@@ -12,85 +12,14 @@
 #include <vostok/physics/character_controller.h>
 #include <vostok/console_command.h>
 
-// claude@NOTE: get_rotation_matrix / change_matrix_orientation are inline math
-// helpers (math_float4x4_inline_2.h on target) absent from our headers; process_leg
-// calls them OUT-OF-LINE (not inlined), so a self-contained definition here resolves
-// the link without affecting process_leg's scored bytes (they are separate objects).
-namespace vostok {
-namespace math {
-
-float4x4 get_rotation_matrix( float3 const& original_dir, float3 const& target_dir )
-{
-	float3 const&	axis	= original_dir ^ target_dir;
-	float			axis_len	= axis.length( );
-	float			cos_angle	= original_dir | target_dir;
-
-	clamp( axis_len, -1.0f, 1.0f );
-	clamp( cos_angle, -1.0f, 1.0f );
-
-	float			angle	= atan2( axis_len, cos_angle );
-	if ( is_zero( angle, epsilon_5 ) )
-		return float4x4( ).identity( );
-
-	float3 const&	normalized_axis	= normalize( axis );
-	return create_rotation( normalized_axis, -angle );
-}
-
-void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix )
-{
-	float3 const	position	= matrix.c.xyz( );
-	matrix.c.xyz( )	= float3( 0.0f, 0.0f, 0.0f );
-	matrix			= matrix * rotation;
-	matrix.c.xyz( )	= position;
-}
-
-} // namespace math
-} // namespace vostok
-
 namespace survarium {
 
-// claude@NOTE: defined out-of-line in ik_processor.cpp (same module); process()
-// calls it to build the hip object-space matrix.
 float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
 
-// claude@MATCH: the s_ik_*_cc console-command static initializers. Each `static
-// console_commands::cc_*` emits the `dynamic initializer for 's_ik_*_cc'` (ctor +
-// atexit) and a matching `dynamic atexit destructor`. Backing value statics are
-// bound by reference; get_foot_fixed_transform / process read them. Names taken from
-// the mangled ??_C@ string constants; cc kinds/args from each initializer's target
-// asm (cc_bool for debug_draw/rot_axis/adjust_hip, cc_float for foot_capsule). See
-// dispersion_calculator.cpp / bullet.cpp for the identical-shape reference inits.
-//
-// claude@NOTE: report.json leaves every `dynamic initializer`/`dynamic atexit
-// destructor` thunk UNSCORED (fuzzy_match_percent: None) - objdiff does not pair the
-// base `??__E.../??__F...` mangled names with the target's demangled "dynamic
-// initializer/destructor" names. This is the SAME None every cc init in the codebase
-// reports (dispersion/bullet/etc.), a universal name-pairing artifact, not 0%.
-//
-// VERIFIED (base init asm vs target init asm, both pulled via pdb_fetch):
-//   * cc_float (foot_capsule): base is BYTE-IDENTICAL to target - same push 1 / fld
-//     [3e4ccccd]=0.2f / push &value / push name / mov eax,1 / xor ecx / movss
-//     xmm0,[3c23d70a]=0.01f / mov esi,&cc / call. Fully matched.
-//   * cc_bool (debug_draw/rot_axis/adjust_hip): same arg VALUES, only the passing
-//     convention differs - base is plain thiscall (this in eax; serializable,
-//     command_type, execution_filter pushed on the stack: push <filter>; push 0
-//     <command_type=engine_internal>; push 0 <serializable=false>; push &value; push
-//     name), the target uses a whole-program LTCG custom convention (this in esi, and
-//     two args in registers: eax=1 plus ecx=<filter>). The base stack pushes carry the
-//     correct values - the omitted explicit filter on debug_draw defaults to
-//     execution_filter_general(=1), matching target ecx=1; rot_axis/adjust_hip pass
-//     execution_filter_early(=0), matching target ecx=0. (eax=1 is a constant the cc_bool
-//     convention loads in all three regardless of command_type, NOT command_type-in-eax.)
-// So all four are effectively DONE - bytes correct, capped only by the None pairing
-// artifact (cc_bool also by the register-vs-stack call-boundary LTCG choice).
 static bool		s_ik_legs_debug_draw_value		= false;
 static float	s_ik_foot_capsule_radius_value	= 0.0f;
 static bool		s_ik_legs_rot_axis_value		= false;
 static bool		s_ik_adjust_hip_position_value	= false;
-
-// Each cc static below emits a compiler-generated dynamic initializer (+ a paired atexit
-// destructor) thunk; report.json leaves both unscored (None, name-pairing artifact), never 0%.
-// All four init bytes are VERIFIED correct against the target (see claude@NOTE above).
 
 static console_commands::cc_bool	s_ik_legs_debug_draw_cc		( "ik_legs_debug_draw", s_ik_legs_debug_draw_value, false, console_commands::command_type_engine_internal );
 static console_commands::cc_float	s_ik_foot_capsule_radius_cc	( "ik_foot_capsule_radius", s_ik_foot_capsule_radius_value, 0.01f, 0.2f, true, console_commands::command_type_engine_internal );
@@ -130,8 +59,6 @@ void legs_ik_processor::leg_params::tick( float dt )
 	m_time_since_stance		+= dt;
 }
 
-// claude@MATCH: arg order is min( member, tr_time ), verified against the target asm.
-// The swapped min( tr_time, member ) emits an extra movss that reorders the operand spills.
 void legs_ik_processor::leg_params::set_heel_transition_time( float tr_time )
 {
 	heel_transition_time = math::min( heel_transition_time, tr_time );
@@ -215,8 +142,6 @@ void legs_ik_processor::process( float4x4* matrices, float4x4 const& transform )
 		process_leg( m_left_leg_params, right_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
 		process_leg( m_right_leg_params, left_foot_fixed_transform * inverted_transform, hip_obj_matrix, matrices, transform );
 	}
-	// claude@MATCH: the whole branch is ONE target statement (0xbd = test 0x64 + call 0x59):
-	// condition and body sit on the SAME source line in the original.
 	else if ( m_left_leg_params.is_on_ground( ) ) m_right_leg_params.is_on_ground( );
 }
 
@@ -347,10 +272,8 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float&								delta_len
 ) const
 {
-	static float const		dist_to_test					= 0.082f; // s_ik_foot_capsule_radius_value-region const
+	static float const		dist_to_test					= 0.082f;
 
-	// claude@MATCH: get_root_bones_count() is re-called per matrix in the target
-	// (the index helper is inlined fresh each time), not hoisted into one local.
 	float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
 	float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
 	float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
@@ -386,8 +309,6 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float3					capsule_size( s_ik_foot_capsule_radius_value, 0.12f, s_ik_foot_capsule_radius_value );
 	float3					foot_to_cube_center_offset( 0.0f, 1.0f, 0.0f );
 
-	// claude@MATCH: target line-table has ONE stmt for both float3 ctors (0x16 = 2*0xb) and
-	// ONE for both color ctors (0x32 = 2*0x19) - each pair declared on a single source line.
 	float3					start, finish;
 	math::color				original_color( 0x80u, 0xc8u, 0x00u, 0x00u ), fixed_color( 0x80u, 0x00u, 0xc8u, 0x00u );
 	float					rotation_interpolation_koef		= 0.0f;
@@ -414,8 +335,6 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	{
 		start			= foot_to_cube_center_offset * dist_to_test + finish;
 		finish			= start;
-		// claude@MATCH: target writes only the low (b) channel byte: mov byte[tmp],64h;
-		// mov cl,[tmp]; mov [original_color],cl == set_B(0x64) (b = val&0xff at offset 0).
 		original_color.set_B( 0x64u );
 	}
 

@@ -59,8 +59,7 @@ engine_world::engine_world				(
 		build_date
 	);
 
-#if 0 // sushi@TODO
-	logging::set_format		(
+	core::g_log_format.set		(
 		logging::format_initiator +
 		logging::format_separator(" <") +
 		logging::format_verbosity +
@@ -70,7 +69,6 @@ engine_world::engine_world				(
 		logging::format_separator("]\t") +
 		logging::format_message
 	);
-#endif
 	g_allocator.do_register				(  64*Kb,	"engine"	);
 	m_render_allocator.do_register		( 128*Mb,	"render"	);
 	m_network_allocator.do_register		(  64*Kb,	"network"	);
@@ -237,6 +235,11 @@ void engine_world::on_application_deactivate( )
 	m_engine_user_world->on_application_deactivate	( );
 
 	m_application_activated	= false;
+}
+
+void engine_world::on_fullscreen_alttab( bool first )
+{
+	m_engine_user_world->on_fullscreen_alttab	( first );
 }
 
 bool engine_world::is_application_active( )

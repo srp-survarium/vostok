@@ -43,10 +43,6 @@ void triangle_mesh_geometry::add_triangles		( triangles_type& triangles ) const
 	VOSTOK_UNREFERENCED_PARAMETER	(triangles);
 }
 
-// claude@NOTE: QUANTITY +1 (target splits the `m_model = VOSTOK_NEW_IMPL(...)( allocator )`
-// into an alloc-shell stmt + the inlined Opcode::Model placement-new ctor stmt; base keeps
-// one stmt). The VOSTOK_NEW_IMPL / new_helper placement-new inline boundary - same /Ox+/GL
-// inline knob as the strip_pointer wall, not source-steerable per-fn.
 void triangle_mesh_geometry::initialize		( memory::base_allocator* allocator, float3 const* const vertices, u32 const vertex_count, u32 const* const indices, u32 const index_count )
 {
 	ASSERT					( (index_count % 3) == 0 );
@@ -73,11 +69,6 @@ void triangle_mesh_geometry::initialize		( memory::base_allocator* allocator, fl
 	calculate_aabb			( vertices, vertex_count, indices, index_count );
 }
 
-// claude@NOTE: STRUCTURE MATCH, both VOSTOK_DELETE_IMPL lines SIZE-capped. Base
-// folds strip_pointer as `call boost::get_pointer<weapon_user_animations_selector>`
-// before the virtual free; target inlines it (reads g_resources_unmanaged_allocator
-// directly). The strip_pointer inline-vs-call wall (patterns/strip-pointer-delete-resource.md);
-// global __forceinline regresses ~170 fns => not source-steerable here.
 void triangle_mesh_geometry::destroy	( memory::base_allocator* allocator )
 {
 	VOSTOK_DELETE_IMPL		( allocator, m_model );

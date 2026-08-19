@@ -116,10 +116,10 @@ void aabb_object::query						( non_null<oct_node const>::ptr const node, float3 
 	}
 
 	for ( collision::object* i = node->objects; i; i = i->get_next() ) {
-		if ( !i->is_type_suitable(m_query_type) )                        // ?
+		if ( !i->is_type_suitable(m_query_type) )
 			continue;		
-		// if ( out_of_bounds( m_aabb, i->get_aabb().center(), i->get_aabb().extents() ) )
-		// 	continue;
+
+
 		if ( math::min( i->get_aabb().min, m_aabb.max ) != i->get_aabb().min
 			|| math::max( m_aabb.min, i->get_aabb().max ) != i->get_aabb().max )
 			continue;

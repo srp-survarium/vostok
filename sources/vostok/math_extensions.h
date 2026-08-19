@@ -39,7 +39,7 @@ namespace vostok {
 namespace math {
 
 template < typename T >
-__declspec(noinline) inline T lerp( T const& current, T const& target, float amount )
+inline T lerp( T const& current, T const& target, float amount )
 {
 	return current + ( target - current ) * amount;
 }

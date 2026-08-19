@@ -44,8 +44,9 @@ inline quaternion::quaternion				( float3 angles )
 
 inline quaternion::quaternion				( float3 const& direction, float angle )
 {
-	w				= cos( angle * .5f );
-	vector.xyz()	= direction * sin( angle * .5f );
+	sine_cosine	sin_cos( angle * .5f );
+	w				= sin_cos.cosine;
+	vector.xyz()	= direction * sin_cos.sine;
 
 	R_ASSERT		( is_unit() );
 }

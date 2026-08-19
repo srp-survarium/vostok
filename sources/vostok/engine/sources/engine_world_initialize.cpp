@@ -93,8 +93,8 @@ void engine_world::initialize			( )
 	collision::initialize				( );
 	initialize_terminate_on_timeout		( );
 
-	core::run_tests						( );
 	m_timer.start						( );
+	core::run_tests						( );
 
 	if ( m_destruction_started )
 	{
@@ -118,8 +118,7 @@ void engine_world::initialize			( )
 										   & g_allocator );
 
 	fixed_string<256>					build_resources_string;
-	bool const is_build					= s_build_resources.is_set_as_string( &build_resources_string );
-	if ( is_build )
+	if ( s_build_resources.is_set_as_string( &build_resources_string ) )
 		initialize_build				( build_resources_string.c_str() );
 
 	bool const is_editor				= command_line_editor();
@@ -147,18 +146,26 @@ void engine_world::initialize			( )
 	if ( is_editor )
 		apc::run						( apc::editor,	boost::bind(&sound::world_user::initialize, &m_sound_world->get_editor_world_user()), apc::continue_process_loop, apc::dont_wait_for_completion);
 #endif //#ifndef MASTER_GOLD
-	
+
+	for ( ; ; ) {
+		resources::dispatch_callbacks	( );
+		if ( m_shader_mask_config.c_ptr( ) )
+			break;
+
+		threading::yield				( 1 );
+	}
+
 	// no apc::run since we are in the render thread
 	initialize_render					( m_shader_mask_config, is_editor );
 	
 	apc::run							( apc::logic,	boost::bind(&engine_world::initialize_logic_modules, this), apc::continue_process_loop, apc::dont_wait_for_completion);
 	
-	m_render_world->engine_renderer().initialize	( is_editor );
-	
 	// initialize render users
 	if ( is_editor )
 		apc::run						( apc::editor,	boost::bind(&render::one_way_render_channel::owner_initialize, &render_world().editor_channel() ), apc::continue_process_loop, apc::dont_wait_for_completion);
 	apc::run							( apc::logic,	boost::bind(&render::one_way_render_channel::owner_initialize, &render_world().logic_channel() ), apc::continue_process_loop, apc::dont_wait_for_completion);
+
+	m_render_world->engine_renderer().initialize	( is_editor );
 
 	apc::run							( apc::build,	boost::bind(&apc::empty::function), apc::break_process_loop, apc::dont_wait_for_completion);
 	apc::run							( apc::network,	boost::bind(&apc::empty::function), apc::break_process_loop, apc::dont_wait_for_completion);
@@ -246,7 +253,6 @@ void engine_world::finalize				( )
 	apc::wait							( apc::logic );
 	apc::wait							( apc::editor );
 
-	apc::run							( apc::network,	boost::bind(&engine_world::network_clear_resources, this), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run							( apc::sound,	boost::bind(&engine_world::sound_clear_resources, this), apc::continue_process_loop, apc::dont_wait_for_completion );
 
 	while ( !m_render_world->logic_channel().render_process_commands( false ) ) ;
@@ -303,6 +309,8 @@ void engine_world::finalize				( )
 	if ( s_build_resources.is_set() )
 		apc::wait						( apc::build );
 
+	apc::run							( apc::logic,	boost::bind(&engine_world::network_clear_resources, this), apc::continue_process_loop, apc::dont_wait_for_completion );
+	apc::run							( apc::network,	boost::bind(&engine_world::network_tick, this), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run							( apc::logic,	boost::bind(&engine_world::logic_finalize_modules, this), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run							( apc::logic,	boost::bind(&network::world::finalize, m_network_world ), apc::continue_process_loop, apc::dont_wait_for_completion );
 	apc::run_remote_only				( apc::logic,	boost::bind(&resources::finalize_thread_usage, false), apc::break_process_loop, apc::dont_wait_for_completion );
