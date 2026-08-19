@@ -70,6 +70,7 @@ VOSTOK_CORE_API	void   	end_query_might_destroy_this_transaction	( );
 
 struct VOSTOK_CORE_API query_resource_params
 {
+public:
 	request	const *				requests;
 	creation_request const *	requests_create;
 	u32							requests_count;
