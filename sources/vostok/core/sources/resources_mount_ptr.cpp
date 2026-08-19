@@ -12,12 +12,9 @@
 namespace vostok {
 namespace resources {
 
+// claude@NOTE: retail passes object in a register; the candidate retains the stack argument convention.
 void   intrusive_fs_task_unmount_base::destroy	(fs_task_unmount * object) const
 {
-	LOGI_TRACE								("resources", "adding unmount task: '%s' on '%s'", 
-											 object->get_vfs_mount_ptr()->get_physical_path(), 
-											 object->get_vfs_mount_ptr()->get_virtual_path());
-
 	g_resources_manager->change_count_of_pending_mount_operations	(+1);
 	g_resources_manager->add_fs_task		(object);
 }
@@ -28,6 +25,7 @@ fs_task_unmount::fs_task_unmount		(vfs_sub_fat_resource_ptr const & sub_fat_ptr)
 {
 }
 
+// claude@NOTE: retail keeps the intrusive-pointer traversal helpers out of line; the candidate inlines them.
 void   fs_task_unmount::unmount_children	(vfs::vfs_mount * sub_fat)
 {
 	u32 const children_count			=	sub_fat->children.size();
@@ -57,6 +55,7 @@ void   fs_task_unmount::unmount_children	(vfs::vfs_mount * sub_fat)
 	g_game_resources_manager->release_sub_fat	(sub_fat_resource);
 }
 
+// claude@NOTE: retail inlines the intrusive-pointer ownership update; the candidate retains its helpers out of line.
 void   fs_task_unmount::execute_may_destroy_this	()
 {
 	unmount_children						(m_sub_fat_ptr->mount_ptr.c_ptr());
