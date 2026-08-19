@@ -61,9 +61,6 @@ void   initialize (fs_new::asynchronous_device_interface & hdd,
 	VOSTOK_CONSTRUCT_REFERENCE				(g_resources_manager, resources_manager) (hdd, dvd, enable_fs_watcher);
 
 	threading::yield						(10);
-// 	fs::set_allocator_thread_id				(threading::current_thread_id());
-// 	memory::g_resources_helper_allocator.user_current_thread_id();
-// 	g_resources_manager->get_managed_resource_allocator()->test_defragment();
 }
 
 void   mount_mounts_path (pcstr const mounts_path)
@@ -170,7 +167,7 @@ struct query_resources_and_wait_callback_proxy_pred
 
 	bool received_callback		() const { return receieved_callback_; }
 
-private:
+public:
 	bool						receieved_callback_;
 	query_callback				callback_;
 };
@@ -255,7 +252,7 @@ struct query_create_resources_and_wait_callback_proxy_pred
 
 	bool received_callback		() const { return receieved_callback_; }
 
-private:
+public:
 	bool						receieved_callback_;
 	query_callback				callback_;
 };
@@ -496,5 +493,3 @@ void   finish_resources_threads			()
 
 } // namespace resources
 } // namespace vostok
-
-
