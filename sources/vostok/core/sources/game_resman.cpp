@@ -76,8 +76,7 @@ void   game_resources_manager::on_node_unmount (vfs::vfs_iterator & it)
 
 
 	if ( base_resource )
-		LOG_ERROR							("resource %s is still associated with fat-node %s! Call Lain",
-											 base_resource->log_string().c_str(), it.get_virtual_path().c_str());
+		LOG_ERROR							("resource %s is still associated with fat-node %s! Call Lain", base_resource->log_string().c_str(), it.get_virtual_path().c_str());
 }
 
 void   game_resources_manager::release_sub_fat (vfs_sub_fat_resource * resource)
