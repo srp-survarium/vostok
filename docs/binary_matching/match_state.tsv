@@ -19565,7 +19565,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?applicable@impl@planner_forward@graph_wrapper@ai@vostok@@AAE_NABV?$vector@Vworld_state_property@planning@ai@vostok@@@45@00@Z	vostok/ai/sources/graph_wrapper_planner_forward.cpp	ai	done	MATCH	100	100	100	1	590		13a7ee3ee4f3	auto: at 100% ceiling, demoted from queue
 ?applicationDomainGet@LoaderInfo@fl_display@Instances@AS3@GFx@Scaleform@@QAE?AV?$SPtr@VApplicationDomain@fl_system@Instances@AS3@GFx@Scaleform@@@456@XZ	src/gfx/as3/obj/display/as3_obj_display_loaderinfo.cpp	gfx	done	MATCH	100	100	100	0	23	f		
 ?applicationDomainGet@LoaderInfo@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAAV?$SPtr@VApplicationDomain@fl_system@Instances@AS3@GFx@Scaleform@@@456@@Z	src/gfx/as3/obj/display/as3_obj_display_loaderinfo.cpp	gfx	done	MATCH	100	100	100	0	122	f		
-?application_name@core@vostok@@YAPBDXZ	vostok/core/sources/core_entry_point_win.cpp	core	inprogress	SIZE	96.5172	96.5172	96.5172	0	93	f	a7ee490c8657	
+?application_name@core@vostok@@YAPBDXZ	vostok/core/sources/core_entry_point_win.cpp	core	done	MATCH	100	100	100	1	93	f	89ec0cdd91bc	Complete TU audit: replaced retained two-argument strings::copy<512> wrapper with target direct three-argument copy calls; function is byte-exact.
 ?apply@?$constants_handler@$00@render@vostok@@AAEXXZ	vostok/render/core/dx11/sources/backend_handlers.cpp	render	done	MATCH	100	100	100	1	98	f	6159e19b85d5	
 ?apply@?$constants_handler@$01@render@vostok@@AAEXXZ	vostok/render/core/dx11/sources/backend_handlers.cpp	render	done	MATCH	100	100	100	1	98	f	f690fbafb2e3	
 ?apply@?$constants_handler@$0A@@render@vostok@@AAEXXZ	vostok/render/core/dx11/sources/backend_handlers.cpp	render	done	MATCH	100	100	100	1	98	f	d7b7e07d5a98	
