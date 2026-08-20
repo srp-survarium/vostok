@@ -33,9 +33,9 @@ pcstr   application_name ( )
 		{
 			pstr const last_back_slash	=	strrchr ( path, '\\' );
 			if ( last_back_slash )
-				strings::copy				(s_application, last_back_slash + 1);
+				strings::copy				(s_application, sizeof(s_application), last_back_slash + 1);
 			else
-				strings::copy				(s_application, path);
+				strings::copy				(s_application, sizeof(s_application), path);
 		}
 	}
 
