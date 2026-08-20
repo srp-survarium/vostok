@@ -317,6 +317,8 @@ void   query_result::do_create_resource_end_part ()
 template <class Resource>
 void   query_result::propogate_sub_fats_to_resource (Resource & resource)
 {
+	if ( !resource )
+		return;
 	if ( resource->get_fat_it() != m_fat_it )
 		return;
 
@@ -465,16 +467,16 @@ void   query_result::finish_translated_query (cook_base::result_enum result)
 	else if ( !is_requery_result && result == cook_base::result_success )
 	{
 		R_ASSERT							(m_managed_resource || m_unmanaged_resource);
-		if ( is_new_resource )
+		if ( is_new_resource && m_class_id )
 		{
-			LOGI_INFO						("resources",	"cooked %s [quid %d] (cook id: %d)", 
-											 resources::log_string(m_managed_resource ? 
-																   (resource_base *)m_managed_resource.c_ptr() : m_unmanaged_resource.c_ptr()).c_str(),
-											 uid(),
-											 m_class_id
-											);
+			LOGI_INFO						("resources",	"cooked %s [quid %d] (cook id: %d)",
+										 resources::log_string(m_managed_resource ?
+														   (resource_base *)m_managed_resource.c_ptr() : m_unmanaged_resource.c_ptr()).c_str(),
+										 uid(),
+										 m_class_id);
 		}
 	}
+
 
 	try_push_created_resource_to_manager_might_destroy_this	();
 }
