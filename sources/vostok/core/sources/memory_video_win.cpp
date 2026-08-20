@@ -392,11 +392,11 @@ static u64 get_local_video_memory_size_impl	( )
 u64 vostok::platform::get_local_video_memory_size	( )
 {
 	u64 result		= get_local_video_memory_size_impl( );
-	u32 max_video_memory_size_in_mb;
-
-	if ( s_max_video_memory.is_set_as_number(&max_video_memory_size_in_mb) )
-		result		= math::min(result, math::max(256*Mb, (u64)max_video_memory_size_in_mb*Mb));
-
+	if ( s_max_video_memory ) {
+		u32 max_video_memory_size_in_mb;
+		if ( s_max_video_memory.is_set_as_number(&max_video_memory_size_in_mb) )
+			result		= math::min(math::max(256*Mb, (u64)max_video_memory_size_in_mb*Mb), result);
+	}
 
 	result			= math::min(result, (u64)1*Gb);
 
