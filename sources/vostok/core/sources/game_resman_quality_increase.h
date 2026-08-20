@@ -34,7 +34,12 @@ private:
 	void			select_resource_to_increase_quality			(resource_base * , increase_quality_queue *	);
 
 	void	schedule_to_increase_quality						(increase_quality_queue & );
+
+#ifdef MASTER_GOLD
+	void	log_increase_quality_queue							() {}
+#else
 	void	log_increase_quality_queue							();
+#endif // #ifdef MASTER_GOLD
 
 private:
 	game_resources_manager_data &				m_data;

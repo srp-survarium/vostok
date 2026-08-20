@@ -188,7 +188,7 @@ void   quality_increase_functionality::schedule_to_increase_quality (increase_qu
 		resource->increase_quality_to_target	(query);
 	}
 }
-
+#ifndef MASTER_GOLD
 void   quality_increase_functionality::log_increase_quality_queue ()
 {
 	fixed_string8192						log_string;
@@ -206,7 +206,7 @@ void   quality_increase_functionality::log_increase_quality_queue ()
 	}
 	LOGI_DEBUG									("grm", "increase quality queue: %s", log_string.c_str());
 }
-
+#endif // #ifndef MASTER_GOLD
 void   quality_increase_functionality::tick ()
 {
 	R_ASSERT_CMP							(threading::current_thread_id(), ==, g_resources_manager->resources_thread_id());
@@ -231,4 +231,3 @@ void   quality_increase_functionality::tick ()
 
 } // namespace vostok
 } // namespace resources
-
