@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,088 / 12,932 functions exact (70.28%) &middot; 9,340 / 12,932 functions exact-max (72.22%) &middot; 88.04% fuzzy &middot; 88.60% fuzzy-max.**
+**Overall: 9,091 / 12,932 functions exact (70.30%) &middot; 9,343 / 12,932 functions exact-max (72.25%) &middot; 88.05% fuzzy &middot; 88.60% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -21,7 +21,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
 | `render`        |   351 | 1,667 / 2,653 (62.8%) | 1,667 / 2,653 (62.8%) |  86.3% |     86.3% |
 | `game`          |   141 |   836 / 1,528 (54.7%) |   836 / 1,528 (54.7%) |  73.6% |     73.6% |
-| `core`          |   136 | 1,007 / 1,325 (76.0%) | 1,064 / 1,325 (80.3%) |  91.5% |     93.7% |
+| `core`          |   136 | 1,010 / 1,325 (76.2%) | 1,067 / 1,325 (80.5%) |  91.5% |     93.7% |
 | `vostok`        |   112 |   861 / 1,252 (68.8%) |   935 / 1,252 (74.7%) |  86.0% |     89.3% |
 | `game_core`     |   189 |   763 / 1,181 (64.6%) |   772 / 1,181 (65.4%) |  92.9% |     93.1% |
 | `animation`     |   102 |     542 / 725 (74.8%) |     554 / 725 (76.4%) |  84.4% |     85.2% |

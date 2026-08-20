@@ -1,10 +1,5 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 24.10.2025
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include <vostok/core/logging_extensions.h>
-
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
 #include <vostok/debug/log_callback.h>
@@ -16,7 +11,6 @@
 #include <vostok/logging/logging_filters_console_command.h>
 #include "core_entry_point.h"
 #include "testing_impl.h"
-
 #include <vostok/os_include.h>
 #include <fcntl.h>
 
@@ -24,49 +18,13 @@
 extern "C" FILE* __iob_func(void);
 
 namespace vostok {
-
-namespace logging {
-	class filter_tree;
-	class log_file;
-} // namespace logging
-
 namespace core {
-
 
 enum stdstream_enum { stdstream_out, stdstream_error };
 
-		void		generate_log_file_name	( fs_new::native_path_string* const out_result, pcstr const extension );
-static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
-		void		write_to_stdstream		( stdstream_enum stream, pcstr format, ... );
-static	bool		is_logging_initialized	( );
-		bool		use_console_for_logging	( );
-
 		void		logging_preinitialize	( );
-
-static	void		push_logging_filters	( );
 static	bool		initialize_console		( );
 static	void		finalize_console		( );
-
-
-static	void		logging_callback		(
-												void*						user_data,
-												pcstr						file,
-												u32							line,
-												pcstr						function_signature,
-												pcstr						initiator,
-												logging::verbosity			verbosity,
-												pcstr						log_string,
-												u32							log_string_length,
-												logging::callback_flag		flag
-											);
-
-		void		debug_log_callback		(
-												pcstr		initiator,
-												bool		is_error_verbosity,
-												bool		log_only_user_string,
-												pcstr		message
-											);
-
 
 struct logging_preinitializer
 {
@@ -88,12 +46,10 @@ static bool													s_console_initialized			=	false;
 static vostok::logging::logging_filters_console_command*	s_logging_console_command		=	NULL;
 static bool													s_tried_to_initialize_console	=	false;
 
-
 logging::filter_tree*		g_log_filter_tree	= NULL;
 logging::log_callback_type	g_log_callback		= NULL;
 log_flags_enum				g_log_flags			= log_to_console;
 logging::log_format			g_log_format;
-
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;
 
@@ -127,6 +83,7 @@ void write_to_stdstream( stdstream_enum stream, pcstr format, ... )
 		return;
 	va_list					mark;
 	va_start				( mark, format );
+
 	vfprintf				( handle, format, mark );
 	va_end					( mark );
 }
@@ -138,7 +95,7 @@ static bool is_logging_initialized( )
 
 bool use_console_for_logging( )
 {
-	if ( is_logging_initialized( ) )
+	if ( !is_logging_initialized( ) )
 		return false;
 	// Preserve target evaluation order: command-line key before the test flag.
 	static bool s_use_console_for_logging = s_use_console || testing::run_tests_command_line();
@@ -157,12 +114,6 @@ static void logging_callback(
 	logging::callback_flag const flag
 )
 {
-	(void)file;
-	(void)line;
-	(void)function_signature;
-	(void)initiator;
-	(void)verbosity;
-
 	static bool first_time						= true;
 	static bool s_tried_to_initialize_console	= false;
 	static bool s_initialized_console			= false;
@@ -177,12 +128,10 @@ static void logging_callback(
 		debug::output( buffer );
 	}
 
-
 	if ( g_log_file && g_log_file->initialized( ) ) {
 		g_log_file->append( log_string, log_string_length );
 		g_log_file->append( "\r\n", 2 );
 	}
-
 
 	bool log_to_console_settings = ( (intptr_t)user_data & log_to_console ) != 0;
 	bool should_use_console_for_logging = use_console_for_logging( );
@@ -193,12 +142,8 @@ static void logging_callback(
 	bool logged_to_stdout = false;
 	bool log_to_stderr_settings = ( (intptr_t)user_data & log_to_stderr ) != 0;
 
-
-
 	if ( log_to_console_settings || should_use_console_for_logging )
 	{
-
-
 		if ( !s_tried_to_initialize_console )
 		{
 			s_initialized_console = initialize_console( );
@@ -212,16 +157,11 @@ static void logging_callback(
 		}
 	}
 
-	if ( g_log_filter_tree )
-	{
-		if ( log_to_stderr_settings )
-			write_to_stdstream( stdstream_error, "%s\r\n", log_string );
+	if ( g_log_filter_tree && log_to_stderr_settings )
+		write_to_stdstream( stdstream_error, "%s\r\n", log_string );
 
-		if ( g_log_filter_tree ) {
-			if ( s_log_to_stdout.is_set( ) && !logged_to_stdout )
-				write_to_stdstream( stdstream_out, "%s\r\n", log_string );
-		}
-	}
+	if ( g_log_filter_tree && s_log_to_stdout && !logged_to_stdout )
+		write_to_stdstream( stdstream_out, "%s\r\n", log_string );
 }
 
 void debug_log_callback(
@@ -235,15 +175,17 @@ void debug_log_callback(
 									core::log_to_stderr : core::log_flags_enum(0);
 	pstr debug_log = NULL;
 	STR_JOINA( debug_log, initiator, ":" );
-
+#line 194
 	if ( log_only_user_string )	__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
 									logging::format_message, &log_flags,
 									debug_log, "%s", message );
+#line 197
 	else
 		__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
 									&g_log_format, &log_flags,
 									debug_log, "%s", message );
 
+#line 203
 	if ( g_log_file )
 		g_log_file->flush( NULL );
 }
@@ -260,7 +202,7 @@ void logging_preinitialize( )
 static void push_logging_filters( )
 {
 	using namespace vostok;
-	logging::verbosity	verbosity		=	logging::trace;
+	logging::verbosity	verbosity		=	logging::warning;
 	fixed_string512		verbosity_string;
 	bool const log_verbosity_key_is_set	=	s_log_verbosity.is_set_as_string(& verbosity_string);
 	if ( log_verbosity_key_is_set )
@@ -268,6 +210,7 @@ static void push_logging_filters( )
 	else if ( testing::run_tests_command_line() && !vostok::debug::is_debugger_present() )
 		verbosity						= logging::warning;
 	//	logging::verbosity const verbosity_for_resources	=	log_verbosity_key_is_set ? verbosity : logging::warning;
+
 	logging::push_filter			( *g_log_filter_tree, "", verbosity, u32(-1) );
 	//	logging::push_filter		( "core:fs", verbosity_for_resources, & memory::g_mt_allocator );
 	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
@@ -297,9 +240,8 @@ void logging_initialize( )
 
 	push_logging_filters( );
 
-
 	if ( g_log_file_usage ) {
-		fs_new::device_file_system_proxy	device( NULL, fs_new::watcher_enabled_true );								// sushi@TODO: `NULL` is `fs_new::s_hdd` in `core\sources\core_entry_point_win_xbox360.cpp`
+		fs_new::device_file_system_proxy	device( get_core_device_file_system( ), fs_new::watcher_enabled_true );
 		fs_new::native_path_string 			log_file_name;
 		generate_log_file_name	( &log_file_name, "log" );
 		g_log_file = logging::new_log_file( memory::g_mt_allocator, device, log_file_name.c_str( ), g_log_file_usage );
@@ -321,48 +263,37 @@ static bool initialize_console( )
 {
 	if ( s_tried_to_initialize_console )
 		return s_console_initialized;
-
 	s_tried_to_initialize_console = true;
 
-	if ( GetConsoleWindow( ) )
-	{
-		s_console_initialized = true;
-		return true;
+	if ( !GetConsoleWindow( ) )
+		if ( !AttachConsole( ATTACH_PARENT_PROCESS ) )
+			if ( !AllocConsole( ) ) {
+#line 301
+				LOG_WARNING( "cannot neither attach parent console, nor create new" );
+				s_console_initialized = false;
+				return false;
+			}
+
+	int os_input_handle = _open_osfhandle( (intptr_t)GetStdHandle( STD_INPUT_HANDLE ), _O_TEXT );
+	if ( os_input_handle != -1 ) {
+		__iob_func()[2] = *_fdopen(os_input_handle, "rt");				// Target assigns stdin to the stderr slot.
+		setvbuf(&__iob_func()[0], 0, _IONBF, 0);
 	}
 
-	if ( AttachConsole( ATTACH_PARENT_PROCESS ) || AllocConsole( ) )
-	{
-		HANDLE input_handle = GetStdHandle( STD_INPUT_HANDLE );
-		int os_input_handle = _open_osfhandle( (intptr_t)input_handle, _O_TEXT );
-		if ( os_input_handle != -1 ) {
-			FILE input_file = *_fdopen(os_input_handle, "rt");
-			__iob_func()[2] = input_file;				// Target assigns stdin to the stderr slot.
-			setvbuf(&__iob_func()[0], 0, _IONBF, 0);
-		}
+	int os_output_handle = _open_osfhandle( (intptr_t)GetStdHandle( STD_OUTPUT_HANDLE ), _O_TEXT );
+	__iob_func()[1] = *_fdopen(os_output_handle, "wt");
+	setvbuf(&__iob_func()[1], 0, _IONBF, 0);
 
-		HANDLE output_handle = GetStdHandle( STD_OUTPUT_HANDLE );
-		int os_output_handle = _open_osfhandle( (intptr_t)output_handle, _O_TEXT );
-		FILE output_file = *_fdopen(os_output_handle, "wt");
-		__iob_func()[1] = output_file;
-		setvbuf(&__iob_func()[1], 0, _IONBF, 0);
-
-		HANDLE error_handle = GetStdHandle( STD_ERROR_HANDLE );
-		int os_error_handle = _open_osfhandle( (intptr_t)error_handle, _O_TEXT );
-		if ( os_error_handle != -1 ) {
-			FILE error_file = *_fdopen(os_error_handle, "wt");
-			__iob_func()[2] = error_file;
-			setvbuf(&__iob_func()[2], 0, _IONBF, 0);
-		}
-
-		std::ios_base::sync_with_stdio( true );
-
-		s_console_initialized = true;
-		return true;
+	int os_error_handle = _open_osfhandle( (intptr_t)GetStdHandle( STD_ERROR_HANDLE ), _O_TEXT );
+	if ( os_error_handle != -1 ) {
+		__iob_func()[2] = *_fdopen(os_error_handle, "wt");
+		setvbuf(&__iob_func()[2], 0, _IONBF, 0);
 	}
 
-	LOG_WARNING( "cannot neither attach parent console, nor create new" );
-	s_console_initialized = false;
-	return false;
+	std::ios_base::sync_with_stdio( true );
+
+	s_console_initialized = true;
+	return true;
 }
 
 static void finalize_console( )
