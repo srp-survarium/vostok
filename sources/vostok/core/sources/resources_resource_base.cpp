@@ -10,6 +10,7 @@
 #include <vostok/resources_unmanaged_resource.h>
 #include "resources_allocators.h"
 
+
 #include "game_resman.h"
 
 namespace vostok {
@@ -47,7 +48,6 @@ void   resource_base::set_need_cook ()
 	set_flags								(resource_flag_needs_cook);
 }		
 
-// claude@NOTE: retail keeps the source-matched virtual_path_string<char const *> constructor out of line here.
 fs_new::virtual_path_string   resource_base::reusable_request_name ()
 {
 	vfs::vfs_iterator	fat_it;
