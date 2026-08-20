@@ -161,6 +161,8 @@ public:
 	inline				quaternion	( float3 const& direction, float angle );
 	inline	explicit	quaternion	( float4 const& vector );
 
+	inline	quaternion		operator -	( ) const;
+
 //	inline	quaternion&	normalize	( );
 	inline	quaternion&	conjugate	( );
 	inline	quaternion&	identity	( );
@@ -195,7 +197,7 @@ VOSTOK_CORE_API quaternion weighted_blend( std::pair< quaternion, float > const*
 } // namespace vostok
 
 VOSTOK_CORE_API vostok::math::quaternion slerp_optimized
-	( vostok::math::quaternion const& q0, vostok::math::quaternion const& q1, float const time_delta );
+	( vostok::math::quaternion const& q0, vostok::math::quaternion const& q1, float const t );
 VOSTOK_CORE_API vostok::math::quaternion extrapolated_slerp
 	( std::pair< vostok::math::quaternion, float > const* const begin, std::pair< vostok::math::quaternion, float > const* const end );
 

@@ -51,6 +51,11 @@ inline quaternion::quaternion				( float3 const& direction, float angle )
 	R_ASSERT		( is_unit() );
 }
 
+inline quaternion quaternion::operator -		( ) const
+{
+	return			quaternion( float4( -x, -y, -z, -w ) );
+}
+
 inline quaternion& quaternion::conjugate	( )
 {
 	vector.xyz()	= -vector.xyz();
