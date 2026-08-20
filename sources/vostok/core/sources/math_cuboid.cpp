@@ -38,17 +38,17 @@ cuboid::cuboid					( aabb const& aabb, float4x4 const& matrix )
 		matrix.transform_position( aabb.vertex(7) ),
 	};
 
-	m_planes[0].plane			= math::create_plane( vertices[0], vertices[1], vertices[2] );
-	m_planes[1].plane			= math::create_plane( vertices[0], vertices[2], vertices[4] );
-	m_planes[2].plane			= math::create_plane( vertices[0], vertices[4], vertices[1] );
-	m_planes[3].plane			= math::create_plane( vertices[7], vertices[5], vertices[6] );
-	m_planes[4].plane			= math::create_plane( vertices[7], vertices[3], vertices[5] );
-	m_planes[5].plane			= math::create_plane( vertices[7], vertices[6], vertices[3] );
+	m_planes[0].plane			= math::create_plane( vertices[0], vertices[2], vertices[1] );
+	m_planes[1].plane			= math::create_plane( vertices[0], vertices[4], vertices[2] );
+	m_planes[2].plane			= math::create_plane( vertices[0], vertices[1], vertices[4] );
+	m_planes[3].plane			= math::create_plane( vertices[7], vertices[6], vertices[5] );
+	m_planes[4].plane			= math::create_plane( vertices[7], vertices[5], vertices[3] );
+	m_planes[5].plane			= math::create_plane( vertices[7], vertices[3], vertices[6] );
 
 	aabb_plane* i				= &m_planes[0];
 	aabb_plane const* const e	= &m_planes[plane_count];
 	for ( ; i != e; ++i )
-		(*i).plane				= transform( (*i).plane, matrix );
+		(*i).normalize			( );
 }
 
 cuboid::cuboid					( cuboid const& other, float4x4 const& matrix )
