@@ -12,6 +12,9 @@ namespace vostok {
 namespace resources {
 
 
+
+
+
 vfs_sub_fat_resource_ptr	get_sub_fat_resource (vfs::vfs_mount_ptr mount_ptr)
 {
 	return									(vfs_sub_fat_resource *)mount_ptr->user_data;
