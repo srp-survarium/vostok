@@ -329,8 +329,8 @@ struct checker
 
 		if ( !command_line_key && !(key_name && * key_name == '.') )
 		{
-			LOGFD_FORCED
-				(logging::info, logging::format_message, core::log_to_console, "\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
+			LOGFD_FORCED			(logging::info, logging::format_message, core::log_to_console, "\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
+
 			debug::terminate			("Command line argument '%s' has not been registered", key_name);
 		}
 	}
@@ -340,8 +340,7 @@ void   check_keys ()
 {
 	if ( s_command_line_error.length() )
 	{
-		LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console,
-											 "%s", s_command_line_error.c_str());
+		LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console, "%s", s_command_line_error.c_str());
 		if ( debug::is_debugger_present() )
 			DEBUG_BREAK						();
 
@@ -351,6 +350,7 @@ void   check_keys ()
 
 	iterate_keys							(checker());
 }
+
 
 bool   initialized ()
 {
