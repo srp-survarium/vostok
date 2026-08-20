@@ -273,8 +273,11 @@ void   queries_result::end_and_delete_self (bool finalizing_thread)
 		if ( m_is_queries_for_quality )
 			mark_inconsistent_qualities_as_failed	();
 
-		call_user_callback					();
-		push_to_grm_cache					();
+		if ( !is_cancelled )
+		{
+			call_user_callback					();
+			push_to_grm_cache					();
+		}
 	}
 
 	this->~queries_result					();
