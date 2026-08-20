@@ -49,8 +49,6 @@ vostok::configs::binary_config_ptr vostok::configs::create_binary_config ( mutab
 	resources::g_resources_manager->get_binary_config_cook().register_object_to_delete( result, threading::current_thread_id() );
 	result->set_creation_source (
 		resources::resource_base::creation_source_created_by_user,
-		"user generated",
-		resources::memory_usage_type( resources::nocache_memory, buffer.size() )
-	);
+		"user generated", resources::memory_usage_type( resources::nocache_memory, buffer.size() ));
 	return result;
 }
