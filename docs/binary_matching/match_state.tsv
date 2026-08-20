@@ -8716,7 +8716,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gplayer_logic_sprint_state@survarium@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	44		76d210fa4afd	
 ??_Gplayer_parameters_modifyer@survarium@@UAEPAXI@Z	vostok/game_core/player_parameters_cook.h	game_core	done	MATCH	100	100	100	0	72		8ffe6ec140fe	
 ??_Gportal_sector_system@culling@render@vostok@@UAEPAXI@Z	vostok/math_cuboid.h	vostok	done	MATCH	100	100	100	0	30	f	a7d9bf795d59	
-??_Gppmd_compressor@vostok@@UAEPAXI@Z	vostok/core/sources/compressor_ppmd.cpp	core	done	MATCH	100	100	100	0	54	f	f7b144f81732	
+??_Gppmd_compressor@vostok@@UAEPAXI@Z	vostok/core/sources/compressor_ppmd.cpp	core	done	MATCH	100	100	100	0	54	f	9930bec25ec6	
 ??_Gpredicate@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/sources/base_lexeme_inline.h	ai	done	MATCH	100	100	100	0	98		5e128713a9e5	
 ??_Gpropositional_planner@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/search/search_forward_inline.h	ai	done	MATCH	100	100	100	0	44		9fc2ffa8cd61	
 ??_Gquery_result@resources@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	30	f	440cb9692a74	
@@ -20598,7 +20598,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?complete_iocp_send@socket_ops@detail@asio@boost@@YAXABV?$weak_ptr@X@4@AAVerror_code@system@4@@Z	boost/asio/detail/impl/socket_ops.ipp	boost	inprogress	SIZE	89.3939	89.3939	89.3939	1	203		30ebb954a5d6	auto: at 100% ceiling, demoted from queue
 ?compress@ByteArray@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXAAVValue@456@IQBV7456@@Z	src/gfx/as3/obj/utils/as3_obj_utils_bytearray.cpp	gfx	done	MATCH	100	100	100	0	156	f		
 ?compress@ppmd_compressor@vostok@@UAE_NVconst_buffer@2@Vmutable_buffer@2@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	done	MATCH	100	100	100	1	39	f	5e72e1939d92	auto: at 100% ceiling, demoted from queue
-?compress@ppmd_compressor_impl@@UAEXVconst_buffer@vostok@@Vmutable_buffer@3@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	inprogress	SIZE	63.4242	63.4242	63.4242	0	108	f	db796f911f53	
+?compress@ppmd_compressor_impl@@UAEXVconst_buffer@vostok@@Vmutable_buffer@3@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	parked	SIZE	63.4242	63.4242	63.4242	1	108	f	db796f911f53	Archived v0.100 body and target statements/locals agree verbatim; target retains const_buffer size/c_ptr and mutable_buffer size accessors that candidate inlines. Requeue after broader core LTCG reconstruction.
 ?compute@btConvexHullComputer@@AAEMPBX_NHHMM@Z	bullet/linearmath/btconvexhullcomputer.cpp	bullet	done	MATCH	100	100	100	1	2138			auto: at 100% ceiling, demoted from queue
 ?compute@btConvexHullInternal@@QAEXPBX_NHH@Z	bullet/linearmath/btconvexhullcomputer.cpp	bullet	done	MATCH	100	100	100	1	1529			auto: at 100% ceiling, demoted from queue
 ?computeBounds@FontCompactor@GFx@Scaleform@@ABEXPAH000@Z	src/gfx/gfx_fontcompactor.cpp	gfx	done	MATCH	100	100	100	0	1081			
@@ -21320,7 +21320,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?decompress@ogg_file_contents@sound@vostok@@QAEIPAEIAAII@Z	vostok/sound/sources/ogg_file_contents.cpp	sound	done	MATCH	100	100	100	1	58		0f80f8b1e065	auto: at 100% ceiling, demoted from queue
 ?decompress@ogg_utils@sound@vostok@@YAIPAUOggVorbis_File@@PAEAAII@Z	vostok/sound/sources/ogg_utils.cpp	sound	done	MATCH	100	100	100	1	312		3659176c26b7	Structure/size exact; remaining external Vorbis relocation and logging RAII compiler-context residual.
 ?decompress@ppmd_compressor@vostok@@UAE_NVconst_buffer@2@Vmutable_buffer@2@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	done	MATCH	100	100	100	1	40	f	70af74ac6208	auto: at 100% ceiling, demoted from queue
-?decompress@ppmd_compressor_impl@@UAEXVconst_buffer@vostok@@Vmutable_buffer@3@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	inprogress	QUANTITY	67.6667	67.6667	67.6667	0	108	f	a41a76398894	
+?decompress@ppmd_compressor_impl@@UAEXVconst_buffer@vostok@@Vmutable_buffer@3@AAI@Z	vostok/core/sources/compressor_ppmd.cpp	core	parked	QUANTITY	67.6667	67.6667	67.6667	1	108	f	a41a76398894	Archived v0.100 body and target statements/locals agree verbatim; target retains const_buffer size/c_ptr and mutable_buffer size accessors that candidate inlines, keeping dest_stream as a separate PDB row. Requeue after broader core LTCG reconstruction.
 ?decompress@wav_encoded_sound_interface@sound@vostok@@UAEIPAEIAAII@Z	vostok/sound/sources/wav_encoded_sound_interface.cpp	sound	done	MATCH	100	100	100	1	400		0e6ff9d28097	auto: at 100% ceiling, demoted from queue
 ?decompress_resource@resources_manager@resources@vostok@@AAEXPAVquery_result@23@@Z	vostok/core/sources/resources_manager_cook.cpp	core	parked	SIZE	83.9333	87.3583	87.3583	1	401	f	9fba37886040	Faithful 10/10 statements, identical src_file/dest_file locals and 15-block CFG. Target retains buffer access/conversion helpers in destination construction and unpinning that candidate inlines. Revisit with the memory_buffer shared-header/helper cone; no retention anchor.
 ?decompress_resources@resources_manager@resources@vostok@@AAEXXZ	vostok/core/sources/resources_manager_cook.cpp	core	done	MATCH	100	100	100	0	107		91f41671df7b	
