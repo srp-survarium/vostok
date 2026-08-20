@@ -798,7 +798,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??$_Copy_Construct@Umaterial_effects_entry@render@vostok@@@stlp_std@@YAXPAUmaterial_effects_entry@render@vostok@@ABU123@@Z	stlport/stl/_construct.h	stlport	done			100	100	0	66	f		
 ??$_Copy_Construct@Umovement_target_wrapper@planning@ai@vostok@@@stlp_std@@YAXPAUmovement_target_wrapper@planning@ai@vostok@@ABU1234@@Z	stlport/stl/_construct.h	stlport	done			100	100	0	170			
 ??$_Copy_Construct@Utexture_named_instance@render@vostok@@@stlp_std@@YAXPAUtexture_named_instance@render@vostok@@ABU123@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	63	f	f464ab135f39	
-??$_Copy_Construct@Uunique_propagator_info@sound@vostok@@@stlp_std@@YAXPAUunique_propagator_info@sound@vostok@@ABU123@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	83		f464ab135f39	
+??$_Copy_Construct@Uunique_propagator_info@sound@vostok@@@stlp_std@@YAXPAUunique_propagator_info@sound@vostok@@ABU123@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	83		31eee827626d	
 ??$_Copy_Construct@V?$fixed_vector@I$0CA@@vostok@@@stlp_std@@YAXPAV?$fixed_vector@I$0CA@@vostok@@ABV12@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	52		31eee827626d	
 ??$_Copy_Construct@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@@stlp_std@@YAXPAV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@ABV123@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	17	f	f464ab135f39	
 ??$_Copy_Construct@Vpddl_world_state_property_impl@planning@ai@vostok@@@stlp_std@@YAXPAVpddl_world_state_property_impl@planning@ai@vostok@@ABV1234@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	79		31eee827626d	
@@ -976,7 +976,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??$__destroy_range@V?$reverse_iterator@PAUunique_propagator_info@sound@vostok@@@stlp_std@@Uunique_propagator_info@sound@vostok@@@stlp_std@@YAXV?$reverse_iterator@PAUunique_propagator_info@sound@vostok@@@0@0PAUunique_propagator_info@sound@vostok@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	55		5a71007865c3	
 ??$__destroy_range@V?$reverse_iterator@PAV?$basic_resolver_entry@Vudp@ip@asio@boost@@@ip@asio@boost@@@stlp_std@@V?$basic_resolver_entry@Vudp@ip@asio@boost@@@ip@asio@boost@@@stlp_std@@YAXV?$reverse_iterator@PAV?$basic_resolver_entry@Vudp@ip@asio@boost@@@ip@asio@boost@@@0@0PAV?$basic_resolver_entry@Vudp@ip@asio@boost@@@ip@asio@boost@@@Z	stlport/stl/_construct.h	stlport	done			100	100	0	55		5a71007865c3	
 ??$__destroy_range@V?$reverse_iterator@PAV?$fixed_vector@I$0CA@@vostok@@@stlp_std@@V?$fixed_vector@I$0CA@@vostok@@@stlp_std@@YAXV?$reverse_iterator@PAV?$fixed_vector@I$0CA@@vostok@@@0@0PAV?$fixed_vector@I$0CA@@vostok@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	55		5a71007865c3	
-??$__destroy_range@V?$reverse_iterator@PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@stlp_std@@V?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@stlp_std@@YAXV?$reverse_iterator@PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@0@0PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	55		5a71007865c3	
+??$__destroy_range@V?$reverse_iterator@PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@stlp_std@@V?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@stlp_std@@YAXV?$reverse_iterator@PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@0@0PAV?$shared_ptr@Vwin_mutex@detail@asio@boost@@@boost@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	55		2f353b8d470f	
 ??$__destroy_range@V?$reverse_iterator@PAV?$variant@$0CA@@vostok@@@stlp_std@@V?$variant@$0CA@@vostok@@@stlp_std@@YAXV?$reverse_iterator@PAV?$variant@$0CA@@vostok@@@0@0PAV?$variant@$0CA@@vostok@@@Z	stlport/stl/_construct.h	stlport	inprogress	SIZE	93.1458	93.1458	93.1458	0	122		5a71007865c3	
 ??$__destroy_range@V?$reverse_iterator@PAVpddl_world_state_property_impl@planning@ai@vostok@@@stlp_std@@Vpddl_world_state_property_impl@planning@ai@vostok@@@stlp_std@@YAXV?$reverse_iterator@PAVpddl_world_state_property_impl@planning@ai@vostok@@@0@0PAVpddl_world_state_property_impl@planning@ai@vostok@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	55		5a71007865c3	
 ??$__destroy_range@V?$reverse_iterator@PAVspecified_action@planning@ai@vostok@@@stlp_std@@Vspecified_action@planning@ai@vostok@@@stlp_std@@YAXV?$reverse_iterator@PAVspecified_action@planning@ai@vostok@@@0@0PAVspecified_action@planning@ai@vostok@@@Z	stlport/stl/_construct.h	stlport	done	MATCH	100	100	100	0	144		5a71007865c3	
@@ -5194,7 +5194,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0ai_sound_player@survarium@@QAE@AAV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@IAAVworld_user@sound@4@QBVsound_producer@64@QBVsound_receiver@64@@Z	vostok/game/sources/ai_sound_player.cpp	game	done	MATCH	100	100	100	1	92	f	0b56d40c0630	Target/source initializer structure is complete (2/2), target 92/base 86. Residual is LTCG constructor calling convention and register preloading (target receives this/arguments in customized registers/stack; base emits ordinary prologue loads). Reopen only when the real construction caller cone or game compiler-context hash changes.
 ??0ai_world@ai@vostok@@QAE@AAUengine@12@@Z	vostok/ai/sources/ai_world.cpp	ai	done	MATCH	100	100	100	0	328		0ce22004f526	
 ??0ambient_volume@render@vostok@@QAE@ABUambient_volume_properties@12@I@Z	vostok/render/engine/sources/ambient_volume.cpp	render	done	MATCH	100	100	100	1	130	f	9b3f5ed8f9a1	Target leaves m_properties uninitialized and then overwrites it in set_properties; source now matches. Remaining target inlines create_identity_aabb and uses custom register arguments while base calls the helper and uses stack arguments. Stop at this LTO/calling-convention boundary.
-??0animated_model_instance@render@vostok@@QAE@XZ	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	61	f	1310d5d88106	
+??0animated_model_instance@render@vostok@@QAE@XZ	boost/function/function_template.hpp	boost	done			100	100	0	61	f	1310d5d88106	
 ??0animated_model_instance_cook@physics@vostok@@QAE@XZ	vostok/physics/sources/animated_model_instance_cook.cpp	physics	parked	SIZE	63.4091	63.4091	63.4091	1	112	f	a062b3eb49d1	Target statement shape and control flow match; residual is Bullet/math helper instruction selection, register allocation, static-constructor relocation, or compiler-generated destructor code.
 ??0animated_model_instance_cook@render@vostok@@QAE@XZ	vostok/render/engine/sources/animated_model_instance_cook.cpp	render	done	MATCH	100	100	100	1	88	f	0b56d40c0630	auto: at 100% ceiling, demoted from queue
 ??0animated_model_instance_cook@survarium@@QAE@XZ	vostok/game/sources/animated_model_instance_cook.cpp	game	done	MATCH	100	100	100	1	88	f	0b56d40c0630	
@@ -5257,7 +5257,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0base_project@survarium@@QAE@XZ	vostok/game_core/sources/base_project.cpp	game_core	done	MATCH	100	100	100	3	119		0b56d40c0630	game_core #403 cleanup: STALE-LABEL - 0/0 STRUCTURE MATCH (byte-identical) verified by structure-diff; match.db struct_class is a heuristic false-positive. DONE, not parked.
 ??0behaviour@ai@vostok@@QAE@ABVbinary_config_value@configs@2@0AAVai_world@12@III@Z	vostok/ai/sources/behaviour.cpp	ai	done	MATCH	100	100	100	1	353		fa4a57248f4f	auto: at 100% ceiling, demoted from queue
 ??0behaviour_cook@ai@vostok@@QAE@AAVai_world@12@@Z	vostok/ai/sources/behaviour_cook.cpp	ai	inprogress	MATCH	89.1071	89.1071	89.1071	0	82		0b56d40c0630	
-??0behaviour_cook_params@ai@vostok@@QAE@XZ	boost/function/function_base.hpp	boost	done	MATCH	100	100	100	0	7	f	b51f2e835a2d	
+??0behaviour_cook_params@ai@vostok@@QAE@XZ	boost/function/function_base.hpp	boost	done			100	100	0	7	f	b51f2e835a2d	
 ??0bi_spline_skeleton_animation_baked_cook@animation@vostok@@QAE@XZ	vostok/animation/sources/bi_spline_skeleton_animation_baked_cook.cpp	animation	done	MATCH	100	100	100	1	97	f	2532c6aa59a2	Complete baked cook TU audit: target source flow restored; exact methods retained, remaining allocation/deallocation/root deltas isolated to LTCG inlining and parameter elimination.
 ??0bi_spline_skeleton_animation_impl_cook@animation@vostok@@QAE@XZ	vostok/animation/sources/bi_spline_skeleton_animation_impl_cook.cpp	animation	done	MATCH	100	100	100	1	100	f	2532c6aa59a2	[UNCHECKED] sushi@NOTE: Incorrect flags most likely | All serialized base-cook fields and flag 8 match; residual is target/base register allocation and one-byte padding.
 ??0binary_config@configs@core@vostok@@QAE@PBEIPAVbase_allocator@memory@3@@Z	vostok/core/sources/configs_binary_config.cpp	core	done	MATCH	100	100	100	0	85	f	955d9f4c2cac	
@@ -5973,7 +5973,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0sensed_visual_object@ai@vostok@@QAE@XZ	vostok/ai/sensed_visual_object.h	ai	done	MATCH	100	100	100	1	289		9a34355f0ff1	auto: at 100% ceiling, demoted from queue
 ??0shader_binary_source_cook@render@vostok@@QAE@XZ	vostok/render/core/dx11/sources/shader_binary_source_cook.cpp	render	inprogress	MATCH	84.5312	84.5312	84.5312	1	141	f	5277da92608b	
 ??0shader_cache_info@effect_compiler@render@vostok@@QAE@ABU0123@@Z	stlport/stl/_algobase.h	stlport	done	MATCH	25.5	100	100	0	246	f	c09c2b7f1bc3	
-??0shader_cache_info@effect_compiler@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	155	f	c09c2b7f1bc3	
+??0shader_cache_info@effect_compiler@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	155	f	222f641982b5	
 ??0shader_constant_buffer@render@vostok@@IAE@ABV?$fixed_string@$0EA@@2@W4enum_shader_type@12@W4_D3D_CBUFFER_TYPE@@I@Z	vostok/render/core/dx11/sources/shader_constant_buffer.cpp	render	parked	MATCH	89.1023	89.1023	89.1023	1	255	f	c4620eb4175f	Constructor is target-sized with matching statements, locals, descriptor constants, and embedded CHECK_RESULT line. Remaining difference is independent instruction scheduling around the D3D device-vtable load.
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	vostok/render/core/shader_constant_host_inline.h	render	inprogress	SIZE	65.2	65.2	65.2	1	90	f	a0bbbd9a3e2e	auto: at 100% ceiling, demoted from queue
 ??0shader_constant_slot@render@vostok@@QAE@XZ	vostok/render/core/shader_constant_slot_inline.h	render	done	MATCH	100	100	100	1	27	f	0b56d40c0630	auto: at 100% ceiling, demoted from queue
@@ -6448,7 +6448,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1?$tcp_packet_socket@V?$basic_stream_socket@Vtcp@ip@asio@boost@@V?$stream_socket_service@Vtcp@ip@asio@boost@@@34@@asio@boost@@@network_core@vostok@@QAE@XZ	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	44		a68cc4e0c14e	
 ??1?$vector@EV?$allocator@E@stlp_std@@@stlp_std@@QAE@XZ	vostok/math_plane_inline.h	vostok	blocked				0	0	39	f		
 ??1?$vector@PAUrender_surface_instance@render@vostok@@@render@vostok@@QAE@XZ	vostok/render/engine/sources/render_engine_world_pc_dx11.cpp	render	done	MATCH	100	100	100	2	27	f	73c41f1a370a	Restored world option-change orchestration and render reset/reload root cone from target evidence.
-??1?$vector@PBV?$variant@$0CA@@vostok@@@survarium@@QAE@XZ	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	27	f	aba6036ac218	
+??1?$vector@PBV?$variant@$0CA@@vostok@@@survarium@@QAE@XZ	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	27	f	222f641982b5	
 ??1?$vectora@Urequest@resources@vostok@@@vostok@@QAE@XZ	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	18	f	aba6036ac218	
 ??1?$weak_ptr@X@boost@@QAE@XZ	stlport/stl/_istream.h	stlport	done	MATCH	100	100	100	0	67		f6aba4669117	
 ??1?$weapon_sound_events_handler_state@Vdouble_barreled_weapon_core_hide_state@survarium@@@survarium@@UAE@XZ	boost/bind/bind_mf_cc.hpp	boost	blocked	MATCH			0	0	109	f		
@@ -6459,8 +6459,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1?$weapon_sound_events_handler_state@Vweapon_core_shotgun_reload_finish_substate@survarium@@@survarium@@UAE@XZ	boost/function/function_template.hpp	boost	blocked	MATCH			0	0	109	f		
 ??1?$weapon_sound_events_handler_state@Vweapon_core_shotgun_reload_one_round_substate@survarium@@@survarium@@UAE@XZ	boost/function/function_template.hpp	boost	inprogress	MATCH	69.6	69.6	69.6	0	109	f	74847e444b8c	
 ??1?$win_iocp_socket_send_op@Vmutable_buffers_1@asio@boost@@V?$write_op@V?$basic_stream_socket@Vtcp@ip@asio@boost@@V?$stream_socket_service@Vtcp@ip@asio@boost@@@34@@asio@boost@@Vmutable_buffers_1@23@Vtransfer_all_t@detail@23@V?$io_op@V?$basic_stream_socket@Vtcp@ip@asio@boost@@V?$stream_socket_service@Vtcp@ip@asio@boost@@@34@@asio@boost@@V?$write_op@Vmutable_buffers_1@asio@boost@@@detail@ssl@23@V?$write_op@V?$stream@AAV?$basic_stream_socket@Vtcp@ip@asio@boost@@V?$stream_socket_service@Vtcp@ip@asio@boost@@@34@@asio@boost@@@ssl@asio@boost@@Vmutable_buffers_1@34@Vtransfer_all_t@detail@34@V?$bind_t@XV?$mf3@XVlogin_client_impl@network@vostok@@ABV?$function@$$A6AXW4connection_error_types_enum@vostok@@W4handshaking_error_types_enum@2@W4socket_error_types_enum@2@W4login_server_message_types_enum@2@@Z@boost@@ABVerror_code@system@5@I@_mfi@boost@@V?$list4@V?$value@PAVlogin_client_impl@network@vostok@@@_bi@boost@@V?$value@V?$function@$$A6AXW4connection_error_types_enum@vostok@@W4handshaking_error_types_enum@2@W4socket_error_types_enum@2@W4login_server_message_types_enum@2@@Z@boost@@@23@U?$arg@$00@3@U?$arg@$01@3@@_bi@3@@_bi@4@@523@@6ssl@23@@detail@23@@detail@asio@boost@@QAE@XZ	boost/asio/detail/handler_alloc_helpers.hpp	boost	done	MATCH	100	100	100	0	40		154567f6abc5	
-??1?$xs_descriptor@Ugs_data@render@vostok@@@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	inprogress	MATCH	94.9583	94.9583	100	0	72	f	c09c2b7f1bc3	
-??1?$xs_descriptor@Ups_data@render@vostok@@@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	inprogress	MATCH	94.9583	94.9583	100	0	72	f	c09c2b7f1bc3	
+??1?$xs_descriptor@Ugs_data@render@vostok@@@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	inprogress	MATCH	94.9583	94.9583	100	0	72	f	222f641982b5	
+??1?$xs_descriptor@Ups_data@render@vostok@@@render@vostok@@QAE@XZ	stlport/stl/_vector.h	stlport	inprogress	MATCH	94.9583	94.9583	100	0	72	f	222f641982b5	
 ??1AABBCollisionTree@Opcode@@UAE@XZ	opcode/opc_optimizedtree.cpp	opcode	done	MATCH	100	100	100	1	47	f		auto: at 100% ceiling, demoted from queue
 ??1AABBNoLeafTree@Opcode@@UAE@XZ	opcode/opc_optimizedtree.cpp	opcode	done	MATCH	100	100	100	1	47	f		auto: at 100% ceiling, demoted from queue
 ??1AABBQuantizedNoLeafTree@Opcode@@UAE@XZ	opcode/opc_optimizedtree.cpp	opcode	done	MATCH	100	100	100	1	47	f		auto: at 100% ceiling, demoted from queue
@@ -7025,7 +7025,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1medkit@survarium@@EAE@XZ	vostok/game_core/sources/medkit.cpp	game_core	done	MATCH	100	100	100	3	236		7b55df1c75d7	[DONE 100%] was 67.06 with VOSTOK_DELETE_IMPL - the target's three statements are the free_helper shape exactly (null-check, free_impl, pointer=0, NO element dtor even for the non-trivial damage_protection), i.e. VOSTOK_FREE_IMPL, symmetric with the raw VOSTOK_MALLOC_IMPL allocations in load.
 ??1messaging_client@survarium@@QAE@XZ	vostok/game/sources/messaging_client.cpp	game	done	MATCH	100	100	100	3	83	f	137f554ee0f6	Whole-TU PDB/assembly audit: recovered session_id=-1 and preserved reconnect count; connect/ctor exact; target statement lines reconstructed; remaining compiler-context walls flagged.
 ??1model_def@skeleton_combined_cook_data@render@vostok@@QAE@XZ	vostok/render/facade/skeleton_combined_cook_data.h	render	done	MATCH	100	100	100	0	142	f	e1e8c3500a14	
-??1mount_by_config_helper@resources@vostok@@QAE@XZ	vostok/core/sources/resources_query_mount.cpp	core	parked	MATCH	92.8571	92.8571	92.8571	1	73	f	a9f39b4097f3	Compiler-generated zero-statement destructor with identical nine-block CFG. Operand-aware comparison reaches exact equivalence after relocation normalization; ledger residual is delink/scoring attribution.
+??1mount_by_config_helper@resources@vostok@@QAE@XZ	vostok/core/sources/resources_query_mount.cpp	core	parked	MATCH	92.8571	92.8571	92.8571	1	73	f	cab674298f61	Compiler-generated zero-statement destructor with identical nine-block CFG. Operand-aware comparison reaches exact equivalence after relocation normalization; ledger residual is delink/scoring attribution.
 ??1mount_result@vfs@vostok@@QAE@XZ	boost/function/function_template.hpp	boost	blocked				0	0	21			
 ??1mounter@vfs@vostok@@UAE@XZ	vostok/vfs/sources/mounter.cpp	vfs	parked	SIZE	89.6038	89.6038	89.6038	0	163		17fcf16c24dd	vfs (/Od+/Ob2+/GL): structure faithful (11 re-paired via no_debug_policy fix). Residual = LTCG accessor inline-vs-call over correct structure; 5 vfs_association/tls-init TRGT_ONLY = vtable-emission/delink-attribution gap. Not source-steerable.
 ??1mouse@receiver@input@vostok@@UAE@XZ	vostok/input/sources/receiver_mouse_win.cpp	input	done	MATCH	100	100	100	1	33	f	fb2807ebb91b	auto: at 100% ceiling, demoted from queue
@@ -7167,10 +7167,10 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1skeleton_mesh_gpu_skinning_2weights@render@vostok@@UAE@XZ	vostok/render/engine/sources/skeleton_mesh_gpu_skinning_2weights.cpp	render	done	MATCH	100	100	100	0	51	f	0451e539f73f	
 ??1skeleton_mesh_gpu_skinning_3weights@render@vostok@@UAE@XZ	vostok/render/engine/sources/skeleton_mesh_gpu_skinning_3weights.cpp	render	done	MATCH	100	100	100	0	51	f	0f5323e55f74	
 ??1skeleton_mesh_gpu_skinning_4weights@render@vostok@@UAE@XZ	vostok/render/engine/sources/skeleton_mesh_gpu_skinning_4weights.cpp	render	done	MATCH	100	100	100	0	51	f	a392440e7143	
-??1skeleton_model_instance@render@vostok@@UAE@XZ	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	91	f	1310d5d88106	
+??1skeleton_model_instance@render@vostok@@UAE@XZ	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	91	f	440cb9692a74	
 ??1skeleton_render_model_instance@render@vostok@@UAE@XZ	vostok/render/engine/sources/render_model_skeleton.cpp	render	done	MATCH	100	100	100	0	160	f	aef8fade896d	
 ??1sky_ambient_occlusion@render@vostok@@QAE@XZ	vostok/render/engine/sources/sky_ambient_occlusion.cpp	render	done	MATCH	100	100	100	1	30	f	137f554ee0f6	Empty destructor is faithful; target inlines intrusive res_texture destroy_impl, stale base calls resource_manager::release.
-??1sliced_cube_geometry@render@vostok@@QAE@XZ	vostok/math_half_inline.h	vostok	done	MATCH	100	100	100	0	81	f	42efae71705b	
+??1sliced_cube_geometry@render@vostok@@QAE@XZ	vostok/math_half_inline.h	vostok	done	MATCH	100	100	100	0	81	f	8965b8b2fb95	
 ??1socket_holder@detail@asio@boost@@QAE@XZ	boost/asio/detail/socket_holder.hpp	boost	done	MATCH	100	100	100	1	87		003fbbccf444	auto: at 100% ceiling, demoted from queue
 ??1sound_buffer@sound@vostok@@QAE@XZ	vostok/sound/sources/sound_buffer.cpp	sound	done	MATCH	100	100	100	1	71		0b56d40c0630	auto: at 100% ceiling, demoted from queue
 ??1sound_buffer_factory@sound@vostok@@QAE@XZ	vostok/sound/sources/sound_buffer_factory.cpp	sound	parked	MATCH	99.8451	99.8451	99.8451	1	203		67f624d361cb	Target statement/local shape is present; residual is MSVC inline partitioning, register/frame allocation, logging callback COMDAT attribution, or compiler-generated destruction state.
@@ -7245,7 +7245,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1texture_storage@render@vostok@@QAE@XZ	vostok/render/core/dx11/sources/texture_storage.cpp	render	done	MATCH	100	100	100	0	112	f	baeca8b30f8b	
 ??1thread_local_data@resources@vostok@@QAE@XZ	boost/intrusive/detail/tree_algorithms.hpp	boost	inprogress	MATCH	84.1304	84.1304	84.1304	0	124	f	cc7f3508c105	
 ??1thread_pool@tasks@vostok@@QAE@XZ	vostok/core/sources/tasks_thread_pool_utils.cpp	core	done	MATCH	100	100	100	0	344	f	fdcee6428bb7	
-??1translate_query_cook@resources@vostok@@UAE@XZ	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	7	f	62f2d77841a0	
+??1translate_query_cook@resources@vostok@@UAE@XZ	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	7	f	440cb9692a74	
 ??1triangle_mesh_buffer@collision@vostok@@UAE@XZ	vostok/collision/sources/triangle_mesh_geometry.h	collision	done	MATCH	100	100	100	0	91	f	d84ba60cc185	
 ??1triangle_mesh_geometry@collision@vostok@@UAE@XZ	vostok/collision/sources/triangle_mesh_geometry.cpp	collision	done	MATCH	100	100	100	0	47	f	0b56d40c0630	
 ??1triangle_mesh_geometry_instance@collision@vostok@@UAE@XZ	vostok/collision/sources/triangle_mesh_geometry_instance.cpp	collision	done	MATCH	100	100	100	1	7	f	137f554ee0f6	auto: at 100% ceiling, demoted from queue
@@ -7484,7 +7484,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??4texture_slot@render@vostok@@QAEAAV012@ABV012@@Z	vostok/render/core/dx11/res_xs_hw_impl.h	render	inprogress	MATCH	94.4872	94.4872	94.4872	1	96	f	3067a5ecca62	
 ??4vs_data@render@vostok@@QAEAAU012@ABU012@@Z	vostok/render/core/dx11/sources/xs_descriptor.cpp	render	done	MATCH	100	100	100	1	173	f	5265a9d130a3	
 ??4weapon_state@survarium@@QAEAAU01@ABU01@@Z	vostok/game_core/sources/weapon_state.cpp	game_core	done	MATCH	100	100	100	2	50		d5276a045c84	auto: at 100% ceiling, demoted from queue
-??7?$intrusive_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@Vsimple_lock@threading@5@@vostok@@QBE_NXZ	vostok/intrusive_ptr_inline.h	vostok	done	MATCH	100	100	100	0	8	f	914ea217ec40	
+??7?$intrusive_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@Vsimple_lock@threading@5@@vostok@@QBE_NXZ	vostok/intrusive_ptr_inline.h	vostok	done	MATCH	100	100	100	0	8	f	721b9ed29dd6	
 ??8?$Point@N@Render@Scaleform@@QBE_NABV012@@Z	src/render/render_types2d.h	gfx	done	MATCH	100	100	100	0	41	f		
 ??8?$Rect@N@Render@Scaleform@@QBE_NABV012@@Z	src/render/render_types2d.h	gfx	done	MATCH	100	100	100	0	67	f		
 ??8?$intrusive_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@Vsimple_lock@threading@5@@vostok@@QBE_NQBVinventory_item@survarium@@@Z	vostok/intrusive_ptr_inline.h	vostok	blocked				0	0	14	f		
@@ -7966,13 +7966,13 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_G?$basic_streambuf@DV?$char_traits@D@stlp_std@@@stlp_std@@UAEPAXI@Z	boost/asio/detail/impl/win_iocp_socket_service_base.ipp	boost	done	MATCH	100	100	100	0	44		20ee4f6f6dd3	
 ??_G?$basic_streambuf@V?$allocator@D@stlp_std@@@asio@boost@@UAEPAXI@Z	boost/asio/basic_streambuf.hpp	boost	done	MATCH	100	100	100	0	68		2ec9ecb59ef4	
 ??_G?$bind_t@XP6AXAAVqueries_result@resources@vostok@@V?$resource_ptr@Vbi_spline_skeleton_animation_baked@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@23@@ZV?$list2@U?$arg@$00@boost@@V?$value@V?$resource_ptr@Vbi_spline_skeleton_animation_baked@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@_bi@2@@_bi@boost@@@_bi@boost@@QAEPAXI@Z	boost/function/function_base.hpp	boost	done	MATCH	100	100	100	0	41	f	c92d87cfff83	
-??_G?$bind_t@XV?$mf2@XVanimated_model_instance_cook@render@vostok@@AAVqueries_result@resources@3@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@_mfi@boost@@V?$list3@V?$value@PAVanimated_model_instance_cook@render@vostok@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/bind/storage.hpp	boost	done	MATCH	100	100	100	0	41	f	1310d5d88106	
+??_G?$bind_t@XV?$mf2@XVanimated_model_instance_cook@render@vostok@@AAVqueries_result@resources@3@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@_mfi@boost@@V?$list3@V?$value@PAVanimated_model_instance_cook@render@vostok@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/bind/storage.hpp	boost	done	MATCH	100	100	100	0	41	f	3e2e1a1e5351	
 ??_G?$bind_t@XV?$mf2@XVobject_environment@survarium@@AAVqueries_result@resources@vostok@@AAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@_mfi@boost@@V?$list3@V?$value@PAVobject_environment@survarium@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@23@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	51	f	c92d87cfff83	
 ??_G?$bind_t@XV?$mf3@XVanimation_collection_cook@animation@vostok@@AAVqueries_result@resources@3@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@53@ABVbinary_config_value@configs@3@@_mfi@boost@@V?$list4@V?$value@PAVanimation_collection_cook@animation@vostok@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@V?$reference_wrapper@$$CBVbinary_config_value@configs@vostok@@@3@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/function/function_base.hpp	boost	done			100	100	0	41	f	c92d87cfff83	
 ??_G?$bind_t@XV?$mf3@XVweapon_cook@survarium@@AAVqueries_result@resources@vostok@@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@PAVweapon_core@2@@_mfi@boost@@V?$list4@V?$value@PAVweapon_cook@survarium@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@V?$value@PAVweapon@survarium@@@23@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/function/function_base.hpp	boost	blocked				0	0	39	f		
 ??_G?$btAxisSweep3Internal@G@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btaxissweep3.h	bullet	done	MATCH	100	100	100	0	45	f		
 ??_G?$cc_value@I@console_commands@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	70	f	c92d87cfff83	
-??_G?$concrete_type_helper@E@detail@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	45		3b189dbadffe	
+??_G?$concrete_type_helper@E@detail@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	45		440cb9692a74	
 ??_G?$concrete_type_helper@Ubooby_trap_set_cook_data@survarium@@@detail@vostok@@UAEPAXI@Z	vostok/intrusive_ptr_inline.h	vostok	done			100	100	0	44		1310d5d88106	
 ??_G?$deadline_timer_service@Vptime@posix_time@boost@@U?$time_traits@Vptime@posix_time@boost@@@asio@3@@asio@boost@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	69		440cb9692a74	
 ??_G?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@UAEPAXI@Z	vostok/intrusive_list_inline.h	vostok	done	MATCH	100	100	100	0	44		d8af7619e572	
@@ -7985,7 +7985,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_G?$functor_with_big_buffer_to_copy_command@Utrample_desc@render@vostok@@@render@vostok@@UAEPAXI@Z	vostok/render/facade/sources/scene_renderer.cpp	render	blocked	MATCH			0	0	30	f		
 ??_G?$intrusive_spsc_queue@Vasynchronous_device_query@fs_new@vostok@@V?$threads_channel_query_base_helper@Vasynchronous_device_query@fs_new@vostok@@@3@$03@vostok@@QAEPAXI@Z	vostok/intrusive_mpsc_queue_inline.h	vostok	done	MATCH	100	100	100	1	62		64029b8658f3	auto: at 100% ceiling, demoted from queue
 ??_G?$resolve_endpoint_op@Vtcp@ip@asio@boost@@V?$bind_t@XV?$mf3@XVasync_connector@network_core@vostok@@PAV?$basic_resolver@Vtcp@ip@asio@boost@@V?$resolver_service@Vtcp@ip@asio@boost@@@234@@ip@asio@boost@@ABVerror_code@system@7@V?$basic_resolver_iterator@Vtcp@ip@asio@boost@@@567@@_mfi@boost@@V?$list4@V?$value@PAVasync_connector@network_core@vostok@@@_bi@boost@@V?$value@PAV?$basic_resolver@Vtcp@ip@asio@boost@@V?$resolver_service@Vtcp@ip@asio@boost@@@234@@ip@asio@boost@@@23@U?$arg@$00@3@U?$arg@$01@3@@_bi@3@@_bi@4@@detail@asio@boost@@QAEPAXI@Z	boost/asio/detail/completion_handler.hpp	boost	done	MATCH	100	100	100	0	76		4553509e00d1	
-??_G?$resolver_service@Vtcp@ip@asio@boost@@@ip@asio@boost@@UAEPAXI@Z	boost/asio/impl/write.hpp	boost	done	MATCH	100	100	100	0	69		fa8187dd7628	
+??_G?$resolver_service@Vtcp@ip@asio@boost@@@ip@asio@boost@@UAEPAXI@Z	boost/asio/impl/write.hpp	boost	done	MATCH	100	100	100	0	69		50e7e0792c8f	
 ??_G?$service_base@Vwin_iocp_io_service@detail@asio@boost@@@detail@asio@boost@@UAEPAXI@Z	boost/asio/basic_io_object.hpp	boost	done			100	100	0	56			
 ??_G?$sound_instance_proxy_order_with_data@Ucreate_sound_propagator_params@sound@vostok@@@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/sound_instance_proxy_order.h	sound	done	MATCH	100	100	100	0	68		a7090491a738	
 ??_G?$sp_counted_impl_pd@PAXUnoop_deleter@socket_ops@detail@asio@boost@@@detail@boost@@UAEPAXI@Z	boost/asio/detail/impl/resolver_service_base.ipp	boost	done			100	100	0	45		440cb9692a74	
@@ -8512,7 +8512,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gartefact_container@survarium@@UAEPAXI@Z	vostok/game_core/artefact_container_core.h	game_core	blocked				53.2609	0	68	f		
 ??_Gartefact_container_core@survarium@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	blocked	MATCH		73.421	73.421	0	48			
 ??_Gartefact_lifebone_core@survarium@@UAEPAXI@Z	vostok/game_core/artefact_lifebone_core.h	game_core	done	MATCH	100	100	100	0	44		cc0cc0c7b032	
-??_Gasynchronous_device_query@fs_new@vostok@@UAEPAXI@Z	vostok/fs/device_file_system_no_watcher.h	fs	done	MATCH	100	100	100	0	45		d8da2b2e8825	
+??_Gasynchronous_device_query@fs_new@vostok@@UAEPAXI@Z	vostok/fs/device_file_system_no_watcher.h	fs	done			100	100	0	45		d8da2b2e8825	
 ??_Gbase_allocator@memory@vostok@@UAEPAXI@Z	stlport/stl/_algobase.h	stlport	done	MATCH	100	100	100	0	31	f	0a6ae1003628	
 ??_Gbase_lexeme@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/sources/base_lexeme.h	ai	done	MATCH	100	100	100	0	44		a5a9c5187998	
 ??_Gbase_scene@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	74	f	c09c2b7f1bc3	
@@ -8527,7 +8527,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gbooby_trap@survarium@@EAEPAXI@Z	vostok/game_core/booby_trap_core.h	game_core	done			100	100	0	30	f	c9d6e7775262	
 ??_Gbooby_trap_core@survarium@@MAEPAXI@Z	boost/utility/addressof.hpp	boost	done	MATCH	100	100	100	0	44		440cb9692a74	
 ??_Gbooby_trap_set@survarium@@EAEPAXI@Z	vostok/game/sources/booby_trap_set.h	game	done	MATCH	100	100	100	0	30	f	428c61ac6128	
-??_Gbooby_trap_set_core@survarium@@MAEPAXI@Z	vostok/game_core/booby_trap_set_core.h	game_core	done	MATCH	100	100	100	0	44		03b7c39b74f2	
+??_Gbooby_trap_set_core@survarium@@MAEPAXI@Z	vostok/game_core/booby_trap_set_core.h	game_core	done	MATCH	100	100	100	0	44		735747639952	
 ??_Gbox_geometry_instance@collision@vostok@@UAEPAXI@Z	vostok/collision/sources/sphere_geometry_instance.h	collision	done	MATCH	100	100	100	0	31	f	0ae133217e82	
 ??_Gbrain_unit@ai@vostok@@UAEPAXI@Z	vostok/intrusive_list_inline.h	vostok	done	MATCH	100	100	100	0	44		d8af7619e572	
 ??_Gbreath_state_normal@survarium@@UAEPAXI@Z	vostok/game_core/sources/breath_holding_states_inline.h	game_core	blocked				0	0	49			
@@ -8608,7 +8608,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gdoug_lea_mt_allocator@memory@vostok@@UAEPAXI@Z	vostok/core/sources/memory_doug_lea_mt_allocator.cpp	core	done	MATCH	100	100	100	0	51	f	3dfe7a08dedb	
 ??_Gdraw_lines_command@debug@render@vostok@@UAEPAXI@Z	vostok/render/facade/sources/debug_draw_lines_command_inline.h	render	done	MATCH	100	100	100	0	30	f	59a0cc824a2c	
 ??_Gdraw_triangles_command@debug@render@vostok@@UAEPAXI@Z	vostok/render/facade/sources/debug_draw_triangles_command_inline.h	render	done	MATCH	100	100	100	0	30	f	3919d0762bb1	
-??_Geffect_pick_light_luminance@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	31	f	440cb9692a74	
+??_Geffect_pick_light_luminance@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	31	f	440cb9692a74	
 ??_Gencoded_sound_with_qualities@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/encoded_sound_with_qualities.cpp	sound	done	MATCH	100	100	100	0	44		b242a016967b	
 ??_Genemy_perceptor@perceptors@ai@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	44		440cb9692a74	
 ??_Genemy_target_selector@selectors@ai@vostok@@UAEPAXI@Z	stlport/stl/_algo.c	stlport	done	MATCH	100	100	100	0	46		9d744def2444	
@@ -8626,7 +8626,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Ggame@survarium@@UAEPAXI@Z	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	0	30	f	62f2d77841a0	
 ??_Ggame_material_manager@survarium@@UAEPAXI@Z	stlport/stl/_tree.h	stlport	done	MATCH	100	100	100	0	44		46d18bc6461f	
 ??_Ggame_module_proxy@survarium@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	25	f	440cb9692a74	
-??_Ggame_options@survarium@@UAEPAXI@Z	vostok/game/sources/game_options.h	game	inprogress	MATCH	91.6667	91.6667	91.6667	0	31	f	cd7c15575c30	
+??_Ggame_options@survarium@@UAEPAXI@Z	vostok/game/sources/game_options.h	game	inprogress	MATCH	91.6667	91.6667	91.6667	0	31	f	38c7a140861f	
 ??_Ggame_world@survarium@@UAEPAXI@Z	vostok/game/sources/booby_trap_set_cook.h	game	done	MATCH	100	100	100	0	30	f	9f9fbf30677f	
 ??_Ggame_world_object@survarium@@UAEPAXI@Z	boost/utility/addressof.hpp	boost	done	MATCH	100	100	100	0	60		440cb9692a74	
 ??_Ggame_world_ui@survarium@@UAEPAXI@Z	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	30	f	5aa6c963bb23	
@@ -8686,7 +8686,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gogg_file_contents_cook@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/ogg_file_contents_cook.cpp	sound	done	MATCH	100	100	100	0	44		b242a016967b	
 ??_Gogg_sound@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/ogg_sound.cpp	sound	done	MATCH	100	100	100	0	44		df9efe402e0a	
 ??_Gogg_sound_cook@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/ogg_sound_cook.cpp	sound	done	MATCH	100	100	100	0	44		b242a016967b	
-??_Goperator_base@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/search/operator_inline.h	ai	done	MATCH	100	100	100	0	44		78d9fac29379	
+??_Goperator_base@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/search/operator_inline.h	ai	done	MATCH	100	100	100	0	44		589256e8cfc8	
 ??_Goracle@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/search/search_backward_inline.h	ai	done	MATCH	100	100	100	0	44		25fd9f73d1b0	
 ??_Gorder@network@vostok@@UAEPAXI@Z	vostok/network_core/http_client.h	network_core	done	MATCH	100	100	100	0	56		6589dbcb6a6f	
 ??_Goxygen_tank@survarium@@EAEPAXI@Z	vostok/game_core/oxygen_tank.h	game_core	done	MATCH	100	100	100	0	44		48b2089751e1	
@@ -8707,7 +8707,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gparticle_system_instance_impl@particle@vostok@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	44		d8af7619e572	
 ??_Gparticle_system_wrapper_cook@particle@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	64		972583414034	
 ??_Gparticle_world@particle@vostok@@UAEPAXI@Z	vostok/particle/base_particle_inline.h	particle	done	MATCH	100	100	100	1	44		63cfa5b506e8	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
-??_Gphysical_path_mounter@vfs@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	44		440cb9692a74	
+??_Gphysical_path_mounter@vfs@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	44		440cb9692a74	
 ??_Gpickup_item_perceptor@perceptors@ai@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	44		03b7c39b74f2	
 ??_Gpistol_weapon_core_show_state@survarium@@UAEPAXI@Z	vostok/animation/cubic_spline_skeleton_animation.h	game_core	parked	MATCH			0	1	47			Game-core deleting destructor misattributed to an animation header by folded COMDAT/PDB source ownership.
 ??_Gplayer@survarium@@UAEPAXI@Z	vostok/animation/linear_interpolator.h	game	parked	MATCH	97.7273	97.7273	97.7273	1	30	f	73f9b57a0341	Non-animation symbol misattributed to animation by folded COMDAT/PDB ownership.
@@ -8724,22 +8724,22 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Greceive_response@network@vostok@@UAEPAXI@Z	vostok/network/sources/receive_response.h	network	done	MATCH	100	100	100	0	46		96936487fb28	
 ??_Greceive_udp_response@network@vostok@@UAEPAXI@Z	vostok/network/sources/receive_udp_response.h	network	inprogress	MATCH	99.7059	99.7059	99.7059	0	46		ac26da846b5a	
 ??_Grender_cc_bool@render@vostok@@UAEPAXI@Z	vostok/render/core/dx11/sources/options.cpp	render	blocked				0	0	71	f		
-??_Grender_model@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_collision_object.h	render	inprogress	MATCH	97.7273	97.7273	97.7273	1	30	f	d60679d04e09	Removed the non-target explicit render_collision_object destructor. The target template class now has identical topology and the compiler-generated scalar deleting destructor is newly paired at 97.7%; residual is compiler destructor emission.
+??_Grender_model@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_collision_object.h	render	inprogress	MATCH	97.7273	97.7273	97.7273	1	30	f	d4d2bdfd72bb	Removed the non-target explicit render_collision_object destructor. The target template class now has identical topology and the compiler-generated scalar deleting destructor is newly paired at 97.7%; residual is compiler destructor emission.
 ??_Grender_output_window@render@vostok@@UAEPAXI@Z	vostok/render/core/dx11/backend_inline.h	render	blocked				44	0	77	f		
 ??_Grender_particle_emitter_instance@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_particle_emitter_instance.cpp	render	done	MATCH	100	100	100	0	30	f	36fa8311396b	
-??_Grender_surface@render@vostok@@UAEPAXI@Z	vostok/math_aabb_inline.h	vostok	done	MATCH	100	100	100	0	30	f	d60679d04e09	
+??_Grender_surface@render@vostok@@UAEPAXI@Z	vostok/math_aabb_inline.h	vostok	done	MATCH	100	100	100	0	30	f	2f4cb894c8fb	
 ??_Gresponse@network@vostok@@UAEPAXI@Z	vostok/network_core/http_client.h	network_core	done	MATCH	100	100	100	0	45		6589dbcb6a6f	
-??_Gruntime_error@stlp_std@@UAEPAXI@Z	stlport/stl/_string_base.h	stlport	done	MATCH	100	100	100	0	30	f	c01bc374d301	
+??_Gruntime_error@stlp_std@@UAEPAXI@Z	stlport/stl/_string_base.h	stlport	done	MATCH	100	100	100	0	30	f	c92d87cfff83	
 ??_Gscene@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/batched_geometry.h	render	done	MATCH	100	100	100	0	30	f	a2b64d5e7d9e	
 ??_Gscene_view@render@vostok@@UAEPAXI@Z	stlport/stl/_algobase.h	stlport	done	MATCH	100	100	100	0	30	f	b56199d19cc1	
 ??_Gselect_reactor@detail@asio@boost@@UAEPAXI@Z	boost/asio/detail/impl/service_registry.hpp	boost	done	MATCH	100	100	100	0	46		72398d143e08	
 ??_Gsend_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/send_order.h	network	done	MATCH	100	100	100	0	46		16e271dc66ca	
 ??_Gsend_queued_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/send_queued_order.h	network	done	MATCH	100	100	100	0	46		5bb5c08ad893	
 ??_Gshotgun_weapon_reload_state@survarium@@UAEPAXI@Z	vostok/game/sources/shotgun_weapon_reload_state.h	game	done	MATCH	100	100	100	0	30	f	dea250c9001c	
-??_Gsimple_game_project@survarium@@UAEPAXI@Z	vostok/vector_inline.h	vostok	done	MATCH	100	100	100	0	30	f	222f641982b5	
+??_Gsimple_game_project@survarium@@UAEPAXI@Z	vostok/vector_inline.h	vostok	done			100	100	0	30	f	222f641982b5	
 ??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	vostok/game/sources/animations_search_service.h	game	inprogress	MATCH	91.6667	91.6667	91.6667	0	32	f	fb69549f3322	
 ??_Gsingle_sound@sound@vostok@@UAEPAXI@Z	vostok/sound/single_sound.h	sound	done	MATCH	100	100	100	0	44		459e30b17911	
-??_Gsingle_sound_cook@sound@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	45		3b189dbadffe	
+??_Gsingle_sound_cook@sound@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	45		440cb9692a74	
 ??_Gskeleton@animation@vostok@@UAEPAXI@Z	vostok/animation/skeleton_inline.h	animation	parked				100	2	36	f		Compiler-generated deleting-destructor presence/COMDAT residual.
 ??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	vostok/animation/anim_track_common.h	render	parked	MATCH	95	95	95	1	60	f	36d2acb3cbe0	Non-animation symbol misattributed to animation by folded COMDAT/PDB ownership.
 ??_Gskeleton_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/animation/anim_track_common.h	render	done	MATCH	100	100	100	1	30	f	36d2acb3cbe0	Non-animation symbol misattributed to animation by folded COMDAT/PDB ownership.
@@ -8756,7 +8756,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gsound_scene@sound@vostok@@UAEPAXI@Z	vostok/sound/atomic_half3.h	sound	done			100	100	0	44			
 ??_Gsound_spl@sound@vostok@@UAEPAXI@Z	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	0	44		b242a016967b	
 ??_Gsound_world@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/sound_world.h	sound	done	MATCH	100	100	100	0	44		4a11801f650b	
-??_Gspecified_action@planning@ai@vostok@@QAEPAXI@Z	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	89		222f641982b5	
+??_Gspecified_action@planning@ai@vostok@@QAEPAXI@Z	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	89		b56199d19cc1	
 ??_Gspeed_tree_allocator@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/speedtree.cpp	render	blocked				0	0	31	f		
 ??_Gspeedtree_instance_impl@render@vostok@@UAEPAXI@Z	vostok/render/facade/model.h	render	done	MATCH	100	100	100	0	30	f	0166917c0465	
 ??_Gspeedtree_tree@render@vostok@@UAEPAXI@Z	vostok/render/facade/model.h	render	done	MATCH	100	100	100	0	30	f	64e04e63f25d	
@@ -8766,7 +8766,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gstage_ambient_occlusion@render@vostok@@UAEPAXI@Z	vostok/math_color.h	vostok	blocked				100	0	30	f		
 ??_Gstage_forward@render@vostok@@UAEPAXI@Z	vostok/render/core/dx11/destroy_data_helper.h	render	inprogress	MATCH	97.7273	97.7273	97.7273	0	30	f	178e80554020	
 ??_Gstage_gbuffer@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/stage_gbuffer.cpp	render	done	MATCH	100	100	100	0	30	f	73710ca47d05	
-??_Gstage_light_propagation_volumes@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	inprogress	MATCH	91.6667	91.6667	91.6667	0	31	f	cc7f3508c105	
+??_Gstage_light_propagation_volumes@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	inprogress	MATCH	91.6667	91.6667	91.6667	0	31	f	440cb9692a74	
 ??_Gstage_lights@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/capsule_light_effect.h	render	done	MATCH	100	100	100	0	30	f	867909f99a9d	
 ??_Gstage_particles@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH	100	100	100	0	30	f	0725a459ce6f	
 ??_Gstage_postprocess@render@vostok@@UAEPAXI@Z	stlport/stl/_alloc.h	stlport	done	MATCH	100	100	100	0	31	f	cc7f3508c105	
@@ -8776,7 +8776,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gstage_sun@render@vostok@@UAEPAXI@Z	vostok/math_half_inline.h	vostok	done	MATCH	100	100	100	0	30	f	177c02252664	
 ??_Gstage_visibility@render@vostok@@UAEPAXI@Z	vostok/math_randoms_generator.h	vostok	inprogress	MATCH	97.7273	97.7273	97.7273	0	30	f	cc7f3508c105	
 ??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/stage_volume_fog.h	render	inprogress	MATCH	97.7273	97.7273	97.7273	0	30	f	6f6aa9cfaf8a	
-??_Gstatic_model_instance@render@vostok@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	30	f	1310d5d88106	
+??_Gstatic_model_instance@render@vostok@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	30	f	440cb9692a74	
 ??_Gstatic_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/possible_sectors_holder.h	render	done	MATCH	100	100	100	0	30	f	a9b88fafde61	
 ??_Gstring_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/string_order.h	network	inprogress	MATCH	99.7059	99.7059	99.7059	0	46		5adeba0f33fc	
 ??_Gstring_response@network@vostok@@UAEPAXI@Z	vostok/network/sources/string_order.h	network	inprogress	MATCH	99.7059	99.7059	100	0	46		23194e871ad4	
@@ -8790,11 +8790,11 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gui_progress_bar@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_progress_bar.h	ui	done	MATCH	100	100	100	0	45	f	58175575d64c	
 ??_Gui_scroll_view@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_scroll_view.h	ui	done	MATCH	100	100	100	0	30	f	5f7f1e11112f	
 ??_Gui_text_edit@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_text_edit.h	ui	done	MATCH	100	100	100	0	30	f	cc2ee96cbd62	
-??_Gui_window@ui@vostok@@UAEPAXI@Z	stlport/stl/_algobase.c	stlport	done	MATCH	100	100	100	0	30	f	112db7bcc1ea	
+??_Gui_window@ui@vostok@@UAEPAXI@Z	stlport/stl/_algobase.c	stlport	done	MATCH	100	100	100	0	30	f	3067a5ecca62	
 ??_Gui_world@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_world.h	ui	done	MATCH	100	100	100	0	57	f	461534297c82	
 ??_Gunmanaged_resource@resources@vostok@@UAEPAXI@Z	boost/bind/storage.hpp	boost	blocked				0	0	30	f		
 ??_Gusable_object@survarium@@UAEPAXI@Z	vostok/game_core/ladder.h	game_core	done			100	100	0	44		da039f19c629	
-??_Guser_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_model.h	render	done	MATCH	100	100	100	0	46	f	d4d2bdfd72bb	
+??_Guser_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_model.h	render	done	MATCH	100	100	100	0	46	f	cc7f3508c105	
 ??_Gverify_callback_base@detail@ssl@asio@boost@@UAEPAXI@Z	boost/asio/ssl/detail/verify_callback.hpp	boost	done	MATCH	100	100	100	0	45		dca1fda47ead	
 ??_Gvfs_association@vfs@vostok@@UAEPAXI@Z	vostok/vfs/association.h	vfs	blocked	MATCH			0	0	45			
 ??_Gvfs_sub_fat_resource@resources@vostok@@UAEPAXI@Z	vostok/core/sources/resources_hdd_manager.h	core	done	MATCH	63.76	100	100	0	85	f	2d8bd1eb3c1f	
@@ -16503,7 +16503,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ReallocInPlace@Granulator@HeapPT@Scaleform@@QAE_NPAXIII@Z	src/kernel/heappt/heappt_granulator.cpp	gfx	done	MATCH	100	100	100	0	472	f		
 ?ReallocInPlace@SysAllocGranulator@HeapPT@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_root.cpp	gfx	done	MATCH	100	100	100	0	8	f		
 ?ReallocInPlace@SysAllocMapper@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocmapper.cpp	gfx	blocked				0	0	282	f		
-?ReallocInPlace@SysAllocPaged@Scaleform@@UAE_NPAXIII@Z	src/gfx/as2/as2_object.h	gfx	done			100	100	0	5	f		
+?ReallocInPlace@SysAllocPaged@Scaleform@@UAE_NPAXIII@Z	src/gfx/as2/as2_object.h	gfx	done	MATCH	100	100	100	0	5	f		
 ?ReallocInPlace@SysAllocStatic@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocstatic.cpp	gfx	done	MATCH	100	100	100	0	115	f		
 ?ReallocInPlace@SysAllocWinAPI@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocwinapi.cpp	gfx	blocked				0	0	10	f		
 ?ReallocInPlace@SysAllocWrapper@HeapPT@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_root.cpp	gfx	done	MATCH	100	100	100	0	50	f		
@@ -18101,7 +18101,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ToAvmCharacter@ObjectInterface@AS2@GFx@Scaleform@@QAEPAVAvmCharacter@234@XZ	src/gfx/as2/as2_object.cpp	gfx	done	MATCH	100	100	100	0	27	f		
 ?ToAvmCharacter@Value@AS2@GFx@Scaleform@@QBEPAVAvmCharacter@234@PBVEnvironment@234@@Z	src/gfx/as2/as2_value.cpp	gfx	done	MATCH	100	100	100	0	82	f		
 ?ToAvmDispContainerBase@AvmDisplayObjContainer@AS3@GFx@Scaleform@@UAEPAVAvmDisplayObjContainerBase@34@XZ	src/gfx/as3/as3_avmbutton.h	gfx	done	MATCH	100	100	100	0	11	f		
-?ToAvmInteractiveObjBase@AvmSprite@AS3@GFx@Scaleform@@UAEPAVAvmInteractiveObjBase@34@XZ	src/gfx/as3/as3_avmbutton.h	gfx	done	MATCH	100	100	100	0	11	f		
+?ToAvmInteractiveObjBase@AvmSprite@AS3@GFx@Scaleform@@UAEPAVAvmInteractiveObjBase@34@XZ	src/gfx/as3/as3_avmbutton.h	gfx	done	QUANTITY	100	100	100	0	11	f		
 ?ToAvmSpriteBase@AvmSprite@AS2@GFx@Scaleform@@UAEPAVAvmSpriteBase@34@XZ	src/gfx/as2/as2_avmsprite.h	gfx	done	MATCH	100	100	100	0	11	f		
 ?ToAvmSpriteBase@AvmSprite@AS3@GFx@Scaleform@@UAEPAVAvmSpriteBase@34@XZ	src/gfx/as3/as3_avmsprite.h	gfx	done	MATCH	100	100	100	0	11	f		
 ?ToBool@Value@AS2@GFx@Scaleform@@QBE_NPBVEnvironment@234@@Z	src/gfx/as2/as2_value.cpp	gfx	done	MATCH	100	100	100	0	230	f		
@@ -19088,7 +19088,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?add_body_part@damage_model@survarium@@QAEXQAVbody_part_parameters@2@@Z	vostok/game_core/sources/damage_model.cpp	game_core	done	MATCH	100	100	100	2	35		d7efb56d8268	auto: at 100% ceiling, demoted from queue
 ?add_bool_macro@?A0x5cfdc817@render@vostok@@YAXAAV?$fixed_vector@Ushader_macro@render@vostok@@$0IA@@3@PBD_N@Z	vostok/render/core/dx11/sources/shader_macros.cpp	render	done	MATCH	100	100	100	0	210	f	8b9a73a1d182	
 ?add_brain_unit@ai_world@ai@vostok@@UAEXV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@3@@Z	vostok/ai/sources/ai_world.cpp	ai	done	MATCH	100	100	100	0	84		45d3ce4fb2dc	
-?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z	vostok/core/sources/resources_fs_task_composite.cpp	core	blocked	QUANTITY		49.8333	49.8333	0	14	f		
+?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z	vostok/core/sources/resources_fs_task_composite.cpp	core	parked	QUANTITY		49.8333	49.8333	1	14	f		Archived one-statement push_back body is exact; target passes child in EAX with no stack cleanup while candidate uses the normal stack argument. Temporary retention anchor remains until real reachability preserves the standalone body.
 ?add_child@ui_window@ui@vostok@@UAEXPAUwindow@23@_N@Z	vostok/ui/sources/ui_window.cpp	ui	done	MATCH	100	100	100	1	70	f	da1f5d76bd45	auto: at 100% ceiling, demoted from queue
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	vostok/render/engine/sources/scene.cpp	render	inprogress	SIZE	97.2973	97.2973	97.2973	1	107	f	d8f60bdf7191	
 ?add_clouds@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABUcloud_parameters@34@@Z	vostok/render/engine/sources/render_engine_world_pc_dx11.cpp	render	done	MATCH	100	100	100	3	15	f	137f554ee0f6	Completed cloud facade-to-world reachability cone; restored queued facade callers and audited all eight target world wrappers.
@@ -19119,7 +19119,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?add_filters_list@action_instance@planning@ai@vostok@@QAEXPAV?$intrusive_list@U?$intrusive_list_item@PAV?$intrusive_list@U?$intrusive_list_item@PAVbase_filter@planning@ai@vostok@@@planning@ai@vostok@@PAU1234@$03Vsingle_threading_policy@threading@4@Vsize_policy@4@Vno_debug_policy@4@@vostok@@@planning@ai@vostok@@PAU1234@$03Vsingle_threading_policy@threading@4@Vsize_policy@4@Vno_debug_policy@4@@4@@Z	vostok/ai/sources/action_instance.cpp	ai	done	MATCH	100	100	100	0	122		eae773f27733	
 ?add_filters_list@goal@planning@ai@vostok@@QAEXPAV?$intrusive_list@U?$intrusive_list_item@PAV?$intrusive_list@U?$intrusive_list_item@PAVbase_filter@planning@ai@vostok@@@planning@ai@vostok@@PAU1234@$03Vsingle_threading_policy@threading@4@Vsize_policy@4@Vno_debug_policy@4@@vostok@@@planning@ai@vostok@@PAU1234@$03Vsingle_threading_policy@threading@4@Vsize_policy@4@Vno_debug_policy@4@@4@@Z	vostok/ai/sources/goal.cpp	ai	done	MATCH	100	100	100	0	200		7195da13021e	
 ?add_frustum@sector_double_query_preventer@culling@render@vostok@@QAEXABVfrustum@math@4@I@Z	vostok/render/engine/sources/sector_double_query_preventer.cpp	render	done	QUANTITY	100	100	100	2	58	f	8754ed33ab31	portal selection root and frustum image cone reconstructed from retail PDB topology and disassembly
-?add_fs_task@resources@vostok@@YAXQAVfs_task@12@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	blocked	SIZE			0	1	14	f		Complete v0.100b mount-path audit using target strings, statement structure, operand diffs, caller/callee edges, and comparison with the later archived source.
+?add_fs_task@resources@vostok@@YAXQAVfs_task@12@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	done	MATCH	100	100	100	2	14	f	f808ff68c0e9	Restored the archived developer if-composite/add_child else/resources_manager helper after auditing its inlined callers; the specialized standalone target now matches exactly.
 ?add_fs_task@resources_manager@resources@vostok@@QAEXPAVfs_task@23@@Z	vostok/core/sources/resources_manager_helper.cpp	core	done	MATCH	100	100	100	0	68		c19dbf621664	
 ?add_game_material@game_material_manager@survarium@@AAEXQBVgame_material@2@@Z	vostok/game_core/sources/game_material_manager.cpp	game_core	done	MATCH	100	100	100	1	64		a311257301ea	auto: at 100% ceiling, demoted from queue
 ?add_grass_layer@grass_world@render@vostok@@QAEXPAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N2@Z	vostok/render/engine/sources/grass_world.cpp	render	blocked				0	1	26	f		
@@ -20229,7 +20229,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?clear@color_matrix@particle@vostok@@AAEXXZ	vostok/particle/sources/color_matrix_inline.h	particle	done	MATCH	100	100	100	1	122		93199a3fb471	auto: at 100% ceiling, demoted from queue
 ?clear@effect_constant_storage@render@vostok@@QAEXXZ	vostok/render/core/dx11/sources/effect_constant_storage.cpp	render	blocked	QUANTITY			0	1	52	f		auto: at 100% ceiling, demoted from queue
 ?clear@grass_world@render@vostok@@QAEXXZ	vostok/render/engine/sources/grass_world.cpp	render	parked	SPLIT	67.2874	67.2874	67.2874	1	264	f	c9903cde04ed	Same clear()-expansion family as remove_patches across both containers.
-?clear@mutex_raii@simple_lock@threading@vostok@@QAEXXZ	vostok/threading_simple_lock.h	vostok	done	MATCH	100	100	100	0	25	f	fddbceb5ba19	
+?clear@mutex_raii@simple_lock@threading@vostok@@QAEXXZ	vostok/threading_simple_lock.h	vostok	done	MATCH	100	100	100	0	25	f	176dbbeb57e9	
 ?clear@operator_holder@planning@ai@vostok@@QAEXXZ	vostok/ai/sources/operator_holder.cpp	ai	done	MATCH	100	100	100	1	64		5231cfb478e7	auto: at 100% ceiling, demoted from queue
 ?clear@oracle_holder@planning@ai@vostok@@QAEXXZ	vostok/ai/sources/oracle_holder.cpp	ai	done	MATCH	100	100	100	1	95		d4a09ac3f64f	auto: at 100% ceiling, demoted from queue
 ?clear@overlapped_node_iterator@vfs@vostok@@QAEXXZ	vostok/vfs/sources/overlapped_node_iterator.cpp	vfs	done	MATCH	100	100	100	1	77		7dcaf08e75df	auto: at 100% ceiling, demoted from queue
@@ -21259,7 +21259,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?deallocate@task_allocator@tasks@vostok@@QAEXPAVtask@23@@Z	vostok/core/sources/tasks_allocator.cpp	core	done	QUANTITY	65.5526	100	100	0	106		4ae3c9542a45	
 ?deallocate_delayed_unmanaged_resources@resources_manager@resources@vostok@@QAEXXZ	vostok/core/sources/resources_manager_deallocation.cpp	core	done	MATCH	100	100	100	0	92	f	c3b3322f2134	
 ?deallocate_particle@particle_world@particle@vostok@@QAEXPAUbase_particle@23@@Z	vostok/particle/sources/particle_world.cpp	particle	done	MATCH	100	100	100	1	80		93ed50792948	auto: at 100% ceiling, demoted from queue
-?deallocate_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vpistol_weapon_core_aimed_fire_state@survarium@@@survarium@@@survarium@@EAEXPAX@Z	vostok/game/sources/weapon_sound_events_handler_state_cook_inline.h	game	done	MATCH	100	100	100	0	31	f	1b64e18b640a	
+?deallocate_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vpistol_weapon_core_aimed_fire_state@survarium@@@survarium@@@survarium@@EAEXPAX@Z	vostok/game/sources/weapon_sound_events_handler_state_cook_inline.h	game	done	MATCH	100	100	100	0	31	f	619171f5ce7c	
 ?deallocate_resource@bi_spline_skeleton_animation_baked_cook@animation@vostok@@EAEXPAX@Z	vostok/animation/sources/bi_spline_skeleton_animation_baked_cook.cpp	animation	done	MATCH	100	100	100	1	30	f	b520d26265e9	0/0 PDB statement structure; residual is allocator accessor/global folding around the same UNMANAGED_FREE call.
 ?deallocate_resource@binary_config_cook_impl@configs@core@vostok@@UAEXPAX@Z	vostok/core/sources/configs_binary_config_cook.cpp	core	done	MATCH	100	100	100	0	30	f	6bc196b76c74	
 ?deallocate_resource@effect_cook@render@vostok@@UAEXPAX@Z	vostok/render/core/dx11/sources/effect_cook.cpp	render	parked	MATCH	45.5	45.5	45.5	1	31	f	6990b73b47f0	Retail inlines FREE's null-check/free helper while base retains the helper call; replacing the allocator API would falsify source.
@@ -27324,7 +27324,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ov_tell_func@ogg_utils@sound@vostok@@YAJPAX@Z	vostok/sound/sources/ogg_utils.cpp	sound	done	MATCH	100	100	100	1	20		6e010cf69a2f	auto: at 100% ceiling, demoted from queue
 ?overStateGet@SimpleButton@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAAV?$SPtr@VDisplayObject@fl_display@Instances@AS3@GFx@Scaleform@@@456@@Z	src/gfx/as3/obj/display/as3_obj_display_simplebutton.cpp	gfx	done	MATCH	100	100	100	0	125	f		
 ?overStateSet@SimpleButton@fl_display@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@PAVDisplayObject@23456@@Z	src/gfx/as3/obj/display/as3_obj_display_simplebutton.cpp	gfx	done	MATCH	100	100	100	0	41	f		
-?overflow@?$basic_streambuf@DV?$char_traits@D@stlp_std@@@stlp_std@@MAEHH@Z	stlport/stl/_streambuf.c	stlport	done	MATCH	100	100	100	1	16		21dd044373f1	auto: at 100% ceiling, demoted from queue
+?overflow@?$basic_streambuf@DV?$char_traits@D@stlp_std@@@stlp_std@@MAEHH@Z	stlport/stl/_streambuf.c	stlport	done	MATCH	100	100	100	1	16		fd8e3ded11c3	auto: at 100% ceiling, demoted from queue
 ?overflow@?$basic_streambuf@V?$allocator@D@stlp_std@@@asio@boost@@MAEHH@Z	boost/asio/basic_streambuf.hpp	boost	done	MATCH	100	100	100	1	313		be194a1414ac	auto: at 100% ceiling, demoted from queue
 ?overlap_test_conservative@btPrimitiveTriangle@@QAE_NABV1@@Z	bullet/bulletcollision/gimpact/bttriangleshapeex.cpp	bullet	done	MATCH	100	100	100	1	333	f		auto: at 100% ceiling, demoted from queue
 ?overlapped_chain_is_expanded@vfs@vostok@@YA?AW4result_enum@12@PAV?$base_node@$00@12@AAUfind_environment@12@@Z	vostok/vfs/sources/find_sync.cpp	vfs	parked	SIZE	91.1475	91.1475	91.1475	0	185		a2a17b6885d6	vfs (/Od+/Ob2+/GL): structure faithful (11 re-paired via no_debug_policy fix). Residual = LTCG accessor inline-vs-call over correct structure; 5 vfs_association/tls-init TRGT_ONLY = vtable-emission/delink-attribution gap. Not source-steerable.
@@ -27952,7 +27952,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?query_create_resources_and_wait@resources@vostok@@YAXPBVcreation_request@12@IABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@QAPBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	vostok/core/sources/resources_impl.cpp	core	parked	SIZE	33.8364	85.5455	85.5455	1	158		a54e779cc4ac	Both sides have the same five-block flow and named local. Retail inlines query_resource_params member construction while the candidate retains its constructor call; forcing the target-undeclared inline boundary would falsify source.
 ?query_custom_operation@asynchronous_device_interface@fs_new@vostok@@QAE_NABUquery_custom_operation_args@23@PAVbase_allocator@memory@3@@Z	vostok/fs/sources/asynchronous_device_interface_commands.cpp	fs	parked	SIZE	92.6	92.6	92.6	0	316		dc043361384a	fs: structure faithful (verified). 5 TRGT_ONLY injected (open_cached_file 28-stmt cache fn, open_file_cache ctor, path_string_impl::operator=, convert_to_absolute_path_inplace + dtor) + a self-guard fix cascaded to 8 improvements. Residuals = /Ob2 inline-vs-call + ICF-fold codegen (SAME flags as target, /Ob2 picks inline-vs-call per-site on incomplete-program reachability). The 10 un-injectable TRGT_ONLY are ICF-folds (already in base under another COMDAT) / inline walls / need-reachability-from-outside-fs - require vtable-emission/delink-attribution, not source. Not steerable per-fn.
 ?query_data@stage_visibility@render@vostok@@AAE_NXZ	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	19	f	53529ccf6f88	reconstructed visibility caller cone from target PDB/disassembly
-?query_db@mount_by_config_helper@resources@vostok@@AAEXXZ	vostok/core/sources/resources_query_mount.cpp	core	parked	SIZE	66.6667	66.6667	75.0133	1	260	f	b821e7843ba1	5/5 statements and exact v0.100b ../../%s.db literal/local set. Target inlines virtual-path copy, query_mount_archive, and add_fs_task while retaining resources_manager::add_fs_task; candidate retains different helpers in that same chain.
+?query_db@mount_by_config_helper@resources@vostok@@AAEXXZ	vostok/core/sources/resources_query_mount.cpp	core	parked	SIZE	68.0667	68.0667	75.0133	2	260	f	b821e7843ba1	Restored the real add_fs_task branch cone and remeasured the five-statement v0.100b ../../%s.db path. Remaining gap is virtual-path construction/copy retention and associated helper scheduling.
 ?query_effects@material_effects_instance_cook@render@vostok@@QAEXAAVquery_result_for_cook@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	vostok/render/engine/sources/material_effects_instance_cook.cpp	render	parked	QUANTITY	83.4205	83.4205	83.4205	2	1820	f	335521babb48	Full target validation, config merge, request construction, sync/async query and destruction sequence is present with all target literals/locals; first CFG divergence is retail inlining early-return intrusive cleanup while base shares helper cleanup.
 ?query_expand_nodes@vfs@vostok@@YAXAAV?$intrusive_list@Unode_to_expand@vfs@vostok@@PAU123@$07Vsingle_threading_policy@threading@3@Vsize_policy@3@Vno_debug_policy@3@@2@PAUasync_callbacks_data@12@@Z	vostok/vfs/sources/find_async_tree.cpp	vfs	done	MATCH	100	100	100	0	286		43f44729acd1	
 ?query_finished_callback@game_resources_manager@resources@vostok@@QAEXPAVresource_base@23@@Z	vostok/core/sources/game_resman.cpp	core	done	SIZE	83.5417	100	100	1	76	f	4ad059e6318c	auto: at 100% ceiling, demoted from queue
@@ -27977,9 +27977,9 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?query_mount@resources@vostok@@YAXPBDV?$function@$$A6AXV?$intrusive_ptr@Vfs_task_unmount@resources@vostok@@Vintrusive_fs_task_unmount_base@23@Vsimple_lock@threading@3@@vostok@@@Z@boost@@PAVbase_allocator@memory@2@@Z	vostok/core/sources/resources_query_mount.cpp	core	done	MATCH	100	100	100	0	90	f	3076bb7c30b1	
 ?query_mount@virtual_file_system@vfs@vostok@@QAEXAAVquery_mount_arguments@23@@Z	vostok/vfs/sources/virtual_file_system.cpp	vfs	done	MATCH	100	100	100	1	78		ee6d9a63d552	auto: at 100% ceiling, demoted from queue
 ?query_mount_and_wait@vfs@vostok@@YA?AUmount_result@12@AAVvirtual_file_system@12@AAVquery_mount_arguments@12@V?$function@$$A6AXXZ@boost@@@Z	vostok/vfs/sources/virtual_file_system.cpp	vfs	parked	SIZE	84.8969	84.8969	89.3815	0	308		e68fdcbc7040	vfs (/Od+/Ob2+/GL): structure faithful (11 re-paired via no_debug_policy fix). Residual = LTCG accessor inline-vs-call over correct structure; 5 vfs_association/tls-init TRGT_ONLY = vtable-emission/delink-attribution gap. Not source-steerable.
-?query_mount_archive@resources@vostok@@YAXABVvirtual_path_string@fs_new@2@ABVnative_path_string@42@1PBDABV?$function@$$A6AXV?$intrusive_ptr@Vfs_task_unmount@resources@vostok@@Vintrusive_fs_task_unmount_base@23@Vsimple_lock@threading@3@@vostok@@@Z@boost@@QAVbase_allocator@memory@2@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	parked	QUANTITY	93.5	93.5	93.5938	1	83	f	5741dad54de1	Identical three-block allocation flow. Target inlines add_fs_task then retains resources_manager::add_fs_task; candidate retains add_fs_task. PDB quantity difference is the allocation failure path/helper attribution.
+?query_mount_archive@resources@vostok@@YAXABVvirtual_path_string@fs_new@2@ABVnative_path_string@42@1PBDABV?$function@$$A6AXV?$intrusive_ptr@Vfs_task_unmount@resources@vostok@@Vintrusive_fs_task_unmount_base@23@Vsimple_lock@threading@3@@vostok@@@Z@boost@@QAVbase_allocator@memory@2@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	parked	MATCH	99.9062	99.9062	99.9062	2	83	f	5741dad54de1	Restored the real add_fs_task branch cone; target/base now have identical four-statement structure, size, and flow, with only caller-selected stack slots for constructor arguments differing.
 ?query_mount_impl@virtual_file_system@vfs@vostok@@AAEXAAVquery_mount_arguments@23@@Z	vostok/vfs/sources/virtual_file_system.cpp	vfs	parked	SIZE	88.1805	88.1805	88.1805	0	906		cebfbd07bc08	vfs (/Od+/Ob2+/GL): structure faithful (11 re-paired via no_debug_policy fix). Residual = LTCG accessor inline-vs-call over correct structure; 5 vfs_association/tls-init TRGT_ONLY = vtable-emission/delink-attribution gap. Not source-steerable.
-?query_mount_physical@resources@vostok@@YAXABVvirtual_path_string@fs_new@2@ABVnative_path_string@42@PBDW4watcher_enabled_bool@42@V?$function@$$A6AXV?$intrusive_ptr@Vfs_task_unmount@resources@vostok@@Vintrusive_fs_task_unmount_base@23@Vsimple_lock@threading@3@@vostok@@@Z@boost@@QAVbase_allocator@memory@2@W4recursive_bool@12@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	parked	SIZE	94.6429	94.6429	94.6429	1	105	f	ed32cacfac76	Single target statement and identical eight-block allocation/destruction CFG. Target inlines add_fs_task and retains resources_manager::add_fs_task; candidate retains the wrapper.
+?query_mount_physical@resources@vostok@@YAXABVvirtual_path_string@fs_new@2@ABVnative_path_string@42@PBDW4watcher_enabled_bool@42@V?$function@$$A6AXV?$intrusive_ptr@Vfs_task_unmount@resources@vostok@@Vintrusive_fs_task_unmount_base@23@Vsimple_lock@threading@3@@vostok@@@Z@boost@@QAVbase_allocator@memory@2@W4recursive_bool@12@QAVfs_task_composite@12@@Z	vostok/core/sources/resources_query_mount.cpp	core	parked	MATCH	97.0238	97.0238	97.0238	2	105	f	ed32cacfac76	Restored the real add_fs_task branch cone; target/base have identical one-statement structure and flow. Residual is one constructor argument dropped at the call boundary plus register scheduling in callback cleanup.
 ?query_new_target_if_needed@simple_animation_controller@survarium@@UAEXXZ	vostok/game/sources/simple_animation_controller.cpp	game	done	QUANTITY	100	100	100	0	41	f	a8b75b552f8b	
 ?query_new_target_if_needed@single_position_animation_controller@survarium@@UAEXXZ	vostok/game/sources/single_position_animation_controller.cpp	game	inprogress	QUANTITY	88.7037	88.7037	88.7037	1	68	f	1be4a1b1ec28	
 ?query_npc_dictionary@game_world@survarium@@AAEXXZ	vostok/game/sources/game_world_npc.cpp	game	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
@@ -30058,7 +30058,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?sputbackc@?$basic_streambuf@DV?$char_traits@D@stlp_std@@@stlp_std@@QAEHD@Z	stlport/stl/_streambuf.h	stlport	inprogress	SIZE	88.587	88.587	88.587	0	123		f1a2a0b842a6	
 ?sqrt@Math@fl@Classes@AS3@GFx@Scaleform@@QAEXAANN@Z	src/gfx/as3/obj/as3_obj_math.cpp	gfx	done	MATCH	100	100	100	0	18	f		
 ?sqrt@math@vostok@@YAMM@Z	vostok/math_functions_inline.h	vostok	done	MATCH	100	100	100	1	17	f	56983b97a87d	auto: at 100% ceiling, demoted from queue
-?sqrt_safe@@YAMM@Z	vostok/core/sources/math_quaternion.cpp	core	blocked	QUANTITY		14.0909	100	1	37	f	e1e3553af13d	Recovered target line geometry, declarations, constants, comparison semantics, and caller structure; audited remaining optimized boundaries.
+?sqrt_safe@@YAMM@Z	vostok/core/sources/math_quaternion.cpp	core	parked	QUANTITY		14.0909	100	2	37	f	e1e3553af13d	Archived ternary body and quaternion caller geometry are restored; target retains an optimized sqrtf-calling body while the anchored candidate emits a different standalone optimization context. Temporary retention anchor remains pending natural caller-cone retention.
 ?squeezeMemoryRange@MatrixPool@MatrixPoolImpl@Render@Scaleform@@AAE_NPAUDataPage@234@0W4SqueezeType@1234@@Z	src/render/render_matrixpool.cpp	gfx	inprogress	SIZE	98.528	98.528	98.528	0	478	f		
 ?stageFocusRectGet@Stage@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/display/as3_obj_display_stage.cpp	gfx	done	MATCH	100	100	100	0	22	f		
 ?stageFocusRectSet@Stage@fl_display@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@_N@Z	src/gfx/as3/obj/display/as3_obj_display_stage.cpp	gfx	done	MATCH	100	100	100	0	41	f		
@@ -30808,7 +30808,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?unpin@managed_node_owner@memory@vostok@@QAEXPBE@Z	vostok/core/sources/managed_node_owner.cpp	core	done	MATCH	100	100	100	1	55	f	549637de4cd9	auto: at 100% ceiling, demoted from queue
 ?unpinLayerBatches@TextPrimitiveBundle@Render@Scaleform@@AAEXXZ	src/render/render_textprimitivebundle.h	gfx	done	MATCH	100	100	100	0	82	f		
 ?unpin_compressed_file@query_result@resources@vostok@@AAEXABVconst_buffer@3@@Z	vostok/core/sources/resources_query_result.cpp	core	parked	SIZE	83.2	83.2	83.2	1	81	f	011be6f051ef	Single statement and identical CFG. Target stack-passes the reference and retains const_buffer::c_ptr; candidate carries the reference in EDX and inlines c_ptr. The entry/return convention is directly visible.
-?unpin_compressed_or_raw_file@query_result@resources@vostok@@AAEXABVconst_buffer@3@@Z	vostok/core/sources/resources_query_result.cpp	core	blocked	SIZE		19.1176	19.1176	0	45	f		
+?unpin_compressed_or_raw_file@query_result@resources@vostok@@AAEXABVconst_buffer@3@@Z	vostok/core/sources/resources_query_result.cpp	core	parked	SIZE		19.1176	19.1176	1	45	f		Exact four-statement branch source; target retains unpin_raw_file and uses an internal argument convention while candidate inlines that helper. Revisit through the real unpin caller cone.
 ?unpin_raw_buffer@query_result@resources@vostok@@AAEXABVconst_buffer@3@@Z	vostok/core/sources/resources_query_result.cpp	core	parked	SIZE	83.2	83.2	83.2	1	81	f	44cee953778e	Single statement and identical CFG. Target stack-passes the reference and retains const_buffer::c_ptr; candidate carries the reference in EDX and inlines c_ptr. The entry/return convention is directly visible.
 ?unpin_raw_file@query_result@resources@vostok@@AAEXABVconst_buffer@3@@Z	vostok/core/sources/resources_query_result.cpp	core	parked	SIZE	49	49	49	1	68	f	c85e983d8d27	Single source statement. Target retains const_buffer size/c_ptr and temporary-buffer constructors; candidate inlines those helpers and uses the alternate proven unpin_raw_buffer argument convention.
 ?unpin_reference_count_for_query_finished_callback@base_of_intrusive_base@resources@vostok@@AAEXXZ	vostok/core/sources/resources_intrusive_base.cpp	core	done	MATCH	100	100	100	0	24	f	6ff68ce784db	
