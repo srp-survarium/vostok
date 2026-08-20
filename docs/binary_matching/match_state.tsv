@@ -19814,7 +19814,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?buildLinearJacobian@btGeneric6DofConstraint@@IAEXAAVbtJacobianEntry@@ABVbtVector3@@11@Z	bullet/bulletdynamics/constraintsolver/btgeneric6dofconstraint.cpp	bullet	done	MATCH	100	100	100	1	520			auto: at 100% ceiling, demoted from queue
 ?buildOptimizedBvh@btBvhTriangleMeshShape@@QAEXXZ	bullet/bulletcollision/collisionshapes/btbvhtrianglemeshshape.cpp	bullet	done	MATCH	100	100	100	1	111	f		auto: at 100% ceiling, demoted from queue
 ?buildTree@btQuantizedBvh@@IAEXHH@Z	bullet/bulletcollision/broadphasecollision/btquantizedbvh.cpp	bullet	done	MATCH	100	100	100	1	308			auto: at 100% ceiling, demoted from queue
-?build_date@build@vostok@@YAPBDXZ	vostok/core/sources/build_extensions.cpp	core	done	MATCH	100	100	100	1	6	f	9772707fffe9	auto: at 100% ceiling, demoted from queue
+?build_date@build@vostok@@YAPBDXZ	vostok/core/sources/build_extensions.cpp	core	done	MATCH	100	100	100	1	6	f	48e04c976a6e	auto: at 100% ceiling, demoted from queue
 ?build_from_config@render@vostok@@YAXAAV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAUskeleton_combined_cook_data@12@@Z	vostok/render/engine/sources/combined_model_cooker.cpp	render	inprogress	SIZE	97.0079	97.0079	97.0079	1	430		48cfa4b4d428	complete TU reconstructed; remaining byte/CFG gaps stop at target-vs-base LTCG helper inlining (path strings, resource pointers, delete/query wrappers); no steering
 ?build_lpv_geometry@game@survarium@@QAEXXZ	vostok/game/sources/game.cpp	game	parked	MATCH	85	85	85	2	23	f	46d0220e3079	WALL LTCG_CALL_BOUNDARY: source body and PDB structure match; target passes scene_renderer through EDX plus stack while base emits ordinary thiscall. Reopen only after scene_renderer::build_lpv_geometry or its compiler context changes.
 ?build_lpv_geometry@scene@render@vostok@@QAEXXZ	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	1	24	f	96aa3d615559	
@@ -24344,7 +24344,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?initialize@btConvexPolyhedron@@QAEXXZ	bullet/bulletcollision/collisionshapes/btconvexpolyhedron.cpp	bullet	done	MATCH	100	100	100	1	2256			auto: at 100% ceiling, demoted from queue
 ?initialize@bt_character_controller@physics@vostok@@QAEXXZ	vostok/physics/sources/character_controller.cpp	physics	parked	MATCH	88.4074	88.4074	88.4074	0	181	f	22d1ee043ed2	[PARTIAL 88.41%] Logically the same. The stack is used slightly differently in target. I don't know how to fix that or whether this is possible, even.
 ?initialize@bugtrap@debug@vostok@@YAXXZ	vostok/debug/sources/bugtrap_win.cpp	debug	done	MATCH	100	100	100	0	88		585da94fd1f3	
-?initialize@build@vostok@@YAXPAUengine@core@2@@Z	vostok/core/sources/build_extensions.cpp	core	inprogress	SPLIT	78.4108	79.5737	79.5737	0	390	f	1dd86b294733	
+?initialize@build@vostok@@YAXPAUengine@core@2@@Z	vostok/core/sources/build_extensions.cpp	core	done	MATCH	100	100	100	1	390	f	3c58cd2963e0	recovered 2012 epoch, forced-log form, and exact TU line geometry; byte and structure exact
 ?initialize@bullet_manager@survarium@@QAEXXZ	vostok/game_core/sources/bullet_manager.cpp	game_core	done	MATCH	100	100	100	2	24		1ffd2389dc66	auto: at 100% ceiling, demoted from queue
 ?initialize@bullet_physics_world@physics@vostok@@UAEXXZ	vostok/physics/sources/bullet_physics_world.cpp	physics	parked	SPLIT	99.3609	99.3609	99.3609	2	810		e001f5818a28	Retail source, named locals, and Bullet call order were verified. Residual is Bullet/helper inline retention, allocator statement splitting, register scheduling, symbol attribution, or a proven LTCG call-boundary convention.
 ?initialize@chat_handler@survarium@@QAEXABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@@Z	vostok/game/sources/chat_handler.cpp	game	inprogress	MATCH	99.993	99.993	99.993	1	421	f	b5360f02d98d	
@@ -34327,7 +34327,7 @@ btAllocDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	QUANTITY	100
 btFreeDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	QUANTITY	100	100	100	0	30	f		
 btSimdDot3	bullet/bulletdynamics/constraintsolver/btsequentialimpulseconstraintsolver.cpp	bullet	done	MATCH	100	100	100	0	28	f		
 build_bl_tree	zlib/trees.c	zlib	inprogress	SIZE	93.8039	93.8039	93.8039	1	199	f	ff162aa442b2	audited zlib 1.2.3 target structure and restored Release Win32 /O2 compiler context
-build_id	vostok/core/sources/build_extensions.cpp	core	inprogress	SIZE	80.6429	80.6429	80.6429	0	177	f	898779878902	
+build_id	vostok/core/sources/build_extensions.cpp	core	parked	MATCH	99.6429	99.6429	99.6429	1	177	f	898779878902	STRUCTURE MATCH and equal 177-byte CFG; remaining four substitutions only exchange EAX/ECX while pushing identical _stricmp arguments; archived wrapper, direct CRT, and &month_string[0] emit the same schedule
 build_tree	zlib/trees.c	zlib	inprogress	SIZE	98.4231	98.4231	98.4231	0	497	f	c826f660af23	
 calculate_desirable_resource_arenas	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	0	1032	f	b0ea9c2d195e	
 capsuleCapsuleDistance	bullet/bulletcollision/collisiondispatch/btconvexconvexalgorithm.cpp	bullet	done	MATCH	100	100	100	1	1047			auto: at 100% ceiling, demoted from queue

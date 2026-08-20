@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "build_extensions.h"
 
+
 static char s_print_build_id_string[]	=	"print_build_id";
 static vostok::command_line::key			s_print_build_id	(s_print_build_id_string, "", "", "prints build id to stdout");
 static pcstr s_build_date				= __DATE__;
@@ -98,8 +99,8 @@ static u32 build_id				( u32 const day, u32 const month, u32 const year, pcstr c
 
 u32 vostok::build::calculate_build_id ( pcstr current_date )
 {
-	// start development date (26.08.2008)
-	return						build_id( 26, 8, 2008, current_date );
+	// start development date (06.01.2012)
+	return						build_id( 6, 1, 2012, current_date );
 }
 
 void vostok::build::preinitialize	( pcstr const build_date )
@@ -110,7 +111,12 @@ void vostok::build::preinitialize	( pcstr const build_date )
 void vostok::build::initialize	( core::engine *  )
 {
 	u32 const id	=	calculate_build_id ( s_build_date );
-	LOG_INFO					(
+	LOGIFD_FORCED
+	(
+		"core",
+		logging::info,
+		&core::g_log_format,
+		NULL,
 		"%s build %d(internal id %d), %s",
 		VOSTOK_ENGINE_ID,
 		build_station_build_id(),
@@ -120,11 +126,15 @@ void vostok::build::initialize	( core::engine *  )
 
 	if ( s_print_build_id )
 	{
-		LOGFD_FORCED		(logging::info,
-							 logging::format_message,
-							 core::log_to_console,
-						     "%d",
-							 id);
+		LOGIFD_FORCED
+		(
+			"core",
+			logging::info,
+			logging::format_message,
+			core::log_to_console,
+			"%d",
+			id
+		);
 
 		debug::terminate	("");
 	}
