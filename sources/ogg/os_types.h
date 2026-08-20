@@ -19,12 +19,12 @@
 
 /* make it easy on the folks that want to compile the libs with a
    different malloc than stdlib */
-#if 0
+#if 1
 #	define _ogg_malloc  malloc
 #	define _ogg_calloc  calloc
 #	define _ogg_realloc realloc
 #	define _ogg_free    free
-#else // #if 0
+#else // #if 1
 	void* vostok_ogg_malloc( size_t size );
 	void* vostok_ogg_calloc( size_t count, size_t element_size );
 	void* vostok_ogg_realloc( void* pointer, size_t size );
@@ -33,7 +33,7 @@
 #	define _ogg_calloc  vostok_ogg_calloc
 #	define _ogg_realloc vostok_ogg_realloc
 #	define _ogg_free    vostok_ogg_free
-#endif // #if 0
+#endif // #if 1
 
 #if defined(_WIN32) 
 
