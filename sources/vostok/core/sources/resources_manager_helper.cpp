@@ -32,7 +32,7 @@ public:
 
 	virtual	void			translate_query			(resources::query_result_for_cook &	parent)
 	{
-		parent.finish_query	(result_error);
+		parent.finish_query	(result_success);
 	}
 
 	virtual void			delete_resource			(resources::resource_base *)
@@ -85,9 +85,9 @@ void   resources_manager::do_mount_mounts_path ()
 {
 	vfs::query_mount_arguments	mounts_args	=	vfs::query_mount_arguments::mount_physical_path
 												(unmanaged_allocator(), 
-												 "mounts", 
-												 m_mounts_path, 
-												 "mounts", 
+											 "mounts.sources",
+											 m_mounts_path,
+											 "mounts.sources",
 												 & m_hdd, 
 												 NULL, 
 												 NULL, 
@@ -111,9 +111,9 @@ void   resources_manager::do_mount_mounts_path ()
 	vfs::query_mount_arguments	mounts_converted_args	=	
 											vfs::query_mount_arguments::mount_physical_path
 												(unmanaged_allocator(), 
-												 "mounts.converted", 
-												 mounts_converted_path, 
-												 "mounts.converted", 
+											 "mounts",
+											 mounts_converted_path,
+											 "mounts",
 												 & m_hdd, 
 												 NULL, 
 												 NULL, 
