@@ -8,6 +8,11 @@
 #define CORE_INTERNAL_H_INCLUDED
 
 namespace vostok {
+
+namespace fs_new {
+class device_file_system_interface;
+} // namespace fs_new
+
 namespace core {
 namespace platform {
 
@@ -22,6 +27,7 @@ pcstr	current_directory		( );
 pcstr	application_name		( );
 pcstr   get_command_line		( );
 pcstr	user_data_directory		( );
+fs_new::device_file_system_interface*	get_core_device_file_system	( );
 
 void	set_application_name	( pcstr application_name );
 
