@@ -31463,7 +31463,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?write@device_file_system_no_watcher_proxy@fs_new@vostok@@QBE_KPAPAXPBX_K@Z	vostok/fs/sources/device_file_system_no_watcher.cpp	fs	done	MATCH	100	100	100	1	46		c042bd62654c	auto: at 100% ceiling, demoted from queue
 ?write@engine@detail@ssl@asio@boost@@QAE?AW4want@12345@ABVconst_buffer@45@AAVerror_code@system@5@AAI@Z	boost/asio/ssl/detail/impl/engine.ipp	boost	done	MATCH	100	100	100	0	109		bb6a617f0761	
 ?write@windows_hdd_file_system@fs_new@vostok@@UAE_KPAXPBX_K@Z	vostok/fs/sources/windows_hdd_file_system.cpp	fs	done	MATCH	100	100	100	1	85		0c0c7ddf1e92	auto: at 100% ceiling, demoted from queue
-?write@writer@memory@vostok@@UAEXPBXI@Z	vostok/core/sources/memory_writer.cpp	core	inprogress	MATCH	99.5536	99.5536	99.5536	0	134	f	dd8f54418dbb	
+?write@writer@memory@vostok@@UAEXPBXI@Z	vostok/core/sources/memory_writer.cpp	core	parked	MATCH	99.5536	99.5536	99.5536	1	134	f	dd8f54418dbb	Target and candidate both inline memory::copy into retained memcpy with identical 13-statement/12-block/134-byte shape and zero locals; residual is only EAX/ECX allocation while preparing the same destination/source stack arguments.
 ?writeBoolean@ByteArray@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@_N@Z	src/gfx/as3/obj/utils/as3_obj_utils_bytearray.cpp	gfx	done	MATCH	100	100	100	0	55	f		
 ?writeBoolean@Socket@fl_net@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@_N@Z	src/gfx/as3/obj/net/as3_obj_net_socket.cpp	gfx	blocked				0	0	55	f		
 ?writeByte@ByteArray@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@J@Z	src/gfx/as3/obj/utils/as3_obj_utils_bytearray.cpp	gfx	done	MATCH	100	100	100	0	51	f		
