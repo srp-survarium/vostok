@@ -17,8 +17,10 @@ namespace resources {
 
 void   add_fs_task						(fs_task * const new_task, fs_task_composite * const composite_task)
 {
-	(void)composite_task;
-	g_resources_manager->add_fs_task		(new_task);
+	if ( composite_task )
+		composite_task->add_child			(new_task);
+	else
+		g_resources_manager->add_fs_task	(new_task);
 }
 
 fs_task_composite *   create_mount_composite_helper_task_and_lock (memory::base_allocator * const allocator)
