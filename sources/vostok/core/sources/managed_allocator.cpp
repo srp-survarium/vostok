@@ -111,6 +111,8 @@ managed_node *   managed_allocator::allocate (u32 const size)
 
 void   managed_allocator::deallocate (managed_node * node)
 {
+
+
 	CURE_ASSERT								(node->is_allocated(),
 											 return,
 											 "resources:allocator",	"bah! already deallocated node: %s", node->owner()->log_string().c_str());
@@ -991,4 +993,3 @@ void   managed_allocator::defragment (u32 const sufficient_contigous_space)
 
 } // namespace memory		
 } // namespace resources 
-
