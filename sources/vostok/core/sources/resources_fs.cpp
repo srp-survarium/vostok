@@ -23,8 +23,9 @@ fs_new::physical_path_info   get_physical_path_info	(vfs::vfs_iterator const & i
 
 fs_new::physical_path_info   get_physical_path_info	(fs_new::native_path_string const & path, bool check_archive_on_the_way)
 {
-	(void)check_archive_on_the_way;
 	fs_new::synchronous_device_interface const &	device	=	g_resources_manager->get_synchronous_device();
+
+	R_ASSERT							(!check_archive_on_the_way);
 	return								device->get_physical_path_info(path);
 }
 
