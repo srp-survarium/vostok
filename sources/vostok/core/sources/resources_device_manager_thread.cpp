@@ -93,6 +93,7 @@ bool   device_manager::process_query	(query_result * query, fs_new::synchronous_
 	return									true;
 }
 
+
 bool   device_manager::open_file		(fs_new::file_type * *							out_file, 
 										 query_result *									query, 
 										 fs_new::synchronous_device_interface const &	device)
