@@ -14,7 +14,15 @@
 
 #ifndef NDEBUG
 #	define	VOSTOK_THREADING_INLINE
+#	if VOSTOK_PLATFORM_WINDOWS
 #		include <vostok/threading_functions_win_inline.h>
+#	elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
+#		include <vostok/threading_functions_xbox_inline.h>
+#	elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
+#		include <vostok/threading_functions_ps3_inline.h>
+#	else // #elif VOSTOK_PLATFORM_PS3
+#		error "create an implementation of threading functions for your platform"
+#	endif // #ifdef VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
 #	undef	VOSTOK_THREADING_INLINE
 #endif // #ifndef NDEBUG
 
