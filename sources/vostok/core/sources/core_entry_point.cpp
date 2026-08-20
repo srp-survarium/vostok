@@ -6,14 +6,6 @@
 
 #include "pch.h"
 
-// Temporary matching anchors for target-emitted bodies whose known retail uses were inlined.
-#pragma comment( linker, "/include:?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z" )
-#pragma comment( linker, "/include:?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z" )
-#pragma comment( linker, "/include:?set_multibyte@strings@vostok@@YA_NPADIPB_W@Z" )
-#pragma comment( linker, "/include:?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z" )
-#pragma comment( linker, "/include:?sqrt_safe@@YAMM@Z" )
-#pragma comment( linker, "/include:?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z" )
-#pragma comment( linker, "/include:?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z" )
 #include <vostok/core/core.h>
 
 #include "build_extensions.h"
@@ -110,9 +102,10 @@ void vostok::core::preinitialize		( core::engine *							engine,
 {
 	g_log_file_usage		= log_file_usage;
 	s_engine				= engine;
+
+
 	setlocale				( LC_COLLATE, ".ACP" );
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
-
 	using namespace			debug;
 	command_line::initialize( engine, command_line, command_line_contains_application );
 
@@ -131,9 +124,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 
 	memory::preinitialize	( );
 	build::preinitialize	( build_date );
-
 	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
-
 	g_log_format.set( logging::format_separator("{") +
 							  logging::format_thread_id +
 							  logging::format_time +
@@ -166,7 +157,6 @@ void vostok::core::initialize			(
 	setlocale				( LC_CTYPE, "" );
 
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
-
 	threading::initialize	( );
 
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
@@ -183,9 +173,18 @@ void vostok::core::initialize			(
 	strings::initialize		( );
 
 
+#if VOSTOK_PLATFORM_WINDOWS
 	fs_new::native_path_string replication_folder_string = core::user_data_directory( );
 	replication_folder_string.append_with_conversion( "/replication" );
 	pcstr const replication_folder	= replication_folder_string.c_str();
+#elif VOSTOK_PLATFORM_XBOX_360 // #if VOSTOK_PLATFORM_WINDOWS
+	pcstr const replication_folder	= "cache:/replication";
+#elif VOSTOK_PLATFORM_PS3 // #elif VOSTOK_PLATFORM_XBOX_360
+	pcstr const replication_folder	= SYS_DEV_HDD0 "/replication";
+#else // #elif VOSTOK_PLATFORM_PS3
+#	error define your platform
+#endif // #if VOSTOK_PLATFORM_WINDOWS
+
 
 	VOSTOK_UNREFERENCED_PARAMETER				(replication_folder);
 
@@ -196,16 +195,20 @@ void vostok::core::initialize			(
 #endif	// #ifndef MASTER_GOLD
 
 	if ( initialize_task_pool )
-		tasks::initialize		(	2 * threading::core_count(),	// tasks thread count
+		tasks::initialize		(	2 * math::min(16u, threading::core_count()),	// tasks thread count
 									64,								// user thread count
 									threading::core_count(), //1,								// minimum active task thread count
 									tasks::execute_while_wait_for_children_true,
 									tasks::do_logging_false
 								);
+
 	threading::set_current_thread_affinity	( 0 );
 	threading::on_thread_spawn	( threading::tasks_aware );
 	s_initialized			= true;
 }
+
+
+
 
 void	vostok::core::initialize_resources	(
 							fs_new::asynchronous_device_interface &	hdd,
@@ -217,7 +220,9 @@ void	vostok::core::initialize_resources	(
 
 	core_test_suite::singleton()->set_resources_path	( s_engine->get_resources_path() );
 
+
 	if ( s_mount_mounts_path )
+
 		resources::mount_mounts_path		( s_engine->get_mounts_path( ) );
 
 	static resources::unmanaged_allocation_cook		s_unmanaged_allocation_cook;
@@ -252,8 +257,8 @@ void vostok::core::finalize			( const bool finalize_task_pool )
 #endif	//MASTER_GOLD
 
 	strings::finalize		( );
-//	build::finalize			( );
-//	timing::finalize		( );
+	// build::finalize		( );
+	// timing::finalize		( );
 	threading::finalize		( );
 	memory::finalize		( );
 
@@ -286,3 +291,12 @@ pcstr vostok::core::user_data_directory( )
 {
 	return									s_engine->get_user_data_directory( );
 }
+
+// Temporary retention anchors; remove each when reconstructed reachability keeps it emitted.
+#pragma comment( linker, "/include:?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z" )
+#pragma comment( linker, "/include:?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z" )
+#pragma comment( linker, "/include:?set_multibyte@strings@vostok@@YA_NPADIPB_W@Z" )
+#pragma comment( linker, "/include:?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z" )
+#pragma comment( linker, "/include:?sqrt_safe@@YAMM@Z" )
+#pragma comment( linker, "/include:?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z" )
+#pragma comment( linker, "/include:?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z" )
