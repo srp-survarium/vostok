@@ -95,10 +95,8 @@ bool   resources_manager::thread_can_exit ()
 												local_data_allows;
 }
 
-// sushi@TODO: 83% residual is register allocation inside the LOG_WARNING expansion -
-// target keeps `result` in edi and emits `return result` (mov eax, edi) as its own
-// statement (line 114), our base puts it in ebx and folds the move into the epilogue.
-// Non-steerable from source; structure otherwise matches.
+// LOG_WARNING embeds __LINE__; keep the function's source-line position stable.
+
 cook_base *   resources_manager::unregister_cook (class_id_enum const resource_class)
 {
 	if ( s_cooks_registry.empty() )
@@ -108,8 +106,9 @@ cook_base *   resources_manager::unregister_cook (class_id_enum const resource_c
 	R_ASSERT									(resource_class < last_resource_class);
 	cook_base * const result				=	s_cooks_registry[resource_class];
 	if ( result && result->cook_users_count()!=0)
+
 		LOG_WARNING( "There are [%d] leaked resource(s). (classid = [%d])", result->cook_users_count(), resource_class );
-//		R_ASSERT_CMP							(result->cook_users_count(), ==, 0);
+
 
 	s_cooks_registry[resource_class]		=	NULL;
 	return										result;
@@ -130,7 +129,7 @@ void   resources_manager::dispatch_created_resources ()
 	while ( it_query )
 	{
 		query_result *	next_query			=	m_created_resources.get_next_of_object(it_query);
-//		LOG_INFO								("on_create_resource_end %s", it_query->log_string().c_str());
+
 		it_query->on_create_resource_end		();
 		it_query							=	next_query;
 	}
@@ -196,7 +195,7 @@ void   resources_manager::on_created_resource (query_result * query)
 	}
 	else
 	{
-// 		LOGI_WARNING("temp", "on_created_resource %s", query->get_requested_path());
+
 		m_created_resources.push_back		(query);
 	}
 
