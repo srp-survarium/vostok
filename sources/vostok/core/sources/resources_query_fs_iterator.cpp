@@ -113,7 +113,7 @@ bool   convert_virtual_to_physical_path	(fs_new::native_path_string * const		out
 	}
 
 	vfs::virtual_file_system * const	vfs	=	g_resources_manager->get_vfs();
-	return									vfs->convert_virtual_to_physical_path(out_path, path, mount_descriptor);	
+	return									vfs->convert_virtual_to_physical_path(out_path, path, sources_mount);	
 }
 
 void   query_erase_file 				(fs_new::native_path_string const &		opt_physical_path, 
