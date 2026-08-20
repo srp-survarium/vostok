@@ -5582,7 +5582,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0game_object_static@survarium@@QAE@AAVbase_game_scene@1@@Z	vostok/game/sources/object.cpp	game	done	MATCH	100	100	100	0	30	f	0b56d40c0630	
 ??0game_options@survarium@@QAE@AAVgame@1@@Z	vostok/game/sources/game_options.cpp	game	done	MATCH	100	100	100	1	64	f	0b56d40c0630	
 ??0game_resources_manager@resources@vostok@@QAE@XZ	vostok/core/sources/game_resman_data.h	core	done	MATCH	100	100	100	1	62	f	a345c3f63fea	auto: at 100% ceiling, demoted from queue
-??0game_resources_manager_data@resources@vostok@@QAE@XZ	vostok/core/sources/game_resman_data.h	core	inprogress	MATCH	83.4167	83.4167	83.4167	0	134	f	56efb4c45708	
+??0game_resources_manager_data@resources@vostok@@QAE@XZ	vostok/core/sources/game_resman_data.h	core	parked	MATCH	83.4167	83.4167	83.4167	1	134	f	56efb4c45708	Sole real caller is exact and source/CFG match; target inlines Boost.Intrusive init_header and empty set_size while candidate retains both calls. Requeue after broader core LTCG graph reconstruction; no force-inline hack added.
 ??0game_world@survarium@@QAE@AAVgame@1@@Z	vostok/game/sources/game_world.cpp	game	inprogress	SIZE	99.1653	99.1653	99.1653	2	956	f	5b13cee46c1a	G11: restored startup allocators, target ctor access/line geometry and uninitialized-member shape, natural profile/physics ownership, and retained IncludeAll until A05
 ??0game_world_ui@survarium@@QAE@AAVgame_world@1@@Z	vostok/game/sources/game_world_ui.cpp	game	inprogress	SIZE	89.0714	89.0714	89.0714	2	81	f	d8bb27971719	
 ??0gamepad@receiver@input@vostok@@QAE@IAAUworld@23@@Z	vostok/input/sources/receiver_gamepad_win_xbox360.cpp	input	done	MATCH	100	100	100	1	96	f	0a2655326bb9	auto: at 100% ceiling, demoted from queue
