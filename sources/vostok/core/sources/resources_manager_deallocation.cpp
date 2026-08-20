@@ -74,7 +74,7 @@ void   resources_manager::delete_unmanaged_resource (unmanaged_resource * dying_
 	memory_usage_type const memory_usage	=	dying_resource->memory_usage();
 	bool const is_delay_delete			=	dying_resource->is_delay_delete();
 	resource_base::creation_source_enum	creation_source	=	dying_resource->creation_source();
-	bool const is_helper_deallocate_resource	=	(dying_resource->creation_source() == resource_base::creation_source_deallocate_buffer_helper);
+
 	query_result * const destruction_observer	=	dying_resource->get_destruction_observer();
 
 	fs_new::virtual_path_string const request_path	=	dying_resource->request_path();
@@ -82,7 +82,7 @@ void   resources_manager::delete_unmanaged_resource (unmanaged_resource * dying_
 	if ( is_delay_delete )
 		debug()->unregister_delay_delete_unmanaged	(dying_resource);
 
-	if ( is_helper_deallocate_resource )
+	if ( creation_source == resource_base::creation_source_deallocate_buffer_helper )
 	{
 		dying_resource->~unmanaged_resource	();
 	}
