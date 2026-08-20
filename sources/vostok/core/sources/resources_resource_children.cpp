@@ -14,10 +14,10 @@ namespace resources {
 
 void   resource_children::link_parent_resource (resource_base * parent, u32 quality)
 {
-//	resource_link * const new_link		=	memory::g_resources_links_allocator.allocate();
+
 	resource_link* const new_link		=	VOSTOK_NEW_IMPL( memory::g_resources_links_allocator, resource_link )();
 	CURE_ASSERT								(new_link, return);
-//	new (new_link)							resource_link;
+
 	new_link->resource					=	parent;
 	new_link->quality_value				=	quality;
 	m_parent_resources.push_back			(new_link);
@@ -28,10 +28,10 @@ void   resource_children::link_child_resource (resource_base * child, u32 qualit
 	if ( quality != resource_link::not_a_quality_link )
 		child->set_flags			(resource_flag_is_quality_resource);
 
-//	resource_link * const new_link		=	memory::g_resources_links_allocator.allocate();
+
 	resource_link* const new_link		=	VOSTOK_NEW_IMPL( memory::g_resources_links_allocator, resource_link )();
 	CURE_ASSERT								(new_link, return);
-//	new (new_link)							resource_link;
+
 	new_link->resource					=	child;
 	new_link->quality_value				=	quality;
 	m_children_resources.push_back			(new_link);
@@ -65,7 +65,7 @@ void   resource_children::unlink_parent_resource (resource_base * parent)
 	find_resource_link_predicate			erase_predicate(parent);
 	CURE_ASSERT								(m_parent_resources.remove_if(erase_predicate), return);
 	ASSERT									(erase_predicate.found_link_);
-	//memory::g_resources_links_allocator.deallocate	(erase_predicate.found_link_);
+
 	VOSTOK_DELETE_IMPL						( memory::g_resources_links_allocator, erase_predicate.found_link_ );
 }
 
@@ -81,7 +81,7 @@ void   resource_children::unlink_child_resource (resource_base * child)
  	CURE_ASSERT								(m_children_resources.remove_if(erase_predicate), return);
 	resource_link * const link			=	erase_predicate.found_link_;
 	ASSERT_U								(link);
-	//memory::g_resources_links_allocator.deallocate	(erase_predicate.found_link_);
+
 	VOSTOK_DELETE_IMPL						( memory::g_resources_links_allocator, erase_predicate.found_link_ );
 }
 
