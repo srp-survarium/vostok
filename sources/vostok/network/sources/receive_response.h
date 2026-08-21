@@ -21,9 +21,7 @@ class receive_response :
 public:
 	typedef boost::function< void ( network_core::packet_reader& ) >	on_packet_received_type;
 
-	// no standalone symbol on either side; init list recovered from the inline
-	// expansion in tcp_packet_client::on_packet_received: receiver function1
-	// copy-ctor, allocator + packet reference stores
+	// Target emits this constructor only inline in tcp_packet_client::on_packet_received.
 	inline			receive_response	(
 			on_packet_received_type const& receiver,
 			memory::doug_lea_allocator& allocator,

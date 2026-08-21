@@ -17,8 +17,7 @@ class send_order : public order {
 public:
 	typedef boost::function< void ( network_core::tcp_packet const& ) >	send_type;
 
-	// STATE[INLINED]: no standalone target symbol (pdb_rich_query lists only
-	// dtor/execute/??_G); the only construction site is tcp_packet_client::send
+	// Target emits this constructor only inline in tcp_packet_client::send.
 	inline				send_order	(
 			send_type const& sender,
 			network_core::tcp_packet const& packet,
@@ -30,14 +29,12 @@ public:
 	{
 	}
 
-	// STATE[100%|DONE]
 	virtual				~send_order	( )
 	{
 		network_core::tcp_packet const* temp	= &m_packet;
 		VOSTOK_DELETE_IMPL	( m_allocator, temp );
 	}
 
-	// STATE[100%|DONE]
 	virtual	void		execute		( )
 	{
 		m_sender			( m_packet );

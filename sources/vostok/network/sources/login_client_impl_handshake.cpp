@@ -55,15 +55,12 @@ void login_client_impl::on_handshaked(
 	m_connection_state	= handshaked;
 	functor			( successfully_handshaked );
 }
-// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
-// schedule + the functor by-value bind copy lowering in the async_handshake bind
 void login_client_impl::handshake( boost::function< void ( handshaking_error_types_enum ) > const& functor, const u32 retry_count, const bool stop_timer )
 {
 	if ( m_connection_state == handshaked ) {
 		functor		( successfully_handshaked );
 		return;
 	}
-
 	LOG_INFO		( "[LOGIN] handshaking...\r\n" );
 
 	ASSERT			( UNKNOWN_EXPRESSION_T( m_connection_state == connected ) );
@@ -81,6 +78,9 @@ void login_client_impl::handshake( boost::function< void ( handshaking_error_typ
 		)
 	);
 }
+
+// LOG_INFO must remain at target source line 64; its retained __LINE__ value
+// controls the exact callback schedule (log-callback-ctor-schedule.md).
 
 } // namespace network
 } // namespace vostok

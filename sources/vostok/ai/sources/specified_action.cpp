@@ -54,13 +54,9 @@ bool specified_action::specify_property	( pddl_world_state_property_impl const& 
 		if ( specified_property.get_predicate() == state[i].get_predicate() &&
 			 are_instances_indices_equal( specified_property, state[i] ) )
 		{
-// 			if ( specified_property.get_value() != state[i].get_value() )
-// 			{
-				LOG_WARNING			( "attempt to add already set world state property, specification is skipping");
-				return				false;
-// 			}
-// 			else
-// 				continue;
+#line 59
+			LOG_WARNING			( "attempt to add already set world state property, specification is skipping");
+			return				false;
 		}
 	}
 	
@@ -89,6 +85,7 @@ void specified_action::debug_output	( specified_problem const& problem ) const
 {
 	if ( !m_prototype )
 	{
+#line 92
 		LOG_WARNING				( "attempt to manipulate with unspecified action" );
 		return;
 	}

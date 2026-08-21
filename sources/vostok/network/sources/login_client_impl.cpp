@@ -126,18 +126,14 @@ void login_client_impl::establish_connection( boost::function< void ( connection
 		);
 }
 
-// claude@NOTE: structure + locals match; residual = the LOG-helper callback-ctor
-// schedule (base emits it at the append site, target at block entry - see
-// log-callback-ctor-schedule.md) inside the LOG_INFO statement
+// LOG_INFO must remain at target source line 133; its retained __LINE__ value
+// affects callback construction (log-callback-ctor-schedule.md).
 void login_client_impl::close_connection( const bool stop_ping_timer )
 {
 	LOG_INFO				( "[LOGIN] closed connection\r\n" );
 
-
-
 	if ( stop_ping_timer )
 		m_ping_timer.cancel	( );
-
 
 	m_ssl_stream.~stream	( );
 	new ( &m_ssl_stream ) boost::asio::ssl::stream< boost::asio::ip::tcp::socket& >( m_socket, m_ssl_context );

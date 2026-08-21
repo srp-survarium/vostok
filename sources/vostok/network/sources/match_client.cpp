@@ -18,12 +18,10 @@
 using vostok::network::match_client;
 using vostok::network::match_client_impl;
 
-// TU-local order living at GLOBAL namespace (per the PDB): deferred destruction
-// of the match client + its allocators on the network thread
+// Global scope and private PDB name are part of the target type identity.
 class client_destroyer : public vostok::network::order {
 public:
-	// no standalone symbol; init list recovered from the inline expansion in
-	// match_client's dtor
+	// Target emits this constructor only inline in match_client::~match_client.
 	inline			client_destroyer	(
 						vostok::network_core::udp_match_packets_allocator_ptr const&	responses_allocator,
 						vostok::memory::base_allocator&			orders_allocator,
@@ -52,9 +50,6 @@ void match_client::create_client( vostok::network_core::udp_network_flow_emulato
 	ASSERT					( UNKNOWN_EXPRESSION_T( !*m_client ) );
 	match_client_impl* const temp	= VOSTOK_NEW_IMPL( m_world.responses_allocator( ), match_client_impl ) (
 		m_world.io_service( ), m_packets_orderer, options );
-
-
-
 	vostok::threading::interlocked_exchange_pointer( (pvoid&)*m_client, temp );
 	( *m_client )->set_on_packet_received	( boost::bind( &match_client::on_packet_received, this, _1, _2 ) );
 	( *m_client )->set_on_disconnect		( boost::bind( &match_client::on_disconnect, this, _1 ) );

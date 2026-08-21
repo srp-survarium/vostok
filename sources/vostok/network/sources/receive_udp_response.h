@@ -19,10 +19,7 @@ class receive_udp_response :
 	public boost::noncopyable
 {
 public:
-	// no standalone symbol on either side; init list recovered from the inline
-	// expansion in match_client::on_packet_received: copied_stats rep-movsd copy,
-	// receiver function1 copy-ctor, allocator intrusive_ptr copy-ctor, packet
-	// address, target_stats reference
+	// Target emits this constructor only inline in match_client::on_packet_received.
 	inline			receive_udp_response	(
 			boost::function< void ( network_core::packet_reader& ) > const& receiver,
 			network_core::udp_match_packets_allocator_ptr const& allocator,

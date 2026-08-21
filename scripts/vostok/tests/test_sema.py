@@ -137,6 +137,71 @@ class PairingTests(unittest.TestCase):
         b = [_full(0x2000, "?f@@YAXXZ")]
         self.assertEqual(self._pair_of(t, b), {"?f@@YAXXZ": (0x1000, 0x2000)})
 
+    def test_unscored_primary_pair_accepts_icf_aliased_call_operands(self):
+        caller = "?caller@@YAXXZ"
+        target_caller = dict(
+            _full(0x1000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "call  target_alias"}],
+        )
+        base_caller = dict(
+            _full(0x2000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "call  base_alias"}],
+        )
+        target_records = [
+            target_caller,
+            _full(0x1100, "?target_alias@@YAXXZ", name="void target_alias()"),
+            _full(0x1100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+        ]
+        base_records = [
+            base_caller,
+            _full(0x2100, "?base_alias@@YAXXZ", name="void base_alias()"),
+            _full(0x2100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+        ]
+        pairing = derive_pair(_Inputs(
+            index_by_mangled(target_records),
+            index_by_mangled(base_records),
+            target_records,
+            base_records,
+            {},
+        ))
+
+        self.assertEqual(pairing.pairs[caller].fuzzy, 100.0)
+
+    def test_icf_call_alias_evidence_refuses_an_ambiguous_operand(self):
+        caller = "?caller@@YAXXZ"
+        target_caller = dict(
+            _full(0x1000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "call  target_alias"}],
+        )
+        base_caller = dict(
+            _full(0x2000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "call  base_alias"}],
+        )
+        target_records = [
+            target_caller,
+            _full(0x1100, "?target_alias1@@YAXXZ", name="void target_alias()"),
+            _full(0x1100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+            _full(0x1200, "?target_alias2@@YAXXZ", name="void target_alias()"),
+        ]
+        base_records = [
+            base_caller,
+            _full(0x2100, "?base_alias@@YAXXZ", name="void base_alias()"),
+            _full(0x2100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+        ]
+        pairing = derive_pair(_Inputs(
+            index_by_mangled(target_records),
+            index_by_mangled(base_records),
+            target_records,
+            base_records,
+            {},
+        ))
+
+        self.assertIsNone(pairing.pairs[caller].fuzzy)
+
     def test_a_dynamic_initializer_pairs_across_the_namespace_gap(self):
         # the retail PDB puts the namespace OUTSIDE the quotes and ours puts it
         # inside; ~589 pairs exist only because this is reconciled, and they are
