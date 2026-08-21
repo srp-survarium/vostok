@@ -92,10 +92,6 @@ static vostok::uninitialized_reference<allocators_type>	s_allocators;
 
 static u64			s_arena_size	= 0;
 
-
-
-
-
 void vostok::memory::lock_process_heap		( )
 {
 	s_process_heap_walk->lock	( );
@@ -135,9 +131,6 @@ void vostok::memory::preinitialize			( )
 
 	//vostok::particle::g_particles_allocator.do_register			(		 10*Mb  ,	"particle system"		);
 
-
-
-
 	u32 mt_memory_amount						= 312*Mb;
 
 	if ( testing::run_tests_command_line () )
@@ -153,13 +146,6 @@ void vostok::memory::preinitialize			( )
 		else
 			register_debug_allocator			( result*Mb );
 	}
-
-
-
-
-
-
-
 
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
 	g_mt_allocator.do_register					( mt_memory_amount,	"global multithreaded"	);
@@ -285,8 +271,6 @@ void vostok::memory::finalize				( )
 
 //.	memory::dump_statistics		( );
 
-
-
 	allocators_type::reverse_iterator i			= s_allocators->rbegin( );
 	allocators_type::reverse_iterator const e	= s_allocators->rend( );
 	for ( ; i != e; ++i ) {
@@ -296,10 +280,6 @@ void vostok::memory::finalize				( )
 		(*i).allocator->finalize( );
 		platform::free_region	( (*i).arena_address, (*i).arena_size );
 	}
-
-
-
-
 
 	VOSTOK_DESTROY_REFERENCE		( s_allocators );
 	VOSTOK_DESTROY_REFERENCE		( s_process_heap_walk );
@@ -342,23 +322,12 @@ void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_a
 	R_ASSERT_CMP				( allocated_size, >=, crt_allocated_size + process_allocated_size );
 	u64 const vostok_used			= allocated_size - (crt_allocated_size + process_allocated_size);
 
-
-
-
-
-
-
-
-
-
-
-
+#line 356
 	LOGF_INFO					( logging::format_message, "---------------overall memory stats---------------" );
 	LOGF_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "size: " VOSTOK_PRINTF_SPEC_LONG_LONG(10), total_size );
-
 
 }
 

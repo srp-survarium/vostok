@@ -10,7 +10,6 @@
 #include <vostok/resources_unmanaged_resource.h>
 #include "resources_allocators.h"
 
-
 #include "game_resman.h"
 
 namespace vostok {

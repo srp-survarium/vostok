@@ -20,7 +20,6 @@ using vostok::threading::mutex;
 using vostok::logging::try_lock_log_mutex;
 using vostok::logging::try_unlock_log_mutex;
 
-
 static vostok::uninitialized_reference<mutex>	s_mutex;
 static vostok::core::engine * s_core_engine	=	NULL;
 
@@ -28,6 +27,7 @@ static vostok::core::engine * s_core_engine	=	NULL;
 void boost::throw_exception			( std::exception const& exception )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( exception );
+#line 31
 	FATAL							( "boost::throw_exception: %s", exception.what() );
 }
 #endif // #ifndef VOSTOK_STATIC_LIBRARIES

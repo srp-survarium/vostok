@@ -151,7 +151,6 @@ public:
 				 cook_base::use_current_thread_id, 
 				 allocate_in_current_thread ? cook_base::use_current_thread_id : cook_base::use_resource_manager_thread_id);
 
-
 			register_cook				(& cook);
 
 			work_with_specific_cooker	(& cook);

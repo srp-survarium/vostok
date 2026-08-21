@@ -303,7 +303,6 @@ void*   ppmd_allocator::MoveUnitsUp (void* OldPtr,UINT NU)
     return ptr;
 }
 
-
 inline void   ppmd_allocator::ExpandTextArea ()
 {
     BLK_NODE* p;
@@ -319,6 +318,5 @@ inline void   ppmd_allocator::ExpandTextArea ()
                 if ( !--Count[i] )          break;
             }
 }
-
 
 #endif // #define VOSTOK_PPMD_ALLOCATOR_H_INCLUDED

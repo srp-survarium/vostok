@@ -287,7 +287,6 @@ private:
 	threading::atomic32_type	m_count_of_pending_query_with_fat_it;
 	void						change_count_of_pending_query_with_fat_it		(long change);
 
-
 	//----------------------------------------------------------
 	// fs watcher notifications
 	//----------------------------------------------------------

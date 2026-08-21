@@ -16,6 +16,7 @@ void   resource_children::link_parent_resource (resource_base * parent, u32 qual
 {
 
 	resource_link* const new_link		=	VOSTOK_NEW_IMPL( memory::g_resources_links_allocator, resource_link )();
+#line 19
 	CURE_ASSERT								(new_link, return);
 
 	new_link->resource					=	parent;
@@ -28,8 +29,8 @@ void   resource_children::link_child_resource (resource_base * child, u32 qualit
 	if ( quality != resource_link::not_a_quality_link )
 		child->set_flags			(resource_flag_is_quality_resource);
 
-
 	resource_link* const new_link		=	VOSTOK_NEW_IMPL( memory::g_resources_links_allocator, resource_link )();
+#line 33
 	CURE_ASSERT								(new_link, return);
 
 	new_link->resource					=	child;

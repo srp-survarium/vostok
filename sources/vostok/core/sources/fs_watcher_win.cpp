@@ -348,7 +348,6 @@ intrusive_double_linked_list<	skip_deassociation_node, skip_deassociation_node *
 								& skip_deassociation_node::next, 
 								threading::simple_lock	>	s_skip_deassociation_nodes;
 
-
 static
 void   skip_deassociation_notification (pcstr physical_path)
 {
@@ -444,5 +443,4 @@ bool				try_remove_deassociation_notification	(pcstr) { return true; }
 
 } // namespace fs
 } // namespace vostok
-
 

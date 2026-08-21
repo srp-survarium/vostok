@@ -180,7 +180,6 @@ private:
 	void								lock_associated		() const;
 	void								unlock_associated	() const;
 
-
 	typedef	typename pointer_for_fat<fat_node, pointer_for_fat_size>::type	pointer_to_node;
 
 	pointer_to_node						m_next;
@@ -399,7 +398,6 @@ public:
 	fat_node<pointer_for_fat_size>		m_base;
 
 }; // class fat_db_inline_compressed_file_node
-
 
 //-----------------------------------------------------------------------------------
 // fat_disk_node

@@ -33,7 +33,6 @@ u32  spin_count_before_notify_task_system ()
 // thread_pool
 //-----------------------------------------------------------------------------------
 
-
 thread_pool::thread_pool(u32 const								max_task_threads,
 						 u32 const								max_user_threads,
 						 u32 const								min_permanent_working_threads,
@@ -160,6 +159,7 @@ void   thread_pool::log_columns_header ()
 		output								+=	column_output;
 	}
 
+#line 163
 	LOGIFD_FORCED								("tasks", logging::info, logging::format_message, core::log_to_console, "%s", output.c_str());
 }
 

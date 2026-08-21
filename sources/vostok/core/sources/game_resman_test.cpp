@@ -248,7 +248,6 @@ public:
 			logging::push_filter			( "core:grm", logging::silent, & memory::g_mt_allocator );
 			logging::push_filter			( "core:grm:test", logging::trace, & memory::g_mt_allocator );
 
-
 			logging::push_filter			( "core:grm", logging::trace, & memory::g_mt_allocator );
 		}
 

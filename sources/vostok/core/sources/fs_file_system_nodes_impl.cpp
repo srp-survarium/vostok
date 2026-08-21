@@ -625,7 +625,6 @@ bool   fat_node<pointer_for_fat_size>::get_inline_data (const_buffer * out_buffe
 	return									true;
 }
 
-
 template <pointer_for_fat_size_enum pointer_for_fat_size>
 bool   fat_node<pointer_for_fat_size>::set_inline_data (const_buffer const & buffer)
 {

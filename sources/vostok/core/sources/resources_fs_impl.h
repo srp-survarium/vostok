@@ -98,7 +98,6 @@ private:
 	fs::find_results_struct		m_find_results;
 };
 
-
 } // namespace resources
 } // namespace vostok
 

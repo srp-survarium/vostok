@@ -71,7 +71,6 @@ public:
 
 	void	fill_stats						(strings::text_tree_item & stats);
 
-
 private:
 	pending_query_list							m_pending_query_list;
 	vfs_lock_query_list							m_vfs_lock_query_list;

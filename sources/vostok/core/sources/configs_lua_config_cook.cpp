@@ -62,7 +62,6 @@ void   lua_config_cook::create_resource (resources::query_result_for_cook &	in_o
 		disk_path = path;
 	}
 
-
 	vostok::configs::lua_config *	out_config	=	create_lua_config_inplace( in_out_unmanaged_resource_buffer, disk_path.c_str(), reader);
 	
 	if ( !out_config ) {

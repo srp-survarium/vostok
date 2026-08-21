@@ -39,5 +39,4 @@ private:
 #error class must not be used in MASTER_GOLD
 #endif
 
-
 #endif // #ifndef SCRIPT_ENGINE_WRAPPER_H_INCLUDED

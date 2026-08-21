@@ -124,21 +124,6 @@ void binary_config_cook::translate_query	( query_result_for_cook & parent )
 
 	make_source_path							(& source_path, converted_path);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	request	fs_iterator_requests[]		=	{	{ source_path.c_str(), fs_iterator_class }, 
 												{ converted_path.c_str(), fs_iterator_class } };
 
@@ -168,9 +153,7 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 	}
 	#endif // #ifndef MASTER_GOLD
 
-
 	vfs::vfs_iterator const&				converted_path_it	= results[1].get_result_iterator();
-
 
 	if ( !converted_path_it )
 	{
@@ -178,19 +161,7 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 		return;
 	}
 
-
-
 	fs_new::physical_path_info const converted_info	=	get_physical_path_info(converted_path_it);
-
-
-
-
-
-
-
-
-
-
 
 	 if	(
 			converted_info.exists() &&
@@ -220,6 +191,7 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 			parent
 			);
 #else // #ifndef MASTER_GOLD
+#line 223
 		FATAL( "cannot find binary config [%s]!", source_path.c_str() );
 #endif // #ifndef MASTER_GOLD
 	 }

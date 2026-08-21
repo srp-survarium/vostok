@@ -36,7 +36,6 @@ void thread_main	( pvoid array_raw )
 	threading::interlocked_increment( s_threads_exited );
 }
 
-
 #if 0 
 
 DEFINE_TEST(threading_test, core_test_suite)

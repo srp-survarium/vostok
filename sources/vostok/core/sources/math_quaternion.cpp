@@ -6,8 +6,6 @@
 
 #include "pch.h"
 
-
-
 using vostok::math::quaternion;
 using vostok::math::float4x4;
 
@@ -21,82 +19,6 @@ inline float sqrt_safe( float val )
 
 quaternion::quaternion	( float4x4 const& matrix_raw )
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	R_ASSERT		( matrix_raw.valid() );
 	float4x4 matrix = matrix_raw;
@@ -119,7 +41,6 @@ quaternion::quaternion	( float4x4 const& matrix_raw )
 		E,
 		I
 	};
-
 
 	int biggest;
 	if (matrix.e00 > matrix.e11){
@@ -276,8 +197,6 @@ quaternion vostok::math::slerp ( quaternion const& q0, quaternion const& q1, con
 
 	return slerp_optimized( q0, q1, t );
 
-
-
 }
 
 quaternion extrapolated_slerp ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
@@ -296,57 +215,8 @@ quaternion extrapolated_slerp ( std::pair< quaternion, float > const* const begi
 	return		result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 quaternion vostok::math::weighted_blend ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
 {
-
 
 	return extrapolated_slerp( begin, end );
 }

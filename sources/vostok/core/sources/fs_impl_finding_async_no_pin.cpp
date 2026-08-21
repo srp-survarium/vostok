@@ -73,7 +73,6 @@ void   find_async_across_link (find_env & env)
 	path_string									path_across_link;
 	env.node->find_link_target_path				(& path_across_link);
 	path_across_link						+=	env.path_to_find + strings::length(env.partial_path);
-	
 
 	pstr const allocated_path_across_link	=	strings::duplicate(memory::g_resources_helper_allocator, path_across_link.c_str());
 

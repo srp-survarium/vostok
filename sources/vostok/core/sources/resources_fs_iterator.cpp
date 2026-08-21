@@ -314,5 +314,4 @@ void   sub_fat_pin_fs_iterator::clear_without_unpin ()
 } // namespace resources
 } // namespace vostok
 
-
 #endif // #if 0

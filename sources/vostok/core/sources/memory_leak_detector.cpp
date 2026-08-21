@@ -263,7 +263,6 @@ struct leak_logger
 	}
 }; // struct helper
 
-
 void leak_detector_dump_leaks	()
 {
 	s_leak_detector->dump_leaks	( );

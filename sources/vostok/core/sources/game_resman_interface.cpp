@@ -44,7 +44,6 @@ void   initialize_game_resources_manager ()
 	set_resource_freed_callback				(boost::bind(& game_resources_manager::on_resource_freed_callback, 
 														   g_game_resources_manager.c_ptr(), _1, _2, _3));
 
-	
 	vfs::virtual_file_system * const file_system	=	g_resources_manager->get_vfs();
 
 	file_system->on_node_hides			=	boost::bind(& game_resources_manager::on_node_hides, 

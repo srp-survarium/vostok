@@ -47,5 +47,4 @@ vfs_sub_fat_cook *		get_vfs_sub_fat_cook	();
 } // namespace resources
 } // namespace vostok
 
-
 #endif // #ifndef VFS_SUB_FAT_COOK_H_INCLUDED

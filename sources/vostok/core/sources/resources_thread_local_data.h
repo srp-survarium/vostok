@@ -79,7 +79,6 @@ public:
 	u32							disable_translate_query_counter_check;
 	fixed_string<32>			thread_name;
 
-
 	void	delete_this ()
 	{ 
 		thread_local_data * this_ptr	=	this;

@@ -477,7 +477,6 @@ void   query_result::finish_translated_query (cook_base::result_enum result)
 		}
 	}
 
-
 	try_push_created_resource_to_manager_might_destroy_this	();
 }
 

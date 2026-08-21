@@ -21,11 +21,11 @@ struct action_logger
 		: result(false), grm_test_resource(grm_test_resource), action_message(action_message)
 	{
 
-
 	}
 	~action_logger	()	
 	{ 
 		if ( grm_test_resource ) 
+#line 29
 			LOGI_INFO	("grm", "%s for %s : %s", action_message, grm_test_resource->name(), result ? "scheduled" : "failed"); 
 	}
 	
@@ -85,10 +85,6 @@ bool   resource_freeing_functionality::try_collect_parents_to_free(resource_base
 	resource_link_list & parents			=	resource->get_parents();
 	if ( parents.empty() )
 		return									true;
-
-
-
-
 
 	resource_link_list::mutex_raii	raii		(parents);
 	resource_link * it_parent				=	resource_link_list_front_no_dying(parents);
@@ -152,6 +148,7 @@ void   resource_freeing_functionality::release_sub_fat_from_parents (vfs_sub_fat
 		if ( !try_collect_to_free_resource(it_parent->resource) )
 		{
 			resource_base * const parent	=	it_parent->resource;
+#line 155
 			LOGI_WARNING					("resources", 
 											 "LEAK: %s or one of its parents is held by user"
 											 "when its sub-fat being unmounted, leak?",

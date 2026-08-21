@@ -31,7 +31,6 @@ void* virtual_alloc	(virtual_alloc_arena* arena, size_t size)
 			if ( i->next_free_region )
 				i->next_free_region->previous_free_region	= i->previous_free_region;
 
-
 			return							(i);
 		}
 

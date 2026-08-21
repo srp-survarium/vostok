@@ -109,7 +109,6 @@ cook_base *   resources_manager::unregister_cook (class_id_enum const resource_c
 
 		LOG_WARNING( "There are [%d] leaked resource(s). (classid = [%d])", result->cook_users_count(), resource_class );
 
-
 	s_cooks_registry[resource_class]		=	NULL;
 	return										result;
 }

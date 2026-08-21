@@ -158,8 +158,6 @@ private:
 	void				test_unmovables_list_valid		() const;
 	void				log_test_resources				() const;
 
-
-
 	bool												m_defragmenting;
 	u32													m_reserved_size;
 	mode_state											m_main_mode;

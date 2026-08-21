@@ -342,7 +342,6 @@ u32 cc_token::find_id( pcstr args )const
 	return u32(-1);
 }
 
-
 pcstr cc_token::find_name( u32 id )const
 {
 	u32 size  = num_commands	();
@@ -406,8 +405,6 @@ void cc_token::fill_command_args_list( vectora<pcstr>& dest ) const
 	for(u32 i=0; i<m_num_commands; ++i)
 		dest.push_back(m_commands[i].name);
 }
-
-
 
 class cc_help :public console_command
 {

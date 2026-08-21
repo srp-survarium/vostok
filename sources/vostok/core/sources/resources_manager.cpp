@@ -402,7 +402,6 @@ void   resources_manager::on_mounted (vfs::base_node<> * const node)
 											 memory_usage_type(unmanaged_memory, 
 															   sub_fat->mount_ptr->get_mount_size()));
 
-
 	node->set_mount_root_user_data			(sub_fat);
 
 	if ( g_game_resources_manager.initialized() )

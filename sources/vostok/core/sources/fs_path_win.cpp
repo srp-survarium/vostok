@@ -30,6 +30,5 @@ path_string   convert_to_native (pcstr path)
 	return								res;
 }
 
-
 } // namespace fs
 } // namespace vostok

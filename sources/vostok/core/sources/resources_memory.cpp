@@ -41,4 +41,3 @@ fixed_string512	  memory_usage_type::log_string () const
 } // namespace resources
 } // namespace vostok
 
-

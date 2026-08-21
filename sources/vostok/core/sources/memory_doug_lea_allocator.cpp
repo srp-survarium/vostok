@@ -44,13 +44,11 @@ static char __stdcall out_of_memory_with_crash	( mspace const space, void const*
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( parameter, space, first_time );
 
-
-
+#line 49
 	LOG_ERROR					( "out of memory in arena \"%s\"", (( doug_lea_allocator* )parameter)->arena_id( ) );
 
-
-
 	vostok::memory::dump_statistics( );
+#line 54
 	FATAL						( "not enough memory for arena [%s]", (( doug_lea_allocator* )parameter)->arena_id( ) );
 	return						0;
 }
@@ -62,10 +60,8 @@ static char __stdcall out_of_memory_silent		( mspace const space, void const* co
 	if ( first_time )
 		return					0;
 
-
-
-
 	vostok::memory::dump_statistics	( );
+#line 69
 	FATAL						( "not enough memory for arena [%s]", (( doug_lea_allocator* )parameter)->arena_id( ) );
 	return						1;
 }
@@ -98,8 +94,6 @@ void doug_lea_allocator::initialize_impl( pvoid arena, u64 arena_size, pcstr are
 	m_arena						= create_vostok_mspace_with_base( arena, arena_size, 0, m_crash_after_out_of_memory ? &out_of_memory_with_crash : &out_of_memory_silent, (pcvoid)this );
 }
 
-
-
 void doug_lea_allocator::finalize_impl	( )
 {
 	ASSERT						( m_arena, "arena is not initialized or is initialized more than once" );
@@ -127,13 +121,6 @@ pvoid doug_lea_allocator::malloc_impl	( size_t const size VOSTOK_CORE_DEBUG_PARA
 	if ( m_out_of_memory )
 		return					0;
 
-
-
-
-
-
-
-
 	VOSTOK_CORE_DEBUG_PARAMETERS_UNREFERENCED_GUARD;
 
 	ASSERT						( initialized ( ) );
@@ -142,6 +129,7 @@ pvoid doug_lea_allocator::malloc_impl	( size_t const size VOSTOK_CORE_DEBUG_PARA
 	if ( !result )
 	{
 		if ( !m_return_null_after_out_of_memory )
+#line 145
 			LOG_ERROR			( "out of memory!!!! (%s)", arena_id() ? arena_id() : "" );
 	}
 	m_out_of_memory				= m_return_null_after_out_of_memory & !result;

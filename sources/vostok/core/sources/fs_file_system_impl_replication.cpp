@@ -118,7 +118,5 @@ void   file_system_impl::commit_replication (fat_node<> * work_node)
 	}
 }
 
-
-
 } // namespace fs 
 } // namespace vostok 

@@ -24,7 +24,6 @@ void   resources_manager::out_of_memory_functionality::tick ()
 	}
 }
 
-
 } // namespace resources
 } // namespace vostok
 

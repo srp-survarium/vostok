@@ -66,8 +66,6 @@ void   device_manager::on_pre_allocated_size_change (int size_delta, query_resul
 	VOSTOK_UNREFERENCED_PARAMETER				(query);
 	R_ASSERT								(query->is_load_type());
 
-
-
 	R_ASSERT_CMP							(m_pre_allocated_size, >=, -size_delta);
 	m_pre_allocated_size				+=	size_delta;	
 }
@@ -146,8 +144,6 @@ void   device_manager::on_query_processed	(query_result * query, bool result)
 #pragma message(VOSTOK_TODO("implement replication here"))
 		NOT_IMPLEMENTED					("implement replication!");
 
-
-
 	}
 	else if ( query->is_save_type() )
 	{
@@ -166,6 +162,7 @@ void   device_manager::on_query_processed	(query_result * query, bool result)
 											 boost::bind(& resources_manager::dispatch_callbacks, g_resources_manager.c_ptr(), false));
 
 		R_ASSERT							(virtual_path);
+#line 169
 		LOGI_INFO							("resources", "written generated resource to file: '%s'", physical_path.c_str());
 		query->late_set_fat_it				(iterator);
 	}

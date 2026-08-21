@@ -79,8 +79,6 @@ vostok::core::configs::lua_config_cook& resources_manager::get_lua_config_cook	(
 
 #endif //MASTER_GOLD
 
-
-
 void   resources_manager::do_mount_mounts_path ()
 {
 	vfs::query_mount_arguments	mounts_args	=	vfs::query_mount_arguments::mount_physical_path

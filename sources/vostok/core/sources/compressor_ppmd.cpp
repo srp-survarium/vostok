@@ -13,8 +13,6 @@
 
 #pragma message( VOSTOK_TODO("PS3: PPMD compressor") )
 
-
-
 #pragma warning (push)
 #pragma warning (disable: 4244)
 #pragma warning (disable: 4189)
@@ -382,7 +380,6 @@ ppmd_compressor::~ppmd_compressor ()
 }
 
 } // namespace vostok
-
 
 //--------------------------------------------------------
 // ppmd_compressor_impl implementation
@@ -848,7 +845,6 @@ void   ppmd_compressor_impl::UpdateModel (PPM_CONTEXT* MinContext)
     UINT ns1, ns, cf, sf, s0, FFreq=FoundState->Freq;
     BYTE Flag, sym, FSymbol=FoundState->Symbol;
 
-
     if( FFreq < MAX_FREQ/4  &&  pc ) 
     {
         if ( pc->NumStats ) 
@@ -889,7 +885,6 @@ void   ppmd_compressor_impl::UpdateModel (PPM_CONTEXT* MinContext)
     if (m_allocator.pText >= m_allocator.UnitsStart)                
         goto RESTART_MODEL;
 
-
     if( FSuccessor ) 
     {
         if ((BYTE*) FSuccessor < m_allocator.UnitsStart)
@@ -902,7 +897,6 @@ void   ppmd_compressor_impl::UpdateModel (PPM_CONTEXT* MinContext)
     
     if( !FSuccessor )                          
         goto RESTART_MODEL;
-
 
     if( !--OrderFall ) 
     {
@@ -1171,7 +1165,6 @@ void   ppmd_compressor_impl::ClearMask (_PPMD_FILE* EncodedFile,_PPMD_FILE* Deco
     if (++PrintCount == 0)                  PrintInfo(DecodedFile,EncodedFile);
 }
 
-
 void _STDCALL   ppmd_compressor_impl::EncodeFile (_PPMD_FILE* EncodedFile,_PPMD_FILE* DecodedFile, int MaxOrder,MR_METHOD MRMethod)
 {
     rcInitEncoder();
@@ -1382,9 +1375,6 @@ void   _STDCALL   ppmd_compressor_impl::StartModelRare (int MaxOrder, MR_METHOD 
     }
 }
 
-
-
-
 /****************************************************************************
  *  This file is part of PPMd project                                       *
  *  Contents: 'Carryless rangecoder' by Dmitry Subbotin                     *
@@ -1399,7 +1389,6 @@ typedef unsigned char uc;
 #define  DO(n)     for (int _=0; _<n; _++)
 #define  TOP       (1<<24)
 #define  BOT       (1<<16)
-
 
 class RangeCoder
 {

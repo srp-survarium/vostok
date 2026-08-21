@@ -27,7 +27,6 @@ static float4x4 invert_impl								( float4x4 const& other, float const determin
 	//}
 	R_ASSERT		( vostok::math::is_relatively_similar( determinant, other.determinant4x3( ), vostok::math::epsilon_5 ) );
 
-
 	float const	inverted_determinant = 1.f / determinant;
 
 	float4x4	result;
@@ -141,7 +140,6 @@ bool float4x4::try_invert								( float4x4 const& other )
 	return		( true );
 }
 
-
 float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order ) const // zxy indeed
 {
 	ASSERT_U( order == rotation_zxy);
@@ -150,9 +148,7 @@ float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order )
 	ASSERT	( !math::is_zero( k.xyz().length( ) ), "vector 'k' is 0 !" );
 	float3 result;
 
-
 	float inv_scale_z		=	1 / sqrt( k.xyz().squared_length( ) );
-
 
 	float const ky_wo_scale	=	k.y * inv_scale_z;
 	if ( ky_wo_scale < 1.f ) {
@@ -167,7 +163,6 @@ float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order )
 			result.x = -pi_d2;
 			result.y = 0.f;
 
-
 			result.z = -atan2(i.z, i.x);
 		}
 	}
@@ -175,27 +170,11 @@ float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order )
 		result.x = pi_d2;
 		result.y = 0.f;
 
-
 		result.z = atan2(i.z, i.x);
 	}
 
 	return result;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 float3 float4x4::get_angles_xyz				( ) const
 {
@@ -205,9 +184,6 @@ float3 float4x4::get_angles_xyz				( ) const
 
 	float inv_scale_x		=	1 / i.xyz().length( );
 
-
-
-
 	float3 result;
 	float const iz_wo_scale	=	i.z * inv_scale_x;
 	if ( iz_wo_scale < 1.f ) {
@@ -215,16 +191,12 @@ float3 float4x4::get_angles_xyz				( ) const
 			result.x = atan2(-j.z * (1 / j.xyz().length( )), k.z * (1 / k.xyz().length( )));
 			result.y = asin(iz_wo_scale);
 
-
 			result.z = atan2(-i.y, i.x);
 		}
 		else {
 
-
 			result.x = -atan2(j.x, j.y);
 			result.y = -pi_d2;
-
-
 
 			result.z = 0.f;
 		}

@@ -76,27 +76,6 @@ struct environment
 
 static environment						s_environment;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void   test_watcher_thread_proc ()
 {
 	static const u32 max_time_allowed_for_one_test	=	100*1000;
@@ -108,7 +87,6 @@ void   test_watcher_thread_proc ()
 		long const current_test_number			=	s_environment.current_test_number;
 		bool const in_test						=	!!s_environment.is_testing;
 
-
 		s_environment.test_watcher_thread_must_exit.wait	( in_test ? max_time_allowed_for_one_test :
 															 			max_time_allowed_to_start_test);
 
@@ -119,6 +97,7 @@ void   test_watcher_thread_proc ()
 		if ( !in_test && !s_environment.is_testing && s_environment.current_test_number == current_test_number )
 		{
 			if ( !debug::is_debugger_present() )
+#line 122
 				LOGI_ERROR							("test", "%.4f sec. passed and still next test is not executed", max_time_allowed_to_start_test / 1000.f);
 		}
 		else if ( in_test && s_environment.is_testing && s_environment.current_test_number == current_test_number )
@@ -207,8 +186,6 @@ static inline u32 execute_handler_filter( ... )
 	return						EXCEPTION_EXECUTE_HANDLER;
 }
 
-
-
 void   on_exception (assert_enum			assert_type,
 					 pcstr					description,
 					 _EXCEPTION_POINTERS*	exception_information,
@@ -228,7 +205,6 @@ void   on_exception (assert_enum			assert_type,
 	#if !VOSTOK_PLATFORM_PS3
 	__try {
 
-
 	fixed_string8192 description_string	(	*description == '\n' ? (description + 1) : description	);
 
 	u32 const description_size		=	description_string.length();
@@ -238,20 +214,8 @@ void   on_exception (assert_enum			assert_type,
 		description_string			+=	'\n';
 	}
 
-
-
-
-
-
-
-
-
-
-
+#line 251
 	LOGIFD_FORCED("test", logging::error, &core::g_log_format, NULL, "-------------------------------------------------------------\nEXCEPTION #%d in test '%s', suite '%s'\n-------------------------------------------------------------\n%s", s_environment.exception_index+1, s_environment.current_test, s_environment.current_suite, description_string.c_str());
-
-
-
 
 	debug::dump_call_stack("test", true, is_assertion ? 3 : 0,
 		s_environment.num_top_callstack_frames_to_skip, exception_information);
@@ -329,17 +293,10 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 		result_string.appendf			("TEST SUITE '%s' : successfull %d tests", suite_name, num_tests);
 	}
 
-
-
-
-
-
-
-
+#line 339
 	LOGIFD_FORCED("test", message_type, logging::format_message, NULL, "------------------------------------------------------------------------------\n%s (%d ms)\n------------------------------------------------------------------------------", result_string.c_str(), timer.get_elapsed_msec());
 	s_environment.num_failed_tests	+=	num_failed_tests;
 	threading::interlocked_increment	(s_environment.num_suites_executed);
-
 
 	if ( s_environment.num_suites_executed == (long)s_environment.num_suites_total )
 	{

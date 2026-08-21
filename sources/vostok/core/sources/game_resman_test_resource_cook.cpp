@@ -103,7 +103,6 @@ void   test_resource_cook::create_resource	(query_result_for_cook &	in_out_query
 	in_out_query.finish_query					(result_success);
 }
 
-
 } // namespace resources
 } // namespace vostok
 
