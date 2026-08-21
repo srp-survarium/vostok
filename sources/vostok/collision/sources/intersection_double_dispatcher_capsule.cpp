@@ -77,10 +77,7 @@ bool segment_segment_intersect ( float3 const& p1, float3 const& p2, float3 cons
 		float	mua;
 		float	mub;
 
-		// sushi@TODO: qualified to bind the collision-local copy (target calls
-		// vostok::collision::); a recovery-added vostok::math:: decl in
-		// math_functions.h makes the bare call ADL-ambiguous here.
-		collision::line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub );
+		line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub );
 
 		if( ( pa - pb ).squared_length( ) > max_distance_squared )
 			return false;
@@ -90,16 +87,16 @@ bool segment_segment_intersect ( float3 const& p1, float3 const& p2, float3 cons
 			return true;
 	}
 
-	if( ( p1 - collision::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ) < max_distance_squared )
+	if( ( p1 - closest_point_on_segment( p1, p3, d2 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p2 - collision::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ) < max_distance_squared )
+	if( ( p2 - closest_point_on_segment( p2, p3, d2 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p3 - collision::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ) < max_distance_squared )
+	if( ( p3 - closest_point_on_segment( p3, p1, d1 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p4 - collision::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ) < max_distance_squared )
+	if( ( p4 - closest_point_on_segment( p4, p1, d1 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
 	return false;
