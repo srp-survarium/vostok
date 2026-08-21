@@ -94,7 +94,6 @@ public:
 			void	play_animation			( animation_item const* const animation_to_be_played ) const;
 			void	play_sound				( sound_item const* const sound_to_be_played );
 			void	move_to_point			( movement_target const* const target );
-			bool	is_playing_sound		( ) const;
 			bool	is_at_position			( movement_target const* const target ) const;
 			void	play_animation_with_sound		(
 						animation_item const* const animation_to_be_played,
