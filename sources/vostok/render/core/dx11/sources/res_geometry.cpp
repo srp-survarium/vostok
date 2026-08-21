@@ -35,7 +35,6 @@ s32 res_geometry::compare( res_geometry const& other ) const
 
 void res_geometry::apply()
 {
-	// FUNCTION BODY[0x6e8300]
 	backend::ref().set_declaration( m_dcl.c_ptr());
 	backend::ref().set_vb( m_vb.c_ptr(), m_vb_stride);
 	backend::ref().set_ib( m_ib.c_ptr());

@@ -41,7 +41,7 @@ inline shader_constant_host* backend::register_constant_host( shader_constant co
 
 inline void backend::set_vb( untyped_buffer* vb, u32 vb_stride, u32 vb_offset )
 {
-	m_dirty_objects.vertex_buffer |= m_vb != vb || m_vb_stride != vb_stride || m_vb_offset != vb_offset;
+	m_dirty_objects.vertex_buffer |= m_vb != vb || vb_stride != m_vb_stride || m_vb_offset != vb_offset;
 	m_vb = vb;
 	m_vb_stride = vb_stride;
 	m_vb_offset = vb_offset;
@@ -99,13 +99,14 @@ inline void backend::set_gs( res_gs_hw* shader )
 
 inline void backend::set_declaration( res_declaration* declaration )
 {
-	bool const changed = m_decl != declaration;
-	if ( changed ) {
+	if ( m_decl != declaration ) {
 		m_decl = declaration;
 		m_dirty_objects.input_declaration = true;
 		m_input_layout = 0;
+		m_dirty_objects.input_layout = true;
 	}
-	m_dirty_objects.input_layout = changed;
+	else
+		m_dirty_objects.input_layout = false;
 }
 
 inline void backend::set_input_layout( res_input_layout* layout )
