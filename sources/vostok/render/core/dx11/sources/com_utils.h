@@ -1,3 +1,4 @@
+#line 7
 #ifndef VOSTOK_RENDER_CORE_DX11_SOURCES_COM_UTILS_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SOURCES_COM_UTILS_H_INCLUDED
 
@@ -18,6 +19,7 @@ inline void log_ref_count( pcstr object_name, com_type* object )
 
 	object->AddRef( );
 	ULONG const reference_count = object->Release( );
+#line 29
 	LOG_INFO( "%-20s:refCount: %d", object_name, reference_count );
 
 }

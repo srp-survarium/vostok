@@ -198,7 +198,9 @@ s32 cook_intermediate_data::find_material_index( pcstr surface_name )
 		if(strings::equal(m_surface_materials[idx], surface_name))
 			return idx;
 
+#line 203
 	LOG_WARNING("material not found %s", surface_name );
+#line 202
 	return -1;
 }
 

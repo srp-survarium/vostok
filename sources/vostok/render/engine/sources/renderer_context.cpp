@@ -148,37 +148,24 @@ renderer_context::renderer_context( ) :
 
 void renderer_context::set_scene( render::scene* in_scene )
 {
-	// <0x642720>|0x000|+0x006:'169'
-	// <0>
 
 	m_scene					= in_scene;
 }
 
 scene_view const* renderer_context::scene_view( ) const
 {
-	// <0x642740>|0x000|+0x006:'175'
 
 	return static_cast_checked< vostok::render::scene_view const* >( m_scene_view.c_ptr( ) );
 }
 
 scene_view* renderer_context::get_scene_view( )
 {
-	// <0x642730>|0x000|+0x006:'180'
 
 	return static_cast_checked< vostok::render::scene_view* >( m_scene_view.c_ptr( ) );
 }
 
 void renderer_context::set_scene_view( base_scene_view_ptr view_ptr )
 {
-	// <0x643362>|0x002|+0x010:'185'
-	// <0>
-	// <0x643372>|0x012|+0x006:'187'
-	// <0>
-	// <0x643378>|0x018|+0x00c:'189'
-	// <0>
-	// <1>
-	// <2>
-	// <0x643384>|0x024|+0x00d:'193'
 
 	m_scene_view			= view_ptr;
 
@@ -192,28 +179,6 @@ void renderer_context::set_view2shadow( float4x4 const& view2shadow, u32 index )
 {
 	// STATICS
 	// static < NoType > 				 = <0x64270c>;
-
-	// <0x6426b5>|0x005|+0x00d:'198'
-	// <0>
-	// <1>
-	// <0x6426c2>|0x012|+0x012:'201'
-	// <0>
-	// <1>
-	// <0x6426d4>|0x024|+0x012:'204'
-	// <0>
-	// <1>
-	// <0x6426e6>|0x036|-0x01e:'207'
-	// <0>
-	// <1>
-	// <0x6426c8>|0x018|+0x012:'210'
-	// <0x6426da>|0x02a|+0x012:'210'
-	// <0x6426ec>|0x03c|+0x00c:'210'
-	// <0x6426f8>|0x048|-0x027:'210'
-	// <0>
-	// <1>
-	// <0x6426d1>|0x021|+0x012:'213'
-	// <0x6426e3>|0x033|+0x012:'213'
-	// <0x6426f5>|0x045|+0x012:'213'
 
 	switch ( index )
 	{
@@ -236,22 +201,6 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 {
 	// STATICS
 	// static < NoType > 				 = <0x642694>;
-
-	// <0x642670>|0x000|+0x00c:'217'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64267c>|0x00c|+0x006:'222'
-	// <0>
-	// <0x642682>|0x012|+0x006:'224'
-	// <0>
-	// <0x642688>|0x018|+0x006:'226'
-	// <0>
-	// <0x64268e>|0x01e|-0x00d:'228'
-	// <0x642681>|0x011|+0x006:'229'
-	// <0x642687>|0x017|+0x006:'229'
-	// <0x64268d>|0x01d|+0x006:'229'
 
 	switch ( index )
 	{
@@ -304,46 +253,18 @@ void renderer_context::set_target_context( renderer_context_targets const* targe
 
 void renderer_context::set_time_delta( const float time_delta )
 {
-	// <0x642660>|0x000|+0x008:'255'
 
 	m_time_delta			= time_delta;
 }
 
 void renderer_context::set_current_time( const float current_time )
 {
-	// <0x642650>|0x000|+0x008:'260'
 
 	m_current_time			= current_time;
 }
 
 void renderer_context::set_w( float4x4 const& m )
 {
-	// <0x6431a2>|0x012|+0x011:'265'
-	// <0x6431b3>|0x023|+0x023:'266'
-	// <0x6431d6>|0x046|+0x014:'267'
-	// <0>
-	// <1>
-	// <0x6431ea>|0x05a|+0x021:'270'
-	// <0x64320b>|0x07b|+0x008:'271'
-	// <0x643213>|0x083|+0x013:'272'
-	// <0>
-	// <0x643226>|0x096|+0x01a:'274'
-	// <0x643240>|0x0b0|+0x02b:'275'
-	// <0>
-	// <0x64326b>|0x0db|+0x022:'277'
-	// <0>
-	// <0x64328d>|0x0fd|+0x025:'279'
-	// <0x6432b2>|0x122|+0x016:'280'
-	// <0x6432c8>|0x138|+0x016:'281'
-	// <0x6432de>|0x14e|+0x016:'282'
-	// <0>
-	// <0x6432f4>|0x164|+0x01c:'284'
-	// <0x643310>|0x180|+0x016:'285'
-	// <0x643326>|0x196|+0x016:'286'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
 
 	m_w						= m;
 	m_wv					= m_w * m_v;
@@ -369,41 +290,6 @@ void renderer_context::set_w( float4x4 const& m )
 
 void renderer_context::set_v( float4x4 const& m )
 {
-	// <0x642db0>|0x010|+0x024:'295'
-	// <0>
-	// <0x642dd4>|0x034|+0x023:'297'
-	// <0x642df7>|0x057|+0x00d:'298'
-	// <0>
-	// <0x642e04>|0x064|+0x03f:'300'
-	// <0x642e43>|0x0a3|+0x04d:'301'
-	// <0x642e90>|0x0f0|+0x038:'302'
-	// <0>
-	// <0x642ec8>|0x128|+0x066:'304'
-	// <0x642f2e>|0x18e|+0x04f:'305'
-	// <0>
-	// <0x642f7d>|0x1dd|+0x01d:'307'
-	// <0>
-	// <1>
-	// <0x642f9a>|0x1fa|+0x0bc:'310'
-	// <0x643056>|0x2b6|+0x016:'311'
-	// <0>
-	// <0x64306c>|0x2cc|+0x016:'313'
-	// <0x643082>|0x2e2|+0x016:'314'
-	// <0>
-	// <0x643098>|0x2f8|+0x016:'316'
-	// <0x6430ae>|0x30e|+0x016:'317'
-	// <0>
-	// <0x6430c4>|0x324|+0x016:'319'
-	// <0x6430da>|0x33a|+0x016:'320'
-	// <0>
-	// <0x6430f0>|0x350|+0x016:'322'
-	// <0x643106>|0x366|+0x013:'323'
-	// <0>
-	// <0x643119>|0x379|+0x01e:'325'
-	// <0x643137>|0x397|+0x016:'326'
-	// <0>
-	// <0x64314d>|0x3ad|+0x016:'328'
-	// <0x643163>|0x3c3|+0x016:'329'
 
 	m_v_transposed			= transpose( m_v = m );
 
@@ -438,37 +324,6 @@ void renderer_context::set_v( float4x4 const& m )
 
 void renderer_context::set_p( float4x4 const& m )
 {
-	// <0x642bf0>|0x000|+0x026:'345'
-	// <0x642c16>|0x026|+0x018:'346'
-	// <0x642c2e>|0x03e|+0x01f:'347'
-	// <0>
-	// <1>
-	// <2>
-	// <0x642c4d>|0x05d|+0x01a:'351'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x642c67>|0x077|+0x03e:'356'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x642ca5>|0x0b5|+0x048:'362'
-	// <0>
-	// <0x642ced>|0x0fd|+0x009:'364'
-	// <0x642cf6>|0x106|+0x005:'365'
-	// <0>
-	// <0x642cfb>|0x10b|+0x022:'367'
-	// <0x642d1d>|0x12d|+0x016:'368'
-	// <0>
-	// <0x642d33>|0x143|+0x010:'370'
-	// <0>
-	// <0x642d43>|0x153|+0x01c:'372'
-	// <0x642d5f>|0x16f|+0x016:'373'
-	// <0>
-	// <0x642d75>|0x185|+0x010:'375'
 
 	m_p						= m;
 	m_p_transposed			= transpose( m_p = m );
@@ -494,17 +349,6 @@ void renderer_context::set_p( float4x4 const& m )
 
 void renderer_context::update_near_far( )
 {
-	// <0>
-	// <0x6429f0>|0x000|+0x04b:'381'
-	// <0x642a3b>|0x04b|+0x00c:'382'
-	// <0>
-	// <1>
-	// <0x642a47>|0x057|+0x048:'385'
-	// <0x642a8f>|0x09f|+0x004:'386'
-	// <0>
-	// <1>
-	// <0x642a93>|0x0a3|+0x00f:'389'
-	// <0x642aa2>|0x0b2|+0x01c:'390'
 
 	float4 tmp_transformed	= m_p_inverted.transform( float4( 0.f, 0.f, 0.f, 1.f ) );
 	m_near_far_invn_invf.x	= tmp_transformed.z / tmp_transformed.w;
@@ -518,23 +362,6 @@ void renderer_context::update_near_far( )
 
 void renderer_context::reset_matrices( )
 {
-	// <0x642903>|0x003|+0x00b:'395'
-	// <0x64290e>|0x00e|+0x00b:'396'
-	// <0x642919>|0x019|+0x00b:'397'
-	// <0x642924>|0x024|+0x00b:'398'
-	// <0x64292f>|0x02f|+0x00b:'399'
-	// <0x64293a>|0x03a|+0x00b:'400'
-	// <0x642945>|0x045|+0x00b:'401'
-	// <0x642950>|0x050|+0x00b:'402'
-	// <0x64295b>|0x05b|+0x00b:'403'
-	// <0x642966>|0x066|+0x00b:'404'
-	// <0x642971>|0x071|+0x00b:'405'
-	// <0x64297c>|0x07c|+0x00b:'406'
-	// <0x642987>|0x087|+0x00b:'407'
-	// <0x642992>|0x092|+0x00b:'408'
-	// <0x64299d>|0x09d|+0x00b:'409'
-	// <0>
-	// <0x6429a8>|0x0a8|+0x035:'411'
 
 	m_w.identity			( );
 	m_w_transposed.identity	( );
@@ -567,36 +394,6 @@ float renderer_context::get_shadow_map_z_bias( )
 
 void renderer_context::update_eye_rays( )
 {
-	// LOCALS
-	// float4 							eye_00
-
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x642753>|0x003|+0x0be:'436'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x642811>|0x0c1|+0x016:'441'
-	// <0x642827>|0x0d7|+0x00a:'442'
-	// <0x642831>|0x0e1|+0x006:'443'
-	// <0x642837>|0x0e7|+0x00e:'444'
-	// <0x642845>|0x0f5|+0x028:'445'
-	// <0x64286d>|0x11d|+0x028:'446'
-	// <0x642895>|0x145|+0x02b:'447'
-	// <0x6428c0>|0x170|+0x036:'448'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
 
 	float4x4 const& inv_proj = m_p_inverted;
 
@@ -616,7 +413,6 @@ void renderer_context::update_eye_rays( )
 
 void renderer_context::clear_resources( )
 {
-	// <0x643351>|0x001|+0x00e:'481'
 
 	m_scene_view			= NULL;
 }

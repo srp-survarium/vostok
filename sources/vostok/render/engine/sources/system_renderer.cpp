@@ -153,8 +153,6 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 
 untyped_buffer* system_renderer::create_quad_ib( )
 {
-	// LOCALS
-	// u16[24576] 						indices
 
 	const u32 quad_count	= 4 * 1024;
 	const u32 idx_count		= quad_count * 2 * 3;
@@ -178,34 +176,6 @@ untyped_buffer* system_renderer::create_quad_ib( )
 
 	return resource_manager::ref( ).create_buffer( idx_count * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
 
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x6449ad>|0x00d|+0x013:'81'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6449c0>|0x020|+0x009:'85'
-	// <0x6449c9>|0x029|+0x009:'86'
-	// <0x6449d2>|0x032|+0x009:'87'
-	// <0>
-	// <0x6449db>|0x03b|+0x009:'89'
-	// <0x6449e4>|0x044|+0x006:'90'
-	// <0x6449ea>|0x04a|+0x006:'91'
-	// <0>
-	// <0x6449f0>|0x050|+0x008:'93'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6449f8>|0x058|+0x01a:'97'
 }
 
 bool system_renderer::is_effects_ready( ) const
@@ -228,39 +198,16 @@ bool system_renderer::is_effects_ready( ) const
 		&& m_notexture_shader.c_ptr( ) != NULL
 		&& m_sh_particle_selection.c_ptr( ) != NULL;
 
-	// <0x644700>|0x000|+0x012:'254'
-	// <0x644712>|0x012|-0x00a:'254'
-	// <0>
-	// <0x644708>|0x008|+0x005:'256'
-	// <0>
-	// <1>
-	// <0x64470d>|0x00d|+0x050:'259'
-	// <0x64475d>|0x05d|-0x042:'260'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x64471b>|0x01b|+0x045:'270'
-	// <0x644760>|0x060|-0x004:'270'
-	// <0x64475c>|0x05c|+0x003:'271'
-	// <0x64475f>|0x05f|+0x003:'271'
 }
 
 system_renderer::~system_renderer( )
 {
-	// <0>
 }
 
 void system_renderer::set_w( float4x4 const& m )
 {
 	m_renderer_context->set_w( m );
 
-	// <0x644990>|0x000|+0x009:'293'
 }
 
 void system_renderer::set_v( float4x4 const& m )
@@ -350,22 +297,6 @@ static float2 clip_2_screen(
 
 	return float2( result.elements[0], result.elements[1] );
 
-	// <0x6447d3>|0x003|+0x0b1:'358'
-	// <0>
-	// <0x644884>|0x0b4|+0x023:'360'
-	// <0x6448a7>|0x0d7|+0x008:'361'
-	// <0>
-	// <0x6448af>|0x0df|+0x008:'363'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6448b7>|0x0e7|+0x0b2:'370'
-	// <0x644969>|0x199|+0x01a:'371'
-	// <0>
-	// <0x644983>|0x1b3|+0x007:'373'
 }
 
 static u8 pattern_length = 8;
@@ -581,8 +512,6 @@ void system_renderer::fill_surface(
 
 void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& color )
 {
-	// LOCALS
-	// vertex_colored[8] 				vertices
 
 	if ( !is_effects_ready( ) )
 		return;
@@ -606,26 +535,6 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 		false
 	);
 
-	// <0x6465a6>|0x006|+0x00d:'576'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6465b3>|0x013|+0x004:'580'
-	// <0x6465b7>|0x017|+0x008:'581'
-	// <0x6465bf>|0x01f|+0x053:'582'
-	// <0x646612>|0x072|+0x01d:'583'
-	// <0x64662f>|0x08f|+0x031:'584'
-	// <0x646660>|0x0c0|+0x038:'585'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x646698>|0x0f8|+0x0a8:'595'
 }
 
 void system_renderer::draw_obb( float4x4 const& transform, math::color const& color )
@@ -730,8 +639,6 @@ void system_renderer::draw_ui_vertices(
 	s32								point_type
 )
 {
-	// LOCALS
-	// u32 								v_offset
 
 	if ( !is_effects_ready( ) )
 		return;
@@ -772,46 +679,6 @@ void system_renderer::draw_ui_vertices(
 		UNREACHABLE_CODE();
 	}
 
-	// <0x64568c>|0x00c|+0x00f:'697'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64569b>|0x01b|+0x016:'702'
-	// <0x6456b1>|0x031|+0x01c:'703'
-	// <0x6456cd>|0x04d|+0x029:'704'
-	// <0>
-	// <0x6456f6>|0x076|+0x00b:'706'
-	// <0>
-	// <0x645701>|0x081|+0x007:'708'
-	// <0>
-	// <0x645708>|0x088|+0x008:'710'
-	// <0x645710>|0x090|+0x004:'711'
-	// <0>
-	// <1>
-	// <0x645714>|0x094|+0x00a:'714'
-	// <0>
-	// <1>
-	// <0x64571e>|0x09e|+0x010:'717'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64572e>|0x0ae|+0x024:'722'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x645752>|0x0d2|+0x012:'727'
-	// <0>
-	// <0x645764>|0x0e4|-0x019:'729'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x64574b>|0x0cb|+0x065:'736'
 }
 
 void system_renderer::draw_render_models_selection( vector< render_model_instance_impl_ptr >& render_models )

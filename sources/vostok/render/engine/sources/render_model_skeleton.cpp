@@ -10,7 +10,6 @@ skeleton_render_surface::skeleton_render_surface( )
 {
 	m_vertex_input_type=skeletal_4_bones_mesh_vertex_input_type;
 
-	// <0x63b1ad>|0x00d|+0x007:'22'
 }
 
 skeleton_render_model::skeleton_render_model( )
@@ -20,8 +19,6 @@ skeleton_render_model::skeleton_render_model( )
 	m_prev_bones_matrices_shader_constant	=
 		backend::ref().register_constant_host( "prev_bones_matrices",  rc_float );
 
-	// <0x63ae2e>|0x02e|+0x05c:'27'
-	// <0x63ae8a>|0x08a|+0x05c:'28'
 }
 
 void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
@@ -35,14 +32,6 @@ void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
 		m.try_invert					( bind_matrix_inv );
 	}
 
-	// <0>
-	// <1>
-	// <0x63aa1f>|0x00f|+0x011:'35'
-	// <0>
-	// <1>
-	// <0x63aa30>|0x020|+0x00e:'38'
-	// <0x63aa3e>|0x02e|+0x00e:'39'
-	// <0>
 }
 
 void skeleton_render_model::load_bones( memory::reader& bones_chunk )
@@ -62,31 +51,11 @@ void skeleton_render_model::load_bones( memory::reader& bones_chunk )
 		float4x4 frm_matrix			= frame_matrix( frm );
 		float4x4& bind_matrix_inv	= m_inverted_bones_matrices_in_bind_pose[i];
 		bind_matrix_inv.try_invert	( frm_matrix );
+#line 60
 		LOG_INFO("%s %f %f %f", bone_name, frm_matrix.c.x, frm_matrix.c.y, frm_matrix.c.z);
+#line 55
 	}
 
-	// LOCALS
-	// animation::frame 				frm
-	// float4x4 						frm_matrix
-
-	// <0x63ac16>|0x006|+0x00f:'45'
-	// <0>
-	// <0x63ac25>|0x015|+0x023:'47'
-	// <0>
-	// <1>
-	// <0x63ac48>|0x038|+0x01f:'50'
-	// <0>
-	// <0x63ac67>|0x057|+0x00e:'52'
-	// <0x63ac75>|0x065|+0x011:'53'
-	// <0x63ac86>|0x076|+0x018:'54'
-	// <0x63ac9e>|0x08e|+0x010:'55'
-	// <0>
-	// <0x63acae>|0x09e|-0x05b:'57'
-	// <0x63ac53>|0x043|+0x07d:'58'
-	// <0x63acd0>|0x0c0|+0x00b:'58'
-	// <0x63acdb>|0x0cb|+0x00a:'59'
-	// <0x63ace5>|0x0d5|+0x111:'60'
-	// <0>
 }
 
 void skeleton_render_model::update( vector< float4x4 > const& bones )
@@ -97,13 +66,6 @@ void skeleton_render_model::update( vector< float4x4 > const& bones )
 		s->update	( bones );
 	}
 
-	// <0x63a692> -> void < unknown >( vector< float4x4 > const& )
-
-	// <0x63a671>|0x001|+0x00f:'66'
-	// <0>
-	// <0x63a680>|0x010|+0x00c:'68'
-	// <0x63a68c>|0x01c|+0x013:'69'
-	// <0>
 }
 
 skeleton_render_model_instance::skeleton_render_model_instance( )
@@ -116,7 +78,6 @@ skeleton_render_model_instance::~skeleton_render_model_instance( )
 {
 	DELETE_ARRAY	( m_surface_instances );
 
-	// <0x63aefa>|0x00a|+0x01b:'80'
 }
 
 void skeleton_render_model_instance::assign_original( skeleton_render_model_ptr v )
@@ -166,8 +127,6 @@ void skeleton_render_model_instance::get_surfaces(
 	u32										surface_flags
 )
 {
-	// LOCALS
-	// u32 								i
 
 	list.reserve(list.size()+m_instances_count);
 
@@ -178,16 +137,6 @@ void skeleton_render_model_instance::get_surfaces(
 			list.push_back		( inst );
 	}
 
-	// <0x63aa87>|0x007|+0x033:'132'
-	// <0x63aaba>|0x03a|-0x012:'132'
-	// <0>
-	// <0x63aaa8>|0x028|+0x018:'134'
-	// <0>
-	// <0x63aac0>|0x040|+0x00a:'136'
-	// <0x63aaca>|0x04a|+0x014:'137'
-	// <0x63aade>|0x05e|+0x11a:'138'
-	// <0x63abf8>|0x178|-0x00a:'138'
-	// <0>
 }
 
 void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
@@ -195,8 +144,6 @@ void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_
 	R_ASSERT(surface_id<m_instances_count);
 	VOSTOK_UNREFERENCED_PARAMETER	( stats );
 
-	// <0>
-	// <1>
 }
 
 void skeleton_render_model_instance::update( )
@@ -221,32 +168,6 @@ void skeleton_render_model_instance::update( )
 		}
 	}
 
-	// LOCALS
-	// u32 								i
-
-	// <0>
-	// <0x63a7c1>|0x011|+0x016:'151'
-	// <0>
-	// <0x63a7d7>|0x027|+0x210:'153'
-	// <0x63a9e7>|0x237|-0x1f7:'153'
-	// <0>
-	// <0x63a7f0>|0x040|+0x00a:'155'
-	// <0x63a7fa>|0x04a|+0x00a:'156'
-	// <0>
-	// <1>
-	// <0x63a804>|0x054|+0x00c:'159'
-	// <0x63a810>|0x060|+0x006:'160'
-	// <0x63a816>|0x066|+0x00f:'161'
-	// <0x63a825>|0x075|+0x031:'162'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63a856>|0x0a6|+0x18a:'166'
-	// <0x63a9e0>|0x230|-0x180:'166'
-	// <0x63a860>|0x0b0|+0x1a4:'167'
-	// <0>
-	// <1>
-	// <2>
 }
 
 void skeleton_render_model_instance::set_constants( )
@@ -271,7 +192,6 @@ void skeleton_render_model_instance::update_render_matrices( float4x4 const* mat
 
 bool skeleton_render_model_instance::get_locator( pcstr locator_name, model_locator_item& result ) const
 {
-	// <0x63a6bb> -> bool < unknown >( pcstr, model_locator_item& ) const
 
 	return m_original->get_locator( locator_name, result );
 
@@ -281,7 +201,6 @@ void skeleton_render_model_instance::get_bind_pose( float4x4* matrices, u32 coun
 {
 	m_original->get_bind_pose( matrices, count );
 
-	// <0x63aa60>|0x000|+0x015:'202'
 }
 
 } // namespace render
