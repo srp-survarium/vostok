@@ -306,13 +306,13 @@ void render_particle_emitter_instance::update_render_buffers(
 
 u32 render_particle_emitter_instance::get_num_particles( ) const
 {
-	u32 result = 0;
-	particle::base_particle* current = m_particle_list.front( );
-	while ( current ) {
-		++result;
-		current = m_particle_list.get_next_of_object( current );
+	particle::base_particle* particle = m_particle_list.front( );
+	u32 num_particles = 0;
+	while ( particle ) {
+		particle = m_particle_list.get_next_of_object( particle );
+		++num_particles;
 	}
-	return result;
+	return num_particles;
 }
 
 void render_particle_emitter_instance::render_sprites( )
