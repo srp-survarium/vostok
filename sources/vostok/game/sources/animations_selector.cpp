@@ -39,6 +39,7 @@ namespace survarium {
 	m_game_world( world ),
 	m_owner( owner ),
 	m_default_animation( default_animation )
+#line 39
 {
 	m_animation_player.subscribe(
 		animation::channel_id_on_animation_interval_end,
@@ -50,6 +51,7 @@ namespace survarium {
 }
 
 void animations_selector::set_animation_player_target( animation::mixing::expression const& target_expression, const u32 time_in_ms )
+#line 48
 {
 	if ( !target_expression.is_empty( ) )
 		m_animation_player.set_target_and_tick( target_expression, time_in_ms, m_owner.get_transform( ) );
@@ -62,6 +64,7 @@ void animations_selector::set_animation_player_target( animation::mixing::expres
 }
 
 void animations_selector::reset_animation_controller( const u32 time_in_ms )
+#line 62
 {
 	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 	if ( m_current_controller != m_target_controller )
@@ -84,6 +87,7 @@ void animations_selector::reset_animation_controller( const u32 time_in_ms )
 }
 
 animation::callback_return_type_enum animations_selector::on_animation_interval_end( animation::animation_callback_params& params )
+#line 89
 {
 	params.interrupt_animation_player_tick	= true;
 	m_current_controller->query_new_target_if_needed( );
@@ -92,12 +96,14 @@ animation::callback_return_type_enum animations_selector::on_animation_interval_
 }
 
 void animations_selector::on_set_target( )
+#line 97
 {
 	if ( !m_current_controller )
 		reset_animation_controller( m_game_world.get_game().game_time_ms() );
 }
 
 void animations_selector::set_target( ai::animation_item const& animation_emitter )
+#line 103
 {
 	m_simple_animation_parameters.emitter	= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( animation_emitter.animation );
 
@@ -109,6 +115,7 @@ void animations_selector::set_target( ai::animation_item const& animation_emitte
 }
 
 void animations_selector::set_target( ai::movement_target const& target_position )
+#line 113
 {
 	m_movement_animation_parameters.position		= target_position.target_position;
 	m_movement_animation_parameters.eyes_direction	= target_position.direction;
@@ -123,6 +130,7 @@ void animations_selector::set_target( ai::movement_target const& target_position
 }
 
 void animations_selector::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
+#line 126
 {
 	if ( m_current_controller )
 		m_current_controller->debug_draw( render, scene );

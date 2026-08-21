@@ -13,14 +13,14 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,128 / 12,932 functions exact (70.58%) &middot; 9,477 / 12,932 functions exact-max (73.28%) &middot; 88.12% fuzzy &middot; 89.03% fuzzy-max.**
+**Overall: 9,131 / 12,932 functions exact (70.61%) &middot; 9,480 / 12,932 functions exact-max (73.31%) &middot; 88.12% fuzzy &middot; 89.03% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | ----: | --------: |
 | `render`        |   351 | 1,712 / 2,653 (64.5%) | 1,724 / 2,653 (65.0%) | 86.5% |     86.7% |
-| `game`          |   141 |   843 / 1,528 (55.2%) |   847 / 1,528 (55.4%) | 73.3% |     73.8% |
+| `game`          |   141 |   846 / 1,528 (55.4%) |   850 / 1,528 (55.6%) | 73.3% |     73.8% |
 | `core`          |   136 | 1,009 / 1,325 (76.2%) | 1,061 / 1,325 (80.1%) | 91.2% |     93.6% |
 | `vostok`        |   112 |   885 / 1,252 (70.7%) |   954 / 1,252 (76.2%) | 88.4% |     91.2% |
 | `game_core`     |   189 |   745 / 1,181 (63.1%) |   776 / 1,181 (65.7%) | 92.3% |     93.3% |
@@ -43,7 +43,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       21 / 22 (95.5%) |       21 / 22 (95.5%) | 98.1% |     98.1% |
 | `ai_navigation` |     3 |       13 / 14 (92.9%) |      14 / 14 (100.0%) | 89.9% |    100.0% |
 
-_Updated 2026-08-21 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-08-22 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

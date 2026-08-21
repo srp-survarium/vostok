@@ -48,10 +48,12 @@ chat_handler::chat_handler( game& game )
 	, m_active( false )
 	, m_game_ui_mode( false )
 	, m_game( game )
+#line 34
 {
 }
 
 void chat_handler::initialize( resources::unmanaged_resource_ptr const& ui )
+#line 38
 {
 	m_chat_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( ui );
 
@@ -71,10 +73,12 @@ void chat_handler::initialize( resources::unmanaged_resource_ptr const& ui )
 }
 
 chat_handler::~chat_handler( )
+#line 60
 {
 }
 
 void chat_handler::call( flash_function_handler_params& params )
+#line 64
 {
 	flash_value w_text;	params.pArgs[ 0 ].GetMember( "text", &w_text );
 
@@ -87,6 +91,7 @@ void chat_handler::callback(
 	flash_value const*		args,
 	u32						__formal2
 )
+#line 76
 {
 	if( strcmp( methodName, "chat_enter_start" ) == 0 )
 		focus( true );
@@ -101,6 +106,7 @@ bool chat_handler::on_keyboard_action(
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		action
 )
+#line 96
 {
 	toggle_action_enum action_type;
 	game_action_id binded_action = m_game.get_key_binder( ).get_binded_action( key, action_type, 8 );
@@ -132,6 +138,7 @@ bool chat_handler::on_gamepad_action(
 	input::gamepad_button			button,
 	input::enum_gamepad_action		action
 )
+#line 128
 {
 	return m_game_ui_mode;
 }
@@ -141,6 +148,7 @@ bool chat_handler::on_mouse_key_action(
 	input::mouse_button				button,
 	input::enum_mouse_key_action	action
 )
+#line 134
 {
 	return m_game_ui_mode;
 }
@@ -151,11 +159,13 @@ bool chat_handler::on_mouse_move(
 	s32					y,
 	s32					z
 )
+#line 140
 {
 	return m_game_ui_mode;
 }
 
 void chat_handler::on_message_typed( wchar_t const* text, messaging::message_channel_enum message_chanel )
+#line 146
 {
 	if( m_game.network_client( ).has_bandwidth( ) )
 		m_game.network_client( ).messaging_client( ).on_message_typed( text, message_chanel );
@@ -166,6 +176,7 @@ void chat_handler::add_message(
 	wchar_t const*		w_text,
 	wchar_t const*		w_sender_name
 )
+#line 154
 {
 	flash_value obj;
 	get_movie( )->movie->CreateObject( &obj );
@@ -219,6 +230,7 @@ void chat_handler::add_message(
 }
 
 void chat_handler::add_to_recent_list( wchar_t const* name )
+#line 205
 {
 	if( m_game_ui_mode )
 		return;
@@ -229,6 +241,7 @@ void chat_handler::add_to_recent_list( wchar_t const* name )
 }
 
 void chat_handler::set_mode( bool is_game_mode )
+#line 224
 {
 	chat_tab lobby_menu_tabs[ 5 ] =
 	{
@@ -301,6 +314,7 @@ void chat_handler::set_mode( bool is_game_mode )
 }
 
 void chat_handler::set_local_player_name( pcstr account_name )
+#line 316
 {
 	wchar_t an[ 256 ];
 	mbstowcs_s( NULL, an, account_name, -1 );
@@ -311,6 +325,7 @@ void chat_handler::set_local_player_name( pcstr account_name )
 }
 
 void chat_handler::focus( bool b_focused )
+#line 327
 {
 	if( !m_game.network_client( ).has_bandwidth( ) )
 		return;
@@ -334,18 +349,21 @@ void chat_handler::focus( bool b_focused )
 }
 
 void chat_handler::show( base_game_scene* scene )
+#line 350
 {
 	scene->show_movie( m_chat_ui );
 	m_active = true;
 }
 
 void chat_handler::hide( base_game_scene* scene )
+#line 357
 {
 	scene->hide_movie( m_chat_ui );
 	m_active = false;
 }
 
 void chat_handler::tick( u32 delta )
+#line 365
 {
 	get_movie( )->movie->Advance( delta * math::epsilon_3, 1 );
 }

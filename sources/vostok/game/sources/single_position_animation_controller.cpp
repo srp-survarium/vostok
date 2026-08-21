@@ -48,6 +48,7 @@ single_position_animation_controller::single_position_animation_controller(
 	m_owner( owner ),
 	m_navigation_path( g_allocator ),
 	m_next_key_point( u32( -1 ) )
+#line 37
 {
 }
 
@@ -58,12 +59,14 @@ single_position_animation_controller::single_position_animation_controller(
 // edi. The vtable writes come from the inlined empty ~movement_animation_controller_parameters
 // (fully inlined, no standalone symbol); not source-steerable from this TU.
 single_position_animation_controller::~single_position_animation_controller( )
+#line 41
 {
 	DELETE( m_search_service );
 	DELETE( m_target_vertex );
 }
 
 void single_position_animation_controller::initialize( )
+#line 47
 {
 	m_target_vertex->rotation										= math::quaternion( float3( 0.f, 0.f, 0.f ) );
 	m_target_vertex->translation									= m_owner.get_position( float3( 0.f, 0.f, 0.f ) );
@@ -75,11 +78,13 @@ void single_position_animation_controller::initialize( )
 // (extra `call intrusive_ptr<...>`); the structural divergence stops objdiff pairing it.
 // Pairs/matches once the intrusive_ptr default ctor inlines (toolchain inline threshold).
 animation::mixing::expression single_position_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
+#line 53
 {
 	return													animation::mixing::expression( );
 }
 
 void single_position_animation_controller::query_new_target_if_needed( )
+#line 59
 {
 	if ( m_next_key_point > m_navigation_path.size( ) - 1 ) {
 		// claude@NOTE: target emits a real `call human_npc::on_movement_end`; our base
@@ -93,6 +98,7 @@ void single_position_animation_controller::query_new_target_if_needed( )
 }
 
 animation::mixing::expression single_position_animation_controller::selected_animations( mutable_buffer& buffer )
+#line 69
 {
 	if ( m_current_parameters != m_target_parameters )
 		m_current_parameters = m_target_parameters;
@@ -223,11 +229,13 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 // no temp slot. static_cast vs static_cast_checked makes no difference (both reduce to the same
 // cast in MASTER_GOLD - tested). Not source-steerable from this TU.
 void single_position_animation_controller::set_target( animation_controller_parameters const& target )
+#line 206
 {
 	m_target_parameters												= static_cast_checked< movement_animation_controller_parameters const& >( target );
 }
 
 void single_position_animation_controller::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
+#line 211
 {
 	if ( m_target_vertex ) {
 		render.debug( ).draw_origin(

@@ -538,6 +538,7 @@ void human_npc::on_animation_end( )
 {
 	if ( m_current_animation )
 	{
+#line 520
 		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name );
 		m_ai_world.on_animation_finish	( m_current_animation, m_brain_unit );
 		m_current_animation				= 0;	m_ai_world.select_new_goal( m_brain_unit );
@@ -587,6 +588,7 @@ void human_npc::hit(
 }
 
 // Matching wall: only LOG_INFO's embedded original source line differs.
+#line 565
 void human_npc::on_movement_end( )
 #line 556
 {
@@ -653,6 +655,7 @@ void human_npc::select_new_goal( )
 void human_npc::on_affect_event(
 	pcstr							body_part_name,
 	const hit_affects_type_enum		affect_type,
+#line 616
 	const affect_event_type_enum	event_type
 ) const
 #line 613

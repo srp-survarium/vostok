@@ -39,11 +39,13 @@ game_world_ui::game_world_ui( game_world& w ) :
 	m_players_list_visible( false ),
 	m_game_mode( capture_enemy_base ),
 	m_match_time( 0 )
+#line 50
 {
 	m_victory_points[0] = m_victory_points[1] = 0;
 }
 
 void game_world_ui::initialize_resources( resources::unmanaged_resource_ptr const& game_hud )
+#line 55
 {
 	m_game_hud_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( game_hud );
 
@@ -53,6 +55,7 @@ void game_world_ui::initialize_resources( resources::unmanaged_resource_ptr cons
 }
 
 void game_world_ui::initialize( match_options& options )
+#line 75
 {
 	flash_value victory_items_count_val;
 	flash_value game_mode_val;
@@ -129,6 +132,7 @@ void game_world_ui::initialize( match_options& options )
 }
 
 void game_world_ui::initialize_base_points( network_core::packet_reader& packet )
+#line 155
 {
 	u32 const points_count = packet.r< u32 >( );
 	for ( u32 i = 0; i < points_count; ++i )
@@ -148,6 +152,7 @@ void game_world_ui::initialize_base_points( network_core::packet_reader& packet 
 }
 
 void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
+#line 179
 {
 	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
 
@@ -164,6 +169,7 @@ void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
 }
 
 void game_world_ui::set_victory_points( s8 team_1_points, s8 team_2_points )
+#line 198
 {
 	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
 
@@ -180,12 +186,14 @@ void game_world_ui::set_victory_points( s8 team_1_points, s8 team_2_points )
 }
 
 game_world_ui::~game_world_ui( )
+#line 214
 {
 }
 
 // claude@NOTE: flash /Od wall - the two flash_value[3] branches share a folded
 // SetString/Invoke tail; the percent fistp + flash glue is /Od-shaped.
 void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
+#line 221
 {
 	base_point_stats& stats = m_base_points[point_id];
 
@@ -216,6 +224,7 @@ void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
 }
 
 void game_world_ui::set_match_time( u32 time_left_ms )
+#line 252
 {
 	char buff[64];
 	if ( time_left_ms == 0 )
@@ -234,12 +243,14 @@ void game_world_ui::set_match_time( u32 time_left_ms )
 }
 
 void game_world_ui::show_pregame( bool b_show )
+#line 271
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_pregame", NULL, &b_val, 1 );
 }
 
 void game_world_ui::set_pregame( pcstr str, u32 time_left )
+#line 278
 {
 	wchar_t message[512];
 	m_game_world.get_game( ).text_translator( ).translate_text( str, message );
@@ -253,6 +264,7 @@ void game_world_ui::set_pregame( pcstr str, u32 time_left )
 }
 
 void game_world_ui::set_respawn_time( u32 time_left )
+#line 294
 {
 	char buff[64];
 	if ( time_left == 0 )
@@ -266,6 +278,7 @@ void game_world_ui::set_respawn_time( u32 time_left )
 }
 
 void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths )
+#line 314
 {
 	flash_value out_event;				get_ui( )->movie->CreateObject( &out_event );
 	flash_value out_event_property;		get_ui( )->movie->CreateObject( &out_event_property );
@@ -291,6 +304,7 @@ void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths
 // network_client::is_player_local; base keeps thiscall arguments and the vcall.
 // Reopen after game_world::tick/network_client compiler-context changes.
 void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
+#line 345
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 
@@ -326,6 +340,7 @@ void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 }
 
 void game_world_ui::on_unload( )
+#line 387
 {
 	// claude@NOTE: capped by scaleform flash_movie - the inlined movie reset at
 	// vtable+0x58 forwards to a GFx::Movie virtual our flash_movie wrapper stubs out.
@@ -336,6 +351,7 @@ void game_world_ui::on_unload( )
 }
 
 void game_world_ui::set_health( u8 health_in_percentage )
+#line 398
 {
 	flash_value value;
 	value.SetUInt( health_in_percentage );
@@ -346,6 +362,7 @@ void game_world_ui::set_health( u8 health_in_percentage )
 // player::apply_hit_directly caller stack-passes this; base has no real caller
 // while that player function remains stubbed. Reopen with that caller.
 void game_world_ui::on_hit_from_pos( float3 position )
+#line 406
 {
 	float4x4 const actor_camera_matrix = m_game_world.get_camera_director( ).get_inverted_view_matrix( );
 
@@ -368,6 +385,7 @@ void game_world_ui::show_parametrized_message(
 	u8			y_pos_in_percents,
 	u32			timeout_in_ms
 )
+#line 425
 {
 	wchar_t message[512];
 	m_game_world.get_game( ).text_translator( ).translate_text( message_id, message );
@@ -390,6 +408,7 @@ void game_world_ui::show_parametrized_message(
 // (action_id/who_name/who_team/victim_name/victim_team/object_icon/extra_icon/mastery_icon).
 // STATE[STUB]
 void game_world_ui::on_victory_item_put_take( u8 player_id, bool is_taken, bool is_base )
+#line 483
 {
 	// LOCALS
 	// flash_value 						out_event
@@ -494,6 +513,7 @@ void game_world_ui::on_player_killed(
 	bool	is_headshot,
 	u32		item_dict_id
 )
+#line 558
 {
 	network_client* const client = static_cast< network_client* >( m_game_world.get_game( ).get_network_client( ) );
 
@@ -550,47 +570,55 @@ void game_world_ui::on_player_killed(
 }
 
 void game_world_ui::set_crosshair_size( float size )
+#line 616
 {
 	flash_value value;
 	value.SetNumber( size );	get_ui( )->movie->Invoke( "root.set_crosshair_size", NULL, &value, 1 );
 }
 
 void game_world_ui::on_enemy_hitted( )
+#line 625
 {
 	get_ui( )->movie->Invoke( "root.crosshair_enemy_hit", NULL, NULL, 0 );
 }
 
 void game_world_ui::show_crosshair( bool b_show )
+#line 630
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_crosshair", NULL, &b_val, 1 );
 }
 
 void game_world_ui::show_ammo_indicator( bool b_show )
+#line 637
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_ammo", NULL, &b_val, 1 );
 }
 
 void game_world_ui::show_capture_progress( bool b_show )
+#line 644
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_capture_progress", NULL, &b_val, 1 );
 }
 
 void game_world_ui::set_fire_queue_size( const u32 fire_queue_size )
+#line 651
 {
 	flash_value value;
 	value.SetUInt( fire_queue_size );	get_ui( )->movie->Invoke( "root.set_weapon_fire_queue_size", NULL, &value, 1 );
 }
 
 void game_world_ui::set_ammo_in_magazine( const u32 count )
+#line 659
 {
 	flash_value value;
 	value.SetUInt( count );	get_ui( )->movie->Invoke( "root.set_weapon_ammo_size", NULL, &value, 1 );
 }
 
 void game_world_ui::set_ammo_type( const u8 ammo_type )
+#line 666
 {
 	flash_value value;
 	value.SetUInt( ammo_type );
@@ -598,6 +626,7 @@ void game_world_ui::set_ammo_type( const u8 ammo_type )
 }
 
 void game_world_ui::show_players_list( bool b_show )
+#line 674
 {
 	if ( m_players_list_visible == b_show )
 		return;
@@ -612,6 +641,7 @@ void game_world_ui::on_damage_affect_applying(
 	const hit_affects_type_enum		affect,
 	const affect_event_type_enum	event_type
 )
+#line 685
 {
 	u8 body_part_index = 0;
 	if ( affect == affects_type_hand_damage )
@@ -642,6 +672,7 @@ void game_world_ui::on_damage_affect_applying(
 // victory-items-container range accessor, then reconstruct the two object loops.
 // STATE[STUB]
 void game_world_ui::update_minimap_objects( )
+#line 709
 {
 	// LOCALS
 	// player_ptr 						current_player
@@ -756,6 +787,7 @@ void game_world_ui::update_minimap_objects( )
 // the target (register-only, unrecorded local); the value_exists/operator[] ternary +
 // CreateObject/SetMember/Invoke glue is /Od-shaped. Structure faithful, bytes parked.
 void game_world_ui::initialize_minimap( )
+#line 791
 {
 	pcstr const project_name = m_game_world.get_project( )->m_config->get_root( ).value_exists( "project_name" )
 		? m_game_world.get_project( )->m_config->get_root( )[ "project_name" ]
@@ -780,6 +812,7 @@ void game_world_ui::initialize_minimap( )
 // source order, changing register allocation downstream. Reopen if that shared compiler
 // context changes; moving the read earlier in source would contradict the target line records.
 void game_world_ui::update_minimap_players( )
+#line 810
 {
 	base_network_client* client = m_game_world.get_game( ).get_network_client( );
 	player_ptr local_player = client->get_current_player( );
@@ -834,6 +867,7 @@ void game_world_ui::update_minimap_players( )
 // implicit player_ptr destructor; base calls its byte-exact COMDAT body.
 // Reopen after resource_ptr/player compiler-context changes.
 void game_world_ui::update_minimap_local_player( )
+#line 865
 {
 	player_ptr current_player = m_game_world.get_game( ).get_network_client( )->get_current_player( );
 	if ( !current_player )
@@ -853,6 +887,7 @@ void game_world_ui::update_minimap_local_player( )
 }
 
 void game_world_ui::reset_map_rotatable( )
+#line 885
 {
 	flash_value b_val;
 	b_val.SetBoolean( is_ui_minimap_rotable );
@@ -860,6 +895,7 @@ void game_world_ui::reset_map_rotatable( )
 }
 
 void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_count )
+#line 893
 {
 	flash_value count;
 	count.SetUInt( first_type_count );	get_ui( )->movie->Invoke( "root.set_primary_ammo", NULL, &count, 1 );
@@ -868,6 +904,7 @@ void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_
 }
 
 void game_world_ui::show_quick_slots( bool b_show )
+#line 903
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_slots", NULL, &b_val, 1 );
@@ -882,6 +919,7 @@ void game_world_ui::create_slot_value(
 	inventory_item_props&		item_props,
 	flash_value&				slot_descr_value
 )
+#line 913
 {
 	u8 const item_icon	= m_game_world.get_game( ).items_dictionary( ).item_by_id( item_props.m_dict_id ).item_cfg->get_root( )[ "ui_desc" ][ "icon" ];
 
@@ -921,6 +959,7 @@ void game_world_ui::create_slot_value(
 // reuses the two dictionary_item stack lifetimes and counts the six-slot loop
 // down; base keeps separate slots and compares the running inventory offset.
 void game_world_ui::fill_quick_slots( )
+#line 953
 {
 	flash_value slots_array;
 	get_ui( )->movie->CreateArray( &slots_array );
@@ -969,6 +1008,7 @@ void game_world_ui::fill_quick_slots( )
 }
 
 void game_world_ui::update_quick_slot( profile_slot_enum slot )
+#line 1006
 {
 	flash_value slot_descr_value[2];
 	get_ui( )->movie->CreateObject( &slot_descr_value[0] );
@@ -1001,6 +1041,7 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 // and pass message_id in edx, separating the inlined flash_value constructor;
 // base caller context keeps this in esi. Reopen after player/weapon callers.
 void game_world_ui::show_screen_message( pcstr message_id )
+#line 1037
 {
 	wchar_t message[512];
 	m_game_world.get_game( ).text_translator( ).translate_text( message_id, message );
@@ -1011,6 +1052,7 @@ void game_world_ui::show_screen_message( pcstr message_id )
 }
 
 void game_world_ui::set_using_progress_message( u32 progress_value )
+#line 1046
 {
 	wchar_t message[512];
 	m_game_world.get_game( ).text_translator( ).translate_text( "st_using_progress_message", message );
@@ -1023,6 +1065,7 @@ void game_world_ui::set_using_progress_message( u32 progress_value )
 }
 
 void game_world_ui::set_using_info_message( pcstr str )
+#line 1057
 {
 	wchar_t message[512];
 	m_game_world.get_game( ).text_translator( ).translate_text( str, message );
@@ -1035,11 +1078,13 @@ void game_world_ui::set_using_info_message( pcstr str )
 }
 
 void game_world_ui::add_quick_slot_to_update( profile_slot_enum slot )
+#line 1068
 {
 	m_slots_to_update.push_back( slot );
 }
 
 void game_world_ui::disactivate_quick_slot( profile_slot_enum slot )
+#line 1073
 {
 	vector< profile_slot_enum >::iterator it	= m_slots_to_update.begin( );
 	vector< profile_slot_enum >::iterator end	= m_slots_to_update.end( );
@@ -1049,11 +1094,13 @@ void game_world_ui::disactivate_quick_slot( profile_slot_enum slot )
 }
 
 void game_world_ui::show_chat( bool b_show )
+#line 1104
 {
 	VOSTOK_UNREFERENCED_PARAMETER( b_show );
 }
 
 void game_world_ui::set_broken_connection_message( pcstr str )
+#line 1111
 {
 	VOSTOK_UNREFERENCED_PARAMETER( str );
 
@@ -1070,6 +1117,7 @@ void game_world_ui::set_broken_connection_message( pcstr str )
 }
 
 void game_world_ui::on_attached_to_player( player_ptr player )
+#line 1124
 {
 	if ( !player->is_alive( ) )
 	{
@@ -1098,23 +1146,27 @@ void game_world_ui::on_attached_to_player( player_ptr player )
 }
 
 void game_world_ui::on_detached_from_player( )
+#line 1155
 {
 	show_ammo_indicator( false );
 	show_quick_slots( false );
 }
 
 void game_world_ui::show_item_container( u8 visual_id )
+#line 1161
 {
 	flash_value visual_id_val;
 	visual_id_val.SetUInt( visual_id );	get_ui( )->movie->Invoke( "root.show_container_icon", NULL, &visual_id_val, 1 );
 }
 
 void game_world_ui::hide_item_container( )
+#line 1167
 {
 	get_ui( )->movie->Invoke( "root.hide_container_icon", NULL, NULL, 0 );
 }
 
 void game_world_ui::set_player_online_status( u32 player_id, bool is_online )
+#line 1172
 {
 	wchar_t w_player_name[512];
 	mbstowcs_s(
