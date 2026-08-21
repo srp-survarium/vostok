@@ -50,8 +50,7 @@ inline scheduler::record& scheduler::register_object( scheduler::identifier* ide
 inline void scheduler::register_on_frame( scheduler::identifier* const identifier, scheduler::callback const& callback, const bool active )
 {
 	scheduler::record& record = register_object( identifier, callback, active );
-	record.m_update_delta	  = u32(-1);
-	record.m_max_update_count = 0;
+	record.m_update_delta	  = u32(-1); record.m_max_update_count = 0;
 	record.m_last_update_time = 0;
 }
 
