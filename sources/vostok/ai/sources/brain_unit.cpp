@@ -308,11 +308,6 @@ void brain_unit::play_animation_with_sound			(
 	play_sound						( sound_to_be_played );
 }
 
-bool brain_unit::is_playing_animation	( ) const
-{
-	return m_npc.is_playing_animation	( );
-}
-
 bool brain_unit::is_at_node				( game_object const* const node ) const
 {
 	return m_npc.is_at_node				( node );
@@ -386,11 +381,6 @@ bool brain_unit::is_at_position			( movement_target const* const target ) const
 void brain_unit::move_to_point			( movement_target const* const target )
 {
 	m_npc.move_to_position				( target );
-}
-
-bool brain_unit::is_moving				( ) const
-{
-	return m_npc.is_moving				( );
 }
 
 } // namespace ai

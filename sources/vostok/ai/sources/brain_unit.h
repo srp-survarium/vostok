@@ -80,7 +80,6 @@ public:
 			bool	is_invisible			( ) const;
 			bool	is_target_in_melee_range( npc const* const target ) const;
 			bool	is_at_node				( game_object const* const node ) const;
-			bool	is_playing_animation	( ) const;
 			bool	is_feeling_safe			( ) const;
 
 			void	prepare_to_attack		( npc const* const target, weapon const* const gun ) const;	
@@ -96,7 +95,6 @@ public:
 			void	play_sound				( sound_item const* const sound_to_be_played );
 			void	move_to_point			( movement_target const* const target );
 			bool	is_playing_sound		( ) const;
-			bool	is_moving				( ) const;
 			bool	is_at_position			( movement_target const* const target ) const;
 			void	play_animation_with_sound		(
 						animation_item const* const animation_to_be_played,
