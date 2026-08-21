@@ -48,7 +48,6 @@ brain_unit::brain_unit		(
 
 brain_unit::~brain_unit		( )
 {
-	//LOG_INFO				( "destroying brain_unit 0x%8x", this );
 }
 
 void brain_unit::set_behaviour	( behaviour_ptr const& new_behaviour )
@@ -82,9 +81,7 @@ void brain_unit::stop_activity	( )
 		on_finish_sound_playing	( );
 
 	m_blackboard.clear			( );
-
 	m_goal_selector->finalize	( );
-
 	m_target_selectors.for_each	( clear_targets_predicate() );
 }
 
@@ -120,12 +117,19 @@ struct tick_predicate : private boost::noncopyable
 
 void brain_unit::tick			( )
 {
+
 	m_sound_player->tick		( );
 
 	if ( m_is_activity_suspended )
 		return;
 
 	m_active_sensors.for_each	( tick_predicate() );
+
+
+
+
+
+
 }
 
 void brain_unit::select_new_goal	( )
@@ -215,9 +219,6 @@ struct dump_state_predicate : private boost::noncopyable
 
 void brain_unit::retrieve_statistics( npc_statistics& stats ) const
 {
-// 	if ( is_activity_suspended )
-// 		return;
-	
 	dump_state_predicate			dumper_predicate( stats );
 	m_active_sensors.for_each		( dumper_predicate );
 	m_passive_sensors.for_each		( dumper_predicate );
@@ -259,11 +260,6 @@ bool brain_unit::was_sound_played			( sound_item const* const target ) const
 	return m_blackboard.is_sound_played		( target );
 }
 
-bool brain_unit::is_playing_sound			( ) const
-{
-	return m_current_sound					!= 0;
-}
-
 bool brain_unit::was_played_animation_with_sound	(
 		animation_item const* const animation,
 		sound_item const* const sound
@@ -289,7 +285,9 @@ void brain_unit::on_finish_animation_playing		( animation_item const* const anim
 
 void brain_unit::play_sound			( sound_item const* const sound_to_be_played )
 {
-	LOG_INFO						( "%s: playing sound %s", m_npc.cast_game_object()->get_name(), sound_to_be_played->name.c_str() );
+	LOG_INFO						(
+		"%s: playing sound %s",
+		m_npc.cast_game_object()->get_name(), sound_to_be_played->name.c_str() );
 }
 
 void brain_unit::play_animation_with_sound			(
@@ -303,7 +301,6 @@ void brain_unit::play_animation_with_sound			(
 		animation_to_be_played->name.c_str(),
 		sound_to_be_played->name.c_str()
 	);
-
 	play_animation					( animation_to_be_played );
 	play_sound						( sound_to_be_played );
 }
