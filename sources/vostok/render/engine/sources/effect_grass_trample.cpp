@@ -14,7 +14,7 @@ void effect_grass_trample::compile(
 	compiler.begin_pass("grass_trample", NULL, "grass_trample", shader_configuration(), NULL);
 	compiler.set_depth(false, false);
 	compiler.set_cull_mode(D3D11_CULL_NONE);
-	compiler.set_texture("t_trample_template", "engine/grass_trample_template", 0, false, 0);
+	compiler.set_texture("t_trample_template", "engine/grass_trample_template", 0, false, u32(-1));
 	compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE);
 	compiler.end_pass();
 	compiler.end_technique();

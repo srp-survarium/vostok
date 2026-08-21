@@ -38,8 +38,8 @@ void effect_system_colored::compile(
 	c.begin_technique( /*cover*/)
 		.begin_pass	( "color_cover", NULL, "color_cover", shader_configuration(), NULL)
 			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
-			.set_texture("t_position", r2_rt_p, 0, false, 0)
-			.set_texture("t_random_rotates", "engine/ssao_rotate", 0, true, 0)
+			.set_texture("t_position", r2_rt_p, 0, false, u32(-1))
+			.set_texture("t_random_rotates", "engine/ssao_rotate", 0, true, u32(-1))
 		.end_pass	()
 	.end_technique();
 

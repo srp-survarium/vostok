@@ -25,8 +25,8 @@ public:
 		compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
 		compiler.set_stencil( true, 0xff, 0x40, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_INVERT );
 		compiler.set_cull_mode( D3D_CULL_NONE );
-		compiler.set_texture( "t_position", "$user$position", 0, false, 0 );
-		compiler.set_texture( "t_normal", "$user$normal", 0, false, 0 );
+		compiler.set_texture( "t_position", "$user$position", 0, false, u32( -1 ) );
+		compiler.set_texture( "t_normal", "$user$normal", 0, false, u32( -1 ) );
 		compiler.end_pass( );
 		compiler.end_technique( );
 
@@ -36,8 +36,8 @@ public:
 		compiler.set_stencil( true, 0xff, 0x40, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_KEEP );
 		compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
 		compiler.set_cull_mode( D3D_CULL_BACK );
-		compiler.set_texture( "t_position", "$user$position", 0, false, 0 );
-		compiler.set_texture( "t_normal", "$user$normal", 0, false, 0 );
+		compiler.set_texture( "t_position", "$user$position", 0, false, u32( -1 ) );
+		compiler.set_texture( "t_normal", "$user$normal", 0, false, u32( -1 ) );
 		compiler.end_pass( );
 		compiler.end_technique( );
 	}

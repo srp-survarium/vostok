@@ -32,7 +32,7 @@ void effect_simple_fog::compile(
 	compiler.begin_pass( "gather_luminance2", NULL, "fog_simple", shader_configuration( ), NULL );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA );
-	compiler.set_texture( "t_position", "$user$position", 0, false, 0 );
+	compiler.set_texture( "t_position", "$user$position", 0, false, u32( -1 ) );
 	compiler.set_stencil(
 		true,
 		0x80,
