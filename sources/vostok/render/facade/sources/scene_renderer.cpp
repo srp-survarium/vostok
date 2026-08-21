@@ -641,9 +641,6 @@ void load_props_impl( light_props& props, config_value_type const& cfg )
 	{
 		float3 const& scale							= cfg["scale"];
 		float3 const& rotation						= cfg["rotation"];
-		// claude@MATCH: position binds the config value, not a float3 like its two
-		// neighbours - the target's statement is bare push/call with no deref, the
-		// float3 conversion happens later inside create_translation's argument.
 		config_value_type const& position			= cfg["position"];
 		props.transform								= math::mul4x3( math::mul4x3( math::create_scale( scale ), math::create_rotation( rotation ) ), math::create_translation( position ) );
 	}
