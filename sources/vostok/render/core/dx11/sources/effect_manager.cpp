@@ -106,7 +106,9 @@ void effect_manager::delete_pass( res_pass const* pass )
 		return;
 	}
 
+#line 118
 	LOG_ERROR( "!ERROR: Failed to find compiled pass.");
+#line 110
 }
 
 effect_descriptor* effect_manager::get_effect_descriptor_by_name( pcstr name )

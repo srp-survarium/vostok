@@ -22,7 +22,8 @@ effect_compiler::effect_compiler(
 ) :
 	m_shader_sources( in_shader_sources ),
 	m_parent_query( parent ),
-	m_shader_cache_info( g_allocator ),
+	m_shader_cache_info( memory::g_mt_allocator ),
+	m_sampler_state_descriptor( *this ),
 	m_curr_sampler_name( 0 ),
 	m_compilation_target( effect ),
 	m_technique_idx( 0 ),
