@@ -10,6 +10,7 @@
 #include <vostok/particle/world.h>
 
 #include "weapon_user_dead_state.h"
+#include "player_logic_preview_state.h"
 
 #include <vostok/math_constants.h>
 #include <vostok/console_command.h>
@@ -230,24 +231,33 @@ bool weapon_user_dead_state::is_ready_for_transition( ) const
 	return false;
 }
 
-// claude@NOTE: STUB - 16 stmts. Lines 266/267: m_rifle_scope = rifle_scope; model = base_model
-// (resource_ptr addref-new/release-old). Lines 269/270: model->m_render_model->get_locator(
-// "barrel_point", m_barrel_locator ) / ( "scope_point", m_scope_locator ) (the [model+0x108] render_
-// model_instance virtual get_locator at vtable+0x20). Lines 272-286: allocates a weapon_user_dead_state
-// via g_allocator (0x30 bytes), constructs it (player_logic_base_state base ctor + dead_state vtable,
-// this+0x28=weapon, +0x2C=NULL), then m_user_animations_selector.m_logic (this+0x278) fsm::add_state(
-// dead ) + fsm::add_transition with is_dead/is_alive predicates (boost::function0<bool> bound to the
-// file-local is_dead/is_alive free fns). PARK CAUSE: the `dead` local (weapon_user_dead_state*
-// placement-new + fsm wiring) is a large reconstruction threading player_logic_base_state ctor +
-// ai::fsm add_state/add_transition + boost predicate vtable bookkeeping. NEXT: recover statement group
-// by group (the resource_ptr assigns + 2 get_locator calls are straightforward; the dead-state fsm
-// block is the bulk).
-// STATE[STUB]
 void weapon::load_weapon(
 	render::skeleton_model_ptr const&	base_model,
 	rifle_scope_ptr const&		rifle_scope
 )
 {
+	m_rifle_scope = rifle_scope;
+	model = base_model;
+
+	model->m_render_model->get_locator( "barrel_point", m_barrel_locator );
+	model->m_render_model->get_locator( "scope_point", m_scope_locator );
+
+	player_logic_base_state* const dead = VOSTOK_NEW_IMPL( g_allocator, weapon_user_dead_state )( *this );
+
+	m_user_animations_selector.logic( ).add_state( dead );
+
+	for ( ai::fsm_state* i = m_user_animations_selector.logic( ).states( ).front( ); i; i = i->next )
+	{
+		m_user_animations_selector.logic( ).add_transition( i, dead, boost::bind( &is_dead, boost::ref( m_user ) ) );
+		m_user_animations_selector.logic( ).add_transition( dead, i, boost::bind( &is_alive, boost::ref( m_user ) ) );
+	}
+
+	player_logic_base_state* const preview = VOSTOK_NEW_IMPL( g_allocator, player_logic_preview_state )(
+		( resources::managed_resource_ptr* )( this + 1 ) + m_first_view_death_animations_count + m_third_view_death_animations_count,
+		m_preview_animations_count,
+		m_user_animations_selector
+	);
+	m_user_animations_selector.logic( ).add_state( preview );
 }
 
 // claude@NOTE: structure faithful (static add, if-guard, the two returns exactly as the target

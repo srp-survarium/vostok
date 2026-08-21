@@ -95,7 +95,7 @@ public:
 			weapon_user_state_enum		get_current_state_id			( ) const;
 			bool						sprint_predicate				( ) const;
 
-	inline	ai::fsm&							logic							( ) { /* no source */ }
+	inline	ai::fsm&							logic							( ) { return m_logic; }
 
 	inline	bool			is_right_leg_supporting			( ) const { return m_right_leg_is_supporting; }
 
