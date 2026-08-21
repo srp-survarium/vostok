@@ -20,7 +20,7 @@ void effect_fix_irradiance_texture::compile(
 	compiler.set_depth( false, false );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.set_fill_mode( D3D_FILL_SOLID );
-	compiler.set_texture( "t_skin_scattering_temp", r2_rt_skin_scattering_temp, 0, false, 0 );
+	compiler.set_texture( "t_skin_scattering_temp", r2_rt_skin_scattering_temp, 0, false, u32( -1 ) );
 	compiler.end_pass( );
 	compiler.end_technique( );
 }

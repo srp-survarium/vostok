@@ -15,11 +15,11 @@ void effect_translucency::compile(
 	compiler.begin_technique( );
 	compiler.begin_pass( "translucency", NULL, "translucency", shader_configuration( ), NULL );
 
-	compiler.set_texture( "t_diffuse", r2_rt_albedo, 0, false, 0 );
-	compiler.set_texture( "t_position", r2_rt_p, 0, false, 0 );
-	compiler.set_texture( "t_normal", r2_rt_n, 0, false, 0 );
+	compiler.set_texture( "t_diffuse", r2_rt_albedo, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_position", r2_rt_p, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_normal", r2_rt_n, 0, false, u32( -1 ) );
 
-	compiler.set_texture( "t_sun_translucensy_help_data", "$user$sun_translucensy_help_data", 0, false, 0 );
+	compiler.set_texture( "t_sun_translucensy_help_data", "$user$sun_translucensy_help_data", 0, false, u32( -1 ) );
 
 	compiler.set_depth( false, false );
 	compiler.set_stencil( true, 0xff, 0x04, 0xff, D3D_COMPARISON_EQUAL );

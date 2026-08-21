@@ -17,7 +17,7 @@ void effect_post_process_fxaa::compile(
 	compiler.begin_pass( "post_process_fxaa", NULL, "post_process_fxaa", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 
-	compiler.set_texture( "t_frame_color", r2_rt_generic1, 0, false, 0 );
+	compiler.set_texture( "t_frame_color", r2_rt_generic1, 0, false, u32( -1 ) );
 	compiler.end_pass( );
 	compiler.end_technique( );
 }

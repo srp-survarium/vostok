@@ -16,13 +16,13 @@ void effect_resolve_lighting::compile(
 	compiler.begin_technique( );
 	compiler.begin_pass( "resolve_lighting", NULL, "resolve_lighting", shader_configuration( ), NULL );
 
-	compiler.set_texture( "t_diffuse", r2_rt_albedo, 0, false, 0 );
-	compiler.set_texture( "t_normal", r2_rt_n, 0, false, 0 );
-	compiler.set_texture( "t_position", r2_rt_p, 0, false, 0 );
-	compiler.set_texture( "t_diffuse_accumulation", r2_rt_accum_diffuse, 0, false, 0 );
-	compiler.set_texture( "t_specular_accumulation", r2_rt_accum_specular, 0, false, 0 );
-	compiler.set_texture( "t_lpv_accumulation", "$user$lpv_accumulation", 0, false, 0 );
-	compiler.set_texture( "t_sun_translucensy_help_data", "$user$sun_translucensy_help_data", 0, false, 0 );
+	compiler.set_texture( "t_diffuse", r2_rt_albedo, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_normal", r2_rt_n, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_position", r2_rt_p, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_diffuse_accumulation", r2_rt_accum_diffuse, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_specular_accumulation", r2_rt_accum_specular, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_lpv_accumulation", "$user$lpv_accumulation", 0, false, u32( -1 ) );
+	compiler.set_texture( "t_sun_translucensy_help_data", "$user$sun_translucensy_help_data", 0, false, u32( -1 ) );
 
 	compiler.set_depth( false, false );
 	compiler.set_stencil(

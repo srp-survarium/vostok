@@ -44,7 +44,7 @@ void decal_default_material_effect::compile(
 				compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 
 			if (configuration.use_diffuse_texture)
-				compiler.set_texture	("t_base", pcstr(config["texture_diffuse"]), 0, true, 0);
+				compiler.set_texture	("t_base", pcstr(config["texture_diffuse"]), 0, true, u32(-1));
 
 			if (config.value_exists("constant_diffuse"))
 				compiler.set_constant	("constant_diffuse", math::float4(config["constant_diffuse"]));
@@ -64,10 +64,10 @@ void decal_default_material_effect::compile(
 				compiler.set_constant("diffuse_alpha", float(config["diffuse_alpha"]));
 
 			if (configuration.use_normal_texture)
-				compiler.set_texture	("t_normal_map", pcstr(config["texture_normal"]), 0, true, 0);
+				compiler.set_texture	("t_normal_map", pcstr(config["texture_normal"]), 0, true, u32(-1));
 
-			compiler.set_texture		("t_position", r2_rt_p, 0, false, 0);
-			compiler.set_texture		("t_normal", r2_rt_n, 0, false, 0);
+			compiler.set_texture		("t_position", r2_rt_p, 0, false, u32(-1));
+			compiler.set_texture		("t_normal", r2_rt_n, 0, false, u32(-1));
 
 			if (config.value_exists("blend_with_geometry_normals"))
 				compiler.set_constant			(
@@ -78,7 +78,7 @@ void decal_default_material_effect::compile(
 				);
 
 			if (configuration.use_reflection)
-				compiler.set_texture("t_cubemap", pcstr(config["texture_cubemap"]), 0, true, 0);
+				compiler.set_texture("t_cubemap", pcstr(config["texture_cubemap"]), 0, true, u32(-1));
 
 		compile_end(compiler);
 	}

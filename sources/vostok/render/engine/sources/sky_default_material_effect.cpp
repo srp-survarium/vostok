@@ -14,7 +14,7 @@ void sky_default_material_effect::compile(
 {
 	compiler.begin_technique();
 		compiler.begin_pass("vertex_base", NULL, "skybox_preview", shader_configuration(), NULL);
-			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]), 0, true, 0);
+			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]), 0, true, u32(-1));
 			compiler.set_cull_mode(D3D_CULL_FRONT);
 		compiler.end_pass();
 	compiler.end_technique();
@@ -24,7 +24,7 @@ void sky_default_material_effect::compile(
 			compiler.set_depth(false, false);
 			compiler.set_stencil(true, 0x00, 0xff, 0x00, D3D_COMPARISON_EQUAL);
 			compiler.set_alpha_blend(true);
-			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]), 0, true, 0);
+			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]), 0, true, u32(-1));
 		compiler.end_pass();
 	compiler.end_technique();
 }
