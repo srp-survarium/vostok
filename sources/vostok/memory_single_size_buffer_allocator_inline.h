@@ -32,6 +32,11 @@ inline single_size_buffer_allocator< DataSize, ThreadingPolicy >::single_size_bu
 }
 
 template < int DataSize, class ThreadingPolicy >
+inline single_size_buffer_allocator< DataSize, ThreadingPolicy >::~single_size_buffer_allocator( )
+{
+}
+
+template < int DataSize, class ThreadingPolicy >
 inline pvoid single_size_buffer_allocator< DataSize, ThreadingPolicy >::allocate	( )
 {
 	node* allocated_node			= PolicyType::allocate( m_free_list_head );

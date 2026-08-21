@@ -33,10 +33,14 @@ class single_size_buffer_allocator : public boost::noncopyable
 
 public:
 	inline				single_size_buffer_allocator	( pvoid arena, size_t arena_size );
+	inline				~single_size_buffer_allocator	( );
 	inline	pvoid		allocate						( );
 	inline	void		deallocate						( pvoid& pointer );
 	inline	size_t		total_size						( ) const { return	m_max_count * DataSize; }
 	inline	size_t		allocated_size					( ) const { return	m_allocated_count * DataSize; }
+	inline	u32			allocated_count					( ) const { return m_allocated_count; }
+	inline	u32			max_count						( ) const { return m_max_count; }
+	inline	bool		is_memory_available				( ) const { return allocated_count( ) < max_count( ); }
 	
 	// complex signatures just for support of VOSTOK_NEW_IMPL/VOSTOK_DELETE_IMPL calls
 	inline	pvoid		malloc_impl						( size_t size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );

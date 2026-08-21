@@ -36,9 +36,9 @@ public:
 	inline 						buffer_string	(value_type* buffer, size_type const& max_count, size_type const& count);
 	inline 						buffer_string	(value_type* buffer, size_type const& max_count, const value_type* src);
 	template <typename input_iterator>
-	inline 						buffer_string	(value_type*			buffer, 
-												 size_type const&		max_count, 
-												 input_iterator const&	begin_src, 
+	inline 						buffer_string	(value_type*			buffer,
+												 size_type const&		max_count,
+												 input_iterator const&	begin_src,
 												 input_iterator const&	end_src);
 
 	inline buffer_string const&	operator =		(value_type const* s);

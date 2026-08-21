@@ -269,7 +269,7 @@ bool check_presence_mutex						( )
 	s_presence_mutex				= OpenMutexA( READ_CONTROL, FALSE, "survarium_already_running" );
 	if ( !s_presence_mutex ) {
 		s_presence_mutex			= CreateMutexA( 0, FALSE, "survarium_already_running" );
-		return						s_presence_mutex != 0;
+		return						s_presence_mutex ? true : false;
 	}
 
 	CloseHandle						( s_presence_mutex );
