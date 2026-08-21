@@ -107,13 +107,15 @@ def dynamic_pair_score(target_mangled, base_mangled, target_rec, base_rec, score
     return fuzzy
 
 
-def instruction_stream_exact(target_rec, base_rec):
+def instruction_stream_exact(target_rec, base_rec, call_alias_equivalent=None):
     """Prove exact code when objdiff omitted a function score.
 
     The rich-index producer has already normalized branch labels and relocation
     operands to symbolic instruction text. Equal size plus an identical,
     non-empty ordered instruction stream is therefore strict function-scoped
-    exact evidence; an absent instruction stream is never evidence.
+    exact evidence. The optional callback may prove that otherwise identical
+    calls or jumps merely use different ICF representative names. An absent
+    instruction stream is never evidence.
     """
     if target_rec is None or base_rec is None:
         return False
@@ -138,7 +140,29 @@ def instruction_stream_exact(target_rec, base_rec):
             for ins in instructions
         ]
 
-    return identity(target_instructions) == identity(base_instructions)
+    target_identity = identity(target_instructions)
+    base_identity = identity(base_instructions)
+    if target_identity == base_identity:
+        return True
+    if call_alias_equivalent is None or len(target_identity) != len(base_identity):
+        return False
+
+    for target, base in zip(target_identity, base_identity):
+        if target == base:
+            continue
+        if target[:2] != base[:2]:
+            return False
+        target_parts = target[2].split(None, 1)
+        base_parts = base[2].split(None, 1)
+        if (
+            len(target_parts) != 2
+            or len(base_parts) != 2
+            or target_parts[0] != base_parts[0]
+            or target_parts[0] not in {"call", "jmp"}
+            or not call_alias_equivalent(target_parts[1], base_parts[1])
+        ):
+            return False
+    return True
 
 
 def island_candidate_score(expected, mangled, scores, target_rec, candidate_rec):

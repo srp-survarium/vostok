@@ -12,16 +12,11 @@
 #include <vostok/console_command.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
-// claude@MATCH: GLOBAL-scope, extern-linkage buffers (target mangles
-// ?s_net_client_account_name@@3PADA - no namespace); note the trailing
-// underscore on the password buffer (the original's exact spelling)
+// Target linkage keeps these buffers at global scope.
 char	s_net_client_account_name[128];
 char	s_net_client_account_password_[128];
 
-// the dynamic-initializer thunks pair as None by design (objdiff cannot pair the
-// base ??__E mangling with the demangled target name - the cc-initializer pattern,
-// assembly_patterns.md); ctor args read off the target initializer bytes
-// (name/buffer/0x80/true/command_type_user_specific)
+// The target initializes both commands with a 128-byte user-specific buffer.
 static vostok::console_commands::cc_string s_net_client_account_name_cc(
 	"account_name", s_net_client_account_name,
 	sizeof( s_net_client_account_name ), true,
@@ -175,12 +170,8 @@ void login_client::sign_in_impl(
 	m_client->sign_in	( host, port, account_name, password, boost::bind( &login_client::on_signed_in, this, _1, _2, _3, _4 ) );
 }
 
-// claude@NOTE: no standalone target symbol - LTCG fully inlined it into its only
-// real caller (the optimized game module); body reconstructed: the impl's sign-up
-// chain binds boost::ref over the info, so the original must pass the long-lived
-// m_sign_up_info member, and the callback routes through on_signed_up (which
-// forwards to m_on_sign_up, assigned here); defining it here also keeps the whole
-// impl sign-up chain reachable
+// Target emits this only inline; m_sign_up_info must outlive the asynchronous
+// boost::ref chain.
 void login_client::sign_up(
 		pcstr					host,
 		u16						port,

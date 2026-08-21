@@ -53,8 +53,7 @@ public:
 
 			void				disconnect				( );
 
-	// no standalone symbol; body recovered from the enqueue_impl expansion
-	// (inline param slot pair + `add ecx, 258038h; call udp_match_client::enqueue`)
+	// Target emits this only inline in enqueue_impl.
 	inline	void				enqueue					( network_core::udp_match_packet* packet )
 	{
 		m_client.enqueue	( packet );
@@ -68,13 +67,9 @@ public:
 			m_client.send_queued_packets	( current_time_in_ms );
 	}
 
-	// forwarders recovered from the match_client::is_connected/is_disconnected
-	// expansions (cmp impl+0x258154 vs 0/3)
 	inline	bool				is_connected			( ) const { return m_client.is_connected( ); }
 	inline	bool				is_disconnected			( ) const { return m_client.is_disconnected( ); }
 
-	// recovered from match_client::create_client (folded function1::operator= into
-	// impl+0x258010)
 	inline	void				set_on_disconnect		(
 									boost::function< void ( enum network_core::disconnect_event_types_enum ) > const&	on_disconnect
 								)
@@ -88,9 +83,6 @@ public:
 
 			network_core::udp_match_packet*	clone_packet	( network_core::udp_match_packet const& packet );
 
-	// forwarders recovered from match_client::enqueue/on_packet_received
-	// (impl+0x258038 = &m_client = its m_stats reference) and
-	// match_client::last_receive_time_in_ms (load of impl+0x258134)
 	inline	network_core::udp_match_stats const&	get_stats				( ) const { return m_client.get_stats( ); }
 	inline	u32					last_receive_time_in_ms	( ) const { return m_client.last_receive_time_in_ms( ); }
 
@@ -100,9 +92,7 @@ private:
 			void				on_disconnect			( const network_core::disconnect_event_types_enum disconnect_type );
 
 public:
-	// no standalone symbol; body recovered from the match_client::new_packet
-	// expansion (orderer materialized to the inline param slot, then a direct
-	// `call udp_match_connection::construct_packet`)
+	// Target emits this only inline in match_client::new_packet.
 	static inline	void		construct_packet		(
 									network_core::udp_match_packets_orderer&	packets_orderer,
 									network_core::udp_match_packet&		packet,

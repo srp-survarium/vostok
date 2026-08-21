@@ -10,18 +10,13 @@
 #include <vostok/network/api.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
-// The target retains this otherwise-unreferenced /GL survivor; no target object
-// contains a code or data xref to it.
+// Temporary /include anchor: target /GL retains this without a visible caller.
+// Remove it when real callers keep the symbol alive.
 #pragma comment( linker, "/include:?sign_up@login_client_impl@network@vostok@@QAEXPBDGABUsign_up_info@3@ABV?$function@$$A6AXW4connection_error_types_enum@vostok@@W4handshaking_error_types_enum@2@W4socket_error_types_enum@2@W4login_server_message_types_enum@2@ABUsign_up_info@2@@Z@boost@@@Z" )
 
 using vostok::network::network_world;
 
-// claude@NOTE: objdiff credits 0 (symbols never pair). The base obj DOES
-// contain the initializer (mangled `??__Es_world@@YAXXZ`, same 3 stores as
-// target rva 0x7c5270) but the target side carries the demangled name
-// (`dynamic initializer for 's_world''), so objdiff never pairs them - a
-// delinker/naming gap affecting every dynamic initializer (base rich index has
-// zero), not source-steerable from this TU
+// The PDB and object index use different names for this initializer thunk.
 static vostok::uninitialized_reference<network_world>	s_world;
 vostok::network::allocator_type*	vostok::network::g_allocator = 0;
 

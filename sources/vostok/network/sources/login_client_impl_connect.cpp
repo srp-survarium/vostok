@@ -63,10 +63,6 @@ void login_client_impl::connect(
 	LOG_INFO		( "[LOGIN] connecting...\r\n" );
 	strcpy_s		( m_host_ip, sizeof( m_host_ip ), iterator->endpoint( ).address( ).to_string( ).c_str( ) );
 
-
-
-
-
 	m_connection_state	= connecting;
 	boost::asio::async_connect	(
 		m_socket,

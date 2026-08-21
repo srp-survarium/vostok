@@ -16,9 +16,7 @@ namespace network {
 
 class connect_order : public order {
 public:
-	// no standalone target symbol (only dtor/execute/??_G); the only construction
-	// site is match_client::connect, so its bytes are verifiable only through that
-	// caller
+	// Target emits this constructor only inline in match_client::connect.
 	inline			connect_order	(
 			memory::base_allocator& strings_allocator,
 			pcstr const host,

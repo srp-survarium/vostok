@@ -53,7 +53,6 @@ void login_client_impl::on_resolved(
 				}
 			}
 
-
 		delete		resolver;
 		functor		( cannot_resolve, iterator );
 		LOG_INFO	( "[LOGIN] can't resolve endpoints: %s", error_code.message( ).c_str( ) );
@@ -61,12 +60,9 @@ void login_client_impl::on_resolved(
 		return;
 	}
 
-
 	delete			resolver;
 
 	LOG_INFO		( "[LOGIN] resolved!\r\n" );
-
-
 
 	m_connection_state	= resolved;
 	functor			( successfully_resolved, iterator );

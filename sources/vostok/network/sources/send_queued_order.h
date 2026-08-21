@@ -14,9 +14,7 @@ namespace network {
 
 class send_queued_order : public order {
 public:
-	// no standalone symbol; init list recovered from the inline expansion in
-	// match_client::send_queued_packets: m_copied_stats rep-movsd copy FROM
-	// target_stats, functor function0 copy-ctor, target_stats/client reference stores
+	// Target emits this constructor only inline in match_client::send_queued_packets.
 	inline			send_queued_order	(
 			boost::function< void ( ) > const& functor,
 			match_client_impl*& client,

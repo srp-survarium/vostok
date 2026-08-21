@@ -15,11 +15,7 @@ namespace network {
 
 class enqueue_order : public order {
 public:
-	// no standalone symbol; init list recovered from the inline expansion in
-	// match_client::enqueue: m_copied_stats rep-movsd copy FROM target_stats (this+8
-	// of the caller, the same address stored to m_target_stats), enqueuer function1
-	// copy, packet address, allocator intrusive_ptr copy-ctor, source/target
-	// reference stores
+	// Target emits this constructor only inline in match_client::enqueue.
 	inline			enqueue_order	(
 			boost::function< void ( network_core::udp_match_packet& ) > const& enqueuer,
 			network_core::udp_match_packet& packet,

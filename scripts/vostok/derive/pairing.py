@@ -7,7 +7,7 @@ one side and `??__E`/`??__F` on the other, and the retail PDB renders a handful
 of template arguments differently. Each recovery is a separate pass with its own
 evidence bar, applied in descending order of certainty:
 
-    primary          identical mangled names
+    primary          identical mangled names and exact or alias-normalized code
     compiler alias   the exact name MSVC would emit, proven by a report score
     report alias     a folded PDB alias the delink report already compared
     strict rich      unique same-source alias with a byte-identical stream
@@ -20,6 +20,7 @@ still free. A wrong alias invents a match that is not there, so each pass
 refuses on ambiguity rather than guessing.
 """
 
+import re
 from dataclasses import dataclass, field
 
 from vostok.core import symbols as normalize_objdiff_symbols
@@ -31,6 +32,7 @@ from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
+from vostok.derive.names import qualified_name
 
 
 @dataclass(frozen=True)
@@ -94,18 +96,29 @@ class _Pairer:
         self.base_aliases_by_mangled = _by_mangled(artifacts.base_records)
         self.target_alias_names_by_rva = _names_by_rva(artifacts.target_records)
         self.base_alias_names_by_rva = _names_by_rva(artifacts.base_records)
+        (
+            self.target_call_rvas_by_operand,
+            self.target_call_operands_by_rva,
+        ) = _call_operand_aliases(artifacts.target_records)
+        (
+            self.base_call_rvas_by_operand,
+            self.base_call_operands_by_rva,
+        ) = _call_operand_aliases(artifacts.base_records)
         self.exact_fold_aliases = load_exact_fold_aliases()
 
     # -- the passes ---------------------------------------------------------
 
     def primary(self):
         """Identical mangled names. A function objdiff never scored but whose
-        rich instruction streams are identical is exact by construction."""
+        rich instruction streams are identical, including uniquely proven ICF
+        call aliases, is exact by construction."""
         recovered = 0
         for mangled in sorted(self.primary_names):
             trec, brec = self.target[mangled], self.base[mangled]
             fuzzy = self.art.fuzzy.get(mangled)
-            if fuzzy is None and instruction_stream_exact(trec, brec):
+            if fuzzy is None and instruction_stream_exact(
+                trec, brec, self._call_alias_equivalent
+            ):
                 fuzzy = 100.0
                 recovered += 1
             self._add(mangled, trec, brec, fuzzy)
@@ -269,6 +282,24 @@ class _Pairer:
             base_aliases_by_mangled=self.base_aliases_by_mangled,
         )
 
+    def _call_alias_equivalent(self, target_operand, base_operand):
+        """Whether two printed call targets are PDB aliases of one body.
+
+        The linker may print a different representative name for the same ICF
+        group on each side. An overlapping alias label at both called RVAs is
+        strict PDB evidence that only the representative spelling changed.
+        """
+        target_rvas = self.target_call_rvas_by_operand.get(target_operand, set())
+        base_rvas = self.base_call_rvas_by_operand.get(base_operand, set())
+        if len(target_rvas) != 1 or len(base_rvas) != 1:
+            return False
+        target_rva = next(iter(target_rvas))
+        base_rva = next(iter(base_rvas))
+        return bool(
+            self.target_call_operands_by_rva[target_rva]
+            & self.base_call_operands_by_rva[base_rva]
+        )
+
     def _add(self, mangled, trec, brec, fuzzy):
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(trec, brec)
         self.pairs[mangled] = Pair(
@@ -329,3 +360,19 @@ def _names_by_rva(records):
     for rec in records:
         out.setdefault(rec["rva"], set()).add(rec["name"])
     return out
+
+
+def _call_operand_aliases(records):
+    """Index the operand spelling each demangled PDB alias contributes."""
+    rvas_by_operand = {}
+    operands_by_rva = {}
+    for rec in records:
+        qualified = qualified_name(rec.get("name", ""))
+        if qualified is None:
+            continue
+        owner, leaf = qualified
+        operand = f"{owner}::{leaf}" if owner else leaf
+        operand = re.sub(r"\s+>", ">", operand)
+        rvas_by_operand.setdefault(operand, set()).add(rec["rva"])
+        operands_by_rva.setdefault(rec["rva"], set()).add(operand)
+    return rvas_by_operand, operands_by_rva

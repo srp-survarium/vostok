@@ -351,15 +351,6 @@ bool specified_problem::has_no_targets		( action_parameter const* const paramete
 	return									!has_targets;
 }
 
-// void specified_problem::add_owner_as_object	( )
-// {
-// 	R_ASSERT								( m_owner, "no brain unit set" );
-// 	brain_unit const* const owner			= m_owner;
-// 	object_instance_type					instance;
-// 	object_instance::set_instance			( instance, owner );
-// 	add_object_instance						( std::make_pair( instance, typeid( owner ).name() ), m_owner->get_npc().cast_game_object()->get_name() );
-// }
-
 object_type specified_problem::get_owner_as_object	( ) const
 {
 	R_ASSERT								( m_owner, "no owner brain unit set" );
