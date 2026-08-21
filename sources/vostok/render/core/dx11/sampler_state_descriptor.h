@@ -16,14 +16,12 @@ class sampler_state_descriptor {
 	friend class effect_compiler;
 	friend class resource_manager;
 
+public:
 	explicit sampler_state_descriptor( effect_compiler& compiler ) :
-		m_effect_compiler( &compiler ),
-		m_updated( false )
+		m_effect_compiler( &compiler )
 	{
-		reset( );
 	}
 
-public:
 	sampler_state_descriptor( ) : m_effect_compiler( 0 ), m_updated( false )
 	{
 		reset( );
