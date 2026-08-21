@@ -50,10 +50,12 @@ console_command_bind::console_command_bind( key_binder* binder, s32 type )
 	),
 	m_type		( type ),
 	m_binder	( binder )
+#line 32
 {
 }
 
 void console_command_bind::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
+#line 40
 {
 	VOSTOK_UNREFERENCED_PARAMETER( a );
 	for ( s32 idx = 0; idx < 64; ++idx ) {
@@ -224,11 +226,15 @@ int bRemapped = FALSE;
 
 key_binder::key_binder( game& g )
 	: m_game( g )
+#line 224
 {
 	memset( m_key_bindings, 0, sizeof( m_key_bindings ) );
 
 	for ( s32 idx = 0; idx < bindings_count; ++idx )
-		m_key_bindings[actions[idx].id].m_action = &actions[idx];
+	{
+		m_key_bindings[actions[idx].id].m_action =
+			&actions[idx];
+	}
 
 	static console_command_bind s_bind_key_command( this, 0 );
 	static console_command_bind s_bind_sec_key_command( this, 1 );
@@ -248,6 +254,7 @@ key_binder::key_binder( game& g )
 }
 
 void key_binder::set_default_controls( )
+#line 244
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
 		if ( actions[idx].default_key ) {
@@ -259,6 +266,7 @@ void key_binder::set_default_controls( )
 }
 
 void key_binder::remap_keys( )
+#line 258
 {
 	s32			idx = 0;
 	string128	buff;
@@ -271,6 +279,7 @@ void key_binder::remap_keys( )
 }
 
 pcstr key_binder::id_to_action_name( game_action_id _id ) const
+#line 272
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
 		if ( _id == actions[idx].id )
@@ -282,6 +291,7 @@ pcstr key_binder::id_to_action_name( game_action_id _id ) const
 }
 
 game_action_id key_binder::action_name_to_id( pcstr _name )
+#line 284
 {
 	game_action_descr* descr = action_name_to_ptr( _name );
 	if ( descr )
@@ -291,6 +301,7 @@ game_action_id key_binder::action_name_to_id( pcstr _name )
 }
 
 game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
+#line 293
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
 		if ( !_stricmp( _name, actions[idx].action_name ) )
@@ -302,6 +313,7 @@ game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 	return NULL;
 }
 pcstr key_binder::dik_to_keyname( s32 _dik )
+#line 305
 {
 	keyboard_key_descr* kb = key_binder::dik_to_ptr( _dik, true );
 	if ( kb )
@@ -311,6 +323,7 @@ pcstr key_binder::dik_to_keyname( s32 _dik )
 }
 
 keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
+#line 314
 {
 	VOSTOK_UNREFERENCED_PARAMETER( bSafe );
 	s32 idx = 0;
@@ -332,6 +345,7 @@ keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 
 
 keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
+#line 335
 {
 	s32 idx = 0;
 	while ( keyboards[idx].key_name )
@@ -348,6 +362,7 @@ keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 }
 
 s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
+#line 367
 {
 	VOSTOK_UNREFERENCED_PARAMETER( idx );
 	key_binding* pbinding = &m_key_bindings[_action_id];
@@ -362,6 +377,7 @@ s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
 }
 
 game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const
+#line 386
 {
 	for ( s32 idx = 0; idx < 64; ++idx )
 	{
@@ -384,6 +400,7 @@ game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& acti
 }
 
 void key_binder::bind_key( pcstr args, s32 bind_number )
+#line 438
 {
 	char	action[256];
 	char	key[256];
@@ -433,12 +450,14 @@ void key_binder::bind_key( pcstr args, s32 bind_number )
 }
 
 void key_binder::unbind_key( pcstr args, s32 bind_number )
+#line 489
 {
 	game_action_id	action_id	= action_name_to_id( args );
 	m_key_bindings[action_id].m_keyboard[bind_number]	= NULL;
 }
 
 s32 key_binder::get_binding_group( game_action_id _id )
+#line 496
 {
 	return m_key_bindings[_id].m_action->key_group;
 }

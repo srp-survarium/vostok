@@ -52,6 +52,7 @@ static u32 s_index_of_parent[15] =
 // __forceinline on the shared interpolator header (off-limits - other units' call sites).
  fingers_to_weapon_corrector::fingers_to_weapon_corrector( ) :
 	m_interpolator( 0.1f )
+#line 47
 {
 }
 
@@ -60,6 +61,7 @@ void fingers_to_weapon_corrector::activate(
 	render::render_model_instance_ptr		weapon_model,
 	const bool								first_person_view
 )
+#line 51
 {
 	initialize_bones_indices							( character_skeleton );
 	initialize_locators									( *weapon_model, first_person_view );
@@ -70,6 +72,7 @@ void fingers_to_weapon_corrector::activate(
 // reg (ebp, surviving the inlined __find_if call) and the bone-index / root-count divides
 // are scheduled in the opposite order to our base. Not source-steerable.
 void fingers_to_weapon_corrector::initialize_bones_indices( animation::skeleton const& character_skeleton )
+#line 60
 {
 	for ( u32 hand = 0; hand < hands_count; ++hand )
 		for ( u32 i = 0; i < 15; ++i )
@@ -81,6 +84,7 @@ void fingers_to_weapon_corrector::initialize_bones_indices( animation::skeleton 
 // up), while our base colors current_item lowest and the temp high. Same locals, same
 // statements - the slot assignment order is a compiler choice, not source-steerable.
 void fingers_to_weapon_corrector::initialize_locators( render::render_model_instance const& weapon_model, const bool first_person_view )
+#line 69
 {
 	typedef fixed_string< 256 >		locator_name_string_type;
 
@@ -115,6 +119,7 @@ void interpolate_hand_matrices(
 	const float			iterpolation_coeff,
 	float4x4*			result_matrices
 )
+#line 106
 {
 	for ( u32 i = 0; i < phalanges_count; ++i )
 		result_matrices[bone_indices[i]] = mix_transformations( result_matrices[bone_indices[i]], locator_matrices[i], iterpolation_coeff );
@@ -125,6 +130,7 @@ void interpolate_hand_matrices(
 // keeps it rolled (15 iterations, one rep movsd each). The unroll factor is an optimizer
 // heuristic on the constant trip count, not source-steerable.
 void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x4* matrices ) const
+#line 113
 {
 	for ( hand const* current_hand = m_hands; current_hand != m_hands + hands_count; ++current_hand )
 	{
@@ -142,6 +148,7 @@ void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x
 }
 
 float fingers_to_weapon_corrector::get_hand_coefficient( const float hand_transition_time, const bool hand_active ) const
+#line 127
 {
 	return hand_active
 		? 1.0f - m_interpolator.interpolated_value( hand_transition_time )
@@ -153,6 +160,7 @@ void fingers_to_weapon_corrector::activate_hand(
 	const bool		is_active,
 	const u32		current_time_in_ms
 )
+#line 140
 {
 	if ( m_hands[ hand ].is_active != is_active )
 	{

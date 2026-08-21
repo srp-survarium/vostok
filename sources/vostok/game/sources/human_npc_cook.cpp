@@ -29,12 +29,14 @@ namespace survarium {
  human_npc_cook::human_npc_cook( game_world& world ) :
 	translate_query_cook( resources::human_npc_class, reuse_true, use_current_thread_id ),
 	m_game_world( world )
+#line 19
 {
 }
 
 // claude@NOTE: Target keeps creation_data_from_user().c_ptr() out-of-line; base inlines it.
 // The remaining query construction difference is LTCG argument scheduling.
 void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
+#line 23
 {
 	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
 
@@ -65,11 +67,13 @@ void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 // claude@NOTE: Target keeps strip_pointer( g_allocator ) out-of-line on this delete path;
 // base inlines it through VOSTOK_DELETE_IMPL.
 void human_npc_cook::delete_resource( resources::resource_base* resource )
+#line 50
 {
 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
 }
 
 void human_npc_cook::on_queried_data_received( resources::queries_result& data )
+#line 55
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
@@ -90,6 +94,7 @@ void human_npc_cook::on_npc_options_received(
 	configs::binary_config_value const&		config_value,
 	resources::query_result_for_cook&		parent
 )
+#line 69
 {
 	configs::binary_config_value const& attributes		= config_value["attributes"];
 
@@ -142,6 +147,7 @@ void human_npc_cook::on_npc_options_received(
 // claude@NOTE: PDB locals and line-record counts agree. The remaining CFG difference is
 // the target/base resource_ptr cast temporary RVO choice, plus the c_ptr inline boundary.
 void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
+#line 123
 {
 	resources::query_result_for_cook* const parent		= data.get_parent_query();
 

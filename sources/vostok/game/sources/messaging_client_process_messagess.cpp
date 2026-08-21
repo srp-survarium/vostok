@@ -23,6 +23,7 @@ namespace survarium {
 // paths while the base duplicates them; logging expansion then changes statement
 // attribution. Revisit only with function-scoped compiler-context control.
 void messaging_client::on_packet_received( network_core::packet_reader& reader )
+#line 20
 {
 	const u8 message_type = reader.r< u8 >( );
 	switch ( message_type )
@@ -80,6 +81,7 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 // (\x043e\x0431\x0449\x0438\x0439 = general, etc.); spelled as code points so the
 // emitted UTF-16 is codepage-independent
 messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_t const* w_receiver_name, const bool in_match )
+#line 101
 {
 	if ( wcsstr( w_receiver_name, L"\x043e\x0431\x0449\x0438\x0439" ) || wcsstr( w_receiver_name, L"general" ) )	return messaging::player_general_channel;
 
@@ -110,6 +112,7 @@ messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_
 // after the wcsncpy that needs the original prefix, so it pairs one row off. None are
 // structural divergences.
 void messaging_client::on_message_typed( wchar_t const* input_text, messaging::message_channel_enum message_chanel )
+#line 121
 {
 	wchar_t			w_receiver_name[32];
 	bool			has_direct_receiver;
@@ -166,6 +169,7 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 }
 
 void messaging_client::query_for_friend_list( )
+#line 217
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -177,6 +181,7 @@ void messaging_client::query_for_friend_list( )
 }
 
 void messaging_client::query_for_friends_status( )
+#line 228
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -188,6 +193,7 @@ void messaging_client::query_for_friends_status( )
 }
 
 void messaging_client::add_to_friend_list( const u32 account_id )
+#line 239
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -200,6 +206,7 @@ void messaging_client::add_to_friend_list( const u32 account_id )
 }
 
 void messaging_client::remove_from_friend_list( const u32 account_id )
+#line 251
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -212,6 +219,7 @@ void messaging_client::remove_from_friend_list( const u32 account_id )
 }
 
 void messaging_client::query_for_ignore_list( )
+#line 263
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -223,6 +231,7 @@ void messaging_client::query_for_ignore_list( )
 }
 
 void messaging_client::add_to_ignore_list( const u32 account_id )
+#line 274
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -235,6 +244,7 @@ void messaging_client::add_to_ignore_list( const u32 account_id )
 }
 
 void messaging_client::remove_from_ignore_list( const u32 account_id )
+#line 286
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -247,6 +257,7 @@ void messaging_client::remove_from_ignore_list( const u32 account_id )
 }
 
 void messaging_client::find_players_by_name( pcstr player_name )
+#line 298
 {
 	if ( m_connection_state != messaging::client_connected )
 		return;
@@ -265,6 +276,7 @@ void messaging_client::find_players_by_name( pcstr player_name )
 // the whole find away to `return true`. Lifts once a real client with a populated
 // ignore list reaches this and the anchor is removed.
 bool messaging_client::accept_message_from( const u32 sender_account_id, messaging::client_type_enum sender_type )
+#line 310
 {
 	if ( sender_type == messaging::account_client_type )
 		return std::find( m_ignore_list.begin( ), m_ignore_list.end( ), sender_account_id ) == m_ignore_list.end( );
@@ -279,6 +291,7 @@ bool messaging_client::accept_message_from( const u32 sender_account_id, messagi
 // from the inlined r_string path) that the /Od base does not. Both trace to the
 // whole-program inlining of accept_message_from / packet_reader::r_string.
 void messaging_client::process_incoming_text_message( network_core::packet_reader& reader )
+#line 317
 {
 	messaging::send_message_params	params;
 	params.sender_type			= messaging::client_type_enum( reader.r< u8 >( ) );

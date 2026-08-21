@@ -32,6 +32,7 @@ extern bool		g_mouse_invert;
 	m_input_mode( ),
 	m_input_mode_changed( true ),
 	m_key_binder_context( 1 )
+#line 32
 {
 }
 
@@ -43,6 +44,7 @@ bool player_input_handler::on_keyboard_action(
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		actions_mask
 )
+#line 40
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
@@ -90,6 +92,7 @@ bool player_input_handler::on_gamepad_action(
 	input::gamepad_button			button,
 	input::enum_gamepad_action		actions_mask
 )
+#line 81
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( input_world, button, actions_mask );
 	return false;
@@ -102,6 +105,7 @@ bool player_input_handler::on_mouse_key_action(
 	input::mouse_button				button,
 	input::enum_mouse_key_action	actions_mask
 )
+#line 87
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
@@ -128,6 +132,7 @@ bool player_input_handler::on_mouse_move(
 	s32					y,
 	s32					z
 )
+#line 108
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
@@ -143,6 +148,7 @@ bool player_input_handler::on_mouse_move(
 }
 
 void player_input_handler::on_before_processing( input::world* const input_world, const u32 current_time_in_ms )
+#line 124
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
@@ -156,6 +162,7 @@ void player_input_handler::on_before_processing( input::world* const input_world
 }
 
 void player_input_handler::on_after_processing( input::world* input_world )
+#line 138
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
@@ -172,6 +179,7 @@ void player_input_handler::on_after_processing( input::world* input_world )
 }
 
 bool player_input_handler::alt_is_held( ) const
+#line 153
 {
 	input::keyboard const& keyboard = *m_game_world.get_game( ).input_world( ).get_keyboard( );
 	return keyboard.is_key_down( input::key_rmenu ) ||
@@ -219,6 +227,7 @@ inline bool player_input_handler::action_present( const game_action_id action, a
 // simple/rotation inline finds keep the * residual. Const-qualifying the whole iteration
 // here without adding a named local is the open lever.
 void player_input_handler::process_first_person_mode( const bool use_mouse_move )
+#line 159
 {
 	if ( m_game_actions.begin( ) == m_game_actions.end( ) && m_input.is_empty( ) )
 		return;
@@ -333,6 +342,7 @@ void player_input_handler::process_first_person_mode( const bool use_mouse_move 
 }
 
 void player_input_handler::process_third_person_mode( )
+#line 307
 {
 	m_distance_to_focus_point	+= m_z_mouse_axis;
 
@@ -361,6 +371,7 @@ void player_input_handler::process_third_person_mode( )
 // the original source broke the rotation/offset across more physical lines (no extra named
 // local; only new_inverted_view is recorded). Next: recover the exact per-line breaks.
 void player_input_handler::update_inverted_view( float4x4 const& player_head_transform )
+#line 324
 {
 	float4x4 new_inverted_view	= player_head_transform;
 
@@ -383,6 +394,7 @@ void player_input_handler::update_inverted_view( float4x4 const& player_head_tra
 // this body - so the byte residual here is an LTCG arg-source artifact, NOT a source
 // difference; do not read the globals here (that would fabricate the LTCG into source).
 void player_input_handler::set_yaw_pitch_distance( const float yaw, const float arg_1, const float arg_2 )
+#line 341
 {
 	m_yaw						= yaw;
 	m_pitch						= arg_1;
@@ -392,12 +404,14 @@ void player_input_handler::set_yaw_pitch_distance( const float yaw, const float 
 void player_input_handler::set_input_mode(
 	const input_mode_type_enum		input_mode
 )
+#line 349
 {
 	m_input_mode_changed	= m_input_mode_changed || m_input_mode != input_mode;
 	m_input_mode			= input_mode;
 }
 
 void player_input_handler::on_focus( bool b_focus_enter )
+#line 384
 {
 	if( b_focus_enter )
 		m_game_world.get_game( ).input_world( ).add_handler( *this );

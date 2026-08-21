@@ -57,10 +57,13 @@ bool	s_draw_respawn_debug	= false;
 bool	s_draw_game_match_stats	= false;
 
 static console_commands::cc_u32		bullet_tracers_max_count_cc(
+#line 69
 	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
 static console_commands::cc_bool	draw_respawn_debug_cc(
+#line 67
 	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_engine_internal );
 static console_commands::cc_bool	draw_match_stats_cc(
+#line 68
 	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_engine_internal );
 
 namespace survarium {
@@ -86,6 +89,7 @@ game_world::game_world( game& game ) :
 	m_active_npc_set( false ),
 	m_is_loading( false ),
 	m_victory_items( g_allocator )
+#line 98
 {
 	static console_commands::cc_delegate add_enemy_position_cc( "add_enemy", boost::bind( &game_world::add_enemy_position_for_team, this, _1 ), false );
 	static console_commands::cc_delegate clear_enemies_position_cc( "clear_enemies", boost::bind( &game_world::clear_enemies_positions_for_team, this, _1 ), false );
@@ -106,6 +110,7 @@ game_world::game_world( game& game ) :
 }
 
 void game_world::register_cooks( )
+#line 118
 {
 	static sound_player_cook			s_sound_player_cook( &get_game( ).get_sound_world( ), resources::sound_player_class );
 	static human_npc_cook				s_human_npc_cook( *this );
@@ -128,6 +133,7 @@ void game_world::register_cooks( )
 }
 
 game_world::~game_world( )
+#line 143
 {
 	DELETE( m_free_fly_camera );
 	DELETE( m_active_npc_stats );
@@ -136,6 +142,7 @@ game_world::~game_world( )
 }
 
 void game_world::on_after_tick( )
+#line 154
 {
 	get_camera_director( ).apply( );
 
@@ -149,6 +156,7 @@ void game_world::on_after_tick( )
 }
 
 void game_world::tick( const u32 frame_delta_ms, const u32 current_time_in_ms, const bool is_game_paused )
+#line 168
 {
 	get_camera_director( ).tick( );
 
@@ -173,6 +181,7 @@ void game_world::tick( const u32 frame_delta_ms, const u32 current_time_in_ms, c
 }
 
 void game_world::switch_camera_mode( const input_mode_type_enum input_mode )
+#line 280
 {
 	switch ( input_mode )
 	{
@@ -189,6 +198,7 @@ void game_world::switch_camera_mode( const input_mode_type_enum input_mode )
 }
 
 void game_world::switch_to_player_camera( const bool first_person_view )
+#line 303
 {
 	if ( m_player_camera )
 	{
@@ -199,12 +209,14 @@ void game_world::switch_to_player_camera( const bool first_person_view )
 }
 
 void game_world::switch_to_free_fly_camera( )
+#line 313
 {
 	m_input_mode = free_fly_mode;
 	get_camera_director( ).switch_to_camera( m_free_fly_camera, "Free Fly View" );
 }
 
 bool game_world::empty( )
+#line 327
 {
 	return m_game_project == NULL;
 }
@@ -229,10 +241,12 @@ void game_world::on_project_loaded(
 	const u32						results_offset,
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
+#line 336
 {
 }
 
 void game_world::unload( )
+#line 449
 {
 	switch_to_free_fly_camera( );
 
@@ -272,6 +286,7 @@ void game_world::load(
 	variant< 32 > const**		user_datas_begin,
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
+#line 486
 {
 	m_is_loading = true;
 
@@ -394,6 +409,7 @@ void game_world::on_portal_system_loaded( resources::queries_result& data )
 }
 
 void game_world::on_activate( )
+#line 603
 {
 	base_game_scene::on_activate( );
 
@@ -408,6 +424,7 @@ void game_world::on_activate( )
 }
 
 void game_world::on_deactivate( )
+#line 616
 {
 	base_game_scene::on_deactivate( );
 
@@ -419,6 +436,7 @@ void game_world::on_deactivate( )
 }
 
 void game_world::show_ui( bool b_show )
+#line 627
 {
 	if ( m_is_ui_shown == b_show )
 		return;
@@ -440,6 +458,7 @@ void game_world::show_ui( bool b_show )
 }
 
 void game_world::clear_resources( )
+#line 647
 {
 	destroy_physics( );
 
@@ -466,11 +485,13 @@ void game_world::clear_resources( )
 }
 
 sound::world& game_world::get_sound_world( ) const
+#line 678
 {
 	return get_game( ).get_sound_world( );
 }
 
 void game_world::add_enemy_position_for_team( pcstr const team_name )
+#line 684
 {
 	float3 const position = get_game( ).get_network_client( )->get_current_player_position( );
 
@@ -481,6 +502,7 @@ void game_world::add_enemy_position_for_team( pcstr const team_name )
 }
 
 void game_world::clear_enemies_positions_for_team( pcstr const team_name )
+#line 694
 {
 	if ( !strcmp( team_name, "1" ) )
 		m_enemies_for_team_1.clear( );
@@ -495,6 +517,7 @@ void game_world::clear_enemies_positions_for_team( pcstr const team_name )
 // vostok::map iterator-typedef quirk to chase; structure (3 stmts: begin, loop,
 // body) is right.
 void game_world::clear_player_spawn_info( )
+#line 702
 {
 	map< u32, respawn_point_core*, std::less< u32 > >::iterator it = m_game_project->m_respawn_points.begin( );
 	for ( ; it != m_game_project->m_respawn_points.end( ); ++it )
@@ -502,23 +525,28 @@ void game_world::clear_player_spawn_info( )
 }
 
 void game_world::on_player_killed( player_ptr& player, const u8 arg_1, const u8 arg_2 )
+#line 720
 {
 }
 
 u32 game_world::get_current_time_in_ms( ) const
+#line 740
 {
 	return get_game( ).game_time_ms( );
 }
 
 void game_world::set_local_player_camera( player_input_handler* camera )
+#line 745
 {
 	m_player_camera = camera;
 }
 
 void game_world::put_victory_item( u8 item_id, float4x4 const& transform )
+#line 750
 {
 	m_victory_items[item_id]->put( get_physics_world( ), transform, get_game( ).scheduler( ) );
 }
 
 
 } // namespace survarium
+#line 0

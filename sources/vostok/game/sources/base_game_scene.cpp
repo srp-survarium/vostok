@@ -44,22 +44,26 @@ base_game_scene::base_game_scene( game& g ) :
 	m_is_ui_shown		( false ),
 	m_physics_world		( NULL ),
 	m_is_active			( false )
+#line 37
 {
 	m_camera_director = VOSTOK_NEW_IMPL( *g_allocator, camera_director )( *this );
 }
 
 // claude@NOTE: target structure matches; residual is the retained empty camera_director vtable rewrite.
 base_game_scene::~base_game_scene( )
+#line 58
 {
 	VOSTOK_DELETE_IMPL( *g_allocator, m_camera_director );
 }
 
 math::uint2 const& base_game_scene::output_window_size( ) const
+#line 63
 {
 	return m_game.render_output_window( )->current_size( );
 }
 
 void base_game_scene::show_movie( flash_movie_resource_ptr& movie )
+#line 68
 {
 	math::uint2 const& output_size = output_window_size( );
 	movie->movie->SetViewport( output_size.x, output_size.y );
@@ -67,12 +71,14 @@ void base_game_scene::show_movie( flash_movie_resource_ptr& movie )
 }
 
 void base_game_scene::hide_movie( flash_movie_resource_ptr& movie )
+#line 78
 {
 	if ( movie.c_ptr( ) )
 		renderer( ).hide_movie( render_scene_view( ), movie );
 }
 
 void base_game_scene::show_text_manager( flash_text_manager* tm )
+#line 87
 {
 	math::uint2 const& output_size = output_window_size( );
 	tm->set_viewport( output_size.x, output_size.y );
@@ -80,6 +86,7 @@ void base_game_scene::show_text_manager( flash_text_manager* tm )
 }
 
 void base_game_scene::hide_text_manager( flash_text_manager* tm )
+#line 97
 {
 	renderer( ).hide_text_manager( render_scene_view( ), tm );
 }
@@ -92,6 +99,7 @@ void base_game_scene::hide_text_manager( flash_text_manager* tm )
 // g_mt_allocator OBJECT, needing the physics-private bullet_physics_world.h). The dropped
 // allocator& ctor arg (target pushes only engine&) is an LTCG constant-arg elision.
 void base_game_scene::init_physics( )
+#line 103
 {
 	( m_physics_world = physics::create_world_bt( &memory::g_mt_allocator, *this ) )->initialize( );
 }
@@ -100,6 +108,7 @@ void base_game_scene::init_physics( )
 // g_mt_allocator). Same allocator-path residual as init_physics (strip_pointer vs direct
 // g_mt_allocator vtable).
 void base_game_scene::destroy_physics( )
+#line 117
 {
 	physics::destroy_world( &memory::g_mt_allocator, m_physics_world );
 }
@@ -112,11 +121,13 @@ void base_game_scene::destroy_physics( )
 // is verified non-steerable - base_game_scene is abstract so a real EAX-this CALL site
 // cannot be created here. Structurally 100%; residual is the address-escape penalty.
 scheduler& base_game_scene::scheduler( )
+#line 129
 {
 	return m_game.scheduler( );
 }
 
 void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, const bool is_game_paused )
+#line 134
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 
@@ -127,16 +138,19 @@ void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, co
 }
 
 render::game::renderer& base_game_scene::renderer( ) const
+#line 146
 {
 	return m_game.renderer( );
 }
 
 render::scene_renderer& base_game_scene::scene_renderer( ) const
+#line 150
 {
 	return m_game.renderer( ).scene( );
 }
 
 void base_game_scene::on_activate( )
+#line 155
 {
 	m_is_active = true;
 	m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 0, 0 );
@@ -145,6 +159,7 @@ void base_game_scene::on_activate( )
 }
 
 void base_game_scene::on_deactivate( )
+#line 166
 {
 	m_is_active = false;
 	m_camera_director->on_focus( false );
@@ -156,6 +171,7 @@ void base_game_scene::on_deactivate( )
 // &m_projection_matrix in ebp across both set_*_matrix calls. Frame-layout/register-alloc
 // only - the source shape is faithful.
 void base_game_scene::apply_camera( camera_director& cd )
+#line 175
 {
 	m_inverted_view_matrix			= cd.get_inverted_view_matrix( );
 	m_projection_matrix				= cd.get_projection_matrix( );
@@ -165,6 +181,7 @@ void base_game_scene::apply_camera( camera_director& cd )
 }
 
 bool base_game_scene::point_to_screen( float3 const& p, float2& result )
+#line 190
 {
 	math::uint2 const& output_size = output_window_size( );
 	u32 const half_width = output_size.x / 2, half_height = output_size.y / 2;
@@ -181,6 +198,7 @@ bool base_game_scene::point_to_screen( float3 const& p, float2& result )
 }
 
 swf_input_translator& base_game_scene::input_translator( )
+#line 205
 {
 	return m_game.input_translator( );
 }
@@ -192,6 +210,7 @@ void base_game_scene::create_text_manager( )
 }
 
 void base_game_scene::on_after_tick( )
+#line 216
 {
 	m_camera_director->apply( );
 }

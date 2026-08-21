@@ -66,6 +66,7 @@ graphic_preset g_graphic_presets[ 5 ][ 10 ];
 	: m_type( type )
 	, m_parent_tab( parent_tab )
 	, m_option_item_id( option_item_id )
+#line 108
 {
 	m_console_command = console_commands::find( console_command );
 
@@ -79,6 +80,7 @@ graphic_preset g_graphic_presets[ 5 ][ 10 ];
 // reproduce. Matching this (real body, not inlined) also makes the derived
 // options_item_{int,float,bool}::revert emit their tail-jmp to it.
 void options_item_base::revert( )
+#line 115
 {
 	flash_value source_data[ 4 ];
 
@@ -100,16 +102,19 @@ void options_item_base::revert( )
 	: options_item_base( parent_tab, console_command, option_item_id, string_selector )
 	, m_values( values )
 	, m_values_count( values_count )
+#line 128
 {
 }
 
 void options_item_int::initialize( )
+#line 134
 {
 	m_source_value	= m_console_command ? ( u8 )( ( console_commands::cc_u32* )m_console_command )->get_value( ) : 0;
 	m_current_value	= m_source_value;
 }
 
 void options_item_int::fill_data( flash_value& val )
+#line 146
 {
 	for ( u8 i = 0; i < m_values_count; ++i )
 	{
@@ -130,11 +135,13 @@ void options_item_int::fill_data( flash_value& val )
 // out-of-line, so the compiler emits a call - byte residual on an otherwise-correct
 // 1-statement structure.
 void options_item_int::fill_value( flash_value& val )
+#line 163
 {
 	val.SetUInt( m_current_value );
 }
 
 void options_item_int::apply( )
+#line 167
 {
 	m_source_value = m_current_value;
 
@@ -147,12 +154,14 @@ void options_item_int::apply( )
 }
 
 void options_item_int::revert( )
+#line 177
 {
 	m_current_value = m_source_value;
 	options_item_base::revert( );
 }
 
 void options_item_int::call( flash_function_handler_params& params )
+#line 184
 {
 	m_current_value = ( u8 )params.pArgs[ 0 ].GetUInt( );
 
@@ -193,16 +202,19 @@ void options_item_int::call( flash_function_handler_params& params )
 )
 	: options_item_base( parent_tab, console_command, option_item_id, slider_selector )
 	, m_step( step )
+#line 225
 {
 }
 
 void options_item_float::initialize( )
+#line 230
 {
 	m_source_value	= m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_value( ) : 0.0f;
 	m_current_value	= m_source_value;
 }
 
 void options_item_float::fill_data( flash_value& val )
+#line 240
 {
 	console_commands::cc_value< float >* command = ( console_commands::cc_value< float >* )m_console_command;
 	flash_value slider_data_member;
@@ -218,11 +230,13 @@ void options_item_float::fill_data( flash_value& val )
 }
 
 void options_item_float::fill_value( flash_value& val )
+#line 256
 {
 	val.SetNumber( m_current_value );
 }
 
 void options_item_float::apply( )
+#line 260
 {
 	m_source_value = m_current_value;
 
@@ -235,12 +249,14 @@ void options_item_float::apply( )
 }
 
 void options_item_float::revert( )
+#line 270
 {
 	m_current_value = m_source_value;
 	options_item_base::revert( );
 }
 
 void options_item_float::call( flash_function_handler_params& params )
+#line 277
 {
 	m_current_value = ( float )params.pArgs[ 0 ].GetNumber( );
 	params.pRetVal->SetNumber( m_current_value );
@@ -248,26 +264,31 @@ void options_item_float::call( flash_function_handler_params& params )
 
  options_item_bool::options_item_bool( options_tab& parent_tab, pcstr console_command, u8 option_item_id )
 	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
+#line 289
 {
 }
 
 void options_item_bool::initialize( )
+#line 293
 {
 	m_source_value	= m_console_command ? ( ( console_commands::cc_value< bool >* )m_console_command )->get_value( ) : false;
 	m_current_value	= m_source_value;
 }
 
 void options_item_bool::fill_data( flash_value& __formal )
+#line 303
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 }
 
 void options_item_bool::fill_value( flash_value& val )
+#line 309
 {
 	val.SetBoolean( m_current_value );
 }
 
 void options_item_bool::apply( )
+#line 313
 {
 	m_source_value = m_current_value;
 
@@ -280,23 +301,27 @@ void options_item_bool::apply( )
 }
 
 void options_item_bool::revert( )
+#line 323
 {
 	m_current_value = m_source_value;
 	options_item_base::revert( );
 }
 
 void options_item_bool::call( flash_function_handler_params& params )
+#line 330
 {
 	params.pRetVal->SetBoolean( m_current_value = params.pArgs[ 0 ].GetBool( ) );
 }
 
 void options_gamma_selector::call( flash_function_handler_params& params )
+#line 340
 {
 	params.pRetVal->SetNumber( m_current_value = (float)params.pArgs[ 0 ].GetNumber( ) );
 	m_parent_tab.get_game( ).active_scene( )->scene_renderer( ).set_gamma_correction_factor( m_current_value );
 }
 
 void options_gamma_selector::revert( )
+#line 347
 {
 	options_item_float::revert( );
 	m_parent_tab.get_game( ).active_scene( )->scene_renderer( ).set_gamma_correction_factor( m_current_value );
@@ -308,6 +333,7 @@ void options_gamma_selector::revert( )
 // fill_resolutions gets its real body (see its render-cap NOTE below).
  options_resolution_selector::options_resolution_selector( options_tab& parent_tab )
 	: options_item_int( parent_tab, "r_resolution", 1, NULL, 0 )
+#line 354
 {
 	fill_resolutions( ( u8 )( ( console_commands::cc_u32* )console_commands::find( "r_monitor_index" ) )->get_value( ) );
 }
@@ -321,11 +347,13 @@ void options_gamma_selector::revert( )
 // (locals: fixed_string<32> old_resolution, u32 old_resolution_index,
 // flash_value new_resolution_data[4]) - not yet reconstructed.
 void options_resolution_selector::fill_resolutions( u8 monitor_number )
+#line 368
 {
 	VOSTOK_UNREFERENCED_PARAMETER( monitor_number );
 }
 
 void options_resolution_selector::initialize( )
+#line 413
 {
 	pcstr current_resolution = ( ( console_commands::cc_string* )m_console_command )->get_value( );
 
@@ -341,6 +369,7 @@ void options_resolution_selector::initialize( )
 }
 
 void options_resolution_selector::apply( )
+#line 427
 {
 	m_source_value = m_current_value;
 	m_console_command->execute( m_values[ m_current_value ] );
@@ -348,6 +377,7 @@ void options_resolution_selector::apply( )
 
  options_monitor_index_selector::options_monitor_index_selector( options_tab& parent_tab )
 	: options_item_int( parent_tab, "r_monitor_index", 0, NULL, 0 )
+#line 435
 {
 	for ( u8 i = 0; i < array_size( m_cached_monitors_names ); ++i )
 		m_cached_monitors_names[ i ].assignf( "%d", i );
@@ -360,12 +390,14 @@ void options_resolution_selector::apply( )
 }
 
 void options_monitor_index_selector::call( flash_function_handler_params& params )
+#line 451
 {
 	options_item_int::call( params );
 	refill_resolutions_data( );
 }
 
 void options_monitor_index_selector::revert( )
+#line 457
 {
 	options_item_int::revert( ); refill_resolutions_data( );
 }
@@ -377,6 +409,7 @@ void options_monitor_index_selector::revert( )
 // argument-passing exception). refill_item_data itself is scaleform-capped in
 // game_options.cpp.
 void options_monitor_index_selector::refill_resolutions_data( )
+#line 463
 {
 	( ( options_resolution_selector* )m_parent_tab.option_by_id( 1 ) )->fill_resolutions( m_current_value );
 	m_parent_tab.get_game( ).get_game_options( ).refill_item_data( m_parent_tab.type( ), m_option_item_id );
@@ -399,10 +432,12 @@ static pcstr graphics_quality_data[ 6 ] =
 
  options_graphics_quality_selector::options_graphics_quality_selector( options_tab& parent_tab )
 	: options_item_int( parent_tab, "r_graphics_quality", 8, graphics_quality_data, 6 )
+#line 480
 {
 }
 
 void options_graphics_quality_selector::call( flash_function_handler_params& params )
+#line 485
 {
 	options_item_int::call( params );
 
@@ -445,6 +480,7 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 	: m_type( type )
 	, m_game( g )
 	, m_movie( movie )
+#line 509
 {
 	switch ( type )
 	{
@@ -518,6 +554,7 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 // claude@NOTE: compiler-context wall: target retains strip_pointer( g_allocator )
 // at DELETE_ARRAY; base inlines the same template call.
  options_tab::~options_tab( )
+#line 579
 {
 	for ( u8 i = 0; i < m_options_count; ++i )
 		DELETE( m_options[ i ] );
@@ -526,6 +563,7 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 }
 
 void options_tab::apply( flash_movie_resource_ptr& movie )
+#line 588
 {
 	for ( u8 i = 0; i < m_options_count; ++i )
 		m_options[ i ]->apply( );
@@ -545,6 +583,7 @@ void options_tab::apply( flash_movie_resource_ptr& movie )
 }
 
 void options_tab::revert( flash_movie_resource_ptr& movie )
+#line 608
 {
 	VOSTOK_UNREFERENCED_PARAMETER( movie );
 
@@ -553,6 +592,7 @@ void options_tab::revert( flash_movie_resource_ptr& movie )
 }
 
 void options_tab::initialize_data( flash_movie_resource_ptr& movie )
+#line 615
 {
 	flash_value options_args[ 3 ];
 	options_args[ 0 ].SetUInt( m_type );
