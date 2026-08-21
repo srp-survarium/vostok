@@ -32,8 +32,8 @@ void interaction_sensor::tick			( )
 	{
 		sensed_object pickup_object		(
 			m_npc.get_position( float3( 0, 0, 0 ) ),
-			(*iter)->get_collision_object()->get_origin(),
-			&(*iter)->get_collision_object()->get_game_object(),
+			float3( 0, 0, 0 ),
+			0,
 			m_world.get_current_time_in_ms(),
 			sensed_object_type_interaction,
 			1.f

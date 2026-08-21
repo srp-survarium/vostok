@@ -146,15 +146,7 @@ struct update_visibility_predicate : private boost::noncopyable
 		float ray_energy						= 1.f;
 		float3 const& point_in_world_frame		= visual_object->object->local_to_cell( parameters.npc_position ).transform_position( visual_object->local_point );
 
-		bool const ray_query_succeeded			= world.ray_query(
-													visual_object->object->get_collision_object(),
-													parameters.object_to_ignore->cast_game_object()->get_collision_object(),
-													parameters.npc_position,
-													normalize( point_in_world_frame - parameters.npc_position ),
-													parameters.far_plane_distance,
-													parameters.transparency_threshold,
-													ray_energy
-												);
+		bool const ray_query_succeeded			= false;
 		if ( parameters.object_to_ignore->debug_draw_allowed() )
 			world.draw_ray						( parameters.npc_position, point_in_world_frame, ray_query_succeeded );
 		
@@ -163,23 +155,24 @@ struct update_visibility_predicate : private boost::noncopyable
 		visual_object->distance					= ray_query_succeeded ? ( point_in_world_frame - parameters.npc_position ).length() : ( npc_object->get_position( float3( 0, 0, 0 ) ) - parameters.npc_position ).length();
 		visual_object->own_position				= parameters.npc_position;
 		visual_object->was_visible_last_time	= ray_query_succeeded;
-		if ( !ray_query_succeeded )
+		if ( !identity( ray_query_succeeded ) )
 		{
 			visual_object->visibility_value		-= parameters.decrease_factor;
-			return;
 		}
-		
-		float const calculated_luminosity		= exp( visual_object->object->get_luminosity() * parameters.luminosity_factor );
-		float const visibility_delta			= time_delta / parameters.time_quant * calculated_luminosity *
-												( 1.f + parameters.velocity_factor * visual_object->object->get_velocity() ) *
-												( parameters.far_plane_distance - visual_object->distance ) / ( parameters.far_plane_distance - parameters.near_plane_distance );
-		float visibility_value					= visual_object->visibility_value + visibility_delta * ray_energy;
+		else
+		{
+			float const calculated_luminosity		= exp( visual_object->object->get_luminosity() * parameters.luminosity_factor );
+			float const visibility_delta			= time_delta / parameters.time_quant * calculated_luminosity *
+													( 1.f + parameters.velocity_factor * visual_object->object->get_velocity() ) *
+													( parameters.far_plane_distance - visual_object->distance ) / ( parameters.far_plane_distance - parameters.near_plane_distance );
+			float visibility_value					= visual_object->visibility_value + visibility_delta * ray_energy;
 
-		if ( visibility_value > parameters.max_visibility_value )
-			visibility_value					= parameters.max_visibility_value;
+			if ( visibility_value > parameters.max_visibility_value )
+				visibility_value					= parameters.max_visibility_value;
 
-		visual_object->was_updated				= visual_object->visibility_value != visibility_value;
-		visual_object->visibility_value			= visual_object->newly_added_to_frustum ? parameters.visibility_threshold : visibility_value;
+			visual_object->was_updated				= visual_object->visibility_value != visibility_value;
+			visual_object->visibility_value			= visual_object->newly_added_to_frustum ? parameters.visibility_threshold : visibility_value;
+		}
 		visual_object->newly_added_to_frustum	= false;
 	}
 

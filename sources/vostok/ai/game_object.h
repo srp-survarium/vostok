@@ -28,7 +28,6 @@ struct VOSTOK_NOVTABLE game_object : public loose_ptr_base
 	virtual	weapon const*		cast_weapon				( )	const							= 0;
 	virtual float				get_velocity			( ) const							= 0;
 	virtual float				get_luminosity			( ) const							= 0;
-	virtual	collision_object*	get_collision_object	( )	const							= 0;
 	virtual	float3				get_random_surface_point( u32 const current_time ) const	= 0;
 	virtual	float4x4			local_to_cell			( float3 const& requester ) const	= 0;
 
