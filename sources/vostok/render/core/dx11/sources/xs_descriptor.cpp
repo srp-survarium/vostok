@@ -15,7 +15,8 @@ void xs_descriptor<shader_data>::reset( res_xs_hw<shader_data>* hardware_shader 
 template < typename shader_data >
 bool xs_descriptor<shader_data>::set_sampler( pcstr name, ID3D11SamplerState* state )
 {
-	for ( u32 i = 0; i < m_shader_data.samplers.size( ); ++i ) {
+	u32 const size = m_shader_data.samplers.size( );
+	for ( u32 i = 0; i < size; ++i ) {
 		if ( m_shader_data.samplers[i].name != name )
 			continue;
 		m_shader_data.samplers[i].state = state;
@@ -27,7 +28,8 @@ bool xs_descriptor<shader_data>::set_sampler( pcstr name, ID3D11SamplerState* st
 template < typename shader_data >
 bool xs_descriptor<shader_data>::set_texture( pcstr name, res_texture* texture )
 {
-	for ( u32 i = 0; i < m_shader_data.textures.size( ); ++i ) {
+	u32 const size = m_shader_data.textures.size( );
+	for ( u32 i = 0; i < size; ++i ) {
 		if ( m_shader_data.textures[i].name != name )
 			continue;
 		m_shader_data.textures[i].texture = texture;
@@ -39,7 +41,8 @@ bool xs_descriptor<shader_data>::set_texture( pcstr name, res_texture* texture )
 template < typename shader_data >
 bool xs_descriptor<shader_data>::use_texture( pcstr name )
 {
-	for ( u32 i = 0; i < m_shader_data.textures.size( ); ++i )
+	u32 const size = m_shader_data.textures.size( );
+	for ( u32 i = 0; i < size; ++i )
 		if ( m_shader_data.textures[i].name == name )
 			return true;
 	return false;
@@ -48,7 +51,8 @@ bool xs_descriptor<shader_data>::use_texture( pcstr name )
 template < typename shader_data >
 bool xs_descriptor<shader_data>::use_sampler( pcstr name )
 {
-	for ( u32 i = 0; i < m_shader_data.samplers.size( ); ++i )
+	u32 const size = m_shader_data.samplers.size( );
+	for ( u32 i = 0; i < size; ++i )
 		if ( m_shader_data.samplers[i].name == name )
 			return true;
 	return false;

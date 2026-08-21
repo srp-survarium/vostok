@@ -20,25 +20,27 @@ effect_constant_storage::~effect_constant_storage( )
 }
 
 bool effect_constant_storage::is_equal(
-	u32 const* left,
-	u32 const* right,
-	u32 const count
+	u32 const* a_ptr,
+	u32 const* b_ptr,
+	u32 const num_comparision
 )
 {
-	for ( u32 i = 0; i < count; ++i )
-		if ( left[i] != right[i] )
+	for ( u32 i = 0; i < num_comparision; ++i, ++a_ptr, ++b_ptr )
+		if ( *a_ptr != *b_ptr )
 			return false;
 	return true;
 }
 
 void effect_constant_storage::clear( )
 {
-	while ( m_constant_buffer ) {
-		fixed_constants_data_buffer* current = m_constant_buffer;
-		m_constant_buffer = m_constant_buffer->next;
-		DELETE( current );
+	fixed_constants_data_buffer* next_buffer = m_constant_buffer;
+	while ( next_buffer )
+	{
+		fixed_constants_data_buffer* to_delete = next_buffer;
+		next_buffer = next_buffer->next;
+		DELETE( to_delete );
 	}
-	m_indexers.clear( );
+	m_constant_buffer = 0;
 }
 
 } // namespace render

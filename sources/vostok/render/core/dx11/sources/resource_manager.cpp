@@ -132,7 +132,7 @@ bool resource_manager::constant_buffer_predicate::operator()(
 	return false;
 }
 
-bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
+static bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
 {
 	if (left == right)
 		return true;
@@ -168,7 +168,7 @@ static bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
 	return is_srgb_option;
 }
 
-DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
+static DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 {
 	switch (format)
 	{
@@ -180,19 +180,19 @@ DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 	};
 }
 
-void begin_command_list( D3D11_QUERY_DESC& query_desc, ID3D11Query*& out_empty_query_ptr )
+static void begin_command_list( D3D11_QUERY_DESC& query_desc, ID3D11Query*& out_empty_query_ptr )
 {
 	vostok::render::device::ref().d3d_device()->CreateQuery(&query_desc, &out_empty_query_ptr);
 }
 
-void end_command_list( ID3D11Query*& out_empty_query_ptr )
+static void end_command_list( ID3D11Query*& out_empty_query_ptr )
 {
 	vostok::render::device::ref().d3d_context()->End(out_empty_query_ptr);
 	while( S_OK != vostok::render::device::ref().d3d_context()->GetData(out_empty_query_ptr, 0, 0, 0) );
 	out_empty_query_ptr->Release();
 }
 
-ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
+static ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 {
 	// Make copy.
 	// http://www.gamedev.net/topic/605930-id3dx10font-and-srgb/
