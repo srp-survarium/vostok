@@ -735,7 +735,8 @@ void scene::remove_sky_ambient_occlusion( u32 id )
 		std::find_if( m_sky_ao_volumes.begin( ), m_sky_ao_volumes.end( ), find_by_id_predicate< sky_ambient_occlusion >( id ) );
 	if ( i != m_sky_ao_volumes.end( ) )
 	{
-		DELETE								( *i );
+		sky_ambient_occlusion* sky_ao		= *i;
+		DELETE								( sky_ao );
 		m_sky_ao_volumes.erase				( i );
 	}
 }
@@ -1051,30 +1052,23 @@ void scene::dump_scene_statistics( ) const
 			render_model_instance_impl_ptr const& right
 		) const
 		{
-			return left->get_surfaces_count( ) < right->get_surfaces_count( );
+			return left->get_surfaces_count( ) > right->get_surfaces_count( );
 		}
 	};
 
 	vector< render_model_instance_impl_ptr > dump_instances = m_render_model_instances;
 	std::sort( dump_instances.begin( ), dump_instances.end( ), sort_predicate( ) );
 
+	render_model_instance_impl_ptr* it = dump_instances.begin( );
 	u32 index = 1;
-	for (
-		render_model_instance_impl_ptr* it = dump_instances.begin( );
-		it != dump_instances.end( );
-		++it, ++index
-	)
+	for ( ; it != dump_instances.end( ); ++it, ++index )
 	{
 		fixed_string< 128 > model_name( "<unknown>" );
 
 		if ( model_name.length( ) > 17 )
 			model_name = model_name.substr( 17 );
-		LOG_INFO(
-			"%d: surfaces: %d, model: %s",
-			index,
-			( *it )->get_surfaces_count( ),
-			model_name.c_str( )
-		);
+#line 1250
+		LOG_INFO( "%d: surfaces: %d, model: %s", index, ( *it )->get_surfaces_count( ), model_name.c_str( ) );
 	}
 }
 
