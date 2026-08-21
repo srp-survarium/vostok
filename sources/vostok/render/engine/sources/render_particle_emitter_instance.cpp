@@ -139,8 +139,8 @@ void particle_sprite_vertex::set(
 	uv = uv_value;
 	size = size_value;
 	rotation = rotation_value;
-	gravity = gravity_value;
 	old_position = old_position_value;
+	gravity = gravity_value;
 }
 
 render_particle_emitter_instance::render_particle_emitter_instance(
@@ -154,28 +154,18 @@ render_particle_emitter_instance::render_particle_emitter_instance(
 	float4x4 const&					transform,
 	float4 const&					instance_color
 ) :
-	m_material_effects( ),
-	m_material_effects_ptr( ),
-	m_bbox( math::create_zero_aabb( ) ),
-	m_transform( transform ),
-	m_particle_sprite_geometry( ),
-	m_subuv_particle_sprite_geometry( ),
-	m_particle_beamtrail_geometry( ),
-	m_vertices( ),
-	m_indices( ),
+	m_max_particles( 0 ),
+	m_particle_world( particle_world ),
 	m_particle_emitter_instance( particle_emitter_instance ),
 	m_particle_list( particle_list ),
-	m_particle_world( particle_world ),
 	m_billboard_parameters( billboard_parameters ),
 	m_beamtrail_parameters( beamtrail_parameters ),
-	m_instance_color( instance_color ),
-	m_vertex_type( particle::particle_vertex_type_unknown ),
 	m_locked_axis( locked_axis ),
 	m_screen_alignment( screen_alignment ),
-	m_num_vertices( 0 ),
-	m_num_indices( 0 ),
-	m_max_particles( 0 ),
-	m_occlusion_info_index( 0 ),
+	m_transform( transform ),
+	m_instance_color( instance_color ),
+	m_bbox( math::create_zero_aabb( ) ),
+	m_occlusion_info_index( u32( -1 ) ),
 	m_occluded( false )
 {
 }
