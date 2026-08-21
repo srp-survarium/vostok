@@ -8,11 +8,10 @@
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/render/facade/model.h>
 #include <vostok/resources_resource_ptr.h>
 
-#include "speedtree_instance.h"
 #include "speedtree_shader_parameters.h"
-#include "speedtree_tree_base.h"
 
 namespace vostok {
 namespace render {

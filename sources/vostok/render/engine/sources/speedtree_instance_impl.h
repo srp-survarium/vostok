@@ -1,7 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_SPEEDTREE_INSTANCE_IMPL_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SPEEDTREE_INSTANCE_IMPL_H_INCLUDED
 
-#include "speedtree_instance.h"
+#include <vostok/render/facade/model.h>
 
 namespace SpeedTree {
 class CInstance;

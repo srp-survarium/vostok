@@ -20,7 +20,7 @@
 #include "render_model_instance_impl.h"
 #include "shadow_batched_geometry.h"
 #include "sky_ambient_occlusion.h"
-#include "speedtree_instance.h"
+#include <vostok/render/facade/model.h>
 #include "streaming.h"
 #include "tracer_model_instance.h"
 

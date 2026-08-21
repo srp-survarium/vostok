@@ -7,7 +7,6 @@ namespace render {
 
 speedtree_instance_impl::speedtree_instance_impl( speedtree_tree_base_ptr tree ) :
 	speedtree_instance( tree ),
-	m_speedtree_instance( NULL ),
 	m_speedtree_instance_index( -1 )
 {
 	m_speedtree_instance = NEW(SpeedTree::CInstance);

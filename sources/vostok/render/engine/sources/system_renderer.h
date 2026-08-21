@@ -15,7 +15,7 @@
 #include "render_model_instance_impl.h"
 #include "render_target.h"
 #include "res_geometry.h"
-#include "speedtree_instance.h"
+#include <vostok/render/facade/model.h>
 #include "vertex_formats.h"
 
 namespace vostok {

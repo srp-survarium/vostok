@@ -2,12 +2,12 @@
 #define VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_H_INCLUDED
 
 #include <speedtree/core/core.h>
+#include <vostok/render/facade/model.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include "lod_render_info.h"
 #include "material.h"
 #include "material_effects_instance.h"
 #include "render_geometry.h"
-#include "speedtree_tree_base.h"
 
 namespace vostok {
 namespace render {
