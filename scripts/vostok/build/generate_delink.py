@@ -206,10 +206,11 @@ def _generate_report() -> None:
     if previous is not None:
         _report_changes(previous, report)
 
-    candidates, scored = generate_objdiff_cross_unit.generate(
+    candidates, scored, exact_unit_count = generate_objdiff_cross_unit.generate(
         OBJDIFF_DIR, objdiff_cli=objdiff_cli
     )
     log(f"Cross-unit COMDAT scores: {scored}/{candidates}")
+    log(f"Exact source-object units: {exact_unit_count}")
 
 
 def _report_changes(previous: Path, current: Path) -> None:

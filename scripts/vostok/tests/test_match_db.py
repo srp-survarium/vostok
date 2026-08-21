@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from vostok.build.generate_objdiff_cross_unit import _identical_units
 from vostok.core import symbols as NORMALIZE
 from vostok.derive import maxima
 from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
@@ -28,6 +29,40 @@ from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   rank_island_delta, report_fuzzy_scores,
                                   report_score_for_target)
 from vostok.ledger import store
+
+
+class CrossUnitEvidenceTests(unittest.TestCase):
+    def test_identifies_complete_exact_units(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            for side in ("target", "base"):
+                (root / side / "module").mkdir(parents=True)
+                (root / side / "module" / "exact.cpp.obj").write_bytes(b"exact")
+                (root / side / "module" / "scored.cpp.obj").write_bytes(b"exact")
+            (root / "target" / "module" / "different.cpp.obj").write_bytes(b"target")
+            (root / "base" / "module" / "different.cpp.obj").write_bytes(b"base")
+
+            report = {
+                "units": [
+                    {
+                        "name": "module/exact.cpp",
+                        "functions": [{"fuzzy_match_percent": None}],
+                    },
+                    {
+                        "name": "module/different.cpp",
+                        "functions": [{"fuzzy_match_percent": None}],
+                    },
+                    {
+                        "name": "module/scored.cpp",
+                        "functions": [{"fuzzy_match_percent": 100.0}],
+                    },
+                ]
+            }
+
+            self.assertEqual(
+                _identical_units(report, root),
+                ["module/exact.cpp", "module/scored.cpp"],
+            )
 
 
 class CompilerNameTests(unittest.TestCase):

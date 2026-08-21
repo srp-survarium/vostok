@@ -194,6 +194,18 @@ def _load_report(artifacts):
                 n += 1
         if n:
             log(f"loaded {n} cross-unit COMDAT scores")
+        exact_units = set(cross.get("exact_units", []))
+        exact_functions = 0
+        for mangled, record in artifacts.target.items():
+            if record.get("file") not in exact_units or fuzzy.get(mangled) == 100.0:
+                continue
+            fuzzy[mangled] = 100.0
+            exact_functions += 1
+        if exact_functions:
+            log(
+                "attributed "
+                f"{exact_functions} score gap(s) from exact source-object units"
+            )
 
     for mangled in artifacts.target:
         score = report_score_for_target(mangled, fuzzy)

@@ -1,22 +1,42 @@
 #!/usr/bin/env python3
-"""Measure uniquely-owned functions whose COFF body moved between units.
+"""Recover strict scores hidden by COFF/PDB attribution.
 
 The linker can select a COMDAT body from different translation units in the
 retail and reconstructed executables.  The normal objdiff project compares one
 target object with its same-path base object, so such a function is present on
 both sides but receives no score.  This helper creates a disposable project for
 the unique cross-unit object pairs and writes only the recovered function
-scores.  It never changes the main report's unit totals.
+scores.  It also records same-path source objects that are byte-identical as
+strict evidence for functions whose PDB names do not pair.  It never changes
+the main report's unit totals.
 """
 
 from __future__ import annotations
 
+import filecmp
 import json
 import shutil
 import subprocess
 import tempfile
 from collections import defaultdict
 from pathlib import Path
+
+
+def _identical_units(report: dict, objdiff_dir: Path) -> list[str]:
+    """Return source units whose complete delinked objects are exact."""
+    units = []
+    for unit in report["units"]:
+        name = unit["name"]
+        target = objdiff_dir / "target" / f"{name}.obj"
+        base = objdiff_dir / "base" / f"{name}.obj"
+        if (
+            target.is_file()
+            and base.is_file()
+            and target.stat().st_size == base.stat().st_size
+            and filecmp.cmp(target, base, shallow=False)
+        ):
+            units.append(name)
+    return units
 
 
 def _defined_owners(root: Path, names: set[str], nm: str) -> dict[str, list[Path]]:
@@ -41,12 +61,15 @@ def _defined_owners(root: Path, names: set[str], nm: str) -> dict[str, list[Path
     return owners
 
 
-def generate(objdiff_dir: Path, *, objdiff_cli: str = "objdiff-cli") -> tuple[int, int]:
-    """Write report-cross-unit.json; return (candidate, scored) counts."""
+def generate(
+    objdiff_dir: Path, *, objdiff_cli: str = "objdiff-cli"
+) -> tuple[int, int, int]:
+    """Write strict supplementary evidence and return its three counts."""
     objdiff_dir = objdiff_dir.resolve()
     report_path = objdiff_dir / "report.json"
     output_path = objdiff_dir / "report-cross-unit.json"
     report = json.loads(report_path.read_text())
+    exact_units = _identical_units(report, objdiff_dir)
 
     missing: set[str] = {
         function["name"]
@@ -75,8 +98,14 @@ def generate(objdiff_dir: Path, *, objdiff_cli: str = "objdiff-cli") -> tuple[in
         candidates[(target_path, base_path)].add(name)
 
     if not candidates:
-        output_path.write_text('{"version":1,"functions":[]}\n')
-        return 0, 0
+        output_path.write_text(
+            json.dumps(
+                {"version": 2, "functions": [], "exact_units": exact_units},
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
+        return 0, 0, len(exact_units)
 
     ordered = sorted(candidates.items(), key=lambda item: tuple(map(str, item[0])))
     units = []
@@ -122,5 +151,11 @@ def generate(objdiff_dir: Path, *, objdiff_cli: str = "objdiff-cli") -> tuple[in
         {"name": name, "fuzzy_match_percent": scores[name]}
         for name in sorted(scores)
     ]
-    output_path.write_text(json.dumps({"version": 1, "functions": rows}, separators=(",", ":")) + "\n")
-    return sum(map(len, candidates.values())), len(rows)
+    output_path.write_text(
+        json.dumps(
+            {"version": 2, "functions": rows, "exact_units": exact_units},
+            separators=(",", ":"),
+        )
+        + "\n"
+    )
+    return sum(map(len, candidates.values())), len(rows), len(exact_units)
