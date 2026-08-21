@@ -303,7 +303,7 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
 	m_renderer.debug( ).draw_arrow	(
 		m_scene, get_eyes_position( ),
-		get_eyes_position( ) + get_eyes_direction( ) * 3.f,
+		get_eyes_direction( ) * 3.f + get_eyes_position( ),
 		math::color( 0, 0, 255 ) );
 
 	if ( m_sound_perceived )
