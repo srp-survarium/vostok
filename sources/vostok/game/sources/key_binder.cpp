@@ -230,10 +230,10 @@ key_binder::key_binder( game& g )
 {
 	memset( m_key_bindings, 0, sizeof( m_key_bindings ) );
 
-	for ( s32 idx = 0; idx < bindings_count; ++idx )
+	for ( game_action_descr* action = actions; action != actions + bindings_count; ++action )
 	{
-		m_key_bindings[actions[idx].id].m_action =
-			&actions[idx];
+		m_key_bindings[action->id].m_action =
+			action;
 	}
 
 	static console_command_bind s_bind_key_command( this, 0 );

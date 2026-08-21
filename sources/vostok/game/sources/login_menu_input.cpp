@@ -72,9 +72,8 @@ bool login_menu::on_mouse_move(
 	math::clamp( m_mouse_pos.x, 0, ( s32 )window_size.x );
 	math::clamp( m_mouse_pos.y, 0, ( s32 )window_size.y );
 
-	float scroll_delta = ( float )z;
-	m_login_menu_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
-	m_cursor_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
+	m_login_menu_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, ( float )z );
+	m_cursor_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, ( float )z );
 
 	return true;
 }

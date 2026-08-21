@@ -119,7 +119,8 @@ void login_menu::set_status( login_menu_status_enum status )
 {
 	m_status				= status;
 
-	network::login_client&	login_client	= get_game( ).network_client( ).login_client( );
+	network::login_client&	login_client	= get_game( ).network_client( )
+		.login_client( );
 
 	fixed_string< 512 >		status_str;
 	status_str.assignf( "Login Server: " );
