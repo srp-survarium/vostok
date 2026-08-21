@@ -27029,8 +27029,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?on_mouse_move@game_world@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/game_world_input.cpp	game	done	MATCH	100	100	100	1	5	f	bd01eabe5b21	
 ?on_mouse_move@global_input_handler@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/global_input_handler.cpp	game	done	MATCH	100	100	100	1	5	f	bd01eabe5b21	G12 anchor retirement: real function-local handler retains all seven rich-index symbols; constructor 56% to 100%; no target functions added or removed
 ?on_mouse_move@lobby_camera@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/lobby_camera.cpp	game	inprogress	QUANTITY	85.2222	85.2222	85.2222	1	222	f	4afc14eb4b51	
-?on_mouse_move@lobby_menu@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/lobby_menu_input.cpp	game	inprogress	SPLIT	97.218	97.218	97.218	1	270	f	d92bf82ccc75	
-?on_mouse_move@login_menu@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/login_menu_input.cpp	game	inprogress	SIZE	95.9815	95.9815	95.9815	1	176	f	9f64b98bc2d5	
+?on_mouse_move@lobby_menu@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/lobby_menu_input.cpp	game	inprogress	QUANTITY	97.218	97.218	97.218	1	270	f	924c9dd59e05	
+?on_mouse_move@login_menu@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/login_menu_input.cpp	game	parked	SIZE	95.9815	95.9815	95.9815	1	176	f	9f64b98bc2d5	x/y add scheduling + sret reg choice; conv/schedule class.
 ?on_mouse_move@main_menu@survarium@@UAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/main_menu_input.cpp	game	done	MATCH	100	100	100	0	5	f	cb225fbcbfed	
 ?on_mouse_move@player_input_handler@survarium@@EAE_NPAUworld@input@vostok@@HHH@Z	vostok/game/sources/player_input_handler.cpp	game	inprogress	SIZE	97.3333	97.3333	97.3333	1	260	f	3e559db8f405	
 ?on_mouse_move@ui_dialog@ui@vostok@@UAE_NPAUworld@input@3@HHH@Z	vostok/ui/sources/ui_dialog_input_handler.cpp	ui	done	MATCH	100	100	100	1	5	f	652c07f5ce59	auto: at 100% ceiling, demoted from queue
@@ -28180,7 +28180,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ref_lock@?$base_node@$00@vfs@vostok@@QAEACJXZ	vostok/vfs/base_node_inline.h	vfs	done	MATCH	100	100	100	1	17		829d05ffd908	auto: at 100% ceiling, demoted from queue
 ?reference_count@resource_base@resources@vostok@@QBEIXZ	vostok/core/sources/resources_resource_base.cpp	core	done	MATCH	100	100	100	1	43	f	fb478f01c609	auto: at 100% ceiling, demoted from queue
 ?refill_buffers@sound_voice@sound@vostok@@AAEXXZ	vostok/sound/sources/sound_voice.cpp	sound	done	MATCH	100	100	100	0	257		922b4be97048	
-?refill_item_data@game_options@survarium@@QAEXEE@Z	vostok/game/sources/game_options.cpp	game	inprogress	SPLIT	85.871	85.871	85.871	1	268	f	da39a3ee5e6b	
+?refill_item_data@game_options@survarium@@QAEXEE@Z	vostok/game/sources/game_options.cpp	game	parked	SPLIT	85.871	85.871	85.871	1	268	f	da39a3ee5e6b	±2-7B statement scheduling wobble on equal structure; conv/schedule class.
 ?refill_resolutions_data@options_monitor_index_selector@survarium@@QAEXXZ	vostok/game/sources/options_items.cpp	game	inprogress	MATCH	18.9091	18.9091	18.9091	1	35	f	f07d64d11989	
 ?reflect@?$crc_helper@$0CA@$00@detail@boost@@SAII@Z	boost/crc.hpp	boost	inprogress	MATCH	49.375	49.375	49.375	0	17		3dac294fe3b0	
 ?reflect@?$reflector@$07@detail@boost@@SAEE@Z	boost/crc.hpp	boost	blocked				0	0	88			
@@ -29690,7 +29690,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?set_speedtree_instance_transform@scene@render@vostok@@QAEXV?$resource_ptr@Vspeedtree_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVfloat4x4@math@3@_N@Z	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	1	117	f	8be854db76d7	
 ?set_sprint_callbacks@weapon_user_animations_selector@survarium@@AAEXABV?$function@$$A6AXXZ@boost@@0@Z	vostok/game_core/sources/weapon_user_animations_selector.cpp	game_core	parked	SIZE	88.1515	88.1515	88.1515	1	96		cd5af99442a0	85% (best-of: loop-2 static_cast_checked form); static_cast_checked operator* fold ceiling.
 ?set_stats@npc_stats@survarium@@QAEXQBVhuman_npc@2@@Z	vostok/game/sources/npc_stats.cpp	game	done	MATCH	100	100	100	0	1307		e48104d4ec38	
-?set_status@login_menu@survarium@@QAEXW4login_menu_status_enum@2@@Z	vostok/game/sources/login_menu.cpp	game	inprogress	QUANTITY	95.469	95.469	95.469	0	484	f	74f2ae1b1b65	
+?set_status@login_menu@survarium@@QAEXW4login_menu_status_enum@2@@Z	vostok/game/sources/login_menu.cpp	game	inprogress	QUANTITY	95.469	95.469	95.469	0	484	f	1323f30f3bb2	
 ?set_status_ready_for_match@lobby_client@survarium@@QAEXI@Z	vostok/game/sources/lobby_client.cpp	game	inprogress	QUANTITY	79.2857	79.2857	79.2857	1	109	f	860fc312ae48	
 ?set_stencil@effect_compiler@render@vostok@@QAEAAV123@HIEEW4D3D11_COMPARISON_FUNC@@W4D3D11_STENCIL_OP@@11@Z	vostok/render/core/dx11/sources/effect_compiler.cpp	render	done	MATCH	100	100	100	1	157	f	f708f1d11339	
 ?set_stencil@state_descriptor@render@vostok@@QAEXHIEE@Z	vostok/render/core/dx11/sources/state_descriptor.cpp	render	done	MATCH	100	100	100	1	37	f	43a32a5c0aed	auto: at 100% ceiling, demoted from queue
