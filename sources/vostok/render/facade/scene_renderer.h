@@ -2,7 +2,7 @@
 #define VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
 
 #include <boost/bind.hpp>
-#include <vostok/render/engine/sources/speedtree_instance.h>
+#include <vostok/render/facade/model.h>
 #include <vostok/render/engine/world.h>
 #include <vostok/render/engine/sources/cloud_parameters.h>
 #include <vostok/render/facade/cloud_key.h>

@@ -33,7 +33,7 @@
 #include "scene_view.h"
 #include "render_output_window.h"
 #include "speedtree.h"
-#include "speedtree_instance.h"
+#include <vostok/render/facade/model.h>
 #include "material.h"
 #include "material_effects_instance.h"
 #include "render_model_instance_impl.h"
@@ -1599,70 +1599,8 @@ void engine::world::set_gamma_correction_factor( const float value )
 	options::ref( ).current.m_gamma_correction_factor = value;
 }
 
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fs_new::virtual_path_string*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::data_indexer*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_buffer_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::speedtree_forest::tree_render_info*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
 } // namespace render
 } // namespace vostok
+
+// Temporary retention anchor; remove when reconstructed reachability keeps it emitted.
+#pragma comment( linker, "/include:??0speedtree_tree_base@render@vostok@@QAE@XZ" )

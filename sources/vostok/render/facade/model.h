@@ -3,6 +3,7 @@
 
 #include <vostok/animation/skeleton.h>
 #include <vostok/fixed_string.h>
+#include <vostok/math_aabb.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/resources_unmanaged_resource.h>
 
@@ -14,6 +15,12 @@ namespace culling {
 class possible_sectors_holder;
 
 } // namespace culling
+
+namespace engine {
+
+class world;
+
+} // namespace engine
 
 struct model_locator_item {
 	char		m_name[32];
@@ -109,6 +116,44 @@ typedef resources::resource_ptr<
 	skeleton_model_instance,
 	resources::unmanaged_intrusive_base
 > skeleton_model_ptr;
+
+struct speedtree_tree_base : public resources::unmanaged_resource {
+	speedtree_tree_base( ) : m_bbox( math::create_zero_aabb( ) ) { }
+
+	math::aabb m_bbox;
+};
+
+STATIC_SIZE_ASSERT( speedtree_tree_base, 0x120 );
+
+typedef resources::resource_ptr<
+	speedtree_tree_base,
+	resources::unmanaged_intrusive_base
+> speedtree_tree_base_ptr;
+
+class speedtree_instance_impl;
+struct speedtree_forest;
+class system_renderer;
+
+class speedtree_instance : public resources::unmanaged_resource {
+public:
+	explicit speedtree_instance( speedtree_tree_base_ptr in_speedtree_tree_ptr ) : m_speedtree_tree_ptr( in_speedtree_tree_ptr ) { }
+
+private:
+	friend class speedtree_instance_impl;
+	friend struct speedtree_forest;
+	friend class system_renderer;
+	friend class engine::world;
+
+	float4x4 m_transform;
+	speedtree_tree_base_ptr m_speedtree_tree_ptr;
+};
+
+STATIC_SIZE_ASSERT( speedtree_instance, 0x150 );
+
+typedef resources::resource_ptr<
+	speedtree_instance,
+	resources::unmanaged_intrusive_base
+> speedtree_instance_ptr;
 
 class skin : public resources::unmanaged_resource {
 protected:

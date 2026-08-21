@@ -6,7 +6,7 @@
 
 #include "material.h"
 #include "material_effects_instance.h"
-#include "speedtree_instance.h"
+#include <vostok/render/facade/model.h>
 
 namespace vostok {
 namespace render {
