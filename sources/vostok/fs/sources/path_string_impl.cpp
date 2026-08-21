@@ -23,6 +23,17 @@ portable_path_string::portable_path_string (native_path_string const & other) : 
 	assign_with_conversion					(other.c_str());
 }
 
+// empty in gold: the retail binary retains it as one of the ICF-folded `ret`
+// stubs, and the empty body keeps the derived path-string ctors cheap enough
+// for the /Od modules to inline them (exposing the impl-ctor + verify calls)
+void   path_string_impl::verify_self ()
+{
+#ifdef DEBUG
+	m_string.verify_self					();
+	verify									(m_string.get_buffer());
+#endif // #ifdef DEBUG
+}
+
 void   path_string_impl::convert (iterator begin, iterator end)
 {
 	char const other_separator			=	(m_separator == '/') ? '\\' : '/';

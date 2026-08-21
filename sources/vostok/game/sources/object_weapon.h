@@ -55,7 +55,6 @@ public:
 
 	// inline override the canonical PDB did not emit (never out-of-lined); the
 	// concrete object_weapon needs it (it is constructed in on_npc_attributes_received)
-	virtual	ai::collision_object*		get_collision_object	( ) const override { /* no source */ return NULL; }
 
 	virtual	float3						get_random_surface_point( const u32 current_time ) const override;
 

@@ -22,11 +22,13 @@ path_string_impl::path_string_impl (char separator, path_string_impl const & src
 	verify_self								(); 
 }
 	
+// the src copy goes through operator+= (the target ctor's only call); verify_self
+// moved to the derived path-string ctors - the target impl ctor body has no verify
 template <class T>
-path_string_impl::path_string_impl (char separator, T const & src) 
-	: m_separator(separator), m_string(src)			
-{ 
-	verify_self								(); 
+path_string_impl::path_string_impl (char separator, T const & src)
+	: m_separator(separator)
+{
+	m_string							+=	src;
 }
 
 inline

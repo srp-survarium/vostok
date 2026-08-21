@@ -24,7 +24,7 @@ public:
 	virtual_path_string	(virtual_path_string const & other) : path_string_impl(separator, (path_string_impl &)other) {}
 
 	template <class T>
-	virtual_path_string	(T const & other) : path_string_impl(separator, other) {}
+	virtual_path_string	(T const & other) : path_string_impl(separator, other) { verify_self(); }
 
 	template <class src_iterator>
 	virtual_path_string	(src_iterator const & begin, src_iterator const & end) 
