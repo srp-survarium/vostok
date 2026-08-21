@@ -44,8 +44,6 @@ struct VOSTOK_NOVTABLE npc
 	virtual	bool				is_invisible		( ) const	= 0;
 	virtual	bool			is_target_in_melee_range( npc const* const target ) const		= 0;
 	virtual	bool				is_at_node			( game_object const* const node ) const	= 0;
-	virtual	bool				is_playing_animation( ) const	= 0;
-	virtual	bool				is_moving			( ) const	= 0;
 
 	virtual	void				prepare_to_attack	( npc const* const target, weapon const* const gun ) = 0;	
 	virtual	void				attack				( npc const* const target, weapon const* const gun ) = 0;
@@ -54,7 +52,6 @@ struct VOSTOK_NOVTABLE npc
 	virtual	void				stop_attack			( npc const* const target, weapon const* const gun ) = 0;
 	virtual	void				survey_area			( )			= 0;
 	virtual	void				stop_patrolling		( )			= 0;
-	virtual	void			stop_animation_playing	( )			= 0;
 	virtual	void				reload				( weapon const* const gun )				= 0;
 	
 	virtual	void				play_animation		( animation_item const* const target )	= 0;

@@ -174,9 +174,6 @@ public:
 
 	// inline ai::npc / ai::game_object pure-virtual overrides absent from the
 	// canonical dump (no out-of-line symbol; inlined at the call sites)
-	virtual	bool								is_playing_animation		( ) const override { /* no source */ return false; }
-	virtual	bool								is_moving					( ) const override { /* no source */ return false; }
-	virtual	void								stop_animation_playing		( ) override { /* no source */ }
 
 	virtual	void								prepare_to_attack			( ai::npc const* const target, ai::weapon const* const gun ) override;
 
