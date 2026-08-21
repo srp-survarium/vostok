@@ -31,7 +31,6 @@ static_render_surface::static_render_surface( bool colored )
 {
 	m_vertex_input_type	= colored ? static_mesh_vertex_colored_input_type : static_mesh_vertex_input_type;
 
-	// <0x631d57>|0x007|+0x013:'47'
 }
 
 template < u32 Size >
@@ -608,8 +607,6 @@ static_render_model_instance::~static_render_model_instance( )
 	DELETE			( m_sectors_holder );
 	DELETE_ARRAY		( m_surface_instances );
 
-	// <0x631124>|0x004|+0x019:'846'
-	// <0x63113d>|0x01d|+0x01e:'847'
 }
 
 void static_render_model_instance::assign_original( static_render_model_ptr v )
@@ -627,18 +624,6 @@ void static_render_model_instance::assign_original( static_render_model_ptr v )
 		info.m_flags				= visible_flag | cast_shadow_flag;
 	}
 
-	// <0x631200>|0x000|+0x046:'852'
-	// <0x631246>|0x046|+0x012:'853'
-	// <0x631258>|0x058|+0x00e:'854'
-	// <0>
-	// <0x631266>|0x066|+0x01a:'856'
-	// <0>
-	// <0x631280>|0x080|+0x016:'858'
-	// <0x631296>|0x096|+0x003:'859'
-	// <0x631299>|0x099|+0x012:'860'
-	// <0x6312ab>|0x0ab|+0x003:'861'
-	// <0x6312ae>|0x0ae|+0x015:'862'
-	// <0>
 }
 
 void static_render_model_instance::set_lod_params(
@@ -804,7 +789,6 @@ void static_render_model_instance::get_surfaces(
 
 bool static_render_model_instance::get_locator( pcstr locator_name, model_locator_item& result ) const
 {
-	// <0x6300eb> -> bool < unknown >( pcstr, model_locator_item& ) const
 
 	return m_original->get_locator( locator_name, result );
 
@@ -821,17 +805,6 @@ void static_render_model_instance::get_surface_stats( u32 surface_id, surface_st
 	else
 		stats.material		= "_not_assigned";
 
-	// <0>
-	// <0x6302b0>|0x000|+0x013:'1051'
-	// <0x6302c3>|0x013|+0x00f:'1052'
-	// <0x6302d2>|0x022|+0x008:'1053'
-	// <0x6302da>|0x02a|+0x008:'1054'
-	// <0x6302e2>|0x032|+0x013:'1055'
-	// <0>
-	// <0x6302f5>|0x045|+0x00f:'1057'
-	// <0x630304>|0x054|-0x003:'1057'
-	// <0>
-	// <0x630301>|0x051|+0x01c:'1059'
 }
 
 void static_render_model_instance::add_sectors_holder( configs::binary_config_value sectotrs_cfg )

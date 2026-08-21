@@ -65,6 +65,7 @@ vertex_buffer::vertex_buffer		( u32 const size ) :
 {
 	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_vertex, true, false );
 	R_ASSERT		( m_buffer );
+#line 28
 	LOG_INFO		(" vertex buffer created: %dKb", m_size/1024);
 }
 

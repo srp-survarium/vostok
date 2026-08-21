@@ -327,6 +327,7 @@ void res_render_output::update_depth_stencil_buffer( )
 	desc_depth.MiscFlags = 0;
 
 	HRESULT res = device::ref().d3d_device()->CreateTexture2D( &desc_depth, NULL, &depth_texture );
+#line 393
 	CHECK_RESULT( res );
 
 	D3D_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -337,8 +338,10 @@ void res_render_output::update_depth_stencil_buffer( )
 	descDSV.Texture2D.MipSlice = 0;
 
 	res = device::ref().d3d_device()->CreateDepthStencilView( depth_texture, &descDSV, &m_base_zb );
+#line 404
 	CHECK_RESULT( res );
 
+#line 342
 	static u32 depth_texture_id = 0;
 	m_depth_rexture_name.assignf( "%s%d", depth_render_target_texture_name, depth_texture_id++ );
 
@@ -349,7 +352,7 @@ void res_render_output::update_depth_stencil_buffer( )
 		false,
 		true,
 		true,
-		0
+		u32( -1 )
 	);
 	m_texture_zb->set_hw_texture( depth_texture );
 
