@@ -12,7 +12,6 @@ void effect_speedtree_selection::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7b5990]
 	VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
 
 	shader_configuration configuration;

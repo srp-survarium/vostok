@@ -21,13 +21,11 @@ ui::draw_vertices_command::draw_vertices_command(
 	  m_primitives_type( primitives_type ),
 	  m_points_type( points_type )
 {
-	// FUNCTION BODY[0x7711b0]: 1
 	R_ASSERT( m_scene_view );
 }
 
 void ui::draw_vertices_command::execute( )
 {
-	// FUNCTION BODY[0x771220]: 1
 	m_render_engine_world.draw_ui_vertices	( &*m_vertices.begin(), m_vertices.size(), m_primitives_type, m_points_type );
 }
 
@@ -36,7 +34,6 @@ void defer_execution( base_command& command, base_scene_view_ptr const& scene_vi
 
 void ui::draw_vertices_command::defer_execution( )
 {
-	// FUNCTION BODY[0x771170]: 1
 	render::defer_execution	( *this, m_scene_view );
 }
 

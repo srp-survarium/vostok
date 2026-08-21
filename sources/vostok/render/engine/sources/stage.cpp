@@ -13,23 +13,19 @@ stage::stage( renderer* in_renderer, renderer_context* in_context ) :
 	m_enabled		( true ),
 	m_prev_enabled	( true )
 {
-	// FUNCTION BODY[0x62fe90]
 }
 
 void stage::execute( )
 {
-	// FUNCTION BODY[0x62fe80]
 }
 
 void stage::set_enabled( bool enable )
 {
-	// FUNCTION BODY[0x62fe70]
 	m_enabled = enable;
 }
 
 bool stage::is_enabled( ) const
 {
-	// FUNCTION BODY[0x62fe60]
 	return m_enabled;
 }
 

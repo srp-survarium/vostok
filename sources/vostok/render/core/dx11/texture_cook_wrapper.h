@@ -25,7 +25,7 @@ private:
 		resources::query_result_for_cook&
 	)
 	{
-		// claude@NOTE: no legacy ancestor - make_source_path has no legacy ancestor (legacy had only the opposite make_converted_path mapping, already inlined into the carcass .cpp); matcher-phase work.
+		// claude@NOTE: the available developer sources contain only the inverse path.
 		// STATE[STUB]
 	}
 };

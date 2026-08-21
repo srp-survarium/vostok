@@ -121,8 +121,6 @@ struct remove_model_skeletal_filter_predicate {
 
 STATIC_SIZE_ASSERT( remove_model_skeletal_filter_predicate, 0x1 );
 
-// claude@NOTE: legacy post_process_parameters.h luminance constants relocated here (the canonical
-// header dropped them; legacy NUM_TONEMAP_TEXTURES is superseded by rt_num_frame_luminance_targets)
 #define NUM_HISTOGRAM_VALUES			16
 #define MAX_TONEMAP_TEXTURE_DIMENSION	256
 #define NUM_TONEMAP_PIXELS				(MAX_TONEMAP_TEXTURE_DIMENSION * MAX_TONEMAP_TEXTURE_DIMENSION)
@@ -288,7 +286,7 @@ private:
 		float*
 	)
 	{
-		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram, no start/step/end split; matcher-phase work.
+		// claude@NOTE: developer sources contain only the monolithic histogram path.
 		// STATE[STUB]
 	}
 
@@ -300,7 +298,7 @@ private:
 		u32 const
 	)
 	{
-		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram; matcher-phase work.
+		// claude@NOTE: developer sources contain only the monolithic histogram path.
 		// STATE[STUB]
 	}
 
@@ -312,7 +310,7 @@ private:
 		float*
 	)
 	{
-		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram; matcher-phase work.
+		// claude@NOTE: developer sources contain only the monolithic histogram path.
 		// STATE[STUB]
 	}
 
@@ -320,8 +318,6 @@ private:
 
 	float4 get_frame_luminance_parameters( bool& valid )
 	{
-		// claude@NOTE: post-legacy bool& validity out-param - the legacy no-arg body always
-		// computed; assumed always-valid
 		valid = true;
 
 		// Average, Min, Max, Middle Gray

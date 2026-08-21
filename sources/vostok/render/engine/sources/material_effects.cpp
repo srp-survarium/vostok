@@ -19,7 +19,6 @@ namespace render {
 material_effects::material_effects()
 {
 
-
 	m_cull_mode				= D3D11_CULL_NONE;
 	m_vertex_input_type		= null_vertex_input_type;
 	vostok::memory::zero		(stage_enable);

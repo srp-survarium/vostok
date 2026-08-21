@@ -106,8 +106,7 @@ public:
 	void execute( scene_view_mode )
 	{
 		// STATE[STUB]
-		// claude@NOTE: legacy ~500-line execute blocked - select_models drift, dropped
-		// m_dynamic_visuals, terrain/speedtree machinery; kept in temp/render_legacy remainder
+		// claude@NOTE: the available body depends on retired terrain and model-selection interfaces.
 	}
 
 	void pre_lpv_batch_render( geometry_batch const& )

@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_ENGINE_PORTAL_SECTOR_SYSTEM_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_PORTAL_SECTOR_SYSTEM_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: load(config) and get_portals_count have no legacy ancestor (legacy model_manager loads via chunk_reader into heap arrays and exposes m_portals directly) - matcher-phase work.
 #include <vostok/buffer_vector.h>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4.h>

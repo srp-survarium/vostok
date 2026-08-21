@@ -22,12 +22,10 @@ static D3D_INPUT_ELEMENT_DESC hardware_2weights_skinning_vertex_layout[] =
 
 skeleton_mesh_gpu_skinning_2weights::skeleton_mesh_gpu_skinning_2weights( )
 {
-	// FUNCTION BODY[0x5f3600]
 }
 
 skeleton_mesh_gpu_skinning_2weights::~skeleton_mesh_gpu_skinning_2weights( )
 {
-	// FUNCTION BODY[0x5f35c0]
 }
 
 void skeleton_mesh_gpu_skinning_2weights::load(
@@ -35,7 +33,6 @@ void skeleton_mesh_gpu_skinning_2weights::load(
 	memory::chunk_reader& r
 )
 {
-	// FUNCTION BODY[0x5f3430]
 	skeleton_render_surface::load		( properties, r );
 
 	memory::reader verts_reader		= r.open_reader( model_chunk_vertices );
@@ -84,7 +81,6 @@ void skeleton_mesh_gpu_skinning_2weights::load(
 
 void skeleton_mesh_gpu_skinning_2weights::update( vector< float4x4 > const& bones )
 {
-	// FUNCTION BODY[0x5f3420]
 	VOSTOK_UNREFERENCED_PARAMETER	( bones );
 }
 

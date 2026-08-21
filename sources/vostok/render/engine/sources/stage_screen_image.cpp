@@ -66,12 +66,9 @@ void stage_screen_image::execute( res_texture_ptr t_image )
 		execute_disabled( );
 		return;
 	}
-	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).set_depth_stencil_target( NULL );
-	// 4 target lines are likely retail-compiled-out source.
 	backend::ref( ).clear_render_targets( math::color( 0.5f, 0.5f, 0.5f, 0.5f ) );
-	// 4 target lines are likely retail-compiled-out source.
 	m_present_effect->apply( 0, 0 );
 
 	ASSERT( m_textures.size( ) == 1 );

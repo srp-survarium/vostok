@@ -16,7 +16,6 @@ ui::renderer::renderer(
 	  m_render_engine_world( engine_world ),
 	  m_allocator( allocator )
 {
-	// FUNCTION BODY[0x7372b0]: 0
 }
 
 void ui::renderer::draw_vertices(
@@ -27,7 +26,6 @@ void ui::renderer::draw_vertices(
 	const u32						points_type
 )
 {
-	// FUNCTION BODY[0x7373e0]: 1
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, ui::draw_vertices_command ) ( m_render_engine_world, scene_view, begin, end, m_allocator, primitives_type, points_type ) );
 }
 
@@ -44,7 +42,6 @@ void ui::renderer::draw_text(
 	const u32						end_selection
 )
 {
-	// FUNCTION BODY[0x7372d0]: 18
 	vectora< ui::vertex > vertices( m_allocator );
 	vertices.resize				( strings::length( text ) * 4 );
 	m_render_engine_world.draw_text	(

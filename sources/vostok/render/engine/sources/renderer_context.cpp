@@ -33,7 +33,7 @@ static vostok::console_commands::cc_float s_cc_shadow_map_z_bias(
 namespace vostok {
 namespace render {
 
-// claude@NOTE: The first target-reset loop inlines texture destruction; the base keeps destroy_impl out of line.
+// claude@NOTE: texture destruction is inlined only in the target reset loop.
 renderer_context::renderer_context( ) :
 	m_targets				( NULL ),
 	m_t_null				( NULL ),
@@ -148,35 +148,28 @@ renderer_context::renderer_context( ) :
 
 void renderer_context::set_scene( render::scene* in_scene )
 {
-	// FUNCTION BODY[0x642720]: 2
 	// <0x642720>|0x000|+0x006:'169'
 	// <0>
-	// ******
 
 	m_scene					= in_scene;
 }
 
 scene_view const* renderer_context::scene_view( ) const
 {
-	// FUNCTION BODY[0x642740]: 1
 	// <0x642740>|0x000|+0x006:'175'
-	// ******
 
 	return static_cast_checked< vostok::render::scene_view const* >( m_scene_view.c_ptr( ) );
 }
 
 scene_view* renderer_context::get_scene_view( )
 {
-	// FUNCTION BODY[0x642730]: 1
 	// <0x642730>|0x000|+0x006:'180'
-	// ******
 
 	return static_cast_checked< vostok::render::scene_view* >( m_scene_view.c_ptr( ) );
 }
 
 void renderer_context::set_scene_view( base_scene_view_ptr view_ptr )
 {
-	// FUNCTION BODY[0x643360]: 9
 	// <0x643362>|0x002|+0x010:'185'
 	// <0>
 	// <0x643372>|0x012|+0x006:'187'
@@ -186,7 +179,6 @@ void renderer_context::set_scene_view( base_scene_view_ptr view_ptr )
 	// <1>
 	// <2>
 	// <0x643384>|0x024|+0x00d:'193'
-	// ******
 
 	m_scene_view			= view_ptr;
 
@@ -200,16 +192,7 @@ void renderer_context::set_view2shadow( float4x4 const& view2shadow, u32 index )
 {
 	// STATICS
 	// static < NoType > 				 = <0x64270c>;
-	// ******
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6316c2 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6316d4 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6316e6 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6316f8 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1") })
-	// ******
-
-	// FUNCTION BODY[0x6426b0]: 15
 	// <0x6426b5>|0x005|+0x00d:'198'
 	// <0>
 	// <1>
@@ -231,7 +214,6 @@ void renderer_context::set_view2shadow( float4x4 const& view2shadow, u32 index )
 	// <0x6426d1>|0x021|+0x012:'213'
 	// <0x6426e3>|0x033|+0x012:'213'
 	// <0x6426f5>|0x045|+0x012:'213'
-	// ******
 
 	switch ( index )
 	{
@@ -254,16 +236,7 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 {
 	// STATICS
 	// static < NoType > 				 = <0x642694>;
-	// ******
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63168e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63167c }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x631682 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x631688 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1") })
-	// ******
-
-	// FUNCTION BODY[0x642670]: 12
 	// <0x642670>|0x000|+0x00c:'217'
 	// <0>
 	// <1>
@@ -279,7 +252,6 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 	// <0x642681>|0x011|+0x006:'229'
 	// <0x642687>|0x017|+0x006:'229'
 	// <0x64268d>|0x01d|+0x006:'229'
-	// ******
 
 	switch ( index )
 	{
@@ -295,7 +267,7 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 	return m_v2shadow0;
 }
 
-// claude@NOTE: The target receives this in esi through an LTCG-selected convention; the base preserves esi locally.
+// claude@NOTE: LTCG selects different `this` handling across this call boundary.
 void renderer_context::set_target_context( renderer_context_targets const* targets_context, bool force_set )
 {
 	if (
@@ -332,25 +304,20 @@ void renderer_context::set_target_context( renderer_context_targets const* targe
 
 void renderer_context::set_time_delta( const float time_delta )
 {
-	// FUNCTION BODY[0x642660]: 1
 	// <0x642660>|0x000|+0x008:'255'
-	// ******
 
 	m_time_delta			= time_delta;
 }
 
 void renderer_context::set_current_time( const float current_time )
 {
-	// FUNCTION BODY[0x642650]: 1
 	// <0x642650>|0x000|+0x008:'260'
-	// ******
 
 	m_current_time			= current_time;
 }
 
 void renderer_context::set_w( float4x4 const& m )
 {
-	// FUNCTION BODY[0x643190]: 26
 	// <0x6431a2>|0x012|+0x011:'265'
 	// <0x6431b3>|0x023|+0x023:'266'
 	// <0x6431d6>|0x046|+0x014:'267'
@@ -377,7 +344,6 @@ void renderer_context::set_w( float4x4 const& m )
 	// <1>
 	// <2>
 	// <3>
-	// ******
 
 	m_w						= m;
 	m_wv					= m_w * m_v;
@@ -403,7 +369,6 @@ void renderer_context::set_w( float4x4 const& m )
 
 void renderer_context::set_v( float4x4 const& m )
 {
-	// FUNCTION BODY[0x642da0]: 35
 	// <0x642db0>|0x010|+0x024:'295'
 	// <0>
 	// <0x642dd4>|0x034|+0x023:'297'
@@ -439,7 +404,6 @@ void renderer_context::set_v( float4x4 const& m )
 	// <0>
 	// <0x64314d>|0x3ad|+0x016:'328'
 	// <0x643163>|0x3c3|+0x016:'329'
-	// ******
 
 	m_v_transposed			= transpose( m_v = m );
 
@@ -474,7 +438,6 @@ void renderer_context::set_v( float4x4 const& m )
 
 void renderer_context::set_p( float4x4 const& m )
 {
-	// FUNCTION BODY[0x642bf0]: 31
 	// <0x642bf0>|0x000|+0x026:'345'
 	// <0x642c16>|0x026|+0x018:'346'
 	// <0x642c2e>|0x03e|+0x01f:'347'
@@ -506,7 +469,6 @@ void renderer_context::set_p( float4x4 const& m )
 	// <0x642d5f>|0x16f|+0x016:'373'
 	// <0>
 	// <0x642d75>|0x185|+0x010:'375'
-	// ******
 
 	m_p						= m;
 	m_p_transposed			= transpose( m_p = m );
@@ -532,7 +494,6 @@ void renderer_context::set_p( float4x4 const& m )
 
 void renderer_context::update_near_far( )
 {
-	// FUNCTION BODY[0x6429f0]: 11
 	// <0>
 	// <0x6429f0>|0x000|+0x04b:'381'
 	// <0x642a3b>|0x04b|+0x00c:'382'
@@ -544,7 +505,6 @@ void renderer_context::update_near_far( )
 	// <1>
 	// <0x642a93>|0x0a3|+0x00f:'389'
 	// <0x642aa2>|0x0b2|+0x01c:'390'
-	// ******
 
 	float4 tmp_transformed	= m_p_inverted.transform( float4( 0.f, 0.f, 0.f, 1.f ) );
 	m_near_far_invn_invf.x	= tmp_transformed.z / tmp_transformed.w;
@@ -558,7 +518,6 @@ void renderer_context::update_near_far( )
 
 void renderer_context::reset_matrices( )
 {
-	// FUNCTION BODY[0x642900]: 17
 	// <0x642903>|0x003|+0x00b:'395'
 	// <0x64290e>|0x00e|+0x00b:'396'
 	// <0x642919>|0x019|+0x00b:'397'
@@ -576,7 +535,6 @@ void renderer_context::reset_matrices( )
 	// <0x64299d>|0x09d|+0x00b:'409'
 	// <0>
 	// <0x6429a8>|0x0a8|+0x035:'411'
-	// ******
 
 	m_w.identity			( );
 	m_w_transposed.identity	( );
@@ -611,9 +569,7 @@ void renderer_context::update_eye_rays( )
 {
 	// LOCALS
 	// float4 							eye_00
-	// ******
 
-	// FUNCTION BODY[0x642750]: 27
 	// <0>
 	// <1>
 	// <2>
@@ -641,7 +597,6 @@ void renderer_context::update_eye_rays( )
 	// <2>
 	// <3>
 	// <4>
-	// ******
 
 	float4x4 const& inv_proj = m_p_inverted;
 
@@ -661,9 +616,7 @@ void renderer_context::update_eye_rays( )
 
 void renderer_context::clear_resources( )
 {
-	// FUNCTION BODY[0x643350]: 1
 	// <0x643351>|0x001|+0x00e:'481'
-	// ******
 
 	m_scene_view			= NULL;
 }
@@ -716,8 +669,6 @@ void renderer_context::clear_resources( )
 	// typedef
 	// 	vostok::render::texture_named_instance*
 	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

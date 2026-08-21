@@ -26,7 +26,6 @@ struct screen_vertex {
 };
 
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
-// 16 target lines are likely retail-compiled-out source.
 void stage_atmosphere::fill_surfaces(
 	render_target_ptr	surf0,
 	render_target_ptr	surf1,
@@ -54,7 +53,6 @@ void stage_atmosphere::fill_surfaces(
 	device::ref( ).d3d_context( )->RSGetViewports( &viewport_count, &view_port_saved );
 
 	device::ref( ).d3d_context( )->RSSetViewports( 1, &view_port );
-	// 2 target lines are likely retail-compiled-out source.
 	u32 offset;
 	screen_vertex* pv = reinterpret_cast<screen_vertex*>( backend::ref( ).vertex.lock( 4, sizeof(screen_vertex), offset ) );
 	pv->set( float4( -1.0f, -1.0f, 0.0f, 1.0f ), float2( 0.0f, 1.0f ) ); ++pv;
@@ -93,10 +91,8 @@ stage_atmosphere::stage_atmosphere(
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D_INPUT_PER_VERTEX_DATA, 0 },
 	};
-	// 2 target lines are likely retail-compiled-out source.
 	u16 indices[6] = { 0, 1, 2, 3, 2, 1 };
 	m_screen_vertex_ib = resource_manager::ref( ).create_buffer( 6 * sizeof(u16), indices, enum_buffer_type_index, false, false );
-	// 5 target lines are likely retail-compiled-out source.
 	m_screen_vertex_geometry = resource_manager::ref( ).create_geometry( screen_vertex_layout, sizeof(screen_vertex), backend::ref( ).vertex.buffer( ), *m_screen_vertex_ib );
 
 	m_enabled = options::ref( ).current.m_enabled_atmosphere_stage;
@@ -114,7 +110,6 @@ bool stage_atmosphere::is_effects_ready( ) const
 
 void stage_atmosphere::execute( )
 {
-	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -125,7 +120,6 @@ void stage_atmosphere::execute( )
 	}
 
 	post_process_parameters& pp_parameters = m_context->get_scene_view( )->post_process_parameters( );
-	// 3 target lines are likely retail-compiled-out source.
 	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( ); float3 to_sun_direction( 0.0f, 1.0f, 0.0f );
 
 	if ( m_type == atmosphere_on_sky )
@@ -156,7 +150,6 @@ void stage_atmosphere::execute( )
 
 			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::make_mie_rayleigh_pass, 0 );
 			float sun_int = sun ? sun->intensity : 1.0f; backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
-			// 8 target lines are likely retail-compiled-out source.
 			backend::ref( ).set_ps_constant( m_c_atmosphere_parameters, float4( pp_parameters.atmosphere_kresun_multiplier, pp_parameters.atmosphere_kmesun_multiplier, pp_parameters.atmosphere_kr4pi_multiplier, pp_parameters.atmosphere_km4pi_multiplier ) );
 			fill_surfaces( m_context->get_rt( rt_mie_scattering ), m_context->get_rt( rt_rayleigh_scattering ), false );
 
@@ -174,14 +167,11 @@ void stage_atmosphere::execute( )
 		backend::ref( ).set_vs_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 
 		float4x4 proj_matrix = m_context->get_p( );
-		// 5 target lines are likely retail-compiled-out source.
 		proj_matrix.k.z = 1.0000001f; proj_matrix.c.z = -1.0000001f;
-		// 2 target lines are likely retail-compiled-out source.
 		m_context->push_set_p( proj_matrix );
 		m_context->set_w( float4x4( ).identity( ) );
 
 		m_sky_dome_geometry.draw( );
-		// 2 target lines are likely retail-compiled-out source.
 		if ( pp_parameters.sky_clouds_texture )
 		{
 
@@ -196,7 +186,6 @@ void stage_atmosphere::execute( )
 
 			m_clouds_geometry.draw( );
 		}
-		// 2 target lines are likely retail-compiled-out source.
 		if ( pp_parameters.sun_moon_texture && sun )
 		{
 			u32 offset;
@@ -210,13 +199,10 @@ void stage_atmosphere::execute( )
 			backend::ref( ).vertex.unlock( );
 
 			m_screen_vertex_geometry->apply( );
-			// 3 target lines are likely retail-compiled-out source.
 			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::sun_moon_pass_for_alpha_blend_clouds, 0 );
-			// 5 target lines are likely retail-compiled-out source.
 			float3 L_dir = sun->direction;
 			float3 L_right;
 			float3 L_up;
-			// 2 target lines are likely retail-compiled-out source.
 			if ( sun->right.squared_length( ) > math::epsilon_5 )
 			{
 
@@ -228,15 +214,11 @@ void stage_atmosphere::execute( )
 				L_right = L_up ^ L_dir; L_right.normalize( );
 				L_up = L_right ^ L_dir; L_up.normalize( );
 			}
-			// 4 target lines are likely retail-compiled-out source.
 			float scale = ( m_context->get_view_pos( ) - sun->position ).length( );
-			// 2 target lines are likely retail-compiled-out source.
 			scale /= 384467000.0f;
-			// 4 target lines are likely retail-compiled-out source.
 			scale *= 6948400.0f;
 			float4x4 rotation_X_translation( float4( L_up, 0.0f ), float4( L_right, 0.0f ),
 				float4( L_dir, 0.0f ), float4( sun->position, 1.0f ) );
-			// 5 target lines are likely retail-compiled-out source.
 			scale *= pp_parameters.sun_moon_billboard_scale; float4x4 world_transform =
 				math::create_scale( float3( scale, scale, scale ) ) * math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
 			m_context->set_w( world_transform );
@@ -248,7 +230,6 @@ void stage_atmosphere::execute( )
 
 			m_context->set_w( float4x4( ).identity( ) );
 		}
-		// 2 target lines are likely retail-compiled-out source.
 		m_context->pop_p( );
 
 		backend::ref( ).reset_render_targets( );

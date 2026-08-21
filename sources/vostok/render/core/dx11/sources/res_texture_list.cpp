@@ -25,11 +25,7 @@ void res_texture_list::destroy_impl	() const
 	resource_manager::ref().release( this );
 }
 
-// claude@NOTE: both `compare` overloads are LTCG-convention walls, not shape work. The target
-// takes `this` in edi and returns `ret 4`; our build puts `this` on the stack and returns
-// `ret 8`, which is what makes it spill the loop bound and reload it (`mov edx,[esp+18h]`) -
-// that reload is a 1-instruction fall-through block, and it is the whole reason
-// `sema sweep` files these as TOPOLOGY: contracting it makes the two CFGs isomorphic.
+// claude@NOTE: the two compare residuals are LTCG calling-convention differences.
 s32 res_texture_list::compare( res_texture_list const& base ) const
 {
 	for ( u32 size = std::min( m_container.size( ), base.m_container.size( ) ), cmp = 0; cmp < size; ++cmp )

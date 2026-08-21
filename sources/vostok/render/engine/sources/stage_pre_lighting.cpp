@@ -8,10 +8,8 @@ namespace vostok {
 namespace render {
 
 const u32 stencil_light_marker_shift = 2;
-// 6 target lines are likely retail-compiled-out source.
 void stage_pre_lighting::execute( )
 {
-	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_enabled( ) )
 	{
 		execute_disabled( );

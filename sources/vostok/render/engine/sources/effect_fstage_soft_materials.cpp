@@ -13,9 +13,7 @@ void effect_fstage_soft_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7ba8b0]
 	shader_configuration configuration;
-
 
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
@@ -46,7 +44,6 @@ void effect_fstage_soft_materials::compile(
 
 		if (config.value_exists("constant_soft_distance"))
 			compiler.set_constant("soft_distance", float(config["constant_soft_distance"]));
-
 
 		compiler.set_cull_mode(D3D_CULL_NONE);
 	compile_end(compiler);

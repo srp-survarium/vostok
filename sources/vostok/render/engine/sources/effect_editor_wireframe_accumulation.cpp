@@ -7,7 +7,6 @@
 namespace vostok {
 namespace render {
 
-
 void effect_editor_wireframe_accumulation::compile(
 	effect_compiler&			compiler,
 	custom_config_value const&	config

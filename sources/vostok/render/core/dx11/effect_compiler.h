@@ -45,7 +45,7 @@ public:
 	typedef vector< texture_query_desc > textures_for_query_type;
 
 public:
-	// claude@NOTE: no legacy ancestor - set_mapping was declaration-only in the legacy header (no definition anywhere in the corpus); matcher-phase work.
+	// claude@NOTE: the developer sources contain a declaration but no body.
 	void set_mapping( ) { /* STATE[STUB] */ }
 
 	effect_compiler& begin_pass(
@@ -163,7 +163,6 @@ public:
 		u32 num_last_mips_used
 	)
 	{
-		// FUNCTION BODY[0x89160]
 		return set_texture(
 			hlsl_name,
 			physical_name.c_str( ),
@@ -209,13 +208,12 @@ public:
 
 	shader_cache_info_vector const get_cached_shaders_info( ) const
 	{
-		// FUNCTION BODY[0x130450]
 		return m_shader_cache_info;
 	}
 
 private:
 	u32 get_sampler( pcstr ) { return 0; }
-	// claude@NOTE: no legacy ancestor - the six set_samp_* below were declaration-only in the legacy header (bodies existed only in the dead D3D9 blender_compiler generation); matcher-phase work.
+	// claude@NOTE: the developer sources contain declarations but no DX11 bodies.
 	void set_samp_texture( u32, pcstr ) { /* STATE[STUB] */ }
 	void set_samp_address( u32, u32 ) { /* STATE[STUB] */ }
 	void set_samp_filter_min( u32, u32 ) { /* STATE[STUB] */ }

@@ -29,12 +29,10 @@ effect_compiler::effect_compiler(
 	m_pass_idx( 0 ),
 	m_shaders_cache_mode( shaders_cache_mode )
 {
-	// FUNCTION BODY[0x7a6710]
 }
 
 effect_compiler::~effect_compiler( )
 {
-	// FUNCTION BODY[0x7a6570]
 }
 
 effect_compiler& effect_compiler::set_depth(
@@ -173,10 +171,6 @@ effect_compiler& effect_compiler::set_texture(
 		m_ps_used_textures.push_back	( instance);
 	}
 
-	// claude@NOTE: LTCG drops `out_texture` from the target's parameter list entirely
-	// (every call site passes 0), so the target records ~14 source lines here that emit
-	// no code at all - only the fact that a block existed survives. This is the minimal
-	// reconstruction consistent with the surviving signature.
 	if ( out_texture)
 		*out_texture	= texture;
 

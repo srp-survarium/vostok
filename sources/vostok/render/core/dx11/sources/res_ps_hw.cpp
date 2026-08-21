@@ -11,7 +11,6 @@ HRESULT res_xs_hw<ps_data>::create_hw_shader(
 	ID3D11PixelShader** hardware_shader
 )
 {
-	// FUNCTION BODY[0x738ec0]
 	void const* bytecode_buffer	= shader_code->GetBufferPointer();
 	u32 bytecode_buffer_size	= (u32)shader_code->GetBufferSize();
 

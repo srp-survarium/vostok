@@ -25,13 +25,11 @@
 #include <vostok/render/core/res_render_output.h>
 #include <vostok/render/core/res_xs.h>
 #include <vostok/render/facade/vertex_input_type.h>
-// 31 target lines are likely retail-compiled-out source.
 
 static bool s_debug_profile_dip = false;
 static vostok::console_commands::cc_bool s_debug_profile_dip_cc( "r_debug_profile_dip", s_debug_profile_dip, false, vostok::console_commands::command_type_user_specific );
 
 static vostok::command_line::key s_z_only_1("z_only_1", "", "", "");
-// 6 target lines are likely retail-compiled-out source.
 namespace vostok {
 namespace render {
 
@@ -50,7 +48,6 @@ void effect_copy_depth_rt::compile(
 		compiler.end_pass();
 	compiler.end_technique();
 }
-// 19 target lines are likely retail-compiled-out source.
 static void fill_surface( render_target_ptr surf, renderer_context* context )
 {
 	float w = float(surf->width());
@@ -123,17 +120,13 @@ stage_gbuffer::stage_gbuffer(
 
 	m_enabled = options::ref().current.m_enabled_g_stage;
 }
-// 2 target lines are likely retail-compiled-out source.
 stage_gbuffer::~stage_gbuffer( )
 {
 }
-// 2 target lines are likely retail-compiled-out source.
 bool stage_gbuffer::is_effects_ready( ) const
 {
 	return m_copy_depth_rt.c_ptr() && m_fill_depth_effect.c_ptr();
-	// 2 target lines are likely retail-compiled-out source.
 }
-// 22 target lines are likely retail-compiled-out source.
 void stage_gbuffer::render_models(
 	vector<render_surface_instance*>& models,
 	u32 shader_lod_index,
@@ -149,7 +142,6 @@ void stage_gbuffer::render_models(
 		render_surface_instance& instance = **it;
 
 		render_surface* surface = instance.m_render_surface; material_effects& effects = surface->get_material_effects();
-		// 12 target lines are likely retail-compiled-out source.
 		m_context->set_w(*instance.m_transform);
 
 		if (z_only)
@@ -164,7 +156,6 @@ void stage_gbuffer::render_models(
 		{
 			post_process_parameters const& parameters =
 				m_context->scene_view()->post_process_parameters();
-			// 4 target lines are likely retail-compiled-out source.
 			float3 wind_info_parameters( parameters.wind_direction.x, parameters.wind_direction.z, parameters.wind_strength );
 
 			backend::ref().set_vs_constant(m_wind_info_parameters, wind_info_parameters);
@@ -182,14 +173,11 @@ void stage_gbuffer::render_models(
 				backend::ref().set_ps_constant(m_smoothness_multiplier, 1.f);
 			}
 		}
-		// 2 target lines are likely retail-compiled-out source.
 		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0 );
 
 		++out_num_rendered;
 	}
-	// 5 target lines are likely retail-compiled-out source.
 }
-// 28 target lines are likely retail-compiled-out source.
 bool remove_model_if_not_lod_predicate::operator()( render_surface_instance* in_model )
 {
 	if (options::ref().current.m_use_hiz_occlusion_culling && in_model->m_occluded)
@@ -206,13 +194,11 @@ bool remove_model_if_not_lod_predicate::operator()( render_surface_instance* in_
 
 	return false;
 }
-// 29 target lines are likely retail-compiled-out source.
 bool remove_model_if_not_static_predicate::operator()( render_surface_instance* in_model )
 {
 	bool const is_static =
 		in_model->m_render_surface->get_vertex_input_type() == wires_vertex_input_type
 		|| in_model->m_render_surface->get_vertex_input_type() == static_mesh_vertex_input_type
-		// 2 target lines are likely retail-compiled-out source.
 		|| in_model->m_render_surface->get_vertex_input_type() == static_mesh_vertex_colored_input_type;
 
 	material_effects& effects = in_model->m_render_surface->get_material_effects();
@@ -224,10 +210,8 @@ bool remove_model_if_not_skeletal_predicate::operator()( render_surface_instance
 	material_effects& effects = in_model->m_render_surface->get_material_effects();
 	enum_vertex_input_type const vertex_input_type =
 		in_model->m_render_surface->get_vertex_input_type();
-	// 4 target lines are likely retail-compiled-out source.
 	return effects.has_translucency || (vertex_input_type != skeletal_4_bones_mesh_vertex_input_type && vertex_input_type != skeletal_3_bones_mesh_vertex_input_type && vertex_input_type != skeletal_2_bones_mesh_vertex_input_type && vertex_input_type != skeletal_1_bones_mesh_vertex_input_type);
 }
-// 3 target lines are likely retail-compiled-out source.
 bool remove_model_if_not_translucency_predicate::operator()( render_surface_instance* in_model )
 {
 	material_effects& effects =
@@ -235,7 +219,6 @@ bool remove_model_if_not_translucency_predicate::operator()( render_surface_inst
 
 	return !effects.has_translucency;
 }
-// 5 target lines are likely retail-compiled-out source.
 bool sort_by_ps_predicate::operator()(
 	render_surface_instance const* left,
 	render_surface_instance const* right
@@ -244,12 +227,10 @@ bool sort_by_ps_predicate::operator()(
 	material_effects const& left_material_effects = left->m_render_surface->get_material_effects();
 
 	material_effects const& right_material_effects = right->m_render_surface->get_material_effects();
-	// 2 target lines are likely retail-compiled-out source.
 	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0); res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0);
 
 	return left_pass->get_vs()->hardware_shader()->hardware_shader() < right_pass->get_vs()->hardware_shader()->hardware_shader();
 }
-// 5 target lines are likely retail-compiled-out source.
 void stage_gbuffer::z_only_pass( )
 {
 	vector<render_surface_instance*> m_visible_models;
@@ -304,7 +285,6 @@ void stage_gbuffer::z_only_pass( )
 
 void stage_gbuffer::execute( )
 {
-	// 6 target lines are likely retail-compiled-out source.
 	if (!is_enabled() || !is_effects_ready())
 	{
 		execute_disabled();
@@ -319,12 +299,10 @@ void stage_gbuffer::execute( )
 	vector<render_surface_instance*> m_visible_static_models;
 	vector<render_surface_instance*> m_visible_skeletal_models;
 	vector<render_surface_instance*> m_visible_translucency_models;
-	// 2 target lines are likely retail-compiled-out source.
 	m_visible_models.reserve(2048);
 	m_visible_static_models.reserve(1024);
 	m_visible_skeletal_models.reserve(1024);
 	m_visible_translucency_models.reserve(1024);
-	// 2 target lines are likely retail-compiled-out source.
 	backend::ref().set_render_targets(
 		&*m_context->get_rt(rt_normal),
 		&*m_context->get_rt(rt_albedo),
@@ -339,7 +317,6 @@ void stage_gbuffer::execute( )
 
 	if (s_z_only_1.is_set())
 		z_only_pass();
-	// 2 target lines are likely retail-compiled-out source.
 	u32 num_shader_lods = options::ref().current.m_use_shader_lods ? 2 : 1; u32 num_rendered = 0;
 
 	for (u32 shader_lod_index = 0; shader_lod_index < num_shader_lods; ++shader_lod_index)
@@ -395,13 +372,11 @@ void stage_gbuffer::execute( )
 		std::sort( m_visible_translucency_models.begin(), m_visible_translucency_models.end(), sort_by_vs_predicate(gbuffer_render_stage, 0) );
 		render_models(m_visible_translucency_models, shader_lod_index, num_rendered, false);
 	}
-	// 3 target lines are likely retail-compiled-out source.
 	backend::ref().set_stencil_ref(all_geometry_type + static_geometry_type);
 
 	render_grass(false);
 
 	render_particles(false);
-	// 2 target lines are likely retail-compiled-out source.
 	if (m_copy_depth_rt.c_ptr())
 	{
 		m_copy_depth_rt->apply(0, 0);
@@ -413,9 +388,7 @@ void stage_gbuffer::execute( )
 
 	if (m_fill_view_space_depth)
 	{
-		// 7 target lines are likely retail-compiled-out source.
 		backend::ref().set_render_targets(&*m_context->get_rt(rt_position), 0, 0, 0);
-		// 5 target lines are likely retail-compiled-out source.
 		backend::ref().clear_render_targets(math::color(0.f, 0.f, 0.f, 0.f));
 
 		backend::ref().reset_depth_stencil_target();
@@ -434,7 +407,6 @@ void stage_gbuffer::execute( )
 			render_surface* surface = instance.m_render_surface;
 
 			material_effects& effects = surface->get_material_effects();
-			// 2 target lines are likely retail-compiled-out source.
 			if (!effects.m_effects[gbuffer_render_stage].c_ptr())
 				continue;
 
@@ -494,13 +466,11 @@ void stage_gbuffer::render_particles( bool z_only )
 		if (particle_render_mode == particle::normal_particle_render_mode && instance->get_material_effects().stage_enable[gbuffer_render_stage])
 		{
 			instance->get_material_effects().m_effects[gbuffer_render_stage]->apply(z_only ? 8 : 0, 0);
-			// 7 target lines are likely retail-compiled-out source.
 			particle_shader_constants::ref().set( m_context->get_v_inverted().transform_direction(float3(0, 1000, 0)).normalize(), m_context->get_v_inverted().transform_direction(float3(1000, 0, 0)).normalize(), m_context->get_v_inverted().lines[3].xyz(), instance->locked_axis(), instance->screen_alignment() );
 
 			particle_shader_constants::ref().set_time(m_context->m_current_time);
 
 			m_context->set_w(instance->transform());
-			// 7 target lines are likely retail-compiled-out source.
 			instance->render(m_context->get_v_inverted().lines[3].xyz(), num_particles);
 		}
 		else

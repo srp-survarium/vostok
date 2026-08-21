@@ -125,7 +125,6 @@ inline effect_options_descriptor::const_iterator effect_options_descriptor::end(
 template <>
 inline effect_options_descriptor& effect_options_descriptor::operator=<pcstr>( pcstr value )
 {
-	// FUNCTION BODY[0x66930]
 	count = u16( strings::length( value ) + 1 );
 	memory::copy( data, count, value, count );
 

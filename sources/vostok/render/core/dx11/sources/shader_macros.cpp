@@ -96,7 +96,6 @@ void add_bool_macro(
 	bool flag
 )
 {
-	// FUNCTION BODY[0x1297a0]
 	macros.push_back( shader_macro() );
 	macros.back().name       = name;
 	macros.back().definition = flag ? "1" : "0";
@@ -108,7 +107,6 @@ void add_u8_macro(
 	u8 value
 )
 {
-	// FUNCTION BODY[0x129880]
 	shader_macro macro;
 	macro.name       = name;
 	macro.definition.assignf( "%d", value );
@@ -119,16 +117,11 @@ void add_u8_macro(
 
 shader_macros::shader_macros( )
 {
-	// FUNCTION BODY[0x73a910]
 	register_available_macros();
 }
 
-// claude@NOTE: legacy registration list; the target-era macro set (quality
-// tiers beyond the three ported GLOBAL_*_QUALITY strings, taa/motion-vector
-// era configs) is matcher-phase work against 0x73a520.
 void shader_macros::register_available_macros( )
 {
-	// FUNCTION BODY[0x73a520]
 	// global flags
 	m_available_macros.push_back(str_global_use_branching);
 	m_available_macros.push_back(str_global_allow_steepparallax);

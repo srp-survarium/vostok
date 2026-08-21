@@ -20,7 +20,6 @@ public:
 		billboard,
 	};
 
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

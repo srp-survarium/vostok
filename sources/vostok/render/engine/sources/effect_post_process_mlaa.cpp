@@ -13,7 +13,6 @@ void effect_post_process_mlaa::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_mlaa", NULL, "mlaa_color_edge_detection", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

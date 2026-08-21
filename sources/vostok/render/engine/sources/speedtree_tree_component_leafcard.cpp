@@ -22,13 +22,10 @@ using namespace SpeedTree;
 speedtree_tree_component_leafcard::speedtree_tree_component_leafcard( speedtree_tree& parent ) :
 	speedtree_tree_component( parent )
 {
-	// FUNCTION BODY[0x5f64e0]
 	static const st_float32 c_fUncompressWindScalar = 10.0f;
 
 	ref_declaration decl = resource_manager::ref().create_declaration( layout, array_size( layout ) );
 
-	// claude@NOTE: legacy bound `CTree& tree = parent` - the canonical speedtree_tree
-	// derives SpeedTree::CCore (GetGeometry lives there).
 	SpeedTree::CCore& tree = parent;
 
 	const SGeometry* tree_geometry  = tree.GetGeometry( );
@@ -190,7 +187,6 @@ void speedtree_tree_component_leafcard::init_index_buffer(
 	u32 num_accumulated_vertices
 )
 {
-	// FUNCTION BODY[0x5f5fd0]
 	out_indices.reserve( lod->m_nNumMaterialGroups * lod->m_nTotalNumCards * 6 );
 
 	for (s32 mg_index = 0; mg_index < lod->m_nNumMaterialGroups; mg_index++)
@@ -211,20 +207,15 @@ void speedtree_tree_component_leafcard::init_index_buffer(
 
 void speedtree_tree_component_leafcard::set_material( material_ptr mtl_ptr )
 {
-	// FUNCTION BODY[0x5f64b0]
-	// claude@NOTE: legacy body was fully commented out (initialize_material_effects era).
 	VOSTOK_UNREFERENCED_PARAMETER	( mtl_ptr );
 }
 
 void speedtree_tree_component_leafcard::set_default_material( )
 {
-	// FUNCTION BODY[0x5f5fb0]
-	//m_material_effects = material::nomaterial_material(speedtree_leafcard_vertex_input_type);
 }
 
 void speedtree_tree_component_leafcard::render( lod_entry const* lod, renderer_context* context )
 {
-	// FUNCTION BODY[0x5f5fc0]
 	VOSTOK_UNREFERENCED_PARAMETERS(lod, context);
 }
 

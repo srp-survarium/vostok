@@ -70,7 +70,6 @@ stage_visibility::stage_visibility(
 	m_portals_offset_to_results( 0 )
 {
 	m_data_ready = true;
-	// 4 target lines are likely retail-compiled-out source.
 	m_occlusion_manager = NEW( hw_hiz_occlusion_manager )(
 		true, options::ref( ).current.m_hiz_occlusion_culling_width, options::ref( ).current.m_hiz_occlusion_culling_height );
 	m_static_bounds_array = NEW_ARRAY( float4, occlusion_buffer_size );

@@ -276,11 +276,7 @@ void grass_world::merge_patches( )
 	}
 }
 
-// claude@NOTE: residual cause - our LTCG partial-inlines the s_draw_grass_debug_value guard
-// into renderer::draw_debug (the cmp/je moves to the call site and the standalone body
-// loses it, -0xd bytes and a different prologue/frame layout); the target keeps the whole
-// guard here. The rest is register-allocation drift inside the four inlined math::floor
-// expansions of math::color.
+// claude@NOTE: the grass debug guard is partial-inlined only in the base.
 void grass_world::render_debug( renderer_context* context )
 {
 	if ( !s_draw_grass_debug_value )

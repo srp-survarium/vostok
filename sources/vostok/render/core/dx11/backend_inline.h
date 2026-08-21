@@ -78,8 +78,7 @@ inline void backend::set_vs( res_vs_hw* shader )
 	if ( m_vs != shader )
 		++num_vs_changes;
 	m_vs = shader;
-	if ( m_dirty_objects.vertex_shader )
-		m_input_layout = 0;
+	m_input_layout = m_dirty_objects.vertex_shader ? 0 : m_input_layout;
 	m_dirty_objects.input_layout = m_dirty_objects.vertex_shader;
 }
 
@@ -286,8 +285,8 @@ inline void backend::flush_rt( )
 inline void backend::set_render_output( res_render_output const* render_output )
 {
 	m_render_output = render_output;
-	m_base_rt = m_render_output ? m_render_output->m_base_rt : 0;
-	m_base_zb = m_render_output ? m_render_output->m_base_zb : 0;
+	m_base_rt = m_render_output.c_ptr( ) != NULL ? m_render_output->m_base_rt : NULL;
+	m_base_zb = m_render_output.c_ptr( ) != NULL ? m_render_output->m_base_zb : NULL;
 }
 
 inline u32 backend::target_width( ) const

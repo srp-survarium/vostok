@@ -1,7 +1,7 @@
 #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: the seven set() overloads were declaration-only in the consumed legacy header (no definition anywhere in the corpus) - matcher-phase work.
+// claude@NOTE: the available developer sources contain declarations but no bodies for these overloads.
 #include <vostok/math_float2.h>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4.h>

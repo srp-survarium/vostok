@@ -13,7 +13,6 @@ void effect_gather_luminance_histogram::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "gather_luminance", NULL, "gather_luminance_in_range", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

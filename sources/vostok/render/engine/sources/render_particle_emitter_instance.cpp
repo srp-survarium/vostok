@@ -538,8 +538,6 @@ void render_particle_emitter_instance::render_trails(
 	if (!m_beamtrail_parameters)
 		return;
 
-	// 2 target lines are likely retail-compiled-out source.
-
 	if (!num_particles)
 		return;
 
@@ -576,8 +574,6 @@ void render_particle_emitter_instance::render_trails(
 	for (u32 s=0; s<num_sheets; s++)
 	{
 		float current_uv_start = 0.0f;
-
-
 
 		vostok::particle::base_particle* P = start_particle;
 		vostok::particle::base_particle* prevP = 0;

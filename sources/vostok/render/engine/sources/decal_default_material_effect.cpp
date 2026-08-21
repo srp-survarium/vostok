@@ -31,12 +31,10 @@ void decal_default_material_effect::compile(
 
 			if (pass_index == 0)
 			{
-				// 5 target lines are likely retail-compiled-out source.
 				compiler.set_cull_mode	(D3D_CULL_BACK);
 			}
 			else
 			{
-				// 5 target lines are likely retail-compiled-out source.
 				compiler.set_cull_mode	(D3D_CULL_FRONT);
 			}
 

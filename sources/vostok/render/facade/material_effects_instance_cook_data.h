@@ -20,7 +20,6 @@ struct material_effects_instance_cook_data {
 		cull_mode			( in_cull_mode ),
 		delete_in_cook		( in_delete_in_cook )
 	{
-		// FUNCTION BODY[0x60600]
 	}
 
 	enum_vertex_input_type				vertex_input_type;

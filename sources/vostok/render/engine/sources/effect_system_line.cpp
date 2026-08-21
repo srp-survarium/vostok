@@ -10,7 +10,6 @@ void effect_system_line::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b5e30]
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
 
 	c.begin_technique( /*z_enabled*/)

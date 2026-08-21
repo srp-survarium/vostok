@@ -18,7 +18,6 @@ res_input_layout::res_input_layout(
 	m_signature( signature ),
 	m_is_registered( false )
 {
-	// FUNCTION BODY[0x7a5ce0]
 	m_hw_input_layout = NULL;
 	ID3DBlob * hw_singiture = signature->hw_signature();
 	device::ref().d3d_device()->CreateInputLayout( &m_declaration->dcl_code[0], m_declaration->dcl_code.size(), hw_singiture ->GetBufferPointer(), hw_singiture->GetBufferSize(), &m_hw_input_layout);
@@ -27,13 +26,11 @@ res_input_layout::res_input_layout(
 
 res_input_layout::~res_input_layout( )
 {
-	// FUNCTION BODY[0x7a5c90]
 	safe_release( m_hw_input_layout);
 }
 
 void res_input_layout::destroy_impl( ) const
 {
-	// FUNCTION BODY[0x7a5cd0]
 	resource_manager::ref().release( this );
 }
 

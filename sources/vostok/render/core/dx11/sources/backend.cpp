@@ -135,11 +135,7 @@ void backend::clear_render_targets( float r, float g, float b, float a )
 	}
 }
 
-// claude@NOTE: the target reads the channels in union order - color_elements[0] takes
-// ( value & 0xff ), i.e. math::color::r. sources/vostok/math_color.h (core, out of this
-// unit) defines color_get_R as ( value >> 16 ) while its own union puts r at byte 0, so
-// our get_RGBA fills { B, G, R, A } here. The call site is left in the natural order;
-// the divergence is in math_color.h's accessors.
+// The target reads channels in union order; math_color accessors currently reverse R/B.
 void backend::clear_render_targets( math::color color )
 {
 	if( s_debug_enabled_rt_clearing_value)
@@ -231,9 +227,6 @@ shader_constant_host const* backend::find_constant_host( shared_string const& na
 		return *it;
 }
 
-// claude@NOTE: legacy body; the carcass header carried a generated ZeroMemory
-// placeholder over m_constant_update_markers - wrong state, the legacy source
-// resets the hosts and the counter.
 void backend::reset_constant_update_markers( )
 {
 	LOG_INFO("reset_constant_update_markers called !!!");
@@ -272,10 +265,6 @@ void backend::set_render_target( enum_render_target_enum target, render_target c
 	}
 }
 
-// claude@NOTE: both bodies emit nothing in the shipped build (start_profiling is a bare
-// ret, end_profiling an xorps+ret) but the target records 13 / 22 source statements for
-// them, all compiled out, over a file-scope `s_timer` (target-only `dynamic initializer
-// for 's_timer''); the timing source is not recoverable from the bytes.
 void start_profiling( )
 {
 	// STATE[STUB]
@@ -357,7 +346,6 @@ void backend::flush( )
 			ID3DIndexBuffer * buffer = (m_ib == (untyped_buffer*)NULL) ? NULL : m_ib->hardware_buffer();
 			device::ref().d3d_context()->IASetIndexBuffer( buffer, DXGI_FORMAT_R16_UINT, m_ib_offset);
 		}
-
 
 		m_vs_constants_handler.update_buffers();
 		m_gs_constants_handler.update_buffers();

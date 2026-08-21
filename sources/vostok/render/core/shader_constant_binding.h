@@ -17,8 +17,6 @@ public:
 		m_type( static_cast<enum_constant_type>( constant_type_traits<T>::type ) ),
 		m_class_id( static_cast<enum_constant_class>( constant_type_traits<T>::class_id ) )
 	{
-		// FUNCTION BODY[0x66d40] for math::float4
-		// FUNCTION BODY[0x67540] for float
 	}
 
 	shader_constant_binding( shader_constant_binding const& other ) :

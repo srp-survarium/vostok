@@ -100,8 +100,6 @@ float3 stage_pre_rain::compute_aligment(
 	origin_pixel *= 1.0f / origin_pixel.w;
 	origin_pixel = viewport.transform( origin_pixel );
 
-	// 2 target lines are likely retail-compiled-out source.
-
 	origin_pixel.x = origin_pixel.x / 4.0f - floorf( origin_pixel.x / 4.0f );
 	origin_pixel.y = origin_pixel.y / 4.0f - floorf( origin_pixel.y / 4.0f );
 	origin_pixel.x *= 4.0f;
@@ -112,8 +110,6 @@ float3 stage_pre_rain::compute_aligment(
 	origin_pixel.xyz( ) = light_space_transform_invert.transform_direction( origin_pixel.xyz( ) );
 
 	return origin_pixel.xyz( );
-	// 3 target lines are likely retail-compiled-out source.
-
 
 }
 
@@ -142,8 +138,6 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 	shadow_view_transform = math::create_camera_direction(
 		position + adjastment, direction, float3( 1.0f, 0.0f, 0.0f ) );
 
-
-
 	m_context->push_set_v( shadow_view_transform );
 	m_context->push_set_p( shadow_projection_transform );
 
@@ -171,8 +165,6 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 	vector< render_surface_instance* >::iterator it_d = m_caster_model.begin( );
 	vector< render_surface_instance* >::const_iterator end_d = m_caster_model.end( );
 
-
-
 	if ( s_rain_debug0 )
 		for ( ; it_d != end_d; ++it_d )
 		{
@@ -195,15 +187,9 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 			backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0 );
 		}
 
-
-
 	m_context->pop_v( );
 
-
 	m_context->pop_p( );
-
-
-
 
 	float4x4 texture_space(
 		float4( 0.5f, 0.0f, 0.0f, 0.0f ),
@@ -249,24 +235,7 @@ void stage_pre_rain::execute( )
 		m_rain_offset_counter = 0.0f;
 	}
 
-
-
 	backend::ref( ).flush_rt_shader_resources( );
-	// 16 target lines are likely retail-compiled-out source.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	float4x4 view_to_shadow = render_rain_shadow_map( );
 
@@ -288,25 +257,6 @@ void stage_pre_rain::execute( )
 	}
 
 	m_renderer->set_view_to_rain_shadow( view_to_shadow );
-	// 20 target lines are likely retail-compiled-out source.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	m_context->set_w_identity( );
 	backend::ref( ).reset_render_targets( );

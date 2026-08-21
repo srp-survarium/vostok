@@ -10,12 +10,10 @@ namespace core {
 
 void initialize( )
 {
-	// FUNCTION BODY[0x6571a0]
 }
 
 void finalize( )
 {
-	// FUNCTION BODY[0x657190]
 }
 
 } // namespace core

@@ -13,7 +13,6 @@ void effect_fill_reflective_shadow_map::compile(
 
 	shader_configuration configuration;
 
-
 	compile_begin( "vertex_base_lpv", "fill_reflective_shadow_map", compiler, &configuration, config );
 	compile_end( compiler );
 

@@ -25,7 +25,6 @@ void set_memory_allocator(
 	R_ASSERT			( !editor::g_allocator );
 	editor::g_allocator	= &editor_allocator;
 
-	// FUNCTION BODY[0x738250]
 }
 
 world* create_world(
@@ -35,7 +34,6 @@ world* create_world(
 	bool is_editor
 )
 {
-	// FUNCTION BODY[0x738270]
 	VOSTOK_CONSTRUCT_REFERENCE( s_world, world )(
 		logic_allocator,
 		editor_allocator,
@@ -47,7 +45,6 @@ world* create_world(
 
 void destroy_world( world*& instance )
 {
-	// FUNCTION BODY[0x7382a0]
 	R_ASSERT					( &*s_world == instance );
 	VOSTOK_DESTROY_REFERENCE	( s_world );
 	instance					= 0;

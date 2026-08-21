@@ -14,12 +14,10 @@ texture_options_cooker::texture_options_cooker(
 )
 	: super( resource_class, reuse_type, translate_query_thread, flags )
 {
-	// FUNCTION BODY[0x5591b0]
 }
 
 void texture_options_cooker::delete_resource( resources::resource_base* )
 {
-	// FUNCTION BODY[0x5591a0]
 }
 
 texture_options_binary_cooker::texture_options_binary_cooker( )
@@ -29,14 +27,12 @@ texture_options_binary_cooker::texture_options_binary_cooker( )
 		use_resource_manager_thread_id
 	)
 {
-	// FUNCTION BODY[0x5591d0]
 }
 
 void texture_options_binary_cooker::translate_query(
 	resources::query_result_for_cook& parent
 )
 {
-	// FUNCTION BODY[0x5593c0]
 	pcstr path = parent.get_requested_path();
 
 	resources::query_resource(
@@ -52,7 +48,6 @@ void texture_options_binary_cooker::on_binary_config_loaded(
 	resources::queries_result& result
 )
 {
-	// FUNCTION BODY[0x559240]
 	resources::query_result_for_cook* parent	= result.get_parent_query();
 
 	if( result[0].is_successful())
@@ -82,7 +77,6 @@ void texture_options_binary_cooker::on_lua_options_loaded(
 	resources::queries_result& result
 )
 {
-	// FUNCTION BODY[0x559210]
 	resources::query_result_for_cook* parent	= result.get_parent_query();
 
 	R_ASSERT						( result[0].is_successful() );

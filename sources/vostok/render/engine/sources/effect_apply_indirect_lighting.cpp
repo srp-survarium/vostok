@@ -12,9 +12,7 @@ void effect_apply_indirect_lighting::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bd8b0]
 	VOSTOK_UNREFERENCED_PARAMETER(config);
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("apply_indirect_lighting", NULL, "apply_indirect_lighting_diffuse", shader_configuration(), NULL);
 			compiler.set_depth(false, false);

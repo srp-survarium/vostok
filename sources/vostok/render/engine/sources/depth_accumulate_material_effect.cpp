@@ -19,7 +19,6 @@ void depth_accumulate_material_effect::compile(
 
 	u32 const debug_last_mips = is_static_mesh ? 5 : u32(-1);
 
-
 	shader_configuration configuration;
 	if (config.value_exists("use_alpha_test"))
 		configuration.use_alpha_test = bool(config["use_alpha_test"]);

@@ -136,13 +136,13 @@ struct cpu_gpu_timer_scope : public boost::noncopyable {
 	explicit cpu_gpu_timer_scope( statistics_cpu_gpu& counter ) :
 		m_counter( counter )
 	{
-		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; its scope ctor used the retired USE_GPU_TIMERS gpu_timer member (recoverable from git); matcher-phase work.
+		// claude@NOTE: no body compatible with the current timer layout is available.
 		// STATE[STUB]
 	}
 
 	~cpu_gpu_timer_scope( )
 	{
-		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired gpu_timer layout; matcher-phase work.
+		// claude@NOTE: no body compatible with the current timer layout is available.
 		// STATE[STUB]
 	}
 
@@ -156,13 +156,13 @@ struct timer_scope : public boost::noncopyable {
 	explicit timer_scope( statistics_float& counter ) :
 		m_counter( counter )
 	{
-		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired layout; matcher-phase work.
+		// claude@NOTE: no body compatible with the current timer layout is available.
 		// STATE[STUB]
 	}
 
 	~timer_scope( )
 	{
-		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired layout; matcher-phase work.
+		// claude@NOTE: no body compatible with the current timer layout is available.
 		// STATE[STUB]
 	}
 

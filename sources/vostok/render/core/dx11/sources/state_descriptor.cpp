@@ -8,13 +8,11 @@ namespace render {
 
 state_descriptor::state_descriptor( )
 {
-	// FUNCTION BODY[0x557fc0]
 	reset	( );
 }
 
 void state_descriptor::reset( )
 {
-	// FUNCTION BODY[0x557f00]
 	m_rasterizer_desc_updated		= false;
 	m_depth_stencil_desc_updated	= false;
 	m_effect_desc_updated			= false;
@@ -28,7 +26,6 @@ void state_descriptor::reset( )
 
 void state_descriptor::set_depth( bool enable, bool write_enable, D3D11_COMPARISON_FUNC cmp_func )
 {
-	// FUNCTION BODY[0x557ed0]
 	m_depth_stencil_desc.DepthEnable	= enable;
 	m_depth_stencil_desc.DepthWriteMask	= write_enable ? D3D_DEPTH_WRITE_MASK_ALL : D3D_DEPTH_WRITE_MASK_ZERO;
 	m_depth_stencil_desc.DepthFunc		= cmp_func;
@@ -38,7 +35,6 @@ void state_descriptor::set_depth( bool enable, bool write_enable, D3D11_COMPARIS
 
 void state_descriptor::set_stencil( s32 enable, u32 ref, u8 read_mask, u8 write_mask )
 {
-	// FUNCTION BODY[0x557ea0]
 	m_depth_stencil_desc.StencilEnable		= enable;
 	m_depth_stencil_desc.StencilReadMask	= read_mask;
 	m_depth_stencil_desc.StencilWriteMask	= write_mask;
@@ -54,7 +50,6 @@ void state_descriptor::set_stencil_frontface(
 	D3D11_STENCIL_OP zfail
 )
 {
-	// FUNCTION BODY[0x557e70]
 	m_depth_stencil_desc.FrontFace.StencilFailOp 		= fail;
 	m_depth_stencil_desc.FrontFace.StencilDepthFailOp	= zfail;
 	m_depth_stencil_desc.FrontFace.StencilPassOp		= pass;
@@ -70,7 +65,6 @@ void state_descriptor::set_stencil_backface(
 	D3D11_STENCIL_OP zfail
 )
 {
-	// FUNCTION BODY[0x557e40]
 	m_depth_stencil_desc.BackFace.StencilFailOp 		= fail;
 	m_depth_stencil_desc.BackFace.StencilDepthFailOp	= zfail;
 	m_depth_stencil_desc.BackFace.StencilPassOp			= pass;
@@ -89,7 +83,6 @@ void state_descriptor::set_alpha_blend(
 	D3D11_BLEND_OP blend_alpha_op
 )
 {
-	// FUNCTION BODY[0x557cd0]
 	// Temporary !!!
 	for( int i = 0; i< 8; ++i)
 	{
@@ -105,14 +98,12 @@ void state_descriptor::set_alpha_blend(
 
 void state_descriptor::set_cull_mode( D3D11_CULL_MODE mode )
 {
-	// FUNCTION BODY[0x557cc0]
 	m_rasterizer_desc_updated |= m_rasterizer_desc.CullMode != mode;
 	m_rasterizer_desc.CullMode = mode;
 }
 
 void state_descriptor::color_write_enable( D3D11_COLOR_WRITE_ENABLE mode )
 {
-	// FUNCTION BODY[0x557c90]
 	m_effect_desc_updated |= m_effect_desc.RenderTarget[0].RenderTargetWriteMask != mode;
 
 	for( int i = 0; i< 8; ++i)
@@ -121,7 +112,6 @@ void state_descriptor::color_write_enable( D3D11_COLOR_WRITE_ENABLE mode )
 
 void state_descriptor::set_fill_mode( D3D11_FILL_MODE fill_mode )
 {
-	// FUNCTION BODY[0x557c80]
 	m_rasterizer_desc_updated		|= m_rasterizer_desc.FillMode != fill_mode;
 	m_rasterizer_desc.FillMode		 = fill_mode;
 }

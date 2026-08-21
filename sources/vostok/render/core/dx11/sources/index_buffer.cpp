@@ -9,7 +9,6 @@ int	rs_dib_size = 512;
 
 void	index_buffer::unlock()
 {
-	// FUNCTION BODY[0x739b80]
 //	LOG_INFO("pgo:ib_unlock:%d", i_count);
 	m_position += m_lock_size;
 
@@ -18,7 +17,6 @@ void	index_buffer::unlock()
 
 u16* index_buffer::lock(u32 i_count, u32& i_offset)
 {
-	// FUNCTION BODY[0x739bb0]
 //	LOG_INFO("pgo:ib_lock:%d", i_count);
 	i_offset = 0;
 	char* locked_data = 0;
@@ -54,7 +52,6 @@ index_buffer::index_buffer( u32 const size ) :
 	m_discard_id	( 0 ),
 	m_lock_size		( 0 )
 {
-	// FUNCTION BODY[0x739c20]
 	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_index, true, false);
 	R_ASSERT		( m_buffer );
 	LOG_INFO		("index buffer created: %dKb", m_size/1024);

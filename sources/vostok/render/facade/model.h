@@ -41,12 +41,10 @@ public:
 
 	virtual void update( )
 	{
-		// FUNCTION BODY[0x4f210]
 	}
 
 	virtual bool get_locator( pcstr, model_locator_item& ) const
 	{
-		// FUNCTION BODY[0xb4f50]
 		return false;
 	}
 
@@ -56,7 +54,6 @@ public:
 
 	virtual void get_bind_pose( float4x4*, u32 ) const
 	{
-		// FUNCTION BODY[0x38090]
 	}
 
 	culling::possible_sectors_holder const* get_sectors_holder( ) const

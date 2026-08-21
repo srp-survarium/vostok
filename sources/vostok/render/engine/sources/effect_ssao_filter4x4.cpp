@@ -13,7 +13,6 @@ void effect_ssao_filter4x4::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "ssao_filter4x4", shader_configuration( ), NULL );
 	compiler.set_depth( true, false );
@@ -24,7 +23,6 @@ void effect_ssao_filter4x4::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "ssao_filter4x4_1", shader_configuration( ), NULL );
 	compiler.set_depth( true, false );
@@ -33,7 +31,6 @@ void effect_ssao_filter4x4::compile(
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_NOT_EQUAL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "temporal_mask", shader_configuration( ), NULL );
@@ -45,7 +42,6 @@ void effect_ssao_filter4x4::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "ssao_filter_upsample", shader_configuration( ), NULL );
 	compiler.set_depth( true, false );
@@ -55,7 +51,6 @@ void effect_ssao_filter4x4::compile(
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_NOT_EQUAL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "ssao_filter_upsample_temporal", shader_configuration( ), NULL );

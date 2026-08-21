@@ -18,7 +18,7 @@ struct cloud_parameters {
 
 	void load( configs::binary_config_value const& )
 	{
-		// claude@NOTE: no legacy ancestor - no cloud_* core file ever existed in the legacy corpus; matcher-phase work.
+		// claude@NOTE: no developer body is available.
 		// STATE[STUB]
 	}
 

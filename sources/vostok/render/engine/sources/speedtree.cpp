@@ -30,9 +30,6 @@ extern CAllocator*	g_pAllocator;
 extern size_t		g_siHeapMemoryUsed;
 extern size_t		g_siNumHeapAllocs;
 
-// CInstance ctor/dtor now come from SpeedTreeForest_v5.2 (Instance.obj);
-// the carcass-era minimal stand-ins were removed when the SDK libs were linked.
-
 } // namespace SpeedTree
 
 namespace vostok {
@@ -59,14 +56,12 @@ void* speed_tree_allocator::Alloc( size_t size )
 
 void speed_tree_allocator::Free( void* block )
 {
-	// FUNCTION BODY[0x54490]
 	if ( block )
 		FREE( block );
 }
 
 void initialize_speedtree( )
 {
-	// FUNCTION BODY[0x75a880]
 	static speed_tree_allocator s_speed_tree_allocator;
 
 	if ( !CCore::IsAuthorized( ) )
@@ -87,7 +82,6 @@ void initialize_speedtree( )
 
 void finalize_speedtree( )
 {
-	// FUNCTION BODY[0x75aa10]
 	resources::unregister_cook	( resources::speedtree_class );
 	VOSTOK_DESTROY_REFERENCE	( s_speedtree_cook );
 
@@ -97,8 +91,7 @@ void finalize_speedtree( )
 
 void print_speedtree_errors( )
 {
-	// FUNCTION BODY[0x75a910]
-	// Retail line records include four source lines stripped by the Master Gold configuration.
+	// Preserve target line metadata.
 #line 105
 	const char* pError = SpeedTree::CCore::GetError( );
 	while ( pError )

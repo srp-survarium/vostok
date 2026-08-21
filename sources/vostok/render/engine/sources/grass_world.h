@@ -89,7 +89,7 @@ struct grass_world : public resources::unmanaged_resource {
 
 	grass_patch* find_patch( float3 const&, grass_template* )
 	{
-		// claude@NOTE: no legacy ancestor - declaration-only in the legacy header; the body was consumed into the ported point-only overload; matcher-phase work.
+		// claude@NOTE: the developer sources contain only the point overload.
 		// STATE[STUB]
 		return 0;
 	}
@@ -131,7 +131,7 @@ struct grass_world : public resources::unmanaged_resource {
 private:
 	void on_test_sub_resources_loaded( resources::queries_result& )
 	{
-		// claude@NOTE: legacy body diverged - legacy on_sub_resources_loaded calls the retired add_template/add_instance/populate signatures; matcher-phase work.
+		// claude@NOTE: the available body uses incompatible resource-loading signatures.
 		// STATE[STUB]
 	}
 
@@ -153,7 +153,7 @@ private:
 
 	void create_patch_render_buffers( )
 	{
-		// claude@NOTE: legacy body diverged - legacy loops grass_patch::create_render_buffer, a method the canonical patch does not have; matcher-phase work.
+		// claude@NOTE: the available body depends on grass_patch::create_render_buffer, which is absent here.
 		// STATE[STUB]
 	}
 

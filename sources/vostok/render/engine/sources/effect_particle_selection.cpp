@@ -32,7 +32,6 @@ void effect_particle_selection::compile(
 		compile_end(compiler);
 	}
 
-	// 34 target lines are likely retail-compiled-out source.
 }
 
 } // namespace render

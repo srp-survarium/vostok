@@ -15,12 +15,10 @@ effect_options_descriptor::effect_options_descriptor( ) :
 	count( 0 ),
 	memory_size( 0 )
 {
-	// FUNCTION BODY[0x559a10]
 }
 
 effect_options_descriptor::effect_options_descriptor( pcvoid in_data, u16 in_size )
 {
-	// FUNCTION BODY[0x5599e0]
 	data	= (pbyte)in_data + sizeof(effect_options_descriptor);
 	type	= configs::t_table_named;
 	bytes	= 0;
@@ -32,14 +30,12 @@ effect_options_descriptor::effect_options_descriptor( pcvoid in_data, u16 in_siz
 
 effect_options_descriptor::~effect_options_descriptor( )
 {
-	// FUNCTION BODY[0x5599d0]
 	// Created effect configs call destructors.
 	//call_destructors();
 }
 
 u32 effect_options_descriptor::get_crc( ) const
 {
-	// FUNCTION BODY[0x559bd0]
 	u32 num_bytes_for_data = calc_config_memory_usage(*this);
 
 	pcvoid mem_buffer = ALLOCA(num_bytes_for_data);
@@ -56,7 +52,6 @@ u32 effect_options_descriptor::get_crc( ) const
 
 u32 effect_options_descriptor::get_data_memory_usage( u32& need_bytes_to_align4, u32& last_align_value ) const
 {
-	// FUNCTION BODY[0x559a30]
 	u32 result = 0;
 
 	if (id)
@@ -89,7 +84,6 @@ u32 effect_options_descriptor::get_data_memory_usage( u32& need_bytes_to_align4,
 
 u32 effect_options_descriptor::get_num_total_fields( ) const
 {
-	// FUNCTION BODY[0x559980]
 	if (type!=configs::t_table_named)
 		return 0;
 
@@ -106,7 +100,6 @@ u32 effect_options_descriptor::get_num_total_fields( ) const
 
 u32 effect_options_descriptor::get_num_used_bytes( ) const
 {
-	// FUNCTION BODY[0x559930]
 	u32 result = bytes;
 
 	if (type==configs::t_table_named)
@@ -121,13 +114,6 @@ u32 effect_options_descriptor::get_num_used_bytes( ) const
 	return result;
 }
 
-// claude@NOTE: 271 bytes and 23 blocks on both sides, 16/16 statements with identical line
-// deltas. `sema blocks --diff` reports flow DIFFERS and names a "missing early-out" at B2 -
-// that is an artifact: our 1-byte `nop` alignment pad is its own block and displaces every
-// later index (see sema_tools.md "degenerate fall-through blocks"). The real residual is
-// register allocation: the target keeps a CSE'd zero in edx (an extra `xor edx,edx` at
-// entry and one more at the loop tail) and spells the two null tests `cmp reg,edx` where we
-// emit `test reg,reg`, then reuses that zero for the placement-new ctor's four stores.
 effect_options_descriptor& effect_options_descriptor::operator[]( pcstr key )
 {
 	u32 offset = 0;

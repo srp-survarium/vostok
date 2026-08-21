@@ -12,7 +12,6 @@ void effect_debug_environment_probe_preview::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER(config);
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("environment_probe_preview", NULL, "environment_probe_preview", shader_configuration(), NULL);
 			compiler.set_depth(true, true);

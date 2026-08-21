@@ -18,7 +18,6 @@ using namespace SpeedTree;
 
 speedtree_wind_parameters::speedtree_wind_parameters( )
 {
-	// FUNCTION BODY[0x779210]
 	m_wind_dir_parameter				= backend::ref().register_constant_host( "wind_direction_parameter", rc_float);
 	m_wind_times_parameter				= backend::ref().register_constant_host( "wind_times_parameter", rc_float);
 	m_wind_distances_parameter			= backend::ref().register_constant_host( "wind_distances_parameter", rc_float);
@@ -34,7 +33,6 @@ speedtree_wind_parameters::speedtree_wind_parameters( )
 
 void speedtree_wind_parameters::set( SpeedTree::CWind const& wind )
 {
-	// FUNCTION BODY[0x778320]
 	float const* shader_values			= wind.GetShaderValues( );
 
 	backend::ref().set_vs_constant		(m_wind_dir_parameter,				speedtree_to_vostok(Vec3(shader_values + CWind::SH_WIND_DIR_X)));
@@ -52,7 +50,6 @@ void speedtree_wind_parameters::set( SpeedTree::CWind const& wind )
 
 speedtree_billboard_parameters::speedtree_billboard_parameters( )
 {
-	// FUNCTION BODY[0x778f90]
 	m_billboard_dimensions_parameter	= backend::ref().register_constant_host("billboard_dimensions_parameter", rc_float );
 	m_camera_azimuth_trig_parameter		= backend::ref().register_constant_host("camera_azimuth_trig_parameter", rc_float );
 	m_camera_angles_parameter			= backend::ref().register_constant_host("camera_angles_parameter", rc_float );
@@ -64,7 +61,6 @@ speedtree_billboard_parameters::speedtree_billboard_parameters( )
 
 void speedtree_billboard_parameters::set( renderer_context* context, speedtree_tree_component* tree_component )
 {
-	// FUNCTION BODY[0x778a80]
 	float const azimuth					= context->scene()->get_speedtree_forest()->get_speedtree_view().GetCameraAzimuth( );
 
 	set_billboard_tangents				(azimuth);
@@ -103,7 +99,6 @@ void speedtree_billboard_parameters::set( renderer_context* context, speedtree_t
 
 void speedtree_billboard_parameters::set_billboard_tangents( float camera_azimuth )
 {
-	// FUNCTION BODY[0x778870]
 	camera_azimuth		+= math::pi;
 
 	if (CCoordSys::IsLeftHanded( ))
@@ -130,7 +125,6 @@ void speedtree_billboard_parameters::set_billboard_tangents( float camera_azimut
 
 speedtree_common_parameters::speedtree_common_parameters( )
 {
-	// FUNCTION BODY[0x778e70]
 	m_camera_facing_matrix_parameter			= backend::ref().register_constant_host( "camera_facing_matrix_parameter", rc_float);
 	m_lod_profile_parameter						= backend::ref().register_constant_host( "lod_profile_parameter", rc_float );
 	m_lod_reference_position_parameter			= backend::ref().register_constant_host( "lod_reference_position_parameter", rc_float );
@@ -138,7 +132,6 @@ speedtree_common_parameters::speedtree_common_parameters( )
 
 void speedtree_common_parameters::set( renderer_context* context, speedtree_tree_component* tree_component, float3 const& lod_reference_position )
 {
-	// FUNCTION BODY[0x778160]
 	backend::ref().set_vs_constant				(m_lod_reference_position_parameter, float4(lod_reference_position, 1.0f));
 
 	backend::ref().set_vs_constant				(
@@ -168,7 +161,6 @@ void speedtree_common_parameters::set( renderer_context* context, speedtree_tree
 
 speedtree_tree_parameters::speedtree_tree_parameters( )
 {
-	// FUNCTION BODY[0x778db0]
 	m_tree_position_and_scale_parameter			= backend::ref().register_constant_host( "tree_position_and_scale_parameter", rc_float);
 	m_tree_rotation_parameter					= backend::ref().register_constant_host( "tree_rotation_parameter", rc_float);
 }
@@ -179,7 +171,6 @@ void speedtree_tree_parameters::set(
 	SpeedTree::SInstanceLod const* instance_lod
 )
 {
-	// FUNCTION BODY[0x778030]
 	float4 tree_pos								= speedtree_to_vostok(SpeedTree::Vec4(instance->GetPosAndScale()));
 	backend::ref().set_vs_constant				(m_tree_position_and_scale_parameter, tree_pos);
 

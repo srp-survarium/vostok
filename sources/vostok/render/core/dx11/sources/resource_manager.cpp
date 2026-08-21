@@ -432,8 +432,6 @@ pcstr get_textures_path2( )
 	return "resources/textures";
 }
 
-// claude@NOTE: only the TOTAL size (0xfa0 bytes, from the ctor's memset) and the name are
-// recovered from the target - the element type is a guess; nothing else in the exe touches it.
 static ID3D11CommandList* s_command_lists[1000];
 
 resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
@@ -1084,8 +1082,6 @@ void resource_manager::on_texture_loaded_staging(
 	bool
 )
 {
-	// claude@NOTE: the shipped body is empty - the target's 147 recorded source lines all
-	// compile out of the Master Gold build (staging texture pool disabled).
 }
 
 static bool s_reload_all_textures = false;

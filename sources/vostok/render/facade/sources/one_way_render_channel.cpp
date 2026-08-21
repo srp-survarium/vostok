@@ -51,7 +51,6 @@ void one_way_render_channel::process_next_frame_commands( )
 
 bool one_way_render_channel::render_process_commands( bool const wait_for_command_if_queue_is_empty )
 {
-	// FUNCTION BODY[0x7575f0]
 	if ( m_process_next_frame_commands )
 		process_next_frame_commands			( );
 
@@ -94,7 +93,6 @@ void one_way_render_channel::render_on_draw_scene(
 	bool const									use_depth
 )
 {
-	// FUNCTION BODY[0x7578b0]
 	for ( vostok::render::base_command* i = scene->first_command; i; i = i->deferred_next ) {
 		if ( i->use_depth == use_depth )
 			i->execute						( );
@@ -142,7 +140,6 @@ void one_way_render_channel::render_on_draw_scene(
 template < typename Scene_OR_SceneViewType >
 void one_way_render_channel::move_commands_from_list( Scene_OR_SceneViewType const& scene_or_scene_view )
 {
-	// FUNCTION BODY[0x15c50] for base_scene_ptr
 	pop_front_predicate predicate			( m_current_frame_id );
 
 	vostok::render::base_command* i			= scene_or_scene_view->first_command;
@@ -163,7 +160,6 @@ void one_way_render_channel::move_commands_from_list( Scene_OR_SceneViewType con
 
 void one_way_render_channel::render_on_end_frame( )
 {
-	// FUNCTION BODY[0x757710]
 	for ( base_scene_ptr i = m_scenes; i; i = i->next_scene )
 		move_commands_from_list				( i );
 

@@ -99,7 +99,6 @@ material_effects& render_surface::get_material_effects( )
 		return material::nomaterial_material( get_vertex_input_type( ) );
 	}
 
-
 	return m_materail_effects_instance->get_material_effects( );
 
 }
@@ -132,7 +131,6 @@ void render_surface::set_material_effects( material_effects_instance_ptr mtl_ins
 void render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
 {
 
-
 	m_aabbox.max			= vostok::math::float3(properties["bounding_box"]["max"]);
 	m_aabbox.min			= vostok::math::float3(properties["bounding_box"]["min"]);
 
@@ -141,7 +139,6 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 		(sphere_origin - m_aabbox.min).length();
 
 	m_bounding_sphere = math::sphere( sphere_origin, sphere_radius );
-	// 4 target lines are likely retail-compiled-out source.
 	mesh_type_enum type = (mesh_type_enum)(u16)properties["type"];
 
 	m_vertex_input_type = null_vertex_input_type;
@@ -182,7 +179,6 @@ bool render_surface_instance::is_occluded( ) const
 render_model_instance_impl::render_model_instance_impl( ) :
 	m_collision_object( this )
 {
-
 
 }
 

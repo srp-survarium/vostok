@@ -12,7 +12,6 @@ grass_template::grass_template( u32 const in_index, grass_render_model_ptr const
 
 grass_template::~grass_template( )
 {
-	// FUNCTION BODY[0x7b15e0]
 	vector<grass_instance*>::iterator	it_i		=	m_instances.begin();
 	vector<grass_instance*>::iterator	end_i		=	m_instances.end();
 

@@ -12,7 +12,6 @@ void effect_image_space_reflections::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "image_space_reflections", NULL, "image_space_reflections", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

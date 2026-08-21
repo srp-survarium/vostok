@@ -43,7 +43,6 @@ public:
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
-		// FUNCTION BODY[0x3dde0]
 		return SpeedTree::GEOMETRY_TYPE_VERTICAL_BILLBOARDS;
 	}
 

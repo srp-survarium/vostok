@@ -21,7 +21,6 @@ namespace render {
 
 decal_shader_constants_and_geometry::decal_shader_constants_and_geometry( )
 {
-	// FUNCTION BODY[0x641550]
 	m_world_to_decal_parameter						= backend::ref().register_constant_host("world_to_decal", rc_float);
 	m_eye_ray_corner_parameter						= backend::ref().register_constant_host("s_eye_ray_corner", rc_float);
 	m_decal_tangent_to_view_space_matrix_parameter	= backend::ref().register_constant_host("decal_tangent_to_view_space_matrix", rc_float);
@@ -39,7 +38,6 @@ void decal_shader_constants_and_geometry::set(
 	float4x4 const&		decal_transform
 )
 {
-	// FUNCTION BODY[0x640b30]
 	float3 const* const eye_rays	= context->get_eye_rays();
 	backend::ref().set_ps_constant	(m_world_to_decal_parameter,						math::transpose(world_to_decal_matrix));
 	backend::ref().set_ps_constant	(m_decal_tangent_to_view_space_matrix_parameter,	math::transpose(decal_tangent_to_view_space_matrix));
@@ -49,13 +47,11 @@ void decal_shader_constants_and_geometry::set(
 
 void decal_shader_constants_and_geometry::set_geometry( )
 {
-	// FUNCTION BODY[0x640b20]
 	m_decal_geometry->apply();
 }
 
 void decal_shader_constants_and_geometry::create_decal_geometry( )
 {
-	// FUNCTION BODY[0x641450]
 	m_decal_vertex_buffer			= resource_manager::ref().create_buffer(
 		geometry_utils::cube_solid::vertex_count*sizeof(float3),
 		geometry_utils::cube_solid::vertices,
@@ -105,7 +101,6 @@ decal_instance::decal_instance(
 	m_draw_priority				( 0.0f ),
 	m_occluded					( false )
 {
-	// FUNCTION BODY[0x6412b0]
 	set_properties				( properties );
 
 	render::material_effects_instance_ptr& ptr	= (render::material_effects_instance_ptr&)m_properties.material;
@@ -119,7 +114,6 @@ decal_instance::decal_instance(
 
 decal_instance::~decal_instance( )
 {
-	// FUNCTION BODY[0x640ef0]
 	remove_collision			();
 
 	render::material_effects_instance_ptr& ptr		= (render::material_effects_instance_ptr&)m_properties.material;
@@ -134,7 +128,6 @@ void decal_instance::destroy_impl( ) const
 
 void decal_instance::remove_collision( )
 {
-	// FUNCTION BODY[0x640a60]
 	if (m_collision_tree && m_collision_object)
 		m_collision_tree->erase			(m_collision_object);
 
@@ -144,13 +137,11 @@ void decal_instance::remove_collision( )
 
 bool decal_instance::is_occluded( ) const
 {
-	// FUNCTION BODY[0x640b00]
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 void decal_instance::set_materail_effects( resources::unmanaged_resource_ptr const& in_ptr )
 {
-	// FUNCTION BODY[0x640f30]
 	render::material_effects_instance_ptr& ptr_old	= (render::material_effects_instance_ptr&)m_properties.material;
 
 	material_manager::ref().remove_material_effects	(ptr_old);
@@ -167,7 +158,6 @@ void decal_instance::set_materail_effects( resources::unmanaged_resource_ptr con
 
 void decal_instance::set_properties( decal_properties const& in_properties )
 {
-	// FUNCTION BODY[0x641000]
 	if (in_properties.material.c_ptr() && m_properties.material.c_ptr())
 	{
 		material_effects_instance_ptr this_ptr	= static_cast_resource_ptr<material_effects_instance_ptr>(m_properties.material);
@@ -216,13 +206,11 @@ void decal_instance::set_properties( decal_properties const& in_properties )
 
 decal_properties const& decal_instance::get_properties( ) const
 {
-	// FUNCTION BODY[0x640a50]
 	return m_properties;
 }
 
 material_effects const& decal_instance::get_effects( ) const
 {
-	// FUNCTION BODY[0x640fc0]
 	material_effects_instance_ptr ptr = static_cast_resource_ptr<material_effects_instance_ptr>(m_properties.material);
 
 	// TODO:
@@ -236,7 +224,6 @@ material_effects const& decal_instance::get_effects( ) const
 
 static float4x4 get_decal_view_matrix( decal_instance* decal )
 {
-	// FUNCTION BODY[0x640dc0]
 	float4x4 decal_world_matrix				= decal->get_properties().transform;
 	decal_world_matrix.set_scale			(float3(1.0f, 1.0f, 1.0f));
 
@@ -252,7 +239,6 @@ static float4x4 get_decal_view_matrix( decal_instance* decal )
 
 static float4x4 get_world_to_decal_matrix( decal_instance* decal )
 {
-	// FUNCTION BODY[0x640c20]
 	float4x4 decal_world_matrix				= decal->get_properties().transform;
 	decal_world_matrix.set_scale			(float3(1.0f, 1.0f, 1.0f));
 
@@ -275,7 +261,6 @@ static float4x4 get_world_to_decal_matrix( decal_instance* decal )
 
 void decal_instance::render_geometry( )
 {
-	// FUNCTION BODY[0x6413b0]
 	decal_shader_constants_and_geometry::ref().set_geometry();
 
 	backend::ref().render_indexed			(
@@ -288,7 +273,6 @@ void decal_instance::render_geometry( )
 
 void decal_instance::render( renderer_context* context, enum_render_stage_type stage_type )
 {
-	// FUNCTION BODY[0x6416e0]
 	ASSERT(stage_type == decals_accumulate_render_stage || stage_type == forward_render_stage);
 
 	if (get_effects().m_effects[stage_type]->apply(1, 0))
@@ -326,7 +310,6 @@ u32 decal_instance::draw(
 	enum_render_stage_type stage_type
 )
 {
-	// FUNCTION BODY[0x6417b0]
 	u32 num_draw_calls						= 0;
 
 	decal_instance* decal					= this;
@@ -347,7 +330,6 @@ u32 decal_instance::draw(
 
 		context->set_w						(geom_world_matrix);
 		decal->render(context, stage_type);
-		// 18 target lines are likely retail-compiled-out source.
 	}
 	return num_draw_calls;
 }

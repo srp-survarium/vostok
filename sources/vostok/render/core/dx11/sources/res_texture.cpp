@@ -16,13 +16,11 @@ ID3D11Resource* res_texture::hw_texture()
 // 	if (m_surface)
 // 		m_surface->AddRef();
 
-	// FUNCTION BODY[0x55c290]
 	return m_surface;
 }
 
 void res_texture::desc_update()
 {
-	// FUNCTION BODY[0x55c2a0]
 	m_desc_cache_surface	= m_surface;
 	if (m_desc_cache_surface)
 	{
@@ -48,7 +46,6 @@ void res_texture::save_as(pcstr file_name)
 	// TODO:
 	// Saving flips R and B components...
 
-	// FUNCTION BODY[0x55c300]
 	HRESULT result;
 
 #ifndef MASTER_GOLD
@@ -62,7 +59,6 @@ void res_texture::save_as(pcstr file_name)
 
 void res_texture::clone 	( res_texture* other)
 {
-	// FUNCTION BODY[0x55c310]
 	safe_release(m_surface);
 	safe_release(m_sh_res_view);
 
@@ -85,7 +81,6 @@ void res_texture::clone 	( res_texture* other)
 	m_desc_valid				= other->m_desc_valid;
 	m_pool_texture				= other->m_pool_texture;
 
-
 	if( m_surface)
 		m_surface->AddRef();
 
@@ -95,7 +90,6 @@ void res_texture::clone 	( res_texture* other)
 
 res_texture::~res_texture()
 {
-	// FUNCTION BODY[0x55c430]
 	safe_release(m_surface);
 	safe_release(m_sh_res_view);
 
@@ -105,13 +99,11 @@ res_texture::~res_texture()
 
 void res_texture::unmap3D			( u32 mip_level)
 {
-	// FUNCTION BODY[0x55c480]
 	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels));
 }
 
 void* res_texture::map3D	( D3D_MAP mode, u32 mip_level, u32& row_pitch)
 {
-	// FUNCTION BODY[0x55c4a0]
 	if( m_surface && m_desc_3d_valid)
 	{
 		D3D_RESOURCE_DIMENSION	type;
@@ -131,13 +123,11 @@ void* res_texture::map3D	( D3D_MAP mode, u32 mip_level, u32& row_pitch)
 
 void res_texture::unmap2D			( u32 mip_level)
 {
-	// FUNCTION BODY[0x55c510]
 	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels));
 }
 
 void* res_texture::map2D	( D3D_MAP mode, u32 mip_level, u32& row_pitch, bool do_not_wait)
 {
-	// FUNCTION BODY[0x55c530]
 	if( m_surface && m_desc_valid)
 	{
 		D3D_RESOURCE_DIMENSION	type;
@@ -172,7 +162,6 @@ m_mem_usage		(0),
 m_is_registered	( false ),
 m_streamed		( true )
 {
-	// FUNCTION BODY[0x55c5b0]
 	ZeroMemory( &m_desc, sizeof(m_desc));
 
 	//pAVI				= NULL;
@@ -189,7 +178,6 @@ m_streamed		( true )
 
 void res_texture::destroy_impl		() const
 {
-	// FUNCTION BODY[0x55c670]
 	resource_manager::ref().release( this );
 }
 
@@ -197,7 +185,7 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 {
 	VOSTOK_UNREFERENCED_PARAMETER( srgb );
 	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
-	// Retail line records include source stripped by the Master Gold configuration.
+	// Preserve target line metadata.
 #line 144
 	if (surface)
 		surface->AddRef();

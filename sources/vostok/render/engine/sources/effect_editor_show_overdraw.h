@@ -16,7 +16,6 @@ public:
 		num_overdraw_layers = 10,
 	};
 
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

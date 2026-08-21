@@ -119,7 +119,6 @@ public:
 
 	render_target_ptr get_rt( enum_render_target_index index )
 	{
-		// FUNCTION BODY[0x64550]
 		return m_targets->m_family[index].target;
 	}
 

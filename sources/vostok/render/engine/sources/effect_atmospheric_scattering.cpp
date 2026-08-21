@@ -12,12 +12,10 @@ void effect_atmospheric_scattering::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "make_mie_rayleigh_texture", NULL, "make_mie_rayleigh_texture", shader_configuration( ), NULL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmosphere", NULL, "atmosphere", shader_configuration( ), NULL );
@@ -29,7 +27,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmosphere_clouds", NULL, "atmosphere_clouds_alpha_blend", shader_configuration( ), NULL );
 	compiler.set_cull_mode( D3D_CULL_NONE );
@@ -38,7 +35,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_EQUAL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmosphere_clouds", NULL, "atmosphere_clouds_modulate", shader_configuration( ), NULL );
@@ -49,7 +45,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmosphere_sun_moon", NULL, "atmosphere_sun_moon", shader_configuration( ), NULL );
 	compiler.set_cull_mode( D3D_CULL_NONE );
@@ -59,7 +54,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmosphere_sun_moon", NULL, "atmosphere_sun_moon", shader_configuration( ), NULL );
 	compiler.set_cull_mode( D3D_CULL_NONE );
@@ -68,7 +62,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_EQUAL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmospheric_scattering_on_geometry", NULL, "atmospheric_scattering_on_geometry_mul", shader_configuration( ), NULL );
@@ -81,7 +74,6 @@ void effect_atmospheric_scattering::compile(
 	compiler.set_depth( false, false );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "atmospheric_scattering_on_geometry", NULL, "atmospheric_scattering_on_geometry_add", shader_configuration( ), NULL );

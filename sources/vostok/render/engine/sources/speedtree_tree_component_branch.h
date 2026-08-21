@@ -30,7 +30,6 @@ public:
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
-		// FUNCTION BODY[0x427c0]
 		return SpeedTree::GEOMETRY_TYPE_BRANCHES;
 	}
 

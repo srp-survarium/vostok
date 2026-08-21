@@ -41,7 +41,6 @@ void register_samplers( )
 	sampler_sim_anisotropic.set_mip				( 0.f, 0.f, FLT_MAX );
 	resource_manager::ref( ).register_sampler( "s_anisotropic", resource_manager::ref( ).create_sampler_state( sampler_sim_anisotropic ) );
 
-
 	sampler_state_descriptor sampler_sim;
 	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_WRAP );
 	sampler_sim.set_mip				( 0.f, 0.f, FLT_MAX );
@@ -104,7 +103,6 @@ void register_samplers( )
 	sampler_sim.set_comparison_function( D3D_COMPARISON_LESS_EQUAL );
 
 	resource_manager::ref( ).register_sampler( "s_shmap_local", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
 
 	resource_manager::ref( ).bind_samplers_to_shaders( );
 }

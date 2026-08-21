@@ -28,7 +28,7 @@ scene_manager::scene_manager( )
 
 scene_manager::~scene_manager( )
 {
-	// Retail line records begin eight lines earlier in the stripped Master Gold source.
+	// Preserve target line metadata.
 #line 23
 	vector< scene* >::iterator	it_c = m_scenes.begin(),
 								en_c = m_scenes.end();
@@ -84,10 +84,6 @@ void scene_manager::add_render_output_window( render_output_window* in_output_wi
 	m_output_windows.push_back(in_output_window);
 }
 
-// claude@NOTE: the seven definitions below were declared by the canonical header but
-// left undefined by the carcass (no target symbol - /OPT:REF stripped them); ported
-// from the legacy scene_manager.cpp, with its scenes/scene_views/render_output_windows
-// typedefs resolved to the canonical direct vector< T* > members.
 void scene_manager::remove_render_output_window( render_output_window* in_output_window )
 {
 	vector< render_output_window* >::iterator found = std::find(m_output_windows.begin(), m_output_windows.end(), in_output_window);
@@ -209,8 +205,6 @@ void scene_manager::destroy( render_output_window* output_window )
 	// typedef
 	// 	vostok::render::texture_named_instance*
 	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

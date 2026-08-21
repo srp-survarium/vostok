@@ -15,7 +15,6 @@ renderer::renderer( render::world& world, engine::world& engine_world )
 	: m_world( world ),
 	  m_render_engine_world( engine_world )
 {
-	// FUNCTION BODY[0x737620]
 	m_debug					= NEW( debug::renderer )(
 		world.logic_channel(),
 		*logic::g_allocator,
@@ -36,7 +35,6 @@ renderer::renderer( render::world& world, engine::world& engine_world )
 
 renderer::~renderer( )
 {
-	// FUNCTION BODY[0x7375c0]
 	DELETE	( m_scene );
 	DELETE	( m_ui );
 	DELETE	( m_debug );
@@ -44,13 +42,11 @@ renderer::~renderer( )
 
 void renderer::goto_fullscreen( base_output_window_ptr const& output_window )
 {
-	// FUNCTION BODY[0x7376c0]
 	m_render_engine_world.goto_fullscreen	( output_window );
 }
 
 void renderer::end_frame( )
 {
-	// FUNCTION BODY[0x7379f0]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind( &render::world::end_frame_logic, &m_world )
@@ -60,7 +56,6 @@ void renderer::end_frame( )
 
 void renderer::draw_scene_impl( draw_scene_params const& params )
 {
-	// FUNCTION BODY[0x737d80]
 	R_ASSERT	( params.scene );
 	R_ASSERT	( params.scene_view );
 	R_ASSERT	( params.render_output_window );
@@ -91,7 +86,6 @@ void renderer::draw_scene(
 	vostok::ui::font const* const	default_font
 )
 {
-	// FUNCTION BODY[0x737e50]
 	draw_scene_params params;
 	params.scene					= scene;
 	params.scene_view				= scene_view;
@@ -109,28 +103,24 @@ void renderer::draw_scene(
 
 debug::renderer& renderer::debug( ) const
 {
-	// FUNCTION BODY[0x737480]
 	ASSERT	( m_debug );
 	return	*m_debug;
 }
 
 ui::renderer& renderer::ui( ) const
 {
-	// FUNCTION BODY[0x737470]
 	ASSERT	( m_ui );
 	return	*m_ui;
 }
 
 scene_renderer& renderer::scene( ) const
 {
-	// FUNCTION BODY[0x737460]
 	ASSERT	( m_scene );
 	return	*m_scene;
 }
 
 void renderer::show_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
-	// FUNCTION BODY[0x737860]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind(
@@ -145,7 +135,6 @@ void renderer::show_movie( base_scene_view_ptr const& scene_view, survarium::fla
 
 void renderer::hide_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
-	// FUNCTION BODY[0x7376d0]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind(
@@ -160,7 +149,6 @@ void renderer::hide_movie( base_scene_view_ptr const& scene_view, survarium::fla
 
 void renderer::show_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x737c40]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind(
@@ -175,7 +163,6 @@ void renderer::show_text_manager( base_scene_view_ptr const& scene_view, survari
 
 void renderer::hide_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x737b00]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind(
@@ -190,7 +177,6 @@ void renderer::hide_text_manager( base_scene_view_ptr const& scene_view, survari
 
 void renderer::execute_scaleform_command( survarium::scaleform_render_command command )
 {
-	// FUNCTION BODY[0x737490]
 	m_world.logic_channel().owner_push_back(
 		L_NEW( functor_command )(
 			boost::bind(

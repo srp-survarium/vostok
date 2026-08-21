@@ -22,7 +22,6 @@ void effect_apply_decal::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "apply_decal", NULL, "apply_decal_normals_write", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
@@ -31,7 +30,6 @@ void effect_apply_decal::compile(
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_NOT_EQUAL );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "apply_decal", NULL, "apply_decal_diffuse_write", shader_configuration( ), NULL );

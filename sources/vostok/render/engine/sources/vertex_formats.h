@@ -24,7 +24,6 @@ namespace vertex_formats
 		{"COLOR",		0, DXGI_FORMAT_R8G8B8A8_UNORM,	0, 12, 	D3D_INPUT_PER_VERTEX_DATA, 0}
 	};
 
-
 	struct V 
 	{
 		float3		p;
@@ -103,7 +102,6 @@ namespace vertex_formats
 		{"COLOR",		0, DXGI_FORMAT_R8G8B8A8_UNORM,		0, 16, 	D3D_INPUT_PER_VERTEX_DATA, 0},
 	};
 
-
 	struct TL {
 		float4	p;
 		u32		color;
@@ -179,7 +177,6 @@ namespace vertex_formats
 		{"TEXCOORD",	1, DXGI_FORMAT_R32G32_FLOAT,		0, 28, 	D3D_INPUT_PER_VERTEX_DATA, 0}
 	};
 
-
 	struct TL4uv {
 		float4	p;
 		u32			color;
@@ -207,7 +204,6 @@ namespace vertex_formats
 		{"TEXCOORD",	2, DXGI_FORMAT_R32G32_FLOAT,		0, 36, 	D3D_INPUT_PER_VERTEX_DATA, 0},
 		{"TEXCOORD",	3, DXGI_FORMAT_R32G32_FLOAT,		0, 44, 	D3D_INPUT_PER_VERTEX_DATA, 0}
 	};
-
 
 	struct Tquad
 	{

@@ -25,7 +25,6 @@ world::world(
 	  m_is_editor_frame_ended( !is_editor ),
 	  m_is_editor( is_editor )
 {
-	// FUNCTION BODY[0x7380d0]
 	m_render_engine_world		= engine::create_world( in_config, is_editor );
 	R_ASSERT					( m_render_engine_world );
 
@@ -39,7 +38,6 @@ world::world(
 
 world::~world( )
 {
-	// FUNCTION BODY[0x7381b0]
 #ifndef VOSTOK_STATIC_LIBRARIES
 	DELETE						( m_editor_renderer );
 #endif
@@ -50,21 +48,18 @@ world::~world( )
 
 engine::renderer& world::engine_renderer( )
 {
-	// FUNCTION BODY[0x738020]
 	R_ASSERT	( m_engine_renderer );
 	return		*m_engine_renderer;
 }
 
 game::renderer& world::game_renderer( )
 {
-	// FUNCTION BODY[0x738010]
 	R_ASSERT	( m_game_renderer );
 	return		*m_game_renderer;
 }
 
 void world::end_frame( )
 {
-	// FUNCTION BODY[0x737fe0]
 	R_ASSERT					( m_is_logic_frame_ended );
 	R_ASSERT					( m_is_editor_frame_ended );
 	m_render_engine_world->end_frame( );
@@ -78,7 +73,6 @@ void world::end_frame( )
 
 void world::end_frame_logic( )
 {
-	// FUNCTION BODY[0x738080]
 	m_logic_channel.render_on_end_frame( );
 
 	R_ASSERT					( !m_is_logic_frame_ended || !m_is_logic_enabled );
@@ -90,7 +84,6 @@ void world::end_frame_logic( )
 
 void world::tick( )
 {
-	// FUNCTION BODY[0x738030]
 	if ( !m_is_logic_frame_ended )
 		m_logic_channel.render_process_commands( true );
 
@@ -100,13 +93,11 @@ void world::tick( )
 
 void world::clear_resources( )
 {
-	// FUNCTION BODY[0x738060]
 	m_render_engine_world->clear_resources( );
 }
 
 void world::enable_logic_thread_safety( bool const value )
 {
-	// FUNCTION BODY[0x737fb0]
 	R_ASSERT_CMP					( m_is_logic_enabled == 1, !=, value );
 	threading::interlocked_exchange	( m_is_logic_enabled, value ? 1 : 0 );
 	if ( !value )

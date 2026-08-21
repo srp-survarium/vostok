@@ -336,7 +336,6 @@ stage_postprocess::stage_postprocess(
 	effect_manager::ref().create_effect<effect_gather_luminance>(&m_sh_gather_luminance);
 	effect_manager::ref().create_effect<effect_gather_luminance_histogram>(&m_sh_gather_luminance_histogram);
 	effect_manager::ref().create_effect<effect_eye_adaptation>(&m_sh_eye_adaptation);
-	// 2 target lines are likely retail-compiled-out source.
 	effect_manager::ref().create_effect< effect_blur<3> >(&m_sh_blur[0]);
 	effect_manager::ref().create_effect< effect_blur<5> >(&m_sh_blur[1]);
 	effect_manager::ref().create_effect< effect_blur<7> >(&m_sh_blur[2]);
@@ -376,7 +375,6 @@ stage_postprocess::stage_postprocess(
 	desc["cull_mode"] = D3D11_CULL_NONE;
 
 	effect_manager::ref().create_effect<effect_motion_vectors_accumulation>(&m_motion_vectors_accumulation_effect, desc);
-	// 5 target lines are likely retail-compiled-out source.
 	m_blur_offsets_weights	= backend::ref().register_constant_host("offsets_weights", rc_float);
 	m_kernel_offsets		= backend::ref().register_constant_host("kernel_offsets", rc_float);
 	m_elapsed_time_parameter= backend::ref().register_constant_host("elapsed_time", rc_float);
@@ -400,9 +398,7 @@ stage_postprocess::stage_postprocess(
 	m_inverse_world_matrix_parameter					= backend::ref().register_constant_host( "inverse_world_matrix_parameter", rc_float );
 	m_frame_delta_parameter							= backend::ref().register_constant_host( "frame_delta_parameter", rc_float );
 	m_motion_blur_scale_parameter						= backend::ref().register_constant_host( "motion_blur_scale_parameter", rc_float );
-	// 2 target lines are likely retail-compiled-out source.
 	m_aberration_parameters							= backend::ref().register_constant_host( "aberration_parameters", rc_float );
-	// 2 target lines are likely retail-compiled-out source.
 	m_color_grading_base_lut = create_color_grading_base_lut(16);
 
 	m_textures.resize(10, NULL);
@@ -514,11 +510,9 @@ void stage_postprocess::measure_per_pixel_luminance( res_texture* scene_texture,
 		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->get_t(enum_render_target_index(lum_rt_index+1)) );
 		fill_surface2(m_context->m_targets->m_family[lum_rt_index].target);
 	}
-	// 2 target lines are likely retail-compiled-out source.
 	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
 	if (math::is_similar(pp_parameters.adaptation_speed, 0.0f, 0.05f))
 	{
-		// 11 target lines are likely retail-compiled-out source.
 		m_sh_eye_adaptation->apply( 1, 0 );
 		backend::ref().set_ps_texture( "t_luminance", &*m_context->get_t(rt_frame_luminance0) );
 		fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_current].target);
@@ -639,39 +633,30 @@ void stage_postprocess::advanced_bloom( )
 	float t_h = float( m_context->get_t( rt_blur_0 )->height( ) );
 	float t_w_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->width( ) );
 	float t_h_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->height( ) );
-	// 2 target lines are likely retail-compiled-out source.
 	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w, t_h, t_w_inv, t_h_inv ) );
 	fill_surface( m_context->get_rt( rt_blur_4 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
-	// 2 target lines are likely retail-compiled-out source.
 	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_4 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.5f, t_h * 0.5f, t_w_inv * 2.0f, t_h_inv * 2.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_5 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
-	// 2 target lines are likely retail-compiled-out source.
 	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_5 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.25f, t_h * 0.25f, t_w_inv * 4.0f, t_h_inv * 4.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_6 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
-	// 2 target lines are likely retail-compiled-out source.
 	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_6 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.125f, t_h * 0.125f, t_w_inv * 8.0f, t_h_inv * 8.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_7 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
-	// 2 target lines are likely retail-compiled-out source.
 	process_blur( m_context->get_rt( rt_blur_2 ).c_ptr( ), m_context->get_t( rt_blur_2 ).c_ptr( ), m_context->get_rt( rt_blur_3 ).c_ptr( ), m_context->get_t( rt_blur_3 ).c_ptr( ), kernel_index );
-	// 2 target lines are likely retail-compiled-out source.
 	process_blur( m_context->get_rt( rt_blur_4 ).c_ptr( ), m_context->get_t( rt_blur_4 ).c_ptr( ), m_context->get_rt( rt_blur_4_0 ).c_ptr( ), m_context->get_t( rt_blur_4_0 ).c_ptr( ), kernel_index );
-	// 2 target lines are likely retail-compiled-out source.
 	process_blur( m_context->get_rt( rt_blur_5 ).c_ptr( ), m_context->get_t( rt_blur_5 ).c_ptr( ), m_context->get_rt( rt_blur_5_0 ).c_ptr( ), m_context->get_t( rt_blur_5_0 ).c_ptr( ), kernel_index );
-	// 2 target lines are likely retail-compiled-out source.
 	process_blur( m_context->get_rt( rt_blur_6 ).c_ptr( ), m_context->get_t( rt_blur_6 ).c_ptr( ), m_context->get_rt( rt_blur_6_0 ).c_ptr( ), m_context->get_t( rt_blur_6_0 ).c_ptr( ), kernel_index );
-	// 2 target lines are likely retail-compiled-out source.
 	process_blur( m_context->get_rt( rt_blur_7 ).c_ptr( ), m_context->get_t( rt_blur_7 ).c_ptr( ), m_context->get_rt( rt_blur_7_0 ).c_ptr( ), m_context->get_t( rt_blur_7_0 ).c_ptr( ), kernel_index );
 
 	clear_surface( m_context->get_rt( rt_blur_3 ) );
@@ -1230,7 +1215,6 @@ void stage_postprocess::execute( )
 		m_olta_effect->apply( 1, 0 );
 		fill_surface2( m_context->get_rt( rt_present ) );
 	}
-	// 2 target lines are likely retail-compiled-out source.
 	if ( options::ref( ).current.m_use_temporal_antialiasing )
 	{
 
@@ -1244,7 +1228,6 @@ void stage_postprocess::execute( )
 		backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
 		backend::ref( ).set_ps_constant( m_c_frame_index, m_context->scene_view( )->get_render_frame_index( ) & 1 );
 		fill_surface2( m_context->get_rt( rt_present ) );
-		// 2 target lines are likely retail-compiled-out source.
 		device::ref( ).d3d_context( )->CopyResource(
 			m_context->get_t( rt_previous_present )->hw_texture( ),
 			m_context->get_t( rt_albedo )->hw_texture( )
@@ -1267,7 +1250,6 @@ void stage_postprocess::execute( )
 		 options::ref( ).current.m_use_motion_blur )
 	{
 		backend::ref( ).flush_rt_shader_resources( );
-		// 2 target lines are likely retail-compiled-out source.
 		m_motion_blur_effect->apply( 0, 0 );
 		backend::ref( ).set_ps_constant( m_prev_view_matrix_parameter, transpose( m_prev_view_matrix ) );
 		backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
@@ -1302,7 +1284,6 @@ void stage_postprocess::execute( )
 	}
 
 	m_prev_view_matrix = m_context->get_v( );
-	// 2 target lines are likely retail-compiled-out source.
 	m_context->set_w( float4x4( ).identity( ) );
 }
 

@@ -73,7 +73,6 @@ inline void batched_geometry< Vertex >::for_each_batch_render(
 	render_batch_callback_type const&	post_render
 )
 {
-	// FUNCTION BODY[0x7d2d0] for <lpv_vertex>
 	if ( m_geometry_batches.size( ) == 0 )
 		return;
 

@@ -52,7 +52,6 @@ void tracer_model_instance_cook::on_model_ready( resources::queries_result& data
 
 void tracer_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x76c030]
 	tracer_model_instance* instance = static_cast<tracer_model_instance*>( resource );
 	DELETE( instance );
 }

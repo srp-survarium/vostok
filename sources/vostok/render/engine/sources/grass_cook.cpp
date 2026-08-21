@@ -22,7 +22,6 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 
 	grass_world* result = NEW( grass_world );
 
-
 	configs::binary_config_value const& config = *loading_data->t_current;
 	u8 const layers_count = (u8)config["layers"].size( );
 
@@ -100,7 +99,6 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 			}
 		}
 	}
-
 
 	resources::query_resources(
 		requests.begin( ),

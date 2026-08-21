@@ -22,11 +22,8 @@ using namespace SpeedTree;
 speedtree_tree_component_branch::speedtree_tree_component_branch( speedtree_tree& parent ) :
 	speedtree_tree_component( parent )
 {
-	// FUNCTION BODY[0x5f8760]
 	ref_declaration decl = resource_manager::ref().create_declaration( layout, array_size( layout ) );
 
-	// claude@NOTE: legacy bound `CTree& tree = parent` - the canonical speedtree_tree
-	// derives SpeedTree::CCore (GetGeometry lives there).
 	SpeedTree::CCore& tree = parent;
 
 	const SGeometry* tree_geometry  = tree.GetGeometry( );
@@ -140,7 +137,6 @@ speedtree_tree_component_branch::speedtree_tree_component_branch( speedtree_tree
 
 void speedtree_tree_component_branch::init_index_buffer( SpeedTree::SIndexedTriangles const* lod, vector<u16>& out_indices )
 {
-	// FUNCTION BODY[0x5f83b0]
 	for (s32 mg_index = 0; mg_index < lod->m_nNumMaterialGroups; mg_index++)
 	{
 		const SDrawCallInfo* info = lod->m_pDrawCallInfo + mg_index;
@@ -160,20 +156,15 @@ void speedtree_tree_component_branch::init_index_buffer( SpeedTree::SIndexedTria
 
 void speedtree_tree_component_branch::set_material( material_ptr mtl_ptr )
 {
-	// FUNCTION BODY[0x5f8730]
-	// claude@NOTE: legacy body was fully commented out (initialize_material_effects era).
 	VOSTOK_UNREFERENCED_PARAMETER	( mtl_ptr );
 }
 
 void speedtree_tree_component_branch::set_default_material( )
 {
-	// FUNCTION BODY[0x5f8390]
-	//m_material_effects = material::nomaterial_material(speedtree_branch_vertex_input_type);
 }
 
 void speedtree_tree_component_branch::render( lod_entry const* lod, renderer_context* context )
 {
-	// FUNCTION BODY[0x5f83a0]
 	VOSTOK_UNREFERENCED_PARAMETERS(lod, context);
 }
 

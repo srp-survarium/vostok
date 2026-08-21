@@ -190,13 +190,7 @@ public:
 	void update_portals_visability( math::frustum const& f, pcbyte oclusion_results );
 
 private:
-	// claude@NOTE: the legacy ancestor (dx9/model_manager.cpp portal::create)
-	// built each portal plane from its first three points
-	// (create_plane(p[0],p[1],p[2]) - the averaged-normal variant was
-	// commented out) and derived a bounding sphere from the point aabb; the
-	// canonical portal ctor leaves m_plane default, so that plane build (and
-	// any view-consistent reorientation via swap_sectors) belongs here or in
-	// load - matcher-phase against the load body 0x75ebf0.
+	// claude@NOTE: the available source builds the plane from the first three points.
 	void adjust_portals_orientation( )
 	{
 		// STATE[STUB]

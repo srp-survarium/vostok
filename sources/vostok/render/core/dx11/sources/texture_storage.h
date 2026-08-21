@@ -15,10 +15,6 @@ namespace render {
 class res_texture;
 class texture_pool;
 
-// claude@NOTE: legacy kept get_hash as a file-local free function next to the
-// out-of-line get/release in texture_storage.cpp; the canonical carcass has
-// get/release inline in this header (neither carries a target address, so
-// neither is emitted), so the helper moves here with them.
 inline u32 get_hash( u32 width, u32 height, DXGI_FORMAT format )
 {
 	return (utils::log_2( width) | (utils::log_2( height)<<5) | ( (u32)format<<10));

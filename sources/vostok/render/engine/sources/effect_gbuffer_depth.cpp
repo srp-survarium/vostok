@@ -11,7 +11,6 @@ void effect_gbuffer_depth::compile(
 )
 {
 	shader_configuration configuration;
-	// 4 target lines are likely retail-compiled-out source.
 	compile_begin("vertex_base", "geometry_depth_pass", compiler, &configuration, config);
 		compiler.set_depth(true, false);
 		compiler.set_cull_mode(D3D_CULL_NONE);

@@ -21,7 +21,6 @@ renderer::renderer(
 	  m_channel( channel ),
 	  m_allocator( allocator )
 {
-	// FUNCTION BODY[0x771310]
 }
 
 void renderer::draw_line(
@@ -48,7 +47,6 @@ void renderer::draw_origin(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x771800]
 	//math::aabb bb = (math::aabb().identity()*half_size).modify(matrix);
 	//if(frustum.test_inexact(bb)==math::intersection_outside)
 	//	return;
@@ -76,7 +74,6 @@ void renderer::draw_cross(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x771600]
 	//math::aabb bb = (math::aabb().identity()*2*half_size).move(p);
 	//if(frustum.test_inexact(bb)==math::intersection_outside)
 	//	return;
@@ -97,7 +94,6 @@ void renderer::draw_triangle(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x771560]
 	u16 const indices[3]		= { 0, 1, 2 };
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_triangles_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
 }
@@ -110,7 +106,6 @@ void renderer::draw_cube(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773390]
 	math::aabb bb = create_aabb_min_max(-size, size).modify(matrix);
 	if(frustum.test_inexact(bb)==math::intersection_outside)
 		return;
@@ -141,7 +136,6 @@ void renderer::draw_frustum(
 	bool						use_depth
 )
 {
-	// FUNCTION BODY[0x772920]
 	float y_fov					= fov_in_radians;
 	float x_fov					= fov_in_radians * aspect_ratio;
 
@@ -223,7 +217,6 @@ void renderer::draw_aabb(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773a70]
 	draw_cube					(
 		scene,
 		math::create_translation(
@@ -243,7 +236,6 @@ void renderer::draw_ellipsoid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7728f0]
 	draw_lines					(
 		scene,
 		matrix,
@@ -265,7 +257,6 @@ void renderer::draw_cylinder(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7728c0]
 	//math::aabb bb = (math::aabb().identity()*size).modify(matrix);
 	//if(frustum.test_inexact(bb)==math::intersection_outside)
 	//	return;
@@ -291,7 +282,6 @@ void renderer::draw_sphere(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7739f0]
 	math::sphere sp(m.c.xyz(), radius);
 	if( frustum.test(sp) == math::intersection_outside )
 		return;
@@ -317,7 +307,6 @@ void renderer::draw_cone(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772850]
 	math::sphere sp(matrix.c.xyz(), math::max(size.x, size.y) );
 	if(frustum.test(sp)==math::intersection_outside)
 		return;
@@ -343,7 +332,6 @@ void renderer::draw_cube_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772820]
 	//math::aabb bb = (math::aabb().identity()*size).modify(matrix);
 	//if(frustum.test_inexact(bb)==math::intersection_outside)
 	//	return;
@@ -369,7 +357,6 @@ void renderer::draw_cylinder_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772790]
 	draw_primitive_solid		(
 		scene,
 		// this is temporary, coordinates of the primitive need to be updated.
@@ -393,7 +380,6 @@ void renderer::draw_sphere_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772710]
 	math::sphere sp(center, radius);
 	if(frustum.test(sp)==math::intersection_outside)
 		return;
@@ -415,7 +401,6 @@ void renderer::draw_ellipsoid_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7726d0]
 	draw_primitive_solid		(
 		scene,
 		matrix,
@@ -441,7 +426,6 @@ void renderer::draw_primitive_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772090]
 	float4x4 trnsform = create_scale(size)*matrix;
 
 	debug_vertices_type temp_vertices(m_allocator);
@@ -478,7 +462,6 @@ void renderer::draw_arrow(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7736f0]
 	float3 direction			= end_point - start_point;
 	if ( math::is_zero( direction.squared_length(), math::epsilon_3 ) )
 		return;
@@ -520,7 +503,6 @@ void renderer::draw_arrow(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773ab0]
 	draw_arrow					(
 		scene,
 		start_point,
@@ -538,7 +520,6 @@ void renderer::draw_line_ellipsoid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7714f0]
 	draw_lines(
 		scene,
 		matrix,
@@ -582,7 +563,6 @@ void renderer::draw_line_hemisphere(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x771fe0]
 	// base is XY plane
 	draw_lines(
 		scene,
@@ -632,7 +612,6 @@ void renderer::draw_line_capsule(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7735c0]
 	draw_cylinder		( scene, matrix, size, color, use_depth );
 
 	draw_line_hemisphere( scene, math::create_translation(float3(0, size.y, 0)) * matrix,
@@ -657,7 +636,6 @@ void renderer::draw_solid_capsule(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773460]
 	draw_cylinder_solid	( scene, matrix, size, color, use_depth );
 
 	draw_sphere_solid	( scene, matrix.c.xyz( ) + matrix.j.xyz( ) * size.y,
@@ -679,7 +657,6 @@ void renderer::draw_lines(
 	const bool							use_depth
 )
 {
-	// FUNCTION BODY[0x771f70]
 	R_ASSERT_CMP				( vertices.size(), <=, max_debug_vertices_count );
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( m_allocator, scene, m_render_engine_world, vertices, indices, use_depth ) );
 }
@@ -695,7 +672,6 @@ void renderer::draw_lines(
 	bool						use_depth
 )
 {
-	// FUNCTION BODY[0x771330]
 	R_ASSERT_CMP				( vertex_count, <=, max_debug_vertices_count );
 
 	typedef vostok::buffer_vector< u16 >	TempIndices;
@@ -729,7 +705,6 @@ void renderer::draw_triangles(
 	const bool							use_depth
 )
 {
-	// FUNCTION BODY[0x771f00]
 	R_ASSERT_CMP				( vertices.size(), <=, max_debug_vertices_count );
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_triangles_command ) ( scene, m_render_engine_world, vertices, indices, use_depth ) );
 }
@@ -746,7 +721,6 @@ void renderer::draw_lines(
 	bool						use_depth
 )
 {
-	// FUNCTION BODY[0x771e70]
 	R_ASSERT_CMP				( vertex_count, <=, max_debug_vertices_count );
 	draw_lines					(
 		scene,

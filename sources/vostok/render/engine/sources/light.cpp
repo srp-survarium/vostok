@@ -31,7 +31,6 @@ light::light( collision::space_partitioning_tree* tree ) :
 	occluded						( false ),
 	m_aabb							( math::create_zero_aabb( ) )
 {
-	// FUNCTION BODY[0x601350]
 	flags.type				= render::light_type_point;
 	flags.is_static			= false;
 	flags.does_cast_shadows	= false;
@@ -49,7 +48,6 @@ light::light( collision::space_partitioning_tree* tree ) :
 
 light::~light( )
 {
-	// FUNCTION BODY[0x6012d0]
 	remove_collision( );
 }
 
@@ -73,7 +71,6 @@ void light::tick_color_animation( float const time_delta )
 
 void light::remove_collision( )
 {
-	// FUNCTION BODY[0x5ff510]
 	if ( !m_collision_object )
 		return;
 
@@ -88,13 +85,11 @@ void light::remove_collision( )
 
 bool light::is_occluded( ) const
 {
-	// FUNCTION BODY[0x5ff650]
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 bool light::is_cast_shadows( ) const
 {
-	// FUNCTION BODY[0x5ff4b0]
 	if (!flags.does_cast_shadows)
 	{
 		return false;
@@ -116,14 +111,12 @@ bool light::is_cast_shadows( ) const
 
 void light::destroy_impl( ) const
 {
-	// FUNCTION BODY[0x601540]
 	light const* this_ptr	= this;
 	DELETE					( this_ptr );
 }
 
 void light::set_position( float3 const& value )
 {
-	// FUNCTION BODY[0x5ff6a0]
 	float	eps					=	math::epsilon_7;	//_max	(range*0.001f,EPS_L);
 	if (position.is_similar(value,eps))return	;
 	position = (value);
@@ -131,7 +124,6 @@ void light::set_position( float3 const& value )
 
 void light::set_color( math::color const& c, float const value )
 {
-	// FUNCTION BODY[0x5ff5c0]
 	color.x			= c.r;
 	color.y			= c.g;
 	color.z			= c.b;
@@ -141,7 +133,6 @@ void light::set_color( math::color const& c, float const value )
 
 void light::set_range( float value )
 {
-	// FUNCTION BODY[0x5ff4a0]
 //	float	eps					=	std::max	(range*0.1f, math::epsilon_7);
 //	if (math::is_similar(range,R,eps))	return	;
 	range						= value	;
@@ -152,14 +143,12 @@ void light::set_orientation(
 	float3 const& right
 )
 {
-	// FUNCTION BODY[0x601230]
 	this->direction				= normalize_safe( direction, float3( 1.f, 1.f, 1.f ) );
 	this->right					= normalize_safe( right, float3( 1.f, 1.f, 1.f ) );
 }
 
 void light::on_properties_changed( )
 {
-	// FUNCTION BODY[0x6001c0]
 	m_xform_frame				= u32(-1);
 	xform_calc					( );
 
@@ -293,7 +282,6 @@ void light::on_properties_changed( )
 
 void light::xform_calc( )
 {
-	// FUNCTION BODY[0x5ff6d0]
 //	if	(renderer::ref().frame_id() == m_xform_frame)	return;
 //
 //	m_xform_frame = renderer::ref().frame_id();
@@ -380,13 +368,11 @@ void light::xform_calc( )
 
 void light::set_attenuation_power( float value )
 {
-	// FUNCTION BODY[0x5ff490]
 	attenuation_power	= value;
 }
 
 void light::set_scale( float3 const& value )
 {
-	// FUNCTION BODY[0x5ff470]
 	scale			= value;
 }
 

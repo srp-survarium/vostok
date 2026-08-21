@@ -200,13 +200,9 @@ template class constants_handler<enum_shader_type_vertex>;
 template class constants_handler<enum_shader_type_geometry>;
 template class constants_handler<enum_shader_type_pixel>;
 
-
 //////////////////////////////////////////////////////////////////////////
 //textures
-// claude@NOTE: the target CALLS `vostok::math::max(unsigned int, unsigned int)` here - a
-// non-template overload that sources/vostok/math_functions.h (core, out of this unit) does
-// not declare, so our math::max<u32> template inlines instead. Same wall in
-// samplers_handler::assign and textures_handler::set_overwrite.
+// claude@NOTE: the target calls the u32 max overload that the base inlines.
 template <enum_shader_type shader_type>
 void textures_handler<shader_type>::assign( res_texture_list const * list)
 {
@@ -381,7 +377,6 @@ void textures_handler<enum_shader_type_pixel>::apply	()
 template class textures_handler<enum_shader_type_vertex>;
 template class textures_handler<enum_shader_type_geometry>;
 template class textures_handler<enum_shader_type_pixel>;
-
 
 //////////////////////////////////////////////////////////////////////////
 /// samplers

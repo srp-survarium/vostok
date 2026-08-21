@@ -12,27 +12,20 @@ void effect_light_propagation_volumes::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_lighting", "lpv_inject_lighting", "lpv_inject_lighting", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 
-
 	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_MAX, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_MAX );
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_occluders", "lpv_inject_occluders", "lpv_inject_occluders", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
-	// 4 target lines are likely retail-compiled-out source.
 	compiler.set_alpha_blend( false );
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_occluders_camera_view", "lpv_inject_occluders_camera_view", "lpv_inject_occluders_camera_view", shader_configuration( ), NULL );
@@ -40,20 +33,16 @@ void effect_light_propagation_volumes::compile(
 
 	compiler.set_alpha_blend( false );
 
-
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_occluder_geometry", "lpv_inject_occluder_geometry", "lpv_inject_occluders", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 	compiler.set_alpha_blend( false );
 
-
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_propagate_lighting", "lpv_propagate_lighting", "lpv_propagate_lighting", shader_configuration( ), NULL );
@@ -61,7 +50,6 @@ void effect_light_propagation_volumes::compile(
 	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_accumulate_propagation", "lpv_accumulate_propagation", "lpv_accumulate_propagation", shader_configuration( ), NULL );

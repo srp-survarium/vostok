@@ -139,7 +139,6 @@ DXGI_RATIONAL res_render_output::select_refresh( u32 width, u32 height, DXGI_FOR
 	res.Numerator = 0;
 	res.Denominator = 1;
 
-	// 21 target lines are retail-compiled-out refresh enumeration.
 	return res;
 }
 
@@ -195,7 +194,6 @@ void res_render_output::set_size(
 	u32 const screen_width = GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_height = GetSystemMetrics( SM_CYSCREEN );
 
-	// 16 target lines are retail-compiled-out display-mode handling.
 	u32 const pos_x = screen_width > in_width ? (screen_width - in_width) / 2 : 0;
 	u32 const pos_y = screen_height > in_height ? (screen_height - in_height) / 2 : 0;
 
@@ -240,8 +238,6 @@ void res_render_output::resize(
 
 	buffer_desc.Width = new_size.x;
 	buffer_desc.Height = new_size.y;
-
-	// 19 target lines are retail-compiled-out refresh-target handling.
 
 	log_ref_count( "refCount:pBaseZB", m_base_zb );
 	log_ref_count( "refCount:pBaseRT", m_base_rt );

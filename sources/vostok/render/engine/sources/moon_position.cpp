@@ -73,10 +73,8 @@ void calculate_moon_position(time_parameters const& params, double in_latitude, 
 //	out_azimuth		= RA;
 //	out_zenith		= Decl;
 
-
 #define dEarthMeanRadius     6371.01	// In km
 #define dAstronomicalUnit    384000.0	// In km
-
 
 	// Calculate local coordinates ( azimuth and zenith angle ) in degrees
 	{

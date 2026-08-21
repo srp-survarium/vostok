@@ -10,7 +10,6 @@ void effect_wireframe_colored::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b5dc0]
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
 
  	compiler.begin_technique(/*SE_R2_SHADOW*/)

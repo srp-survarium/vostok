@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (texture streaming is new-in-target) - matcher-phase work.
 #include "streaming.h"
 
 namespace vostok {

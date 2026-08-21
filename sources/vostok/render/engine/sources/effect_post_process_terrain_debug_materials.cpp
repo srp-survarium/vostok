@@ -12,8 +12,6 @@ void effect_post_process_terrain_debug_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7b9880]
-
 
 	compiler.begin_technique();
 		compiler.begin_pass("copy_image", NULL, "terrain_debug", shader_configuration(), NULL);

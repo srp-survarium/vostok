@@ -33,13 +33,11 @@ public:
 
 	virtual void render( scene_ptr const&, debug::renderer& ) const
 	{
-		// FUNCTION BODY[0x122e20]
 		NOT_IMPLEMENTED();
 	}
 
 	virtual bool aabb_query( math::aabb const&, collision::triangles_type& ) const
 	{
-		// FUNCTION BODY[0xb53e0]
 		return true;
 	}
 
@@ -57,13 +55,11 @@ public:
 		collision::triangles_predicate_type const&
 	) const
 	{
-		// FUNCTION BODY[0x6f130]
 		return true;
 	}
 
 	virtual bool aabb_test( math::aabb const& ) const
 	{
-		// FUNCTION BODY[0x6f140]
 		return true;
 	}
 
@@ -74,7 +70,6 @@ public:
 
 	virtual bool ray_test( float3 const&, float3 const&, float, float& ) const
 	{
-		// FUNCTION BODY[0x6f150]
 		return true;
 	}
 

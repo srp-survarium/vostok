@@ -12,7 +12,6 @@ namespace render {
 
 pcstr stage_type_to_string(enum_render_stage_type stage_type)
 {
-	// FUNCTION BODY[0x5872f0]
 	switch (stage_type)
 	{
 		case gbuffer_render_stage:										return "g_stage";

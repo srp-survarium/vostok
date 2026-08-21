@@ -21,7 +21,7 @@ untyped_buffer::untyped_buffer	( u32 const size, pcvoid const data, enum_buffer_
 	m_size					( size ),
 	m_type					( type )
 {
-	// Retail line records begin eight lines earlier in the stripped Master Gold source.
+	// Preserve target line metadata.
 #line 19
 	D3D_BUFFER_DESC			desc;
 	desc.ByteWidth			= size;

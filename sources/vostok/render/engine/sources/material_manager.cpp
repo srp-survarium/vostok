@@ -27,7 +27,6 @@
 namespace vostok {
 namespace render {
 
-
 class material_shader_base: public effect_material_base
 {
 	material_shader_base(enum_vertex_input_type /*vertex_input_type*/, material_ptr /*mtl*/)
@@ -69,7 +68,6 @@ material_manager::~material_manager()
 static pcstr resources_materials_string						=	"resources/materials";
 static pcstr resources_material_instances_string			=	"resources/material_instances";
 static pcstr resources_materials_string_with_slash			=	"resources/materials/";
-// 210 target lines are likely retail-compiled-out source.
 void material_manager::initialize_post_process_parameters(post_process_parameters* out_post_process_parameters_ptr, material_ptr mtl, bool force_recompilation)
 {
 	VOSTOK_UNREFERENCED_PARAMETER									(force_recompilation);
@@ -134,7 +132,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 
 	if (config.value_exists("dof_height_lights"))
 		out_post_process_parameters.dof_height_lights			= float3(config["dof_height_lights"]["value"]);
-	// 4 target lines are likely retail-compiled-out source.
 	if (config.value_exists("dof_focus_region"))
 		out_post_process_parameters.dof_focus_region			= float(config["dof_focus_region"]["value"]);
 
@@ -225,7 +222,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("frame_dark_desaturation_limit"))
 		out_post_process_parameters.frame_dark_desaturation_limit = float(config["frame_dark_desaturation_limit"]["value"]);
 
-
 	if (config.value_exists("environment_rain_num_cones"))
 		out_post_process_parameters.environment_rain_num_cones	= u32(float(config["environment_rain_num_cones"]["value"]));
 
@@ -249,7 +245,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 
 	if (config.value_exists("environment_rain_start_cone_index"))
 		out_post_process_parameters.environment_rain_start_cone_index = u32(config["environment_rain_start_cone_index"]["value"]);
-
 
 	if (config.value_exists("frame_height_lights"))
 		out_post_process_parameters.frame_height_lights			= float3(config["frame_height_lights"]["value"]);
@@ -284,10 +279,8 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("skylight_power")) out_post_process_parameters.skylight_power = float(config["skylight_power"]["value"]);
 	if (config.value_exists("skylight_multiplier")) out_post_process_parameters.skylight_multiplier = float(config["skylight_multiplier"]["value"]);
 
-
 	if (config.value_exists("frame_shadows"))
 		out_post_process_parameters.frame_shadows				= float3(config["frame_shadows"]["value"]);
-	// 5 target lines are likely retail-compiled-out source.
 	if (config.value_exists("environment_far_fog_color") &&
 		config.value_exists("environment_far_fog_distance") &&
 		config.value_exists("environment_near_fog_distance"))
@@ -296,13 +289,11 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 		out_post_process_parameters.environment_far_fog_distance	= float(config["environment_far_fog_distance"]["value"]);
 		out_post_process_parameters.environment_near_fog_distance	= float(config["environment_near_fog_distance"]["value"]);
 	}
-	// 4 target lines are likely retail-compiled-out source.
 	if (config.value_exists("lens_flares_multiplier"))
 		out_post_process_parameters.lens_flares_multiplier		= float(config["lens_flares_multiplier"]["value"]);
 
 	if (config.value_exists("use_aberration"))
 		out_post_process_parameters.use_aberration				= bool(config["use_aberration"]["value"]);
-
 
 	if (config.value_exists("aberration_power"))
 		out_post_process_parameters.aberration_power				= float(config["aberration_power"]["value"]);
@@ -315,11 +306,9 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 
 	if (config.value_exists("environment_fog_alpha"))
 		out_post_process_parameters.environment_fog_alpha		= float(config["environment_fog_alpha"]["value"]);
-	
 
 	if (config.value_exists("environment_ambient_color"))
 		out_post_process_parameters.environment_ambient_color		= float4(config["environment_ambient_color"]["value"]).xyz();
-
 
 	if (config.value_exists("environment_use_rain"))
 		out_post_process_parameters.environment_use_rain			= bool(config["environment_use_rain"]["value"]);
@@ -348,12 +337,10 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("environment_skylight_lower_color"))
 		out_post_process_parameters.environment_skylight_lower_color	= float4(config["environment_skylight_lower_color"]["value"]);	
 
-
 	if (
 		config.value_exists("environment_skylight_upper_power")	&&
 		config.value_exists("environment_skylight_lower_power")
 		)
-		// 4 target lines are likely retail-compiled-out source.
 		out_post_process_parameters.environment_skylight_parameters		= float4(float(config["environment_skylight_upper_power"]["value"]), float(config["environment_skylight_lower_power"]["value"]), 0.0f, 0.0f);
 	
 	if (config.value_exists("adaptation_speed"))
@@ -367,7 +354,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 		out_post_process_parameters.tonemap_darkness_threshold	= float(config["tonemap_darkness_threshold"]["value"]);
 	if (config.value_exists("tonemap_middle_gray"))
 		out_post_process_parameters.tonemap_middle_gray			= float(config["tonemap_middle_gray"]["value"]);
-	// 3 target lines are likely retail-compiled-out source.
 	if (config.value_exists("wind_direction")) 
 		out_post_process_parameters.wind_direction				= float3(config["wind_direction"]["value"]);
 	
@@ -378,7 +364,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 		out_post_process_parameters.enable_bloom				= bool(config["enable_bloom"]["value"]);
 
 #if VOSTOK_PLATFORM_WINDOWS
-	// 4 target lines are likely retail-compiled-out source.
 	if (config.value_exists("environment_suncolor"))
 		out_post_process_parameters.environment_suncolor			= float4(config["environment_suncolor"]["value"]);
 
@@ -407,7 +392,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	
 	if (config.value_exists("use_color_grading_lut"))
 		out_post_process_parameters.use_color_grading_lut		= bool(config["use_color_grading_lut"]["value"]);
-	
 
 	if (config.value_exists("color_grading_texture"))
 		out_post_process_parameters.color_grading_texture		= resource_manager::ref().create_texture(pcstr(config["color_grading_texture"]["value"]), 0, 0, false, true, true, u32(-1));
@@ -460,10 +444,8 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	else
 		out_post_process_parameters.sun_moon_texture				= 0;
 
-
 #endif // #if VOSTOK_PLATFORM_WINDOWS
 }
-
 
 void material_manager::remove_material_effects(material_effects_instance_ptr const& in_material_effects_instance)
 {
@@ -476,7 +458,6 @@ void material_manager::remove_material_effects(material_effects_instance_ptr con
 			m_material_effects.erase(it);
 	}
 }
-// 3 target lines are likely retail-compiled-out source.
 void material_manager::add_material_effects(material_effects_instance_ptr& in_material_effects_instance, fs_new::virtual_path_string const& in_material_name)
 {
 	material_effects_entries_type::iterator it_begin	= m_material_effects.begin();

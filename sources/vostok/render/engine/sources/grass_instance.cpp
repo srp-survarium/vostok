@@ -19,7 +19,6 @@ grass_instance::grass_instance(
 	m_index( in_id ),
 	m_layer_id( in_layer )
 {
-	// FUNCTION BODY[0x5f5550]
 }
 
 } // namespace render

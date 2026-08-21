@@ -12,9 +12,7 @@ void effect_fstage_volume_sphere_base_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7ba5c0]
 	shader_configuration configuration;
-
 
 	configuration.use_diffuse_texture	    = bool(config["use_tdiffuse"]);
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);

@@ -19,19 +19,16 @@ namespace model_factory {
 
 void destroy_render_model( render_model* model )
 {
-	// FUNCTION BODY[0x781940]
 	DELETE( model );
 }
 
 void destroy_render_surface( render_surface* surface )
 {
-	// FUNCTION BODY[0x781980]
 	DELETE( surface );
 }
 
 u16 get_model_type( memory::chunk_reader& chunk )
 {
-	// FUNCTION BODY[0x7819c0]
 	memory::reader	ogf = chunk.open_reader( model_chunk_header );
 	model_header		header;
 	ogf.r			(&header, sizeof(header), sizeof(header));
@@ -40,7 +37,6 @@ u16 get_model_type( memory::chunk_reader& chunk )
 
 render_surface* create_render_surface( u16 type )
 {
-	// FUNCTION BODY[0x781a90]
 	render_surface* result	= NULL;
 	switch(type)
 	{
@@ -82,7 +78,6 @@ render_surface* create_render_surface( u16 type )
 
 render_model* create_render_model( u16 type )
 {
-	// FUNCTION BODY[0x781a00]
 	render_model* result	= NULL;
 	switch(type)
 	{

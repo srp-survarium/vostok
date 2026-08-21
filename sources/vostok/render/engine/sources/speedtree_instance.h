@@ -19,7 +19,6 @@ public:
 	explicit speedtree_instance( speedtree_tree_base_ptr tree ) :
 		m_speedtree_tree_ptr( tree )
 	{
-		// FUNCTION BODY[0x8c7c0]
 	}
 
 	virtual ~speedtree_instance( ) { }
