@@ -171,11 +171,9 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 
 	float3 const normal = math::normalize( ( io_points[1] - io_points[0] ) ^ ( io_points[2] - io_points[0] ) );
 
-
 	vertices_buffer_type temp( ALLOCA( 16 * sizeof( float3 ) ), 16 );
 	vertices_buffer_type pos( ALLOCA( 16 * sizeof( float3 ) ), 16 );
 	std::copy( io_points, io_points + 4, std::back_inserter( temp ) );
-
 
 	for ( u32 plane_id = 0; plane_id < math::cuboid::plane_count; ++plane_id )
 	{
@@ -198,7 +196,6 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 		std::copy( pos.begin( ), pos.end( ), std::back_inserter( temp ) );
 	}
 
-	// 3 target lines are likely retail-compiled-out source.
 	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
 	u32 longest_edge_id = 0;
 	for ( u32 i = 1; i < pos.size( ); ++i )
@@ -222,7 +219,6 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	local_to_world.c.xyz( ) = pos[0];
 	float4x4 world_to_local;
 	world_to_local.try_invert( local_to_world );
-	// 4 target lines are likely retail-compiled-out source.
 	wm_vertices_2d_buffer_type wm_vertices_2d( ALLOCA( pos.size( ) * sizeof( wm_vertex_2d ) ), pos.size( ) );
 
 	for ( u32 i = 0; i < pos.size( ); ++i )
@@ -328,7 +324,6 @@ void portal_sector_system::select_models(
 	selection.erase( selection.begin( ), selection.end( ) );
 	m_quads.clear( );
 
-
 	math::frustum f( mat_vp );
 	u32 const active_sector_id = m_structure->get_sector_id( *g_allocator, view_pos );
 	m_preventer->add_frustum( f, active_sector_id );
@@ -404,7 +399,6 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_points_for_frustum( points, next_sector_id ) )
 		return;
-
 
 	math::frustum const clip = create_frustum_from_four_points( view_pos, points, frustum.planes( )[4].plane );
 	m_preventer->add_frustum( clip, next_sector_id );
@@ -487,9 +481,7 @@ void portal_sector_system::process_portal_in_screen_space(
 	portal const& p = m_structure->get_portals( )[portal_id];
 	if ( ( p.get_plane( ).classify( view_pos ) > 0 ? p.get_sectors( )[1] : p.get_sectors( )[0] ) == sector_id )
 
-
 		return;
-
 
 	float3 points[4];
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
@@ -562,7 +554,6 @@ void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 	for ( portals_type::const_iterator i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
 	{
 		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
-		// 3 target lines are likely retail-compiled-out source.
 		float const radius = math::max( math::max( math::squared_length( i->get_points( )[0] - center ), math::squared_length( i->get_points( )[1] - center ) ), math::max( math::squared_length( i->get_points( )[2] - center ), math::squared_length( i->get_points( )[3] - center ) ) );
 		m_occlusion_bounds.push_back( float4( center, math::sqrt( radius ) ) );
 	}

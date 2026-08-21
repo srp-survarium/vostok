@@ -10,7 +10,6 @@ void effect_wet_surface::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x7bea30]
 	VOSTOK_UNREFERENCED_PARAMETER(config);
 
 	compiler.begin_technique();

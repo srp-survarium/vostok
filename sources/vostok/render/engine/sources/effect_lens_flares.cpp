@@ -11,7 +11,6 @@ void effect_lens_flares::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "lens_flares", NULL, "lens_flares", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

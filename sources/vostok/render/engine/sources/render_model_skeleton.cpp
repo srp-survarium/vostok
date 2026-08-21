@@ -10,9 +10,7 @@ skeleton_render_surface::skeleton_render_surface( )
 {
 	m_vertex_input_type=skeletal_4_bones_mesh_vertex_input_type;
 
-	// FUNCTION BODY[0x63b1a0]: 1
 	// <0x63b1ad>|0x00d|+0x007:'22'
-	// ******
 }
 
 skeleton_render_model::skeleton_render_model( )
@@ -22,10 +20,8 @@ skeleton_render_model::skeleton_render_model( )
 	m_prev_bones_matrices_shader_constant	=
 		backend::ref().register_constant_host( "prev_bones_matrices",  rc_float );
 
-	// FUNCTION BODY[0x63ae00]: 2
 	// <0x63ae2e>|0x02e|+0x05c:'27'
 	// <0x63ae8a>|0x08a|+0x05c:'28'
-	// ******
 }
 
 void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
@@ -39,7 +35,6 @@ void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
 		m.try_invert					( bind_matrix_inv );
 	}
 
-	// FUNCTION BODY[0x63aa10]: 8
 	// <0>
 	// <1>
 	// <0x63aa1f>|0x00f|+0x011:'35'
@@ -48,7 +43,6 @@ void skeleton_render_model::get_bind_pose( float4x4* matrices, u32 count ) const
 	// <0x63aa30>|0x020|+0x00e:'38'
 	// <0x63aa3e>|0x02e|+0x00e:'39'
 	// <0>
-	// ******
 }
 
 void skeleton_render_model::load_bones( memory::reader& bones_chunk )
@@ -74,9 +68,7 @@ void skeleton_render_model::load_bones( memory::reader& bones_chunk )
 	// LOCALS
 	// animation::frame 				frm
 	// float4x4 						frm_matrix
-	// ******
 
-	// FUNCTION BODY[0x63ac10]: 17
 	// <0x63ac16>|0x006|+0x00f:'45'
 	// <0>
 	// <0x63ac25>|0x015|+0x023:'47'
@@ -95,47 +87,36 @@ void skeleton_render_model::load_bones( memory::reader& bones_chunk )
 	// <0x63acdb>|0x0cb|+0x00a:'59'
 	// <0x63ace5>|0x0d5|+0x111:'60'
 	// <0>
-	// ******
 }
 
 void skeleton_render_model::update( vector< float4x4 > const& bones )
 {
-	// claude@NOTE: legacy iterated its own m_children vector; children live in the
-	// render_model base as the m_childs array in the shipped tree.
 	for( u8 i = 0; i < m_childs_count; ++i )
 	{
 		skeleton_render_surface* s = static_cast< skeleton_render_surface* >( m_childs[i] );
 		s->update	( bones );
 	}
 
-	// CALL SITE INFO
 	// <0x63a692> -> void < unknown >( vector< float4x4 > const& )
-	// ******
 
-	// FUNCTION BODY[0x63a670]: 5
 	// <0x63a671>|0x001|+0x00f:'66'
 	// <0>
 	// <0x63a680>|0x010|+0x00c:'68'
 	// <0x63a68c>|0x01c|+0x013:'69'
 	// <0>
-	// ******
 }
 
 skeleton_render_model_instance::skeleton_render_model_instance( )
 :m_surface_instances( NULL ),
 m_instances_count	( 0 )
 {
-	// FUNCTION BODY[0x63af90]
-	// ******
 }
 
 skeleton_render_model_instance::~skeleton_render_model_instance( )
 {
 	DELETE_ARRAY	( m_surface_instances );
 
-	// FUNCTION BODY[0x63aef0]: 1
 	// <0x63aefa>|0x00a|+0x01b:'80'
-	// ******
 }
 
 void skeleton_render_model_instance::assign_original( skeleton_render_model_ptr v )
@@ -187,12 +168,6 @@ void skeleton_render_model_instance::get_surfaces(
 {
 	// LOCALS
 	// u32 								i
-	// ******
-
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x629c02 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN208") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x629c02 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN209") })
-	// ******
 
 	list.reserve(list.size()+m_instances_count);
 
@@ -203,7 +178,6 @@ void skeleton_render_model_instance::get_surfaces(
 			list.push_back		( inst );
 	}
 
-	// FUNCTION BODY[0x63aa80]: 8
 	// <0x63aa87>|0x007|+0x033:'132'
 	// <0x63aaba>|0x03a|-0x012:'132'
 	// <0>
@@ -214,7 +188,6 @@ void skeleton_render_model_instance::get_surfaces(
 	// <0x63aade>|0x05e|+0x11a:'138'
 	// <0x63abf8>|0x178|-0x00a:'138'
 	// <0>
-	// ******
 }
 
 void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
@@ -222,15 +195,12 @@ void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_
 	R_ASSERT(surface_id<m_instances_count);
 	VOSTOK_UNREFERENCED_PARAMETER	( stats );
 
-	// FUNCTION BODY[0x63a6a0]: 2
 	// <0>
 	// <1>
-	// ******
 }
 
 void skeleton_render_model_instance::update( )
 {
-	// claude@NOTE: legacy opened with PIX_EVENT( skeleton_render_model_instance ) - dropped.
 	m_original->update		( m_bones_matrices );
 
 	for( u32 i = 0; i < m_instances_count; ++i )
@@ -253,9 +223,7 @@ void skeleton_render_model_instance::update( )
 
 	// LOCALS
 	// u32 								i
-	// ******
 
-	// FUNCTION BODY[0x63a7b0]: 21
 	// <0>
 	// <0x63a7c1>|0x011|+0x016:'151'
 	// <0>
@@ -279,7 +247,6 @@ void skeleton_render_model_instance::update( )
 	// <0>
 	// <1>
 	// <2>
-	// ******
 }
 
 void skeleton_render_model_instance::set_constants( )
@@ -304,23 +271,17 @@ void skeleton_render_model_instance::update_render_matrices( float4x4 const* mat
 
 bool skeleton_render_model_instance::get_locator( pcstr locator_name, model_locator_item& result ) const
 {
-	// CALL SITE INFO
 	// <0x63a6bb> -> bool < unknown >( pcstr, model_locator_item& ) const
-	// ******
 
 	return m_original->get_locator( locator_name, result );
 
-	// FUNCTION BODY[0x63a6b0]: 0
-	// ******
 }
 
 void skeleton_render_model_instance::get_bind_pose( float4x4* matrices, u32 count ) const
 {
 	m_original->get_bind_pose( matrices, count );
 
-	// FUNCTION BODY[0x63aa60]: 1
 	// <0x63aa60>|0x000|+0x015:'202'
-	// ******
 }
 
 } // namespace render

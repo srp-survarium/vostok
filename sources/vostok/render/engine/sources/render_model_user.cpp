@@ -47,14 +47,12 @@ void user_render_surface::material_ready(
 	char*							material_name
 )
 {
-	// FUNCTION BODY[0x632c90]: 6
 	// <0x632c94>|0x004|+0x012:'30'
 	// <0>
 	// <0x632ca6>|0x016|+0x013:'32'
 	// <0x632cb9>|0x029|+0x05c:'33'
 	// <0>
 	// <0x632d15>|0x085|+0x019:'35'
-	// ******
 	DELETE						( cook_data );
 
 	if (data.is_successful())
@@ -65,19 +63,15 @@ void user_render_surface::material_ready(
 
 void user_render_model_instance::assign_surface( user_render_surface* surface )
 {
-	// FUNCTION BODY[0x632c10]: 5
 	// <0x632c10>|0x000|+0x006:'40'
 	// <0x632c16>|0x006|+0x006:'41'
 	// <0x632c1c>|0x00c|+0x00c:'42'
 	// <0x632c28>|0x018|+0x006:'43'
 	// <0x632c2e>|0x01e|+0x00a:'44'
-	// ******
 	m_surface							= surface;
 	m_surface_instance.m_render_surface = surface;
 	m_surface_instance.m_transform		= &m_transform;
 	m_surface_instance.m_parent			= this;
-	// claude@NOTE: legacy set m_surface_instance.m_visible = true; canonical replaced the bool
-	// with m_flags.
 	m_surface_instance.m_flags			= visible_flag;
 }
 
@@ -90,24 +84,17 @@ void user_render_model_instance::get_surfaces(
 	u32										surface_flags
 )
 {
-	// FUNCTION BODY[0x632c50]: 2
 	// <0>
 	// <0x632c52>|0x002|+0x021:'50'
 	// <0x632c73>|0x023|-0x004:'50'
 	// <0x632c6f>|0x01f|+0x014:'51'
-	// ******
 	VOSTOK_UNREFERENCED_PARAMETERS	( mat_vp, view_pos, visible_only, lod_id, surface_flags );
 	dest.push_back				( &m_surface_instance );
 }
 
 void user_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
 {
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x621c40 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
-	// ******
 
-	// FUNCTION BODY[0x632c40]
-	// ******
 	VOSTOK_UNREFERENCED_PARAMETER	( stats );
 	R_ASSERT		( surface_id==0 );
 	NOT_IMPLEMENTED();
@@ -122,9 +109,7 @@ void user_render_surface_editable::load_from_chunk_data( memory::chunk_reader& c
 	// res_declaration_ptr 				decl
 	// fixed_string< 256 > 				material_name
 	// untyped_buffer_ptr 				ib
-	// ******
 
-	// FUNCTION BODY[0x634030]: 57
 	// <0>
 	// <0x63403c>|0x00c|+0x00a:'78'
 	// <0>
@@ -182,7 +167,6 @@ void user_render_surface_editable::load_from_chunk_data( memory::chunk_reader& c
 	// <11>
 	// <12>
 	// <0x6342b1>|0x281|+0x0c2:'133'
-	// ******
 	m_vertex_input_type			= render::null_vertex_input_type;
 	m_aabbox.min				= float3(-10.0f, -10.0f, -10.0f);
 	m_aabbox.max				= float3(10.0f, 10.0f, 10.0f);
@@ -191,7 +175,6 @@ void user_render_surface_editable::load_from_chunk_data( memory::chunk_reader& c
 	fixed_string<256> material_name	= reader.r_string();
 
 	reader						= chunk.open_reader( model_chunk_vertices);
-
 
 	// The visuals are create with dynamic usage temporary.
 	bool dynamic		= true;
@@ -263,9 +246,7 @@ void user_render_surface_wire::load_from_chunk_data( memory::chunk_reader& chunk
 	// float3 							to_next
 	// float3 							direction
 	// u32 								vertex_index
-	// ******
 
-	// FUNCTION BODY[0x632d40]: 129
 	// <0>
 	// <1>
 	// <0x632d5d>|0x01d|+0x021:'158'
@@ -400,7 +381,6 @@ void user_render_surface_wire::load_from_chunk_data( memory::chunk_reader& chunk
 	// <11>
 	// <12>
 	// <0x633eef>|0x11af|+0x0c5:'284'
-	// ******
 	m_vertex_input_type					= render::wires_vertex_input_type;
 
 	memory::reader reader				= chunk.open_reader( model_texture);

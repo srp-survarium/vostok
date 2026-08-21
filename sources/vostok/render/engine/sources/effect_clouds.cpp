@@ -13,7 +13,6 @@ void effect_clouds::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER(config);
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("clouds", NULL, "clouds", shader_configuration(), NULL);
 			compiler.set_depth(true, false);

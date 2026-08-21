@@ -16,14 +16,6 @@
 namespace vostok {
 namespace render {
 
-
-
-
-
-
-
-
-
 stage_apply_distortion::stage_apply_distortion( renderer* in_renderer, renderer_context* context ) : stage( in_renderer, context )
 {
 	effect_manager::ref( ).create_effect<effect_apply_distortion>( &m_sh_apply_distortion );
@@ -42,7 +34,6 @@ bool stage_apply_distortion::is_effects_ready( ) const
 void stage_apply_distortion::execute( )
 {
 
-
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -52,8 +43,6 @@ void stage_apply_distortion::execute( )
 		return;
 	}
 
-
-
 	m_sh_apply_distortion->apply( effect_apply_distortion::apply_distortion, 0 );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 
@@ -61,8 +50,6 @@ void stage_apply_distortion::execute( )
 
 	m_sh_apply_distortion->apply( effect_apply_distortion::copy_result, 0 );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_present ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
-
-
 
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );

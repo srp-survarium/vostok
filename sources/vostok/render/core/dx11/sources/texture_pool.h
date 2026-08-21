@@ -39,9 +39,6 @@ public:
 		  m_mips( mips ),
 		  m_memory_usage( 0 )
 	{
-		// claude@NOTE: legacy create_texture2d_impl took 6 arguments; the
-		// canonical one is 8-arg, so array_size/use_for_render_target are
-		// spelled out with their legacy defaults.
 		ASSERT( count > 0 );
 
 		m_textures.reserve( count );

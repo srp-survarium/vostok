@@ -52,9 +52,7 @@ class shader_constant_binding;
 class shader_constant_buffer;
 class shader_constant_host;
 class shader_constant_table;
-// claude@NOTE: shader_include_getter is a struct (see core/shader_include_getter.h);
-// the class-key is part of the MSVC mangling, and the target spells it
-// PAUshader_include_getter, so the forward declaration must say struct.
+// Target mangling requires a struct forward declaration.
 struct shader_include_getter;
 class state_descriptor;
 class texture_slot;
@@ -131,7 +129,6 @@ public:
 
 		bool operator<( shader_name_config_pair const& other ) const
 		{
-			// FUNCTION BODY[0x124800]
 			int const comparison = std::strcmp( name, other.name );
 			return comparison < 0
 				|| (comparison == 0
@@ -156,7 +153,6 @@ public:
 			resource_type const* const right
 		) const
 		{
-			// FUNCTION BODY[0x126aa0] for res_signature
 			return *left < *right;
 		}
 	};
@@ -168,7 +164,6 @@ public:
 			resource_type const* const right
 		) const
 		{
-			// FUNCTION BODY[0x126b70] for res_geometry
 			return left->compare( *right ) < 0;
 		}
 
@@ -499,11 +494,7 @@ private:
 	);
 	void release_impl( res_texture const* texture );
 
-	// claude@NOTE: the target instantiates create_xs_hw_impl/release_impl for vs/gs/ps from
-	// ONE template, so the per-shader registry must come from a helper - and the PDB's member
-	// list for resource_manager records no such accessor, which rules out an ordinary member
-	// (an inlined one still shows up there, e.g. tick/copy3D) and leaves a member TEMPLATE.
-	// The name is not recoverable from the binary.
+	// One template selects the per-shader registry for all three shader types.
 	template < typename shader_data >
 	map<shader_name_config_pair, res_xs_hw<shader_data>*>& xs_hw_registry( );
 	template < typename shader_data >

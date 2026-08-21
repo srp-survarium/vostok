@@ -134,9 +134,7 @@ class renderer : public boost::noncopyable {
 	typedef fixed_vector< stage*, 29 > stages_type;
 	typedef frame_histogram_info_list fps_historgram_type;
 
-	// claude@NOTE: world::clear_resources reads m_renderer_context directly
-	// (m_renderer->m_renderer_context->clear_resources() inlined at 0x655631);
-	// the PDB records no accessor on renderer, so the original granted friendship.
+	// world::clear_resources accesses the renderer context directly.
 	friend class engine::world;
 
 public:

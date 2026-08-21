@@ -28,7 +28,6 @@ VertexFormatPairs	VertexFormatList[] =
 
 DXGI_FORMAT ConvertVertexFormat( D3DDECLTYPE dx9FMT )
 {
-	// FUNCTION BODY[0x6e7a10]
 	int arrayLength = sizeof(VertexFormatList)/sizeof(VertexFormatList[0]);
 	for (int i=0; i<arrayLength; ++i)
 	{
@@ -60,7 +59,6 @@ VertexSemanticPairs	VertexSemanticList[] =
 
 pcstr ConvertSemantic( D3DDECLUSAGE Semantic )
 {
-	// FUNCTION BODY[0x6e79f0]
 	int arrayLength = sizeof(VertexSemanticList)/sizeof(VertexSemanticList[0]);
 	for (int i=0; i<arrayLength; ++i)
 	{
@@ -80,7 +78,6 @@ void convert_vertex_declaration(
 	vector<D3D11_INPUT_ELEMENT_DESC>& declOut
 )
 {
-	// FUNCTION BODY[0x6e7a30]
 	int iDeclSize = declIn.size()-1;
 	declOut.resize(iDeclSize);
 

@@ -22,7 +22,6 @@ speedtree_tree_component_billboard::speedtree_tree_component_billboard( speedtre
 	speedtree_tree_component( parent ),
 	m_is_init( false )
 {
-	// FUNCTION BODY[0x5f5f70]
 }
 
 void speedtree_tree_component_billboard::init(
@@ -30,7 +29,6 @@ void speedtree_tree_component_billboard::init(
 	SpeedTree::CArray<SpeedTree::CInstance, 1> const& instances_of_tree
 )
 {
-	// FUNCTION BODY[0x5f55e0]
 	ref_declaration decl				= resource_manager::ref().create_declaration( layout, array_size( layout ) );
 
 	render::vector<u16>					total_indices;
@@ -90,20 +88,15 @@ void speedtree_tree_component_billboard::init(
 
 void speedtree_tree_component_billboard::set_material( material_ptr mtl_ptr )
 {
-	// FUNCTION BODY[0x5f55b0]
-	// claude@NOTE: legacy body was fully commented out (initialize_material_effects era).
 	VOSTOK_UNREFERENCED_PARAMETER	( mtl_ptr );
 }
 
 void speedtree_tree_component_billboard::set_default_material( )
 {
-	// FUNCTION BODY[0x5f5590]
-	//m_material_effects = material::nomaterial_material(speedtree_billboard_vertex_input_type);
 }
 
 void speedtree_tree_component_billboard::render( lod_entry const* lod, renderer_context* context )
 {
-	// FUNCTION BODY[0x5f55a0]
 	VOSTOK_UNREFERENCED_PARAMETERS(lod, context);
 }
 

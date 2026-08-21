@@ -10,9 +10,7 @@ void effect_shadow_map::compile(
 	custom_config_value const&
 )
 {
-	// 4 target lines are likely retail-compiled-out source.
 	shader_configuration configuration;
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "vertex_base_shadow", NULL, "depth_accumulate", configuration, NULL );
@@ -22,7 +20,6 @@ void effect_shadow_map::compile(
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "vertex_base_shadow_batched", NULL, "depth_accumulate_batched", configuration, NULL );

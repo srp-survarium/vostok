@@ -54,7 +54,6 @@ void effect_gstage_default_materials::compile(
 	{
 		bool const first_lod = lod_index == 0;
 		shader_configuration configuration;
-		// 3 target lines are likely retail-compiled-out source.
 		configuration.use_diffuse_texture = bool(custom_config["use_tdiffuse"]);
 		configuration.use_normal_texture = first_lod && bool(custom_config["use_nmap"]);
 		configuration.use_parallax = first_lod && bool(custom_config["use_parallax"]);
@@ -87,9 +86,7 @@ void effect_gstage_default_materials::compile(
 
 		configuration.use_fuzziness = custom_config.value_exists("use_fuzziness") && bool(custom_config["use_fuzziness"]);
 
-
 		configuration.use_diffuse_masked_color_by_hue = configuration.use_diffuse_masked_color && (!custom_config.value_exists("use_constant_mask_color") || !bool(custom_config["use_constant_mask_color"]));
-
 
 		configuration.use_normal_waves = custom_config.value_exists("use_normal_waves") && bool(custom_config["use_normal_waves"]);
 
@@ -98,7 +95,6 @@ void effect_gstage_default_materials::compile(
 		if (custom_config.value_exists("use_variation_mask") && custom_config.value_exists("texture_variation_mask"))
 
 			configuration.use_variation_mask = bool(custom_config["use_variation_mask"]) && !strings::equal(pcstr(custom_config["texture_variation_mask"]), "");
-		// 4 target lines are likely retail-compiled-out source.
 		if (custom_config.value_exists("wind_motion"))
 		{
 			configuration.wind_motion = s32(custom_config["wind_motion"]);
@@ -128,7 +124,6 @@ void effect_gstage_default_materials::compile(
 		);
 
 		compiler.set_depth(true, first_lod);
-		// 4 target lines are likely retail-compiled-out source.
 		if (custom_config.value_exists("constant_tile_u") && custom_config.value_exists("constant_tile_v"))
 			compiler.set_constant("constant_tile_uv", float2(float(custom_config["constant_tile_u"]), float(custom_config["constant_tile_v"])));
 		else
@@ -140,7 +135,6 @@ void effect_gstage_default_materials::compile(
 			alpha_ref = float(custom_config["alpha_ref"]);
 
 		compiler.set_constant("alpha_ref_parameter", alpha_ref);
-		// 5 target lines are likely retail-compiled-out source.
 		if (configuration.use_fuzziness &&
 			custom_config.value_exists("fuzziness_saturation") &&
 			custom_config.value_exists("fuzziness_multiplier") &&
@@ -159,7 +153,6 @@ void effect_gstage_default_materials::compile(
 			custom_config.value_exists("texture_transparency"))
 			compiler.set_texture("t_transparency", pcstr(custom_config["texture_transparency"]), 0, false, u32(-1));
 
-
 		if (configuration.use_diffuse_masked_color)
 		{
 			compiler.set_texture("t_diffuse_color_mask", shared_string(pcstr(custom_config["use_diffuse_color_mask_texture"])), is_static_mesh, debug_last_mips);
@@ -170,7 +163,6 @@ void effect_gstage_default_materials::compile(
 
 				math::sine_cosine sc(angle);
 				float3 cvec(0.0f, 0.0f, 1.0f);
-
 
 				cvec = math::normalize_safe(float3(sc.cosine, 1.0f - sc.cosine - sc.sine, 1.0f - sc.cosine + sc.sine));
 
@@ -186,7 +178,6 @@ void effect_gstage_default_materials::compile(
 					compiler.set_constant("constant_diffuse_mask_color", float3(0.0f, 0.0f, 0.0f));
 			}
 		}
-		// 4 target lines are likely retail-compiled-out source.
 		if (configuration.use_normal_waves && custom_config.value_exists("normal_waves_moving_speed") && custom_config.value_exists("normal_waves_intensity") && custom_config.value_exists("normal_waves_tile"))
 		{
 			compiler.set_texture("t_normal_waves", shared_string(pcstr(custom_config["normal_waves_texture"])), is_static_mesh, debug_last_mips);
@@ -194,7 +185,6 @@ void effect_gstage_default_materials::compile(
 		}
 
 		compiler.set_constant("smoothness_multiplier", 1.0f);
-		// 4 target lines are likely retail-compiled-out source.
 		if (configuration.use_diffuse_texture)
 			compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, is_static_mesh, debug_last_mips);
 
@@ -264,7 +254,6 @@ void effect_gstage_default_materials::compile(
 			if (custom_config.value_exists("texture_vertex_blended_diffuse"))
 				compiler.set_texture("t_vertex_blended_diffuse", shared_string(pcstr(custom_config["texture_vertex_blended_diffuse"])), is_static_mesh, debug_last_mips);
 		}
-		// 6 target lines are likely retail-compiled-out source.
 		if (configuration.use_vertex_blended_normal)
 		{
 			if (custom_config.value_exists("texture_vertex_blended_normal"))
@@ -272,7 +261,6 @@ void effect_gstage_default_materials::compile(
 		}
 
 		float4 solid_color_specular = float4(custom_config["constant_diffuse"]);
-		// 3 target lines are likely retail-compiled-out source.
 		solid_color_specular.w = 0.0f;
 
 		if (configuration.use_reflection)
@@ -280,7 +268,6 @@ void effect_gstage_default_materials::compile(
 			pcstr texture_cubemap = pcstr(custom_config["texture_cubemap"]);
 
 			compiler.set_texture("t_cubemap", strings::equal(texture_cubemap, "") ? "cubemap/reflect_blue" : texture_cubemap, 0, false, u32(-1));
-
 
 			if (configuration.use_reflection_mask)
 			{
@@ -351,7 +338,6 @@ void effect_gstage_default_materials::compile(
 			if (custom_config.value_exists("constant_ditail_texture_tile"))
 				compiler.set_constant("ditail_texture_tile", float(custom_config["constant_ditail_texture_tile"]));
 		}
-		// 27 target lines are likely retail-compiled-out source.
 		if (configuration.use_parallax)
 		{
 			if (custom_config.value_exists("constant_parallax_scale"))
@@ -359,7 +345,6 @@ void effect_gstage_default_materials::compile(
 
 			compiler.set_texture("t_height_map", shared_string(pcstr(custom_config["texture_bump"])), is_static_mesh, debug_last_mips);
 		}
-		// 14 target lines are likely retail-compiled-out source.
 		float4 specular_intensity_ranges(0.0f, 1.0f, 0.0f, 0.0f);
 
 		if (configuration.use_specular_intensity_texture)
@@ -378,11 +363,9 @@ void effect_gstage_default_materials::compile(
 		if (custom_config.value_exists("constant_specular_color") && custom_config.value_exists("constant_specular_color_multiplier"))
 			compiler.set_constant("specular_color_parameter", float4(custom_config["constant_specular_color"]).xyz() * float3(custom_config["constant_specular_color_multiplier"]));
 
-
 		compiler.set_constant("solid_color_specular", solid_color_specular);
 
 		float4 solid_material_params(0.0f, 0.0f, 0.0f, 0.0f);
-		// 4 target lines are likely retail-compiled-out source.
 		float4 specular_fresnel_roughness_parameters(0.0f, 0.0f, 0.0f, 0.0f);
 
 		if (configuration.use_roughness_texture)
@@ -412,13 +395,11 @@ void effect_gstage_default_materials::compile(
 				specular_fresnel_roughness_parameters.x = float(custom_config["constant_fresnel"]);
 		}
 		compiler.set_constant("specular_fresnel_roughness_parameters", specular_fresnel_roughness_parameters);
-		// 3 target lines are likely retail-compiled-out source.
 		if (configuration.use_translucency_texture)
 		{
 			compiler.set_texture("t_translucency", shared_string(pcstr(custom_config["texture_translucency"])), is_static_mesh, debug_last_mips);
 			solid_material_params.z = float(custom_config["constant_translucency"]);
 		}
-
 
 		if (configuration.use_variation_mask)
 		{
@@ -440,7 +421,6 @@ void effect_gstage_default_materials::compile(
 			else
 				compiler.set_texture("t_variation_mask", "", 0, false, u32(-1));
 		}
-		// 6 target lines are likely retail-compiled-out source.
 		if (configuration.use_uv_scrolling)
 		{
 			float4 uv_scrolling_parameters;
@@ -455,7 +435,6 @@ void effect_gstage_default_materials::compile(
 		compiler.set_constant("solid_material_params", solid_material_params);
 
 		compile_end(compiler);
-	// 5 target lines are likely retail-compiled-out source.
 	}
 	// fill rsm backend
 	{

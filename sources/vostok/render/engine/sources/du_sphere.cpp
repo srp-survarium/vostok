@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "du_sphere.h"
 
-
 using vostok::math::float3;
 
 float3 du_sphere_vertices[DU_SPHERE_NUMVERTEX]= {

@@ -201,7 +201,6 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 
 	new_rt( rt_generic_0, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
 	new_rt( rt_generic_1, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
-	// 7 target lines are likely retail-compiled-out source.
 	new_rt( rt_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_previous_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_accumulator_diffuse, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );

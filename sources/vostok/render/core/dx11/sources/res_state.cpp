@@ -8,7 +8,6 @@ namespace render {
 
 res_state::~res_state()
 {
-	// FUNCTION BODY[0x559750]
 	// m_state is released in resource_manager cache.
 }
 
@@ -22,12 +21,10 @@ m_blend_state				( blend_state),
 m_stencil_ref				( stencil_ref),
 m_is_registered				( false )
 {
-	// FUNCTION BODY[0x559760]
 }
 
 void res_state::apply() const
 {
-	// FUNCTION BODY[0x559790]
 	backend::ref().set_rasterizer_state		( m_rasterizer_state);
 	backend::ref().set_depth_stencil_state	( m_depth_stencil_state);
 	backend::ref().set_blend_state			( m_blend_state);
@@ -36,7 +33,6 @@ void res_state::apply() const
 
 void res_state::destroy_impl	() const
 {
-	// FUNCTION BODY[0x5597f0]
 	resource_manager::ref().release( this );
 }
 

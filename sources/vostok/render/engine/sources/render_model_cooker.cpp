@@ -459,7 +459,7 @@ void render_model_cook::on_model_settings_loaded(
 }
 
 // verts+indices
-// Retail line records preserve source excluded from the Master Gold configuration.
+// Preserve target line metadata.
 void render_model_cook::on_subresources_loaded(
 	resources::queries_result& data,
 	cook_intermediate_data* cook_data
@@ -863,7 +863,6 @@ void render_model_cook::finish_model_creation(
 			}
 		}
 
-
 		if ( !material_result )
 		{
 			surface->set_default_material( );
@@ -874,7 +873,6 @@ void render_model_cook::finish_model_creation(
 		surfaces[model_index] = surface;
 	}
 
-
 	model_lods_descriptor* lods_descriptor = 0; arrange_surfaces_by_lod( cook_data, lods_descriptor );
 	cook_data->result_model->set_children(surfaces, cook_data->m_num_render_models, lods_descriptor);
 
@@ -884,7 +882,6 @@ void render_model_cook::finish_model_creation(
 	DELETE_ARRAY( cook_data->assets );
 	DELETE( cook_data );
 }
-
 
 void render_model_cook::delete_resource( resources::resource_base* resource )
 {

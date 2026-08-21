@@ -13,13 +13,11 @@ void effect_eye_adaptation::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "eye_adaptation", NULL, "eye_adaptation", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "eye_adaptation", NULL, "eye_adaptation_copy", shader_configuration( ), NULL );

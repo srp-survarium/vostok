@@ -14,19 +14,16 @@ void effect_fstage_default_materials::compile(
 )
 {
 	shader_configuration configuration;
-	// 3 target lines are likely retail-compiled-out source.
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 	configuration.use_soft_edges = config.value_exists("use_soft_edges") ? bool(config["use_soft_edges"]) : false;
 
 	compile_begin("vertex_base", "forward_base", compiler, &configuration, config);
-		// 6 target lines are likely retail-compiled-out source.
 		compiler.set_texture("t_position", "$user$position", 0, false, u32(-1));
 		compiler.set_texture("t_particle_lighting", "$user$particle_lighting", 0, false, u32(-1));
 
 	float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
 	float   solid_transparency   = 1.0f;
-	// 2 target lines are likely retail-compiled-out source.
 	if( configuration.use_emissive==2)
 		{
 			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
@@ -45,7 +42,6 @@ void effect_fstage_default_materials::compile(
 		compiler.set_constant("constant_tile_uv", config.value_exists("constant_tile_u") && config.value_exists("constant_tile_v") ?
 				float2(float(config["constant_tile_u"]), float(config["constant_tile_v"])) :
 				float2(1.0f, 1.0f));
-		// 10 target lines are likely retail-compiled-out source.
 		compiler.set_cull_mode(D3D_CULL_NONE);
 
 	compile_end(compiler);

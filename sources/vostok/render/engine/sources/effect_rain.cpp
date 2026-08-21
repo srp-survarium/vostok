@@ -11,7 +11,6 @@ void effect_rain::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "rain", NULL, "rain", shader_configuration( ), NULL );
 

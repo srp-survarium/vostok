@@ -96,7 +96,6 @@ inline bool operator<(
 	shader_configuration const& right
 )
 {
-	// FUNCTION BODY[0x124630]
 	return left.configuration[0] < right.configuration[0]
 		|| (left.configuration[0] == right.configuration[0]
 			&& left.configuration[1] < right.configuration[1]);

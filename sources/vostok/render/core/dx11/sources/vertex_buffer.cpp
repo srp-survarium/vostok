@@ -9,7 +9,6 @@ int	rs_dvb_size = 512+1024;
 
 void vertex_buffer::unlock()
 {
-	// FUNCTION BODY[0x739d40]
 	m_position += m_lock_count*m_lock_stride;
 
 	ASSERT(m_buffer);
@@ -20,7 +19,6 @@ void vertex_buffer::unlock()
 // This need to be reviewed
 void* vertex_buffer::lock(u32 v_count, u32 v_stride, u32& v_offset)
 {
-	// FUNCTION BODY[0x739d70]
 	m_lock_count	= v_count;
 	m_lock_stride	= v_stride;
 
@@ -65,7 +63,6 @@ vertex_buffer::vertex_buffer		( u32 const size ) :
 	m_lock_count	( 0 ),
 	m_lock_stride	( 0 )
 {
-	// FUNCTION BODY[0x739e00]
 	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_vertex, true, false );
 	R_ASSERT		( m_buffer );
 	LOG_INFO		(" vertex buffer created: %dKb", m_size/1024);

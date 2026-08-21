@@ -213,7 +213,6 @@ u32 s_format_4x4_pixel[100] =
 
 u32 get_format_4x4_pixel_size( DXGI_FORMAT format )
 {
-	// FUNCTION BODY[0x559120]
 	return s_format_4x4_pixel[(u32)format];
 }
 
@@ -225,7 +224,6 @@ u32 calc_surface_size(
 	u32& row_pitch
 )
 {
-	// FUNCTION BODY[0x559130]
 	if( format >= DXGI_FORMAT_BC1_TYPELESS && format <= DXGI_FORMAT_BC5_SNORM )
 	{
 		u32 width_ceil	= math::max( width/4, 1u);

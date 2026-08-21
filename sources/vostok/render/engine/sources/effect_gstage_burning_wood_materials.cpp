@@ -12,7 +12,6 @@ void effect_gstage_burning_wood_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x5e9c80]
 }
 
 } // namespace render

@@ -43,7 +43,6 @@ public:
 
 	res_input_layout* get( res_signature const* signature )
 	{
-		// FUNCTION BODY[0x129210]
 		vector<signature_layout_pair>::iterator found = std::lower_bound(
 			vs_to_layout.begin( ), vs_to_layout.end( ), signature
 		);

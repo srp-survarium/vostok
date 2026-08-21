@@ -11,7 +11,6 @@ void effect_sky_sphere_default_materials::compile(
 	custom_config_value const& config
 )
 {
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("vertex_base", NULL, "sky_sphere_preview", shader_configuration(), NULL);
 			compiler.set_texture("t_sky_sphere", pcstr(config["sky_texture"]), 0, false, u32(-1));

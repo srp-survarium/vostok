@@ -19,7 +19,6 @@ bool calc_lists_diff_range( list_type const& first, list_type const& second, u32
 		if( *it != *end_oth)
 			break;
 
-
 	if( first.size() != second.size())
 	{
 		max = math::max( first.size(), second.size());

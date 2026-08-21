@@ -12,13 +12,10 @@ void effect_light_mask::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7be000]
 	VOSTOK_UNREFERENCED_PARAMETER	( config);
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass	("accum_mask", NULL, "dumb", shader_configuration(), NULL);
  			compiler.set_depth			( true, false, D3D_COMPARISON_LESS_EQUAL);
-
 
 			compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT);
 

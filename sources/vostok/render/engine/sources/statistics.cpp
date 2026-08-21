@@ -30,12 +30,10 @@ statistics_group::statistics_group( pcstr group_name ) :
 
 statistics_group::~statistics_group( )
 {
-	// FUNCTION BODY[0x6387d0]
 }
 
 void statistics_group::start( )
 {
-	// FUNCTION BODY[0x6387a0]
 	for (statistics_base* it = first_statistics; it != 0; it = it->m_next)
 	{
 		it->start();
@@ -53,7 +51,6 @@ static void push_point(
 	float v
 )
 {
-	// FUNCTION BODY[0x638870]
 	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
 	vertex_item.m_position.set				(x, y, z, 1);
 	vertex_item.m_uv.set					(u, v);
@@ -73,7 +70,6 @@ void make_ui_vertices(
 	u32 end_selection_index
 )
 {
-	// FUNCTION BODY[0x638910]
 	using namespace vostok::math;
 
 	float2 pos_rt			(0, 0);
@@ -138,7 +134,6 @@ statistics_base::statistics_base( statistics_group* group, pcstr name ) :
 
 statistics_base::~statistics_base( )
 {
-	// FUNCTION BODY[0x6387c0]
 }
 
 void statistics_float::print( fs_new::virtual_path_string& out_result )
@@ -191,7 +186,6 @@ void statistics_cpu_gpu::print( fs_new::virtual_path_string& out_result )
 
 void statistics_cpu_gpu::start( )
 {
-	// FUNCTION BODY[0x638770]
 	cpu_time.start();
 	gpu_time.start();
 }
@@ -201,7 +195,6 @@ gbuffer_statistics_group::gbuffer_statistics_group( pcstr group_name ) :
 	pre_pass_execute_time( this, "pre pass execute time" ),
 	material_pass_execute_time( this, "material pass execute time" )
 {
-	// FUNCTION BODY[0x63a4b0]
 }
 
 visibility_statistics_group::visibility_statistics_group( pcstr group_name ) :
@@ -229,7 +222,6 @@ visibility_statistics_group::visibility_statistics_group( pcstr group_name ) :
 	num_occlusion_culled_portals( this, "num occlusion culled portals" ),
 	num_occlusion_culled_ambient_volumes( this, "num occlusion culled ambient volumes" )
 {
-	// FUNCTION BODY[0x6392d0]
 }
 
 lights_statistics_group::lights_statistics_group( pcstr group_name ) :
@@ -238,7 +230,6 @@ lights_statistics_group::lights_statistics_group( pcstr group_name ) :
 	forward_lighting_time( this, "forward lighting time" ),
 	shadow_map_time( this, "shadow map time" )
 {
-	// FUNCTION BODY[0x63a390]
 }
 
 particles_statistics_group::particles_statistics_group( pcstr group_name ) :
@@ -249,7 +240,6 @@ particles_statistics_group::particles_statistics_group( pcstr group_name ) :
 	meshes_execute_time( this, "meshes execute time" ),
 	num_total_instances( this, "num total instances" )
 {
-	// FUNCTION BODY[0x63a210]
 }
 
 cascaded_sun_shadow_statistics_group::cascaded_sun_shadow_statistics_group( pcstr group_name ) :
@@ -266,21 +256,18 @@ cascaded_sun_shadow_statistics_group::cascaded_sun_shadow_statistics_group( pcst
 	num_clipped_dips( this, "num clipped dips" ),
 	num_triangles( this, "num triangles" )
 {
-	// FUNCTION BODY[0x63a000]
 }
 
 postprocess_statistics_group::postprocess_statistics_group( pcstr group_name ) :
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// FUNCTION BODY[0x639f70]
 }
 
 forward_stage_statistics_group::forward_stage_statistics_group( pcstr group_name ) :
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// FUNCTION BODY[0x639ee0]
 }
 
 general_statistics_group::general_statistics_group( pcstr group_name ) :
@@ -292,7 +279,6 @@ general_statistics_group::general_statistics_group( pcstr group_name ) :
 	cpu_fps( this, "cpu fps" ),
 	render_only_time( this, "render only time" )
 {
-	// FUNCTION BODY[0x639dd0]
 }
 
 speedtree_statistics_group::speedtree_statistics_group( pcstr group_name ) :
@@ -301,7 +287,6 @@ speedtree_statistics_group::speedtree_statistics_group( pcstr group_name ) :
 	culling_time( this, "culling time" ),
 	num_instances( this, "num instances" )
 {
-	// FUNCTION BODY[0x639d10]
 }
 
 forward_decals_statistics_group::forward_decals_statistics_group( pcstr group_name ) :
@@ -310,7 +295,6 @@ forward_decals_statistics_group::forward_decals_statistics_group( pcstr group_na
 	num_decals( this, "num decals" ),
 	num_decal_draw_calls( this, "num decal draw calls" )
 {
-	// FUNCTION BODY[0x639240]
 }
 
 deferred_decals_statistics_group::deferred_decals_statistics_group( pcstr group_name ) :
@@ -319,7 +303,6 @@ deferred_decals_statistics_group::deferred_decals_statistics_group( pcstr group_
 	num_decals( this, "num decals" ),
 	num_decal_draw_calls( this, "num decal draw calls" )
 {
-	// FUNCTION BODY[0x6391b0]
 }
 
 distortion_pass_statistics_group::distortion_pass_statistics_group( pcstr group_name ) :
@@ -327,7 +310,6 @@ distortion_pass_statistics_group::distortion_pass_statistics_group( pcstr group_
 	accumulate_time( this, "accumulate time" ),
 	apply_time( this, "apply time" )
 {
-	// FUNCTION BODY[0x639c30]
 }
 
 ssao_statistics_group::ssao_statistics_group( pcstr group_name ) :
@@ -335,14 +317,12 @@ ssao_statistics_group::ssao_statistics_group( pcstr group_name ) :
 	ssao_accumulate_time( this, "ssao accumulate time" ),
 	ssao_blurring_time( this, "ssao blurring time" )
 {
-	// FUNCTION BODY[0x639b50]
 }
 
 sky_statistics_group::sky_statistics_group( pcstr group_name ) :
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// FUNCTION BODY[0x639ac0]
 }
 
 lpv_statistics_group::lpv_statistics_group( pcstr group_name ) :
@@ -359,7 +339,6 @@ lpv_statistics_group::lpv_statistics_group( pcstr group_name ) :
 	num_dips_in_cascade_2( this, "num dips in cascade 2" ),
 	num_clipped_dips( this, "num clipped dips" )
 {
-	// FUNCTION BODY[0x639860]
 }
 
 grass_statistics_group::grass_statistics_group( pcstr group_name ) :
@@ -368,7 +347,6 @@ grass_statistics_group::grass_statistics_group( pcstr group_name ) :
 	num_rendered_patches( this, "num rendered patches" ),
 	num_visible_patches( this, "num visible patches" )
 {
-	// FUNCTION BODY[0x639120]
 }
 
 debug_statistics_group::debug_statistics_group( pcstr group_name ) :
@@ -420,7 +398,6 @@ statistics::statistics( ) :
 
 void statistics::start( )
 {
-	// FUNCTION BODY[0x6387e0]
 	for (statistics_group* it = first_group; it != 0; it = it->m_next)
 	{
 		it->start();
@@ -434,7 +411,6 @@ void statistics::start( )
 
 statistics::~statistics( )
 {
-	// FUNCTION BODY[0x638d70]
 }
 
 } // namespace render

@@ -19,7 +19,6 @@ static inline void process( processor & proc, bool value)
 
 void process( processor& proc, u32 value )
 {
-	// FUNCTION BODY[0x12f920]
 	proc.process_byte( (u8)((value) & 0xff));
 	proc.process_byte( (u8)((value>>8) & 0xff));
 	proc.process_byte( (u8)((value>>16) & 0xff));
@@ -40,7 +39,6 @@ static inline void process( processor & proc, float value)
 
 void reset( D3D11_RASTERIZER_DESC& desc )
 {
-	// FUNCTION BODY[0x558290]
 
 	ZeroMemory(&desc, sizeof(desc));
 	desc.FillMode				= D3D_FILL_SOLID;
@@ -61,7 +59,6 @@ void reset( D3D11_RASTERIZER_DESC& desc )
 
 void reset( D3D11_DEPTH_STENCIL_DESC& desc )
 {
-	// FUNCTION BODY[0x558240]
 
 	ZeroMemory(&desc, sizeof(desc));
 	desc.DepthEnable		= TRUE;
@@ -94,7 +91,6 @@ void reset( D3D11_DEPTH_STENCIL_DESC& desc )
 
 void reset( D3D11_BLEND_DESC& desc )
 {
-	// FUNCTION BODY[0x5581e0]
 	ZeroMemory(&desc, sizeof(desc));
 
 	desc.AlphaToCoverageEnable	= FALSE;
@@ -118,7 +114,6 @@ bool operator==(
 	D3D11_RASTERIZER_DESC const& desc2
 )
 {
-	// FUNCTION BODY[0x558170]
 
 	if (desc1.FillMode != desc2.FillMode) return false;
 	if (desc1.CullMode != desc2.CullMode) return false;
@@ -139,7 +134,6 @@ bool operator==(
 	D3D11_DEPTH_STENCIL_DESC const& desc2
 )
 {
-	// FUNCTION BODY[0x5580f0]
 
 	if ( desc1.DepthEnable != desc2.DepthEnable) return false;
 	if ( desc1.DepthWriteMask != desc2.DepthWriteMask) return false;
@@ -161,15 +155,11 @@ bool operator==(
 	return true;
 }
 
-// claude@NOTE: legacy carried a 4-iteration USE_DX11 "quick fix" variant;
-// USE_DX11 is not defined in this tree, so the shipped arm is the
-// 8-iteration RenderTarget form - verify the loop bound against 0x558070.
 bool operator==(
 	D3D11_BLEND_DESC const& desc1,
 	D3D11_BLEND_DESC const& desc2
 )
 {
-	// FUNCTION BODY[0x558070]
 	if ( desc1.AlphaToCoverageEnable != desc2.AlphaToCoverageEnable) return false;
 	if ( desc1.IndependentBlendEnable != desc2.IndependentBlendEnable) return false;
 
@@ -193,7 +183,6 @@ bool operator==(
 	D3D11_SAMPLER_DESC const& desc2
 )
 {
-	// FUNCTION BODY[0x557fd0]
 
 	if( desc1.Filter != desc2.Filter) return false;
 	if( desc1.AddressU != desc2.AddressU) return false;
@@ -215,7 +204,6 @@ bool operator==(
 
 u32 get_hash( D3D11_RASTERIZER_DESC const& desc )
 {
-	// FUNCTION BODY[0x5587a0]
 
 	crc::processor	crc_hash;
 
@@ -246,7 +234,6 @@ u32 get_hash( D3D11_RASTERIZER_DESC const& desc )
 
 u32 get_hash( D3D11_DEPTH_STENCIL_DESC const& desc )
 {
-	// FUNCTION BODY[0x5586e0]
 
 	crc::processor crc_hash;
 
@@ -272,7 +259,6 @@ u32 get_hash( D3D11_DEPTH_STENCIL_DESC const& desc )
 
 u32 get_hash( D3D11_BLEND_DESC const& desc )
 {
-	// FUNCTION BODY[0x5583d0]
 	crc::processor	crc_hash;
 
 	crc::process( crc_hash, desc.AlphaToCoverageEnable);
@@ -295,7 +281,6 @@ u32 get_hash( D3D11_BLEND_DESC const& desc )
 
 u32 get_hash( D3D11_SAMPLER_DESC const& desc )
 {
-	// FUNCTION BODY[0x5582e0]
 
 	crc::processor	crc_hash;
 

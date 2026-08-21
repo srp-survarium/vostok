@@ -6,19 +6,15 @@
 
 namespace vostok {
 namespace render {
-// 15 target lines are likely retail-compiled-out source.
 static_model_instance_cook::static_model_instance_cook( ) : resources::translate_query_cook( resources::static_model_instance_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
-// 3 target lines are likely retail-compiled-out source.
 void static_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
 
-
 	fs_new::virtual_path_string render_path;
 	render_path.assignf( "%s.model/render", parent.get_requested_path( ) );
-
 
 	u8 resource_count = 1;
 	if ( parent.user_data( ) )
@@ -36,14 +32,11 @@ void static_model_instance_cook::translate_query( resources::query_result_for_co
 	requests[0].id = resources::static_render_model_instance_class;
 	resources::user_data_variant const** user_data = (resources::user_data_variant const**)ALLOCA( sizeof(resources::user_data_variant const*) * resource_count );
 	memory::zero( user_data, sizeof(resources::user_data_variant const*) * resource_count );
-	// 5 target lines are likely retail-compiled-out source.
 	resources::user_data_variant sectors_environment_data;
 	resources::user_data_variant sound_environment_data;
 	if ( parent.user_data( ) )
 	{
 		static_model_instance_user_data model_user_data;
-		// 3 target lines are likely retail-compiled-out source.
-
 
 		parent.user_data( )->try_get( model_user_data );
 		if ( model_user_data.config->value_exists( "sectors" ) )
@@ -72,7 +65,6 @@ void static_model_instance_cook::translate_query( resources::query_result_for_co
 	);
 }
 
-
 void static_model_instance_cook::on_subresources_loaded( resources::queries_result& data, resources::query_result_for_cook* parent_query )
 {
 	if ( data.is_successful( ) )
@@ -90,18 +82,15 @@ void static_model_instance_cook::on_subresources_loaded( resources::queries_resu
 
 }
 
-
 void static_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
 	static_model_instance* instance = static_cast_checked< static_model_instance* >( resource );
 	DELETE( instance );
 }
-// 3 target lines are likely retail-compiled-out source.
 skeleton_model_instance_cook::skeleton_model_instance_cook( ) : resources::translate_query_cook( resources::skeleton_model_instance_class, reuse_false, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
-
 
 void skeleton_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
@@ -131,7 +120,6 @@ void skeleton_model_instance_cook::translate_query( resources::query_result_for_
 	);
 }
 
-
 void skeleton_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& result, skeleton_model_instance_cook_data* cook_data )
 {
 	if (!result.is_successful())
@@ -153,7 +141,6 @@ void skeleton_model_instance_cook::on_skeleton_config_loaded( resources::queries
 	);
 }
 
-
 void skeleton_model_instance_cook::on_skeleton_loaded( resources::queries_result& result, skeleton_model_instance_cook_data* cook_data )
 {
 	if (!result.is_successful())
@@ -171,7 +158,6 @@ void skeleton_model_instance_cook::on_skeleton_loaded( resources::queries_result
 		on_all_subresources_ready(cook_data);
 }
 
-
 void skeleton_model_instance_cook::on_render_model_loaded( resources::queries_result& result, skeleton_model_instance_cook_data* cook_data )
 {
 	if (!result.is_successful())
@@ -188,7 +174,6 @@ void skeleton_model_instance_cook::on_render_model_loaded( resources::queries_re
 	if (cook_data->skeleton_ready)
 		on_all_subresources_ready( cook_data );
 }
-
 
 void skeleton_model_instance_cook::on_all_subresources_ready( skeleton_model_instance_cook_data* cook_data )
 {
@@ -210,7 +195,6 @@ void skeleton_model_instance_cook::on_all_subresources_ready( skeleton_model_ins
 
 	DELETE(cook_data);
 }
-
 
 void skeleton_model_instance_cook::delete_resource( resources::resource_base* resource )
 {

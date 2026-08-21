@@ -7,7 +7,6 @@ namespace render {
 
 update_model_vertex_buffer_command::~update_model_vertex_buffer_command( )
 {
-	// FUNCTION BODY[0x757200]
 	fragments_type::iterator		it	= m_fragments.begin();
 	fragments_type::const_iterator	end	= m_fragments.end();
 
@@ -19,7 +18,6 @@ update_model_vertex_buffer_command::~update_model_vertex_buffer_command( )
 
 void update_model_vertex_buffer_command::execute( )
 {
-	// FUNCTION BODY[0x7571f0]
 	ASSERT								( m_object );
 	m_world.update_model_vertex_buffer	( m_object, m_fragments);
 }

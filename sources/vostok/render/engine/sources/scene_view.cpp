@@ -48,7 +48,6 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 	m_culling_bounds							( 0 ),
 	m_atmosphere_prev_targets_size				( u32( -1 ) )
 {
-	// FUNCTION BODY[0x638550]: 30
 	// <0>
 	// <1>
 	// <2>
@@ -79,7 +78,6 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 	// <7>
 	// <8>
 	// <9>
-	// ******
 	m_prev_frame_luminance_parameters	= math::float4(0.0f, 0.0f, 0.0f, 0.0f);
 	m_frame_luminance_parameters		= math::float4(0.0f, 0.0f, 0.0f, 0.0f);
 	memory::zero						( m_histogram_values );
@@ -87,7 +85,6 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 
  scene_view::~scene_view( )
 {
-	// FUNCTION BODY[0x6383b0]: 23
 	// <0>
 	// <1>
 	// <2>
@@ -111,28 +108,23 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 	// <20>
 	// <21>
 	// <22>
-	// ******
 }
 
 void scene_view::add_movie( survarium::flash_movie_resource_ptr& movie )
 {
-	// FUNCTION BODY[0x638350]: 4
 	// <0>
 	// <1>
 	// <0x638354>|0x004|+0x043:'120'
 	// <0x638397>|0x047|+0x015:'121'
-	// ******
 	m_flash_movies.push_back( movie );
 	std::sort( m_flash_movies.begin( ), m_flash_movies.end( ), priority_less( ) );
 }
 
 void scene_view::remove_movie( survarium::flash_movie_resource_ptr& movie )
 {
-	// FUNCTION BODY[0x638320]: 3
 	// <0x638322>|0x002|+0x016:'126'
 	// <0>
 	// <0x638338>|0x018|+0x009:'128'
-	// ******
 	render::vector< survarium::flash_movie_resource_ptr >::iterator const iterator =
 		std::find( m_flash_movies.begin( ), m_flash_movies.end( ), movie );
 	m_flash_movies.erase( iterator );
@@ -140,25 +132,21 @@ void scene_view::remove_movie( survarium::flash_movie_resource_ptr& movie )
 
 void scene_view::add_text_manager( survarium::flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x638310]: 5
 	// <0>
 	// <0x638310>|0x000|+0x006:'134'
 	// <0>
 	// <1>
 	// <2>
-	// ******
 	m_flash_text_manager = tm;
 }
 
 void scene_view::remove_text_manager( survarium::flash_text_manager* )
 {
-	// FUNCTION BODY[0x638300]: 5
 	// <0>
 	// <0x638300>|0x000|+0x00a:'143'
 	// <0>
 	// <1>
 	// <2>
-	// ******
 	m_flash_text_manager = NULL;
 }
 
@@ -214,8 +202,6 @@ void scene_view::remove_text_manager( survarium::flash_text_manager* )
 	// typedef
 	// 	vostok::render::texture_named_instance*
 	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

@@ -42,12 +42,10 @@ void res_geometry::apply()
 
 res_geometry::~res_geometry()
 {
-	// FUNCTION BODY[0x6e83c0]
 }
 
 void res_geometry::destroy_impl() const
 {
-	// FUNCTION BODY[0x6e8420]
 	resource_manager::ref().release( this );
 }
 

@@ -13,7 +13,6 @@ void effect_post_process_fxaa::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "post_process_fxaa", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

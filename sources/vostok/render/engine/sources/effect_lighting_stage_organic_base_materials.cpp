@@ -16,7 +16,6 @@ void effect_lighting_stage_organic_base_materials::compile(
 	{
 		shader_configuration configuration;
 
-
 		compile_begin("vertex_base", "skin_position_pass", compiler, &configuration, custom_config);
 		compile_end(compiler);
 	}
@@ -32,14 +31,12 @@ void effect_lighting_stage_organic_base_materials::compile(
 		configuration.use_fresnel_texture = custom_config.value_exists("use_tfresnel") ? bool(custom_config["use_tfresnel"]) : false;
 		configuration.use_roughness_texture = custom_config.value_exists("use_troughness") ? bool(custom_config["use_troughness"]) : false;
 
-
 		configuration.is_anisotropic_material = custom_config.value_exists("is_anisotropic_material") ? bool(custom_config["is_anisotropic_material"]) : false;
 
 		configuration.light_type = 0;
 		configuration.shadowed_light				= true;
 
 		compile_begin("unwrap_mesh", "organic_forward_lighting", compiler, &configuration, custom_config);
-			// 3 target lines are likely retail-compiled-out source.
 			compiler.set_alpha_blend(false);
 
 			float const fresnel_at_0_degree				= custom_config.value_exists("fresnel_at_0_degree") ? custom_config["fresnel_at_0_degree"] : 0.04f;
@@ -53,14 +50,11 @@ void effect_lighting_stage_organic_base_materials::compile(
 
 			float const max_roughness					= custom_config.value_exists("max_roughness") ? custom_config["max_roughness"] : 1.0f;
 			compiler.set_constant						( "max_roughness", max_roughness );
-			// 4 target lines are likely retail-compiled-out source.
 			if( configuration.use_diffuse_texture)
 				compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, false, u32(-1));
 
-
 			float4 solid_color_specular = float4(custom_config["constant_diffuse"]);
 			solid_color_specular.w = 0.0f;
-			// 3 target lines are likely retail-compiled-out source.
 			if( configuration.use_normal_texture)
 				compiler.set_texture("t_normal", pcstr(custom_config["texture_normal"]), 0, false, u32(-1));
 
@@ -70,11 +64,9 @@ void effect_lighting_stage_organic_base_materials::compile(
 			if (custom_config.value_exists("constant_specular_color") && custom_config.value_exists("constant_specular_color_multiplier"))
 				compiler.set_constant( "specular_color_parameter", float4(custom_config["constant_specular_color"]).xyz() * float3(custom_config["constant_specular_color_multiplier"]));
 
-
 			compiler.set_constant( "solid_color_specular", solid_color_specular);
 
 			float4 roughness_uv_parameters(0, 0, min_roughness, max_roughness);
-			// 4 target lines are likely retail-compiled-out source.
 			if( configuration.use_roughness_texture)
 				compiler.set_texture("t_roughness", pcstr(custom_config["texture_specular_power"]), 0, false, u32(-1));
 			else
@@ -96,7 +88,6 @@ void effect_lighting_stage_organic_base_materials::compile(
 
 			float   solid_transparency   = 1.0f;
 			compiler.set_constant("solid_transparency",   solid_transparency);
-		// 4 target lines are likely retail-compiled-out source.
 		compile_end(compiler);
 	}
 
@@ -111,9 +102,7 @@ void effect_lighting_stage_organic_base_materials::compile(
 				compiler.set_fill_mode(D3D_FILL_SOLID);
 				compiler.set_alpha_blend(false, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA);
 					compiler.set_texture("t_skin_scattering", r2_rt_skin_scattering, 0, false, u32(-1));
-					// 3 target lines are likely retail-compiled-out source.
 					float4 scattering_component_blurring_weights_and_color_multiplier = float4(1.2f, 0.3f, 0.1f, 1.0f);
-				// 9 target lines are likely retail-compiled-out source.
 				if (custom_config.value_exists("scattering_component_blurring_weights"))
 					scattering_component_blurring_weights_and_color_multiplier.xyz() = float3(custom_config["scattering_component_blurring_weights"]);
 
@@ -122,7 +111,6 @@ void effect_lighting_stage_organic_base_materials::compile(
 
 				if (configuration.use_organic_scattering_depth_texture && custom_config.value_exists("texture_scattering_depth"))
 						compiler.set_texture("t_scattering_depth", pcstr(custom_config["texture_scattering_depth"]), 0, false, u32(-1));
-
 
 					compiler.set_constant("scattering_component_blurring_weights_and_color_multiplier", scattering_component_blurring_weights_and_color_multiplier);
 
@@ -136,14 +124,12 @@ void effect_lighting_stage_organic_base_materials::compile(
 		configuration.use_normal_texture  = custom_config.value_exists("use_nmap") ? bool(custom_config["use_nmap"]) : false;
 			configuration.use_specular_intensity_texture = custom_config.value_exists("use_tspecular_inensity") ? bool(custom_config["use_tspecular_inensity"]) : false;
 
-
 			configuration.use_ao_texture							= custom_config.value_exists("use_ao_texture") ? bool(custom_config["use_ao_texture"]) : false;
 		configuration.use_organic_scattering_amount_mask		= custom_config.value_exists("use_scattering_amount_mask") ? bool(custom_config["use_scattering_amount_mask"]) : false;
 		configuration.use_organic_back_illumination_texture		= custom_config.value_exists("use_back_illumination_texture") ? bool(custom_config["use_back_illumination_texture"]) : false;
 		configuration.use_organic_subdermal_texture				= custom_config.value_exists("use_subdermal_texture") ? bool(custom_config["use_subdermal_texture"]) : false;
 
 			compile_begin("vertex_base", "organic_combine", compiler, &configuration, custom_config);
-			// 5 target lines are likely retail-compiled-out source.
 			compiler.set_depth( true, false);
 			compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_ONE);
 

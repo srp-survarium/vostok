@@ -11,7 +11,6 @@ void effect_system_ui::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bf980]
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
 
 	c.begin_technique( /*ui_font*/)

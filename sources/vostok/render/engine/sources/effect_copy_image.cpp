@@ -14,7 +14,6 @@ void effect_copy_image::compile(
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "copy_image", NULL, "copy_image", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

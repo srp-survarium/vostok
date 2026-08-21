@@ -41,7 +41,6 @@
 #define		r2_rt_decals_diffuse	"$user$decals_diffuse"		// ---
 #define		r2_rt_decals_normal		"$user$decals_normal"		// ---
 
-
 #define		r2_rt_gbuffer_position_downsampled		"$user$gbuffer_position_downsampled"		// ---
 #define		r2_rt_gbuffer_normal_downsampled		"$user$gbuffer_normal_downsampled"		// ---
 
@@ -75,7 +74,6 @@
 #define		r2_rt_mlaa_edges			"$user$mlaa_edges"
 #define		r2_rt_mlaa_blended_weights	"$user$mlaa_blended_weights"
 
-
 // RSM
 #define		r2_rt_lpv_rsm_albedo_source		"$user$lpv_rsm_albedo_source"
 #define		r2_rt_lpv_rsm_normal_source		"$user$lpv_rsm_normal_source"
@@ -86,7 +84,6 @@
 #define		r2_rt_lpv_rsm_normal			"$user$lpv_rsm_normal"
 #define		r2_rt_lpv_rsm_position			"$user$lpv_rsm_position"
 
-
 // Radiance
 #define		r2_rt_lpv_radiance_r			"$user$lpv_radiance_r"
 #define		r2_rt_lpv_radiance_g			"$user$lpv_radiance_g"
@@ -94,7 +91,6 @@
 
 // Geometry occludes
 #define		r2_rt_lpv_occluders				"$user$lpv_occluders"
-
 
 //
 //#define		r2_rt_ssao_temp		"$user$ssao_temp"		//temporary rt for ssao calculation

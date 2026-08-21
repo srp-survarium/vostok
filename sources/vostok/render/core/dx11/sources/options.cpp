@@ -698,9 +698,6 @@ void options::load_from_config( configs::binary_config_value const& config )
  	}
 }
 
-// claude@NOTE: legacy body was gated #ifndef MASTER_GOLD; the canonical class
-// declares it unconditionally and load_from_config ships (0x55ce80), so the
-// gate is dropped.
 void options::on_config_loaded2( resources::queries_result& data )
 {
 	if (data.is_successful())

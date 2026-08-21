@@ -92,7 +92,6 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 #ifndef MASTER_GOLD
 	m_ghost_model_color = math::float4( 0.2f, 0.2f, 0.2f, 0.2f );
 #endif // #ifndef MASTER_GOLD
-	// 33 target lines are likely retail-compiled-out source.
 	effect_manager::ref( ).create_effect< effect_system_colored >( &m_sh_vcolor );
 
 	effect_manager::ref( ).create_effect< effect_system_line >( &m_sh_sl );
@@ -131,19 +130,16 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 	effect_manager::ref( ).create_effect< effect_particle_selection >( &m_sh_particle_selection );
 
 	m_c_start_corner = backend::ref( ).register_constant_host( "start_corner", rc_float );
-	// 15 target lines are likely retail-compiled-out source.
 	m_cook_data_to_delete = MT_NEW( material_effects_instance_cook_data )(
 		post_process_vertex_input_type,
 		NULL,
 		false
 	);
-	// 9 target lines are likely retail-compiled-out source.
 	D3D_INPUT_ELEMENT_DESC const screen_vertex_layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D_INPUT_PER_VERTEX_DATA, 0 },
 	};
-
 
 	u16 indices[6] = { 0, 1, 2, 3, 2, 1 };
 	m_screen_vertex_ib = resource_manager::ref( ).create_buffer( 6 * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
@@ -159,7 +155,6 @@ untyped_buffer* system_renderer::create_quad_ib( )
 {
 	// LOCALS
 	// u16[24576] 						indices
-	// ******
 
 	const u32 quad_count	= 4 * 1024;
 	const u32 idx_count		= quad_count * 2 * 3;
@@ -183,7 +178,6 @@ untyped_buffer* system_renderer::create_quad_ib( )
 
 	return resource_manager::ref( ).create_buffer( idx_count * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
 
-	// FUNCTION BODY[0x6449a0]: 28
 	// <0>
 	// <1>
 	// <2>
@@ -212,7 +206,6 @@ untyped_buffer* system_renderer::create_quad_ib( )
 	// <1>
 	// <2>
 	// <0x6449f8>|0x058|+0x01a:'97'
-	// ******
 }
 
 bool system_renderer::is_effects_ready( ) const
@@ -235,7 +228,6 @@ bool system_renderer::is_effects_ready( ) const
 		&& m_notexture_shader.c_ptr( ) != NULL
 		&& m_sh_particle_selection.c_ptr( ) != NULL;
 
-	// FUNCTION BODY[0x644700]: 17
 	// <0x644700>|0x000|+0x012:'254'
 	// <0x644712>|0x012|-0x00a:'254'
 	// <0>
@@ -257,28 +249,20 @@ bool system_renderer::is_effects_ready( ) const
 	// <0x644760>|0x060|-0x004:'270'
 	// <0x64475c>|0x05c|+0x003:'271'
 	// <0x64475f>|0x05f|+0x003:'271'
-	// ******
 }
 
 system_renderer::~system_renderer( )
 {
-	// FUNCTION BODY[0x644e70]: 1
 	// <0>
-	// ******
 }
 
 void system_renderer::set_w( float4x4 const& m )
 {
 	m_renderer_context->set_w( m );
 
-	// FUNCTION BODY[0x644990]: 1
 	// <0x644990>|0x000|+0x009:'293'
-	// ******
 }
 
-// claude@NOTE: set_v/set_p and the three matrix getters are declared by the canonical
-// class but have no out-of-line target copy (/OPT:REF stripped these editor-facing
-// forwarders); ported from the legacy system_renderer.cpp at their legacy position.
 void system_renderer::set_v( float4x4 const& m )
 {
 	m_renderer_context->set_v(m);
@@ -366,7 +350,6 @@ static float2 clip_2_screen(
 
 	return float2( result.elements[0], result.elements[1] );
 
-	// FUNCTION BODY[0x6447d0]: 16
 	// <0x6447d3>|0x003|+0x0b1:'358'
 	// <0>
 	// <0x644884>|0x0b4|+0x023:'360'
@@ -383,7 +366,6 @@ static float2 clip_2_screen(
 	// <0x644969>|0x199|+0x01a:'371'
 	// <0>
 	// <0x644983>|0x1b3|+0x007:'373'
-	// ******
 }
 
 static u8 pattern_length = 8;
@@ -421,7 +403,6 @@ void system_renderer::draw_screen_lines(
 
 	u32 screen_width	= backend::ref( ).target_width( );
 	u32 screen_height	= backend::ref( ).target_height( );
-
 
 	u32 u32_color		= color.m_value;
 	u32 vertex_count	= count * 2 - 2;
@@ -472,7 +453,6 @@ void system_renderer::draw_screen_lines(
 	m_index_stream.unlock	( );
 
 	m_colored_geom_sl->apply( );
-	// 4 target lines are likely retail-compiled-out source.
 	m_sh_sl->apply( effect_system_line::z_disabled, 0 );
 
 	backend::ref( ).set_vs_constant( m_WVP_sl, transpose( wvpMatrix ) );
@@ -502,9 +482,7 @@ void system_renderer::draw_3D_point(
 
 	inv_view_proj_matrix.try_invert( inv_view_proj_matrix );
 
-
 	float4x4 inv_view_matrix = view_matrix;
-
 
 	inv_view_matrix.try_invert( inv_view_matrix );
 
@@ -605,7 +583,6 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 {
 	// LOCALS
 	// vertex_colored[8] 				vertices
-	// ******
 
 	if ( !is_effects_ready( ) )
 		return;
@@ -629,7 +606,6 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 		false
 	);
 
-	// FUNCTION BODY[0x6465a0]: 20
 	// <0x6465a6>|0x006|+0x00d:'576'
 	// <0>
 	// <1>
@@ -650,14 +626,8 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 	// <7>
 	// <8>
 	// <0x646698>|0x0f8|+0x0a8:'595'
-	// ******
 }
 
-// claude@NOTE: no target address - draw_obb is declared in the target's class
-// but has no out-of-line copy (fully inlined under LTCG); body ported from the
-// legacy system_renderer.cpp at its legacy position, with the fifth
-// draw_lines argument (covering_effect) spelled out as the canonical
-// declaration has no default.
 void system_renderer::draw_obb( float4x4 const& transform, math::color const& color )
 {
 	if ( !is_effects_ready( ) )
@@ -683,9 +653,6 @@ void system_renderer::draw_obb( float4x4 const& transform, math::color const& co
 	);
 }
 
-// claude@NOTE: the three grid/rotation mode setters are declared by the canonical class
-// but have no out-of-line target copy; ported from the legacy system_renderer.cpp at
-// their legacy position (directly after draw_obb).
 void system_renderer::setup_grid_render_mode( u32 grid_density )
 {
 	m_grid_mode = true;
@@ -750,7 +717,6 @@ void system_renderer::draw_triangles(
 	backend::ref( ).set_ps_constant( m_grid_density_constant, m_grid_density );
 
 	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices_size, ioffset /* ? */, voffset );
-	// 3 target lines are likely retail-compiled-out source.
 	m_sh_vcolor->apply( effect_system_colored::wireframe, 0 );
 	m_colored_geom->apply( );
 	backend::ref( ).set_ps_constant( m_grid_density_constant, m_grid_density );
@@ -766,7 +732,6 @@ void system_renderer::draw_ui_vertices(
 {
 	// LOCALS
 	// u32 								v_offset
-	// ******
 
 	if ( !is_effects_ready( ) )
 		return;
@@ -807,7 +772,6 @@ void system_renderer::draw_ui_vertices(
 		UNREACHABLE_CODE();
 	}
 
-	// FUNCTION BODY[0x645680]: 39
 	// <0x64568c>|0x00c|+0x00f:'697'
 	// <0>
 	// <1>
@@ -848,7 +812,6 @@ void system_renderer::draw_ui_vertices(
 	// <4>
 	// <5>
 	// <0x64574b>|0x0cb|+0x065:'736'
-	// ******
 }
 
 void system_renderer::draw_render_models_selection( vector< render_model_instance_impl_ptr >& render_models )
@@ -859,15 +822,12 @@ void system_renderer::draw_render_models_selection( vector< render_model_instanc
 	if ( !render_models.size( ) )
 		return;
 	math::aabb draw_box = math::create_invalid_aabb( );
-	// 4 target lines are likely retail-compiled-out source.
 	for ( vector< render_model_instance_impl_ptr >::iterator it = render_models.begin( ), it_end = render_models.end( ); it != it_end; ++it )
 	{
 		render_model_instance_impl_ptr& instance = *it;
 
-
 		draw_box.modify( instance->get_aabb( ).modify( instance->transform( ) ) );
 	}
-	// 17 target lines are likely retail-compiled-out source.
 	m_current_selection_color		= m_selection_color * math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
 	draw_aabb						(
 		draw_box,
@@ -894,13 +854,10 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 	if ( !m_renderer_context->scene( )->particle_world( ) )
 		return;
 
-
 	m_current_selection_color	= m_selection_color *
 								  math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
 
-
 	// TODO: LODs?
-	// 3 target lines are likely retail-compiled-out source.
 	particle::world* part_world	= m_renderer_context->scene( )->particle_world( );
 
 	for ( vector< resources::unmanaged_resource_ptr >::const_iterator instance_it = instances.begin( );
@@ -914,7 +871,6 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 		for ( particle::render_particle_emitter_instances_type::const_iterator it = emitters.begin( ); it != emitters.end( ); ++it )
 		{
 			render::render_particle_emitter_instance*	instance		= static_cast< render::render_particle_emitter_instance* >( *it );
-			// 12 target lines are likely retail-compiled-out source.
 			u32 const									num_particles	= instance->get_num_particles( );
 
 			if ( !num_particles )
@@ -960,7 +916,6 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 	if ( !instances.size( ) )
 		return;
 
-
 	m_current_selection_color	= m_selection_color *
 								  math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
 
@@ -978,25 +933,14 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 			)
 		);
 	}
-// 53 target lines are likely retail-compiled-out source.
 }
 
-// claude@NOTE: no addressed target record (inlined into renderer::render or
-// folded); the legacy body is blocked on members the canonical class dropped
-// (m_terrain_debug_material / on_material_loaded) and on the retired render-side
-// terrain subsystem (scene::select_terrain_cells, terrain::m_grid_geom_*), so it
-// has no faithful port - link stub only. Legacy body: `git show
-// 8bb5b3dfc:temp/render_legacy/engine/sources/system_renderer.cpp`.
+// No faithful body: the target has no out-of-line record and required terrain members are absent.
 // STATE[STUB]
 void system_renderer::draw_debug_terrain( )
 {
 }
 
-// claude@NOTE: the six members below are declared by the canonical class but have no
-// out-of-line target copy (/OPT:REF stripped the editor-facing surface); ported from
-// the legacy system_renderer.cpp at their legacy position, adapted to the canonical
-// declarations (base_scene_view_ptr / base_output_window_ptr / math::rectangle< float2 >
-// spellings, explicit apply( 0, 0 ) arity, PIX scopes dropped).
 void system_renderer::set_model_ghost_mode(
 	polymorph_vector_base< render_model_instance > const& /*render_models*/,
 	bool /*value*/

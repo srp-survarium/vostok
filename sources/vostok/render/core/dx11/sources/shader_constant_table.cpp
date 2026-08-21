@@ -11,7 +11,6 @@ namespace res_const_table_predicates {
 
 bool sort( shader_constant const & c1, shader_constant const & c2)
 {
-	// FUNCTION BODY[0x12ea70]
 	return c1.host().name() < c2.host().name();
 }
 
@@ -19,13 +18,11 @@ bool sort( shader_constant const & c1, shader_constant const & c2)
 
 void shader_constant_table::destroy_impl() const
 {
-	// FUNCTION BODY[0x739360]
 	resource_manager::ref().release( this );
 }
 
 shader_constant* shader_constant_table::get( shared_string const& name)
 {
-	// FUNCTION BODY[0x7390d0]
 	 //linear search, but only ptr-compare
 	c_table::iterator it  = m_table.begin(),
 							end = m_table.end();
@@ -39,7 +36,6 @@ shader_constant* shader_constant_table::get( shared_string const& name)
 
 shader_constant* shader_constant_table::get( pcstr const name)
 {
-	// FUNCTION BODY[0x7392e0]
 	c_table::iterator	it  = m_table.begin(),
 							end = m_table.end();
 
@@ -47,13 +43,11 @@ shader_constant* shader_constant_table::get( pcstr const name)
 		if ( it->host().name() == name)
 			return &*it;
 
-
 	return	0;
 }
 
 bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstantBuffer* src_table, u32 buffer_index)
 {
-	// FUNCTION BODY[0x739370]
 	ASSERT( src_table);
 
 	D3D_SHADER_BUFFER_DESC	shader_buffer_desc;
@@ -190,7 +184,6 @@ bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstan
 		}
 		if ( skip)			continue;
 
-
 		// We have determined all valuable info, search if shader constant already exists
 		shader_constant *	C		=	get( name);
 		if ( !C)
@@ -228,7 +221,6 @@ bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstan
 
 bool shader_constant_table::parse( ID3D11ShaderReflection* shader_reflection, enum_shader_type destination)
 {
-	// FUNCTION BODY[0x739600]
 	clear();
 
 	ASSERT( destination < enum_shader_types_count);
@@ -297,7 +289,6 @@ bool shader_constant_table::parse( ID3D11ShaderReflection* shader_reflection, en
 
 void shader_constant_table::clear()
 {
-	// FUNCTION BODY[0x7392a0]
 	m_table.clear();
 	m_const_buffers.clear();
 }
@@ -323,7 +314,6 @@ s32 shader_constant_table::compare( shader_constant_table const& other ) const
 
 void shader_constant_table::apply_bindings( shader_constant_bindings const & bindings)
 {
-	// FUNCTION BODY[0x739100]
 	vector<shader_constant_binding>::const_iterator	it  = bindings.bindings().begin(),
 												end = bindings.bindings().end();
 

@@ -33,8 +33,7 @@ shader_binary_source_cook::shader_binary_source_cook( )
 	  m_tasks_type( tasks::create_new_task_type("compile_shader_task", 0) ),
 	  m_blob_creation_counter( 0 )
 {
-	// claude@NOTE: residual is one inline-vs-call - the target inlines the 1-arg
-	// tasks::task_type_parameters ctor (mov [eax],esi) that our base still calls.
+	// claude@NOTE: the task parameter constructor is inlined only in the target.
 }
 
 shader_binary_source_cook::~shader_binary_source_cook( )
@@ -42,12 +41,6 @@ shader_binary_source_cook::~shader_binary_source_cook( )
 //!	tasks::delete_task_type	( m_tasks_type );
 }
 
-// claude@NOTE: the shipped body has no recompile arm - the class dropped
-// is_need_recompile / compile_shader_task / all_tasks_finished /
-// save_binary_shader and resource_manager::get_shader_sources(), so the blob is
-// only ever read back out of the pinned managed resource (hence
-// m_shader_byte_code / m_shader_byte_code_size pointing into it and shader_source
-// being kept alive).
 void shader_binary_source_cook::converted_shader_loaded(
 	conveted_shader_loaded_data* data,
 	resources::queries_result& result
@@ -101,9 +94,7 @@ void shader_binary_source_cook::create_resource(
 	{
 		in_out_query.finish_query					(resources::query_result_for_user::error_type_cook_failed, assert_on_fail_false);
 
-		// claude@NOTE: the class qualification is load-bearing - the target inlines
-		// deallocate_resource's FREE here, and an unqualified call emits a vtable
-		// dispatch ([this][+0x14]) that the target does not have.
+		// claude@MATCH: qualification keeps the target's direct deallocation path.
 		shader_binary_source_cook::deallocate_resource(in_out_unmanaged_resource_buffer.c_ptr());
 		DELETE										(user_data);
 		return;
@@ -213,8 +204,7 @@ mutable_buffer shader_binary_source_cook::allocate_resource(
 	bool file_exist
 )
 {
-	// claude@NOTE: residual is one inline-vs-call - the target returns through an
-	// out-of-line mutable_buffer(pvoid,u32) ctor that our base inlines to two stores.
+	// claude@NOTE: mutable_buffer construction is out-of-line only in the target.
 	VOSTOK_UNREFERENCED_PARAMETERS					(&file_exist, &raw_file_data, &in_query);
 	return											vostok::mutable_buffer(
 		(pvoid)ALLOC(binary_shader_source, 1),

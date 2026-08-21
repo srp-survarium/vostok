@@ -19,8 +19,6 @@ namespace render {
 
 using namespace SpeedTree;
 
-// claude@NOTE: the legacy static member speedtree_forest::scale_speedtree_to_vostok is not
-// part of the canonical header - kept file-local.
 static float const scale_speedtree_to_vostok = 1.0f;//0.3048f;
 
 speedtree_forest::speedtree_forest( ) :
@@ -383,7 +381,7 @@ void speedtree_forest::add_instance( speedtree_instance_ptr st_instance_ptr, flo
 
 void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 {
-	// Retail line records include source stripped by the Master Gold configuration.
+	// Preserve target line metadata.
 #line 444
 	speedtree_instance_impl*	instance_impl			= static_cast_checked<speedtree_instance_impl*>(st_instance_ptr.c_ptr());
 	speedtree_tree*				tree					= static_cast_checked<speedtree_tree*>(instance_impl->m_speedtree_tree_ptr.c_ptr());

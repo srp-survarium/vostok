@@ -13,7 +13,6 @@ void effect_editor_selection::compile(
 
 	shader_configuration configuration;
 
-
 	compile_begin( "vertex_base", "editor_selection", compiler, &configuration, config );
 	compiler.set_depth( true, false );
 	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );

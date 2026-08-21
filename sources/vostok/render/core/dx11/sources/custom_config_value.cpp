@@ -8,7 +8,6 @@ namespace render {
 
 bool custom_config_value::value_exists( pcstr key ) const
 {
-	// FUNCTION BODY[0x73a440]
 	R_ASSERT					(type == vostok::configs::t_table_named || type == vostok::configs::t_table_indexed);
 	const_iterator it			= begin();
 	const_iterator it_e			= end();
@@ -29,7 +28,6 @@ bool custom_config_value::value_exists( pcstr key ) const
 
 void custom_config_value::call_data_destructor( ) const
 {
-	// FUNCTION BODY[0x73a320]
 	if (destroyer)
 	{
 		if (count<=sizeof(u32))
@@ -49,7 +47,6 @@ void custom_config_value::call_data_destructor( ) const
 
 custom_config_value const& custom_config_value::operator[]( pcstr key ) const
 {
-	// FUNCTION BODY[0x73a380]
 	R_ASSERT					(type == vostok::configs::t_table_named);
 	const_iterator it			= begin();
 	const_iterator it_e			= end();

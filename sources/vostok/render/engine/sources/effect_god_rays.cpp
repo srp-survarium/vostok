@@ -21,7 +21,6 @@ void effect_god_rays::compile(
 		compiler.end_pass();
 	compiler.end_technique();
 
-
 	compiler.begin_technique();
 		compiler.begin_pass("god_rays", NULL, "god_rays", shader_configuration(), NULL);
 			compiler.set_depth(false, false);

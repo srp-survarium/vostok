@@ -35,7 +35,6 @@ environment_temp::environment_temp( ) :
 	key_time_step	( 5.0f ),
 	num_keys		( 3 )
 {
-	// 20 target lines are likely retail-compiled-out source.
 	keys = NEW_ARRAY( cloud_key_parameters, num_keys );
 
 	keys[0].cloud_base = 3200.0f;
@@ -70,7 +69,6 @@ environment_temp::~environment_temp( )
 {
 	DELETE_ARRAY( keys );
 }
-// 13 target lines are likely retail-compiled-out source.
 cloud_key_parameters environment_temp::get_next_key( u32 const index )
 {
 	u32 const next_index = index + 1;
@@ -126,9 +124,7 @@ stage_clouds::stage_clouds(
 	m_y_rotation				( 0.0f ),
 	m_prev_right_vector			( 0.0f, 0.0f, 0.0f ),
 	m_prev_up_vector			( 0.0f, 0.0f, 0.0f )
-// 34 target lines are likely retail-compiled-out source.
 {
-	// 18 target lines are likely retail-compiled-out source.
 	m_clouds_scale_multiplier *= options::ref( ).current.m_clouds_scale; m_clouds_scale = float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) * m_clouds_scale_multiplier;
 
 	for ( u32 i = 0; i < 2; ++i )
@@ -209,7 +205,6 @@ stage_clouds::~stage_clouds( )
 {
 	tasks::wait_for_task_list( &m_parent_task );
 }
-// 21 target lines are likely retail-compiled-out source.
 void stage_clouds::execute( )
 {
 	if ( !is_effects_ready( ) )
@@ -395,9 +390,7 @@ void stage_clouds::execute( )
 	}
 
 	m_context->pop_p( );
-	// 42 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
-	// 23 target lines are likely retail-compiled-out source.
 	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture[0];
 	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture[1];
 

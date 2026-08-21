@@ -15,14 +15,12 @@ update_skeleton_command::update_skeleton_command(
 	  m_world( world ),
 	  m_matrices_count( count )
 {
-	// FUNCTION BODY[0x757290]
 	u32 const buff_size		= sizeof(float4x4)*count;
 	memory::copy			( m_matrices, buff_size, matrices, buff_size);
 }
 
 void update_skeleton_command::execute( )
 {
-	// FUNCTION BODY[0x757270]
 	m_world.update_skeleton	( m_model_instance, m_matrices, m_matrices_count );
 }
 

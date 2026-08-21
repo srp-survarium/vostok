@@ -29,7 +29,7 @@ public:
 	u32 get_avaliable_video_memory( ) const;
 	u32 get_max_texture_size( ) const
 	{
-		// claude@NOTE: no legacy ancestor - get_max_texture_size has no legacy ancestor (new-in-target); matcher-phase work.
+		// claude@NOTE: no body is available in the developer sources.
 		// STATE[STUB]
 		return 0;
 	}
@@ -58,10 +58,7 @@ public:
 
 STATIC_SIZE_ASSERT( device, 0x154 );
 
-// claude@NOTE: filled by device::create_d3d while it enumerates the adapter outputs;
-// read back by is_resolution_already_exists and by the game's video options page
-// (game/sources/options_items.cpp). Mangled as ?g_monitor_resolutions@render@vostok@@
-// 3PAY0CAA@Vint2@math@2@A, i.e. the outer dimension decays - [6][512] of int2.
+// Filled during adapter-output enumeration and read by the video options page.
 extern int g_num_monitors;
 extern math::int2 g_monitor_resolutions[6][512];
 

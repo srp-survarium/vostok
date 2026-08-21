@@ -87,8 +87,6 @@ struct speedtree_forest {
 		tree_render_info_array_type& out_tree_render_info_array
 	);
 
-	// claude@NOTE: defined out-of-line in speedtree_forest.cpp (legacy shape) - the body
-	// needs renderer_context, which includes this header.
 	void get_visible_tree_components(
 		renderer_context* context,
 		vector<speedtree_instance_ptr> const& instances,
@@ -98,7 +96,7 @@ struct speedtree_forest {
 
 	u32 get_num_visible_instances( ) const
 	{
-		// claude@NOTE: no legacy ancestor - legacy body was an effective return 0 with the real logic commented out (consumed); matcher-phase work.
+		// claude@NOTE: the available developer body is only a stub.
 		// STATE[STUB]
 		return 0;
 	}

@@ -11,7 +11,6 @@ void effect_post_process_distortion_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// 3 target lines are likely retail-compiled-out source.
 	float distortion_scale = float( custom_config["constant_distortion_scale"] );
 
 	shader_configuration shader_config;

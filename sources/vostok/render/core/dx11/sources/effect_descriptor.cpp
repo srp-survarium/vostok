@@ -6,12 +6,10 @@ namespace render {
 
 effect_descriptor::effect_descriptor( )
 {
-	// FUNCTION BODY[0x559810]
 }
 
 effect_descriptor::~effect_descriptor( )
 {
-	// FUNCTION BODY[0x559800]
 }
 
 void effect_descriptor::compile(
@@ -19,7 +17,6 @@ void effect_descriptor::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x559820]
 	VOSTOK_UNREFERENCED_PARAMETERS	( &compiler, &config );
 }
 

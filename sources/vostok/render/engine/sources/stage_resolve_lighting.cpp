@@ -91,12 +91,10 @@ void stage_resolve_lighting::execute( )
 		execute_disabled( );
 		return;
 	}
-	// 5 target lines are likely retail-compiled-out source.
 	float3 const* const eye_rays = m_context->get_eye_rays( );
 	m_resolve_lighting_effect->apply( 0, 0 );
 	backend::ref( ).set_ps_constant( m_eye_ray_corner_parameter, eye_rays[0].x );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.f, 0.f, 1.f, 1.f );
-	// 6 target lines are likely retail-compiled-out source.
 	vector<render_surface_instance*> visible_models;
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
 	backend::ref( ).reset_depth_stencil_target( );

@@ -12,7 +12,6 @@ void effect_motion_blur::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "motion_blur", NULL, "motion_blur", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
@@ -21,7 +20,6 @@ void effect_motion_blur::compile(
 	compiler.set_texture( "t_object_motion_vectors", "$user$object_motion_vectors", 0, false, u32( -1 ) );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "motion_blur", NULL, "motion_blur_apply", shader_configuration( ), NULL );

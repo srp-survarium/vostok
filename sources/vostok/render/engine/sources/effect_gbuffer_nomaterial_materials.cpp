@@ -12,7 +12,6 @@ void effect_gbuffer_nomaterial_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// 5 target lines are likely retail-compiled-out source.
 	for (u32 lod_index = 0; lod_index < 2; lod_index++)
 	{
 		shader_configuration configuration;

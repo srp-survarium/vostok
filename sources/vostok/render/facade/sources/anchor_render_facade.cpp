@@ -1,24 +1,7 @@
 #include "pch.h"
 
-// Render-facade /OPT:REF reachability anchor for the scene_renderer entries the
-// base build's call graph does not reach yet. The shipped game drives them from
-// object_light / object_vegetation / the bullet manager / the options tab; those
-// game consumers are still carcasses here, so /OPT:REF strips every method whose
-// only reference would come from them - and stripping the facade method strips
-// its whole engine::world -> scene cone with it.
-//
-// Every pin is an ADDRESS-TAKE, never a call: taking the address keeps the
-// out-of-line body (so its bound &engine::world::* references survive) without
-// handing LTCG a call site whose fabricated constant arguments would specialise
-// the body away from the target's bytes.
-//
-// Dispatched from survarium::IncludeAll::IncludeAll() (game_core/sources/anchor.cpp)
-// like every other module anchor - a self-dispatching file-scope initializer does
-// not work here, because render_facade is a static library and the linker never
-// extracts an .obj that resolves no undefined symbol.
-//
-// Retire pin by pin as each real game consumer is matched: a pin whose removal
-// leaves the method paired is redundant and must go.
+// Temporary /OPT:REF anchor for entries not yet retained by real game callers.
+// Address-take only; retire each pin once its caller keeps it linked.
 
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/render/facade/sources/debug_renderer.h>

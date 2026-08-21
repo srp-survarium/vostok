@@ -23,7 +23,6 @@ public:
 	virtual void load( configs::binary_config_value const& properties, memory::chunk_reader& chunk );
 	virtual bool is_dynamic( ) const
 	{
-		// FUNCTION BODY[0xb2740]
 		return false;
 	}
 	virtual void fill_lpv_vertex_color( batched_geometry_interface* in_out_geometry, float4x4 const& transform );

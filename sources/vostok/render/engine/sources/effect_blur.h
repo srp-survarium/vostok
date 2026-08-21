@@ -29,7 +29,6 @@ public:
 	) override
 	{
 		VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
-		// 11 target lines are likely retail-compiled-out source.
 		shader_configuration config;
 		config.post_process_blur_kernel = t_sample_count;
 

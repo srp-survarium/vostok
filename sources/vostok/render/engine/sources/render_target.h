@@ -1,8 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_TARGET_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_TARGET_H_INCLUDED
 
-// The engine carcass initially carried a placeholder render_target here; the
-// real class (one type engine-wide) lives in the core module.
+// Compatibility redirect to the engine-wide core type.
 #include <vostok/render/core/dx11/render_target.h>
 
 namespace vostok {

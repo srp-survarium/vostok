@@ -13,7 +13,6 @@
 #include "material.h"
 #include "material_effects.h"
 #include "material_effects_instance.h"
-// 6 target lines are likely retail-compiled-out source.
 static vostok::command_line::key s_sync_effects_creation_key( "sync_effects_creation", "", "", "enable sync effects creation" );
 
 namespace vostok {
@@ -27,7 +26,6 @@ material_effects_instance_cook::material_effects_instance_cook( ):
 	)
 {
 }
-
 
 static void replace_value_data( custom_config_value const& to, custom_config_value from )
 {
@@ -79,7 +77,6 @@ static void merge_configs(
 
 		custom_config_value* root_values = const_cast<custom_config_value*>(current);
 
-
 		root_values->count = u16(base.end() - base.begin());
 		root_values->data  = (pvoid)values;
 		custom_config_value const* data_values = values;
@@ -115,14 +112,12 @@ static void merge_configs(
 static u32 get_num_fields( custom_config_value const& value )
 {
 
-
 	u32 result = 1;
 	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
 		for (custom_config_value::const_iterator it=value.begin(); it!=value.end(); ++it)
 			result += get_num_fields(*it);
 	return result;
 }
-
 
 static custom_config_ptr merge_effect_options( custom_config_value const& effect_config, effect_options_descriptor const& desc, u32& out_crc ) {
 	u32 crc = 0;
@@ -170,11 +165,9 @@ static D3D11_CULL_MODE base_cull_mode_to_d3d_cull_mode(
 		case cull_mode_back:	return D3D11_CULL_BACK;
 		case cull_mode_front:	return D3D11_CULL_FRONT;
 
-
 		default:				NODEFAULT(return D3D11_CULL_NONE);
 	}
 }
-// 7 target lines are likely retail-compiled-out source.
 void material_effects_instance_cook::query_effects(
 	resources::query_result_for_cook& parent,
 	material_effects_instance_cook_data* cook_data
@@ -184,7 +177,6 @@ void material_effects_instance_cook::query_effects(
 	material_ptr			material			= static_cast_resource_ptr<material_ptr>(cook_data->material);
 
 	u32 crc										= 0;
-
 
 	custom_config_ptr material_config			= create_custom_config(material->m_config->get_root()["material"], crc, false);
 
@@ -202,7 +194,6 @@ void material_effects_instance_cook::query_effects(
 		bool with_static_vertex_color_meshes = g_stage.value_exists("with_static_vertex_color_meshes") ? bool(g_stage["with_static_vertex_color_meshes"]["value"]) : false;
 		bool with_static_meshes = g_stage.value_exists("with_static_meshes") ? bool(g_stage["with_static_meshes"]["value"]) : false;
 		bool with_particles = g_stage.value_exists("with_particles") ? bool(g_stage["with_particles"]["value"]) : false;
-		// 6 target lines are likely retail-compiled-out source.
 		if (vertex_type == static_mesh_vertex_colored_input_type && !with_static_vertex_color_meshes)
 		{
 			parent.finish_query(result_error, assert_on_fail_false);
@@ -228,7 +219,6 @@ void material_effects_instance_cook::query_effects(
 			return;
 		}
 	}
-	// 137 target lines are likely retail-compiled-out source.
 	if (cook_data->cull_mode != cull_mode_none && material_config->root().value_exists("g_stage") && material_config->root()["g_stage"].value_exists("effect"))
 	{
 		if (material_config->root()["g_stage"]["effect"].value_exists("two_sided"))
@@ -237,7 +227,6 @@ void material_effects_instance_cook::query_effects(
 			from_material						= true;
 		}
 	}
-
 
 	byte data[Kb];
 	vostok::render::effect_options_descriptor		additional_parameters(data, sizeof(data) );
@@ -249,7 +238,6 @@ void material_effects_instance_cook::query_effects(
 			from_material ?
 				(is_two_sided ? cull_mode_none : cull_mode_back) :
 				cook_data->cull_mode );
-
 
 	replace_values								(material_config->root());
 
@@ -290,7 +278,6 @@ void material_effects_instance_cook::query_effects(
 			&parent
 		);
 	}
-
 
 	for (u32 i = 0; i < num_requests; i++)
 	{
@@ -426,7 +413,6 @@ void material_effects_instance_cook::on_effect_ready( resources::queries_result&
 				mtl_config["forward"]["effect"].value_exists("blend_mode"))
 				mtl_effects.blend_mode = (u32)mtl_config["forward"]["effect"]["blend_mode"]["value"];
 		}
-		// 3 target lines are likely retail-compiled-out source.
 		if (data[i].is_successful())
 			mtl_effects.m_effects[i]			= static_cast_resource_ptr<ref_effect>(data[i].get_unmanaged_resource());
 
@@ -439,7 +425,6 @@ void material_effects_instance_cook::on_effect_ready( resources::queries_result&
 	if (cook_data->delete_in_cook)
 		DELETE									(cook_data);
 }
-// 3 target lines are likely retail-compiled-out source.
 void material_effects_instance_cook::gather_request_user_data(
 	variant< 32 >* user_data,
 	custom_config_value const* root_config,
@@ -495,7 +480,6 @@ void material_effects_instance_cook::delete_resource(
 ) {
 	material_effects_instance* instance_to_delete = static_cast<material_effects_instance*>(resource); DELETE(instance_to_delete);
 }
-
 
 } // namespace render
 } // namespace vostok

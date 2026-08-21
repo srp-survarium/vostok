@@ -112,11 +112,9 @@ namespace
 namespace vostok {
 namespace render {
 
-
 // Needs some reactor
 void device_caps::update()
 {
-	// ***************** GEOMETRY
 	geometry_major				= 4;
 	geometry_minor				= 0;
 	geometry.software			= false;
@@ -129,7 +127,6 @@ void device_caps::update()
 	geometry.clip_planes		= math::min(6,15);
 	geometry.vtf				= true;
 
-	// ***************** PIXEL processing
 	raster_major				= 4;
 	raster_minor				= 0;
 	raster.stages				= 16;
@@ -140,18 +137,15 @@ void device_caps::update()
 	raster.b_mrt_mixdepth		= true;
 	raster.instructions		= 256;
 
-	// ***************** Info
 	LOG_INFO					("* GPU shading: vs(%x/%d.%d/%d), ps(%x/%d.%d/%d)",
 		0,	geometry_major, geometry_minor, cap_version(geometry_major,	geometry_minor),
 		0,	raster_major,	raster_minor,	cap_version(raster_major,	raster_minor)
 		);
 
-	// *******1********** Vertex cache
 	//	TODO: DX10: Find a way to detect cache size
 	geometry.vertex_cache = 24;
 	LOG_INFO					("* GPU vertex cache: %s, %d","unrecognized",u32(geometry.vertex_cache));
 
-	// *******1********** Compatibility : vertex shader
 	if (0==raster_major)		geometry_major=0;		// Disable VS if no PS
 /*
 	//
@@ -172,7 +166,6 @@ void device_caps::update()
 	// DEV INFO
 	gpu_num = get_gpu_num();
 }
-
 
 } // namespace render
 } // namespace vostok

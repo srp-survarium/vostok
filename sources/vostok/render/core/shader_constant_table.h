@@ -32,7 +32,6 @@ public:
 		m_const_buffers( other.m_const_buffers ),
 		m_is_registered( false )
 	{
-		// FUNCTION BODY[0x124850]
 	}
 
 	void mark_registered( )

@@ -25,17 +25,12 @@ texture_cook_wrapper::texture_cook_wrapper( )
 		use_resource_manager_thread_id
 	)
 {
-	// FUNCTION BODY[0x759980]
 }
 
-// claude@NOTE: the legacy non-MASTER_GOLD arm (fs-iterator freshness check +
-// request_convertion) was dropped with its members from the canonical class;
-// shipped body is the MASTER_GOLD arm.
 void texture_cook_wrapper::translate_query(
 	resources::query_result_for_cook& query
 )
 {
-	// FUNCTION BODY[0x759b50]
 	query_converted_texture					(& query);
 }
 
@@ -56,7 +51,6 @@ void texture_cook_wrapper::query_converted_texture(
 
 void texture_cook_wrapper::on_texture_loaded( resources::queries_result& result )
 {
-	// FUNCTION BODY[0x759a30]
 	query_result_for_cook * const	parent	=	result.get_parent_query();
 
 	if ( !result.is_successful() )
@@ -71,7 +65,6 @@ void texture_cook_wrapper::on_texture_loaded( resources::queries_result& result 
 
 void texture_cook_wrapper::delete_resource( resources::resource_base* )
 {
-	// FUNCTION BODY[0x7599c0]
 	CURE_ASSERT						(identity(false), "should not end up here! Call Lain");
 }
 

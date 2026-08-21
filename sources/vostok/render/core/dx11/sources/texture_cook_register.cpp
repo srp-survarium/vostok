@@ -3,10 +3,6 @@
 #include <vostok/render/core/texture_cook.h>
 #include <vostok/render/core/texture_options_cooker.h>
 
-// claude@NOTE: legacy unconditionally included "texture_converter_cook.h"; the
-// canonical carcass has no such header - its types are referenced only inside
-// the #ifndef MASTER_GOLD blocks below, which this build strips.
-
 namespace vostok {
 namespace render {
 
@@ -28,7 +24,6 @@ static vostok::uninitialized_reference< vostok::render::texture_cook >			s_textu
 
 void vostok::render::register_texture_cook	( )
 {
-	// FUNCTION BODY[0x773ad0]
 	VOSTOK_CONSTRUCT_REFERENCE	( s_texture_wrapper_cook, texture_cook_wrapper );
 	resources::register_cook	( s_texture_wrapper_cook.c_ptr() );
 
@@ -49,7 +44,6 @@ void vostok::render::register_texture_cook	( )
 
 void vostok::render::unregister_texture_cook	( )
 {
-	// FUNCTION BODY[0x773c30]
 	resources::unregister_cook	( resources::texture_wrapper_class );
 	VOSTOK_DESTROY_REFERENCE		( s_texture_wrapper_cook );
 

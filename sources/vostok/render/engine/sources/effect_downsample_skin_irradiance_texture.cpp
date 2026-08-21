@@ -14,7 +14,6 @@ void effect_downsample_skin_irradiance_texture::compile(
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "blur_irradiance_texture", NULL, "downsample_irradiance_texture", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

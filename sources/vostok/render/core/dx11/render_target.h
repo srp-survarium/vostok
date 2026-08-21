@@ -79,7 +79,6 @@ public:
 
 	void set_name( pcstr const name )
 	{
-		// FUNCTION BODY[0x1248b0]
 		R_ASSERT( !m_name.c_str( ) );
 		m_name = name;
 	}

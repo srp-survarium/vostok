@@ -371,8 +371,6 @@ public:
 	);
 	void load_from_config( configs::binary_config_value const& config );
 	fs_new::virtual_path_string get_current_configuration( );
-	// claude@NOTE: legacy body is gated #ifndef MASTER_GOLD (saves the current
-	// configuration to file); empty in the shipped MASTER_GOLD build.
 	void save_current_configuration( ) { }
 	void fill_global_macros( shader_defines_list& out_defines );
 

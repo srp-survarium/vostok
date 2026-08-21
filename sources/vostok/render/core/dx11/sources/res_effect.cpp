@@ -9,10 +9,7 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: the target attributes this ctor to dx11/res_effect.h, but that
-// header cannot see res_xs (res_effect.h -> res_xs.h -> res_xs_hw.h ->
-// resource_manager.h -> res_effect.h cycle), so the intrusive_ptr members
-// cannot be copied there; kept here until the cycle is untangled.
+// Kept out-of-line to avoid the res_effect/res_xs include cycle.
 res_pass::res_pass(
 	res_vs_ptr const& vs,
 	res_gs_ptr const& gs,
@@ -132,30 +129,25 @@ void res_pass::apply() const
 
 res_pass::~res_pass()
 {
-	// FUNCTION BODY[0x6e7e50]
 }
 
 void res_pass::destroy_impl	() const
 {
-	// FUNCTION BODY[0x6e7ee0]
 	effect_manager::ref().delete_pass( this );
 }
 
 res_shader_technique::~res_shader_technique()
 {
-	// FUNCTION BODY[0x6e7ef0]
 }
 
 void res_shader_technique::destroy_impl() const
 {
-	// FUNCTION BODY[0x6e7f30]
 	effect_manager::ref().delete_effect_technique(this);
 }
 
 bool res_effect::apply_pass(u32 id)
 {
 	res_shader_technique_ptr	technique = m_techniques[m_cur_technique];
-
 
 	if (id >= technique->m_passes.size())
 		return false;
@@ -169,7 +161,6 @@ bool res_effect::apply_pass(u32 id)
 
 res_effect::~res_effect()
 {
-	// FUNCTION BODY[0x6e8010]
 }
 
 } // namespace render

@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: the remaining world:: stubs are absent from the legacy twin (new-in-target subsystems: clouds, tracers, environment probes, sky AO, ambient volumes, grass layers, LOD, portal system, volume fog, streaming; renderer_cook is new too); the handful with nuances carry their own notes - matcher-phase work.
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include "renderer_cook_renderer_resource.h"
@@ -112,10 +111,7 @@ renderer_cook::renderer_cook( ) :
 	resources::register_cook( this );
 }
 
-// claude@NOTE: inline-vs-call wall - the target keeps mutable_buffer's
-// (pvoid,u32) ctor out-of-line (ICF-folded, delinked as boost::_bi::storage2)
-// and pushes the size before the malloc; our build inlines it into two stores.
-// Same wall on effect_cook::allocate_resource, so it is codebase-wide.
+// claude@NOTE: mutable_buffer construction remains out-of-line only in the target.
 mutable_buffer renderer_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
@@ -131,10 +127,7 @@ void renderer_cook::deallocate_resource( void* buffer )
 	FREE									(buffer);
 }
 
-// claude@NOTE: residual is one inline-vs-call - the target inlines
-// query_result_for_cook::user_data() to `mov esi,[edi+14Ch]`, our link keeps it
-// as a call, which then costs the aligned frame (push ebp/and esp,-8) the target
-// does not have and a duplicated `engine_world = NULL` store.
+// claude@NOTE: query_result_for_cook::user_data is inlined only in the target.
 void renderer_cook::create_resource(
 	resources::query_result_for_cook&		in_out_query,
 	const_buffer							raw_file_data,
@@ -226,9 +219,7 @@ static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned
 	// IDxDiagContainer* 				pDxDiagRoot
 	// IDxDiagContainer* 				pDxDiagSystemInfo
 	// tagVARIANT 						var
-	// ******
 
-	// CALL SITE INFO
 	// <0x653efe> -> HRESULT < unknown >( void* )
 	// <0x653f25> -> HRESULT < unknown >( _GUID const&, IUnknown*, unsigned long, _GUID const&, void** )
 	// <0x653f6a> -> HRESULT < unknown >( _DXDIAG_INIT_PARAMS* )
@@ -243,7 +234,6 @@ static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned
 	// <0x654057> -> unsigned long < unknown >()
 	// <0x654063> -> unsigned long < unknown >()
 	// <0x65406c> -> void < unknown >()
-	// ******
 
 	// <0>
 	// <1>
@@ -331,7 +321,6 @@ static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned
 	// <0>
 	// <1>
 	// <2>
-	// ******
 
     HRESULT result;
     bool should_cleanup_COM = false;
@@ -427,11 +416,8 @@ static bool does_os_support_dx11( )
 	// _OSVERSIONINFOEXA 				OsVersionInfo
 	// unsigned long 					major_version
 	// unsigned long 					minor_version
-	// ******
 
-	// CALL SITE INFO
 	// <0x6542f7> -> int < unknown >( _OSVERSIONINFOA* )
-	// ******
 
 	// <0>
 	// <1>
@@ -464,7 +450,6 @@ static bool does_os_support_dx11( )
 	// <4>
 	// <0x654344>|0x074|-0x007:'385'
 	// <0x65433d>|0x06d|+0x009:'386'
-	// ******
 
 	OSVERSIONINFOEX OsVersionInfo;
 
@@ -507,7 +492,6 @@ void engine::world::apply_render_options_changes( )
 	// <1>
 	// <2>
 	// <3>
-	// ******
 
 	reset_renderer								( true );
 #ifndef MASTER_GOLD
@@ -559,7 +543,6 @@ static void on_fs_iterator_materials_ready_children(
 			request_path.assignf( "%s/%s", materials_path, mname );
 			request_path.rtrim();
 			request_path.replace( "resources/material_instances/", "" );
-			// 49 target lines are retail-compiled-out source.
 			out_material_names.push_back( fs_new::virtual_path_string( request_path.c_str() ) );
 		}
 	}
@@ -717,7 +700,6 @@ void engine::world::on_renderer_configuration_config_loaded( bool async_effects,
 	// <0>
 	// <0x656deb>|0x0ab|+0x01a:'797'
 	// <0>
-	// ******
 
 	if (data.is_successful())
 	{
@@ -731,11 +713,7 @@ void engine::world::on_renderer_configuration_config_loaded( bool async_effects,
 	console_commands::save			( "user.cfg", console_commands::command_type_user_specific, memory::g_mt_allocator );
 }
 
-// claude@NOTE: LOG_INFO embeds __LINE__, so the two log sites push our physical
-// line numbers (0x43E/0x...) where the target pushes 0x323/0x32E - the original
-// .cpp had these statements at lines 803 and 814. That residual only closes when
-// this file's line numbering matches the original (the remaining carcass blocks
-// above are what shifts it).
+// LOG_INFO embeds __LINE__; keep these sites stable.
 void engine::world::reset_renderer( bool async_effects )
 {
 	LOG_INFO						("Renderer creating started...");
@@ -795,7 +773,6 @@ void engine::world::reload_shaders( )
 void engine::world::reload_modified_textures( )
 {
 	// <0x655d40>|0x000|+0x00b:'892'
-	// ******
 
 	resource_manager::ref().reload_modified_textures( );
 }
@@ -891,7 +868,6 @@ void engine::world::end_render_options_changing(
 void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
 {
 	// <0x654b01>|0x001|+0x016:'1004'
-	// ******
 
 	static_cast_checked< render::scene_view* >( scene_view.c_ptr() )->camera_set_view		( view_and_culling_matrix );
 }
@@ -899,7 +875,6 @@ void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, floa
 void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix )
 {
 	// <0x654490>|0x000|+0x01b:'1016'
-	// ******
 
 	static_cast_checked< render::scene_view* >(scene_view.c_ptr())->camera_set_projection	( projection_matrix );
 }
@@ -928,7 +903,6 @@ void engine::world::draw_scene(
 void engine::world::end_frame( )
 {
 	// <0x653ee0>|0x000|+0x003:'1111'
-	// ******
 
 	++m_frame_id;
 }
@@ -936,7 +910,6 @@ void engine::world::end_frame( )
 u32 engine::world::frame_id( )
 {
 	// <0x653ed0>|0x000|+0x003:'1116'
-	// ******
 
 	return				( m_frame_id);
 }
@@ -949,7 +922,6 @@ void engine::world::draw_ui_vertices(
 )
 {
 	// <0x655c10>|0x000|+0x018:'1132'
-	// ******
 
 	render::system_renderer::ref().draw_ui_vertices( (vertex_formats::TL const*)vertices, count, prim_type, point_type );
 }
@@ -964,7 +936,6 @@ void engine::world::add_speedtree_instance(
 	// <0>
 	// <1>
 	// <0x655bd0>|0x000|+0x039:'1227'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -980,7 +951,6 @@ void engine::world::remove_speedtree_instance(
 	// <0>
 	// <1>
 	// <0x655b90>|0x000|+0x034:'1234'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -997,7 +967,6 @@ void engine::world::update_speedtree_instance(
 	// <0>
 	// <1>
 	// <0x655b50>|0x000|+0x039:'1241'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1008,7 +977,6 @@ void engine::world::populate_speedtree_forest( base_scene_ptr const& in_scene )
 {
 	// <0>
 	// <1>
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1022,9 +990,7 @@ void engine::world::add_model(
 	bool								apply_transform
 )
 {
-	// CALL SITE INFO
 	// <0x655868> -> void < unknown >( float4x4 const& )
-	// ******
 
 	// <0x655831>|0x001|+0x004:'1253'
 	// <0>
@@ -1034,7 +1000,6 @@ void engine::world::add_model(
 	// <0x65585c>|0x02c|+0x00e:'1258'
 	// <0>
 	// <0x65586a>|0x03a|+0x023:'1260'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1052,16 +1017,13 @@ void engine::world::update_model(
 	float4x4 const&						transform
 )
 {
-	// CALL SITE INFO
 	// <0x6555f2> -> void < unknown >( float4x4 const& )
-	// ******
 
 	// <0x6555c1>|0x001|+0x004:'1265'
 	// <0>
 	// <0x6555c5>|0x005|+0x021:'1267'
 	// <0x6555e6>|0x026|+0x00e:'1268'
 	// <0x6555f4>|0x034|+0x021:'1269'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1076,7 +1038,6 @@ void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_i
 	// <0>
 	// <0x6557c4>|0x004|+0x01f:'1276'
 	// <0x6557e3>|0x023|+0x024:'1277'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1124,7 +1085,6 @@ void engine::world::set_speedtree_instance_material(
 	// LOCALS
 	// speedtree_tree* 					tree
 	// variant< 32 > 					data_variant
-	// ******
 
 	speedtree_tree*		tree				= static_cast_checked<speedtree_tree*>(v->m_speedtree_tree_ptr.c_ptr());
 	material_ptr		mtl_ptr				= static_cast_resource_ptr<material_ptr>(in_mtl_ptr);
@@ -1166,7 +1126,6 @@ static void on_model_material_effects_instance_ready( resources::queries_result&
 	// <3>
 	// <0x655745>|0x025|+0x06c:'1357'
 	// <0>
-	// ******
 
 	if (!in_render_surface)
 		return;
@@ -1193,11 +1152,8 @@ void engine::world::set_model_material(
 	// material_ptr 					mtl_ptr
 	// render_surface_instance** 		it
 	// variant< 32 > 					data_variant
-	// ******
 
-	// CALL SITE INFO
 	// <0x656581> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
-	// ******
 
 	// <0x656539>|0x009|+0x024:'1365'
 	// <0>
@@ -1271,7 +1227,6 @@ void engine::world::set_model_material(
 	// <25>
 	// <26>
 	// <27>
-	// ******
 
 	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
 
@@ -1379,7 +1334,6 @@ void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bo
 	// <1>
 	// <2>
 	// <3>
-	// ******
 
 	VOSTOK_UNREFERENCED_PARAMETERS( v, value );
 	//render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
@@ -1389,10 +1343,8 @@ void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bo
 
 void engine::world::update_model_vertex_buffer( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments )
 {
-	// CALL SITE INFO
 	// <0x654438> -> HRESULT < unknown >( ID3D11Resource*, u32, D3D11_MAP, u32, D3D11_MAPPED_SUBRESOURCE* )
 	// <0x654481> -> void < unknown >( ID3D11Resource*, u32 )
-	// ******
 
 	// <0>
 	// <1>
@@ -1409,7 +1361,6 @@ void engine::world::update_model_vertex_buffer( render_model_instance_ptr const&
 	// <0x654447>|0x047|+0x01c:'1517'
 	// <0>
 	// <0x654463>|0x063|+0x024:'1519'
-	// ******
 
 	user_render_model_instance* model = static_cast_checked<user_render_model_instance*>(v.c_ptr());
 
@@ -1432,7 +1383,6 @@ void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_pro
 	// <0>
 	// <1>
 	// <0x656e70>|0x000|+0x01b:'1539'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1444,7 +1394,6 @@ void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_
 	// <0>
 	// <1>
 	// <0x656e23>|0x003|+0x047:'1546'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1456,7 +1405,6 @@ void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
 	// <0>
 	// <1>
 	// <0x655a11>|0x001|+0x018:'1553'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1551,7 +1499,6 @@ void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_pro
 {
 	// <0>
 	// <1>
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1563,7 +1510,6 @@ void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_
 	// <0>
 	// <1>
 	// <0x6558b0>|0x000|+0x016:'1640'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1575,7 +1521,6 @@ void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
 	// <0>
 	// <1>
 	// <0x654c60>|0x000|+0x00f:'1647'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1680,7 +1625,6 @@ void engine::world::update_skeleton( render_model_instance_ptr const& v, float4x
 {
 	// <0>
 	// <0x6543d0>|0x000|+0x00d:'1725'
-	// ******
 
 	skeleton_render_model_instance* skeleton	= static_cast<skeleton_render_model_instance*>(v.c_ptr());
 	skeleton->update_render_matrices	( matrices, count );
@@ -1694,14 +1638,11 @@ void engine::world::play_particle_system(
 	float4x4 const&							transform
 )
 {
-	// CALL SITE INFO
 	// <0x654686> -> void < unknown >( resources::unmanaged_resource_ptr, float4x4 const&, bool, bool )
-	// ******
 
 	// <0>
 	// <1>
 	// <0x654650>|0x000|+0x038:'1767'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1710,15 +1651,12 @@ void engine::world::play_particle_system(
 
 void engine::world::stop_particle_system( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr in_instance )
 {
-	// CALL SITE INFO
 	// <0x65461f> -> void < unknown >( resources::unmanaged_resource_ptr, float )
-	// ******
 
 	// <0>
 	// <0x6545f0>|0x000|+0x004:'1773'
 	// <0>
 	// <0x6545f4>|0x004|+0x02d:'1775'
-	// ******
 
 	// TODO: time
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
@@ -1731,15 +1669,12 @@ void engine::world::remove_particle_system_instance(
 	base_scene_ptr const&					in_scene
 )
 {
-	// CALL SITE INFO
 	// <0x6545b7> -> void < unknown >( resources::unmanaged_resource_ptr )
-	// ******
 
 	// <0x654590>|0x000|+0x007:'1780'
 	// <0>
 	// <1>
 	// <0x654597>|0x007|+0x022:'1783'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1755,11 +1690,9 @@ void engine::world::update_particle_system_instance(
 	bool									paused
 )
 {
-	// CALL SITE INFO
 	// <0x65451c> -> void < unknown >( resources::unmanaged_resource_ptr, float4x4 const& )
 	// <0x65453d> -> void < unknown >( resources::unmanaged_resource_ptr, bool )
 	// <0x65455e> -> void < unknown >( resources::unmanaged_resource_ptr, bool )
-	// ******
 
 	// <0>
 	// <1>
@@ -1767,7 +1700,6 @@ void engine::world::update_particle_system_instance(
 	// <0x6544f0>|0x000|+0x02e:'1791'
 	// <0x65451e>|0x02e|+0x021:'1792'
 	// <0x65453f>|0x04f|+0x021:'1793'
-	// ******
 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
@@ -1785,7 +1717,6 @@ void engine::world::resize_render_output_window(
 )
 {
 	// <0x656e90>|0x000|+0x01b:'1798'
-	// ******
 
 	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->set_size(
 		width,
@@ -1798,7 +1729,6 @@ void engine::world::resize_render_output_window(
 void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
 {
 	// <0x654ca0>|0x000|+0x00f:'1803'
-	// ******
 
 	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->goto_fullscreen( );
 }
@@ -1818,7 +1748,6 @@ void engine::destroy( engine::world*& engine_world )
 	// <1>
 	// <0x655b10>|0x000|+0x00b:'1926'
 	// <0x655b1b>|0x00b|+0x014:'1927'
-	// ******
 
 	R_ASSERT					( s_world.initialized() );
 	R_ASSERT					( s_world.c_ptr() == engine_world );
@@ -1880,7 +1809,6 @@ void engine::world::set_post_process(
 particle::world& engine::world::particle_world( base_scene_ptr const& scene )
 {
 	// <0x6551f1>|0x001|+0x038:'2086'
-	// ******
 
 	return	*static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->particle_world();
 }
@@ -1892,7 +1820,6 @@ void engine::world::draw_lines(
 )
 {
 	// <0x655c80>|0x000|+0x040:'2096'
-	// ******
 
 	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_lines	( vertices, indices );
 }
@@ -1904,7 +1831,6 @@ void engine::world::draw_triangles(
 )
 {
 	// <0x655c30>|0x000|+0x040:'2101'
-	// ******
 
 	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_triangles( vertices, indices );
 }
@@ -1947,7 +1873,6 @@ void engine::world::draw_text(
 	// <9>
 	// <10>
 	// <0x6544b1>|0x001|+0x034:'2141'
-	// ******
 
 	make_ui_vertices(
 		output,
@@ -1967,7 +1892,6 @@ void engine::world::show_movie( base_scene_view_ptr const& scene_view, survarium
 {
 	// <0>
 	// <0x655651>|0x001|+0x00f:'2146'
-	// ******
 
 	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_movie( movie );
 }
@@ -1976,7 +1900,6 @@ void engine::world::hide_movie( base_scene_view_ptr const& scene_view, survarium
 {
 	// <0x655190>|0x000|+0x008:'2151'
 	// <0x655198>|0x008|+0x021:'2152'
-	// ******
 
 	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_movie( movie );
 }
@@ -1985,7 +1908,6 @@ void engine::world::show_text_manager( base_scene_view_ptr const& scene_view, su
 {
 	// <0>
 	// <0x654110>|0x000|+0x010:'2158'
-	// ******
 
 	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_text_manager( tm );
 }
@@ -1994,7 +1916,6 @@ void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, su
 {
 	// <0>
 	// <0x6540f0>|0x000|+0x010:'2164'
-	// ******
 
 	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_text_manager( tm );
 }
@@ -2002,7 +1923,6 @@ void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, su
 void engine::world::execute_scaleform_command( survarium::scaleform_render_command command )
 {
 	// <0x653eb0>|0x000|+0x00b:'2169'
-	// ******
 
 	command.execute	( );
 }
@@ -2142,8 +2062,6 @@ void engine::world::set_gamma_correction_factor( const float value )
 	// typedef
 	// 	vostok::render::texture_named_instance*
 	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

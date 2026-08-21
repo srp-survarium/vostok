@@ -12,15 +12,12 @@ void effect_fstage_smoke_custom_lighted_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b9690]
 	shader_configuration configuration;
-
 
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 
 	compile_begin("vertex_base", "forward_base_smoke_custom_lighted", compiler, &configuration, config);
-
 
 		float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
 		float   solid_transparency   = 1.0f;
@@ -42,7 +39,6 @@ void effect_fstage_smoke_custom_lighted_materials::compile(
 
 		compiler.set_constant("solid_transparency",   solid_transparency);
 		compiler.set_constant("solid_color_specular", solid_color_specular);
-
 
 		compiler.set_cull_mode(D3D_CULL_NONE);
 	compile_end(compiler);

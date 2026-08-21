@@ -11,7 +11,6 @@ void effect_forward_system::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bb380]
 	compiler.begin_technique();
 		compiler.begin_pass("test", NULL, "test", shader_configuration(), NULL);
 	 		compiler.set_depth(true, true);

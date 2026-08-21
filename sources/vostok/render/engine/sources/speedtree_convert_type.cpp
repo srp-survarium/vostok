@@ -6,13 +6,11 @@ namespace render {
 
 SpeedTree::Vec3 vostok_to_speedtree( float3 const& value )
 {
-	// FUNCTION BODY[0x709580]
 	return SpeedTree::Vec3( value.elements );
 }
 
 SpeedTree::Mat4x4 vostok_to_speedtree( float4x4 const& value )
 {
-	// FUNCTION BODY[0x7095b0]
 	SpeedTree::Mat4x4 result;
 	memory::copy(
 		&result.m_afRowCol[0],
@@ -25,19 +23,16 @@ SpeedTree::Mat4x4 vostok_to_speedtree( float4x4 const& value )
 
 float3 speedtree_to_vostok( SpeedTree::Vec3 const& value )
 {
-	// FUNCTION BODY[0x709560]
 	return float3( value.x, value.y, value.z );
 }
 
 float4 speedtree_to_vostok( SpeedTree::Vec4 const& value )
 {
-	// FUNCTION BODY[0x709540]
 	return float4( value.x, value.y, value.z, value.w );
 }
 
 float4x4 speedtree_to_vostok( SpeedTree::Mat4x4 const& value )
 {
-	// FUNCTION BODY[0x7095a0]
 	float4x4 result;
 	memory::copy(
 		&result.elements[0],

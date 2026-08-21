@@ -16,7 +16,6 @@
 
 namespace vostok {
 namespace render {
-// 8 target lines are likely retail-compiled-out source.
 stage_debug::stage_debug( renderer* in_renderer, renderer_context* context ) :
 	stage( in_renderer, context ),
 	m_sphere_geometry( 32, 32 )
@@ -62,7 +61,6 @@ void stage_debug::render_environment_probe_preview( )
 
 void stage_debug::execute( )
 {
-
 
 	if ( !is_enabled( ) || !is_effects_ready( ) )
 	{

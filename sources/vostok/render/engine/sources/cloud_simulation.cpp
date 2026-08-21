@@ -17,7 +17,6 @@ cloud_simulation::cloud_simulation(
 	m_clouds_size_y	( in_size_y ),
 	m_clouds_size_z	( in_size_z )
 {
-	// 15 target lines are likely retail-compiled-out source.
 	m_voxels = NEW_ARRAY( voxel, m_clouds_size_x * m_clouds_size_y * m_clouds_size_z );
 	m_densities = NEW_ARRAY( float, m_clouds_size_x * m_clouds_size_y * m_clouds_size_z );
 	cloud_offset = float3( 0.0f, 0.0f, 0.0f );
@@ -62,7 +61,6 @@ cloud_simulation::voxel const& cloud_simulation::get_voxel(
 
 void cloud_simulation::compute_cloud_density( )
 {
-	// 18 target lines are likely retail-compiled-out source.
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
@@ -77,11 +75,9 @@ void cloud_simulation::compute_cloud_density( )
 					out_density = 0.0f;
 					continue;
 				}
-				// 4 target lines are likely retail-compiled-out source.
 				float accumulated = 0.0f;
 
 				float num = 0.0f;
-				// 5 target lines are likely retail-compiled-out source.
 				for ( s32 x0 = -2; x0 <= 2; ++x0 )
 				{
 					for ( s32 y0 = -2; y0 <= 2; ++y0 )
@@ -97,12 +93,10 @@ void cloud_simulation::compute_cloud_density( )
 
 								sample_z %= m_clouds_size_z;
 							}
-							// 5 target lines are likely retail-compiled-out source.
 							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
 						}
 					}
 				}
-				// 3 target lines are likely retail-compiled-out source.
 				if ( num > 0.0f )
 					out_density = accumulated / num;
 				else
@@ -111,7 +105,6 @@ void cloud_simulation::compute_cloud_density( )
 		}
 	}
 }
-// 110 target lines are likely retail-compiled-out source.
 bool cloud_simulation::is_empty( u32 const x, u32 const y, u32 const z ) const
 {
 	return get_voxel( x, y, z ).x == 0;
@@ -119,7 +112,6 @@ bool cloud_simulation::is_empty( u32 const x, u32 const y, u32 const z ) const
 
 bool cloud_simulation::in_grid( u32 const y, u32 const z, u32 const ) const
 {
-	// 2 target lines are likely retail-compiled-out source.
 	return y < m_clouds_size_y &&
 		z < m_clouds_size_z;
 }
@@ -132,7 +124,6 @@ void cloud_simulation::smooth_transparency( ) {
 			for ( u32 y = 1; y < m_clouds_size_y - 1; ++y )
 			{
 				voxel v = get_voxel( x, y, z );
-				// 6 target lines are likely retail-compiled-out source.
 				float transparency = static_cast<float>( v.x );
 
 				if ( x - 1 < m_clouds_size_x && in_grid( y, z, x - 1 ) && is_empty( x - 1, y, z ) )
@@ -165,7 +156,6 @@ void cloud_simulation::compute_direct_light(
 	cloud_key_parameters const& init_key
 )
 {
-	// 65 target lines are likely retail-compiled-out source.
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )

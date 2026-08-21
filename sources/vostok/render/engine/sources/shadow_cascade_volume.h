@@ -24,9 +24,6 @@ public:
 
 	void compute_planes( )
 	{
-		// FUNCTION BODY[0x76a20]
-		// claude@NOTE: legacy LIGHT_CUBOIDSIDEPOLYS_COUNT constant adapted to the literal 4
-		// (canonical dropped the constants)
 		for (u32 it=0; it<4; it++)
 		{
 			polygon&	poly	=	light_cuboid_polys[it];
@@ -79,7 +76,6 @@ public:
 				break;
 		}
 
-
 		float3 align_vector;
 		align_vector.set( 0.f, 0.f, 0.f );
 
@@ -108,7 +104,6 @@ public:
 		light_ray.origin +=	align_vector;
 
 		// The next translation contains this shift as well.
-		// 3 target lines are likely retail-compiled-out source.
 		// Reset to reuse.
 		align_vector.set( 0.f, 0.f, 0.f );
 
@@ -125,7 +120,6 @@ public:
 					per_plane_view		= math::cross_product( light_cuboid_polys[align_planes[p]].plane.normal, view_ray.direction );
 					float3 per_view_to_plane;
 					per_view_to_plane	= math::cross_product( per_plane_view, view_ray.direction );
-					// 4 target lines are likely retail-compiled-out source.
 					float tmp_mag = -plane_dot_ray / view_frustum_rays[i].direction.dot_product(per_view_to_plane);
 
 					max_mag = (max_mag < tmp_mag) ?  tmp_mag : max_mag;
@@ -134,11 +128,9 @@ public:
 
 			if( math::is_zero( max_mag ) )
 				continue;
-			// 3 target lines are likely retail-compiled-out source.
 			float dist = -light_cuboid_polys[align_planes[p]].plane.normal.dot_product( translation );
 			align_vector += (light_cuboid_polys[align_planes[p]].plane.normal*(dist*max_mag));
 		}
-
 
 		translation	+=			 align_vector;
 		light_ray.origin +=		 align_vector;
@@ -226,7 +218,6 @@ public:
 			view_frustum_rays[i].origin	+=	( view_frustum_rays[i].direction*min_dist );
 		}
 	}
-	// 4 target lines are likely retail-compiled-out source.
 	bool check_cull_plane_valid( math::plane const &plane, float &sign, float mad_factor = 0.f )
 	{
 		bool	valid = false;

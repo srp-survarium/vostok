@@ -16,7 +16,6 @@ m_buffer_size	( size),
 m_changed		( true),
 m_is_registered	( false )
 {
-	// FUNCTION BODY[0x738fd0]
 	D3D_BUFFER_DESC	desc;
 	desc.ByteWidth		= m_buffer_size;
 	desc.Usage			= D3D_USAGE_DEFAULT;
@@ -24,7 +23,7 @@ m_is_registered	( false )
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags		= 0;
 
-	// Retail line records include source stripped by the Master Gold configuration.
+	// Preserve target line metadata.
 #line 40
 	HRESULT res = device::ref().d3d_device()->CreateBuffer( &desc, 0, &m_hardware_buffer);
 	CHECK_RESULT(res);
@@ -39,14 +38,12 @@ m_is_registered	( false )
 #line 57
 shader_constant_buffer::~shader_constant_buffer()
 {
-	// FUNCTION BODY[0x738f80]
 	safe_release( m_hardware_buffer); FREE( m_buffer_data);
 }
 
 #line 67
 void shader_constant_buffer::update()
 {
-	// FUNCTION BODY[0x738f40]
 	if ( m_changed)
 	{
 		if ( !backend::ref().disabled_shader_constansts_set)
@@ -58,7 +55,6 @@ void shader_constant_buffer::update()
 
 void shader_constant_buffer::destroy_impl() const
 {
-	// FUNCTION BODY[0x738fc0]
 	resource_manager::ref().release( this);
 }
 

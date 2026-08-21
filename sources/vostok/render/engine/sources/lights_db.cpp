@@ -11,10 +11,7 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: the target CALLS collision::new_space_partitioning_tree (one statement,
-// 0x2f bytes); our base LTCG-inlines it into loose_oct_tree::loose_oct_tree plus the
-// allocation null check, which splits the one statement into three. Cross-module inlining
-// decision, not source-steerable from here.
+// claude@NOTE: collision tree construction is inlined only in the base.
 lights_db::lights_db( ) :
 	m_lights_tree( 0 )
 {
@@ -238,11 +235,7 @@ void lights_db::add_light( u32 const id, light_props* props )
 	}
 }
 
-// claude@NOTE: the u32 (not light_data) search value is proven by the target's
-// __lower_bound<light_data*,unsigned int,__less_2<light_data,unsigned int>,...>
-// instantiation, which needs the free operator< in lights_db.h. The target CALLS that
-// __lower_bound; our base inlines the binary search, merging the two statements into one -
-// the mirror image of add_light, where the target inlines and we call. Inlining heuristics.
+// claude@NOTE: target evidence requires the u32 key; the base inlines this search.
 void lights_db::update_light( u32 id, light_props* props )
 {
 	lights_type::iterator found	= std::lower_bound( m_lights.begin(), m_lights.end(), id );

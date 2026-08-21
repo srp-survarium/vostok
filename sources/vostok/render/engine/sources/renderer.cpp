@@ -440,7 +440,6 @@ renderer::renderer( renderer_context* renderer_context ) :
 	m_view_mode_stage				= 0;
 	m_present_stage					= 0;
 
-
 	m_stages[gbuffer_render_stage]					= NEW( stage_gbuffer )					( this, m_renderer_context );
 	m_stages[decals_accumulate_render_stage]		= NEW( stage_decals_accumulate )		( this, m_renderer_context );
 	m_stages[accumulate_distortion_render_stage]	= NEW( stage_accumulate_distortion )	( this, m_renderer_context );
@@ -478,7 +477,6 @@ renderer::renderer( renderer_context* renderer_context ) :
 
 renderer::~renderer( )
 {
-
 
 	DELETE					( m_frame_sync_event );
 	DELETE					( m_timing_event );
@@ -559,7 +557,6 @@ void renderer::setup_render_output_window(
 		window_width * res_viewport.left, window_height * res_viewport.top, window_width * res_viewport.width( ), window_height * res_viewport.height( ), 0.f, 1.f
 	};
 
-
 	backend::ref( ).set_viewport( d3d_viewport );
 }
 
@@ -597,7 +594,6 @@ void renderer::execute_stages( )
 
 		if ( !current_stage )
 			continue;
-		// 6 target lines are likely retail-compiled-out source.
 		u32 prev_draw_calls = backend::ref( ).num_draw_calls;
 		if ( s_do_stages_profiling ) {
 			m_timing_timer.start( );
@@ -609,7 +605,6 @@ void renderer::execute_stages( )
 		{
 			stat->dips[0]				= backend::ref( ).num_draw_calls - prev_draw_calls;
 			stat->elapsed_cpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
-
 
 			m_timing_event->issue	( );
 			m_timing_event->wait	( );
@@ -665,10 +660,7 @@ inline bool sort_by_texture_predicate::operator()( render_surface_instance const
 	return left_pass->get_ps( )->m_textures->compare( *right_pass->get_ps( )->m_textures ) < 0;
 }
 
-// claude@MATCH: the nested two-arg max in the return binds the by-value max(float,float)
-// overload, which the inliner expands (the target has NO max<float> template instantiation
-// anywhere, while max<unsigned int> instantiations survive); a 3-arg max(x,y,z) spelling
-// binds the by-const-ref template chain that MSVC leaves out-of-line, splitting the return.
+// claude@MATCH: nested two-argument max calls select the target's inlined overload.
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	bbox.modify					( model_transform );
@@ -677,16 +669,11 @@ static float screen_factor( float3 const& view_position, math::aabb bbox, float4
 	return						( math::clamp_r( math::max( extents.x, math::max( extents.y, extents.z ) )/math::max( math::squared_length( view_position - center ), math::epsilon_6 ), 0.f, 1.f ) );
 }
 
-// claude@NOTE: target inlines screen_factor's whole body here (0x11e in the `);` record,
-// aabb::modify called from inside the expansion) and calls memory::strip_pointer x4 in
-// the vector growth paths; base keeps the screen_factor call (even after screen_factor
-// went all-SSE/no-helper-calls) and inlines strip_pointer - inverse LTCG choices at the
-// same boundaries. Statement pairing is otherwise 1:1 with attribution-only deltas.
+// claude@NOTE: screen_factor and strip_pointer have inverse target/base inline choices here.
 void renderer::fill_opaque_models( )
 {
 	if ( !options::ref( ).current.m_use_shader_lods ) {
 		vector<render_surface_instance*>& opaque_models = m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
-
 
 		opaque_models.clear( );
 
@@ -807,7 +794,6 @@ static void push_point(
 	float						v
 )
 {
-	// 3 target lines are likely retail-compiled-out source.
 	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
 	vertex_item.m_position.set				(x, y, z, 1);
 	vertex_item.m_uv.set					(u, v);
@@ -832,7 +818,6 @@ static void make_ui_vertices(
 	float2 pos_rt			(0, 0);
 	float2 pos				= in_position;
 	u32 symb_count			= strlen(in_text);
-
 
 	pcstr ch				= in_text;
 	float const height		= in_font.get_height();
@@ -909,13 +894,7 @@ static void draw_text(
 	system_renderer::ref().draw_ui_vertices((vertex_formats::TL*)&out_vertices.front(), out_vertices.size(), 0, 0);
 }
 
-// claude@NOTE: target CALLS math::color_rgba for the shadow color (custom cc: b in xmm0,
-// r/g/a on stack) and keeps this body small enough that LTCG inlines it at every caller
-// site; our LTCG instead inlines color_rgba here (two floor calls + packing), fattening
-// the body so the callers keep out-of-line calls. Not fixable with noinline on color_rgba:
-// the target INLINES the same color_rgba in draw_stages_stats (floor bit-twiddle x5) and
-// promotes it into backend::clear_render_targets in renderer::render - the per-site mix
-// is whole-program LTCG state, not a declspec.
+// claude@NOTE: color_rgba and this helper have inverse target/base inline choices.
 static void draw_text_shadowed(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
@@ -928,13 +907,7 @@ static void draw_text_shadowed(
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
-// claude@NOTE: the three TRGT_ONLY records are the is_effects_ready early-return's
-// flush( on_draw_scene, true, true ) kept as a separate cold block at function end in the
-// target (own record + own `}` epilogue record) where base tail-merges it with the
-// s_enable_rendering copy; the clear_render_targets statement also differs because
-// retail's LTCG promotes the math::color ctor floats into backend::clear_render_targets'
-// custom convention (3 stack floats + xmm0) while base packs the u32 via color_rgba here.
-// Both are optimizer placement/convention, not source shape.
+// claude@NOTE: the target keeps the effects-ready return cold and uses a different color call convention.
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -945,7 +918,6 @@ void renderer::render(
 	vostok::ui::font const*				default_font
 )
 {
-
 
 	backend::ref( ).num_vs_changes	=
 	backend::ref( ).num_ps_changes	=
@@ -971,7 +943,6 @@ void renderer::render(
 
 		return;
 	}
-	// 6 target lines are likely retail-compiled-out source.
 	if ( !s_enable_rendering )
 	{
 		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
@@ -982,7 +953,6 @@ void renderer::render(
 	}
 	render::scene* const scene		= static_cast_checked< render::scene* >( in_scene.c_ptr( ) );
 	render::scene_view* view		= static_cast_checked< render::scene_view* >( in_view.c_ptr( ) );
-	// 3 target lines are likely retail-compiled-out source.
 	scene_view_mode view_mode		= view->get_view_mode( );
 	if ( s_view_mode_value != lit_view_mode )
 		view_mode					= scene_view_mode( s_view_mode_value );
@@ -1003,7 +973,6 @@ void renderer::render(
 	m_renderer_context->set_current_time	( m_last_frame_time );
 	m_renderer_context->set_time_delta	( time_delta );
 
-
 	static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->resize( device::ref( ).m_device_removed );
 
 	setup_render_output_window	( output_window, viewport );
@@ -1018,15 +987,12 @@ void renderer::render(
 		return;
 	}
 
-
 	if ( options::ref( ).current.m_use_texture_streaming )
 		scene->process_streaming( m_renderer_context->get_p( ), m_renderer_context->get_view_pos( ), window_size_x, window_size_y );
-	// 3 target lines are likely retail-compiled-out source.
 	bool const need_temporal_jittering = options::ref( ).current.m_use_temporal_antialiasing && view_mode == lit_view_mode && m_renderer_context->scene_view( )->m_use_post_process;
 
 	temporal_projection_matrix_modifier temporal_jitterer( m_renderer_context, window_size_x, window_size_y, need_temporal_jittering );
 	temporal_jitterer.push_jittering( );
-
 
 	if ( m_renderer_context->scene( )->get_clouds( ) )
 	{
@@ -1050,7 +1016,6 @@ void renderer::render(
 		part_world->tick		( time_delta, m_renderer_context->get_v( ) );
 
 	backend::ref( ).reset		( );
-	// 3 target lines are likely retail-compiled-out source.
 	if ( s_do_stages_profiling )
 	{
 
@@ -1065,10 +1030,8 @@ void renderer::render(
 	{
 		s_visibility_stage_stats.dips[0]				= 0;
 
-
 		s_visibility_stage_stats.elapsed_cpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
 		s_visibility_stage_stats.stg					= m_visibility_stage;
-
 
 		m_timing_event->issue	( );
 		m_timing_event->wait	( );
@@ -1076,11 +1039,9 @@ void renderer::render(
 		s_visibility_stage_stats.elapsed_gpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
 	}
 
-
 	backend::ref( ).reset		( );
 
 	backend::ref( ).reset_depth_stencil_target( );
-
 
 	if ( scene->get_grass( ) && options::ref( ).current.m_use_vegetation_trample )
 	{
@@ -1095,43 +1056,34 @@ void renderer::render(
 
 	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_generic_0 ), &*m_renderer_context->get_rt( rt_generic_1 ), 0, 0 );
 	backend::ref( ).clear_render_targets( math::color( 0.f, 0.f, 0.f, 0.f ) );
-	// 9 target lines are likely retail-compiled-out source.
 	fill_opaque_models			( );
 
 	backend::ref( ).disable_DrawIndexed = false;
 
 	execute_stages				( );
 
-
 	backend::ref( ).reset_depth_stencil_target( );
 	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_present ), 0, 0, 0 );
 	scene->flush				( on_draw_scene, true, false );
 #ifndef MASTER_GOLD
-	// 207 target lines are likely retail-compiled-out source.
 #endif // #ifndef MASTER_GOLD
 	temporal_jitterer.pop_jittering( );
 
 	draw_debug					( scene, view, frame_time, default_font );
-	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).flush_rt_shader_resources( );
 	scene->flush				( on_draw_scene, true, false );
-	// 5 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_depth_stencil_target( );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
-
 
 	present						( output_window, viewport );
 
 	if ( static_cast_checked< render_output_window* >( output_window.c_ptr( ) ) )
 	{
 
-
 		if ( s_ui_enabled && static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer )
 		{
 
-
 			scene_view const* s	= m_renderer_context->scene_view( );
-			// 3 target lines are likely retail-compiled-out source.
 			survarium::flash_text_manager* text_manager = s->m_flash_text_manager; vector< survarium::flash_movie* > movies_vec; for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
 				movies_vec.push_back( s->m_flash_movies[i]->movie );
 
@@ -1141,10 +1093,8 @@ void renderer::render(
 
 			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.begin( ), movies_vec.size( ), text_manager );
 		}
-		// 3 target lines are likely retail-compiled-out source.
 		backend::ref( ).flush_rt_shader_resources( );
 		scene->flush			( on_draw_scene, false, true );
-
 
 		device::ref( ).m_device_removed = false;
 
@@ -1183,9 +1133,7 @@ void renderer::render(
 	}
 }
 
-// claude@NOTE: target inlines the render_target_ptr refcount operations that base emits as
-// threading::single_threading_policy::increment/decrement calls; base also partial-inlines
-// grass_world::render_debug's entry guard here.
+// claude@NOTE: render-target refcounts and the grass debug guard have different inline boundaries.
 void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
@@ -1193,7 +1141,6 @@ void renderer::draw_debug(
 	vostok::ui::font const*		default_font
 )
 {
-	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).disable_DrawIndexed		= false;
 
 	backend::ref( ).reset_depth_stencil_target( );
@@ -1203,10 +1150,8 @@ void renderer::draw_debug(
 	if ( m_picking_lighting_luminance_mode && default_font )
 		draw_luminance_picker_info			( default_font );
 
-
 	if ( s_do_stages_profiling && default_font )
 		draw_stages_stats					( default_font );
-	// 6 target lines are likely retail-compiled-out source.
 	u32 num_vs_changes		= backend::ref( ).num_vs_changes;
 	u32 num_ps_changes		= backend::ref( ).num_ps_changes;
 	u32 num_il_changes		= backend::ref( ).num_il_changes;
@@ -1216,13 +1161,11 @@ void renderer::draw_debug(
 	u32 num_psc_changes		= backend::ref( ).num_psc_changes;
 	u32 num_pst_changes		= backend::ref( ).num_pst_changes;
 	u32 num_pss_changes		= backend::ref( ).num_pss_changes;
-	// 5 target lines are likely retail-compiled-out source.
 	statistics::ref( ).debug_stat_group.textures_compression_duration.value		= backend::ref( ).m_texture_compression_time;
 	statistics::ref( ).debug_stat_group.dxt_rt_tex_creation_duration.value		= backend::ref( ).m_dxt_rt_tex_creation_time;
 	statistics::ref( ).debug_stat_group.cpu_textures_compression_duration.value	= backend::ref( ).m_cpu_compression_time;
 	statistics::ref( ).debug_stat_group.gpu_num_compressed_textures.value		= backend::ref( ).m_gpu_num_compressed_textures;
 	statistics::ref( ).debug_stat_group.cpu_num_compressed_textures.value		= backend::ref( ).m_cpu_num_compressed_textures;
-	// 3 target lines are likely retail-compiled-out source.
 	statistics::ref( ).debug_stat_group.num_vertex_shader_changes.value			= num_vs_changes;
 	statistics::ref( ).debug_stat_group.num_pixel_shader_changes.value			= num_ps_changes;
 	statistics::ref( ).debug_stat_group.num_vs_textures_changes.value			= num_vst_changes;
@@ -1240,13 +1183,11 @@ void renderer::draw_debug(
 
 	const double es2 = frame_time;
 
-
 	statistics::ref( ).general_stat_group.render_frame_time.cpu_time.value		= es2 * 1000.;
 	statistics::ref( ).general_stat_group.render_frame_time.gpu_time.value		= es2 * 1000.;
 
 	statistics::ref( ).general_stat_group.fps.value			= math::floor( es2 > 0. ? 1. / es2 : 0. );
 	statistics::ref( ).general_stat_group.cpu_fps.value		= math::floor( es2 > 0. ? 1. / es2 : 0. );
-	// 5 target lines are likely retail-compiled-out source.
 	statistics::ref( ).general_stat_group.num_setted_shader_constants.value		= backend::ref( ).num_setted_shader_constants;
 	statistics::ref( ).visibility_stat_group.num_draw_calls.value				= backend::ref( ).num_draw_calls;
 	statistics::ref( ).general_stat_group.render_only_time.value				= 0.;
@@ -1256,14 +1197,12 @@ void renderer::draw_debug(
 	statistics::ref( ).debug_stat_group.render_tergets_video_memory.value		=
 		( resource_manager::ref( ).get_render_target_video_memory( ) >> 20 ) -
 		statistics::ref( ).debug_stat_group.gbuffer_video_memory.value;
-	// 5 target lines are likely retail-compiled-out source.
 	if ( m_stage_debug && view->editor_debug_mode )
 		m_stage_debug->execute				( );
 
 	if ( m_stages[sun_shadows_accumulate_render_stage] )
 
 		m_stages[sun_shadows_accumulate_render_stage]->m_context->set_w_identity( );
-	// 5 target lines are likely retail-compiled-out source.
 	if ( m_visibility_stage )
 		m_visibility_stage->debug_render	( );
 
@@ -1287,12 +1226,7 @@ void renderer::draw_debug(
 
 }
 
-// claude@NOTE: residual cause - the target inlines draw_text_shadowed at all four sites
-// (~0x250 bytes each, with floor bit-twiddle expanded) but CALLS math::color_rgba x5 for
-// the rgbl_colors init (one PDB record per element); our LTCG does the inverse - it folds
-// the color constants (coalescing the four init records into one) and keeps out-of-line
-// draw_text_shadowed calls at the first two sites. Statement shape and the four locals
-// match; the gap is the inliner, not the source.
+// claude@NOTE: draw_text_shadowed and color_rgba have inverse target/base inline choices.
 void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
 	fixed_string< 64 > strings[8];
@@ -1326,12 +1260,7 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 		draw_text_shadowed	( default_font, strings[4 + i].get_buffer( ), 5, 82 + i * 12, rgbl_colors[i].m_value );
 }
 
-// claude@NOTE: the whole gap is draw_text_shadowed inline-vs-call: target inlines it at
-// all eight sites (draw_text x16 + inlined color_rgba/floor, ~0x260 bytes per statement),
-// base keeps eight calls because its draw_text_shadowed body carries an inlined color_rgba
-// (see the note there). Statement records pair 1:1 otherwise; the two base-only records
-// (fixed_string ctors, string_index init) are code the target scheduler sank into
-// neighboring records - target has no records for them at all.
+// claude@NOTE: draw_text_shadowed remains out-of-line only in the base at these sites.
 void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
 	double total_gpu_time					= 0.;
@@ -1367,7 +1296,6 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 		draw_text_shadowed	( default_font, result_string_gpu_time.c_str( ), 201, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_cpu_time.c_str( ), 285, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_dips.c_str( ), 369, string_index * 12 + 5, char_color );
-		// 3 target lines are likely retail-compiled-out source.
 		total_gpu_time						+= stat.average_time( true );
 
 		total_cpu_time						+= stat.average_time( false );
@@ -1398,11 +1326,7 @@ void renderer::present(
 	m_present_stage->execute	( m_renderer_context->get_t( rt_present ) );
 }
 
-// claude@NOTE: 16 statement records on both sides; target CALLS math::color_rgba x2 for
-// the draw_screen_lines colors while base inlines it (floor x4) - same TU-wide
-// color_rgba inline inversion as draw_text_shadowed. The loop-body record splits
-// (TRGT_ONLY at the loop's closing brace) are scheduler line-attribution over the same
-// float3 math.
+// claude@NOTE: color_rgba remains out-of-line only in the target at these sites.
 void renderer::draw_frame_histogram( ) const
 {
 	if ( !backend::ref( ).m_render_output )
@@ -1420,7 +1344,6 @@ void renderer::draw_frame_histogram( ) const
 
 	u32 count					= 0;
 
-
 	for ( frame_histogram_info* info = m_fps_history.front( ); info; info = info->next )
 	{
 
@@ -1436,7 +1359,6 @@ void renderer::draw_frame_histogram( ) const
 		);
 		++count;
 	}
-
 
 	if ( count > 1 )
 	{
@@ -1509,8 +1431,6 @@ void renderer::draw_frame_histogram( ) const
 	// typedef
 	// 	vostok::render::ui::vertex*
 	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

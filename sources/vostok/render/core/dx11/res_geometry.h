@@ -33,7 +33,6 @@ class res_geometry : public resource_intrusive_base {
 		m_dcl( declaration ),
 		m_is_registered( false )
 	{
-		// FUNCTION BODY[0x124920]
 	}
 
 	~res_geometry( );

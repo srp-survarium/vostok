@@ -12,14 +12,12 @@ void effect_hiz_occlusion::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "dumb", NULL, "hiz_debug_color", shader_configuration( ), NULL );
 	compiler.set_depth( true, true );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "dumb", NULL, "hiz_debug_color", shader_configuration( ), NULL );
@@ -29,7 +27,6 @@ void effect_hiz_occlusion::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_copy_scene_depth", NULL, "hiz_copy_scene_depth", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
@@ -38,14 +35,12 @@ void effect_hiz_occlusion::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_depth", NULL, "hiz_depth", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_downsample_depth", NULL, "hiz_downsample_depth", shader_configuration( ), NULL );
@@ -54,14 +49,12 @@ void effect_hiz_occlusion::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 
-
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_merge_mip", NULL, "hiz_merge_mip", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_fill_culling_results_buffer", NULL, "hiz_fill_culling_results_buffer", shader_configuration( ), NULL );
@@ -70,7 +63,6 @@ void effect_hiz_occlusion::compile(
 
 	compiler.end_pass( );
 	compiler.end_technique( );
-
 
 	compiler.begin_technique( );
 	compiler.begin_pass( "hiz_copy_scene_depth", NULL, "hiz_copy_to_lockable_rt", shader_configuration( ), NULL );

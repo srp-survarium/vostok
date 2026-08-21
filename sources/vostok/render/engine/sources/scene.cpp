@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: every remaining stub is absent from the legacy scene.cpp remainder (only the three select_* helpers survive there; clouds/tracers/probes/sky-AO/ambient-volumes/streaming/portal-system/grass/trample are new-in-target) - matcher-phase work.
 #include "scene.h"
 #include <vostok/console_command.h>
 #include <vostok/collision/api.h>
@@ -84,7 +83,6 @@ particle::render_particle_emitter_instance* scene::particle_engine::create_rende
 			instance_color
 		);
 
-	// FUNCTION BODY[0x63ef30]: 12
 	// <0>
 	// <1>
 	// <2>
@@ -99,7 +97,6 @@ particle::render_particle_emitter_instance* scene::particle_engine::create_rende
 	// <0x63ef31>|0x001|+0x046:'78'
 	// <0x63ef77>|0x047|-0x003:'78'
 	// <0x63ef74>|0x044|+0x006:'79'
-	// ******
 }
 
 void scene::particle_engine::destroy( particle::render_particle_emitter_instance*& instance )
@@ -108,17 +105,13 @@ void scene::particle_engine::destroy( particle::render_particle_emitter_instance
 	MT_DELETE			( render_instance );
 	instance			= 0;
 
-	// CALL SITE INFO
 	// <0x63d431> -> void* < unknown >( u32 )
-	// ******
 
-	// FUNCTION BODY[0x63d410]: 3
 	// <0x63d411>|0x001|+0x007:'83'
 	// <0x63d418>|0x008|+0x028:'84'
 	// <0x63d440>|0x030|+0x00b:'85'
 	// <0x63d44b>|0x03b|-0x004:'85'
 	// <0x63d447>|0x037|+0x00b:'86'
-	// ******
 }
 
 base_scene_ptr scene::particle_engine::get_scene( particle::world& world )
@@ -293,9 +286,7 @@ particle::world* scene::particle_world( )
 {
 	return m_particle_world.c_ptr( );
 
-	// FUNCTION BODY[0x63cf90]: 1
 	// <0x63cf90>|0x000|+0x006:'283'
-	// ******
 }
 
 void scene::add_speedtree_instance( speedtree_instance_ptr instance, float4x4 const& transform, bool populate_forest )
@@ -304,11 +295,9 @@ void scene::add_speedtree_instance( speedtree_instance_ptr instance, float4x4 co
 	if(populate_forest)
 		m_speedtree_forest->populate_forest();
 
-	// FUNCTION BODY[0x63f090]: 3
 	// <0x63f090>|0x000|+0x036:'288'
 	// <0x63f0c6>|0x036|+0x007:'289'
 	// <0x63f0cd>|0x03d|+0x00c:'290'
-	// ******
 }
 
 void scene::remove_speedtree_instance( speedtree_instance_ptr instance, bool populate_forest )
@@ -317,11 +306,9 @@ void scene::remove_speedtree_instance( speedtree_instance_ptr instance, bool pop
 	if(populate_forest)
 		m_speedtree_forest->populate_forest();
 
-	// FUNCTION BODY[0x63f010]: 3
 	// <0x63f016>|0x006|+0x033:'295'
 	// <0x63f049>|0x039|+0x006:'296'
 	// <0x63f04f>|0x03f|+0x00c:'297'
-	// ******
 }
 
 void scene::set_speedtree_instance_transform( speedtree_instance_ptr instance, float4x4 const& transform, bool populate_forest )
@@ -330,20 +317,16 @@ void scene::set_speedtree_instance_transform( speedtree_instance_ptr instance, f
 	if(populate_forest)
 		m_speedtree_forest->populate_forest();
 
-	// FUNCTION BODY[0x63ef90]: 3
 	// <0x63ef90>|0x000|+0x039:'302'
 	// <0x63efc9>|0x039|+0x007:'303'
 	// <0x63efd0>|0x040|+0x00c:'304'
-	// ******
 }
 
 void scene::populate_speedtree_forest( )
 {
 	m_speedtree_forest->populate_forest();
 
-	// FUNCTION BODY[0x63ef80]: 1
 	// <0x63ef80>|0x000|+0x00c:'309'
-	// ******
 }
 
 void scene::add_tracer( tracer_model_instance_ptr const& instance, float4x4 const& initialize_transform )
@@ -365,7 +348,6 @@ void scene::remove_tracer( tracer_model_instance_ptr const& instance )
 {
 	vector< tracer_model_instance_ptr >::iterator	it	= std::find( m_tracers.begin( ), m_tracers.end( ), instance );
 	ASSERT						( it != m_tracers.end( ) );
-	// 3 target lines are likely retail-compiled-out source.
 	m_tracers.erase				( it );
 }
 
@@ -676,7 +658,6 @@ void scene::select_models(
 		if ( !selection.empty( ) )
 			return;
 	}
-	// 3 target lines are likely retail-compiled-out source.
 	math::frustum view_frustum (mat_vp);
 
 	selection.clear();
@@ -726,16 +707,13 @@ void scene::add_light( u32 id, light_props* props )
 {
 	m_lights->add_light( id, props);
 
-	// FUNCTION BODY[0x640a30]: 1
 	// <0x640a30>|0x000|+0x011:'759'
-	// ******
 }
 
 void scene::update_light( u32 id, light_props* props )
 {
 	m_lights->update_light( id, props);
 
-	// FUNCTION BODY[0x6409e0]: 7
 	// <0x6409e3>|0x003|+0x03d:'764'
 	// <0>
 	// <1>
@@ -743,16 +721,13 @@ void scene::update_light( u32 id, light_props* props )
 	// <3>
 	// <4>
 	// <5>
-	// ******
 }
 
 void scene::remove_light( u32 id )
 {
 	m_lights->remove_light( id);
 
-	// FUNCTION BODY[0x63ef20]: 1
 	// <0x63ef21>|0x001|+0x00e:'775'
-	// ******
 }
 
 void scene::update_environment_probe( u32 id, environment_probe_properties const& properties )
@@ -764,7 +739,6 @@ void scene::update_environment_probe( u32 id, environment_probe_properties const
 		m_environment_probes.push_back		( NEW( environment_probe )( m_environment_probes_tree, properties, id ) );
 		return;
 	}
-
 
 	( *i )->set_properties					( properties );
 
@@ -792,7 +766,6 @@ void scene::update_sky_ambient_occlusion( u32 id, sky_ambient_occlusion_properti
 		return;
 	}
 
-
 	( *i )->set_properties					( properties );
 
 }
@@ -818,7 +791,6 @@ void scene::update_ambient_volume( u32 id, ambient_volume_properties const& prop
 		m_ambient_volumes.push_back			( NEW( ambient_volume )( properties, id ) );
 		return;
 	}
-
 
 	( *i )->set_properties					( properties );
 
@@ -856,11 +828,9 @@ void scene::add_decal( u32 id, decal_properties const& properties )
 {
 	m_decals.push_back						(NEW(decal_instance_node)(NEW(decal_instance)(m_decals_tree, properties, id)));
 
-	// FUNCTION BODY[0x63e9b0]: 1
 	// <0x63e9b1>|0x001|+0x08b:'917'
 	// <0x63ea3c>|0x08c|-0x007:'917'
 	// <0x63ea35>|0x085|+0x016:'918'
-	// ******
 }
 
 void scene::update_decal( u32 id, decal_properties const& properties )
@@ -882,7 +852,6 @@ void scene::update_decal( u32 id, decal_properties const& properties )
 		add_decal							(id, properties);
 	}
 
-	// FUNCTION BODY[0x63eec0]: 16
 	// <0x63eec6>|0x006|+0x00e:'922'
 	// <0>
 	// <0x63eed4>|0x014|+0x002:'924'
@@ -899,14 +868,12 @@ void scene::update_decal( u32 id, decal_properties const& properties )
 	// <0>
 	// <0x63eefe>|0x03e|+0x00b:'936'
 	// <0>
-	// ******
 }
 
 void scene::remove_decal( u32 id )
 {
 	// LOCALS
 	// scene::decal_instance_node* 		instance
-	// ******
 
 	decal_instance_node* instance			= m_decals.front();
 
@@ -921,7 +888,6 @@ void scene::remove_decal( u32 id )
 		instance							= m_decals.get_next_of_object(instance);
 	}
 
-	// FUNCTION BODY[0x63d820]: 12
 	// <0x63d821>|0x001|+0x009:'942'
 	// <0>
 	// <0x63d82a>|0x00a|+0x006:'944'
@@ -936,16 +902,13 @@ void scene::remove_decal( u32 id )
 	// <0x63d84e>|0x02e|-0x008:'952'
 	// <0>
 	// <0x63d846>|0x026|+0x026:'954'
-	// ******
 }
 
 void scene::add_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
 	m_volume_fogs.insert			( std::pair< u32, volume_fog_parameters >( id, in_parameters ) );
 
-	// FUNCTION BODY[0x63d2f0]: 1
 	// <0x63d2fc>|0x00c|+0x024:'958'
-	// ******
 }
 
 void scene::update_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
@@ -991,12 +954,10 @@ void scene::update_lines( const u32 add_count )
 
 	ASSERT						( m_line_indices.size() + add_count < s_max_vertex_count );
 
-	// FUNCTION BODY[0x63fa30]: 4
 	// <0x63fa30>|0x000|+0x01a:'1015'
 	// <0x63fa4a>|0x01a|+0x007:'1016'
 	// <0>
 	// <1>
-	// ******
 }
 
 void scene::render_lines( bool covering_effect )
@@ -1029,14 +990,12 @@ void scene::update_triangles( const u32 add_count )
 
 	ASSERT						( m_triangle_vertices.size( ) + add_count < s_max_vertex_count );
 
-	// FUNCTION BODY[0x63f980]: 6
 	// <0>
 	// <1>
 	// <0x63f980>|0x000|+0x01b:'1046'
 	// <0x63f99b>|0x01b|+0x007:'1047'
 	// <0>
 	// <1>
-	// ******
 }
 
 void scene::render_triangles( bool covering_effect )
@@ -1074,14 +1033,7 @@ void scene::draw_lines( vectora< vertex_colored > const& vertices, vectora< u16 
 	// u16 const* 						e
 	// const u16 						n
 	// u16 const* 						i
-	// ******
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x62ee66 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN272") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x62ee66 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN274") })
-	// ******
-
-	// FUNCTION BODY[0x63fc70]: 10
 	// <0>
 	// <0x63fc78>|0x008|+0x030:'1073'
 	// <0>
@@ -1093,7 +1045,6 @@ void scene::draw_lines( vectora< vertex_colored > const& vertices, vectora< u16 
 	// <0x63fd0c>|0x09c|+0x014:'1080'
 	// <0x63fd20>|0x0b0|+0x13c:'1081'
 	// <0x63fe5c>|0x1ec|-0x00a:'1081'
-	// ******
 }
 
 void scene::draw_triangles( vectora< vertex_colored > const& vertices, vectora< u16 > const& indices )
@@ -1114,14 +1065,7 @@ void scene::draw_triangles( vectora< vertex_colored > const& vertices, vectora< 
 	// u16 const* 						e
 	// const u16 						n
 	// u16 const* 						i
-	// ******
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x62ec66 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN280") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x62ec66 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN282") })
-	// ******
-
-	// FUNCTION BODY[0x63fa80]: 11
 	// <0x63fa88>|0x008|+0x037:'1086'
 	// <0>
 	// <0x63fabf>|0x03f|+0x005:'1088'
@@ -1134,7 +1078,6 @@ void scene::draw_triangles( vectora< vertex_colored > const& vertices, vectora< 
 	// <0x63fc5c>|0x1dc|-0x00a:'1094'
 	// <0>
 	// <1>
-	// ******
 }
 
 void scene::flush(
@@ -1181,7 +1124,6 @@ void scene::select_model( render_model_instance_impl_ptr const& instance, const 
 	if ( !is_selected )
 		m_selected_models.erase				( found );
 
-	// FUNCTION BODY[0x63e980]: 10
 	// <0x63e982>|0x002|+0x016:'1166'
 	// <0x63e998>|0x018|+0x004:'1167'
 	// <0>
@@ -1192,7 +1134,6 @@ void scene::select_model( render_model_instance_impl_ptr const& instance, const 
 	// <5>
 	// <6>
 	// <0x63e99c>|0x01c|+0x009:'1175'
-	// ******
 }
 
 void scene::set_portal_system( resources::unmanaged_resource_ptr pss )
@@ -1255,8 +1196,6 @@ void scene::dump_scene_statistics( ) const
 	)
 	{
 		fixed_string< 128 > model_name( "<unknown>" );
-		// 3 target lines are likely retail-compiled-out source (the model name lookup).
-
 
 		if ( model_name.length( ) > 17 )
 			model_name = model_name.substr( 17 );

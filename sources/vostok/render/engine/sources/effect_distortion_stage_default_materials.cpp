@@ -11,14 +11,11 @@ void effect_distortion_stage_default_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// 4 target lines are likely retail-compiled-out source.
 	vostok::math::float3 distortion_scale = vostok::math::float3( config["distortion_scale"] );
 	shader_configuration shader_config;
-	// 3 target lines are likely retail-compiled-out source.
 	compile_begin( "vertex_base", "distortion_base", compiler, &shader_config, config );
 	compiler.set_stencil( false, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP );
 	compiler.set_texture( "t_base", pcstr( config["texture_distortion"] ), 0, false, u32( -1 ) );
-
 
 	compiler.set_texture( "t_position", "$user$position", 0, false, u32( -1 ) );
 

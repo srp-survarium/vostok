@@ -1905,7 +1905,6 @@ void stage_lights::render_light( light* l, bool shadowers_pass )
 			geometry				= m_pyramid_geometry.geometry;
 			break;
 		}
-		// 11 target lines are likely retail-compiled-out source.
 		case light_type_obb :
 		case light_type_capsule :
 		case light_type_plane_spot : {
@@ -2202,7 +2201,6 @@ void stage_lights::debug_render( )
 
 	math::color const color	= math::color(u32(0), 255, 32);
 
-	// 8 target lines are likely retail-compiled-out source.
 	backend::ref().set_render_targets	( &*m_context->get_rt(rt_present), 0, 0, 0);
 
 	typedef lights_db::lights_type	lights_type;
@@ -2212,7 +2210,6 @@ void stage_lights::debug_render( )
 		if ( (*i).light->get_type() != light_type_plane_spot )
 			continue;
 
-		// 26 target lines are likely retail-compiled-out source.
 		float4x4 transform		= (*i).light->m_xform;
 		vertex_colored vertices[8];
 		for ( u32 i = 0; i<array_size(vertices); ++i )

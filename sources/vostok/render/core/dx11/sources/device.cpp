@@ -5,8 +5,7 @@
 
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "dxgi.lib" )
-// claude@NOTE: D3DReflect (res_xs_hw.h) lives in d3dcompiler.lib; the legacy tree
-// pulled it in from the retired render_base platform_dx11.cpp.
+// D3DReflect is provided by d3dcompiler.lib.
 #pragma comment( lib, "d3dcompiler.lib" )
 
 vostok::command_line::key g_debug_render_device( "debug_dx", "", "render", "create d3d device with D3D_CREATE_DEVICE_DEBUG flag" );
@@ -33,8 +32,7 @@ void device::on_device_removed( )
 {
 	HRESULT const reason = device::ref( ).d3d_device( )->GetDeviceRemovedReason( );
 
-//	claude@NOTE: every line of this function is load-bearing - the six LOG_ERROR
-//	sites below bake __LINE__ (38..43 in the shipped image), do not reflow them.
+	// LOG_ERROR embeds __LINE__; keep these calls contiguous.
 	if ( reason == DXGI_ERROR_DEVICE_HUNG )					LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_HUNG" );
 	else if ( reason == DXGI_ERROR_DEVICE_REMOVED )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_REMOVED" );
 	else if ( reason == DXGI_ERROR_DEVICE_RESET )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_RESET" );
@@ -43,13 +41,6 @@ void device::on_device_removed( )
 	else if ( reason == S_OK )								LOG_ERROR( "Device remove reason: %s", "S_OK" );
 
 	m_device_removed = true;
-
-//	claude@NOTE: lines 47..52 emit no code in the shipped build (its PDB line map puts
-//	this function's closing brace on 53) and their content is unrecoverable; the span
-//	is kept so the __LINE__ constants above stay correct. Residual vs the target: MSVC
-//	spends its inline budget on the FIRST arm's log-temp destructor and out-lines the
-//	merged one, where the target inlines the single merged copy at the join.
-
 }
 
 static bool is_resolution_already_exists( u32 const& monitor_index, math::int2 const& res )
@@ -73,10 +64,6 @@ void device::create_d3d( )
 	m_use_perfhud	= false;
 
 #ifndef	MASTER_GOLD
-//	claude@NOTE: MASTER_GOLD compiles this span out, so the shipped image carries no
-//	evidence of what it contained - only of how much of the file it took: the PDB line
-//	map holds no record on 71..99 while pinning CHECK_RESULT on 70 and the EnumAdapters
-//	fallback on 100. The NVPerfHUD search below is the legacy idiom laid out to fit.
 	//	Look for the 'NVIDIA PerfHUD' adapter.
 	//	If it is present, override the default settings.
 	UINT adapter_index = 0;
@@ -108,13 +95,10 @@ void device::create_d3d( )
 	u32				monitor_index	= 0;
 	IDXGIOutput*	output			= 0;
 
-//	claude@NOTE: neither initialiser above keeps a line record of its own - the
-//	scheduler sinks both stores into the m_outputs clear below.
 	memset( m_outputs, 0, sizeof( m_outputs ) );
 
 	while ( m_adapter->EnumOutputs( monitor_index, &output ) != DXGI_ERROR_NOT_FOUND )
 	{
-//	claude@NOTE: this store files under the GetDisplayModeList record below.
 		m_outputs[monitor_index] = output;
 
 		u32 num_display_modes = 0;
@@ -127,10 +111,6 @@ void device::create_d3d( )
 
 		output->GetDisplayModeList( DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num_display_modes, display_modes );
 
-//	claude@NOTE: real_resolution_index is the write cursor into the monitor's row of
-//	g_monitor_resolutions - it only advances for a resolution that is not there yet, so
-//	it runs behind resolution_index as soon as the mode list repeats a resolution at
-//	several refresh rates.
 		u32 real_resolution_index = 0;
 		LOG_INFO( "monitor %d", monitor_index );
 		for ( u32 resolution_index = 0; resolution_index < num_display_modes; ++resolution_index )
@@ -188,22 +168,12 @@ void device::create( )
 		driver_type = D3D_DRIVER_TYPE_REFERENCE;
 	}
 
-//	claude@NOTE: the shipped line map records nothing on 190..198, 205..207 and
-//	222..225, and their content cannot be recovered - the statements that bracket them
-//	are pinned by their own records (the perfhud arm on 188, the D3D11CreateDevice
-//	closing paren on 219, CHECK_RESULT on 221 through its __LINE__ 0DDh, log_ref_count
-//	on 226), so the spans are held open to keep the five baked __LINE__ constants of
-//	this function - 0AEh, 0B0h, 0BBh, 0DDh, 0E5h - on 174, 176, 187, 221 and 229.
-//	Only their extent is evidence; nothing about their content is.
-
 	D3D_FEATURE_LEVEL feature_levels[] =
 	{
 		D3D_FEATURE_LEVEL_11_0,
 		D3D_FEATURE_LEVEL_10_1,
 		D3D_FEATURE_LEVEL_10_0,
 	};
-
-
 
 	HRESULT const result = D3D11CreateDevice(
 		m_use_perfhud ? m_adapter : 0,
@@ -219,9 +189,6 @@ void device::create( )
 	);
 
 	CHECK_RESULT( result );
-
-
-
 
 	log_ref_count( "* create: deviceref:", m_device );
 
@@ -246,19 +213,10 @@ bool device::get_query_data( ID3D11Query* in_query, void* in_out_data, u32 const
 	while ( ( result == S_FALSE ) && in_wait )
 	{
 
-
 		result = m_context->GetData( in_query, in_out_data, in_data_size, 0 );
-
-
-
-
-
 
 	}
 
-//	claude@NOTE: this body records statements on 244, 246, 250, 257, 262, 264, 266,
-//	271, 273, 274 and 278 only; the spans between them emit nothing in the shipped
-//	image and are held open so the recorded statements keep their own lines.
 	if ( result == S_OK )
 
 		return true;
@@ -266,14 +224,11 @@ bool device::get_query_data( ID3D11Query* in_query, void* in_out_data, u32 const
 	if ( result != S_FALSE )
 	{
 
-
-
 		if ( result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET ||
 			result == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
 			m_device_removed = true;
 
 	}
-
 
 	return false;
 
@@ -296,14 +251,6 @@ ID3D11DeviceContext* device::d3d_context( ) const
 {
 	return m_context;
 }
-
-// claude@NOTE: the shipped device.cpp leaves 299..310 free of line records between
-// d3d_context (296..298) and get_avaliable_video_memory (312..314). Both globals are
-// read by is_resolution_already_exists above and written by create_d3d, and a POD
-// array leaves no dynamic initializer to place it by, so this gap is the only
-// file-scope room the line map offers them.
-
-
 
 int g_num_monitors;
 math::int2 g_monitor_resolutions[6][512];

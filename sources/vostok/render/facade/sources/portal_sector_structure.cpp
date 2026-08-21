@@ -55,7 +55,6 @@ u32 portal_sector_structure::get_sector_id( memory::base_allocator& allocator, f
 		if ( std::find_if( results.begin( ) + 1, results.end( ), std::not1( collision_result_user_data_equalls_to( active_sector_id ) ) ) != results.end( ) )
 		{
 			results.clear( );
-			// 12 target lines are likely retail-compiled-out source.
 			math::cuboid c( bbox, math::float4x4( ).identity( ) );
 			if ( m_portals_geometry->cuboid_query( 0, c, results ) )
 			{
@@ -85,7 +84,6 @@ u32 portal_sector_structure::get_sector_id( memory::base_allocator& allocator, f
 
 void portal_sector_structure::load( configs::binary_config_value* value_ptr )
 {
-
 
 	configs::binary_config_value portals_cfg = (*value_ptr)["portals"];
 	m_portal_ids_buffer = static_cast<u32*>( VOSTOK_MALLOC_IMPL(

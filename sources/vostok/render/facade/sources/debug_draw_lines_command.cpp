@@ -8,7 +8,6 @@ namespace debug {
 
 void draw_lines_command::execute( )
 {
-	// FUNCTION BODY[0x7573d0]
 	m_renderer.draw_lines		( m_scene, m_vertices, m_indices );
 }
 
@@ -16,7 +15,6 @@ void draw_lines_command::execute( )
 
 void defer_execution( base_command& command, base_scene_ptr const& scene )
 {
-	// FUNCTION BODY[0x757360]
 	command.deferred_next					= 0;
 
 	if ( scene->last_command )
@@ -29,7 +27,6 @@ void defer_execution( base_command& command, base_scene_ptr const& scene )
 
 void defer_execution( base_command& command, base_scene_view_ptr const& scene_view )
 {
-	// FUNCTION BODY[0x757330]
 	command.deferred_next					= 0;
 
 	if ( scene_view->last_command )
@@ -44,7 +41,6 @@ namespace debug {
 
 void draw_lines_command::defer_execution( )
 {
-	// FUNCTION BODY[0x757390]
 	render::defer_execution		( *this, m_scene );
 }
 
