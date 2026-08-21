@@ -434,7 +434,7 @@ pcstr get_textures_path2( )
 
 static ID3D11CommandList* s_command_lists[1000];
 
-resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
+resource_manager::resource_manager( configs::binary_config_ptr const& in_config ) :
 	sh_created					( 0),
 	sh_returned					( 0),
 	tl_created					( 0),
@@ -442,7 +442,7 @@ resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
 	sl_created					( 0),
 	m_deferred_context			( NULL),
 	m_render_target_video_memory( 0),
-	shader_name_to_mask_config	( config),
+	shader_name_to_mask_config	( in_config),
 	m_num_bytes_of_texture_video_memory( 0),
 	m_num_bytes_of_buffers_video_memory( 0),
 	m_tasks_type				( tasks::create_new_task_type( "texture_create_task", 0)),
@@ -1729,6 +1729,7 @@ res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& bind
 	}
 }
 
+#line 3240
 void resource_manager::release( res_xs<vs_data> const* vs )
 {
 	if( !vs->is_registered())
@@ -1742,6 +1743,7 @@ void resource_manager::release( res_xs<vs_data> const* vs )
 
 	LOG_ERROR( "!ERROR: Failed to find VS.");
 }
+#line 1745
 
 res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& binder )
 {
@@ -1765,6 +1767,7 @@ res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& bind
 	}
 }
 
+#line 3284
 void resource_manager::release( res_xs<gs_data> const* gs )
 {
 	if( !gs->is_registered())
@@ -1778,6 +1781,7 @@ void resource_manager::release( res_xs<gs_data> const* gs )
 
 	LOG_ERROR( "!ERROR: Failed to find GS.");
 }
+#line 1781
 
 res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& binder )
 {
@@ -1801,6 +1805,7 @@ res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& bind
 	}
 }
 
+#line 3329
 void resource_manager::release( res_xs<ps_data> const* ps )
 {
 	if( !ps->is_registered())
@@ -1814,6 +1819,7 @@ void resource_manager::release( res_xs<ps_data> const* ps )
 
 	LOG_ERROR( "!ERROR: Failed to find PS.");
 }
+#line 1817
 
 res_geometry* resource_manager::create_geometry(
 	D3D11_INPUT_ELEMENT_DESC const* decl,
