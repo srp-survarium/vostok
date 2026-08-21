@@ -34,7 +34,8 @@ struct binary_shader_source : public resources::unmanaged_resource {
 	{
 	}
 
-	virtual ~binary_shader_source( ) { }
+	// the target dtor detaches shader_source (temp + swap) before member destruction
+	virtual ~binary_shader_source( ) { shader_source = 0; }
 
 	resources::managed_resource_ptr shader_source;
 	void* m_shader_byte_code;
@@ -158,7 +159,8 @@ public:
 
 	void push_texture_unique( res_texture* texture, pcstr path );
 
-	res_effect( ) : m_cur_technique( 0 ), m_registered( false )
+	// the target ctor leaves m_cur_technique uninitialized (select_technique sets it)
+	res_effect( ) : m_registered( false )
 	{
 	}
 

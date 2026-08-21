@@ -95,8 +95,9 @@ void device::create_d3d( )
 		for ( u32 resolution_index = 0; resolution_index < array_size( g_monitor_resolutions[0] ); ++resolution_index )
 			g_monitor_resolutions[monitor_index][resolution_index] = math::int2( 0, 0 );
 
-	u32				monitor_index	= 0;
-	IDXGIOutput*	output			= 0;
+	u32				monitor_index		= 0;
+	u32				num_display_modes	= 0;
+	IDXGIOutput*	output				= 0;
 
 	memset( m_outputs, 0, sizeof( m_outputs ) );
 
@@ -104,7 +105,7 @@ void device::create_d3d( )
 	{
 		m_outputs[monitor_index] = output;
 
-		u32 num_display_modes = 0;
+		num_display_modes = 0;
 
 		//	ask for the number of supported modes first
 

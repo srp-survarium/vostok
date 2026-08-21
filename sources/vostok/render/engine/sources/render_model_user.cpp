@@ -61,7 +61,7 @@ void user_render_model_instance::assign_surface( user_render_surface* surface )
 	m_surface_instance.m_render_surface = surface;
 	m_surface_instance.m_transform		= &m_transform;
 	m_surface_instance.m_parent			= this;
-	m_surface_instance.m_flags			= visible_flag;
+	m_surface_instance.m_flags			= visible_flag | cast_shadow_flag;
 }
 
 void user_render_model_instance::get_surfaces(

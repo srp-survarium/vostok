@@ -11,6 +11,7 @@ static pcstr const depth_render_target_texture_name = "$user$depth";
 namespace vostok {
 namespace render {
 
+#line 19
 res_render_output::res_render_output( HWND window, bool windowed ) :
 	m_swap_chain( NULL ),
 	m_base_rt( NULL ),
@@ -23,20 +24,17 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 {
 	ZeroMemory( &m_swap_chain_desc, sizeof( m_swap_chain_desc ) );
 
-	m_window = window;
-	m_windowed = windowed;
+#line 38
+	m_window = window; m_windowed = windowed;
 
 	m_swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	m_swap_chain_desc.BufferCount = 1;
 	m_swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
-	select_resolution(
-		m_swap_chain_desc.BufferDesc.Width,
-		m_swap_chain_desc.BufferDesc.Height,
-		m_windowed,
-		m_window
-	);
+#line 45
+	if ( m_window ) select_resolution( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, m_windowed, m_window ); else GetLastError();
 
+#line 50
 	if ( m_windowed )
 	{
 		m_swap_chain_desc.BufferDesc.RefreshRate.Numerator = 0;
@@ -54,14 +52,21 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 	m_swap_chain_desc.SampleDesc.Count = 1;
 	m_swap_chain_desc.SampleDesc.Quality = 0;
 	m_swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+
+
 	m_swap_chain_desc.OutputWindow = m_window;
 	m_swap_chain_desc.Windowed = m_windowed;
+
 	if ( !m_windowed )
+	{
+		// flags stay zero from ZeroMemory; the explicit store is only fullscreen
 		m_swap_chain_desc.Flags = 0;
+	}
 
 	initialize_swap_chain( NULL );
 }
 
+#line 81
 res_render_output::~res_render_output( )
 {
 	log_ref_count( "m_base_zb", m_base_zb );
@@ -71,11 +76,13 @@ res_render_output::~res_render_output( )
 	safe_release( m_base_rt );
 }
 
+#line 90
 void res_render_output::destroy_impl( ) const
 {
 	resource_manager::ref().release( this );
 }
 
+#line 95
 void res_render_output::initialize_swap_chain( IDXGISwapChain* swap_chain )
 {
 	ASSERT( !m_swap_chain );
@@ -90,38 +97,35 @@ void res_render_output::initialize_swap_chain( IDXGISwapChain* swap_chain )
 		R_ASSERT( hr == S_OK );
 
 		IDXGIAdapter* pDXGIAdapter;
+#line 106
 		hr = pDXGIDevice->GetParent( __uuidof( IDXGIAdapter ), (void**)&pDXGIAdapter );
 		R_ASSERT( hr == S_OK );
 
 		IDXGIFactory* dxgi_factory;
+#line 110
 		hr = pDXGIAdapter->GetParent( __uuidof( IDXGIFactory ), (void**)&dxgi_factory );
 		R_ASSERT( hr == S_OK );
 
-		hr = dxgi_factory->CreateSwapChain(
-			device::ref().d3d_device(),
-			&m_swap_chain_desc,
-			&m_swap_chain
-		);
+#line 113
+		hr = dxgi_factory->CreateSwapChain( device::ref().d3d_device(), &m_swap_chain_desc, &m_swap_chain );
 		R_ASSERT( hr == S_OK );
 	}
 	else
 		m_swap_chain = swap_chain;
 
+#line 125
 	update_targets();
 }
 
+#line 128
 void res_render_output::present( )
 {
-	m_present_sync_mode = options::ref().current.m_vsync ?
-		D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
+	m_present_sync_mode = options::ref().current.m_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
 
 	HRESULT res = m_swap_chain->Present( m_present_sync_mode, 0 );
 
-	if (
-		res == DXGI_ERROR_DEVICE_REMOVED ||
-		res == DXGI_ERROR_DEVICE_RESET ||
-		res == DXGI_ERROR_DRIVER_INTERNAL_ERROR
-	)
+	if ( res == DXGI_ERROR_DEVICE_REMOVED || res == DXGI_ERROR_DEVICE_RESET ||
+		res == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
 	{
 		device::ref().on_device_removed();
 	}
@@ -131,17 +135,22 @@ void res_render_output::present( )
 	}
 }
 
+#line 145
 DXGI_RATIONAL res_render_output::select_refresh( u32 width, u32 height, DXGI_FORMAT fmt ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( width, height, fmt );
 
 	DXGI_RATIONAL res;
+
+#line 153
 	res.Numerator = 0;
 	res.Denominator = 1;
 
+#line 175
 	return res;
 }
 
+#line 178
 void res_render_output::select_resolution( u32& width, u32& height, bool windowed, HWND window ) const
 {
 	RECT rect;
@@ -157,45 +166,37 @@ void res_render_output::select_resolution( u32& width, u32& height, bool windowe
 	}
 }
 
-bool set_client_rect(
-	HWND h_wnd,
-	s32 pos_x,
-	s32 pos_y,
-	s32 size_x,
-	s32 size_y
-)
+#line 193
+bool set_client_rect( HWND h_wnd, s32 pos_x, s32 pos_y, s32 size_x, s32 size_y )
 {
 	RECT rect = { pos_x, pos_x, pos_x + size_x, pos_y + size_y };
-	AdjustWindowRect( &rect, GetWindowLong( h_wnd, GWL_STYLE ), FALSE );
-	RECT rect2;
-	GetWindowRect( h_wnd, &rect2 );
 
-	SetWindowLong(
-		h_wnd,
-		GWL_STYLE,
-		GetWindowLong( h_wnd, GWL_STYLE ) | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
-	);
+
+	AdjustWindowRect( &rect, GetWindowLong( h_wnd, GWL_STYLE ), FALSE );
+	RECT rect2; GetWindowRect( h_wnd, &rect2 );
+
+	SetWindowLong( h_wnd, GWL_STYLE, GetWindowLong( h_wnd, GWL_STYLE ) | WS_CAPTION | WS_SYSMENU | WS_VISIBLE );
 	SetWindowPos( h_wnd, NULL, pos_x, pos_y, size_x, size_y, SWP_SHOWWINDOW );
+
+#line 206
 	return true;
 }
 
-void res_render_output::set_size(
-	const u32 in_width,
-	const u32 in_height,
-	const bool in_fullscreen,
-	bool force_resize
-)
+#line 209
+void res_render_output::set_size( const u32 in_width, const u32 in_height, const bool in_fullscreen, bool force_resize )
 {
 	m_windowed = !in_fullscreen;
 
 	RECT desktop_rect;
 	GetClientRect( GetDesktopWindow(), &desktop_rect );
 
+
 	u32 const screen_width = GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_height = GetSystemMetrics( SM_CYSCREEN );
 
-	u32 const pos_x = screen_width > in_width ? (screen_width - in_width) / 2 : 0;
-	u32 const pos_y = screen_height > in_height ? (screen_height - in_height) / 2 : 0;
+#line 235
+	u32 const pos_x = ( math::max( screen_width, in_width ) - in_width ) / 2;
+	u32 const pos_y = ( math::max( screen_height, in_height ) - in_height ) / 2;
 
 	if ( in_fullscreen )
 		SetWindowPos( m_window, NULL, 0, 0, in_width, in_height, SWP_SHOWWINDOW );
@@ -204,57 +205,56 @@ void res_render_output::set_size(
 
 	if ( !in_fullscreen )
 		set_client_rect( m_window, pos_x, pos_y, in_width, in_height );
+
+#line 250
 }
 
+#line 252
 void res_render_output::resize( bool force_resize )
 {
 	resize( m_windowed, 0, 0, force_resize );
 }
 
-void res_render_output::resize(
-	bool windowed,
-	const u32 size_x,
-	const u32 size_y,
-	bool force_resize
-)
+#line 257
+void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_y, bool force_resize )
 {
-	m_windowed = windowed;
-	m_swap_chain_desc.Windowed = m_windowed;
-
 	DXGI_MODE_DESC& buffer_desc = m_swap_chain_desc.BufferDesc;
 
 	math::uint2 new_size = math::uint2( size_x, size_y );
+
 	if ( !new_size.x || !new_size.y )
-		select_resolution( new_size.x, new_size.y, m_windowed, m_window );
+		if ( m_window ) select_resolution( new_size.x, new_size.y, windowed, m_window ); else GetLastError();
 
-	if ( !force_resize && buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y )
+	if ( !force_resize && buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y && m_windowed == windowed )
 		return;
 
-	if ( new_size.x < 16 )
+	if ( new_size.x < 16 || new_size.y < 16 )
 		return;
 
-	if ( new_size.y < 16 )
-		return;
+#line 274
+	m_swap_chain_desc.Windowed = m_windowed = windowed;
 
 	buffer_desc.Width = new_size.x;
 	buffer_desc.Height = new_size.y;
 
+#line 297
 	log_ref_count( "refCount:pBaseZB", m_base_zb );
 	log_ref_count( "refCount:pBaseRT", m_base_rt );
 
 	safe_release( m_base_rt );
 	m_texture_zb->set_hw_texture( NULL );
 
+#line 303
 	CHECK_RESULT(
 		m_swap_chain->ResizeBuffers(
 			m_swap_chain_desc.BufferCount,
 			buffer_desc.Width,
 			buffer_desc.Height,
 			buffer_desc.Format,
-			0
-		)
+			0 )
 	);
 
+#line 313
 	IDXGIOutput* output = m_windowed ?
 		NULL : device::ref().get_output( options::ref().current.m_monitor_index );
 
@@ -264,6 +264,7 @@ void res_render_output::resize(
 
 		MSG msg;
 		BOOL message_result;
+#line 323
 		while ( (message_result = GetMessage( &msg, NULL, 0, 0 )) )
 		{
 			if ( message_result != -1 )
@@ -273,30 +274,36 @@ void res_render_output::resize(
 			}
 		}
 
+#line 332
 		CHECK_RESULT( m_swap_chain->SetFullscreenState( !m_windowed, output ) );
 	}
 
 	update_targets();
+
+#line 338
 	update_window_properties();
 	m_present_sync_mode = select_presentation_interval();
+
+#line 343
 }
 
+#line 345
 void res_render_output::goto_fullscreen( )
 {
 	if ( m_swap_chain && m_window && !m_windowed )
 	{
 		CHECK_RESULT(
-			m_swap_chain->SetFullscreenState(
-				!m_windowed,
-				device::ref().get_output( options::ref().current.m_monitor_index )
-			)
+			m_swap_chain->SetFullscreenState( !m_windowed,
+				device::ref().get_output( options::ref().current.m_monitor_index ) )
 		);
 	}
 }
 
+#line 356
 void res_render_output::update_targets( )
 {
 	HRESULT res;
+
 
 	ID3DTexture2D* buffer;
 	res = m_swap_chain->GetBuffer( 0, __uuidof( ID3DTexture2D ), (void**)&buffer );
@@ -309,9 +316,11 @@ void res_render_output::update_targets( )
 	update_depth_stencil_buffer();
 }
 
+#line 372
 void res_render_output::update_depth_stencil_buffer( )
 {
 	ID3DTexture2D* depth_texture;
+
 
 	D3D_TEXTURE2D_DESC desc_depth;
 	desc_depth.Width = m_swap_chain_desc.BufferDesc.Width;
@@ -326,8 +335,8 @@ void res_render_output::update_depth_stencil_buffer( )
 	desc_depth.CPUAccessFlags = 0;
 	desc_depth.MiscFlags = 0;
 
+#line 392
 	HRESULT res = device::ref().d3d_device()->CreateTexture2D( &desc_depth, NULL, &depth_texture );
-#line 393
 	CHECK_RESULT( res );
 
 	D3D_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -337,33 +346,31 @@ void res_render_output::update_depth_stencil_buffer( )
 	descDSV.ViewDimension = D3D_DSV_DIMENSION_TEXTURE2D;
 	descDSV.Texture2D.MipSlice = 0;
 
+#line 403
 	res = device::ref().d3d_device()->CreateDepthStencilView( depth_texture, &descDSV, &m_base_zb );
-#line 404
 	CHECK_RESULT( res );
 
-#line 342
+#line 406
 	static u32 depth_texture_id = 0;
 	m_depth_rexture_name.assignf( "%s%d", depth_render_target_texture_name, depth_texture_id++ );
 
-	m_texture_zb = resource_manager::ref().create_texture(
-		m_depth_rexture_name.get_buffer(),
-		0,
-		0,
-		false,
-		true,
-		true,
-		u32( -1 )
-	);
+	m_texture_zb = resource_manager::ref().create_texture( m_depth_rexture_name.get_buffer(), 0, 0, false, true, true, u32( -1 ) );
 	m_texture_zb->set_hw_texture( depth_texture );
 
 	depth_texture->Release();
 }
 
+#line 416
 u32 res_render_output::select_presentation_interval( )
 {
-	return options::ref().current.m_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
+	return options::ref().current.m_vsync ?
+		D3DPRESENT_INTERVAL_ONE :
+		D3DPRESENT_INTERVAL_DEFAULT;
+
+#line 422
 }
 
+#line 424
 void res_render_output::update_window_properties( )
 {
 }

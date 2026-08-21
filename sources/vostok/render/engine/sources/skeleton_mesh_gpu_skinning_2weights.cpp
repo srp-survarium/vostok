@@ -20,9 +20,7 @@ static D3D_INPUT_ELEMENT_DESC hardware_2weights_skinning_vertex_layout[] =
 	{"TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,	0, 32, 	D3D_INPUT_PER_VERTEX_DATA, 0},
 };
 
-skeleton_mesh_gpu_skinning_2weights::skeleton_mesh_gpu_skinning_2weights( )
-{
-}
+skeleton_mesh_gpu_skinning_2weights::skeleton_mesh_gpu_skinning_2weights( ) { m_vertex_input_type = skeletal_4_bones_mesh_vertex_input_type; }
 
 skeleton_mesh_gpu_skinning_2weights::~skeleton_mesh_gpu_skinning_2weights( )
 {

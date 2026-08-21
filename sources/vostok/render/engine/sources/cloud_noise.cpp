@@ -20,13 +20,13 @@ static float const aperiodic_noise_table[8][8] =
 
 float cloud_noise::evaluate( float x, float y, u32 num_octaves )
 {
-	num_octaves = math::max( num_octaves, 1u );
+	num_octaves = math::max<u32>( num_octaves, 1u );
 
 	float result = 0.0f;
 
 	for ( u32 octave_index = 0; octave_index < num_octaves; ++octave_index )
 	{
-		float const octave_scale = static_cast<float>( math::floor( math::pow( 2.0f, octave_index ) ) );
+		float const octave_scale = math::pow( 2.0f, octave_index );
 
 		float const table_x = frac( octave_scale * x ) * 8.0f;
 		float const table_y = frac( octave_scale * y ) * 8.0f;

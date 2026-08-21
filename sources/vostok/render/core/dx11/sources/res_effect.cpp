@@ -19,7 +19,8 @@ res_pass::res_pass(
 	m_state	( state ),
 	m_vs	( vs ),
 	m_gs	( gs ),
-	m_ps	( ps )
+	m_ps	( ps ),
+	m_registered( false )
 {
 }
 
@@ -149,7 +150,7 @@ bool res_effect::apply_pass(u32 id)
 {
 	res_shader_technique_ptr	technique = m_techniques[m_cur_technique];
 
-	if (id >= technique->m_passes.size())
+	if (technique->m_passes.size() <= id)
 		return false;
 
 	res_pass_ptr pass = technique->m_passes[id];
