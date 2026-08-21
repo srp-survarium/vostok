@@ -57,8 +57,8 @@ public:
 
 	VOSTOK_IMPLEMENT_COLLISION_GEOMETRY_VISIT_FUNCTIONS
 
-	inline	float			radius				( ) const { return m_matrix.i.xyz().length(); }
-	inline	float			half_length			( ) const { return m_matrix.j.xyz().length(); }
+	inline	float			radius				( ) const { return m_matrix.get_scale().x; }
+	inline	float			half_length			( ) const { return m_matrix.get_scale().y; }
 private:
 	float4x4			m_matrix;
 	float4x4			m_inverted_matrix;
