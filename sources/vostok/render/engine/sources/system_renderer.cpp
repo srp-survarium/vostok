@@ -815,31 +815,6 @@ void system_renderer::set_model_ghost_mode(
 {
 	if (!is_effects_ready())
 		return;
-
-	//for (polymorph_vector_base<render_model_instance>::iterator it=render_models.begin(); it!=render_models.end(); ++it)
-	//{
-	//	render_model_instance* instance = (*it);
-	//
-	//	if (value)
-	//	{
-	//		m_render_model_to_material[instance] = instance->m_material_effects;
-	//
-	//		material_effects temp_material;
-	//		temp_material.m_material = instance->m_material_effects.m_material;
-	//		instance->m_material_effects = temp_material;
-	//
-	//		instance->m_material_effects.m_effects[forward_render_stage]	 = m_editor_model_ghost_shader;
-	//		instance->m_material_effects.stage_enable[forward_render_stage] = true;
-	//	}
-	//	else
-	//	{
-	//		if (m_render_model_to_material.find(instance)!=m_render_model_to_material.end())
-	//		{
-	//			instance->m_material_effects = m_render_model_to_material[instance];
-	//			m_render_model_to_material.erase(instance);
-	//		}
-	//	}
-	//}
 }
 
 void system_renderer::draw_ghost_render_models( vector< render_surface_instance* >& render_models )

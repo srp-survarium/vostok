@@ -39,7 +39,7 @@ void effect_resolve_particles::compile(
 	compiler.set_fill_mode( D3D_FILL_SOLID );
 	compiler.set_alpha_blend( false );
 	compiler.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA );
-	compiler.set_texture( "t_particle_result", "$user$particle_result", 0, false, 0 );
+	compiler.set_texture( "t_particle_result", "$user$particle_result", 0, false, u32( -1 ) );
 
 	compiler.end_pass( );
 	compiler.end_technique( );

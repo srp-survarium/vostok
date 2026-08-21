@@ -30,6 +30,7 @@ stage_translucency::stage_translucency(
 	m_c_sun_direction = backend::ref( ).register_constant_host( "sun_direction", rc_float );
 	m_c_sun_color = backend::ref( ).register_constant_host( "sun_color", rc_float );
 	m_c_eye_ray_corner = backend::ref( ).register_constant_host( "s_eye_ray_corner", rc_float );
+	m_enabled = true;
 }
 
 bool stage_translucency::is_effects_ready( ) const
