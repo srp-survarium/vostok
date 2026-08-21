@@ -86,7 +86,7 @@ void grass_world::set_trample_parameters( trample_desc& desc )
 
 void grass_world::set_shadow_parameters( u32 const )
 {
-	backend::ref( ).set_vs_constant( m_shadow_cascade_index_parameter, 0 );
+	backend::ref( ).set_ps_constant( m_shadow_cascade_index_parameter, 0 );
 }
 
 grass_world::~grass_world( )
@@ -423,8 +423,8 @@ void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* i
 
 void grass_world::remove_trample( )
 {
-	grass_patch* const* it_patch			= m_patches.begin( );
-	grass_patch* const* end_patch		= m_patches.end( );
+	grass_patch* const* it_patch			= m_visible_patches.begin( );
+	grass_patch* const* end_patch		= m_visible_patches.end( );
 
 	for ( ; it_patch != end_patch; ++it_patch )
 		(*it_patch)->remove_trample( );
