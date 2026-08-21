@@ -50,5 +50,4 @@ inline		Params	&r2(){ return *_2 ;}
 }//math
 }//vostok
 
-
 #endif // #ifndef MATH_UTILS_H_INCLUDED

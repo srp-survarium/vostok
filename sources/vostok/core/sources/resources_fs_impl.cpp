@@ -39,7 +39,6 @@ fs_task::fs_task (type_enum const type) :	fs_iterator_path(logical_path),
 		g_resources_manager->change_count_of_pending_mount_operations(+1);
 }
 
-
 void   query_update_disk_node_name (fs::file_change_info const &	file_change_info, 
 									query_mount_callback const 		callback, 
 									memory::base_allocator * const 	allocator)
@@ -172,6 +171,7 @@ bool   fs_task::execute_may_destroy_this ()
 				iterator.get_disk_path	(physical_path);
 		}
 
+#line 175
 		LOGI_INFO						("fs", "erase file(%s)", physical_path.c_str());
 		if ( physical_path.length() )
 			g_fat->mark_disk_node_as_erased	(physical_path.c_str());
@@ -245,7 +245,6 @@ bool   convert_logical_to_physical_path	(fs::path_string * out_physical_path, pc
 {
 	return								g_fat->get_disk_path_to_store_file(logical_path, out_physical_path);
 }
-
 
 } // namespace resources
 } // namespace vostok

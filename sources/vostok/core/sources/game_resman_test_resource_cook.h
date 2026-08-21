@@ -38,7 +38,6 @@ private:
 	bool					m_create_allocates_destroy_deallocates;
 }; // class test_resource_cook
 
-
 } // namespace resources
 } // namespace vostok
 

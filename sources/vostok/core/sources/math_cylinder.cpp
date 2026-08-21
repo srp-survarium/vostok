@@ -152,7 +152,6 @@ u32 cylinder::intersect						( float3 const& position, float3 const& direction, 
     return iQuantity;
 }
 
-
 intersection	cylinder::intersect	( float3 const& position, float3 const& direction, float& distance ) const
 {
 	float			t[2];

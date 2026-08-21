@@ -135,6 +135,5 @@ void   device_manager::close_file		()
 	CloseHandle								(m_file_handle);
 }
 
-
 } // namespace resources
 } // namespace vostok

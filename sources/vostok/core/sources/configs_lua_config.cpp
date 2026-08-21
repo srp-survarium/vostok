@@ -95,7 +95,6 @@ namespace command_line {
 
 } // namespace vostok
 
-
 static void* CS_CALL allocate		( luabind::memory_allocation_function_parameter, void const* current_buffer, size_t const needed_size )
 {
 	return							DEBUG_REALLOC( const_cast<pvoid>(current_buffer), (u32)needed_size, "lua" );
@@ -144,6 +143,7 @@ private:
 static int read_only_enum_function	( lua_State* const state )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( state );
+#line 147
 	FATAL					( "there was an attempt to modify an exported enum table from C++ side" );
 	UNREACHABLE_CODE		( return 0 );
 }
@@ -966,7 +966,6 @@ void vostok::configs::lua_config::save_as_binary			( pcstr const file_name ) con
 
 #include <luabind/luabind.hpp>
 
-
 static void process_table			( vostok::configs::lua_config_value const& value, binary_config_value& item, items_type& items )
 {
 	using namespace vostok::configs;
@@ -1356,7 +1355,6 @@ static void process_string			( vostok::strings::stream& stream, pcstr const valu
 static inline bool lua_typestring(lua_State* L, int idx)	{ return (lua_type(L, idx) == LUA_TSTRING); }
 static inline bool lua_typenumber(lua_State* L, int idx)	{ return (lua_type(L, idx) == LUA_TNUMBER); }
 
-
 struct lua_key_values_crc {
 	pcstr first;
 	u32 second;
@@ -1500,6 +1498,7 @@ static vostok::configs::enum_types get_type_impl	( lua_State* const state )
 			if ( vostok::strings::equal( class_rep->name(), "int2") )
 				return				t_int2;
 
+#line 1503
 			FATAL					( "unknown class found in lua config: %s", class_rep->name() );
 		}
 		case LUA_TNONE				: 
@@ -1856,7 +1855,6 @@ void lua_config_value::save					( vostok::strings::stream& stream, pstr indent, 
 	lua_pop							( state, 1 );
 }
 
-
 lua_config_value lua_config_value::copy() const
 {
 	lua_mutex_guard					mutex_guard;
@@ -2077,6 +2075,7 @@ struct table_object_predicate {
 			return					(true);
 		}
 
+#line 2080
 		FATAL						("cannot find property table '%s'", string );
 		return						(false);
 	}

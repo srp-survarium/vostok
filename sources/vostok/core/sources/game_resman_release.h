@@ -29,8 +29,6 @@ private:
 	game_resources_manager_data &					m_data;
 };
 
-
-
 } // namespace resources
 } // namespace vostok
 

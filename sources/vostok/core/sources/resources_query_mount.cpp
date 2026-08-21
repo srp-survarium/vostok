@@ -65,7 +65,6 @@ public:
 			configs::binary_config_ptr const config_ptr	=	static_cast_checked<configs::binary_config *>
 															(config_result[0].get_unmanaged_resource().c_ptr());
 
-
 			ASSERT( config_ptr );
 
 			configs::binary_config_value const & config	=	config_ptr->get_root();

@@ -100,6 +100,5 @@ signalling_bool   convert_to_absolute_native_path (buffer_string * out_result,
 	return							true;
 }
 
-
 } // namespace fs
 } // namespace vostok

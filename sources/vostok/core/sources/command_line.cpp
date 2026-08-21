@@ -351,7 +351,6 @@ void   check_keys ()
 	iterate_keys							(checker());
 }
 
-
 bool   initialized ()
 {
 	return							s_command_line_initialized;
@@ -361,9 +360,6 @@ void   initialize (core::engine * engine, pcstr const command_line, command_line
 	s_engine			=	engine;
 	typedef	vostok::fixed_string4096	string_type;
 	string_type	string	=	command_line;
-
-
-
 
 	if ( contains_application == command_line::contains_application_true )
 	{
@@ -390,7 +386,6 @@ void   initialize (core::engine * engine, pcstr const command_line, command_line
 	initialize_keys					();
 	s_command_line_initialized	=	true;
 }
-
 
 void   handle_help_key ( )
 {
@@ -445,13 +440,7 @@ void   show_help_and_exit ( )
 										 adder_predicate.longest_short_key_name +
 										 adder_predicate.longest_full_key_name + 5);
 
-
-
-
-
-
-
-
+#line 455
 	LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console, "               " VOSTOK_ENGINE_ID ", build %d, %s\n                  Copyright(C) Vostok Games - 2013\n      Finger print info: %s", build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
 
 	pcstr previous_category			=	"";

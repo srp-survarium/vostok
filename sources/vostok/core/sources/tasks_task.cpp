@@ -160,9 +160,6 @@ void   task::set_event_for_wait_children (threading::event* event)
 } // namespace tasks
 } // namespace vostok
 
-
-
-
 // void   task::unlink_from_children ()
 // {
 // 	// tell children they have no parent

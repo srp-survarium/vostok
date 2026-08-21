@@ -78,7 +78,6 @@ public:
 		return						sizeof(test_managed_resource) + file_size  + size_that_will_be_trunced;
 	}
 
-
 	result_enum			create_resource_impl	(query_result_for_cook &	in_out_query,
 												 managed_resource_ptr		in_out_resource,
 												 u32						raw_file_size,

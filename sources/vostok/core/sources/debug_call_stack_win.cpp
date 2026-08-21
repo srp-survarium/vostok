@@ -156,7 +156,6 @@ static BOOL GetModuleNameFromAddress( DWORD64 address, LPTSTR lpszModule, rsize_
 	::ZeroMemory( &moduleInfo, sizeof(moduleInfo) );
 	moduleInfo.SizeOfStruct = sizeof(moduleInfo);
 
-
 	if ( s_SymGetModuleInfo64( GetCurrentProcess(), (DWORD)address, &moduleInfo ) )
 	{
 	   // Got it!
@@ -480,7 +479,6 @@ static void GetStackTrace(HANDLE hThread, /**DWORD64 ranOffsets[][2],/**/ _EXCEP
 			call_stack_num_lines	=	index;
 			break;
 		}
-    	
 
 		fnAddresses[index]			=	callStack.AddrPC.Offset;
 		stackAddresses[index]		=	callStack.AddrFrame.Offset;
@@ -616,6 +614,7 @@ static void load_function	( T*& result, HMODULE const module, pcstr const module
 
 	result					= ( T* ) GetProcAddress ( module, function_id );
 	if ( !result ) {
+#line 619
 		LOGI_WARNING		( "debug", "can't find function %s in %s", function_id, module_id );
 		s_use_dbghelp		= false;
 	}

@@ -26,9 +26,6 @@ static void show_help(console_command* command)
 	LOG_INFO					(out_str);
 }
 
-
-
-
 console_command* find(pcstr str)
 {
 	console_command* current = s_console_command_root;
@@ -60,14 +57,6 @@ struct starts_from_predicate
 	}
 };
 
-
-
-
-
-
-
-
-
 u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 {
 	u32 dst_count	= dst_size;
@@ -81,7 +70,6 @@ u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 	for( console_command* current = s_console_command_root; current; current = current->prev() )
 		if( strstr( current->name(), starts_from ) )
 			*commands_end++ = current;
-
 
 	dst_count	= std::min( u32(commands_end - commands), dst_count );
 	std::partial_sort		( commands, commands+dst_count, commands_end, starts_from_predicate(starts_from) );
@@ -110,6 +98,7 @@ void execute(pcstr command_to_execute, execution_filter const filter)
 	if(!command)
 	{
 		if ( filter != execution_filter_early )
+#line 113
 			LOG_WARNING("unknown command [%s]", cmd);
 		return;
 	}
@@ -121,11 +110,11 @@ void execute(pcstr command_to_execute, execution_filter const filter)
 	{
 		console_command::status_str	buff;
 		command->status				( buff );
+#line 124
 		LOG_INFO					( buff );
 	}else
 		command->execute	(args);
 }
-
 
 void show_help(pcstr str)
 {
@@ -134,6 +123,7 @@ void show_help(pcstr str)
 		console_command* command	= find(str);
 		if(!command)
 		{
+#line 137
 			LOG_ERROR	("unknown command [%s]", str);
 			return;
 		}else
@@ -166,7 +156,6 @@ void save_storage::save_to		( memory::writer& f )
 	for( ;it!=it_e; ++it)
 		f.write_string_CRLF( *it );
 }
-
 
 save_storage::~save_storage()
 {
@@ -256,7 +245,6 @@ bool execute_console_commands			( fs_new::native_path_string cfg_file_path, exec
 {
 	using namespace  fs_new;
 	synchronous_device_interface const & device	=	core::get_core_synchronous_device( );
-	
 
 	file_size_type	file_size			=	0;
 	if ( !calculate_file_size(device, & file_size, cfg_file_path, assert_on_fail_false) )

@@ -104,7 +104,6 @@ protected:
 
 	bool				check_valid_node	(managed_node*  node) const;
 
-
 protected:
 	managed_node *		m_first_free;
 	managed_node *		m_pinned;					// used for defragmentation

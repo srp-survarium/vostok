@@ -284,7 +284,5 @@ query_result::consider_with_name_registry_result_enum   query_result::consider_w
 	return									consider_with_name_registry_result_no_action;
 }
 
-
-
 } // namespace resources
 } // namespace vostok

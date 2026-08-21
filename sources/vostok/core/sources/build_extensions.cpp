@@ -7,7 +7,6 @@
 #include "pch.h"
 #include "build_extensions.h"
 
-
 static char s_print_build_id_string[]	=	"print_build_id";
 static vostok::command_line::key			s_print_build_id	(s_print_build_id_string, "", "", "prints build id to stdout");
 static pcstr s_build_date				= __DATE__;
@@ -111,6 +110,7 @@ void vostok::build::preinitialize	( pcstr const build_date )
 void vostok::build::initialize	( core::engine *  )
 {
 	u32 const id	=	calculate_build_id ( s_build_date );
+#line 114
 	LOGIFD_FORCED
 	(
 		"core",

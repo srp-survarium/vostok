@@ -29,7 +29,6 @@ writer_base::~writer_base( )
 	ASSERT	( m_chunk_pos.empty(), "Opened chunk not closed." );	
 }
 
-
 void writer_base::open_chunk	(u32 type)
 {
 	write_u32				( type );
@@ -62,7 +61,6 @@ void writer_base::write_chunk(u32 type, pvoid data, u32 size)
 	write		( data, size );
 	close_chunk	( );
 }
-
 
 writer::writer(memory::base_allocator* allocator) 
 :writer_base( allocator )

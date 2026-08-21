@@ -35,7 +35,6 @@ inline float random_angle()
 	return n_pi_d2_random() + pi_d2_random();
 }
 
-
 inline bool is_identity( const float4x4 &m, float epsilon )
 {
 	for( u32 i = 0; i < 4; ++i )
@@ -85,14 +84,11 @@ static void test_matrix_to_quaternion( const float3 &angles )
 
 }
 
-
-
 static void test_matrix_to_quaternion( )
 {	
 	test_matrix_to_quaternion( float3( random_angle(), random_angle(), random_angle() ) );
 	test_matrix_to_quaternion( float3(  n_pi_d2_random(),  n_pi_d2_random(),  n_pi_d2_random() ) );
 }
-
 
 ////////////////////////////////test_angles_to_quaternion////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +99,6 @@ static void test_angles_to_quaternion( const float3 &angles )
 
 	float4x4 rotation = create_rotation( angles );
 
-	
 	quaternion  test_quaternion1( rotation );
 
 	TEST_ASSERT( test_quaternion1.similar( test_quaternion0 ) );
@@ -115,12 +110,10 @@ static void test_angles_to_quaternion( )
 	test_angles_to_quaternion( float3(  n_pi_d2_random(),  n_pi_d2_random(),  n_pi_d2_random() ) );
 }
 
-
 static void axis_angle_from_random_angles( float3 &axis, float& angle, const float3 &angles )
 {
 	sine_cosine	x( angles.x );
 	sine_cosine	y( angles.y );
-
 
 	axis  = float3( x.cosine * y.sine , x.sine * y.sine, y.cosine );
 	angle = angles.z;
@@ -158,9 +151,7 @@ static bool is_similar( const float3 &axis,  float angle, const  float3 &to_axis
 	
 	return angle_similar( angle, to_angle ) && is_similar( test_axis, to_axis ); 
 
-
 }
-
 
 ////////////////////////////////test_axis_angle_to_quaternion////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +173,6 @@ static void test_axis_angle_to_quaternion( const float3 &angles )
 
 	float4x4 rotation = create_rotation(  axis, angle );
 
-	
 	quaternion  test_quaternion1( rotation );
 	const float epsilon_4 = 0.0001f;
 
@@ -215,7 +205,6 @@ static void test_axis_angle_to_matrix_0( float angle )
 	float4x4 rotation_z			=			create_rotation_z		( angle );
 	float4x4 test_rotation_z	=			create_rotation			( float3( 0, 0 ,1 ), angle );
 	TEST_ASSERT( matrix_similar( rotation_z, test_rotation_z ) );
-	
 
 }
 
@@ -263,8 +252,7 @@ static void test_axis_angle_to_matrix( )
 
 static void test_angles_to_matrix( const float3 &angles )
 {
-	
-	
+
 	float4x4 rotation_x		=			create_rotation_x		( angles.x );
 	float4x4 rotation_y		=			create_rotation_y		( angles.y );
 	float4x4 rotation_z		=			create_rotation_z		( angles.z );
@@ -282,10 +270,7 @@ static void test_angles_to_matrix( const float3 &angles )
 	test_angles = to_close_xyz( test_angles, angles, pi_d2 );
 	TEST_ASSERT( math::is_similar( test_angles, angles ) );
 
-
-	
 	float4x4 m = create_rotation( angles );
-	
 
 	test_angles = m.get_angles_xyz();
 	test_angles = to_close_xyz( test_angles, angles, pi_d2 );
@@ -295,8 +280,6 @@ static void test_angles_to_matrix( const float3 &angles )
 	
 	TEST_ASSERT( matrix_similar( rotation, test_rotation ) );
 
-
-	
 //////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
@@ -306,7 +289,6 @@ static void test_angles_to_matrix( const float3 &angles )
 	TEST_ASSERT( compare( rotation, test_rotation, 0.01f ) );
 	TEST_ASSERT( compare( test_rotation, rotation, 0.01f ) );
 
-	
 	test_angles = angles;
 	test_angles.x = -math::pi/2;
 	test_angles = create_rotation_INCORRECT		( test_angles ).get_angles_xyz_INCORRECT();
@@ -321,8 +303,6 @@ static void test_angles_to_matrix( const float3 &angles )
 	TEST_ASSERT( matrix_similar( rotation, test_rotation ) );
 
 */	
-
-
 
 }
 
@@ -374,9 +354,6 @@ struct math_tests
 } ;
 
 //REGISTER_TEST_CLASS( math_tests, core_test_suite );
-
-
-
 
 } // namespace math
 } // namespace vostok

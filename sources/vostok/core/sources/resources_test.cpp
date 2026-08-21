@@ -370,7 +370,6 @@ public:
 		test_configuration_type				test_configuration(1);
 		u32 const tests_to_skip			=	0;
 
-
 		do {
 
 			if ( m_test_iteration <= tests_to_skip )
@@ -435,6 +434,7 @@ public:
 			if ( test_configuration.inplace_in_creation_or_inline_data )
 				cook_string				+=	"+inplace_inline";
 
+#line 438
 			LOGI_INFO("resources:test",	"TEST ITERATION %d | cook: %s, cook_reuse: %s, create_in_current_thread: %d, allocate_in_current_thread: %d, sleep_after_mount: %d",
 										m_test_iteration, cook_string.c_str(),
 										convert_cook_reuse_value_to_string(test_configuration.reuse_type),
@@ -463,8 +463,6 @@ public:
 
 		} while ( test_configuration.move_next() );
 
-
-
 		for ( u32 i=0; i<2; ++i )
 			logging::pop_filter				();
 
@@ -485,7 +483,6 @@ public:
 
 		u32									files_left;
 	};
-
 
 	void   delete_files_created_by_cook (test_configuration_type const & test_configuration, pcstr const cook_string)
 	{
@@ -546,47 +543,6 @@ REGISTER_TEST_CLASS							(resource_tester, core_test_suite);
 
 } // namespace vostok
 } // namespace resources
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*@                                    /\  /\
  * @                                  /  \/  \                        ----- |   | ----      |---\ |    | /--\  --- |   |  ---- /--\ /--\

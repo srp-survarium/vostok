@@ -24,8 +24,7 @@ virtual_file_system (i)
 			virtual_file_system
 		
 } // virtual_file_system
-		
-		
+
 } // namespace vfs
 } // namespace vostok
 
@@ -51,45 +50,11 @@ asynchronous_device_interface (i)
 	synchronous_device_interface
 	device_file_system_interface
 
-
 } // namespace fs_new
 } // namespace vostok
-
 
 todos:
 1. use spsc queues in watcher
 2. implement hot unmount of mount root
 3. implement find of several iterators
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

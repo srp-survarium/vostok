@@ -205,7 +205,6 @@ void   file_system_impl::mark_disk_node_as_erased (pcstr physical_path)
 		if ( !cur_node->is_disk() )
 			continue;
 
-
 		if ( cur_node_path != physical_path )
 			continue;
 		

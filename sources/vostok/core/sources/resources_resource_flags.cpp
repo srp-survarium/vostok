@@ -82,7 +82,6 @@ resource_base const *	resource_flags::cast_resource_base	() const
 	return									static_cast_checked<resource_base const *>(this); 
 }
 
-
 } // namespace resources
 } // namespace vostok
 

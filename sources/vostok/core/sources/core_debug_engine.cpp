@@ -132,7 +132,6 @@ bool	core_debug_engine::create_folder_r			( pcstr path, bool create_last ) const
 																	create_last);
 }
 
-
 void	core_debug_engine::generate_debug_file_name	(string_path &				file_name,
 											 _SYSTEMTIME const * const	date_time,
 											 pcstr const 				report_id,

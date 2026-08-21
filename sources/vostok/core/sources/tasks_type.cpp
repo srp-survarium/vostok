@@ -65,7 +65,6 @@ task_type *   create_new_task_type (pcstr description, enum_flags<enum vostok::t
 		new (new_type)					task_type(description, flags);*/
 //	if ( task_type* new_type = VOSTOK_NEW_IMPL( s_task_types_allocator, task_type )( description, flags ) )
 
-
 	if ( !s_task_type_list )
 	{
 		bind_pointer_to_buffer_mt_safe	(	s_task_type_list, 

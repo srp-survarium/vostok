@@ -293,4 +293,3 @@ void   paint_info_tree (fat_node_info *	node_info,
 } // namespace fs
 } // namespace vostok
 
-

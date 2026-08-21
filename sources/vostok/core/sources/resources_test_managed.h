@@ -34,7 +34,6 @@ public:
 										 NULL,
 										 & in_out_query);
 
-		
 			in_out_query.finish_query	(result_postponed);
 			return;
 		}

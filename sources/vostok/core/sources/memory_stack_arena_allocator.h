@@ -51,7 +51,6 @@ typedef crt_allocator	stack_arena_allocator;
 
 #endif // #if !VOSTOK_USE_CRT_MEMORY_ALLOCATOR
 
-
 } // namespace memory
 } // namespace vostok
 

@@ -76,7 +76,6 @@ bool create_cone( geom_vertices_type& vertices, vostok::vectora< u16 >& indices,
 	return true;
 }
 
-
 bool create_cube( geom_vertices_type& vertices, geom_indices_type& indices, float4x4 transform, float3 size )
 {
 	create_primitive	( vertices, 
@@ -191,7 +190,6 @@ int geometry_collector::find_vertex( geometry_collector_vert const& v ) const
 	return -1;
 }
 
-
 void geometry_collector::add_vertex( geometry_collector_vert const& v ) 
 {
 	int idx = find_vertex( v );
@@ -230,6 +228,7 @@ bool geometry_collector::write_obj_file( pcstr fn, float const scale, bool save_
 	
 	if(!device->open(&f, fn, file_mode::create_always, file_access::write, assert_on_fail_false))
 	{
+#line 233
 		LOG_INFO					("unable to open file [%s]", fn);
 		return false;
 	}

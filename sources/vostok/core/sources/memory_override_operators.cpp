@@ -245,7 +245,6 @@ pvoid _aligned_offset_realloc	( pvoid ptr, size_t size, size_t alignment, size_t
 } // namespace memory
 } // namespace vostok
 
-
 extern "C" {
 
 pvoid vostok_ogg_malloc			( size_t size );

@@ -29,7 +29,6 @@ float get_tangent_from_2d_vector( float2 const& vec )
 	return t;
 }
 
-
 enum_evaluate_type string_to_evaluate_type(pcstr name)
 {
 		 if	(vostok::strings::compare(name, "Age")==0)	return age_evaluate_type;

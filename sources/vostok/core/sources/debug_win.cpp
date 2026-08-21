@@ -35,7 +35,6 @@ struct helper {
 	vostok::fixed_string512   m_initiator;
 	vostok::logging::verbosity m_verbosity;
 
-
 	u32						m_num_first_to_ignore;
 	u32						m_num_last_to_ignore;
 
@@ -75,6 +74,7 @@ struct helper {
 
 		using namespace vostok;
 
+#line 78
 		logging::helper	( __FILE__, __FUNCSIG__, __LINE__, m_initiator.c_str(), m_verbosity )
 						( logging::settings(0, logging::settings::flags_log_only_user_string), "%s", string.c_str() );
 				

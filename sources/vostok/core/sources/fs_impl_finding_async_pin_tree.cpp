@@ -17,7 +17,6 @@ namespace fs {
 
 using namespace		resources;
 
-
 void   query_recursive_mount_of_sub_tree	(fat_node<> *			tree_root, 
 											 async_callbacks_data *	callbacks_data, 
 											 enum_flags<find_enum>	find_flags);
@@ -217,7 +216,6 @@ void   query_recursive_mount_of_tree	(fat_node<> *			tree_root,
 
 	query_recursive_mount_of_tree_impl			(tree_root, callbacks_data, find_flags);
 }
-
 
 } // namespace fs
 } // namespace vostok

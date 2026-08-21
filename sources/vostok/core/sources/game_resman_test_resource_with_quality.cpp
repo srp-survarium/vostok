@@ -81,7 +81,7 @@ void   test_resource_with_quality::on_quality_loaded (queries_result & results)
 		add_quality						(quality_child, current_result_quality);
 	}
 
-
+#line 85
 	LOGI_INFO							("grm", "%s qualities(->%d) for %s %s", 
 										increasing ? "increasing" : "loading",
 										current_quality_level(),

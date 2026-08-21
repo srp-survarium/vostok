@@ -49,8 +49,6 @@ void   game_resources_manager::capture_resource (resource_base * resource)
 
 	resource->cast_base_of_intrusive_base()->on_capture_increment_reference_count	();
 
-
-
 	memory_type * const info			=	(memory_type *)resource->memory_usage().type;
 	if ( !info->in_list )
 	{
@@ -72,10 +70,8 @@ void   game_resources_manager::on_node_unmount (vfs::vfs_iterator & it)
 	resources::resource_base *			base_resource	=
 		unmanaged_resource ? (resources::resource_base *)unmanaged_resource.c_ptr() : managed_resource.c_ptr();
 
-
-
-
 	if ( base_resource )
+#line 79
 		LOG_ERROR							("resource %s is still associated with fat-node %s! Call Lain", base_resource->log_string().c_str(), it.get_virtual_path().c_str());
 }
 
@@ -218,6 +214,7 @@ void   game_resources_manager::dispatch_resources_to_release ()
 			continue;
 		}
 
+#line 221
 		LOG_INFO							("releasing resource from game resources manager: %s", resources::log_string(it_resource).c_str());
 		release_resource					(it_resource);
 		it_resource						=	next;

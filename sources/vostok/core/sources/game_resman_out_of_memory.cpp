@@ -196,6 +196,5 @@ void   game_resources_manager::tick_memory_types ()
 	}
 }
 
-
 } // namespace resources
 } // namespace vostok

@@ -48,7 +48,6 @@ intersection	aabb::intersect	( float3 const& origin, float3 const& direction, fl
 		return math::intersection_inside;
 	}
 
-
 	/* Calculate T distances to candidate planes */
 	for (i = 0; i < num_dim; i++)
 		if (quadrant[i] != middle && direction[i] !=0.)

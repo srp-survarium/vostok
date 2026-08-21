@@ -75,6 +75,5 @@ void   file_system_impl::find_async_pin	(find_results_struct *	find_results,
 	query_recursive_mount_of_tree				(env.node, find_results, find_flags);
 }
 
-
 } // namespace fs
 } // namespace vostok

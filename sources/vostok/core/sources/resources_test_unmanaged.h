@@ -141,7 +141,6 @@ private:
 	bool												m_allocate_in_current_thread;
 };
 
-
 } // namespace resources
 } // namespace vostok
 

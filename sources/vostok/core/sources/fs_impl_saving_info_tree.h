@@ -49,7 +49,6 @@ private:
 
 typedef hash_multiset< fat_node_info, fat_node_info *, & fat_node_info::next_in_hashset, vostok::detail::fixed_size_policy<1024*32> >	fat_node_info_set;
 
-
 void					sort_info_tree					(fat_node<> *			node, 
 														 fat_node_info *		node_info);
 void					calculate_sizes_for_info_tree	(fat_node<> *			node, 

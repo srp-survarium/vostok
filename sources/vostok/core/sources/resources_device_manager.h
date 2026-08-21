@@ -102,7 +102,6 @@ query_logging_string		make_query_logging_string	(query_result * query);
 
 } // namespace detail
 
-
 } // namespace resources
 } // namespace vostok
 

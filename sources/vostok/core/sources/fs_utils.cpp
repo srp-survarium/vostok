@@ -118,7 +118,6 @@ file_size_type   tell_file (file_type * file)
 
 #endif // #if VOSTOK_PLATFORM_WINDOWS
 
-
 static bool s_user_data_folder_initialized = false;
 static string_path s_user_data_folder;
 

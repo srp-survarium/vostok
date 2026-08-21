@@ -61,7 +61,6 @@ float3 vostok::math::to_close_xyz( float3_pod const& angles, float3_pod const& t
 #endif // #if 0
 }
 
-
 float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement )
 {
 	float domen_value	= ( ( point - segment_origin ) | segment_displacement ) / segment_displacement.squared_length( );
@@ -69,13 +68,6 @@ float3 closest_point_on_segment( float3 const& point, float3 const& segment_orig
 
 	return segment_origin + segment_displacement * domen_value;
 }
-
-
-
-
-
-
-
 
 bool line_line_intersect_non_parallel ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
 {

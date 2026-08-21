@@ -191,7 +191,6 @@ void iterate_regions		( u32 const start_address, u32 const allocation_granularit
 	}
 }
 
-
 static u64 select_best_region	(
 		u64 largest_but_two,
 		u64 largest_but_one,

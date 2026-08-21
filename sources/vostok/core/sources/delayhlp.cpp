@@ -73,7 +73,6 @@ __memcpy(void * pvDst, const void * pvSrc, size_t cb) {
     return pvRet;
     }
 
-
 // utility function for calculating the index of the current import
 // for all the tables (INT, BIAT, UIAT, and IAT).
 inline unsigned
@@ -201,7 +200,6 @@ bool WINAPI
 FLoadedAtPreferredAddress(PIMAGE_NT_HEADERS pinh, HMODULE hmod) {
     return UINT_PTR(hmod) == pinh->OptionalHeader.ImageBase;
     }
-
 
 // Do the InterlockedExchange magic
 //

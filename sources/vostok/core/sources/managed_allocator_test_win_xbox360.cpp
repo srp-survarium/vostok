@@ -584,8 +584,6 @@ void   managed_allocator::test_unmovables_list_valid () const
 } // namespace vostok		
 } // namespace resources 
 
-
-
 // 	s_resources.push_back						( allocate(53-overhead,  0, NULL) );
 // 	s_resources.push_back						( allocate(53-overhead,  0, NULL) ); 
 // 	s_resources.push_back						( allocate(54-overhead,  0, NULL) ); 
@@ -646,5 +644,4 @@ void   managed_allocator::test_unmovables_list_valid () const
 // 	pstr			m_data;
 // 	pstr			m_cur;
 // };
-
 

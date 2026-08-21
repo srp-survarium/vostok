@@ -317,7 +317,6 @@ HRESULT GetVideoMemoryViaDirectDraw( HMONITOR hMonitor, u64* pdwAvailableVidMem 
         FreeLibrary( hInstDDraw );
     }
 
-
     if( bGotMemory )
         return S_OK;
     else

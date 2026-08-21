@@ -213,7 +213,6 @@ bool   file_system_impl::mount_disk_node (pcstr in_logical_path, fat_node<> * * 
 
 	u32 const		  file_hash			=	crc32(file_name.c_str(), file_name.length(), folder_hash);
 
-
 	fat_node<> * const new_node				=	(path_type == path_info::type_folder) ? 
 											create_disk_folder_node( file_hash,
 																	 file_name.c_str(),
@@ -231,6 +230,7 @@ bool   file_system_impl::mount_disk_node (pcstr in_logical_path, fat_node<> * * 
 	if ( out_result_node )
 		* out_result_node				=	new_node;
 
+#line 234
 	LOGI_INFO								("file_system", "mount_disk_node '%s' with size (%d)", physical_path.c_str(), file_size);
 	return									true;
 }

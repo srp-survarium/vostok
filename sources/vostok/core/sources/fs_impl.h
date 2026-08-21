@@ -174,7 +174,6 @@ public:
 	void				clear						();
 	fat_node<> *		get_root					() const { return m_root->cast_node(); }
 
-
 	bool				try_find_sync				(resources::sub_fat_pin_fs_iterator *	out_pin_iterator,													 
 													 pcstr									path_to_find,
 													 enum_flags<find_enum>					find_flags);
@@ -287,7 +286,6 @@ private:
 													 recursive_bool);
 	bool					physical_node_mounted	(u32					hash,
 													 pcstr					physical_path);
-
 
 	bool				mount_disk_file				(fat_folder_node<> *	work_folder, 
 													 pcstr					physical_path, 

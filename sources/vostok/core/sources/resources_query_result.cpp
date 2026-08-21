@@ -162,7 +162,6 @@ bool   query_result::translate_query_if_needed ()
 
 	--tls->in_translate_query_counter;
 
-
 		bool const is_out_of_memory			=	(get_error_type() == error_type_out_of_memory);
 		set_flag								(flag_translated_query);
 	

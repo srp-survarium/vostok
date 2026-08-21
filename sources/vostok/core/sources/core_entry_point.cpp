@@ -31,7 +31,6 @@
 #include <vostok/logging/format.h>
 #include <vostok/memory_base_allocator.h>
 
-
 #ifdef _MSC_VER
 #	pragma warning( push )
 #	pragma warning( disable : 4995 )
@@ -103,7 +102,6 @@ void vostok::core::preinitialize		( core::engine *							engine,
 	g_log_file_usage		= log_file_usage;
 	s_engine				= engine;
 
-
 	setlocale				( LC_COLLATE, ".ACP" );
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
 	using namespace			debug;
@@ -159,6 +157,7 @@ void vostok::core::initialize			(
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
 	threading::initialize	( );
 
+#line 162
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
 	LOG_INFO				( "resources directory: '%s'", s_engine->get_resources_path() );
 
@@ -172,7 +171,6 @@ void vostok::core::initialize			(
 
 	strings::initialize		( );
 
-
 #if VOSTOK_PLATFORM_WINDOWS
 	fs_new::native_path_string replication_folder_string = core::user_data_directory( );
 	replication_folder_string.append_with_conversion( "/replication" );
@@ -184,7 +182,6 @@ void vostok::core::initialize			(
 #else // #elif VOSTOK_PLATFORM_PS3
 #	error define your platform
 #endif // #if VOSTOK_PLATFORM_WINDOWS
-
 
 	VOSTOK_UNREFERENCED_PARAMETER				(replication_folder);
 
@@ -207,9 +204,6 @@ void vostok::core::initialize			(
 	s_initialized			= true;
 }
 
-
-
-
 void	vostok::core::initialize_resources	(
 							fs_new::asynchronous_device_interface &	hdd,
 							fs_new::asynchronous_device_interface &	dvd,
@@ -219,7 +213,6 @@ void	vostok::core::initialize_resources	(
 	resources::initialize					( hdd, dvd, enable_fs_watcher );
 
 	core_test_suite::singleton()->set_resources_path	( s_engine->get_resources_path() );
-
 
 	if ( s_mount_mounts_path )
 

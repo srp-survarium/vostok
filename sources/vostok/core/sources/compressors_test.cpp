@@ -8,7 +8,6 @@ VOSTOK_DECLARE_LINKAGE_ID(compressor_test)
 
 #pragma message( VOSTOK_TODO("PS3: PPMD compressor test") )
 
-
 namespace vostok {
 
 class compressor_test
