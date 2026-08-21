@@ -98,7 +98,7 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 	}
 
 private:
-	bool is_equal( u32 const* left, u32 const* right, u32 const count );
+	bool is_equal( u32 const* a_ptr, u32 const* b_ptr, u32 const num_comparision );
 
 	indexers_vector_type m_indexers;
 	fixed_constants_data_buffer* m_constant_buffer;
