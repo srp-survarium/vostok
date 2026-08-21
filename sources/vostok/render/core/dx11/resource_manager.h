@@ -220,7 +220,7 @@ public:
 	typedef map<fs_new::virtual_path_string, res_texture*, str_pred> map_texture;
 
 public:
-	explicit resource_manager( configs::binary_config_ptr const& config );
+	explicit resource_manager( configs::binary_config_ptr const& in_config );
 	~resource_manager( );
 
 	res_texture* create_texture(
