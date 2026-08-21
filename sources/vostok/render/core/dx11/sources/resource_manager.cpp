@@ -132,7 +132,7 @@ bool resource_manager::constant_buffer_predicate::operator()(
 	return false;
 }
 
-static bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
+bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
 {
 	if (left == right)
 		return true;
@@ -168,7 +168,7 @@ static bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
 	return is_srgb_option;
 }
 
-static DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
+DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 {
 	switch (format)
 	{
@@ -180,12 +180,12 @@ static DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 	};
 }
 
-static void begin_command_list( D3D11_QUERY_DESC& query_desc, ID3D11Query*& out_empty_query_ptr )
+void begin_command_list( D3D11_QUERY_DESC& query_desc, ID3D11Query*& out_empty_query_ptr )
 {
 	vostok::render::device::ref().d3d_device()->CreateQuery(&query_desc, &out_empty_query_ptr);
 }
 
-static void end_command_list( ID3D11Query*& out_empty_query_ptr )
+void end_command_list( ID3D11Query*& out_empty_query_ptr )
 {
 	vostok::render::device::ref().d3d_context()->End(out_empty_query_ptr);
 	while( S_OK != vostok::render::device::ref().d3d_context()->GetData(out_empty_query_ptr, 0, 0, 0) );
