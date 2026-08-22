@@ -563,7 +563,7 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 {
 	if (collisionShape->isConvex())
 	{
-		//BT_PROFILE("convexSweepConvex");
+		BT_PROFILE("convexSweepConvex");
 		btConvexCast::CastResult castResult;
 		castResult.m_allowedPenetration = allowedPenetration;
 		castResult.m_fraction = resultCallback.m_closestHitFraction;//btScalar(1.);//??
@@ -608,7 +608,7 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 		{
 			if (collisionShape->getShapeType()==TRIANGLE_MESH_SHAPE_PROXYTYPE)
 			{
-				//BT_PROFILE("convexSweepbtBvhTriangleMesh");
+				BT_PROFILE("convexSweepbtBvhTriangleMesh");
 				btBvhTriangleMeshShape* triangleMesh = (btBvhTriangleMeshShape*)collisionShape;
 				btTransform worldTocollisionObject = colObjWorldTransform.inverse();
 				btVector3 convexFromLocal = worldTocollisionObject * convexFromTrans.getOrigin();
@@ -976,7 +976,7 @@ struct btSingleRayCallback : public btBroadphaseRayCallback
 
 void	btCollisionWorld::rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, RayResultCallback& resultCallback) const
 {
-	//BT_PROFILE("rayTest");
+	BT_PROFILE("rayTest");
 	/// use the broadphase to accelerate the search for objects, based on their aabb
 	/// and for each object with ray-aabb overlap, perform an exact ray test
 	btSingleRayCallback rayCB(rayFromWorld,rayToWorld,this,resultCallback);
