@@ -98,7 +98,7 @@ public:
 
 	virtual	void								execute_scaleform_command		( scaleform_render_command command ) override;
 
-	inline	u32									game_time_ms					( ) const { /* no source */ return m_current_time_in_ms; }
+	inline	u32									game_time_ms					( ) const { return m_current_time_in_ms; }
 	inline	u32									game_permanent_time_ms			( ) const { /* no source */ return m_permanent_time_in_ms; }
 	inline	float								game_time_sec					( ) { /* no source */ return 0.f; }
 

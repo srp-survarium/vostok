@@ -16,6 +16,7 @@
 #include <vostok/console_command.h>
 
 #include "base_game_scene.h"
+#include "game.h"
 #include "game_camera.h"
 #include "player.h"
 #include "player_input_handler.h"
@@ -542,22 +543,27 @@ void weapon::on_ammo_empty( )
 		m_game_ui->show_screen_message( "st_empty_ammo_message" );
 }
 
-// claude@NOTE: STUB - 13 stmts. RESOLVED pieces (player.h now included): line 510 `if
-// ( user.is_demo_player() )`; line 516 `m_game_scene = static_cast<base_game_scene*>(&engine)`
-// (the engine-0xC cross-cast with null guard); weapon_core::activate(user, engine); lines 520/521
-// `m_left/right_toe_bone_index = user.skeleton().get_bone_index("LeftFoot"/"RightFoot") -
-// user.skeleton().get_root_bones_count()` (the __find_if(bone_id_predicate)+index/0x14 inline);
-// lines 523-526 four set_animation_callback("sound_events"/"shell_extraction"/"left_hand_corrector"/
-// "right_hand_corrector", get_user(), boost::bind(&weapon::on_foot_step/on_shell_extraction_event/
-// on_hand_correction_event(left/right), this, _1)) - mirror of weapon_core::activate:854-857.
-// PARK CAUSE: line 513 (under the demo guard) copies m_user_animations_selector internals
-// [this+0x284]->[this+0x2C0] = m_logic.m_states.<+0xC> -> m_player_logic_initial_state, an fsm-state-list
-// internal whose source spelling is unresolved (set_player_logic_initial_state is a /no source/ stub).
-// NEXT: identify the m_logic.states() expression at fsm_state_list+0xC for line 513, then write the
-// whole body (all other 12 statements are recovered above).
-// STATE[STUB]
 void weapon::activate( base_player& user, engine& engine )
 {
+	if ( static_cast< player& >( user ).is_demo_player( ) )
+		m_user_animations_selector.set_player_logic_initial_state(
+			static_cast_checked< player_logic_base_state* >( m_user_animations_selector.logic( ).states( ).back( ) )
+		);
+
+	m_game_scene = static_cast< base_game_scene* >( &engine );
+	weapon_core::activate( user, engine );
+
+	m_left_toe_bone_index = user.skeleton( ).get_bone_index( "LeftFoot" ) - user.skeleton( ).get_root_bones_count( );
+	m_right_toe_bone_index = user.skeleton( ).get_bone_index( "RightFoot" ) - user.skeleton( ).get_root_bones_count( );
+
+	set_animation_callback( "sound_events", get_user( ), boost::bind( &weapon::on_foot_step, this, _1 ) );
+	set_animation_callback( "shell_extraction", get_user( ), boost::bind( &weapon::on_shell_extraction_event, this, _1 ) );
+	set_animation_callback( "left_hand_corrector", get_user( ), boost::bind( &weapon::on_hand_correction_event, this, _1, fingers_to_weapon_corrector::left ) );
+	set_animation_callback( "right_hand_corrector", get_user( ), boost::bind( &weapon::on_hand_correction_event, this, _1, fingers_to_weapon_corrector::right ) );
+
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left, true, m_game_scene->get_game( ).game_time_ms( ) );
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, true, m_game_scene->get_game( ).game_time_ms( ) );
+	m_fingers_corrector.activate( user.skeleton( ), model->m_render_model, m_game_ui != NULL );
 }
 
 // The target inlines remove_animation_callback at these call sites.
@@ -578,8 +584,10 @@ animation::callback_return_type_enum weapon::on_foot_step( animation::animation_
 		float4x4 const& toe = params.domain_data == 5 ? m_left_toe_transform : m_right_toe_transform;
 
 		if ( !user( ).is_demo_player( ) )
-			static_cast< game_world& >( *get_game_scene( ) ).get_step_manager( ).on_step(
-				user( ), toe.c.xyz( ), toe.k.xyz( ), static_cast< game_world& >( *get_game_scene( ) ) );
+		{
+			game_world& world = static_cast< game_world& >( *get_game_scene( ) );
+			world.get_step_manager( ).on_step( user( ), toe.c.xyz( ), toe.k.xyz( ), world );
+		}
 	}
 
 	return animation::callback_return_type_call_me_again;
