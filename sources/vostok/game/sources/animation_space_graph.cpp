@@ -66,6 +66,14 @@ animation_space_vertex const* animation_space_graph::get_animation_by_path( pcst
 	return NULL;
 }
 
+// keeps the buffer construction out-of-line here like retail (the two-store
+// body ICF-folds with the ctor group); the global ctor stays inline - other
+// sites inline it in retail
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
+{
+	return mutable_buffer( data, size );
+}
+
 animation_space_vertex_id animation_space_graph::get_movement(
 	animation::animation_player&		player,
 	animation_space_vertex const*		left_animation,
@@ -75,7 +83,7 @@ animation_space_vertex_id animation_space_graph::get_movement(
 {
 	player.reset( false );
 
-	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+	mutable_buffer buffer = make_stack_buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 
 	animation::mixing::animation_lexeme right_lexeme( animation::mixing::animation_lexeme_parameters( buffer, "", left_animation->animation, NULL, NULL ) );
 	animation::mixing::weight_lexeme left_weight_lexeme( buffer, left_weight, animation::instant_interpolator( ) );
