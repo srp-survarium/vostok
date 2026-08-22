@@ -328,18 +328,14 @@ void game_options::fill_settings_data( )
 	controllers_options_labels[0] = "st_mouse_invertion_option";
 	controllers_options_labels[1] = "st_mouse_sensitivity_option";
 
+	fixed_string< 64 >* const options_labels_table[4]	= { gameplay_options_labels, video_options_labels, sound_options_labels, controllers_options_labels };
+	u8 const options_counts[4]							= { 9, 19, 7, 2 };
+
 	flash_value options_args[2];
 	for ( u32 i = 0; i < 4; ++i )
 	{
-		fixed_string< 64 >* options_labels	= NULL;
-		u8 options_count					= 0;
-		switch ( i )
-		{
-			case 0:	options_labels = gameplay_options_labels;		options_count = 9;	break;
-			case 1:	options_labels = video_options_labels;			options_count = 19;	break;
-			case 2:	options_labels = sound_options_labels;			options_count = 7;	break;
-			case 3:	options_labels = controllers_options_labels;	options_count = 2;	break;
-		}
+		fixed_string< 64 >* options_labels	= options_labels_table[i];
+		u8 options_count					= options_counts[i];
 
 		options_args[0].SetUInt( i );
 		m_options_ui->movie->CreateArray( &options_args[1] );
