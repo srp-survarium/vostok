@@ -173,6 +173,11 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 	}
 }
 
+// claude@NOTE: canon instruction-mix is ~96% identical; the score gap is block
+// ORDER (gold tail-places the error finish_query with the success one, our /Od
+// keeps it at the head, dragging both config-ptr dec calls with it) plus the
+// gold MALLOC path calling strip_pointer<doug_lea_allocator> and dropping the
+// fldz agent_radius arg (see sushi@TODO below). No statement-level lever left.
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	resources::query_result_for_cook* const parent = data.get_parent_query( );
