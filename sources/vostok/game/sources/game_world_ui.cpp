@@ -71,8 +71,9 @@ void game_world_ui::initialize( match_options& options )
 
 	get_ui( )->movie->SetVariable( "root.player_list.players.team2.text", victory_items_count_val );
 
-	game_mode_val.SetUInt( 0xff0000 );
-	get_ui( )->movie->SetVariable( "root.player_list.players.team2.textColor", game_mode_val );
+	flash_value v;
+	v.SetUInt( 0xff0000 );
+	get_ui( )->movie->SetVariable( "root.player_list.players.team2.textColor", v );
 
 	m_game_mode				= options.match_mode_;
 	m_match_time			= options.match_time;
@@ -92,8 +93,7 @@ void game_world_ui::initialize( match_options& options )
 
 	flash_value players_array;
 	get_ui( )->movie->CreateArray( &players_array );
-	u32 in_array_index = 0;
-	for ( u8 i = 0; i < 20; ++i )
+	for ( u8 i = 0, in_array_index = 0; i < 20; ++i )
 	{
 		if ( options.player_profiles[i].team == team_undefined )
 			continue;
