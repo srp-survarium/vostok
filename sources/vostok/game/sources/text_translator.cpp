@@ -4,11 +4,13 @@
 
 #include "pch.h"
 #include "text_translator.h"
+#include <vostok/console_command.h>
 #include <vostok/resources.h>
 #include <vostok/resources_queries_result.h>
-#include <vostok/resources_query_result.h>
 #include <vostok/configs_binary_config.h>
 #include <vostok/configs_binary_config_value.h>
+static char s_localization_str[16] = "russian";
+static console_commands::cc_string s_localization( "localization", s_localization_str, 16, true, console_commands::command_type_user_specific );
 
 namespace survarium {
 
@@ -20,33 +22,31 @@ namespace survarium {
 {
 }
 
-// claude@NOTE: line 29 STR_JOIN'd config path - the recorded tuples ctor is
-// <char const*, char*, char const*>, i.e. STR_JOINA( path, "resources/localization/", <lang>,
-// ... ); the middle char* is a runtime language string whose source is unknown from the
-// available corpus, so the exact literals/byte image are not recoverable here. Structure
-// (2 stmts: STR_JOIN+request build, then query_resources) reproduced.
+// The console-command buffer is also the localization path component.
 void text_translator::load_text_localization( )
 {
-	resources::request requests[1] = { { NULL, resources::binary_config_class } };
-	STR_JOINA							( requests[0].path, "resources/localization/", "", "" );	// claude@TODO: middle char* is an unknown runtime language string
+	pstr path;
+	STR_JOINA							( path, "resources/localization/", s_localization_str, "" );
+	resources::request requests[1]	= { { path, resources::binary_config_class } };
 
 	resources::query_resources(
 		requests,
 		boost::bind( &text_translator::on_texts_ready, this, _1 ),
 		g_allocator
+
+
+
+
+
+
+
+
+
+
+
+
 	);
 }
-
-
-
-
-
-
-
-
-
-
-
 void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
 {
 	size_t converted_chars_count;
