@@ -66,6 +66,13 @@ static void create_wire_visual_source(
 	writer.close_chunk		( );
 }
 
+// gold keeps the const_buffer ctor out of line at the load site (folds with the
+// two-store group); a TU-local noinline forwarder reproduces that
+static __declspec( noinline ) const_buffer make_creation_buffer( pcvoid const data, u32 const size )
+{
+	return const_buffer( data, size );
+}
+
 // claude@NOTE: The 22-statement source shape matches. The residual is a shared-template
 // /GL cut around creation_request and the Boost callback exception tail; reopen only
 // after the compiler context or function-scoped MAX attribution changes.
@@ -100,7 +107,7 @@ void object_wire::load(
 	{
 		create_wire_visual_source( writer, m_points, m_points_count, material_name, m_wire_width );
 
-		const_buffer creation_buffer( writer.pointer(), writer.size() );
+		const_buffer creation_buffer = make_creation_buffer( writer.pointer(), writer.size() );
 		fixed_string< 32 > wire_name;
 		wire_name.assignf( "wire_%X", this );
 
