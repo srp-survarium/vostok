@@ -643,6 +643,18 @@ void game_world_ui::on_damage_affect_applying(
 // STATE[STUB]
 void game_world_ui::update_minimap_objects( )
 {
+	// claude@NOTE: RESOLVED range/accessors (2026-08-22) - write the body next:
+	//  head: u8 i; for (i=0;i<20;++i) if (client->is_player_local(i)) break;   [vtbl+0x4C]
+	//        local_player_team = client->match_options( ).player_profiles[i].team;  [vtbl+0x34, stride 0x1B8, team @+0x1B0]
+	//  is_carrying: client+8 intrusive player copy; player->inventory-ish@+8 -> [+0x15C] != 0
+	//  containers loop (line 733, 0x31d): for (victory_items_container** it =
+	//        m_game_world.get_project( )->m_victory_items_containers.begin( );
+	//        it != m_game_world.get_project( )->m_victory_items_containers.end( ); ++it)
+	//        - get_project() BY VALUE each side = the addref/release temp dance
+	//  items loop (line 761, 0x29f): m_game_world vector victory_item* @+0x2C4..0x2C8;
+	//        per item: if (item->m_spoted_to_team[+0x170] == local_player_team)
+	//        CreateObject + position via [item vtbl+0x2C] float4x4 (x @+0x30, y @+0x38)
+	//  tail: Invoke with the level_objects array
 	// LOCALS
 	// player_ptr 						current_player
 	// bool 							is_carrying_victory_item
