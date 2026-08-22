@@ -436,13 +436,13 @@ void lobby_menu::update_status( )
 	account_info.SetElement				( 0, login_client( ).account_name( ) );
 	account_info.SetElement				( 1, login_client( ).m_server_host );
 
-	flash_value port_value;
-	port_value.SetUInt					( login_client( ).m_server_port );
-	account_info.SetElement				( 2, port_value );
+	flash_value port;
+	port.SetUInt					( login_client( ).m_server_port );
+	account_info.SetElement				( 2, port );
 
-	fixed_string< 128 > lobby_address;
-	lobby_address.assignf				( "%s:%d", lobby_client( ).connection_info( ).host, lobby_client( ).connection_info( ).port );
-	account_info.SetElement				( 3, lobby_address.c_str( ) );
+	fixed_string< 128 > buff;
+	buff.assignf				( "%s:%d", lobby_client( ).connection_info( ).host, lobby_client( ).connection_info( ).port );
+	account_info.SetElement				( 3, buff.c_str( ) );
 
 	m_lobby_menu_ui->movie->Invoke		( "root.lobby_menu.set_account_info", NULL, &account_info, 1 );
 	m_lobby_menu_ui->movie->Invoke		( "root.lock_play_button", NULL, &b_val, 1 );
