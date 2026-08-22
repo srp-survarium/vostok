@@ -68,27 +68,24 @@ void console_command_bind::save_to( console_commands::save_storage& f, memory::b
 	}
 }
 
-// This TU owns the namespace-scope mouse-input globals; recovered defaults from
-// .data/.bss: g_mouse_sensitivity = 1.0f (VA 0x9c8950, raw 0000803f),
-// g_mouse_invert = false (zero-init .bss). Consumed by lobby_camera::on_mouse_move
-// and player_input_handler::on_mouse_move / process_first_person_mode (parked on
-// this definition's absence until now).
+// Mouse-input configuration is registered as user-specific console state.
+// The target retains the historical "invertion" spelling.
 float	g_mouse_sensitivity	= 1.0f;
 bool	g_mouse_invert		= false;
 
-// claude@NOTE: PARKED - file-scope mouse console-command statics
-// (set_mouse_sensitivity_cc / set_mouse_invert_cc) and their compiler-emitted
-// dynamic init + atexit. The cc_float dynamic init proves min=0.01f
-// (__real@3c23d70a), max=10.0f (the shared .rdata constant the delinker labels
-// c_fUncompressWindScalar), value=&g_mouse_sensitivity, serializable=true; the
-// cc_bool init proves value=&g_mouse_invert, serializable=true. The command-NAME
-// string for each does not appear in either init body (it is stored by the
-// cc_value/console_command base ctor which the linker placed out of the init),
-// so the registered name is unrecoverable from this TU's asm alone. Reconstruct
-// once the name strings surface (a sibling consumer or the cc_value base ctor).
-// The two GLOBALS above are independently faithful and unblock the mouse-input
-// consumers without the cc statics.
-
+static console_commands::cc_float set_mouse_sensitivity_cc(
+	"sensitivity",
+	g_mouse_sensitivity,
+	0.01f,
+	10.0f,
+	true,
+	console_commands::command_type_user_specific
+);
+static console_commands::cc_bool set_mouse_invert_cc(
+	"mouse_invertion",
+	g_mouse_invert,
+	true,
+	console_commands::command_type_user_specific );
 // TU-local action table; the ctor populates per-action m_keyboard slots through it.
 game_action_descr	actions[] = {
 	{ "left",						kLEFT,						game_world_group | weapon_aim_group,	hold_action,	"kLEFT"		},
@@ -227,6 +224,7 @@ key_binder::key_binder( game& g )
 {
 	memset( m_key_bindings, 0, sizeof( m_key_bindings ) );
 
+
 	for ( game_action_descr* action = actions; action != actions + bindings_count; ++action )
 	{
 		m_key_bindings[action->id].m_action =
@@ -236,16 +234,8 @@ key_binder::key_binder( game& g )
 	static console_command_bind s_bind_key_command( this, 0 );
 	static console_command_bind s_bind_sec_key_command( this, 1 );
 
-	static console_commands::cc_delegate s_unbind_key_command(
-		"unbind",
-		boost::bind( &key_binder::unbind_key, this, _1, 0 ),
-		true
-	);
-	static console_commands::cc_delegate s_unbind_second_key_command(
-		"unbind_sec",
-		boost::bind( &key_binder::unbind_key, this, _1, 1 ),
-		true
-	);
+	static console_commands::cc_delegate s_unbind_key_command( "unbind", boost::bind( &key_binder::unbind_key, this, _1, 0 ), true );
+	static console_commands::cc_delegate s_unbind_second_key_command( "unbind_sec", boost::bind( &key_binder::unbind_key, this, _1, 1 ), true );
 
 	set_default_controls( );
 }
