@@ -1505,7 +1505,8 @@ void lobby_menu::fill_friend_list( )
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	for ( u32 i = 0; i < players_list.size( ); ++i )
+	for ( u32 i = 0;
+			i < players_list.size( ); ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
@@ -1538,7 +1539,8 @@ void lobby_menu::fill_ignore_list( )
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	for ( u32 i = 0; i < players_list.size( ); ++i )
+	for ( u32 i = 0;
+			i < players_list.size( ); ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
@@ -1565,7 +1567,8 @@ void lobby_menu::fill_found_players( )
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
 	const u32 count = messaging_client( ).get_found_players_list( ).size( );
-	for ( u32 i = 0; i < count; ++i )
+	for ( u32 i = 0;
+			i < count; ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
