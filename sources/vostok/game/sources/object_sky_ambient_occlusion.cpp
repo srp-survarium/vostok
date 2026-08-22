@@ -26,7 +26,9 @@ static u32	sky_ao_volume_ids	= 0;
 	m_resolution_x( 256 ),
 	m_resolution_y( 256 )
 {
-	m_sky_ao_volume_id = sky_ao_volume_ids++;	m_enabled = true;	m_generated = false;
+	m_sky_ao_volume_id = sky_ao_volume_ids++;
+	m_enabled = true;
+	m_generated = false;
 }
 
  object_sky_ambient_occlusion::~object_sky_ambient_occlusion( )
@@ -41,7 +43,8 @@ void object_sky_ambient_occlusion::load(
 {
 	load_transform( t, m_transform );
 
-	m_generated = false;	m_width = t["width"];
+	m_generated = false;
+	m_width = t["width"];
 	m_height			= t["height"];
 	m_depth				= t["depth"];
 	m_enabled			= t["enabled"];

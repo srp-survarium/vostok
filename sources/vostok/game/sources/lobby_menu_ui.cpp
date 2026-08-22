@@ -387,10 +387,12 @@ void lobby_menu::update_level_loading_progress( )
 	text.SetStringW						( w_text );
 	m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
 
-	if ( clear_value - m_level_loading_progress < math::epsilon_3 )	m_level_loading_progress = clear_value;
+	if ( clear_value - m_level_loading_progress < math::epsilon_3 )
+		m_level_loading_progress = clear_value;
 
 	flash_value progress;
-	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );	m_match_making_ui->movie->Invoke( "root.set_percent", NULL, &progress, 1 );
+	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );
+	m_match_making_ui->movie->Invoke	( "root.set_percent", NULL, &progress, 1 );
 }
 
 void lobby_menu::on_ui_destroy( )

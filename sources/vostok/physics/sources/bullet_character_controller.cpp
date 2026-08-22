@@ -241,7 +241,8 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = math::abs( m_shape_offset.y( ) );	btManifoldArray manifold_array;
+	float shape_y = math::abs( m_shape_offset.y( ) );
+	btManifoldArray manifold_array;
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{

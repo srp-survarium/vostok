@@ -28,7 +28,8 @@ static float clear_value = 0.0f;
  object_ambient_volume::object_ambient_volume( base_game_scene& w ) :
 	game_object_static( w )
 {
-	m_id	= ambient_volume_ids++;	m_valid	= true;
+	m_id	= ambient_volume_ids++;
+	m_valid	= true;
 }
 
  object_ambient_volume::~object_ambient_volume( )

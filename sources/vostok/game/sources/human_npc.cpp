@@ -497,7 +497,8 @@ void human_npc::on_animation_end( )
 	{
 		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name );
 		m_ai_world.on_animation_finish	( m_current_animation, m_brain_unit );
-		m_current_animation				= 0;	m_ai_world.select_new_goal( m_brain_unit );
+		m_current_animation				= 0;
+		m_ai_world.select_new_goal( m_brain_unit );
 	}
 }
 
@@ -552,7 +553,8 @@ void human_npc::on_movement_end( )
 			m_current_movement_target->target_position.y,
 			m_current_movement_target->target_position.z
 		);
-		m_current_movement_target		= 0;	m_ai_world.select_new_goal( m_brain_unit );
+		m_current_movement_target		= 0;
+		m_ai_world.select_new_goal( m_brain_unit );
 	}
 }
 

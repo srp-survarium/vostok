@@ -980,14 +980,16 @@ void game::toggle_pause( )
 
 void game::pause( )
 {
-	m_is_paused = true;				m_timer.pause( );
+	m_is_paused = true;
+	m_timer.pause( );
 	m_last_sound_timescale_factor	= m_sound_world.get_logic_world_user( ).get_time_scale_factor( );
 	m_sound_world.get_logic_world_user( ).set_time_scale_factor( 0.f );
 }
 
 void game::resume( )
 {
-	m_is_paused = false;				m_timer.resume( );
+	m_is_paused = false;
+	m_timer.resume( );
 	m_sound_world.get_logic_world_user( ).set_time_scale_factor( m_last_sound_timescale_factor );
 }
 
