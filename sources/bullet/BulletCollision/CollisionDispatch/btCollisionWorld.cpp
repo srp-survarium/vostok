@@ -1435,33 +1435,6 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
 				}
 			default:
 				{
-
-					if (shape->isConcave())
-					{
-						btConcaveShape* concaveMesh = (btConcaveShape*) shape;
-
-						///@todo pass camera, for some culling? no -> we are not a graphics lib
-						btVector3 aabbMax(btScalar(BT_LARGE_FLOAT),btScalar(BT_LARGE_FLOAT),btScalar(BT_LARGE_FLOAT));
-						btVector3 aabbMin(btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT));
-
-						DebugDrawcallback drawCallback(getDebugDrawer(),worldTransform,color);
-						concaveMesh->processAllTriangles(&drawCallback,aabbMin,aabbMax);
-
-					}
-
-					if (shape->getShapeType() == CONVEX_TRIANGLEMESH_SHAPE_PROXYTYPE)
-					{
-						btConvexTriangleMeshShape* convexMesh = (btConvexTriangleMeshShape*) shape;
-						//todo: pass camera for some culling			
-						btVector3 aabbMax(btScalar(BT_LARGE_FLOAT),btScalar(BT_LARGE_FLOAT),btScalar(BT_LARGE_FLOAT));
-						btVector3 aabbMin(btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT));
-						//DebugDrawcallback drawCallback;
-						DebugDrawcallback drawCallback(getDebugDrawer(),worldTransform,color);
-						convexMesh->getMeshInterface()->InternalProcessAllTriangles(&drawCallback,aabbMin,aabbMax);
-					}
-
-
-					
 				}
 			}
 			}
