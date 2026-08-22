@@ -1632,11 +1632,13 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 
 	if ( player_joined_message )
 	{
-		wcsncpy_s			( w_player_name, player_joined_message + 6, ( wcsstr( player_joined_message, L" ]" ) - player_joined_message ) / 2 - 6 );
+		wchar_t const* const player_name_end = wcsstr( player_joined_message, L" ]" );
+		wcsncpy_s			( w_player_name, player_joined_message + 6, ( player_name_end - player_joined_message ) / 2 - 6 );
 
 		wchar_t const* player_team = wcsstr( w_text, player_team_pref );
+		wchar_t const* const player_team_end = wcsstr( player_team, L"]" );
 		wchar_t w_player_team[8];
-		wcsncpy_s			( w_player_team, player_team + 4, ( wcsstr( player_team, L"]" ) - player_team ) / 2 - 4 );
+		wcsncpy_s			( w_player_team, player_team + 4, ( player_team_end - player_team ) / 2 - 4 );
 
 		game_team_id team = ( game_team_id )_wtoi( w_player_team );
 
@@ -1656,7 +1658,8 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 
 	if ( player_left_message )
 	{
-		wcsncpy_s			( w_player_name, player_left_message + 6, ( wcsstr( player_left_message, L" ]" ) - player_left_message ) / 2 - 6 );
+		wchar_t const* const player_left_end = wcsstr( player_left_message, L" ]" );
+		wcsncpy_s			( w_player_name, player_left_message + 6, ( player_left_end - player_left_message ) / 2 - 6 );
 
 		player_name_val.SetStringW	( w_player_name );
 		m_match_making_ui->movie->Invoke( "root.remove_player", NULL, &player_name_val, 1 );
@@ -1665,7 +1668,8 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 	if ( queue_state_message )
 	{
 		wchar_t w_player_in_queue[16];
-		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( wcsstr( queue_state_message, L"]" ) - queue_state_message ) / 2 - 4 );
+		wchar_t const* const queue_state_end = wcsstr( queue_state_message, L"]" );
+		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( queue_state_end - queue_state_message ) / 2 - 4 );
 
 		flash_value players_in_queue_val;
 		players_in_queue_val.SetStringW	( w_player_in_queue );
