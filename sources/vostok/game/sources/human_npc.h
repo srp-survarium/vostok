@@ -321,7 +321,7 @@ private:
 													const affect_event_type_enum	event_type
 												) const;
 
-	virtual	float								get_speed					( ) const override { /* no source */ return 0.0f; }
+	virtual	float								get_speed					( ) const override { return 1.0f; }
 
 	inline	human_npc*							return_this					( ) { /* no source */ return this; }
 
