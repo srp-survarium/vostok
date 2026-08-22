@@ -451,7 +451,8 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 		case gameplay_options_type:
 		{
 
-			m_options_count = 9;	m_options = NEW_ARRAY( options_item_base*, 9 );
+			m_options_count = 9;
+			m_options = NEW_ARRAY( options_item_base*, 9 );
 
 			m_options[ 0 ] = NEW( options_item_bool )( *this, "g_invite_from_friends", 0 );
 			m_options[ 1 ] = NEW( options_item_bool )( *this, "g_friends_signin_notification", 1 );
@@ -466,7 +467,8 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 		}
 		case video_options_type:
 		{
-			m_options_count = 19;	m_options = NEW_ARRAY( options_item_base*, 19 );
+			m_options_count = 19;
+			m_options = NEW_ARRAY( options_item_base*, 19 );
 
 			m_options[ 0 ]	= NEW( options_monitor_index_selector )( *this );
 			m_options[ 1 ]	= NEW( options_resolution_selector )( *this );
@@ -491,7 +493,8 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 		}
 		case controllers_options_type:
 		{
-			m_options_count = 2;	m_options = NEW_ARRAY( options_item_base*, 2 );
+			m_options_count = 2;
+			m_options = NEW_ARRAY( options_item_base*, 2 );
 
 			m_options[ 0 ]	= NEW( options_item_bool )( *this, "mouse_invertion", 0 );
 			m_options[ 1 ]	= NEW( options_item_float )( *this, "sensitivity", 1, 0.05f );
@@ -501,7 +504,8 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 
 		case sound_options_type:
 		{
-			m_options_count = 7;	m_options = NEW_ARRAY( options_item_base*, 7 );
+			m_options_count = 7;
+			m_options = NEW_ARRAY( options_item_base*, 7 );
 
 			m_options[ 0 ]	= NEW( options_item_float )( *this, "s_general_volume", 0, 1.0f );
 			m_options[ 1 ]	= NEW( options_item_float )( *this, "s_ingame_volume", 1, 1.0f );
@@ -568,7 +572,8 @@ void options_tab::initialize_data( flash_movie_resource_ptr& movie )
 		movie->movie->CreateObject( &option_item );
 
 		flash_value option_item_member;
-		option_item_member.SetUInt( i );			option_item.SetMember( "id", option_item_member );
+		option_item_member.SetUInt( i );
+		option_item.SetMember( "id", option_item_member );
 
 		m_options[ i ]->fill_value( option_item_member );
 		option_item.SetMember( "value", option_item_member );

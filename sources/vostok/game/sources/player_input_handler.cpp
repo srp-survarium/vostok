@@ -150,7 +150,9 @@ void player_input_handler::on_before_processing( input::world* const input_world
 
 	m_rotation_delta	= float2( 0.0f, 0.0f );
 
-	m_z_mouse_axis = 0.0f;	m_input.actions_mask = 0;	m_time_delta_in_ms		= current_time_in_ms - m_current_time_in_ms;
+	m_z_mouse_axis = 0.0f;
+	m_input.actions_mask = 0;
+	m_time_delta_in_ms		= current_time_in_ms - m_current_time_in_ms;
 
 	m_current_time_in_ms	= current_time_in_ms;
 }

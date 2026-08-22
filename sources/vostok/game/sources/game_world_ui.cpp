@@ -92,7 +92,8 @@ void game_world_ui::initialize( match_options& options )
 
 	flash_value players_array;
 	get_ui( )->movie->CreateArray( &players_array );
-	u32 in_array_index = 0;	for ( u8 i = 0; i < 20; ++i )
+	u32 in_array_index = 0;
+	for ( u8 i = 0; i < 20; ++i )
 	{
 		if ( options.player_profiles[i].team == team_undefined )
 			continue;
@@ -238,7 +239,8 @@ void game_world_ui::set_match_time( u32 time_left_ms )
 void game_world_ui::show_pregame( bool b_show )
 {
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_pregame", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_pregame", NULL, &b_val, 1 );
 }
 
 void game_world_ui::set_pregame( pcstr str, u32 time_left )
@@ -269,8 +271,10 @@ void game_world_ui::set_respawn_time( u32 time_left )
 
 void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths )
 {
-	flash_value out_event;				get_ui( )->movie->CreateObject( &out_event );
-	flash_value out_event_property;		get_ui( )->movie->CreateObject( &out_event_property );
+	flash_value out_event;
+	get_ui( )->movie->CreateObject( &out_event );
+	flash_value out_event_property;
+	get_ui( )->movie->CreateObject( &out_event_property );
 
 	out_event_property.SetUInt( player_id );
 	out_event.SetMember( "id", out_event_property );
@@ -554,7 +558,8 @@ void game_world_ui::on_player_killed(
 void game_world_ui::set_crosshair_size( float size )
 {
 	flash_value value;
-	value.SetNumber( size );	get_ui( )->movie->Invoke( "root.set_crosshair_size", NULL, &value, 1 );
+	value.SetNumber( size );
+	get_ui( )->movie->Invoke( "root.set_crosshair_size", NULL, &value, 1 );
 }
 
 void game_world_ui::on_enemy_hitted( )
@@ -565,31 +570,36 @@ void game_world_ui::on_enemy_hitted( )
 void game_world_ui::show_crosshair( bool b_show )
 {
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_crosshair", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_crosshair", NULL, &b_val, 1 );
 }
 
 void game_world_ui::show_ammo_indicator( bool b_show )
 {
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_ammo", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_ammo", NULL, &b_val, 1 );
 }
 
 void game_world_ui::show_capture_progress( bool b_show )
 {
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_capture_progress", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_capture_progress", NULL, &b_val, 1 );
 }
 
 void game_world_ui::set_fire_queue_size( const u32 fire_queue_size )
 {
 	flash_value value;
-	value.SetUInt( fire_queue_size );	get_ui( )->movie->Invoke( "root.set_weapon_fire_queue_size", NULL, &value, 1 );
+	value.SetUInt( fire_queue_size );
+	get_ui( )->movie->Invoke( "root.set_weapon_fire_queue_size", NULL, &value, 1 );
 }
 
 void game_world_ui::set_ammo_in_magazine( const u32 count )
 {
 	flash_value value;
-	value.SetUInt( count );	get_ui( )->movie->Invoke( "root.set_weapon_ammo_size", NULL, &value, 1 );
+	value.SetUInt( count );
+	get_ui( )->movie->Invoke( "root.set_weapon_ammo_size", NULL, &value, 1 );
 }
 
 void game_world_ui::set_ammo_type( const u8 ammo_type )
@@ -605,7 +615,8 @@ void game_world_ui::show_players_list( bool b_show )
 		return;
 
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_player_list", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_player_list", NULL, &b_val, 1 );
 	m_players_list_visible = b_show;
 }
 
@@ -648,7 +659,12 @@ void game_world_ui::update_minimap_objects( )
 	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
 
 	game_team_id local_player_team = team_1;
-	for ( u8 i = 0; i < 20; ++i )	if ( client->is_player_local( i ) )	{	local_player_team = client->match_options( ).player_profiles[i].team;	break;	}
+	for ( u8 i = 0; i < 20; ++i )
+		if ( client->is_player_local( i ) )
+		{
+			local_player_team = client->match_options( ).player_profiles[i].team;
+			break;
+		}
 
 	flash_value level_objects;
 	get_ui( )->movie->CreateArray( &level_objects );
@@ -827,13 +843,15 @@ void game_world_ui::reset_map_rotatable( )
 {
 	flash_value b_val;
 	b_val.SetBoolean( is_ui_minimap_rotable );
-	get_ui( )->movie->Invoke( "root.set_rotable", NULL, &b_val, 1 );	is_ui_minimap_rotable_old = is_ui_minimap_rotable;
+	get_ui( )->movie->Invoke( "root.set_rotable", NULL, &b_val, 1 );
+	is_ui_minimap_rotable_old = is_ui_minimap_rotable;
 }
 
 void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_count )
 {
 	flash_value count;
-	count.SetUInt( first_type_count );	get_ui( )->movie->Invoke( "root.set_primary_ammo", NULL, &count, 1 );
+	count.SetUInt( first_type_count );
+	get_ui( )->movie->Invoke( "root.set_primary_ammo", NULL, &count, 1 );
 	count.SetUInt( second_type_count );
 	get_ui( )->movie->Invoke( "root.set_secondary_ammo", NULL, &count, 1 );
 }
@@ -841,7 +859,8 @@ void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_
 void game_world_ui::show_quick_slots( bool b_show )
 {
 	flash_value b_val;
-	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_slots", NULL, &b_val, 1 );
+	b_val.SetBoolean( b_show );
+	get_ui( )->movie->Invoke( "root.show_slots", NULL, &b_val, 1 );
 	if ( !b_show )
 		m_slots_to_update.clear( );
 }
@@ -1086,7 +1105,8 @@ void game_world_ui::on_detached_from_player( )
 void game_world_ui::show_item_container( u8 visual_id )
 {
 	flash_value visual_id_val;
-	visual_id_val.SetUInt( visual_id );	get_ui( )->movie->Invoke( "root.show_container_icon", NULL, &visual_id_val, 1 );
+	visual_id_val.SetUInt( visual_id );
+	get_ui( )->movie->Invoke( "root.show_container_icon", NULL, &visual_id_val, 1 );
 }
 
 void game_world_ui::hide_item_container( )

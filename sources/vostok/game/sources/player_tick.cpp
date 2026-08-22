@@ -156,7 +156,8 @@ void player::replay_history( const u32 from_index, float4x4& previous_transform 
 	while( index != m_history.head( ) )
 	{
 		update_history_item_from_previous( m_history[ m_history.previous( index ) ], m_history[ index ], previous_transform );
-		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );	index = m_history.next( index );
+		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );
+		index = m_history.next( index );
 	}
 
 	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
@@ -460,7 +461,8 @@ void player::tick( const u32 current_time_in_ms )
 		}
 	}
 
-	if( m_text.visible )	m_text.set_visible( false );
+	if( m_text.visible )
+		m_text.set_visible( false );
 }
 
 } // namespace survarium
