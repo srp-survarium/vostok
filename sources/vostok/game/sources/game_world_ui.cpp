@@ -648,20 +648,13 @@ void game_world_ui::update_minimap_objects( )
 	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
 
 	game_team_id local_player_team = team_1;
-	for ( u8 i = 0; i < 20; ++i )
-		if ( client->is_player_local( i ) )
-		{
-			local_player_team = client->match_options( ).player_profiles[i].team;
-			break;
-		}
+	for ( u8 i = 0; i < 20; ++i )	if ( client->is_player_local( i ) )	{	local_player_team = client->match_options( ).player_profiles[i].team;	break;	}
 
 	flash_value level_objects;
 	get_ui( )->movie->CreateArray( &level_objects );
 
 	player_ptr current_player = client->get_current_player( );
-	bool is_carrying_victory_item = false;
-	if ( current_player )
-		is_carrying_victory_item = current_player->inventory( ).get_victory_item( ) != NULL;
+	bool const is_carrying_victory_item = current_player && current_player->inventory( ).get_victory_item( ) != NULL;
 
 	u8 bases_count = 0;
 	for ( victory_items_container** it = m_game_world.get_project( )->m_victory_items_containers.begin( );
