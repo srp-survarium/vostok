@@ -487,7 +487,9 @@ bool   operator != (const buffer_string& s1, const buffer_string::value_type* s2
 	return						!(s1 == s2);
 }
 
-inline
+// gold never inlines this comparator - every insert_unique/__median/find caller
+// emits `call vostok::operator<` against the 44-byte out-of-line body
+inline __declspec( noinline )
 bool   operator < (const buffer_string& s1, const buffer_string& s2)
 {
 	return						detail::strcmp_s(s1.c_str(), s2.c_str()) == -1;
