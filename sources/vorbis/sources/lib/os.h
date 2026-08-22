@@ -13,17 +13,13 @@
  ********************************************************************
 
  function: #ifdef jail to whip a few platforms into the UNIX ideal.
- last mod: $Id: os.h 16227 2009-07-08 06:58:46Z xiphmont $
+ last mod: $Id$
 
  ********************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#ifdef __SNC__
-#	include <alloca.h>
-#endif // #ifdef __SNC__
 
 #include <math.h>
 #include <ogg/os_types.h>
@@ -51,7 +47,7 @@
 
 #if defined(_WIN32) && !defined(__SYMBIAN32__)
 #  include <malloc.h>
-#  define rint(x)   ((long)floor((x)+0.5f))
+#  define rint(x)   (floor((x)+0.5f))
 #  define NO_FLOAT_MATH_LIB
 #  define FAST_HYPOT(a, b) sqrt((a)*(a) + (b)*(b))
 #endif
@@ -124,7 +120,7 @@ static inline int vorbis_ftoi(double f){  /* yes, double!  Otherwise,
 
 /* MSVC inline assembly. 32 bit only; inline ASM isn't implemented in the
  * 64 bit compiler */
-#if defined(_MSC_VER) && !defined(_WIN64) && !defined(_WIN32_WCE) && !defined(_XBOX)
+#if defined(_MSC_VER) && !defined(_WIN64) && !defined(_WIN32_WCE)
 #  define VORBIS_FPU_CONTROL
 
 typedef ogg_int16_t vorbis_fpu_control;
