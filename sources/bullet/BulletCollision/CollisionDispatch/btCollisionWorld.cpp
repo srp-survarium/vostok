@@ -890,57 +890,6 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 					if (dbvt->m_root)
 						dbvt->collideTV(dbvt->m_root, volume, rayCB);
 				}
-				else
-				{
-				int i=0;
-				for (i=0;i<compoundShape->getNumChildShapes();i++)
-				{
-					btTransform childTrans = compoundShape->getChildTransform(i);
-					const btCollisionShape* childCollisionShape = compoundShape->getChildShape(i);
-					btTransform childWorldTrans = colObjWorldTransform * childTrans;
-					// replace collision shape so that callback can determine the triangle
-					btCollisionShape* saveCollisionShape = collisionObject->getCollisionShape();
-					collisionObject->internalSetTemporaryCollisionShape((btCollisionShape*)childCollisionShape);
-                    struct	LocalInfoAdder : public ConvexResultCallback {
-                            ConvexResultCallback* m_userCallback;
-							int m_i;
-
-                            LocalInfoAdder (int i, ConvexResultCallback *user)
-								: m_userCallback(user), m_i(i)
-							{
-								m_closestHitFraction = m_userCallback->m_closestHitFraction;
-							}
-							virtual bool needsCollision(btBroadphaseProxy* p) const
-							{
-								return m_userCallback->needsCollision(p);
-							}
-                            virtual btScalar addSingleResult (btCollisionWorld::LocalConvexResult&	r,	bool b)
-                            {
-                                    btCollisionWorld::LocalShapeInfo	shapeInfo;
-                                    shapeInfo.m_shapePart = -1;
-                                    shapeInfo.m_triangleIndex = m_i;
-									shapeInfo.m_is_shape_index = true;
-                                    if (r.m_localShapeInfo == NULL)
-                                        r.m_localShapeInfo = &shapeInfo;
-									const btScalar result = m_userCallback->addSingleResult(r, b);
-									m_closestHitFraction = m_userCallback->m_closestHitFraction;
-									return result;
-                                    
-                            }
-                    };
-
-                    LocalInfoAdder my_cb(i, &resultCallback);
-					
-
-					objectQuerySingle(castShape, convexFromTrans,convexToTrans,
-						collisionObject,
-						childCollisionShape,
-						childWorldTrans,
-						my_cb, allowedPenetration);
-					// restore
-					collisionObject->internalSetTemporaryCollisionShape(saveCollisionShape);
-				}
-				}
 			}
 		}
 	}
