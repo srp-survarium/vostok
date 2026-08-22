@@ -35,6 +35,12 @@
 #include <vostok/sound/sound_scene_creation_params.h>	// sound::sound_scene_creation_params (load)
 #include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
 #include <vostok/buffer_vector.h>	// buffer_vector (load)
+#include "lobby_menu.h"				// m_match_making_ui abort path (on_project_loaded)
+#include "match_client.h"			// match_client::m_match_options (on_project_loaded)
+#include "game_project.h"			// simple_game_project::insert/m_config (on_project_loaded)
+#include "game_camera.h"			// free_fly camera set_position_direction (on_project_loaded)
+#include "flash_factory.h"			// m_gfx_loader for flash_text_manager (on_project_loaded)
+#include <vostok/configs_binary_config.h>	// m_config->get_root() (on_project_loaded)
 #include <vostok/fixed_string.h>	// fixed_string<8> name (load)
 // register_cooks: the cook family + the resources::register_cook free function
 #include "sound_player_cook.h"
@@ -217,19 +223,118 @@ bool game_world::empty( )
 // BLOCKED on cross-unit symbols still missing/stripped: the 4-arg
 // sound::world_user::set_active_sound_scene(scene, portal, u32, u32) overload and
 // render::scene_renderer::set_portal_system are not declared in our headers; and the
-// callees game_world_ui::initialize / initialize_minimap / show_capture_progress are
-// UNPAIRED (empty stubs in game_world_ui.cpp - they /Od-inline to nothing and collapse
-// the wiring guards). NEXT: add the 4-arg set_active_sound_scene + set_portal_system
-// overloads (do that in on_portal_system_loaded's unit first, same wall), match the
-// three game_world_ui setup methods, then reconstruct from the rich asm. Locals:
-// resource_index, user_data variant<32>, camera_position/_direction float3, two loops.
-// STATE[STUB]
+// claude@NOTE: reconstructed from the 0xb06-byte target (43 stmts). Member offsets,
+// virtual slots (show_ui +0x14, has_bandwidth +0x14, match_options +0x34,
+// lobby_client +0x3C, match_client +0x40), the "unused string"/0x6E portal request,
+// match_client+0xFC m_match_options, lobby_client+0x190 m_status and the
+// lobby_menu m_match_making_ui/+0xF5 abort path are all byte-verified.
 void game_world::on_project_loaded(
 	resources::queries_result&		data,
 	const u32						results_offset,
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
 {
+	u32 resource_index = results_offset;
+
+	if ( !m_render_scene )
+	{
+		m_render_scene		= static_cast_resource_ptr< render::base_scene_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+		m_render_scene_view	= static_cast_resource_ptr< render::base_scene_view_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+		m_sound_scene		= data[resource_index++].get_unmanaged_resource( );
+
+		game_ui.initialize_resources( data[resource_index++].get_unmanaged_resource( ) );
+
+		for ( u32 i = 0; i < s_max_tracers_count; ++i )
+		{
+			bullet_tracer tracer;
+			tracer.bullet	= NULL;
+			tracer.tracer	= static_cast_resource_ptr< render::tracer_model_instance_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+			m_bullet_tracers.push_back( tracer );
+		}
+
+		for ( u8 i = 0; i < 16; ++i )
+			death_particles[i] = data[resource_index++].get_unmanaged_resource( );
+
+		m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory( ).m_gfx_loader );
+
+		math::uint2 const& output_size = output_window_size( );
+		m_text_manager->set_viewport( output_size.x, output_size.y );
+		renderer( ).show_text_manager( m_render_scene_view, m_text_manager );
+	}
+
+	if ( !m_game_material_manager )
+	{
+		m_game_material_manager	= static_cast_resource_ptr< game_material_manager_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+		m_bullet_manager		= NEW( bullet_manager )( m_game_material_manager.c_ptr( ), m_physics_world, this );
+	}
+
+	m_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+
+	if ( m_game.network_client( ).has_bandwidth( ) && m_game.network_client( ).lobby_client( ).status( ) == lobby::surf_lobby_menu )
+	{
+		unload( );
+
+		if ( m_game.lobby_menu( ).m_is_in_match_making )
+		{
+			hide_movie( m_game.lobby_menu( ).m_match_making_ui );
+			m_game.lobby_menu( ).m_is_in_match_making = false;
+		}
+
+		m_is_loading = false;
+		return;
+	}
+
+	show_ui( true );
+
+	for ( u8 i = 0; i < m_game.network_client( ).match_options( ).victory_items_count; ++i )
+		m_victory_items.push_back( static_cast_resource_ptr< victory_item_ptr >( data[resource_index++].get_unmanaged_resource( ) ) );
+
+	m_game_project->insert( m_game.scheduler( ) );
+
+	float3 camera_position	= m_game_project->m_config->get_root( )["camera"]["position"];
+	float3 camera_direction	= m_game_project->m_config->get_root( )["camera"]["direction"];
+
+	m_camera_director->set_position_direction( camera_position, camera_direction );
+	m_free_fly_camera->set_position_direction( camera_position, camera_direction );
+
+	m_input_mode = free_fly_mode;
+	m_camera_director->switch_to_camera( m_free_fly_camera, "Free Fly View" );
+
+	if ( m_is_active )
+		m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 1000, 0 );
+
+	if ( m_game.network_client( ).has_bandwidth( ) )
+		game_ui.initialize( m_game.network_client( ).match_client( ).m_match_options );
+
+	variant< 32 > user_data;
+	user_data.set( m_game_project->m_config );
+
+	resources::user_data_variant const* user_data_ptrs[] = { &user_data };
+	resources::request request = { "unused string", resources::portal_sector_structure_class };
+	resources::query_resources(
+		&request,
+		1,
+		boost::bind( &game_world::on_portal_system_loaded, this, _1 ),
+		g_allocator,
+		user_data_ptrs );
+
+	game_ui.initialize_minimap( );
+
+	if ( m_game.network_client( ).has_bandwidth( ) )
+		game_ui.show_capture_progress( true );
+
+	if ( callback )
+		callback( data );
+
+	if ( m_game.m_active_scene != this )
+	{
+		if ( m_game.m_active_scene )
+			m_game.m_active_scene->on_deactivate( );
+		m_game.m_active_scene = this;
+		m_game.m_active_scene->on_activate( );
+	}
+
+	m_is_loading = false;
 }
 
 void game_world::unload( )
