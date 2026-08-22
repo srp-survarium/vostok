@@ -102,6 +102,7 @@
         # Keep the campaign-specific raw CodeView topology query beside this
         # repository while it is evaluated for upstreaming into the parser.
         postPatch = ''
+          patch -p1 < ${./tools/pdb_diff_all_files.patch}
           cp ${./tools/pdb_topology.rs} src/bin/pdb_topology.rs
         '';
         cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
