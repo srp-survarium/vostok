@@ -17,7 +17,9 @@
 #include "game_memory.h"				// g_allocator for circular_buffer member
 #include <vostok/game_core/weapon_core.h>			// cast_weapon_core()->could_be_used (quick slots)
 #include <vostok/animation/linear_interpolator.h>	// fov_factor interpolation
+#include <vostok/render/facade/game_renderer.h>	// renderer().ui() in render
 #include <vostok/render/facade/scene_renderer.h>	// add/remove_model
+#include <vostok/render/engine/sources/trample_desc.h>
 #include <vostok/physics/character_controller.h>	// physics_controller->set_crouch / jump
 #include <vostok/game_core/hit_info.h>				// hit() builds a hit_info
 #include <vostok/game_core/hit_initiator.h>			// initiator->id
@@ -346,219 +348,114 @@ void player::serialize_current_state( const u32 current_time_in_ms )
 	item.action.weapon_state.slot_id	= inventory( ).get_active_slot( );
 }
 
-// claude@NOTE: PARKED. 9 stmts (target 0x5e4210). Computes the skeleton bone count
-// from m_current.model's bone vector, alloca's a float4x4[count] buffer, then
-// m_current.animation_player.compute_bones(...) (vtable+0x3C), animated_object::update
-// on m_damage_collision, and TWO render::scene_renderer::update_skeleton calls gated
-// by m_show_client_player (10F33) / m_show_server_player-ish (10F32), plus an
-// animation::mixing::n_ary_tree::compute_bones_matrices on m_target. Next step: needs
-// render::scene_renderer::update_skeleton(render_model_instance_ptr const&, float4x4*,
-// u32) bodied (render module, matched last) + the animation_player compute_bones vtable
-// inline - cross-module render/animation, cannot land from player.cpp alone.
-// STATE[STUB]
 void player::compute_bones( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// render::game::renderer& 			r
-	// ******
+	u32 const bones_count = m_current.model->m_skeleton->get_non_root_bones_count( );
+	float4x4* const bones_matrices = (float4x4*)alloca( bones_count * sizeof( float4x4 ) );
 
-	// CALL SITE INFO
-	// <0x5e427d> -> void < unknown >( animation::skeleton_ptr const&, float4x4* const, const u32, const u32, float4x4&, float4x4&, animation::animation_player const& )
-	// ******
+	m_current_active_object->update_bones_matrices(
+		m_current.model->m_skeleton,
+		bones_matrices,
+		bones_count,
+		current_time_in_ms,
+		m_character_head_transform,
+		m_root_transform,
+		m_current.animation_player
+	);
+	m_damage_collision->update( bones_matrices, bones_matrices + bones_count );
 
-	// FUNCTION BODY[0x5e4210]: 27
-	// <0x5e4214>|0x004|+0x039:'531'
-	// <0x5e424d>|0x03d|+0x00a:'532'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5e4257>|0x047|+0x028:'541'
-	// <0>
-	// <0x5e427f>|0x06f|+0x00d:'543'
-	// <0>
-	// <1>
-	// <0x5e428c>|0x07c|+0x01e:'546'
-	// <0>
-	// <0x5e42aa>|0x09a|+0x017:'548'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e42c1>|0x0b1|+0x009:'552'
-	// <0>
-	// <0x5e42ca>|0x0ba|+0x01c:'554'
-	// <0x5e42e6>|0x0d6|+0x01a:'555'
-	// <0>
-	// <1>
-	// ******
+	render::game::renderer& r = m_game_scene.renderer( );
+	if ( m_show_client_player )
+		r.scene( ).update_skeleton( m_current.model->m_render_model, bones_matrices, bones_count );
+
+	if ( m_show_server_player )
+	{
+		m_target.animation_player.compute_bones_matrices(
+			*m_target.model->m_skeleton,
+			bones_matrices,
+			bones_matrices + bones_count,
+			this,
+			NULL
+		);
+		r.scene( ).update_skeleton( m_target.model->m_render_model, bones_matrices, bones_count );
+	}
 }
 
-// claude@NOTE: PARKED. 27 stmts (target 0x5e49f0), the heaviest render entry in the
-// TU: a render::base_scene_ptr + render::trample_desc local, gated draws of the
-// current/server skeleton models into the scene, debug rigid-body draws
-// (physics::bt_rigid_body_base*, float4x4), and trample/decal emission. Deep render
-// module (scene draw + trample) which matches LAST; cannot link/inline its render
-// facade calls until those render bodies exist. Next step: revisit after the render
-// scene_renderer / trample subsystem is bodied.
-// STATE[STUB]
 void player::render( const u32 __formal, const u32 current_time_in_ms )
 {
-	// LOCALS
-	// render::base_scene_ptr 			scene
-	// render::trample_desc 			trample
-	// ******
+	render::base_scene_ptr scene = m_game_scene.render_scene( );
 
-	// CALL SITE INFO
-	// <0x5e4b25> -> void < unknown >()
-	// <0x5e4c1c> -> void < unknown >( physics::bt_rigid_body_base*, float4x4 const& )
-	// ******
+	if ( s_draw_linear_speed_graph_value )
+		m_linear_speed_graph->render( m_game_scene.renderer( ).ui( ), m_game_scene.render_scene_view( ), 510, 256, __formal, 1004, 10 );
 
-	// FUNCTION BODY[0x5e49f0]: 68
-	// <0x5e49f8>|0x008|+0x02b:'562'
-	// <0>
-	// <1>
-	// <0x5e4a23>|0x033|+0x01b:'565'
-	// <0x5e4a3e>|0x04e|+0x023:'566'
-	// <0>
-	// <0x5e4a61>|0x071|+0x00d:'568'
-	// <0>
-	// <0x5e4a6e>|0x07e|+0x006:'570'
-	// <0x5e4a74>|0x084|+0x009:'571'
-	// <0x5e4a7d>|0x08d|+0x01b:'572'
-	// <0x5e4a98>|0x0a8|+0x002:'573'
-	// <0x5e4a9a>|0x0aa|+0x021:'574'
-	// <0>
-	// <1>
-	// <0x5e4abb>|0x0cb|+0x00d:'577'
-	// <0>
-	// <0x5e4ac8>|0x0d8|+0x006:'579'
-	// <0x5e4ace>|0x0de|+0x009:'580'
-	// <0>
-	// <0x5e4ad7>|0x0e7|+0x01b:'582'
-	// <0x5e4af2>|0x102|+0x008:'583'
-	// <0>
-	// <0x5e4afa>|0x10a|+0x002:'585'
-	// <0>
-	// <0x5e4afc>|0x10c|+0x021:'587'
-	// <0x5e4b1d>|0x12d|+0x00a:'588'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4b27>|0x137|+0x00d:'592'
-	// <0>
-	// <0x5e4b34>|0x144|+0x00d:'594'
-	// <0>
-	// <0x5e4b41>|0x151|+0x022:'596'
-	// <0>
-	// <0x5e4b63>|0x173|+0x022:'598'
-	// <0>
-	// <1>
-	// <0x5e4b85>|0x195|+0x007:'601'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4b8c>|0x19c|+0x039:'605'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4bc5>|0x1d5|+0x009:'609'
-	// <0x5e4bce>|0x1de|+0x022:'610'
-	// <0>
-	// <1>
-	// <0x5e4bf0>|0x200|+0x00a:'613'
-	// <0>
-	// <0x5e4bfa>|0x20a|+0x024:'615'
-	// <0>
-	// <1>
-	// <0x5e4c1e>|0x22e|+0x03c:'618'
-	// <0>
-	// <0x5e4c5a>|0x26a|+0x005:'620'
-	// <0x5e4c5f>|0x26f|+0x002:'621'
-	// <0>
-	// <0x5e4c61>|0x271|+0x002:'623'
-	// <0x5e4c63>|0x273|+0x007:'624'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// ******
+	if ( m_show_server_player != s_show_server_player )
+	{
+		m_show_server_player = s_show_server_player;
+		if ( !s_show_server_player )
+			m_game_scene.scene_renderer( ).remove_model( scene, m_target.model->m_render_model );
+		else
+			m_game_scene.scene_renderer( ).add_model( scene, m_target.model->m_render_model, m_target.transform );
+	}
+
+	if ( m_show_client_player != s_show_client_player )
+	{
+		m_show_client_player = s_show_client_player;
+		if ( !s_show_client_player )
+		{
+			m_game_scene.scene_renderer( ).remove_model( scene, m_current.model->m_render_model );
+			m_current_active_object->on_player_model_removed( );
+		}
+		else
+		{
+			m_game_scene.scene_renderer( ).add_model( scene, m_current.model->m_render_model, m_current.transform );
+			m_current_active_object->on_player_model_added( );
+		}
+	}
+
+	if ( m_is_visible )
+	{
+		if ( m_show_client_player )
+		{
+			m_game_scene.scene_renderer( ).update_model( scene, m_current.model->m_render_model, m_current.transform );
+			if ( !m_current.transform.c.xyz( ).is_similar( m_current.previous_transform.c.xyz( ), 0.025f ) )
+			{
+				render::trample_desc trample;
+				trample.position = m_current.transform.c.xyz( );
+				trample.radius = 0.f;
+				trample.multiplier = 0.5f;
+				m_game_scene.scene_renderer( ).add_vegetation_trample( scene, trample );
+			}
+		}
+
+		if ( m_show_server_player )
+			m_game_scene.scene_renderer( ).update_model( scene, m_target.model->m_render_model, m_target.transform );
+	}
+
+	compute_bones( current_time_in_ms );
+	m_game_scene.get_physics_world( )->move( m_damage_collision->get_rigid_body( ), m_current.transform );
+
+	if ( m_game.network_client( ).is_player_current( id ) &&
+		( s_first_person_animations_only || m_local_input_controller->input_mode( ) == first_person_mode ) )
+	{
+		render_crosshair_info( );
+		set_head_visibility( false );
+	}
+	else
+		set_head_visibility( true );
 }
 
-// claude@NOTE: PARKED. Casts a physics ray from the camera (ray_from + ray_dir locals)
-// via physics::closest_ray_result, then drives the crosshair "can use" / hit-marker UI
-// from the result. Deep physics raycast + scaleform crosshair UI inlining (closest_ray_result
-// construction is a physics-module template; the UI feedback path is scaleform GFx). Next
-// step: revisit once the physics world raycast helper + the crosshair UI path are bodied.
-// STATE[STUB]
 void player::render_crosshair_info( )
 {
-	// LOCALS
-	// physics::closest_ray_result 		result
-	// float3 							ray_dir
-	// float3 							ray_from
-	// ******
+	float3 ray_from = m_character_head_transform.c.xyz( );
+	float3 ray_dir = m_character_head_transform.k.xyz( );
 
-	// CALL SITE INFO
-	// <0x5e3b6b> -> physics::closest_ray_result < unknown >( float3 const&, float3 const&, const float, u16, u16 )
-	// ******
-
-	// FUNCTION BODY[0x5e3af0]: 50
-	// <0x5e3af3>|0x003|+0x00b:'634'
-	// <0x5e3afe>|0x00e|+0x007:'635'
-	// <0>
-	// <1>
-	// <0x5e3b05>|0x015|+0x038:'638'
-	// <0>
-	// <0x5e3b3d>|0x04d|+0x030:'640'
-	// <0>
-	// <0x5e3b6d>|0x07d|+0x007:'642'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e3b74>|0x084|+0x03e:'647'
-	// <0x5e3bb2>|0x0c2|+0x01d:'648'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// ******
+	render::base_scene_ptr scene = m_game_scene.render_scene( );
+	physics::closest_ray_result result = m_game_scene.get_physics_world( )->ray_test( ray_from, ray_dir, 1000.f, 16, 8 );
+	if ( result.object )
+	{
+		float const distance = math::length( result.hit_point_world - ray_from );
+		m_game.get_stats( ).set_crosshair_info( distance );
+	}
 }
 
 void player::update_speed_info( )
