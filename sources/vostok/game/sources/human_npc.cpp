@@ -279,6 +279,9 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 
 	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
 
+	// 86.4 wall: draw_origin/draw_arrow take a reg-arg custom convention
+	// target-side (set by their OTHER callers); ours pushes. The remaining
+	// delta is that convention + the scheduling cascade off it.
 	float3 const eyes_position		= get_eyes_position( );
 	float3 const eyes_direction		= get_eyes_direction( ) * 3.f;
 	m_renderer.debug( ).draw_arrow	( m_scene, eyes_position, eyes_position + eyes_direction, math::color( 255, 0, 0 ) );

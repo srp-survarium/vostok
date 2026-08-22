@@ -131,7 +131,7 @@ void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x
 		if ( current_hand->start_transition_time_in_ms + 100 <= current_time_in_ms )
 		{
 			if ( current_hand->is_active )
-				for ( u32 i = 0; i < 15; ++i ) matrices[current_hand->phalanges_bones_indices[i]] = current_hand->phalanges_matrices[i];
+				for ( u32 i = 0; i != 15; ++i ) matrices[current_hand->phalanges_bones_indices[i]] = current_hand->phalanges_matrices[i];
 		}
 		else
 		{

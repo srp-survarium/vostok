@@ -102,7 +102,7 @@ public:
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
 			u16									fire_queue_length				( ) const;
 
-	inline	float4x4							get_transform					( ) const { /* no source */ }
+	inline	float4x4							get_transform					( ) const { return m_transform; }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
 	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
 

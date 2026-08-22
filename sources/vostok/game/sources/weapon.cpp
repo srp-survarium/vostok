@@ -125,15 +125,16 @@ static u32 light_ids = 1000000;
 {
 	if ( get_game_scene( ) && get_game_scene( )->render_scene( ) )
 	{
+		render::scene_ptr const& render_scene = get_game_scene( )->render_scene( );
 		render::scene_renderer& scene = get_game_scene( )->renderer( ).scene( );
 
 		for ( u8 i = 0; i < m_fire_pfx_count; ++i )
 			if ( particle::is_playing( m_fire_pfx_list[ i ] ) )
-				scene.remove_particle_system_instance( get_game_scene( )->render_scene( ), m_fire_pfx_list[ i ] );
+				scene.remove_particle_system_instance( render_scene, m_fire_pfx_list[ i ] );
 
 		for ( u8 i = 0; i < m_shells_pfx_count; ++i )
 			if ( particle::is_playing( m_shells_pfx_list[ i ] ) )
-				scene.remove_particle_system_instance( get_game_scene( )->render_scene( ), m_shells_pfx_list[ i ] );
+				scene.remove_particle_system_instance( render_scene, m_shells_pfx_list[ i ] );
 	}
 }
 
@@ -280,20 +281,15 @@ float4x4 weapon::calculate_locator(
 	return math::mul4x3( math::mul4x3( matrices[ locator.m_bone ], weapon_core::m_transform ), math::mul4x3( locator.m_offset, add ) );
 }
 
-// claude@NOTE: last statement (line 318) is STUB - it sets the player_input_handler aim/input
-// state to 1 via user().m_local_input_controller (player+0x10EF4 -> [+0x1A0] = 1). player and
-// player_input_handler are incomplete in this TU (forward-declared only), so that member chain
-// can't be spelled here without pulling player.h + player_input_handler.h. The other 10 statements
-// (model add x2, the m_game_ui UI refresh block) are recovered.
 void weapon::on_show( )
 {
 	m_is_in_scene = true;
 	render::scene_ptr scene = get_game_scene( )->render_scene( );
 
-	get_game_scene( )->renderer( ).scene( ).add_model( scene, model->m_render_model, transform( ) );
+	get_game_scene( )->renderer( ).scene( ).add_model( scene, model->m_render_model, get_transform( ) );
 
 	if ( m_rifle_scope )
-		get_game_scene( )->renderer( ).scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, transform( ) );
+		get_game_scene( )->renderer( ).scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, get_transform( ) );
 
 	if ( m_game_ui )
 	{
@@ -305,6 +301,7 @@ void weapon::on_show( )
 			m_game_ui->show_crosshair( true );
 
 		set_ui_ammo( true );
+		user( ).get_input_handler( ).set_key_binder_context( 1 );
 	}
 }
 
@@ -324,11 +321,9 @@ void weapon::on_hide( )
 				: m_rifle_scope->idle_model( ) )->m_render_model
 		);
 
+	m_is_scope_aimed = false;
 	if ( m_game_ui )
-	{
-		m_is_scope_aimed = false;
 		m_game_ui->show_crosshair( false );
-	}
 
 	if ( m_game_ui )
 		m_game_ui->show_ammo_indicator( false );
