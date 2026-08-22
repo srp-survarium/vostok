@@ -484,6 +484,13 @@ void animation_player::destroy_subscriptions( subscribed_channel const* const ch
 	}
 }
 
+// retail calls the two-store buffer ctor out-of-line at the deserialize site
+// (ICF-folds with the ctor group); TU-local per-site forwarder
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
+{
+	return mutable_buffer( data, size );
+}
+
 void animation_player::compact_callbacks( )
 {
 	m_callbacks_are_actual					= true;
@@ -539,7 +546,7 @@ void animation_player::compact_callbacks( )
 
 	m_first_subscribed_channel				= 0;
 	m_callbacks_buffer.~mutable_buffer		( );
-	new (&m_callbacks_buffer) mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
+	new (&m_callbacks_buffer) mutable_buffer( make_stack_buffer( m_callbacks_buffer_raw, callbacks_buffer_size ) );
 
 	u32 channels_count						= 0;
 	for ( i = first_cloned_channel ; i ; i = i->next )
@@ -649,7 +656,7 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
 	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
-	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
+	mutable_buffer tree_buffer = make_stack_buffer( (void*)((u32*)buffer + 2), buffer_size );
 
 	tree_buffer += sizeof( mixing::n_ary_tree );
 
@@ -675,13 +682,6 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 
 	m_mixing_tree.adjust_animation_events_times( *(mixing::n_ary_tree*)((u32*)buffer + 2) );
 	invert_times( *(mixing::n_ary_tree*)((u32*)buffer + 2), m_mixing_tree.tree_actual_time_in_ms( ), false, false );
-}
-
-// retail calls the two-store buffer ctor out-of-line at the deserialize site
-// (ICF-folds with the ctor group); TU-local per-site forwarder
-static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
-{
-	return mutable_buffer( data, size );
 }
 
 void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
