@@ -656,7 +656,7 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
 	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
-	mutable_buffer tree_buffer = make_stack_buffer( (void*)((u32*)buffer + 2), buffer_size );
+	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
 
 	tree_buffer += sizeof( mixing::n_ary_tree );
 
