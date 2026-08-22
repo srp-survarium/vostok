@@ -36,7 +36,8 @@
 #include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
 #include <vostok/buffer_vector.h>	// buffer_vector (load)
 #include "lobby_menu.h"				// m_match_making_ui abort path (on_project_loaded)
-#include "match_client.h"			// match_client::m_match_options (on_project_loaded)
+#include "match_client.h"			// match_client::get_match_options (on_project_loaded)
+#include "lobby_client.h"			// lobby_client::status (on_project_loaded)
 #include "game_project.h"			// simple_game_project::insert/m_config (on_project_loaded)
 #include "game_camera.h"			// free_fly camera set_position_direction (on_project_loaded)
 #include <vostok/scaleform/sources/flash_factory.h>	// m_gfx_loader for flash_text_manager (on_project_loaded)
@@ -246,16 +247,14 @@ void game_world::on_project_loaded(
 
 		for ( u32 i = 0; i < s_max_tracers_count; ++i )
 		{
-			bullet_tracer tracer;
-			tracer.bullet	= NULL;
-			tracer.tracer	= static_cast_resource_ptr< render::tracer_model_instance_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+			bullet_tracer tracer( NULL, static_cast_resource_ptr< render::tracer_model_instance_ptr >( data[resource_index++].get_unmanaged_resource( ) ) );
 			m_bullet_tracers.push_back( tracer );
 		}
 
 		for ( u8 i = 0; i < 16; ++i )
 			death_particles[i] = data[resource_index++].get_unmanaged_resource( );
 
-		m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory( ).m_gfx_loader );
+		m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory( ).get_gfx_loader( ) );
 
 		math::uint2 const& output_size = output_window_size( );
 		m_text_manager->set_viewport( output_size.x, output_size.y );
@@ -265,7 +264,7 @@ void game_world::on_project_loaded(
 	if ( !m_game_material_manager )
 	{
 		m_game_material_manager	= static_cast_resource_ptr< game_material_manager_ptr >( data[resource_index++].get_unmanaged_resource( ) );
-		m_bullet_manager		= NEW( bullet_manager )( m_game_material_manager.c_ptr( ), m_physics_world, this );
+		m_bullet_manager		= NEW( bullet_manager )( m_game_material_manager.c_ptr( ), get_physics_world( ), this );
 	}
 
 	m_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[resource_index++].get_unmanaged_resource( ) );
@@ -300,11 +299,11 @@ void game_world::on_project_loaded(
 	m_input_mode = free_fly_mode;
 	m_camera_director->switch_to_camera( m_free_fly_camera, "Free Fly View" );
 
-	if ( m_is_active )
+	if ( is_active( ) )
 		m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 1000, 0 );
 
 	if ( m_game.network_client( ).has_bandwidth( ) )
-		game_ui.initialize( m_game.network_client( ).match_client( ).m_match_options );
+		game_ui.initialize( m_game.network_client( ).match_client( ).get_match_options( ) );
 
 	variant< 32 > user_data;
 	user_data.set( m_game_project->m_config );
