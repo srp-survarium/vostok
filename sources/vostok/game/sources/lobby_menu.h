@@ -52,6 +52,9 @@ class lobby_menu : public base_game_scene , public input::handler {
 	// the lobby-menu UI carcass anchor (anchor_game_lobby_ui.cpp) address-takes the
 	// private fill_*/update_*/on_* UI methods; codegen-neutral friend.
 	friend void ::survarium::use_game_lobby_ui( );
+	// on_project_loaded aborts the load through m_match_making_ui / m_is_in_match_making
+	// (codegen-neutral friendship; PDB does not record it)
+	friend class game_world;
 	// network_client toggles m_is_connected_to_lobby directly on (dis)connect
 	friend class network_client;
 public:
