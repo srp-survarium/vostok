@@ -677,6 +677,13 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 	invert_times( *(mixing::n_ary_tree*)((u32*)buffer + 2), m_mixing_tree.tree_actual_time_in_ms( ), false, false );
 }
 
+// retail calls the two-store buffer ctor out-of-line at the deserialize site
+// (ICF-folds with the ctor group); TU-local per-site forwarder
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
+{
+	return mutable_buffer( data, size );
+}
+
 void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 {
 	buffer										= (u32*)buffer + 1;
@@ -694,7 +701,7 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 
 	tree.m_tree_actual_time_in_ms				= time_in_ms;
 
-	mutable_buffer mixing_buffer( get_next_buffer( stack_buffer_size ), stack_buffer_size );
+	mutable_buffer mixing_buffer = make_stack_buffer( get_next_buffer( stack_buffer_size ), stack_buffer_size );
 
 	m_mixing_tree = mixing::n_ary_tree_transition_tree_constructor(
 		mixing_buffer,
