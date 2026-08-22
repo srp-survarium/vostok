@@ -99,7 +99,7 @@ public:
 
 	inline	bool			is_right_leg_supporting			( ) const { return m_right_leg_is_supporting; }
 
-	inline	void			set_player_logic_initial_state	( player_logic_base_state* arg_0 ) { /* no source */ }
+	inline	void			set_player_logic_initial_state	( player_logic_base_state* value ) { m_player_logic_initial_state = value; }
 	inline	void			set_forced_not_to_sprint		( bool arg_0 ) { /* no source */ }
 
 private:
