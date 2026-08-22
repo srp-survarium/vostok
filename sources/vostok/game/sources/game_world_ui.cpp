@@ -18,6 +18,9 @@
 #include <vostok/game_core/weapon_core.h>		// get_ammo_info() / cast_weapon_core()
 #include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/inventory_item_props.h>	// create_slot_value item props
+#include <vostok/game_core/inventory.h>			// update_minimap_objects: get_victory_item
+#include "victory_items_container.h"			// update_minimap_objects: team/get_transform
+#include "victory_item.h"						// update_minimap_objects: spotted/get_transform
 #include <vostok/game_core/dictionary_item.h>		// item_by_id().item_cfg
 #include "key_binder.h"			// get_action_dik / dik_to_ptr (create_slot_value hotkey)
 #include "keyboard_key_descr.h"	// keyboard_key_descr::key_name
@@ -643,126 +646,88 @@ void game_world_ui::on_damage_affect_applying(
 // STATE[STUB]
 void game_world_ui::update_minimap_objects( )
 {
-	// claude@NOTE: RESOLVED range/accessors (2026-08-22) - write the body next:
-	//  head: u8 i; for (i=0;i<20;++i) if (client->is_player_local(i)) break;   [vtbl+0x4C]
-	//        local_player_team = client->match_options( ).player_profiles[i].team;  [vtbl+0x34, stride 0x1B8, team @+0x1B0]
-	//  is_carrying: client+8 intrusive player copy; player->inventory-ish@+8 -> [+0x15C] != 0
-	//  containers loop (line 733, 0x31d): for (victory_items_container** it =
-	//        m_game_world.get_project( )->m_victory_items_containers.begin( );
-	//        it != m_game_world.get_project( )->m_victory_items_containers.end( ); ++it)
-	//        - get_project() BY VALUE each side = the addref/release temp dance
-	//  items loop (line 761, 0x29f): m_game_world vector victory_item* @+0x2C4..0x2C8;
-	//        per item: if (item->m_spoted_to_team[+0x170] == local_player_team)
-	//        CreateObject + position via [item vtbl+0x2C] float4x4 (x @+0x30, y @+0x38)
-	//  tail: Invoke with the level_objects array
-	// LOCALS
-	// player_ptr 						current_player
-	// bool 							is_carrying_victory_item
-	// game_team_id 					local_player_team
-	// flash_value 						level_objects
-	// u8 								bases_count
-	// flash_value 						level_object_val_prop
-	// u8 								i
-	// victory_items_container** 		it
-	// float 							position_y
-	// flash_value 						level_object_val
-	// float 							position_x
-	// float 							position_y
-	// flash_value 						level_object_val
-	// float 							position_x
-	// ******
+	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
 
-	// CALL SITE INFO
-	// <0x5d39ec> -> bool < unknown >( const u8 ) const
-	// <0x5d3a06> -> match_options& < unknown >()
-	// <0x5d3b19> -> game_team_id < unknown >()
-	// <0x5d3e04> -> float4x4 < unknown >()
-	// <0x5d3e23> -> float4x4 < unknown >()
-	// ******
+	game_team_id local_player_team = team_1;
+	for ( u8 i = 0; i < 20; ++i )
+		if ( client->is_player_local( i ) )
+		{
+			local_player_team = client->match_options( ).player_profiles[i].team;
+			break;
+		}
 
-	// FUNCTION BODY[0x5d39b0]: 78
-	// <0x5d39be>|0x00e|+0x00c:'710'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d39ca>|0x01a|+0x016:'714'
-	// <0>
-	// <0x5d39e0>|0x030|+0x01f:'716'
-	// <0x5d39ff>|0x04f|+0x01d:'717'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5d3a1c>|0x06c|+0x020:'723'
-	// <0>
-	// <0x5d3a3c>|0x08c|+0x008:'725'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d3a44>|0x094|+0x022:'729'
-	// <0>
-	// <0x5d3a66>|0x0b6|+0x015:'731'
-	// <0>
-	// <0x5d3a7b>|0x0cb|+0x31d:'733'
-	// <0x5d3d98>|0x3e8|-0x28a:'733'
-	// <0>
-	// <0x5d3b0e>|0x15e|+0x017:'735'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d3b25>|0x175|+0x023:'739'
-	// <0>
-	// <0x5d3b48>|0x198|+0x014:'741'
-	// <0x5d3b5c>|0x1ac|+0x01d:'742'
-	// <0>
-	// <0x5d3b79>|0x1c9|+0x039:'744'
-	// <0x5d3bb2>|0x202|+0x03b:'745'
-	// <0>
-	// <0x5d3bed>|0x23d|+0x075:'747'
-	// <0x5d3c62>|0x2b2|+0x02e:'748'
-	// <0>
-	// <0x5d3c90>|0x2e0|+0x025:'750'
-	// <0x5d3cb5>|0x305|+0x043:'751'
-	// <0>
-	// <0x5d3cf8>|0x348|+0x025:'753'
-	// <0x5d3d1d>|0x36d|+0x03e:'754'
-	// <0>
-	// <0x5d3d5b>|0x3ab|+0x015:'756'
-	// <0>
-	// <1>
-	// <0x5d3d70>|0x3c0|+0x036:'759'
-	// <0>
-	// <0x5d3da6>|0x3f6|+0x29f:'761'
-	// <0x5d4045>|0x695|-0x285:'761'
-	// <0>
-	// <0x5d3dc0>|0x410|+0x012:'763'
-	// <0>
-	// <0x5d3dd2>|0x422|+0x002:'765'
-	// <0x5d3dd4>|0x424|+0x021:'766'
-	// <0>
-	// <0x5d3df5>|0x445|+0x016:'768'
-	// <0x5d3e0b>|0x45b|+0x01f:'769'
-	// <0>
-	// <0x5d3e2a>|0x47a|+0x04a:'771'
-	// <0x5d3e74>|0x4c4|+0x03a:'772'
-	// <0>
-	// <0x5d3eae>|0x4fe|+0x069:'774'
-	// <0x5d3f17>|0x567|+0x02c:'775'
-	// <0>
-	// <0x5d3f43>|0x593|+0x024:'777'
-	// <0x5d3f67>|0x5b7|+0x043:'778'
-	// <0>
-	// <0x5d3faa>|0x5fa|+0x025:'780'
-	// <0x5d3fcf>|0x61f|+0x03e:'781'
-	// <0>
-	// <0x5d400d>|0x65d|+0x015:'783'
-	// <0x5d4022>|0x672|+0x035:'784'
-	// <0>
-	// <0x5d4057>|0x6a7|+0x020:'786'
-	// <0>
-	// ******
+	flash_value level_objects;
+	get_ui( )->movie->CreateArray( &level_objects );
+
+	player_ptr current_player = client->get_current_player( );
+	bool is_carrying_victory_item = false;
+	if ( current_player )
+		is_carrying_victory_item = current_player->inventory( ).get_victory_item( ) != NULL;
+
+	u8 bases_count = 0;
+	for ( victory_items_container** it = m_game_world.get_project( )->m_victory_items_containers.begin( );
+		  it != m_game_world.get_project( )->m_victory_items_containers.end( );
+		  ++it )
+	{
+		if ( (*it)->team( ) != local_player_team )
+			continue;
+
+		flash_value level_object_val;
+		get_ui( )->movie->CreateObject( &level_object_val );
+
+		float const position_x = (*it)->get_transform( ).c.x;
+		float const position_y = (*it)->get_transform( ).c.z;
+
+		flash_value level_object_val_prop;
+		level_object_val_prop.SetUInt( bases_count );
+		level_object_val.SetMember( "id", level_object_val_prop );
+
+		level_object_val_prop.SetString( is_carrying_victory_item ? "base_highlighted" : "base" );
+		level_object_val.SetMember( "type", level_object_val_prop );
+
+		level_object_val_prop.SetNumber( position_x );
+		level_object_val.SetMember( "pos_x", level_object_val_prop );
+
+		level_object_val_prop.SetNumber( position_y );
+		level_object_val.SetMember( "pos_y", level_object_val_prop );
+
+		level_objects.SetElement( bases_count, level_object_val );
+		++bases_count;
+	}
+
+	for ( victory_item_ptr* it = m_game_world.get_victory_items( ).begin( );
+		  it != m_game_world.get_victory_items( ).end( );
+		  ++it )
+	{
+		if ( (*it)->get_spotted_to_team( ) != local_player_team )
+			continue;
+
+		flash_value level_object_val;
+		get_ui( )->movie->CreateObject( &level_object_val );
+
+		float const position_x = (*it)->get_transform( ).c.x;
+		float const position_y = (*it)->get_transform( ).c.z;
+
+		flash_value level_object_val_prop;
+		level_object_val_prop.SetUInt( 0 );
+		level_object_val.SetMember( "id", level_object_val_prop );
+
+		level_object_val_prop.SetString( "artifact" );
+		level_object_val.SetMember( "type", level_object_val_prop );
+
+		level_object_val_prop.SetNumber( position_x );
+		level_object_val.SetMember( "pos_x", level_object_val_prop );
+
+		level_object_val_prop.SetNumber( position_y );
+		level_object_val.SetMember( "pos_y", level_object_val_prop );
+
+		level_objects.SetElement( bases_count, level_object_val );
+		++bases_count;
+	}
+
+	get_ui( )->movie->Invoke( "root.update_objects", NULL, &level_objects, 1 );
 }
+
 
 // claude@NOTE: flash /Od wall - project_name fetch reuses one get_project() temp in
 // the target (register-only, unrecorded local); the value_exists/operator[] ternary +
