@@ -13,12 +13,12 @@ struct breath_holding_params {
 		shortbreathing_repair_time	( 6.0f ),
 		breath_holding_multiplier	( 0.5f ),
 		shortbreathing_multiplier	( 3.0f ),
-		multiplier_increase_speed	( 0.0f ),
-		multiplier_decrease_speed	( 0.0f ),
-		horizontal_amplitude		( 0.0f ),
-		vertical_amplitude			( 0.0f ),
-		horizontal_peroid			( 0.0f ),
-		vertical_peroid				( 0.0f )
+		multiplier_increase_speed	( 1.0f ),
+		multiplier_decrease_speed	( 1.0f ),
+		horizontal_amplitude		( 1.0f ),
+		vertical_amplitude			( 1.0f ),
+		horizontal_peroid			( 1.0f ),
+		vertical_peroid				( 1.0f )
 	{
 	}
 
