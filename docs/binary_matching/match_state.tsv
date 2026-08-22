@@ -31694,7 +31694,7 @@ __book_unquantize	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	
 __calloc_crt	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	0	55	f	46b673ff4cd8	
 __float32_unpack	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	1	59	f	49b9f586bc57	auto: at 100% ceiling, demoted from queue
 __ilog	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	1	12	f	b60d410bb2ee	auto: at 100% ceiling, demoted from queue
-__make_words	vorbis/sources/lib/sharedbook.c	vorbis	inprogress	SIZE	93.7853	93.7853	93.7853	0	538	f	736219760dd8	
+__make_words	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	0	538	f	736219760dd8	
 __malloc_crt	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	0	30	f	c0a021a8c78f	
 __memcpy	vostok/core/sources/delayhlp.cpp	core	done	MATCH	100	100	100	1	32	f	102b74d4e713	auto: at 100% ceiling, demoted from queue
 __msize	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	1	69	f	bebc70989e9c	auto: at 100% ceiling, demoted from queue
@@ -31704,18 +31704,18 @@ __tr_align	zlib/trees.c	zlib	inprogress	MATCH	98.6846	98.6846	98.6846	0	493	f	3c
 __tr_flush_block	zlib/trees.c	zlib	inprogress	QUANTITY	86.9412	86.9412	86.9412	0	516	f	3885ff9311cc	
 __tr_init	zlib/trees.c	zlib	inprogress	MATCH	93.3333	93.3333	93.3333	0	100	f	ea3a10ac9dc2	
 __tr_stored_block	zlib/trees.c	zlib	inprogress	QUANTITY	63.3696	63.3696	63.3696	0	157	f	cb59a87d0a0b	
-__ve_envelope_clear	vorbis/sources/lib/envelope.c	vorbis	inprogress	SIZE	52.7604	52.7604	52.7604	0	376	f	b49966c395f5	
+__ve_envelope_clear	vorbis/sources/lib/envelope.c	vorbis	done	MATCH	100	100	100	0	376	f	b49966c395f5	
 __vi_psy_free	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	46	f	4bcfb2a73f15	
 __vorbis_apply_window	vorbis/sources/lib/window.c	vorbis	done	MATCH	100	100	100	1	510	f	e46ef0c26988	auto: at 100% ceiling, demoted from queue
 __vorbis_block_alloc	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	0	124	f	9e74db44ae6a	
-__vorbis_block_ripcord	vorbis/sources/lib/block.c	vorbis	inprogress	SIZE	61.1481	71.5926	71.5926	0	269	f	bb8ca91f5e1e	
+__vorbis_block_ripcord	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	0	269	f	bb8ca91f5e1e	
 __vorbis_window_get	vorbis/sources/lib/window.c	vorbis	done	MATCH	100	100	100	1	8	f	d1cdb09879c6	auto: at 100% ceiling, demoted from queue
 __vp_couple_quantize_normalize	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	2379	f	095f14fd2836	
 __vp_global_free	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	59	f	5cb59c96c647	
 __vp_noisemask	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	482		4af7bf632d6e	auto: at 100% ceiling, demoted from queue
 __vp_offset_and_mix	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	1386	f	bf567cc6228e	auto: at 100% ceiling, demoted from queue
-__vp_psy_clear	vorbis/sources/lib/psy.c	vorbis	inprogress	SIZE	74.0242	74.0242	74.0242	0	440	f	b68be25f725f	
-__vp_psy_init	vorbis/sources/lib/psy.c	vorbis	inprogress	QUANTITY	86.5666	86.5666	86.5666	0	1900	f	98d39c5645f8	
+__vp_psy_clear	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	440	f	b68be25f725f	
+__vp_psy_init	vorbis/sources/lib/psy.c	vorbis	inprogress	QUANTITY	88.3734	88.3734	88.3734	0	1900	f	98d39c5645f8	
 __vp_tonemask	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	292		6eaabb5d22cd	auto: at 100% ceiling, demoted from queue
 _add_serialno	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	106		b10fd8e290b4	auto: at 100% ceiling, demoted from queue
 _adler32	zlib/adler32.c	zlib	blocked				0	0	622	f		
@@ -31856,11 +31856,11 @@ _pt3memalign	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	1
 _pt3realloc	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	232	f	7c7c90f3bffb	auto: at 100% ceiling, demoted from queue
 _realloc	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	0	35	f	cd5d74b0c105	
 _res0_free_info	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	52	f	0e727af6e519	
-_res0_free_look	vorbis/sources/lib/res0.c	vorbis	inprogress	SIZE	49.7404	49.7404	70.5096	0	360	f	a62e6fe9f88b	
+_res0_free_look	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	360	f	a62e6fe9f88b	
 _res0_inverse	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	1	84	f	05776d9c5a9a	auto: at 100% ceiling, demoted from queue
-_res0_look	vorbis/sources/lib/res0.c	vorbis	inprogress	SIZE	75.097	75.097	75.097	0	789	f	2df4e9dd1bfd	
+_res0_look	vorbis/sources/lib/res0.c	vorbis	inprogress	SIZE	85.5021	85.5021	85.5021	0	789	f	2df4e9dd1bfd	
 _res0_pack	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	252	f	dba4db7a0006	
-_res0_unpack	vorbis/sources/lib/res0.c	vorbis	inprogress	SIZE	92.4405	92.4405	92.4405	0	528	f	2120f96659f5	
+_res0_unpack	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	528	f	2120f96659f5	
 _res1_class	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	1	83	f	1fd6197b3d14	auto: at 100% ceiling, demoted from queue
 _res1_forward	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	89	f	cd7bdd631966	
 _res1_inverse	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	1	84	f	7d106ff6d730	auto: at 100% ceiling, demoted from queue
@@ -31870,7 +31870,7 @@ _res2_inverse	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	453	f	ac
 _seek_helper	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	108		f9d2a099f4e2	auto: at 100% ceiling, demoted from queue
 _ssl2_num_ciphers	src/gfx/as2/as2_arrayobject.cpp	gfx	done	MATCH	100	100	100	0	6	f		
 _v_readstring	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	38	f	d71534de4341	
-_vds_shared_init	vorbis/sources/lib/block.c	vorbis	inprogress	SIZE	82.148	82.148	82.148	0	1390		b769c2027732	
+_vds_shared_init	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	0	1390		b769c2027732	
 _virtual_alloc	vostok/core/sources/virtual_alloc.cpp	core	done	MATCH	100	100	100	1	186	f	71838477b404	auto: at 100% ceiling, demoted from queue
 _virtual_free	vostok/core/sources/virtual_alloc.cpp	core	done	MATCH	100	100	100	1	184	f	b0d30a05ce1a	auto: at 100% ceiling, demoted from queue
 _vorbis_bitrate_clear	vorbis/sources/lib/bitrate.c	vorbis	done	MATCH	100	100	100	1	14	f	2d0be09ad0ce	auto: at 100% ceiling, demoted from queue
@@ -31884,13 +31884,13 @@ _vorbis_book_decodev_set	vorbis/sources/lib/codebook.c	vorbis	done	MATCH	100	100
 _vorbis_book_decodevs_add	vorbis/sources/lib/codebook.c	vorbis	done	MATCH	100	100	100	0	350		ac6762d84520	
 _vorbis_book_decodevv_add	vorbis/sources/lib/codebook.c	vorbis	done	MATCH	100	100	100	0	151	f	468b9d6d5ef3	
 _vorbis_book_encode	vorbis/sources/lib/codebook.c	vorbis	done	MATCH	100	100	100	1	52	f	65e47517e1be	auto: at 100% ceiling, demoted from queue
-_vorbis_book_init_decode	vorbis/sources/lib/sharedbook.c	vorbis	inprogress	SPLIT	68.7821	68.8049	68.8049	0	1894		6669452e7441	
+_vorbis_book_init_decode	vorbis/sources/lib/sharedbook.c	vorbis	inprogress	QUANTITY	78.0163	78.0163	78.0163	0	1894		6669452e7441	
 _vorbis_book_init_encode	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	0	251	f	9b262babc939	
 _vorbis_comment_clear	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	184	f	c73ed94e34dd	
 _vorbis_comment_init	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	1	18	f	7b8cdb6d6868	auto: at 100% ceiling, demoted from queue
 _vorbis_dsp_clear	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	0	882	f	382134102048	
 _vorbis_info_blocksize	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	1	23	f	369c033a1d9c	auto: at 100% ceiling, demoted from queue
-_vorbis_info_clear	vorbis/sources/lib/info.c	vorbis	inprogress	SIZE	57.2402	57.2402	57.2402	0	870	f	0a1b5c259877	
+_vorbis_info_clear	vorbis/sources/lib/info.c	vorbis	inprogress	SIZE	64.8465	64.8465	64.8465	0	870	f	0a1b5c259877	
 _vorbis_info_init	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	83	f	475ba933e1f6	
 _vorbis_lsp_to_curve	vorbis/sources/lib/lsp.c	vorbis	done	MATCH	100	100	100	1	393	f	12af2d75d181	auto: at 100% ceiling, demoted from queue
 _vorbis_packet_blocksize	vorbis/sources/lib/synthesis.c	vorbis	done	MATCH	100	100	100	0	144	f	e5765f2a01df	
@@ -31908,7 +31908,7 @@ _vorbis_synthesis_pcmout	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	10
 _vorbis_synthesis_read	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	34	f	b435fbbd11f3	auto: at 100% ceiling, demoted from queue
 _vorbis_synthesis_restart	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	98	f	33f153ba6131	auto: at 100% ceiling, demoted from queue
 _vorbis_synthesis_trackonly	vorbis/sources/lib/synthesis.c	vorbis	done	MATCH	100	100	100	0	228	f	c1adc3dbcdb0	
-_vorbis_unpack_books	vorbis/sources/lib/info.c	vorbis	inprogress	SIZE	87.1401	87.1401	87.1401	0	818	f	7733c5582518	
+_vorbis_unpack_books	vorbis/sources/lib/info.c	vorbis	inprogress	SIZE	85.7743	87.1401	87.1401	0	818	f	7733c5582518	
 _vorbis_unpack_comment	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	287	f	3f847ba25747	
 _vorbis_unpack_info	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	219	f	1da0c6176dc9	
 _vorbis_window	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	45	f	78b50b953172	auto: at 100% ceiling, demoted from queue
@@ -34408,7 +34408,7 @@ floor1_inverse1	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	804	
 floor1_inverse2	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	417	f	9bc8e2714089	
 floor1_look	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	564	f	0700cbce70ee	
 floor1_pack	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	1	472	f	9ecc099be5ca	auto: at 100% ceiling, demoted from queue
-floor1_unpack	vorbis/sources/lib/floor1.c	vorbis	inprogress	QUANTITY	83.2252	83.2252	83.2252	0	891	f	cd6599f46672	
+floor1_unpack	vorbis/sources/lib/floor1.c	vorbis	inprogress	QUANTITY	86.4962	86.4962	86.4962	0	891	f	cd6599f46672	
 flush_pending	zlib/deflate.c	zlib	done	MATCH	100	100	100	0	78	f	45e7b056c543	
 free_region_impl	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	1	15	f	ef631e335b75	auto: at 100% ceiling, demoted from queue
 free_starter	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	76	f	aef247ea1f89	auto: at 100% ceiling, demoted from queue
@@ -34561,7 +34561,7 @@ send_tree	zlib/trees.c	zlib	inprogress	SIZE	98.9702	98.9702	98.9702	0	1291	f	56e
 set_animation_user_data	vostok/animation/sources/mixing_n_ary_tree_converter.cpp	animation	done	MATCH	100	100	100	2	7	f	9ec1fd19814b	Removed the incorrect MASTER_GOLD no-op guard; target PDB/disassembly requires the user_data copy. Authoritative rebuild reached byte-exact 7B and improved constructed_n_ary_tree with zero regressions.
 set_data_type	zlib/trees.c	zlib	done	MATCH	100	100	100	1	201	f	37b070567089	audited zlib 1.2.3 target structure and restored Release Win32 /O2 compiler context
 set_low_fragmentation_heap	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	1	86	f	2bdbffa5ebbb	auto: at 100% ceiling, demoted from queue
-setup_tone_curves	vorbis/sources/lib/psy.c	vorbis	inprogress	QUANTITY	90.0633	90.0633	90.0633	0	2106		ffd500b82c33	
+setup_tone_curves	vorbis/sources/lib/psy.c	vorbis	inprogress	QUANTITY	94.034	94.034	94.034	0	2106		ffd500b82c33	
 slerp_optimized	vostok/core/sources/math_quaternion.cpp	core	parked	SIZE	28.125	28.125	28.125	1	481	f	41ab8cd62bd6	Exact 16-statement structure and 7-block CFG. Restored parameter name and direct cosom < 1-epsilon comparison; remaining split is target sinf/x87 lowering and custom aggregate argument/result registers versus candidate SSE libm lowering.
 slrelease	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	21	f	a6cce705588e	auto: at 100% ceiling, demoted from queue
 sltrywait	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	27	f	c83334bc8446	auto: at 100% ceiling, demoted from queue
