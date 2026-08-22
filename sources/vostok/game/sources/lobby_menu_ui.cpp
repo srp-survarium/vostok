@@ -1602,21 +1602,20 @@ void lobby_menu::fill_ignore_list( )
 
 void lobby_menu::fill_found_players( )
 {
-	vectora< account_list_item > const& players_list = messaging_client( ).get_found_players_list( );
-
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	for ( u32 i = 0; i < players_list.size( ); ++i )
+	const u32 count = messaging_client( ).get_found_players_list( ).size( );
+	for ( u32 i = 0; i < count; ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
 		flash_value value;
-		value.SetUInt					( players_list[ i ].account_id );
+		value.SetUInt					( messaging_client( ).get_found_players_list( )[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
-		value.SetString					( players_list[ i ].account_name.c_str( ) );
+		value.SetString					( messaging_client( ).get_found_players_list( )[ i ].account_name.c_str( ) );
 		list_item.SetMember				( "name", value );
 
 		array_value.SetElement			( i, list_item );
