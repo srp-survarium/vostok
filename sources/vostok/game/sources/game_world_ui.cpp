@@ -912,8 +912,10 @@ void game_world_ui::fill_quick_slots( )
 	flash_value slots_array;
 	get_ui( )->movie->CreateArray( &slots_array );
 	u32 in_array_index = 0;
-	for ( profile_slot_enum slot = quick_slot1; slot <= quick_slot6; slot = (profile_slot_enum)( slot + 1 ) )
+	for ( u32 i = 0; i < 6; ++i )
 	{
+		profile_slot_enum const slot = (profile_slot_enum)( quick_slot1 + i );
+
 		flash_value slot_descr_value;
 		get_ui( )->movie->CreateObject( &slot_descr_value );
 
