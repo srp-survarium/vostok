@@ -13,9 +13,6 @@ class VOSTOK_CORE_API mutable_buffer
 {
 public:
 				mutable_buffer	() : m_data(NULL), m_size(0) {}
-	// retail keeps this two-store body out-of-line at every call site (the call
-	// ICF-folds with boost storage2); without noinline our LTCG inlines it
-	__declspec( noinline )
 				mutable_buffer	(pvoid data, u32 size) : m_data((pstr)data), m_size(size) {}
 
 				template <class T>
