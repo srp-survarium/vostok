@@ -428,9 +428,7 @@ void lobby_menu::update_status( )
 	flash_value b_val;
 
 	fixed_string< 128 > status_str;
-	lobby::client_state_enum const status = lobby_client( ).status( status_str );
-
-	if ( status == lobby::surf_lobby_menu )
+	if ( lobby_client( ).status( status_str ) == lobby::surf_lobby_menu )
 		b_val.SetBoolean( true );
 
 	flash_value account_info;
@@ -442,11 +440,8 @@ void lobby_menu::update_status( )
 	port_value.SetUInt					( login_client( ).m_server_port );
 	account_info.SetElement				( 2, port_value );
 
-	pcstr const lobby_host = lobby_client( ).connection_info( ).host;
-	u32 const lobby_port = lobby_client( ).connection_info( ).port;
-
 	fixed_string< 128 > lobby_address;
-	lobby_address.assignf				( "%s:%d", lobby_host, lobby_port );
+	lobby_address.assignf				( "%s:%d", lobby_client( ).connection_info( ).host, lobby_client( ).connection_info( ).port );
 	account_info.SetElement				( 3, lobby_address.c_str( ) );
 
 	m_lobby_menu_ui->movie->Invoke		( "root.lobby_menu.set_account_info", NULL, &account_info, 1 );
@@ -913,13 +908,12 @@ void lobby_menu::on_items_compatibility_arrived( )
 		flash_value items_compatibility_item;
 		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
 
-		flash_value first_item_property;
-		first_item_property.SetUInt					( client.get_items_compatibility( i ).first_item_dict_id );
-		items_compatibility_item.SetMember			( "first_item_dict_id", first_item_property );
+		flash_value items_compatibility_item_property;
+		items_compatibility_item_property.SetUInt	( client.get_items_compatibility( i ).first_item_dict_id );
+		items_compatibility_item.SetMember			( "first_item_dict_id", items_compatibility_item_property );
 
-		flash_value second_item_property;
-		second_item_property.SetUInt				( client.get_items_compatibility( i ).second_item_dict_id );
-		items_compatibility_item.SetMember			( "second_item_dict_id", second_item_property );
+		items_compatibility_item_property.SetUInt	( client.get_items_compatibility( i ).second_item_dict_id );
+		items_compatibility_item.SetMember			( "second_item_dict_id", items_compatibility_item_property );
 
 		slot_restrictions_array.SetElement			( i, items_compatibility_item );
 	}
@@ -1701,9 +1695,8 @@ void lobby_menu::on_stats_message_arrived(
 
 	if ( player_id )
 	{
-		wchar_t const* const player_id_end = wcsstr( player_id, L" =" );
 		wchar_t w_player_id[32];
-		wcsncpy_s			( w_player_id, player_id + 9, ( player_id_end - player_id ) / 2 - 9 );
+		wcsncpy_s			( w_player_id, player_id + 9, ( wcsstr( player_id, L" =" ) - player_id ) / 2 - 9 );
 
 		char player_name[32];
 		wcstombs_s			( NULL, player_name, 32, w_player_id, _TRUNCATE );
@@ -1714,9 +1707,8 @@ void lobby_menu::on_stats_message_arrived(
 
 			if ( player_exp )
 			{
-				wchar_t const* const player_exp_end = wcsstr( player_exp, L"=" );
 				wchar_t w_player_exp[32];
-				wcsncpy_s	( w_player_exp, player_exp + 4, ( player_exp_end - player_exp ) / 2 - 4 );
+				wcsncpy_s	( w_player_exp, player_exp + 4, ( wcsstr( player_exp, L"=" ) - player_exp ) / 2 - 4 );
 
 				m_match_stats.last_match_exp_delta = _wtoi( w_player_exp );
 
@@ -1732,9 +1724,8 @@ void lobby_menu::on_stats_message_arrived(
 	}
 	else if ( player_count )
 	{
-		wchar_t const* const player_count_end = wcsstr( player_count, L"=" );
 		wchar_t w_player_count[8];
-		wcsncpy_s			( w_player_count, player_count + 5, ( player_count_end - player_count ) / 2 - 5 );
+		wcsncpy_s			( w_player_count, player_count + 5, ( wcsstr( player_count, L"=" ) - player_count ) / 2 - 5 );
 
 		flash_value player_count_val;
 		player_count_val.SetStringW		( w_player_count );

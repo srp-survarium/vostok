@@ -105,25 +105,17 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 
 	u32 const start_node_id = m_ai_navigation_world.get_node_id_at( movement_position );
 	u32 const target_node_id = m_ai_navigation_world.get_node_id_at( m_target_vertex->translation );
-	if ( start_node_id != u32( -1 ) && target_node_id != u32( -1 ) )
-	{
-		if (
-			m_ai_navigation_world.find_path(
-				start_node_id,
-				movement_position,
-				target_node_id,
-				m_target_vertex->translation,
-				m_animation_space_graph->agent_radius( ),
-				m_navigation_path
-			) &&
-			!m_navigation_path.empty( )
-		)
-			m_next_key_point = 1;
-		else
-			m_next_key_point = u32( -1 );
-	}
-	else
+	if ( start_node_id == u32( -1 ) || target_node_id == u32( -1 ) )
 		m_next_key_point = u32( -1 );
+	else
+		m_next_key_point = m_ai_navigation_world.find_path(
+			start_node_id,
+			movement_position,
+			target_node_id,
+			m_target_vertex->translation,
+			m_animation_space_graph->agent_radius( ),
+			m_navigation_path
+		) && !m_navigation_path.empty( ) ? 1 : u32( -1 );
 
 	float3 target_position;
 	if ( m_next_key_point == u32( -1 ) )
