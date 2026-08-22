@@ -135,10 +135,24 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	parent->finish_query							( result_success );
 }
 
-// STATE[STUB]
-// claude@NOTE: real body (14 stmts) unrecovered; its only bind site is the
-// hit-params follow-up query that the matched on_subresources_loaded does not emit
-// (LTCG-folded tail / different version), so it is also unreachable - left unpaired.
+// claude@NOTE: DECODED (target 0x7695c0 caller / 0x769893 tail + this fn 292B).
+// The target on_subresources_loaded differs from ours:
+//  1. m_damage_collision = physics::new_animated_bt_hit_model( collision_config->get_root(),
+//     m_physics_model->m_skeleton(+0x108), unmanaged_allocator() )  [NOT collision::new_animated_object]
+//  2. a data[3] fetch-and-release temp exists (queries stride 0x1E0, header 0x12C ->
+//     on_config_loaded must add a FOURTH sub-request; identity TBD - likely the skin)
+//  3. then: virtual_path_string p; p.assignf( "resources/gameplay/hit_params/%s",
+//     new_model->m_render_model->m_hit_params.c_str() );   [m_hit_params @render facade +0x110]
+//     user_data_variant v; v.set( type_apply_directly );   [affects_applying_type_enum 0]
+//     request r = { p.c_str(), damage_model_class /*0x5F*/ };
+//     query_resources( &r, 1, bind(&on_hit_params_loaded, this, _1, new_model),
+//                      unmanaged_allocator(), &v-array, parent?, 1 );
+//  4. set_unmanaged_resource + finish_query move INTO on_hit_params_loaded (deferred).
+// This fn (target): parent=get_parent_query; if !is_successful -> finish_query(result_error);
+// else new_model->m_damage_model = static_cast_resource_ptr<damage_model_ptr>(
+//   data[0].get_unmanaged_resource() ) [swap-destroy of the old at +0x110];
+// parent->set_unmanaged_resource( new_model, memory_usage_type( nocache_memory,
+//   sizeof(animated_model_instance) /*0x120*/ ) ); parent->finish_query( result_success );
 void animated_model_instance_cook::on_hit_params_loaded( resources::queries_result& data, animated_model_instance* new_model )
 {
 }
