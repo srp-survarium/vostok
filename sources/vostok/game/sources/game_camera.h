@@ -40,8 +40,6 @@ public:
 	inline	base_game_scene&	get_game_scene			( ) { /* no source */ return m_game_scene; }
 			float				get_vertical_fov		( ) const;
 
-	inline						~game_camera			( ) { /* no source */ }
-
 protected:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	float4x4			m_inverted_view_matrix;
