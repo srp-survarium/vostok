@@ -181,7 +181,7 @@ inline void plan_tracker::dump_current_state	( ) const
 
 inline void plan_tracker::dump_target_state		( ) const
 {
-	LOG_INFO			( "target world state :" );
+	LOG_INFO			( "target world state:\n" );
 	dump_state			( m_planner.target(), "" );
 }
 
