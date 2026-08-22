@@ -9,18 +9,23 @@
 #include <vostok/render/facade/model.h>
 #include <vostok/resources_unmanaged_resource.h>
 
+namespace vostok { void use_game_booby_trap( ); }
+
 namespace survarium {
 
 class game_world;
 
 class booby_trap : public booby_trap_core {
-public:
+	friend void ::vostok::use_game_booby_trap( );
+private:
 			explicit	booby_trap				( game_world& gw );
 	virtual				~booby_trap				( );
 
+public:
 			void		on_trap_fired_message	( );
 			void		on_trap_disarmed_message( );
 
+private:
 	virtual	void		defuse_completed		( ) override;
 
 	virtual	void		switch_to_state			( booby_trap_state new_state ) override;
@@ -32,7 +37,6 @@ public:
 
 			void		play_fired_effects		( ) const;
 
-private:
 	/* 0x0000 */	/* booby_trap_core */
 	// PDB spells the models vostok::render::static_model_instance_ptr - the
 	// same resource_ptr type our render tree typedefs as static_model_ptr
