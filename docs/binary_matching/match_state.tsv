@@ -10859,7 +10859,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Draw@HAL@Render@Scaleform@@UAEXABVRenderQueueItem@23@@Z	src/render/render_hal.cpp	gfx	done	MATCH	100	100	100	0	111	f		
 ?Draw@Renderer2DImpl@Render@Scaleform@@QAEXPAVTreeRoot@23@@Z	src/render/renderer2dimpl.cpp	gfx	done	MATCH	100	100	100	0	679			
 ?Draw@TreeCacheRoot@Render@Scaleform@@QAEXXZ	src/render/render_treecachenode.cpp	gfx	done	MATCH	100	100	100	0	168	f		
-?Draw@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@H@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	99.9878	99.9878	99.9878	0	9514			
+?Draw@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@H@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	100	99.9878	100	0	9514			
 ?DrawBundleEntries@HAL@Render@Scaleform@@UAEXVBundleIterator@23@PAVRenderer2DImpl@23@@Z	src/render/render_hal.cpp	gfx	done	MATCH	100	100	100	0	265	f		
 ?DrawBundleEntry@SKI_BlendMode@Render@Scaleform@@UAEXPAXPAVBundleEntry@23@PAVRenderer2DImpl@23@@Z	src/render/render_primitivebundle.cpp	gfx	done	MATCH	100	100	100	0	42	f		
 ?DrawBundleEntry@SKI_ComplexPrimitive@Render@Scaleform@@UAEXPAXPAVBundleEntry@23@PAVRenderer2DImpl@23@@Z	src/render/render_primitivebundle.cpp	gfx	done	MATCH	100	100	100	0	27	f		
@@ -10869,7 +10869,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?DrawBundleEntry@SKI_TextPrimitive@Render@Scaleform@@UAEXPAXPAVBundleEntry@23@PAVRenderer2DImpl@23@@Z	src/render/render_textprimitivebundle.cpp	gfx	done	MATCH	100	100	100	0	52	f		
 ?DrawClusterTree@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@HH@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	done	MATCH	100	100	100	1	107			auto: at 100% ceiling, demoted from queue
 ?DrawFaceTree@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@HH@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	done	MATCH	100	100	100	1	107			auto: at 100% ceiling, demoted from queue
-?DrawFrame@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	99.9926	99.9926	99.9926	0	2099			
+?DrawFrame@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	100	99.9926	100	0	2099			
 ?DrawNodeTree@btSoftBodyHelpers@@SAXPAVbtSoftBody@@PAVbtIDebugDraw@@HH@Z	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	done	MATCH	100	100	100	1	107			auto: at 100% ceiling, demoted from queue
 ?DrawProcessedComplexMeshes@HAL@D3D1x@Render@Scaleform@@UAEXPAVComplexMesh@34@ABV?$StrideArray@VHMatrix@MatrixPoolImpl@Render@Scaleform@@@34@@Z	vostok/scaleform/sources/d3d1x_hal.cpp	scaleform	parked	QUANTITY	85.3486	85.3486	85.3486	1	1794		6bf6de02e694	Built from d3d1x_hal.cpp (the ExcludedFromBuild claim was false). All 22 named locals match and every source line maps 1:1 onto the target. The single largest residual is an inline-vs-call wall in another unit: the target INLINES MeshCacheItem::MoveToCacheListFront at the tail (it has no standalone symbol anywhere in the target) while our LTCG calls the out-of-line copy we emit from scaleform/src/render/render_meshcache.h - that is the 0x4f-vs-0x16 final statement, and inlining is also what lets the target dead-store-eliminate ListNode::RemoveNode two 0xFFFFFFFF poison writes. The rest is optimizer attribution: base rematerialises the textureMatrices load inside the fill loop and gives fillFlags its own record, target gives batchType/formatIndex their own records; byte totals over the if/else region are equal. Next step is the MoveToCacheListFront inline decision, which must not be forced from this unit.
 ?DrawProcessedPrimitive@HAL@D3D1x@Render@Scaleform@@UAEXPAVPrimitive@34@PAVPrimitiveBatch@34@1@Z	vostok/scaleform/sources/d3d1x_hal.cpp	scaleform	parked	SIZE	86.3957	86.3957	86.3957	1	657		6e769999f0c8	Built from d3d1x_hal.cpp (the ExcludedFromBuild claim was false). Structure matches 29/29; 0x38 of the whole byte gap is one statement - pmesh->MoveToCacheListFront(MCL_ThisFrame), 0x47 inlined in the target versus 0x0f as a call in the base. Same MoveToCacheListFront inline-vs-call wall as DrawProcessedComplexMeshes (prebuilt libgfx.lib also exports that symbol); not steerable from this unit.
@@ -16150,8 +16150,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Process@CollideCL_SS@btSoftColliders@@QAEXPBUbtDbvtNode@@0@Z	bullet/bulletsoftbody/btsoftbodyinternals.h	bullet	done	MATCH	100	100	100	1	893			auto: at 100% ceiling, demoted from queue
 ?Process@CollideVF_SS@btSoftColliders@@QAEXPBUbtDbvtNode@@0@Z	bullet/bulletsoftbody/btsoftbodyinternals.h	bullet	done	MATCH	100	100	100	1	1117			auto: at 100% ceiling, demoted from queue
 ?Process@RayFromToCaster@btSoftBody@@QAEXPBUbtDbvtNode@@@Z	bullet/bulletsoftbody/btsoftbody.cpp	bullet	done	MATCH	100	100	100	1	90	f		auto: at 100% ceiling, demoted from queue
-?Process@btCompoundLeafCallback@@QAEXPBUbtDbvtNode@@@Z	bullet/bulletcollision/collisiondispatch/btcompoundcollisionalgorithm.cpp	bullet	inprogress	MATCH	99.9906	99.9906	99.9906	0	957			
-?ProcessChildShape@btCompoundLeafCallback@@QAEXPAVbtCollisionShape@@H@Z	bullet/bulletcollision/collisiondispatch/btcompoundcollisionalgorithm.cpp	bullet	inprogress	MATCH	99.9914	99.9914	99.9914	0	1652			
+?Process@btCompoundLeafCallback@@QAEXPBUbtDbvtNode@@@Z	bullet/bulletcollision/collisiondispatch/btcompoundcollisionalgorithm.cpp	bullet	inprogress	MATCH	100	99.9906	100	0	957			
+?ProcessChildShape@btCompoundLeafCallback@@QAEXPAVbtCollisionShape@@H@Z	bullet/bulletcollision/collisiondispatch/btcompoundcollisionalgorithm.cpp	bullet	inprogress	MATCH	100	99.9914	100	0	1652			
 ?ProcessDeclDict@ActionBuffer@AS2@GFx@Scaleform@@QAEXPAVASStringContext@234@IIAAVActionLogger@234@@Z	src/gfx/as2/as2_action.cpp	gfx	done	MATCH	100	100	100	0	431	f		
 ?ProcessEventHandlers@PlaceObject2EH@AS2@GFx@Scaleform@@UAEXAAUUnpackedData@GFxPlaceObjectBase@34@AAUStreamContext@34@PBEE@Z	src/gfx/gfx_as2support.cpp	gfx	inprogress	MATCH	99.5973	99.5973	99.5973	0	408	f		
 ?ProcessEventHandlers@PlaceObject2EHa@AS2@GFx@Scaleform@@UAEXAAUUnpackedData@GFxPlaceObjectBase@34@AAUStreamContext@34@PBEE@Z	src/gfx/gfx_as2support.cpp	gfx	done	MATCH	100	100	100	0	13	f		
@@ -19888,7 +19888,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?calcRoundCap@StrokerAA@Render@Scaleform@@AAEXABUStrokeVertex@23@0MABUWidthsType@123@_N@Z	src/render/render_strokeraa.cpp	gfx	done	MATCH	100	100	100	0	1399	f		
 ?calcRoundJoin@StrokerAA@Render@Scaleform@@AAEXABUStrokeVertex@23@ABUWidthsType@123@ABUJoinParamType@123@@Z	src/render/render_strokeraa.cpp	gfx	done	MATCH	100	100	100	0	2719	f		
 ?calcSplittingAxis@btQuantizedBvh@@IAEHHH@Z	bullet/bulletcollision/broadphasecollision/btquantizedbvh.cpp	bullet	done	MATCH	100	100	100	1	962			auto: at 100% ceiling, demoted from queue
-?calcTimeOfImpact@btContinuousConvexCollision@@UAE_NABVbtTransform@@000AAUCastResult@btConvexCast@@@Z	bullet/bulletcollision/narrowphasecollision/btcontinuousconvexcollision.cpp	bullet	inprogress	MATCH	99.9934	99.9934	99.9934	0	1341			
+?calcTimeOfImpact@btContinuousConvexCollision@@UAE_NABVbtTransform@@000AAUCastResult@btConvexCast@@@Z	bullet/bulletcollision/narrowphasecollision/btcontinuousconvexcollision.cpp	bullet	inprogress	MATCH	100	99.9934	100	0	1341			
 ?calcTimeOfImpact@btGjkConvexCast@@UAE_NABVbtTransform@@000AAUCastResult@btConvexCast@@@Z	bullet/bulletcollision/narrowphasecollision/btgjkconvexcast.cpp	bullet	done	MATCH	100	100	100	1	1082			auto: at 100% ceiling, demoted from queue
 ?calcTimeOfImpact@btSubsimplexConvexCast@@UAE_NABVbtTransform@@000AAUCastResult@btConvexCast@@@Z	bullet/bulletcollision/narrowphasecollision/btsubsimplexconvexcast.cpp	bullet	done	MATCH	100	100	100	1	3124			auto: at 100% ceiling, demoted from queue
 ?calcTopBound@Font@Render@Scaleform@@IAEGG@Z	src/render/render_font.cpp	gfx	done	MATCH	100	100	100	0	120			
@@ -21276,11 +21276,11 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?deallocate_task@tasks@vostok@@YAXQAVtask@12@@Z	vostok/core/sources/tasks_manager.cpp	core	done	MATCH	100	100	100	1	14	f	a74b3f3e2527	auto: at 100% ceiling, demoted from queue
 ?deallocate_unmanaged_resource@resources_manager@resources@vostok@@QAEXPAVunmanaged_resource_buffer@23@@Z	vostok/core/sources/resources_manager_deallocation.cpp	core	parked	SIZE	76.3947	76.3947	76.3947	1	114	f	1577cdf86e7c	Target-faithful archived body, exact 8/8 statements and exact four named locals. In MASTER_GOLD request_name is the empty literal; target retains virtual_path_string construction and inlines buffer getters, while candidate inlines the constructor and schedules getter fields differently.
 ?debug@renderer@game@render@vostok@@QBEAAV1034@XZ	vostok/render/facade/sources/game_renderer.cpp	render	done	MATCH	100	100	100	2	4	f	fdb97ca2734a	Clean-room game renderer owner rebuilt from target structure; live facade and marshalling replace both queues.
-?debugDrawConstraint@btDiscreteDynamicsWorld@@QAEXPAVbtTypedConstraint@@@Z	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	99.9901	99.9901	99.9901	0	11068			
-?debugDrawObject@btCollisionWorld@@UAEXABVbtTransform@@PBVbtCollisionShape@@ABVbtVector3@@@Z	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	QUANTITY	45.4576	37.6592	45.4576	0	2465			
-?debugDrawWorld@btCollisionWorld@@UAEXXZ	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	MATCH	99.9807	99.9807	99.9807	0	1312			
-?debugDrawWorld@btDiscreteDynamicsWorld@@UAEXXZ	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	99.9762	99.9762	99.9762	0	341			
-?debugDrawWorld@btSoftRigidDynamicsWorld@@UAEXXZ	bullet/bulletsoftbody/btsoftrigiddynamicsworld.cpp	bullet	inprogress	MATCH	99.9762	99.9762	99.9762	0	232			
+?debugDrawConstraint@btDiscreteDynamicsWorld@@QAEXPAVbtTypedConstraint@@@Z	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	100	99.9901	100	0	11068			
+?debugDrawObject@btCollisionWorld@@UAEXABVbtTransform@@PBVbtCollisionShape@@ABVbtVector3@@@Z	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	QUANTITY	45.4752	37.6592	45.4752	0	2465			
+?debugDrawWorld@btCollisionWorld@@UAEXXZ	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	MATCH	100	99.9807	100	0	1312			
+?debugDrawWorld@btDiscreteDynamicsWorld@@UAEXXZ	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	100	99.9762	100	0	341			
+?debugDrawWorld@btSoftRigidDynamicsWorld@@UAEXXZ	bullet/bulletsoftbody/btsoftrigiddynamicsworld.cpp	bullet	inprogress	MATCH	100	99.9762	100	0	232			
 ?debug_draw@animations_selector@survarium@@QBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/animations_selector.cpp	game	inprogress	SIZE	62.9	62.9	62.9	1	31	f	e406f18d5256	
 ?debug_draw@simple_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/simple_animation_controller.cpp	game	done	MATCH	100	100	100	0	3	f	137f554ee0f6	
 ?debug_draw@single_position_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/single_position_animation_controller.cpp	game	inprogress	SIZE	74.9896	74.9896	74.9896	1	330		80a570f423aa	
@@ -27654,7 +27654,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?processTriangle@SupportVertexCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletcollision/collisionshapes/bttrianglemeshshape.cpp	bullet	done	MATCH	100	100	100	1	212	f		auto: at 100% ceiling, demoted from queue
 ?processTriangle@btConvexTriangleCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletcollision/collisiondispatch/btconvexconcavecollisionalgorithm.cpp	bullet	done	MATCH	100	100	100	1	271			auto: at 100% ceiling, demoted from queue
 ?processTriangle@btGImpactTriangleCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletcollision/gimpact/btgimpactcollisionalgorithm.cpp	bullet	done	MATCH	100	100	100	1	168			auto: at 100% ceiling, demoted from queue
-?processTriangle@btSoftBodyTriangleCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletsoftbody/btsoftbodyconcavecollisionalgorithm.cpp	bullet	inprogress	MATCH	99.9925	99.9925	99.9925	0	2209			
+?processTriangle@btSoftBodyTriangleCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletsoftbody/btsoftbodyconcavecollisionalgorithm.cpp	bullet	inprogress	MATCH	100	99.9925	100	0	2209			
 ?processTriangle@btTriangleConvexcastCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletcollision/narrowphasecollision/btraycastcallback.cpp	bullet	done	MATCH	100	100	100	1	530			auto: at 100% ceiling, demoted from queue
 ?processTriangle@btTriangleRaycastCallback@@UAEXPAVbtVector3@@HH@Z	bullet/bulletcollision/narrowphasecollision/btraycastcallback.cpp	bullet	done	MATCH	100	100	100	1	1274			auto: at 100% ceiling, demoted from queue
 ?process_affect_damage_model@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	vostok/game/sources/network_client_processing.cpp	game	done	QUANTITY	100	100	100	2	197	f	7ec7b88d3ecd	
@@ -30123,7 +30123,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?status@console_command@console_commands@vostok@@UBEXAAY0CAA@D@Z	vostok/core/sources/console_command.cpp	core	parked	MATCH	85.4286	85.4286	85.4286	1	26	f	ade07ce5985e	Archived one-line body and literal agree; target inlines strings::copy<512> to strcpy_s while candidate retains the wrapper. Recover through the real strings helper COMDAT caller cone.
 ?status@lobby_client@survarium@@QBE?AW4client_state_enum@lobby@@AAV?$fixed_string@$0IA@@vostok@@@Z	vostok/game/sources/lobby_client.cpp	game	done	MATCH	100	100	100	1	188	f	44f2037ab2f4	
 ?statusGet@AppLifecycleEvent@fl_events@Instances@AS3@GFx@Scaleform@@QAEXAAV?$SPtr@VObject@fl@Instances@AS3@GFx@Scaleform@@@456@@Z	src/gfx/as3/obj/events/as3_obj_events_applifecycleevent.cpp	gfx	done	MATCH	100	100	100	0	30	f		
-?stepSimulation@btDiscreteDynamicsWorld@@UAEHMHM@Z	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	99.993	99.993	99.993	0	451	f		
+?stepSimulation@btDiscreteDynamicsWorld@@UAEHMHM@Z	bullet/bulletdynamics/dynamics/btdiscretedynamicsworld.cpp	bullet	inprogress	MATCH	100	99.993	100	0	451	f		
 ?step_down@bullet_character_controller@physics@vostok@@AAEXM_NABVbtVector3@@@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	parked	QUANTITY	95.3617	95.3617	95.3617	0	1356		094356146314	[PARTIAL 93.5%] Failed to match this further. See comments as to why. * There were 44 commented out lines, possibly with some future logic. * btKinematicCharacterController has a slightly different order for transforms and `finish_pos`.
 ?step_forward_and_strafe@bullet_character_controller@physics@vostok@@AAEXABVbtVector3@@@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	done	MATCH	100	100	100	1	1137		36ce7c5ab522	[DONE 98.71%] LTCG for s_cc_max_allowed_penetration_value
 ?step_up@bullet_character_controller@physics@vostok@@AAEX_NAAVbtVector3@@@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	done	QUANTITY	100	100	100	1	206		ffe6d485adc2	auto: at 100% ceiling, demoted from queue
@@ -30904,7 +30904,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?updateNormals@btSoftBody@@QAEXXZ	bullet/bulletsoftbody/btsoftbody.cpp	bullet	done	MATCH	100	100	100	1	758			auto: at 100% ceiling, demoted from queue
 ?updatePose@btSoftBody@@QAEXXZ	bullet/bulletsoftbody/btsoftbody.cpp	bullet	done	MATCH	100	100	100	1	3526			auto: at 100% ceiling, demoted from queue
 ?updateRenderTargetRT@DrawableImage@Render@Scaleform@@IAEXXZ	src/render/render_drawableimage.cpp	gfx	inprogress	SIZE	66.4769	66.4769	66.4769	0	173	f		
-?updateSingleAabb@btCollisionWorld@@QAEXPAVbtCollisionObject@@@Z	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	MATCH	99.9767	99.9767	99.9767	0	671			
+?updateSingleAabb@btCollisionWorld@@QAEXPAVbtCollisionObject@@@Z	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	inprogress	MATCH	100	99.9767	100	0	671			
 ?updateSoftBodies@btDefaultSoftBodySolver@@UAEXXZ	bullet/bulletsoftbody/btdefaultsoftbodysolver.cpp	bullet	done	MATCH	100	100	100	1	53	f		auto: at 100% ceiling, demoted from queue
 ?updateSortKey@TreeCacheShapeLayer@Render@Scaleform@@QAEXXZ	src/render/render_treeshape.cpp	gfx	done	MATCH	100	100	100	0	377	f		
 ?updateSortKeyGradientMorph@TreeCacheShapeLayer@Render@Scaleform@@QAEXXZ	src/render/render_treeshape.cpp	gfx	done	MATCH	100	100	100	0	79	f		
@@ -34375,9 +34375,9 @@ destroy_client@@pdb-overload:6b7060be47b7868a	vostok/network/sources/tcp_packet_
 dradf2	vorbis/sources/lib/smallft.c	vorbis	done	MATCH	100	100	100	1	803	f	0c8334875206	auto: at 100% ceiling, demoted from queue
 dradf4	vorbis/sources/lib/smallft.c	vorbis	done	MATCH	100	100	100	1	2329	f	530b1546fa5f	auto: at 100% ceiling, demoted from queue
 dradfg	vorbis/sources/lib/smallft.c	vorbis	done	MATCH	100	100	100	1	5564	f	1eeddf2b461a	auto: at 100% ceiling, demoted from queue
-drawBox	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	99.9221	99.9221	99.9221	0	488			
+drawBox	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	100	99.9221	100	0	488			
 drawTree	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	done	MATCH	100	100	100	1	447			auto: at 100% ceiling, demoted from queue
-drawVertex	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	99.9647	99.9647	99.9647	0	321			
+drawVertex	bullet/bulletsoftbody/btsoftbodyhelpers.cpp	bullet	inprogress	MATCH	100	99.9647	100	0	321			
 drftf1	vorbis/sources/lib/smallft.c	vorbis	done	MATCH	100	100	100	1	484		268ff116c19d	auto: at 100% ceiling, demoted from queue
 drfti1	vorbis/sources/lib/smallft.c	vorbis	done	MATCH	100	100	100	1	408	f	2cddef689d5e	auto: at 100% ceiling, demoted from queue
 dump_memory_statistics	vostok/core/sources/memory.cpp	core	done	MATCH	100	100	100	1	13	f	137f554ee0f6	auto: at 100% ceiling, demoted from queue
