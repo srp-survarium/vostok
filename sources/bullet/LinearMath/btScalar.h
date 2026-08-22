@@ -68,7 +68,7 @@ inline int	btGetVersion()
 		#else
 
 #if (defined (_WIN32) && (_MSC_VER) && _MSC_VER >= 1400) && (!defined (BT_USE_DOUBLE_PRECISION))
-//.			#define BT_USE_SSE
+			#define BT_USE_SSE
 			#include <emmintrin.h>
 #endif
 

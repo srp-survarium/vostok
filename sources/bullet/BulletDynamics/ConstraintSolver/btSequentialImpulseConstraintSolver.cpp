@@ -16,8 +16,6 @@ subject to the following restrictions:
 //#define COMPUTE_IMPULSE_DENOM 1
 //It is not necessary (redundant) to refresh contact manifolds, this refresh has been moved to the collision algorithms.
 
-#define BT_USE_SSE
-
 #include "btSequentialImpulseConstraintSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
@@ -1237,3 +1235,4 @@ btRigidBody& btSequentialImpulseConstraintSolver::getFixedBody()
 	s_fixed.setMassProps(btScalar(0.),btVector3(btScalar(0.),btScalar(0.),btScalar(0.)));
 	return s_fixed;
 }
+
