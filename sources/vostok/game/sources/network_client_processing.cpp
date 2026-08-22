@@ -37,13 +37,11 @@
 namespace survarium {
 
 player_ptr network_client::get_player( const u8 id ) const
-#line 60
 {
 	return player_ptr( static_cast< player* >( m_net_players[ id ].player.c_ptr( ) ) );
 }
 
 void network_client::destroy_player_impl( const u8 id )
-#line 72
 {
 	player_ptr player = get_player( id );
 
@@ -63,14 +61,12 @@ void network_client::destroy_player_impl( const u8 id )
 }
 
 void network_client::process_match_info( network_core::packet_reader& reader )
-#line 92
 {
 	match_client( ).get_match_options( ).deserialize( reader );
 	match_client( ).get_match_options( ).received_players_count = 0;
 }
 
 void network_client::on_players_ready( resources::queries_result& data, const u32 players_count )
-#line 98
 {
 	LOG_INFO( "network_client::on_players_ready" );
 
@@ -92,7 +88,6 @@ void network_client::on_players_ready( resources::queries_result& data, const u3
 }
 
 void network_client::query_players( )
-#line 128
 {
 	struct match_options& options = match_client( ).get_match_options( );
 
@@ -134,7 +129,6 @@ void network_client::query_players( )
 // allocates esi/edi and tail-jmps query_players (last-statement tail-call). The regalloc
 // + tail-call choice is whole-program-driven and not source-steerable in this single TU.
 void network_client::process_player_profile( network_core::packet_reader& reader )
-#line 175
 {
 	struct match_options& options = match_client( ).get_match_options( );
 	options.player_profiles[ options.received_players_count++ ].deserialize( reader );
@@ -154,7 +148,6 @@ void network_client::process_player_profile( network_core::packet_reader& reader
 // get_game_world( ).game_ui to a single [this+18h]+0x26C add in the target where the base
 // computes it across the thiscall/arg threading; the forwarding call itself is emitted.
 void network_client::process_team_bases( network_core::packet_reader& reader )
-#line 184
 {
 	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
 }
@@ -171,7 +164,6 @@ void on_signed_out(
 }
 
 void network_client::disconnect( )
-#line 193
 {
 	if ( m_game_status )
 	{
@@ -187,7 +179,6 @@ void network_client::disconnect( )
 }
 
 void network_client::process_player_kill( network_core::packet_reader& packet )
-#line 216
 {
 	const u8 victim_id = packet.r< u8 >( );
 	const u8 killer_id = packet.r< u8 >( );
@@ -202,7 +193,6 @@ void network_client::process_player_kill( network_core::packet_reader& packet )
 }
 
 void network_client::process_player_hit( network_core::packet_reader& packet )
-#line 232
 {
 	hit_info info;
 	info.deserialize( packet );
@@ -212,7 +202,6 @@ void network_client::process_player_hit( network_core::packet_reader& packet )
 }
 
 void network_client::process_affect_damage_model( network_core::packet_reader& packet )
-#line 241
 {
 	player_ptr player = get_player( packet.r< u8 >( ) );
 	char body_part_name[ 16 ];
@@ -230,7 +219,6 @@ void network_client::process_affect_damage_model( network_core::packet_reader& p
 // structurally-correct single-statement placeholder (right count/position, links). Replace
 // once the slot-25 override is named. Byte residual is the shared packet_reader::r<T> wall.
 void network_client::process_player_respawn( network_core::packet_reader& packet )
-#line 253
 {
 	const u8 id = packet.r< u8 >( );
 	player_ptr player = get_player( id );
@@ -245,7 +233,6 @@ void network_client::process_player_respawn( network_core::packet_reader& packet
 }
 
 void network_client::process_initialize_victory_items( network_core::packet_reader& packet )
-#line 269
 {
 	const s8 team_1 = packet.r< s8 >( );
 	const s8 team_2 = packet.r< s8 >( );
@@ -295,7 +282,6 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 }
 
 void network_client::process_base_capture_progress( network_core::packet_reader& packet )
-#line 317
 {
 	const u32 progress = packet.r< u32 >( );
 	const u32 point_id = packet.r< u32 >( );
@@ -303,19 +289,16 @@ void network_client::process_base_capture_progress( network_core::packet_reader&
 }
 
 void network_client::process_match_time( network_core::packet_reader& packet )
-#line 324
 {
 	m_game.get_game_world( ).game_ui.set_match_time( packet.r< u32 >( ) );
 }
 
 void network_client::process_respawn_timer( network_core::packet_reader& packet )
-#line 330
 {
 	m_game.get_game_world( ).game_ui.set_respawn_time( packet.r< u32 >( ) );
 }
 
 void network_client::process_match_wait_timer( network_core::packet_reader& packet )
-#line 337
 {
 	const u32 time_left = packet.r< u32 >( );
 	m_game.get_game_world( ).game_ui.set_pregame(
@@ -337,7 +320,6 @@ static console_commands::cc_float3		cc_warmup_camera_target(
 											false, console_commands::command_type_user_specific );
 
 void network_client::setup_camera_for_warmup( )
-#line 350
 {
 	float3 target = m_local_player->get_current( ).transform.transform_position( s_warmup_camera_target );
 	float3 position = m_local_player->get_current( ).transform.transform_position( s_warmup_camera_position );
@@ -353,7 +335,6 @@ void network_client::setup_camera_for_warmup( )
 }
 
 void network_client::process_game_status( network_core::packet_reader& packet )
-#line 375
 {
 	const game_status status = ( game_status )packet.r< u32 >( );
 
@@ -383,7 +364,6 @@ void network_client::process_game_status( network_core::packet_reader& packet )
 }
 
 void network_client::process_player_kd_stats( network_core::packet_reader& packet )
-#line 403
 {
 	const u8 player_id = packet.r< u8 >( );
 	const u32 kills = packet.r< u32 >( );
@@ -400,7 +380,6 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 // The add_victory_points sign ( slot ? -1 : 1 ) is CSE'd once in the target but per-arg in
 // the base - an LTCG scheduling artifact, not a structure divergence.
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
-#line 412
 {
 	const s8 team_1_points = packet.r< s8 >( );
 	const s8 team_2_points = packet.r< s8 >( );
@@ -462,7 +441,6 @@ void network_client::process_victory_item_take_or_put( network_core::packet_read
 }
 
 void network_client::send_sync_request( )
-#line 474
 {
 	m_last_sync_request_time = m_game.permanent_timer( ).get_elapsed_msec( );
 	network_core::udp_match_packet* packet = m_match_client.new_packet( ( match_client_message_types_enum )0x45 );
@@ -471,7 +449,6 @@ void network_client::send_sync_request( )
 }
 
 void network_client::process_sync_response( network_core::packet_reader& packet )
-#line 484
 {
 	m_server_latency = ( m_game.permanent_timer( ).get_elapsed_msec( ) - m_last_sync_request_time ) / 2;
 
@@ -492,7 +469,6 @@ void network_client::send_local_player_input(
 	float4x4 const&			transform,
 	const float				look_pitch
 )
-#line 505
 {
 	if ( m_player_inputs.size( ) == m_player_inputs.max_size( ) )
 		m_player_inputs.erase( m_player_inputs.begin( ) );
@@ -512,7 +488,6 @@ void network_client::send_local_player_input(
 // ::deserialize is bodied now so the deserialize call is emitted. Lifts when whole-program
 // inlining is reproduced.
 void network_client::process_player_action( network_core::packet_reader& packet, const u32 time_in_ms )
-#line 521
 {
 	const u8 id = packet.r< u8 >( );
 	player_ptr player = get_player( id );
@@ -522,7 +497,6 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 
 	if ( !player )
 	{
-#line 535
 		LOG_WARNING( "player not found %d", id );
 		return;
 	}
@@ -540,7 +514,6 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 }
 
 void network_client::send_player_inputs( )
-#line 581
 {
 	for ( client_player_update* update = m_player_inputs.begin( ); update != m_player_inputs.end( ); ++update )
 	{
@@ -567,7 +540,6 @@ void network_client::send_player_inputs( )
 // Preserve this comment line count: LOG_WARNING below embeds the physical source line.
 // This pass stops at that demonstrated compiler-context boundary.
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
-#line 594
 {
 	static u32			lobby_resolve_time		= 0;
 	static u32			messaging_resolve_time	= 0;
@@ -670,14 +642,12 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 }
 
 void network_client::initiate_kill_current_player( )
-#line 720
 {
 	if ( m_local_player.c_ptr( ) && m_current_player.c_ptr( ) )
 		m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x44 ) );
 }
 
 void network_client::unload( )
-#line 730
 {
 	for ( u8 id = 0; id < 20; ++id )
 		if ( get_player( id ) )
@@ -685,7 +655,6 @@ void network_client::unload( )
 }
 
 bool network_client::is_player_local( const u8 player_id ) const
-#line 742
 {
 	return m_local_player && m_local_player->id == player_id;
 }
@@ -695,7 +664,6 @@ bool network_client::is_player_local( const u8 player_id ) const
 // program-inlines at each early-return tail, plus the packet_reader::r<T> inline split; the
 // base emits a single out-of-line ~resource_ptr / r<T> call. Lifts with networking inlining.
 void network_client::player_visibility_change( network_core::packet_reader& packet )
-#line 917
 {
 	const u8 id = packet.r< u8 >( );
 	const bool is_visible = packet.r< bool >( );
@@ -711,7 +679,6 @@ void network_client::player_visibility_change( network_core::packet_reader& pack
 // wall (target inlines to direct member loads; this single-TU base emits the out-of-line
 // reads) - documented in packet_reader_inline.h; lifts when networking inlining is whole.
 void network_client::on_trap_placed( network_core::packet_reader& packet )
-#line 935
 {
 	const u8 player_id = packet.r< u8 >( );
 	const u8 slot = packet.r< u8 >( );
@@ -724,7 +691,6 @@ void network_client::on_trap_placed( network_core::packet_reader& packet )
 }
 
 void network_client::on_trap_removed( network_core::packet_reader& packet )
-#line 949
 {
 	const u8 player_id = packet.r< u8 >( );
 	const u8 slot = packet.r< u8 >( );
@@ -735,7 +701,6 @@ void network_client::on_trap_removed( network_core::packet_reader& packet )
 }
 
 void network_client::on_trap_fired( network_core::packet_reader& packet )
-#line 961
 {
 	const u8 player_id = packet.r< u8 >( );
 	const u8 slot = packet.r< u8 >( );
@@ -746,7 +711,6 @@ void network_client::on_trap_fired( network_core::packet_reader& packet )
 }
 
 void network_client::on_trap_disarmed( network_core::packet_reader& packet )
-#line 973
 {
 	const u8 player_id = packet.r< u8 >( );
 	const u8 slot = packet.r< u8 >( );
@@ -757,14 +721,12 @@ void network_client::on_trap_disarmed( network_core::packet_reader& packet )
 }
 
 void network_client::game_world_object_state_arrived( network_core::packet_reader& reader )
-#line 985
 {
 	player_ptr player = get_player( reader.r< u8 >( ) );
 	player->deserialize_game_world_object( reader );
 }
 
 void network_client::on_world_sync_request( )
-#line 993
 {
 	m_player_inputs.clear( );
 
@@ -792,7 +754,6 @@ void network_client::on_world_sync_request( )
 }
 
 void network_client::damage_model_state_arrived( network_core::packet_reader& packet )
-#line 1027
 {
 	player_ptr player = get_player( packet.r< u8 >( ) );
 	player->damage_model( )->deserialize( packet );

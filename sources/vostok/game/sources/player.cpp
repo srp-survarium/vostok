@@ -87,7 +87,6 @@ static console_commands::cc_bool	s_show_client_player_command				( "show_client_
 	m_game_ui( NULL ),
 	m_is_demo_player( params.initial_info.is_demo_player ),
 	m_force_bones_recompute( false )
-#line 124
 {
 	m_current.animation_player.enable_logging( is_local );
 
@@ -111,7 +110,6 @@ static console_commands::cc_bool	s_show_client_player_command				( "show_client_
 }
 
 player::~player( )
-#line 148
 {
 	DELETE( m_damage_collision );
 
@@ -123,7 +121,6 @@ player::~player( )
 // target hoists the inlined scene-renderer pointer before the visibility guards;
 // base reloads it inside each guarded add_model call.
 void player::add_models_to_scene( )
-#line 166
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
 
@@ -137,7 +134,6 @@ void player::add_models_to_scene( )
 // target hoists the inlined scene-renderer pointer before the visibility guards;
 // base reloads it inside each guarded remove_model call.
 void player::remove_models_from_scene( )
-#line 182
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
 
@@ -156,7 +152,6 @@ void player::on_before_active_object_changed(
 	interactive_object_ptr const&		current_active_object,
 	interactive_object_ptr const&		target_active_object
 ) const
-#line 200
 {
 	if ( current_active_object.c_ptr() )
 		current_active_object.c_ptr()->assign_game_ui( NULL );
@@ -166,7 +161,6 @@ void player::on_before_active_object_changed(
 }
 
 void player::insert_alive( )
-#line 237
 {
 	m_is_first_tick	= true;
 	m_input			= player_input( );
@@ -196,7 +190,6 @@ void player::insert_alive( )
 }
 
 void player::insert( const bool is_alive )
-#line 273
 {
 	m_has_been_inserted = true;
 
@@ -247,7 +240,6 @@ void player::insert( const bool is_alive )
 // separate body statement. Content is identical; physics deactivate() bytes are
 // the bullet from_*/remove inline residual.
 void player::remove_alive( )
-#line 362
 {
 	m_is_alive = false;
 	m_target.physics_controller->deactivate( );
@@ -260,7 +252,6 @@ void player::remove_alive( )
 }
 
 void player::remove( )
-#line 398
 {
 	m_has_been_inserted = false;
 
@@ -289,7 +280,6 @@ void player::remove( )
 }
 
 float4x4 player::get_transform_for_animation_player( pcvoid const animated_object, float4x4 const& character_transform ) const
-#line 461
 {
 	if ( animated_object == this )
 		return character_transform;
@@ -308,7 +298,6 @@ float4x4 player::get_transform_for_animation_player( pcvoid const animated_objec
 // away (+0x2a bytes), and the upper bound is the unresolved float-pool symbol
 // `clear_value` (guessed 1.f). sushi@TODO below.
 void player::apply_input( client_player_state& player_state, float2 const& rotation_to_apply )
-#line 470
 {
 	player_state.transform = math::mul4x3(
 		math::mul4x3(
@@ -334,7 +323,6 @@ void player::apply_input(
 	float2 const&			current_acceleration,
 	const float				time_delta
 )
-#line 482
 {
 	float2 rotation_to_apply(
 		( current_acceleration.x * time_delta * 0.5f + previous_velocity.x ) * time_delta,
@@ -345,7 +333,6 @@ void player::apply_input(
 }
 
 void player::serialize_current_state( const u32 current_time_in_ms )
-#line 507
 {
 	client_player_history_item& item = m_history.new_item( );
 	item.time_in_ms						= current_time_in_ms;
@@ -366,7 +353,6 @@ void player::serialize_current_state( const u32 current_time_in_ms )
 // inline - cross-module render/animation, cannot land from player.cpp alone.
 // STATE[STUB]
 void player::compute_bones( const u32 current_time_in_ms )
-#line 530
 {
 	// LOCALS
 	// render::game::renderer& 			r
@@ -416,7 +402,6 @@ void player::compute_bones( const u32 current_time_in_ms )
 // scene_renderer / trample subsystem is bodied.
 // STATE[STUB]
 void player::render( const u32 __formal, const u32 current_time_in_ms )
-#line 561
 {
 	// LOCALS
 	// render::base_scene_ptr 			scene
@@ -507,7 +492,6 @@ void player::render( const u32 __formal, const u32 current_time_in_ms )
 // step: revisit once the physics world raycast helper + the crosshair UI path are bodied.
 // STATE[STUB]
 void player::render_crosshair_info( )
-#line 633
 {
 	// LOCALS
 	// physics::closest_ray_result 		result
@@ -574,7 +558,6 @@ void player::render_crosshair_info( )
 }
 
 void player::update_speed_info( )
-#line 687
 {
 	float3 const movement	= m_current.transform.c.xyz( ) - m_last_frame_position;
 	m_last_frame_position	= m_current.transform.c.xyz( );
@@ -603,7 +586,6 @@ void player::update_speed_info( )
 // temp build (L726) and set_transform (L731) as two statements; our /Od compile fuses the c
 // override into the set_transform statement (1 fewer stmt). Non-steerable line-boundary artifact.
 void player::set_physics_controller_walk_vector( client_player_state& state )
-#line 721
 {
 	float4x4 physics_transform = state.physics_controller->get_transform( );
 
@@ -624,7 +606,6 @@ void player::set_physics_controller_walk_vector( client_player_state& state )
 // reconstruct the predicate filter loop.
 // STATE[STUB]
 void player::detect_usable_objects( const u32 current_time_in_ms )
-#line 741
 {
 	// LOCALS
 	// physics::closest_ray_result 		ray_result
@@ -711,7 +692,6 @@ void player::detect_usable_objects( const u32 current_time_in_ms )
 }
 
 void player::use_ladder( ladder* __formal )
-#line 795
 {
 	NOT_IMPLEMENTED( __formal );
 }
@@ -726,7 +706,6 @@ void player::apply_damage_model_affect(
 	const hit_affects_type_enum		affect,
 	const affect_event_type_enum	event_type
 )
-#line 867
 {
 	damage_model( )->apply_affect( part_name, affect, event_type );
 
@@ -738,7 +717,6 @@ void player::apply_damage_model_affect(
 // create_translation / mul4x3 inline schedule (the chained matrix assignment's temp
 // re-use) - not source-steerable from here.
 void player::set_character_transform( float3 const& position, const float orientation, const float look_pitch )
-#line 874
 {
 	m_current.transform = m_current.previous_transform = m_target.transform = m_target.previous_transform =
 		math::mul4x3( math::create_rotation_y( orientation ), math::create_translation( position ) );
@@ -753,7 +731,6 @@ void player::hit(
 	const float						armor_piercing,
 	bullet* const					bullet
 )
-#line 903
 {
 	hit_info info(
 		initiator->id, id, m_damage_collision->body_part_name( bone_index ),
@@ -769,7 +746,6 @@ void player::hit(
 	const float						armor_piercing,
 	bullet* const					bullet
 )
-#line 920
 {
 	hit_info info(
 		initiator->id, id, bone_data.body_part_name.c_str( ),
@@ -788,7 +764,6 @@ void player::hit(
 // reconstruct once GFx Movie::Invoke wrapper + the sound emitter accessor are named.
 // STATE[STUB]
 void player::apply_hit_directly( hit_info const& info, const u32 current_time_in_ms )
-#line 929
 {
 	// LOCALS
 	// player_ptr 						initiator_ptr
@@ -825,7 +800,6 @@ void player::apply_hit_directly( hit_info const& info, const u32 current_time_in
 }
 
 void player::reset_fov_factor( )
-#line 998
 {
 	m_start_fov_factor		= 1.0f;
 	m_target_fov_factor		= 1.0f;
@@ -836,7 +810,6 @@ void player::reset_fov_factor( )
 // a constant 0.3f, LTCG const-propagates it into m_fov_factor_transition_time
 // (the [s_aim_transition_time]=0.3f memload). Allowed LTCG arg-drop.
 void player::set_target_fov_factor( const float target_fov_factor, const float transition_time )
-#line 1005
 {
 	m_start_fov_factor						= m_current_fov_factor;
 	m_fov_factor_transition_time			= transition_time;
@@ -845,7 +818,6 @@ void player::set_target_fov_factor( const float target_fov_factor, const float t
 }
 
 float player::fov_factor( const u32 current_time_in_ms ) const
-#line 1013
 {
 	const float time = ( current_time_in_ms - m_start_fov_factor_change_time_in_ms ) * math::epsilon_3;
 	if ( time >= m_fov_factor_transition_time )
@@ -860,7 +832,6 @@ float player::fov_factor( const u32 current_time_in_ms ) const
 // is an empty stub in game_camera.h (render cone, another unit), so our base omits
 // the store. Re-score once game_camera::set_near_plane has a body.
 void player::set_near_plane_factor( const float near_plane_factor )
-#line 1020
 {
 	if ( m_local_input_controller )
 		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
@@ -872,7 +843,6 @@ void player::set_near_plane_factor( const float near_plane_factor )
 // the linear_interpolator::interpolated_value vtable-inline schedule - a math/codegen
 // inline residual, not source-steerable from this TU.
 void player::update_camera( )
-#line 1026
 {
 	if ( !m_local_input_controller )
 		return;
@@ -907,7 +877,6 @@ void player::update_camera( )
 }
 
 player_input player::local_input( ) const
-#line 1065
 {
 	return m_local_input_controller ? m_local_input_controller->get_input( ) : player_input( );
 }
@@ -916,39 +885,33 @@ player_input player::local_input( ) const
 // (this in eax, struct-return buffer in a register vs base's stack slot + ret 4) -
 // an argument-passing artifact, not a source-steerable diff. Same cap on local_input.
 player_input player::remote_input( ) const
-#line 1070
 {
 	return m_history.empty( ) ? player_input( ) : m_history.newest( ).action.input;
 }
 
 float player::get_speed( ) const
-#line 1075
 {
 	return m_linear_speed_graph->average_value( );
 }
 
 void player::hide( )
-#line 1080
 {
 	m_is_visible = false;
 	remove_models_from_scene( );
 }
 
 void player::show( )
-#line 1088
 {
 	m_is_visible = true;
 	add_models_to_scene( );
 }
 
 void player::subscribe_on_actions( player_actions_subscriber* subscriber )
-#line 1095
 {
 	m_player_actions_subscribers.push_back( subscriber );
 }
 
 void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
-#line 1101
 {
 	m_player_actions_subscribers.erase(
 		std::remove( m_player_actions_subscribers.begin( ), m_player_actions_subscribers.end( ), subscriber ),
@@ -985,7 +948,6 @@ struct player_movement_notifier {
 // inline-vs-call wall as on_fire/jump - the functor body inlines in the target
 // (its 1113/1115/1117-1120 statements) but our for_each stays out-of-line.
 void player::notify_actions_subscribers( )
-#line 1107
 {
 	const float movement = math::length( m_current.transform.c.xyz( ) - m_last_frame_position );
 	std::for_each(
@@ -1019,7 +981,6 @@ struct player_action_notifier {
 // (game_core's enum is off-by-one vs the real walk0/run1/jump2/shoot3 - on_fire
 // is semantically `shoot`; match the literal 3, a game_core enum fix is separate).
 void player::on_fire( )
-#line 1126
 {
 	std::for_each(
 		m_player_actions_subscribers.begin( ),
@@ -1032,7 +993,6 @@ void player::on_fire( )
 // semantically `jump`), then bullet_character_controller::jump on both controllers.
 // Same STLport for_each inline-vs-call wall as on_fire for the notify loop.
 void player::jump( )
-#line 1135
 {
 	stand_up( );
 	std::for_each(
@@ -1046,7 +1006,6 @@ void player::jump( )
 }
 
 void player::end_jump( )
-#line 1150
 {
 	m_target.physics_controller->end_jump( );
 	if ( m_use_physics_controller_for_current )
@@ -1057,7 +1016,6 @@ void player::end_jump( )
 // The target inlines bt_character_controller::set_crouch through the Bullet
 // crouch-state/list cleanup; base keeps the physics-owned wrapper call.
 void player::crouch( )
-#line 1160
 {
 	m_target.physics_controller->set_crouch( true );
 	if ( m_use_physics_controller_for_current )
@@ -1065,7 +1023,6 @@ void player::crouch( )
 }
 
 void player::stand_up( )
-#line 1174
 {
 	m_target.physics_controller->set_crouch( false );
 	if ( m_use_physics_controller_for_current )
@@ -1078,7 +1035,6 @@ void player::stand_up( )
 // out-lines them (calls). That inlining is a core-module template-instantiation
 // decision not steerable from player.cpp. Byte residual only.
 bool player::set_new_active_item( inventory_item_ptr const& item )
-#line 1188
 {
 	if ( m_target_active_object != item.c_ptr( ) )
 		force_animation_selection( );
@@ -1101,7 +1057,6 @@ static const profile_slot_enum accept_slots[] = {
 // Loop check item_in_slot is also intrusive_ptr inline-vs-call capped. Park: find
 // why the post-set_item guard block is dropped before banking. STATE[STUB]
 void player::take_inventory_item( inventory_item_ptr const& item )
-#line 1226
 {
 	for ( u32 i = 0; i < array_size( accept_slots ); ++i )
 	{
@@ -1121,7 +1076,6 @@ void player::take_inventory_item( inventory_item_ptr const& item )
 // cap - target inlines to `mov eax,[eax+10Ch]`, our base emits `add ecx,10Ch; jmp
 // c_ptr`. Same accessor-inlining wall as the quick-slot fns; not TU-steerable.
 animation::skeleton const& player::skeleton( ) const
-#line 1243
 {
 	return *m_current.model->m_skeleton.c_ptr( );
 }
@@ -1130,7 +1084,6 @@ animation::skeleton const& player::skeleton( ) const
 // activate()/get_transform() inline (the bullet from_vostok/from_bullet roundtrip) -
 // the same physics-conversion wall as player_tick's set_transform tails.
 void player::set_use_physics_controller_for_current( const bool value )
-#line 1294
 {
 	if ( m_use_physics_controller_for_current == value )
 		return;
@@ -1143,7 +1096,6 @@ void player::set_use_physics_controller_for_current( const bool value )
 }
 
 engine& player::get_engine( )
-#line 1308
 {
 	return m_game_scene;
 }
@@ -1155,7 +1107,6 @@ engine& player::get_engine( )
 // intrusive_ptr accessor-inlining cap that walls player::skeleton. cast_weapon_core
 // slot now matches after the interactive_object vtable reorder.
 void player::process_quick_slots_for_proxy_player( )
-#line 1313
 {
 	if ( remote_input( ).actions_mask & 0x1000 )
 	{
@@ -1220,7 +1171,6 @@ void player::process_quick_slots_for_proxy_player( )
 // be used" screen message on failure, quick-slot blocks feed add_quick_slot_to_update
 // when action() succeeds. Same item_in_slot/intrusive_ptr accessor-inlining residual.
 void player::process_quick_slots_for_current_player( )
-#line 1362
 {
 	if ( input( ).actions_mask & 0x1000 )
 	{
@@ -1298,13 +1248,11 @@ void player::process_quick_slots_for_current_player( )
 }
 
 physics::world* player::get_physics_world( )
-#line 1431
 {
 	return m_game_scene.get_physics_world( );
 }
 
 void player::select_animations( const u32 current_time_in_ms )
-#line 1436
 {
 	tick_active_object( );
 
@@ -1335,7 +1283,6 @@ static console_commands::cc_float cc_death_camera_distance	( "death_camera_dista
 // target retains the inlined is_player_current entry statement while base folds
 // it into the prologue; the final select_animations differs by LTCG tail-calling.
 void player::kill( const u32 current_time_in_ms )
-#line 1465
 {
 	const bool is_local_player = m_game.network_client( ).is_player_current( id );
 
@@ -1364,7 +1311,6 @@ void player::attach_controller(
 	stats_graph*				angular_speed,
 	game_world_ui*				ui
 )
-#line 1487
 {
 	m_current_active_object->assign_game_ui( m_game_ui = ui );
 
@@ -1393,7 +1339,6 @@ void player::attach_controller(
 // statement / prologue; our base emits a separate `if` line) - the same intrusive_ptr
 // accessor inline-vs-call wall as skeleton()/the quick-slot fns; not TU-steerable.
 void player::detach_controller( )
-#line 1533
 {
 	if ( m_current_active_object )
 		m_current_active_object->assign_game_ui( NULL );
@@ -1410,7 +1355,6 @@ void player::detach_controller( )
 }
 
 void player::set_head_visibility( bool is_visible )
-#line 1551
 {
 	if ( m_player_head_visible == is_visible )
 		return;
@@ -1447,7 +1391,6 @@ void player::subscribe_animation_player(
 	const u8		event_type,
 	pcvoid const	animated_object
 )
-#line 1588
 {
 	m_current.animation_player.subscribe( channel_id, callback, callback_uid, animation, event_type, animated_object );
 	m_target.animation_player.subscribe( channel_id, empty_callback, callback_uid, animation, event_type, animated_object );
@@ -1460,21 +1403,18 @@ void player::subscribe_animation_player(
 	resources::managed_resource_ptr const&	animation,
 	pcvoid const	animated_object
 )
-#line 1602
 {
 	m_current.animation_player.subscribe( channel_id, callback, callback_uid, animation, animated_object );
 	m_target.animation_player.subscribe( channel_id, empty_callback, callback_uid, animation, animated_object );
 }
 
 void player::unsubscribe_animation_player( pcstr channel_id, pcvoid callback_uid )
-#line 1610
 {
 	m_current.animation_player.unsubscribe( channel_id, callback_uid );
 	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
 void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
-#line 1618
 {
 	m_current.animation_player.unsubscribe( channel_id, callback_uid );
 	m_target.animation_player.unsubscribe( channel_id, callback_uid );
@@ -1490,7 +1430,6 @@ void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum 
 // /Ox target register-allocated away - NOT deleted (release structure is the
 // post-optimization projection). Residual is non-steerable from this TU.
 void player::deserialize( network_core::packet_reader& reader )
-#line 1626
 {
 	float3 const position		= reader.r< float3 >( );
 	const float orientation		= reader.r< float >( );

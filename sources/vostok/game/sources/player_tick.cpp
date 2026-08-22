@@ -21,53 +21,41 @@
 #include <vostok/console_command.h>
 
 static float s_net_max_position_discrepancy = 0.1f;
-#line 31
 static vostok::console_commands::cc_float s_net_max_position_discrepancy_command( "net_max_position_discrepancy", s_net_max_position_discrepancy, 1e-7f, 0.1f, true, vostok::console_commands::command_type_engine_internal );
 
 static bool s_is_test_players_random_input_enabled;
-#line 35
 static vostok::console_commands::cc_bool s_test_players_random_input_cc( "test_players_random_input", s_is_test_players_random_input_enabled, false, vostok::console_commands::command_type_user_specific );
 
 static bool s_is_local_player_random_input_enabled;
-#line 38
 static vostok::console_commands::cc_bool s_local_player_random_input_cc( "local_player_random_input", s_is_local_player_random_input_enabled, false, vostok::console_commands::command_type_user_specific );
 
 static bool s_print_animations_value;
-#line 42
 static vostok::console_commands::cc_bool s_print_animations_cc( "print_animations", s_print_animations_value, true, vostok::console_commands::command_type_user_specific );
 
 static bool s_sf_animation_states_value;
-#line 45
 static vostok::console_commands::cc_bool s_sf_animation_states_cc( "sf_animation_states", s_sf_animation_states_value, true, vostok::console_commands::command_type_user_specific );
 
 static float s_smooth_linear_speed = 3.f;
-#line 48
 static vostok::console_commands::cc_float s_smooth_linear_speed_command( "smooth_linear_speed", s_smooth_linear_speed, 0.f, 10.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_smooth_angular_speed = 180.f;
-#line 51
 static vostok::console_commands::cc_float s_smooth_angular_speed_command( "smooth_angular_speed", s_smooth_angular_speed, 0.f, 720.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_smooth_pitch_speed = 11.25f;
-#line 54
 static vostok::console_commands::cc_float s_smooth_pitch_speed_command( "smooth_pitch_speed", s_smooth_pitch_speed, 0.f, 720.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_min_font_size = 12.f;
-#line 538
 static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_max_font_size = 32.f;
-#line 539
 static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_decrease_koef = 0.3f;
-#line 540
 static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
 u32 player::history_lower_bound_index( const u32 time_in_ms ) const
-#line 66
 {
 	u32 index = m_history.head( );
 	while( index != m_history.tail( ) )
@@ -81,20 +69,17 @@ u32 player::history_lower_bound_index( const u32 time_in_ms ) const
 }
 
 void player::remove_oldest_history_item( )
-#line 79
 {
 	m_history.pop_tail( );
 }
 
 void player::remove_oldest_history_items( const u32 new_oldest_time_in_ms )
-#line 84
 {
 	while( !m_history.empty( ) && m_history.oldest( ).time_in_ms < new_oldest_time_in_ms )
 		m_history.pop_tail( );
 }
 
 void player::restore_history_item( client_player_history_item& item )
-#line 98
 {
 	m_target.transform		= item.action.state.transform;
 	m_target.look_pitch		= item.action.state.look_pitch;
@@ -109,7 +94,6 @@ void player::update_history_item(
 	float4x4&						previous_transform,
 	bool&							__formal
 )
-#line 120
 {
 	restore_history_item( item );
 
@@ -138,7 +122,6 @@ void player::update_history_item_from_previous(
 	client_player_history_item&				item_to_update,
 	float4x4&								previous_transform
 )
-#line 185
 {
 	math::quaternion target_rotation =
 		math::quaternion( previous_transform.get_angles_xyz( ) )
@@ -168,7 +151,6 @@ void player::update_history_item_from_previous(
 // our LTCG out-lines inventory() to a `call` where the target inlines the [this+8] deref, and
 // the target tail-duplicates the post-loop set_object_transform across the empty-loop edge.
 void player::replay_history( const u32 from_index, float4x4& previous_transform )
-#line 264
 {
 	u32 index = from_index;
 	while( index != m_history.head( ) )
@@ -184,7 +166,6 @@ void player::replay_history( const u32 from_index, float4x4& previous_transform 
 // clamp/lower-bound/update/replay path. Residual statement splits come from ring-index
 // register selection, replay_history's call schedule, and the physics transform tail.
 void player::time_warp( server_player_update const& action, u32 time_in_ms )
-#line 284
 {
 	if( m_last_server_correction_time && time_in_ms < m_last_server_correction_time )
 		return;
@@ -256,7 +237,6 @@ void player::time_warp( server_player_update const& action, u32 time_in_ms )
 // gated header param) that all compile out; reproduced as the unreferenced-param
 // eater so the base also emits just `ret`.
 void player::log_active_object( pcstr const header ) const
-#line 415
 {
 	VOSTOK_UNREFERENCED_PARAMETER( header );
 }
@@ -272,7 +252,6 @@ void player::apply_input_before_new_transform(
 	player_input const&		previous_input,
 	const float				time_delta
 )
-#line 511
 {
 	math::quaternion previous_rotation(
 		player_state.animation_player.are_there_any_animations( )
@@ -307,7 +286,6 @@ void player::apply_input_before_new_transform(
 }
 
 void player::smooth( const float time_delta )
-#line 543
 {
 	if( time_delta > 0.f )
 	{
@@ -341,7 +319,6 @@ void player::smooth( const float time_delta )
 // skeleton divergence is animation-owned animation_player::tick: target inlines
 // skip_time_if_needed/n_ary_tree::tick/callback compaction, while base calls it.
 void player::tick( const u32 current_time_in_ms )
-#line 589
 {
 	if( m_is_first_tick )
 	{
@@ -483,4 +460,3 @@ void player::tick( const u32 current_time_in_ms )
 }
 
 } // namespace survarium
-#line 0

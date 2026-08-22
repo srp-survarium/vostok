@@ -4,7 +4,6 @@
 namespace vostok {
 namespace render {
 
-#line 13
 template < typename resource_type >
 bool reclaim( vector< resource_type* >& vec, resource_type const* ptr )
 {

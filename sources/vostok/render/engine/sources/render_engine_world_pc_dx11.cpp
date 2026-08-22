@@ -1011,7 +1011,6 @@ void engine::world::set_model_visible(
 void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v, u32 subsurface_id, u32 flags )
 {
 	// Retail source has 109 preprocessed-out lines before this body.
-#line 1468
 	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>( v );
 	// One additional retail source line was preprocessed out here.
 

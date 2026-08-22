@@ -143,7 +143,6 @@ private:
 static int read_only_enum_function	( lua_State* const state )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( state );
-#line 147
 	FATAL					( "there was an attempt to modify an exported enum table from C++ side" );
 	UNREACHABLE_CODE		( return 0 );
 }
@@ -1498,7 +1497,6 @@ static vostok::configs::enum_types get_type_impl	( lua_State* const state )
 			if ( vostok::strings::equal( class_rep->name(), "int2") )
 				return				t_int2;
 
-#line 1503
 			FATAL					( "unknown class found in lua config: %s", class_rep->name() );
 		}
 		case LUA_TNONE				: 
@@ -2075,7 +2073,6 @@ struct table_object_predicate {
 			return					(true);
 		}
 
-#line 2080
 		FATAL						("cannot find property table '%s'", string );
 		return						(false);
 	}

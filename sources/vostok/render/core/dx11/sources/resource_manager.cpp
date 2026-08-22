@@ -617,23 +617,6 @@ shader_constant_table* resource_manager::create_const_table(
 	return created_table;
 }
 
-// Retail source gaps reflect blocks excluded from the Master Gold configuration.
-#line 1557
-void resource_manager::release( shader_constant_table const* const_table )
-{
-	if( !const_table->is_registered())
-		return;
-
-	if( reclaim( m_const_tables, const_table))
-	{
-		DELETE( const_table, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find compiled shader_constant-table");
-}
-
-#line 641
 shader_constant_host const* resource_manager::register_constant_binding(
 	shader_constant_binding const& binding
 )
@@ -1392,22 +1375,6 @@ res_state* resource_manager::create_state( state_descriptor& descriptor )
 	return new_state;
 }
 
-#line 2842
-void resource_manager::release( res_state const* state )
-{
-	if( !state->is_registered())
-		return;
-
-	if( reclaim( m_states, state))
-	{
-		DELETE( state, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find compiled stateblock");
-}
-
-#line 1424
 res_declaration* resource_manager::create_declaration(
 	D3D11_INPUT_ELEMENT_DESC const* dcl,
 	u32 count
@@ -1427,22 +1394,6 @@ res_declaration* resource_manager::create_declaration(
 	return new_decl;
 }
 
-#line 2888
-void resource_manager::release( res_declaration const* dcl )
-{
-	if( !dcl->is_registered())
-		return;
-
-	if( reclaim( m_declarations, dcl))
-	{
-		DELETE( dcl, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "! ERROR: Failed to find compiled vertex-declarator");
-}
-
-#line 1458
 res_signature* resource_manager::create_signature( ID3D10Blob* signature )
 {
 	{
@@ -1459,22 +1410,6 @@ res_signature* resource_manager::create_signature( ID3D10Blob* signature )
 	return new_signature;
 }
 
-#line 2931
-void resource_manager::release( res_signature const* signature )
-{
-	if( !signature->is_registered())
-		return;
-
-	if( reclaim( m_signatures, signature))
-	{
-		DELETE( signature, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "! ERROR: Failed to find created signature.");
-}
-
-#line 1490
 res_input_layout* resource_manager::create_input_layout(
 	res_declaration const* decl,
 	res_signature const* signature
@@ -1494,22 +1429,6 @@ res_input_layout* resource_manager::create_input_layout(
 	return new_layout;
 }
 
-#line 2975
-void resource_manager::release( res_input_layout const* layout )
-{
-	if( !layout->is_registered())
-		return;
-
-	if( reclaim( m_input_layouts, layout))
-	{
-		DELETE( layout, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "! ERROR: Failed to find created layout");
-}
-
-#line 1527
 render_target* resource_manager::create_volume_render_target(
 	pcstr name,
 	u32 w,
@@ -1614,22 +1533,21 @@ shader_constant_buffer* resource_manager::create_constant_buffer(
 	return cbuffer;
 }
 
-#line 3085
-void resource_manager::release( shader_constant_buffer const* cbuffer )
+// Retail source gaps reflect blocks excluded from the Master Gold configuration.
+void resource_manager::release( shader_constant_table const* const_table )
 {
-	if( !cbuffer->is_registered())
+	if( !const_table->is_registered())
 		return;
 
-	if( reclaim( m_const_buffers, cbuffer))
+	if( reclaim( m_const_tables, const_table))
 	{
-		DELETE( cbuffer, resource_manager_call_destructor_predicate());
+		DELETE( const_table, resource_manager_call_destructor_predicate());
 		return;
 	}
 
-	LOG_ERROR( "!ERROR: Failed to find shader_constant buffer");
+	LOG_ERROR( "!ERROR: Failed to find compiled shader_constant-table");
 }
 
-#line 1657
 ID3D11SamplerState* resource_manager::create_sampler_state(
 	sampler_state_descriptor const& sampler_props
 )
@@ -1654,22 +1572,6 @@ res_texture_list* resource_manager::create_texture_list(
 	return lst;
 }
 
-#line 3133
-void resource_manager::release( res_texture_list const* tex_list )
-{
-	if( !tex_list->is_registered())
-		return;
-
-	if( reclaim( m_texture_lists, tex_list))
-	{
-		DELETE( tex_list, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find compiled list of textures");
-}
-
-#line 1697
 res_sampler_list* resource_manager::create_sampler_list(
 	fixed_vector<sampler_slot, 16> const& smp_list
 )
@@ -1685,22 +1587,6 @@ res_sampler_list* resource_manager::create_sampler_list(
 	return lst;
 }
 
-#line 3187
-void resource_manager::release( res_sampler_list const* smp_list )
-{
-	if( !smp_list->is_registered())
-		return;
-
-	if( reclaim( m_sampler_lists, smp_list))
-	{
-		DELETE( smp_list, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find compiled list of samplers");
-}
-
-#line 1727
 template <class shader, class binder>
 bool operator == ( shader const* sh, binder const& bn )
 {
@@ -1729,21 +1615,6 @@ res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& bind
 	}
 }
 
-#line 3240
-void resource_manager::release( res_xs<vs_data> const* vs )
-{
-	if( !vs->is_registered())
-		return;
-
-	if( reclaim( m_v_shaders, vs))
-	{
-		DELETE( vs, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find VS.");
-}
-#line 1745
 
 res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& binder )
 {
@@ -1767,21 +1638,6 @@ res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& bind
 	}
 }
 
-#line 3284
-void resource_manager::release( res_xs<gs_data> const* gs )
-{
-	if( !gs->is_registered())
-		return;
-
-	if( reclaim( m_g_shaders, gs))
-	{
-		DELETE( gs, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find GS.");
-}
-#line 1781
 
 res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& binder )
 {
@@ -1805,21 +1661,6 @@ res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& bind
 	}
 }
 
-#line 3329
-void resource_manager::release( res_xs<ps_data> const* ps )
-{
-	if( !ps->is_registered())
-		return;
-
-	if( reclaim( m_p_shaders, ps))
-	{
-		DELETE( ps, resource_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find PS.");
-}
-#line 1817
 
 res_geometry* resource_manager::create_geometry(
 	D3D11_INPUT_ELEMENT_DESC const* decl,
@@ -1856,21 +1697,6 @@ res_geometry* resource_manager::create_geometry(
 	return	geom;
 }
 
-#line 3380
-void resource_manager::release( res_geometry const* geom )
-{
-	if( !geom->is_registered())
-		return;
-
-	if( reclaim( m_geometries, geom))
-	{
-		DELETE( geom, resource_manager_call_destructor_predicate());
-		return;
-	}
-	LOG_ERROR( "!ERROR: Failed to find the geometry.");
-}
-
-#line 1896
 res_render_output* resource_manager::create_render_output( HWND__* window, bool windowed )
 {
 	res_render_output * r_output = NEW(res_render_output)( window, windowed);
@@ -1880,21 +1706,6 @@ res_render_output* resource_manager::create_render_output( HWND__* window, bool 
 	return r_output;
 }
 
-#line 3408
-void resource_manager::release( res_render_output const* render_output )
-{
-	if( !render_output->is_registered())
-		return;
-
-	if( reclaim( m_render_outputs, render_output))
-	{
-		DELETE( render_output, resource_manager_call_destructor_predicate());
-		return;
-	}
-	LOG_ERROR( "!ERROR: Failed to render output in registry.");
-}
-
-#line 1918
 void resource_manager::copy( untyped_buffer* dest, untyped_buffer* source )
 {
 	device::ref().d3d_context()->CopyResource( dest->hardware_buffer(), source->hardware_buffer());
@@ -1950,6 +1761,170 @@ ID3D11SamplerState* resource_manager::find_registered_sampler( pcstr name )
 
 	return NULL;
 }
+
+void resource_manager::release( res_state const* state )
+{
+	if( !state->is_registered())
+		return;
+
+	if( reclaim( m_states, state))
+	{
+		DELETE( state, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find compiled stateblock");
+}
+
+void resource_manager::release( res_declaration const* dcl )
+{
+	if( !dcl->is_registered())
+		return;
+
+	if( reclaim( m_declarations, dcl))
+	{
+		DELETE( dcl, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "! ERROR: Failed to find compiled vertex-declarator");
+}
+
+void resource_manager::release( res_signature const* signature )
+{
+	if( !signature->is_registered())
+		return;
+
+	if( reclaim( m_signatures, signature))
+	{
+		DELETE( signature, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "! ERROR: Failed to find created signature.");
+}
+
+void resource_manager::release( res_input_layout const* layout )
+{
+	if( !layout->is_registered())
+		return;
+
+	if( reclaim( m_input_layouts, layout))
+	{
+		DELETE( layout, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "! ERROR: Failed to find created layout");
+}
+
+void resource_manager::release( shader_constant_buffer const* cbuffer )
+{
+	if( !cbuffer->is_registered())
+		return;
+
+	if( reclaim( m_const_buffers, cbuffer))
+	{
+		DELETE( cbuffer, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find shader_constant buffer");
+}
+
+void resource_manager::release( res_texture_list const* tex_list )
+{
+	if( !tex_list->is_registered())
+		return;
+
+	if( reclaim( m_texture_lists, tex_list))
+	{
+		DELETE( tex_list, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find compiled list of textures");
+}
+
+void resource_manager::release( res_sampler_list const* smp_list )
+{
+	if( !smp_list->is_registered())
+		return;
+
+	if( reclaim( m_sampler_lists, smp_list))
+	{
+		DELETE( smp_list, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find compiled list of samplers");
+}
+
+void resource_manager::release( res_xs<vs_data> const* vs )
+{
+	if( !vs->is_registered())
+		return;
+
+	if( reclaim( m_v_shaders, vs))
+	{
+		DELETE( vs, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find VS.");
+}
+void resource_manager::release( res_xs<gs_data> const* gs )
+{
+	if( !gs->is_registered())
+		return;
+
+	if( reclaim( m_g_shaders, gs))
+	{
+		DELETE( gs, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find GS.");
+}
+void resource_manager::release( res_xs<ps_data> const* ps )
+{
+	if( !ps->is_registered())
+		return;
+
+	if( reclaim( m_p_shaders, ps))
+	{
+		DELETE( ps, resource_manager_call_destructor_predicate());
+		return;
+	}
+
+	LOG_ERROR( "!ERROR: Failed to find PS.");
+}
+void resource_manager::release( res_geometry const* geom )
+{
+	if( !geom->is_registered())
+		return;
+
+	if( reclaim( m_geometries, geom))
+	{
+		DELETE( geom, resource_manager_call_destructor_predicate());
+		return;
+	}
+	LOG_ERROR( "!ERROR: Failed to find the geometry.");
+}
+
+void resource_manager::release( res_render_output const* render_output )
+{
+	if( !render_output->is_registered())
+		return;
+
+	if( reclaim( m_render_outputs, render_output))
+	{
+		DELETE( render_output, resource_manager_call_destructor_predicate());
+		return;
+	}
+	LOG_ERROR( "!ERROR: Failed to render output in registry.");
+}
+
 
 } // namespace render
 } // namespace vostok

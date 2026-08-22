@@ -25,19 +25,16 @@
 namespace survarium {
 
 void game_world::initialize_ai( )
-#line 26
 {
 	m_ai_world = ai::create_world( *this );
 }
 
 void game_world::initialize_ai_navigation( )
-#line 35
 {
 	m_ai_navigation_world = ai::navigation::create_world( *this, render_scene(), renderer().debug() );
 }
 
 void game_world::get_colliding_objects( math::aabb const& query_aabb, vectora< ai::game_object const* >& results )
-#line 42
 {
 }
 
@@ -45,7 +42,6 @@ void game_world::get_visible_objects(
 	math::cuboid const&		cuboid,
 	boost::function< void( ai::game_object const& ) > const&	update_callback
 )
-#line 54
 {
 }
 
@@ -108,7 +104,6 @@ bool game_world::ray_query(
 	const float								transparency_threshold,
 	float&									visibility_value
 ) const
-#line 120
 {
 	vectora< physics::closest_ray_result > game_objects( g_allocator );
 	get_physics_world( )->ray_query( origin, direction, max_distance, game_objects, 0xffff, 0x40 );
@@ -123,7 +118,6 @@ void game_world::draw_frustum(
 	float3 const&		direction,
 	math::color			color
 ) const
-#line 149
 {
 	renderer( ).debug( ).draw_frustum(
 		m_render_scene,
@@ -139,13 +133,11 @@ void game_world::draw_frustum(
 }
 
 void game_world::draw_ray( float3 const& start_point, float3 const& end_point, bool sees_something ) const
-#line 164
 {
 	renderer().debug().draw_arrow( m_render_scene, start_point, end_point, sees_something ? math::color( 255, 0, 0 ) : math::color( 0, 255, 255 ) );
 }
 
 void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& list_to_be_filled ) const
-#line 169
 {
 	static_cast_checked< human_npc* >( owner )->get_available_weapons( list_to_be_filled );
 }
@@ -153,9 +145,7 @@ void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& 
 // claude@NOTE: structure matches (1 stmt). Byte residual is the repo-wide
 // logging-not-gold-stubbed wall: target ICF-folds has_passed_filters/append onto
 // empty_stub, base emits the real logging bodies. Verbosity/format from the asm.
-#line 183
 u32 game_world::get_node_by_name( pcstr node_name ) const
-#line 175
 {
 	LOG_ERROR						( "node with name %s wasn't found", node_name );
 	return u32( -1 );
@@ -178,14 +168,12 @@ void delete_weapons( human_npc_ptr& owner )
 // base ({ret}), so the target's call inlines to nothing here; matches once that
 // sibling (human_npc.cpp) is bodied. Residual otherwise is LTCG this-in-register.
 void game_world::kill_npc( human_npc_ptr& condemned )
-#line 291
 {
 	delete_weapons					( condemned );
 	condemned->clear_resources		( );
 }
 
 void game_world::on_behaviour_created( resources::queries_result& data )
-#line 327
 {
 	resources::unmanaged_resource_ptr new_behaviour = data[ 0 ].get_unmanaged_resource( );
 	if ( m_selected_npc )
@@ -196,7 +184,6 @@ void game_world::on_behaviour_created( resources::queries_result& data )
 // inlined here, so the same human_npc::enable stub cap applies (TRGT_ONLY tail);
 // otherwise byte residual is the config operator[] / float-conversion codegen.
 void game_world::on_npc_attributes_received( configs::binary_config_value const& attributes_config, human_npc_ptr owner )
-#line 337
 {
 	human_npc::npc_game_attributes		attributes;
 	attributes.group_id					= attributes_config[ "group_id" ];
@@ -234,7 +221,6 @@ void game_world::on_npc_attributes_received( configs::binary_config_value const&
 // statement); structure (3 stmts) is correct, byte-matches once human_npc.cpp's
 // enable is bodied. Residual otherwise is LTCG this-in-register.
 void game_world::finish_npc_creation( human_npc_ptr& new_npc, human_npc::npc_game_attributes& attributes )
-#line 370
 {
 	new_npc->set_attributes			( attributes );
 	new_npc->enable					( );
@@ -242,7 +228,6 @@ void game_world::finish_npc_creation( human_npc_ptr& new_npc, human_npc::npc_gam
 }
 
 void game_world::query_npc_dictionary( )
-#line 377
 {
 }
 
@@ -251,7 +236,6 @@ void game_world::query_npc_dictionary( )
 // ref-count statements show as TRGT_ONLY); matches once human_npc.cpp's tick is
 // bodied.
 void game_world::tick_npcs( const u32 current_frame_id, const bool is_game_paused )
-#line 402
 {
 	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
 		it_npc->tick				( current_frame_id, is_game_paused );
@@ -262,7 +246,6 @@ void game_world::tick_npcs( const u32 current_frame_id, const bool is_game_pause
 // game/ui::world vtable layouts differ in base (ui_world()/get_renderer() land at
 // different vtable slots), shifting two call offsets. Structure is correct.
 void game_world::update_npc_stats( )
-#line 408
 {
 	if ( m_active_npc_set && m_selected_npc )
 	{

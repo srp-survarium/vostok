@@ -60,7 +60,6 @@ void base_allocator::dump_statistics( ) const
 	u64 const total_size		= this->total_size( );
 	u64 const allocated_size	= this->allocated_size( );
 
-#line 78
 	LOGF_INFO					( logging::format_message, "--------------- memory stats for arena [%s] ---------------", m_arena_id );
 	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "free: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", total_size - allocated_size, total_size == 0.f ? 0.f : float(total_size - allocated_size)/float(total_size)*100.f );

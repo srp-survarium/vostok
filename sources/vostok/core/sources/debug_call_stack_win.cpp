@@ -614,7 +614,6 @@ static void load_function	( T*& result, HMODULE const module, pcstr const module
 
 	result					= ( T* ) GetProcAddress ( module, function_id );
 	if ( !result ) {
-#line 619
 		LOGI_WARNING		( "debug", "can't find function %s in %s", function_id, module_id );
 		s_use_dbghelp		= false;
 	}

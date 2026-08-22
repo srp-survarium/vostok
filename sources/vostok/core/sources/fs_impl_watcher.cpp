@@ -284,7 +284,6 @@ bool   file_system_impl::mount_disk_node (pcstr const						in_logical_path,
 	if ( out_result_it )
 		* out_result_it					=	resources::fs_iterator(new_node, find_referenced_link_node(new_node));
 
-#line 289
 	LOGI_INFO								("fs", "mount_disk_node '%s' with size (%d)", 
 													physical_path.c_str(), file_size);
 	return									true;

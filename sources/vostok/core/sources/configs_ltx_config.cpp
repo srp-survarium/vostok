@@ -547,7 +547,6 @@ vostok::core::configs::binary_config* vostok::core::configs::create_from_ltx_tex
 		file_type_pointer	f				(fn, device, file_mode::open_existing, file_access::read, assert_on_fail_false);
 		
 		if ( !f )
-#line 551
 			LOG_INFO						("unable to open file [%s]", fn);
 		else
 			device->write					(f, binary_buff, binary_buff_size);

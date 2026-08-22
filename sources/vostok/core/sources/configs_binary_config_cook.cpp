@@ -191,7 +191,6 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 			parent
 			);
 #else // #ifndef MASTER_GOLD
-#line 223
 		FATAL( "cannot find binary config [%s]!", source_path.c_str() );
 #endif // #ifndef MASTER_GOLD
 	 }

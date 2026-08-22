@@ -22,7 +22,6 @@ untyped_buffer::untyped_buffer	( u32 const size, pcvoid const data, enum_buffer_
 	m_type					( type )
 {
 	// Preserve target line metadata.
-#line 19
 	D3D_BUFFER_DESC			desc;
 	desc.ByteWidth			= size;
 	//desc.Usage			= bImmutable ? D3D_USAGE_IMMUTABLE : D3D_USAGE_DEFAULT;

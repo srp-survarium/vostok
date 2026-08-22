@@ -171,7 +171,6 @@ bool   fs_task::execute_may_destroy_this ()
 				iterator.get_disk_path	(physical_path);
 		}
 
-#line 175
 		LOGI_INFO						("fs", "erase file(%s)", physical_path.c_str());
 		if ( physical_path.length() )
 			g_fat->mark_disk_node_as_erased	(physical_path.c_str());

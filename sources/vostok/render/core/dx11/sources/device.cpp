@@ -30,11 +30,9 @@ device::~device( )
 
 void device::on_device_removed( )
 {
-#line 34
 	HRESULT const reason = device::ref( ).d3d_device( )->GetDeviceRemovedReason( );
 
 	// LOG_ERROR embeds __LINE__; keep these calls contiguous.
-#line 38
 	if ( reason == DXGI_ERROR_DEVICE_HUNG )					LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_HUNG" );
 	else if ( reason == DXGI_ERROR_DEVICE_REMOVED )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_REMOVED" );
 	else if ( reason == DXGI_ERROR_DEVICE_RESET )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_RESET" );
@@ -45,7 +43,6 @@ void device::on_device_removed( )
 	m_device_removed = true;
 }
 
-#line 55
 static bool is_resolution_already_exists( u32 const& monitor_index, math::int2 const& res )
 {
 	for ( u32 i = 0; i < 512; ++i )

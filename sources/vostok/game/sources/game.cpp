@@ -67,49 +67,37 @@ using vostok::console_commands::command_type_engine_internal;
 // (126/127), particle commands (138/141).
 
 static bool s_draw_snd_stats_value;
-#line 58
 static cc_bool s_draw_snd_stats( "draw_sound_stats", s_draw_snd_stats_value, true, command_type_user_specific );
 
 static bool s_draw_stats_value = true;
-#line 70
 static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
 
 static bool s_show_profiler;
-#line 74
 static cc_bool s_show_profiler_command( "show_profiler", s_show_profiler, false, command_type_user_specific );
 
 void cfg_save_user( )
-#line 117
 {
 	vostok::console_commands::save( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 }
 
 // target body is empty (single `ret`); the system-save logic is compiled out in this build.
 void cfg_save_system( )
-#line 122
 {
 }
 
-#line 126
 static cc_delegate cfg_save_system_cc( "cfg_save_system", boost::bind( &cfg_save_system ), false );
-#line 127
 static cc_delegate cfg_save_user_cc( "cfg_save_user", boost::bind( &cfg_save_user ), false );
 
 static u32 s_max_particles_value = 100;
-#line 138
 static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, true, command_type_engine_internal );
 
 static u32 s_particle_lod_value = 0;
-#line 141
 static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
 
 static bool s_show_detailed_statistics_value;
-#line 144
 static cc_bool show_detailed_statistics( "r_show_detailed_statistics", s_show_detailed_statistics_value, true, command_type_user_specific );
 
-#line 54
 vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
-#line 55
 static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
 
 namespace survarium {
@@ -156,12 +144,10 @@ STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
 	console_commands::cc_float( name, m_value, min, max, serializable, arg_4, arg_5 ),
 	m_engine( NULL ),
 	m_value( 720.f )
-#line 87
 {
 }
 
 void max_angular_velocity_command::execute( pcstr args )
-#line 97
 {
 	console_commands::cc_float::execute( args );
 	g_max_angular_velocity[ 1 ] = math::deg2rad( m_value );
@@ -217,7 +203,6 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 	m_game_options( *this ),
 	m_debug_window_type( debug_window_none ),
 	m_debug_window( NULL )
-#line 206
 {
 	s_max_angular_velocity_command.set_engine( engine );
 
@@ -272,19 +257,16 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 }
 
 void game::execute_scaleform_command( scaleform_render_command command )
-#line 268
 {
 	m_renderer.execute_scaleform_command	( command );
 }
 
 void game::build_lpv_geometry( )
-#line 273
 {
 	m_renderer.scene( ).build_lpv_geometry( m_game_world.render_scene( ) );
 }
 
  game::~game( )
-#line 278
 {
 	vostok::console_commands::save	( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 
@@ -323,7 +305,6 @@ math::uint2 parse_resolution( pcstr in_str )
 }
 
 void game::on_configs_loaded( resources::queries_result& result )
-#line 329
 {
 	initialize_modules				( );
 
@@ -371,7 +352,6 @@ void game::on_configs_loaded( resources::queries_result& result )
 }
 
 void game::on_render_output_window_created( resources::queries_result& data )
-#line 380
 {
 	m_render_output_window			= static_cast_resource_ptr< render::render_output_window_ptr >( data[0].get_unmanaged_resource( ) );
 
@@ -393,7 +373,6 @@ void game::on_render_output_window_created( resources::queries_result& data )
 }
 // claude@NOTE: target keeps key::is_set_as_string out of line and passes create_and_assign_network_client this on the stack.
 void game::on_base_resources_created( resources::queries_result& data )
-#line 398
 {
 	m_items_dictionary = static_cast_resource_ptr< items_dictionary_ptr >( data[0].get_unmanaged_resource( ) );
 	m_initialized = true;
@@ -471,7 +450,6 @@ void game::on_base_resources_created( resources::queries_result& data )
 }
 
 void game::create_and_assign_network_client( fixed_string< 512 > client_options, const bool is_spectator )
-#line 481
 {
 	m_network_client_options		= client_options;
 
@@ -486,7 +464,6 @@ void game::create_and_assign_network_client( fixed_string< 512 > client_options,
 }
 
 void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_ready )
-#line 492
 {
 	switch ( scene_ready )
 	{
@@ -512,7 +489,6 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 // ret 4) and the ctor's is_spectator goes via register. The 4-byte frame shift
 // cascades through every [esp+XX] slot. Not source-steerable (arg-passing).
 void game::create_network_client( const bool is_spectator )
-#line 510
 {
 	fixed_string< 512 > host;
 
@@ -533,19 +509,16 @@ void game::create_network_client( const bool is_spectator )
 }
 
 void game::create_lobby_menu( )
-#line 524
 {
 	m_lobby_menu					= NEW( class lobby_menu )( *this );
 }
 
 void game::create_login_menu( )
-#line 529
 {
 	m_login_menu					= NEW( class login_menu )( *this );
 }
 
 void game::query_base_resources( )
-#line 550
 {
 	register_console_commands		( );
 
@@ -567,7 +540,6 @@ void game::query_base_resources( )
 }
 
 void game::enable( bool value )
-#line 567
 {
 	m_enabled						= value;
 
@@ -616,12 +588,10 @@ void game::enable( bool value )
 
 
 void game::on_renderer_created( resources::queries_result& data )
-#line 591
 {
 }
 
 void game::on_config_loaded( resources::queries_result& data, bool create_renderer )
-#line 596
 {
 	if ( !data.is_successful( ) )
 	{
@@ -633,7 +603,6 @@ void game::on_config_loaded( resources::queries_result& data, bool create_render
 }
 
 void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_renderer )
-#line 607
 {
 	if ( cfg && cfg.c_ptr( ) )
 	{
@@ -662,13 +631,11 @@ void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_rend
 }
 
 void game::load_config_query( pcstr cfg_name, bool create_renderer )
-#line 633
 {
 	resources::query_resources_and_wait	( &resources::create_request( cfg_name, resources::raw_data_class ), 1, boost::bind( &game::on_config_loaded, this, _1, create_renderer ), g_allocator, NULL, NULL, assert_on_fail_false );
 }
 
 void game::register_console_commands( )
-#line 646
 {
 	static console_commands::cc_delegate	game_exit_cc( "quit", boost::bind( &game::exit, this, _1 ), false );
 	static console_commands::cc_delegate	cfg_load_cc( "cfg_load", boost::bind( &game::load_config_query, this, _1, false ), true );
@@ -677,7 +644,6 @@ void game::register_console_commands( )
 }
 
 void game::switch_to_scene( base_game_scene* scene )
-#line 655
 {
 	if ( m_active_scene == scene )
 		return;
@@ -690,7 +656,6 @@ void game::switch_to_scene( base_game_scene* scene )
 }
 
 void game::toggle_console( )
-#line 673
 {
 	if ( m_console->get_active( ) )
 		m_console->on_deactivate	( );
@@ -699,7 +664,6 @@ void game::toggle_console( )
 }
 
 void game::exit( pcstr str )
-#line 681
 {
 	unload							( str, true );
 
@@ -710,7 +674,6 @@ void game::exit( pcstr str )
 }
 
 void game::tick( const u32 current_frame_id )
-#line 691
 {
 	u32 const		current_time_in_ms		= m_timer.get_elapsed_msec( );
 	u32 const		frame_delta				= current_time_in_ms - m_current_time_in_ms;
@@ -771,7 +734,6 @@ void game::tick( const u32 current_frame_id )
 }
 
 void game::update_stats( const u32 current_frame_id )
-#line 812
 {
 	float const last_frame_time				= float( m_permanent_time_in_ms - m_first_frame_time_in_ms ) * math::epsilon_3;
 	m_fps_graph->add_value					( last_frame_time, math::is_zero( last_frame_time - m_last_frame_time ) ? 10000.f : 1.f / ( last_frame_time - m_last_frame_time ) );
@@ -826,7 +788,6 @@ void game::update_stats( const u32 current_frame_id )
 }
 
 void game::clear_resources( )
-#line 868
 {
 	destroy_debug_window			( );
 
@@ -857,13 +818,11 @@ void game::clear_resources( )
 }
 
 void game::load_cmd( pcstr project_name )
-#line 897
 {
 	load							( project_name );
 }
 
 void game::unload_cmd( pcstr s )
-#line 902
 {
 	unload							( s, false );
 }
@@ -875,7 +834,6 @@ void game::load(
 	variant< 32 > const** const		user_datas_begin,
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
-#line 913
 {
 	m_project_resource_name			= project_resource_name;
 
@@ -885,13 +843,11 @@ void game::load(
 }
 
 void game::load( pcstr const project_resource_name )
-#line 926
 {
 	m_network_client->load			( project_resource_name, m_game_world.get_camera_director( ) );
 }
 
 void game::unload( pcstr __formal, bool destroying )
-#line 931
 {
 	if ( !m_game_world.empty( ) )
 		m_game_world.unload			( );
@@ -901,19 +857,16 @@ void game::unload( pcstr __formal, bool destroying )
 }
 
 void game::switch_to_game_world( )
-#line 940
 {
 	switch_to_scene					( &m_game_world );
 }
 
 void game::switch_to_main_menu( )
-#line 945
 {
 	switch_to_scene					( m_main_menu );
 }
 
 void game::switch_to_lobby( )
-#line 950
 {
 	if ( !m_network_client->has_bandwidth( ) )
 		return;
@@ -922,7 +875,6 @@ void game::switch_to_lobby( )
 }
 
 void game::switch_to_login( login_menu_status_enum status )
-#line 958
 {
 	if ( !m_network_client->has_bandwidth( ) )
 		return;
@@ -943,7 +895,6 @@ void game::switch_to_login( login_menu_status_enum status )
 
 
 void game::register_cooks( )
-#line 967
 {
 	static animated_model_instance_cook				s_animated_model_instance_cook;
 	static game_material_manager_cook				s_material_manager_cook( false );
@@ -962,7 +913,6 @@ void game::register_cooks( )
 }
 
 void game::on_application_activate( )
-#line 1096
 {
 	::SetWindowTextA					( m_engine.get_main_window_handle( ), "Survarium\x99 v0.1 - Copyright\xA9 Vostok Games\xAE" );
 
@@ -975,7 +925,6 @@ void game::on_application_activate( )
 }
 
 void game::on_application_deactivate( )
-#line 1112
 {
 	if ( !m_input_world )
 		return;
@@ -987,14 +936,12 @@ void game::on_application_deactivate( )
 }
 
 void game::on_fullscreen_alttab( bool first )
-#line 1124
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( first );
 	m_renderer.goto_fullscreen		( m_render_output_window );
 }
 
 void game::draw_debug_window( )
-#line 1130
 {
 	u32 const buffer_size			= u32( 64 * Kb );
 	pvoid const buffer				= ALLOCA( buffer_size );
@@ -1008,7 +955,6 @@ void game::draw_debug_window( )
 }
 
 void game::create_debug_window( )
-#line 1148
 {
 	m_debug_window						= m_ui_world->create_window( );
 	m_debug_window->set_visible			( true );
@@ -1017,20 +963,17 @@ void game::create_debug_window( )
 }
 
 void game::destroy_debug_window( )
-#line 1157
 {
 	m_ui_world->destroy_window			( m_debug_window );
 	m_debug_window						= 0;
 }
 
 flash_factory& game::get_flash_factory( )
-#line 1174
 {
 	return *m_flash_factory;
 }
 
 void game::toggle_pause( )
-#line 1184
 {
 	m_is_paused						= !m_is_paused;
 	if ( m_is_paused )
@@ -1040,7 +983,6 @@ void game::toggle_pause( )
 }
 
 void game::pause( )
-#line 1193
 {
 	m_is_paused = true;				m_timer.pause( );
 	m_last_sound_timescale_factor	= m_sound_world.get_logic_world_user( ).get_time_scale_factor( );
@@ -1048,7 +990,6 @@ void game::pause( )
 }
 
 void game::resume( )
-#line 1201
 {
 	m_is_paused = false;				m_timer.resume( );
 	m_sound_world.get_logic_world_user( ).set_time_scale_factor( m_last_sound_timescale_factor );
@@ -1060,7 +1001,6 @@ void game::set_network_client(
 	const u16						port,
 	const bool						is_spectator
 )
-#line 1208
 {
 	m_network_client				= network_client;
 
@@ -1084,19 +1024,16 @@ void game::set_network_client(
 }
 
 void game::commit_suicide( )
-#line 1232
 {
 	m_network_client->initiate_kill_current_player( );
 }
 
 void game::respawn_local_player( )
-#line 1237
 {
 	m_network_client->initiate_respawn_current_player( );
 }
 
 bool game::is_loading( ) const
-#line 1250
 {
 	return m_game_world.is_loading( );
 }
@@ -1105,19 +1042,16 @@ scaleform_movie_cook::scaleform_movie_cook( flash_factory& factory )
 :
 	resources::translate_query_cook( resources::flash_movie_class, reuse_false, use_current_thread_id ),
 	m_factory( factory )
-#line 1260
 {
 	resources::register_cook		( this );
 }
 
 void scaleform_movie_cook::translate_query( resources::query_result_for_cook& parent )
-#line 1265
 {
 	resources::query_resources		( &resources::create_request( parent.get_requested_path( ), resources::raw_data_class ), 1, boost::bind( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ), g_allocator, NULL, &parent );
 }
 
 void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
-#line 1277
 {
 	m_factory.destroy_movie			( static_cast< flash_movie_resource* >( resource )->movie );
 
@@ -1125,7 +1059,6 @@ void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
 }
 
 void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
-#line 1284
 {
 	resources::managed_resource_ptr raw_data	= data[0].get_managed_resource( );
 	resources::pinned_ptr_const< u8 > pinned	( raw_data );
@@ -1139,25 +1072,21 @@ void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, 
 }
 
 void game::activate_main_menu( )
-#line 1298
 {
 	m_active_scene->show_ui			( false );
 	m_game_options.activate			( m_active_scene );
 }
 
 void game::deactivate_main_menu( )
-#line 1304
 {
 	m_game_options.deactivate		( );
 	m_active_scene->show_ui			( true );
 }
 
 void game::discard_current_match( )
-#line 1310
 {
 	m_network_client->close_current_match( true );
 }
 
 
 } // namespace survarium
-#line 0

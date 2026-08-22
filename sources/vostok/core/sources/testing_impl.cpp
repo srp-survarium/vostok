@@ -97,7 +97,6 @@ void   test_watcher_thread_proc ()
 		if ( !in_test && !s_environment.is_testing && s_environment.current_test_number == current_test_number )
 		{
 			if ( !debug::is_debugger_present() )
-#line 122
 				LOGI_ERROR							("test", "%.4f sec. passed and still next test is not executed", max_time_allowed_to_start_test / 1000.f);
 		}
 		else if ( in_test && s_environment.is_testing && s_environment.current_test_number == current_test_number )
@@ -214,7 +213,6 @@ void   on_exception (assert_enum			assert_type,
 		description_string			+=	'\n';
 	}
 
-#line 251
 	LOGIFD_FORCED("test", logging::error, &core::g_log_format, NULL, "-------------------------------------------------------------\nEXCEPTION #%d in test '%s', suite '%s'\n-------------------------------------------------------------\n%s", s_environment.exception_index+1, s_environment.current_test, s_environment.current_suite, description_string.c_str());
 
 	debug::dump_call_stack("test", true, is_assertion ? 3 : 0,
@@ -293,7 +291,6 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 		result_string.appendf			("TEST SUITE '%s' : successfull %d tests", suite_name, num_tests);
 	}
 
-#line 339
 	LOGIFD_FORCED("test", message_type, logging::format_message, NULL, "------------------------------------------------------------------------------\n%s (%d ms)\n------------------------------------------------------------------------------", result_string.c_str(), timer.get_elapsed_msec());
 	s_environment.num_failed_tests	+=	num_failed_tests;
 	threading::interlocked_increment	(s_environment.num_suites_executed);

@@ -29,7 +29,6 @@ scene_manager::scene_manager( )
 scene_manager::~scene_manager( )
 {
 	// Preserve target line metadata.
-#line 23
 	vector< scene* >::iterator	it_c = m_scenes.begin(),
 								en_c = m_scenes.end();
 

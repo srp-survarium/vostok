@@ -98,7 +98,6 @@ void execute(pcstr command_to_execute, execution_filter const filter)
 	if(!command)
 	{
 		if ( filter != execution_filter_early )
-#line 113
 			LOG_WARNING("unknown command [%s]", cmd);
 		return;
 	}
@@ -110,7 +109,6 @@ void execute(pcstr command_to_execute, execution_filter const filter)
 	{
 		console_command::status_str	buff;
 		command->status				( buff );
-#line 124
 		LOG_INFO					( buff );
 	}else
 		command->execute	(args);
@@ -123,7 +121,6 @@ void show_help(pcstr str)
 		console_command* command	= find(str);
 		if(!command)
 		{
-#line 137
 			LOG_ERROR	("unknown command [%s]", str);
 			return;
 		}else

@@ -24,7 +24,6 @@ m_is_registered	( false )
 	desc.MiscFlags		= 0;
 
 	// Preserve target line metadata.
-#line 40
 	HRESULT res = device::ref().d3d_device()->CreateBuffer( &desc, 0, &m_hardware_buffer);
 	CHECK_RESULT(res);
 	ASSERT( m_hardware_buffer);
@@ -35,13 +34,11 @@ m_is_registered	( false )
 	memset( m_buffer_data, 0, m_buffer_size);
 }
 
-#line 57
 shader_constant_buffer::~shader_constant_buffer()
 {
 	safe_release( m_hardware_buffer); FREE( m_buffer_data);
 }
 
-#line 67
 void shader_constant_buffer::update()
 {
 	if ( m_changed)

@@ -71,7 +71,6 @@ void   game_resources_manager::on_node_unmount (vfs::vfs_iterator & it)
 		unmanaged_resource ? (resources::resource_base *)unmanaged_resource.c_ptr() : managed_resource.c_ptr();
 
 	if ( base_resource )
-#line 79
 		LOG_ERROR							("resource %s is still associated with fat-node %s! Call Lain", base_resource->log_string().c_str(), it.get_virtual_path().c_str());
 }
 
@@ -214,7 +213,6 @@ void   game_resources_manager::dispatch_resources_to_release ()
 			continue;
 		}
 
-#line 221
 		LOG_INFO							("releasing resource from game resources manager: %s", resources::log_string(it_resource).c_str());
 		release_resource					(it_resource);
 		it_resource						=	next;

@@ -92,7 +92,6 @@ void finalize_speedtree( )
 void print_speedtree_errors( )
 {
 	// Preserve target line metadata.
-#line 105
 	const char* pError = SpeedTree::CCore::GetError( );
 	while ( pError )
 	{

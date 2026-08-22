@@ -74,7 +74,6 @@ struct helper {
 
 		using namespace vostok;
 
-#line 78
 		logging::helper	( __FILE__, __FUNCSIG__, __LINE__, m_initiator.c_str(), m_verbosity )
 						( logging::settings(0, logging::settings::flags_log_only_user_string), "%s", string.c_str() );
 				
