@@ -23,6 +23,8 @@
 #include "game_world.h"
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
+#include <vostok/animation/mixing_animation_lexeme.h>			// dead-state selected_animations
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 // TU-local console-command statics (file scope, no namespace prefix in the PDB).
 // finger_corrector_enable gates weapon::process_finger_correction.
@@ -206,25 +208,36 @@ float freeze_at_end_time_calculator(
 	return animation_time_before_time_scale_starts + ( target_time_in_ms - time_scale_start_time_in_ms ) * time_scale * math::epsilon_3;
 }
 
-// STATE[STUB]
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > weapon_user_dead_state::selected_animations(
 	mutable_buffer&							buffer,
 	weapon_animation_parameters const&		weapon_parameters,
 	const bool								is_third_view
 ) const
 {
-	// claude@NOTE: STUB - parked (large reconstruction ~0x1c7 bytes, 1 named local death_lexeme).
-	// Inlines weapon_animation_parameters from the params, an LCG random (imul 8088405h) picks the death
-	// animation index from m_first/third_view_death_animations_count, binds freeze_at_end_time_calculator
-	// via FastDelegate6, calls animation_lexeme_parameters::animation_intervals_count +
-	// create_animation_intervals, constructs a binary_tree_animation_node, cloned_in_buffer, an
-	// intrusive_ptr cleanup loop, then animation_lexeme + expression<animation_lexeme> + make_pair.
-	// The create_animation_interval wall is RESOLVED (now in mixing_animation_lexeme_parameters.h) and all
-	// 9 callees exist - this is now a pure multi-statement reconstruction, NOT a symbol wall.
-	// VOSTOK_UNREACHABLE_CODE is the buildability device (pair element types have no default ctor -
-	// empty_hands precedent). NEXT: recover group-by-group (mirror a *_state selected_animations); too
-	// large for this batch.
-	VOSTOK_UNREACHABLE_CODE( );
+	VOSTOK_UNREFERENCED_PARAMETER( weapon_parameters );
+
+	// first-view animations lead the trailing array, third-view ones follow
+	u32 const death_animation_index =
+		is_third_view
+			? m_weapon.first_view_death_animations_count( ) + m_random.random( m_weapon.third_view_death_animations_count( ) )
+			: m_random.random( m_weapon.first_view_death_animations_count( ) );
+
+	animation::mixing::animation_lexeme	death_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			0,
+			m_weapon.death_animations( )[ death_animation_index ],
+			0,
+			0
+		)
+		.time_calculator		( &freeze_at_end_time_calculator )
+		.animated_object		( m_user )
+	);
+
+	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
+		death_lexeme,
+		death_lexeme
+	);
 }
 
 bool weapon_user_dead_state::is_ready_for_transition( ) const

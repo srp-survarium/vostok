@@ -60,6 +60,8 @@ public:
 	inline	u32					first_view_death_animations_count	( ) const { return m_first_view_death_animations_count; }
 	inline	u32					third_view_death_animations_count	( ) const { return m_third_view_death_animations_count; }
 	inline	u32					preview_animations_count			( ) const { return m_preview_animations_count; }
+	// the death animations live in the trailing region of the weapon's combined malloc
+	inline	resources::managed_resource_ptr const*	death_animations( ) const { return ( resources::managed_resource_ptr const* )( this + 1 ); }
 
 	// the methods below mangle private (AAE / EAE) in the shipped PDB - declaring
 	// them private keeps each out-of-line symbol pairable with the target
