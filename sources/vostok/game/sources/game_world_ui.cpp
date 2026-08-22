@@ -104,10 +104,10 @@ void game_world_ui::initialize( match_options& options )
 		flash_value player_item_property;
 		get_ui( )->movie->CreateObject( &player_item_property );
 
-		player_item_property.SetUInt( in_array_index );
+		player_item_property.SetInt( in_array_index );
 		player_item.SetMember( "id", player_item_property );
 
-		player_item_property.SetUInt( options.player_profiles[i].team != local_player_team ? 2 : 1 );
+		player_item_property.SetInt( options.player_profiles[i].team != local_player_team ? 2 : 1 );
 		player_item.SetMember( "team", player_item_property );
 
 		wchar_t profile_name_w[32];
@@ -115,13 +115,13 @@ void game_world_ui::initialize( match_options& options )
 		player_item_property.SetStringW( profile_name_w );
 		player_item.SetMember( "name", player_item_property );
 
-		player_item_property.SetUInt( 66 );
+		player_item_property.SetInt( 66 );
 		player_item.SetMember( "ping", player_item_property );
 
-		player_item_property.SetUInt( 0 );
+		player_item_property.SetInt( 0 );
 		player_item.SetMember( "rank", player_item_property );
 
-		player_item_property.SetUInt( 0 );
+		player_item_property.SetInt( 0 );
 		player_item.SetMember( "artifacts", player_item_property );
 
 		players_array.SetElement( in_array_index, player_item );
