@@ -76,13 +76,10 @@ public:
 
 public:
 	inline			animations_search_service	( ) :
-		// buildability placeholders - the members' non-default ctors force the
-		// init-list; the real allocator/counts live at the inlined ctor call
-		// site (a matcher recovers them when the consumer TU is enabled)
-		m_vertex_allocator( *::survarium::g_allocator, 0 ),
-		m_vertex_manager( m_vertex_allocator, 0, 0 ),
-		m_priority_queue( m_vertex_manager, 0 )
-	{ /* no source */ }
+		m_vertex_allocator( *::survarium::g_allocator, 0x400 ),
+		m_vertex_manager( m_vertex_allocator, 0x1000, 0x400 ),
+		m_priority_queue( m_vertex_manager, 0x400 )
+	{ }
 
 			bool	search						(
 						animation_space_graph_ptr const&	graph,

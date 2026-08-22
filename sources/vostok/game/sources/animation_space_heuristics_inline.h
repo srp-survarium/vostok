@@ -7,13 +7,6 @@
 
 namespace survarium {
 
-// claude@NOTE: these inline COMDATs (ctor + estimate, and the related operator!= in
-// animation_space_graph.h) only emit when a_star::find<...> is instantiated, which
-// happens in animations_search_service::search. That fn is still a STUB (parked on the
-// A* graph_wrapper/vertex_manager machinery), so our base never reaches these and they
-// stay UNPAIRED despite the bodies being recovered from the target asm. They pair once
-// search() compiles - do NOT delete them.
-
 inline animation_space_heuristics::animation_space_heuristics(
 	animation_space_graph_ptr const&	graph,
 	animation_space_vertex_id const&	target_vertex_id,
@@ -21,10 +14,11 @@ inline animation_space_heuristics::animation_space_heuristics(
 ) :
 	m_graph( graph ),
 	m_target_vertex_id( target_vertex_id ),
-	m_best_vertex_id( ),
 	m_min_heuristics_value( math::infinity ),
 	m_max_speed( max_speed )
 {
+	m_best_vertex_id.rotation		= math::quaternion( float3( 0.f, 0.f, 1.f ), 0.f );
+	m_best_vertex_id.translation	= float3( 0.f, 0.f, 0.f );
 }
 
 inline float animation_space_heuristics::estimate(

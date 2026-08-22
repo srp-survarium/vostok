@@ -11,7 +11,7 @@ namespace survarium {
 
 class animation_space_heuristics : public boost::noncopyable {
 public:
-												animation_space_heuristics	(
+	__declspec( noinline )						animation_space_heuristics	(
 													animation_space_graph_ptr const&	graph,
 													animation_space_vertex_id const&	target_vertex_id,
 													const float							max_speed
@@ -25,12 +25,21 @@ public:
 													animation_space_vertex_id const* const	current_vertex_id_ptr,
 													animation_space_vertex_id const&	neighbour_vertex_id
 												) const;
+	template < typename VertexType >
+	inline	float							evaluate					(
+													VertexType const& current_vertex,
+													VertexType const& neighbour_vertex,
+													const u32 iterator
+												) const
+	{
+		return current_vertex.g( ) + m_graph->edge( iterator ).animation_length;
+	}
 
 	inline	animation_space_vertex_id const&	best_vertex_id				( ) const { /* no source */ return m_best_vertex_id; }
 
 	inline										~animation_space_heuristics	( ) { /* no source */ }
 
-	static	inline	bool						metric_euclidian			( ) { /* no source */ return false; }
+	static	inline	bool						metric_euclidian			( ) { return true; }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */
