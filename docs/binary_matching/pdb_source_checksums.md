@@ -48,3 +48,16 @@ The initial full Bullet sweep contains 221 target checksum records: 192 match
 and 29 differ.  That 29-file set is the source-recovery worklist; function
 scores on the 192 byte-certain files are compiler or link context, not evidence
 for editing those files.
+
+## Pristine Bullet baseline
+
+The development shell pins official Bullet commit
+`ce62d7615ecb1faa876d11172c418244c7246b5c`, the first upstream revision marked
+2.79.  Its `src` directory is available as `$BULLET_2_79_SOURCE` and retained by
+the `binaries/nix-store/bullet-2.79-source` indirect GC root.
+
+This is a byte-evidenced baseline, not a version-number inference.  After the
+same LF-to-CRLF conversion, the upstream `btAxisSweep3.cpp`, `btDbvt.cpp`,
+`btDbvt.h`, `btRigidBody.cpp`, and `btTransform.h` MD5s all equal their target
+PDB records.  The remaining 29 files must therefore be classified against this
+pinned tree as either pristine-source restoration or a target-specific delta.

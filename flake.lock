@@ -1,5 +1,22 @@
 {
   "nodes": {
+    "bullet-2_79-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1316129819,
+        "narHash": "sha256-sunb8YrGSvC1k1IygRqhRVtK/VALrdHgb8/kPSFXkNM=",
+        "owner": "bulletphysics",
+        "repo": "bullet3",
+        "rev": "ce62d7615ecb1faa876d11172c418244c7246b5c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bulletphysics",
+        "repo": "bullet3",
+        "rev": "ce62d7615ecb1faa876d11172c418244c7246b5c",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1779560665,
@@ -34,6 +51,7 @@
     },
     "root": {
       "inputs": {
+        "bullet-2_79-src": "bullet-2_79-src",
         "nixpkgs": "nixpkgs",
         "pdb-fetch-nvim-src": "pdb-fetch-nvim-src",
         "rust-overlay": "rust-overlay",
