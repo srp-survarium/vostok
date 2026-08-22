@@ -97,20 +97,23 @@ void human_npc_cook::on_npc_options_received(
 #line 69
 {
 	configs::binary_config_value const& attributes		= config_value["attributes"];
-
 	configs::binary_config_value* project_config		= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
 
 	human_npc* const human								= NEW( human_npc )( m_game_world );
 
+
 	pcstr brain_unit_path								= attributes["brain_unit"];
 
+
 	pcstr model_path									= ( *project_config )["model"];
+
 
 	pcstr space_graph_path								= attributes["animation_space_graph"];
 
 	ai::brain_unit_cook_params cook_brain_unit_params;
 	cook_brain_unit_params.sound_world_user				= &m_game_world.get_game().get_sound_world().get_logic_world_user();
 	cook_brain_unit_params.sound_scene					= m_game_world.get_sound_scene();
+
 	cook_brain_unit_params.npc							= human;
 
 	resources::user_data_variant brain_unit_params;
@@ -123,17 +126,19 @@ void human_npc_cook::on_npc_options_received(
 	{
 		&brain_unit_params,
 		&physics_world,
-		NULL,
-		NULL
-	};
-
-	resources::request requests[] =
-	{
-		{ brain_unit_path,											resources::brain_unit_class },
-		{ model_path,												resources::game_animated_model_instance_class },
+		NULL, NULL };
+	resources::request requests[] = { { brain_unit_path,		resources::brain_unit_class },
+		{ model_path,											resources::game_animated_model_instance_class },
 		{ "resources/animations/single/slot_1/walk/on_site_idle",	resources::animation_class },
-		{ space_graph_path,											resources::animation_space_graph_class }
-	};
+		{ space_graph_path,										resources::animation_space_graph_class } };
+
+
+
+
+
+
+
+
 
 	resources::query_resources							(
 		requests,
