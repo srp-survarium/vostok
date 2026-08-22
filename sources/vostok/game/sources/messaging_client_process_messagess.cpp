@@ -136,26 +136,30 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 			m_chat_handler.add_to_recent_list	( w_receiver_name );
 
 		char message_body[256];
-		if ( wcstombs_s( NULL, message_body, input_text, _TRUNCATE ) && wcstombs_s( NULL, message_body, input_text, _TRUNCATE ) != STRUNCATE )
+		errno_t const body_error = wcstombs_s( NULL, message_body, input_text, _TRUNCATE );
+		if ( body_error && body_error != STRUNCATE )
 			strcpy_s	( message_body, "##text conversion error##" );
 
 		char receiver_name[32];
-		if ( wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE ) && wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE ) != STRUNCATE )
+		errno_t const name_error = wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE );
+		if ( name_error && name_error != STRUNCATE )
 			strcpy_s	( message_body, "##name conversion error##" );
 
+		u32 channel_id = u32( -1 );
 		switch ( message_chanel )
 		{
 			case messaging::player_match_channel:
 			case messaging::player_team1_channel:
 			case messaging::player_team2_channel:
-				if ( m_match_channel_id_ == u32( -1 ) )
+				channel_id = m_match_channel_id_;
+				if ( channel_id == u32( -1 ) )
 					return;
 				break;
 		}
 
 		network_core::tcp_packet	packet( memory::g_mt_allocator );
 		packet.append	( ( u8 )0xC1 );
-		packet.append	( m_match_channel_id_ );
+		packet.append	( channel_id );
 		packet.append	( receiver_name );
 		packet.append	( ( u8 )message_chanel );
 		packet.append	( message_body );
