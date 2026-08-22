@@ -61,9 +61,15 @@ void animations_selector::set_animation_player_target( animation::mixing::expres
 	}
 }
 
+// retail calls the two-store buffer ctor out-of-line here (ICF ctor group)
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
+{
+	return mutable_buffer( data, size );
+}
+
 void animations_selector::reset_animation_controller( const u32 time_in_ms )
 {
-	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+	mutable_buffer buffer = make_stack_buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 	if ( m_current_controller != m_target_controller )
 	{
 		animation::mixing::expression expression;
