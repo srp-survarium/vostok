@@ -70,7 +70,7 @@ graphic_preset g_graphic_presets[ 5 ][ 10 ];
 	m_console_command = console_commands::find( console_command );
 
 	if ( m_console_command == NULL )
-		LOG_ERROR( "Console command [%s] not found for option item", console_command );
+		LOG_ERROR( "Console command [%s] not found for options_item [%d]", console_command, option_item_id );
 }
 
 // claude@NOTE: structure matches (flash_value[4] + 3 SetUInt + fill_value + Invoke).

@@ -92,7 +92,7 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 			else if ( type == 0xA )
 				lobby_client( ).read_service_prices	( reader );
 			else
-				LOG_WARNING	( "Unknown client state received [%d", type );
+				LOG_WARNING	( "Unknown client state received [%d]", type );
 
 			m_game.lobby_menu( ).on_client_status_received	( (lobby::query_info_types)type );
 		}

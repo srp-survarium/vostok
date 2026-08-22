@@ -107,7 +107,7 @@ void relocate_item_func::call( flash_function_handler_params& params )
 		dictionary_item current_item = m_game.items_dictionary( ).item_by_id( current.item_dict_id );
 
 		LOG_INFO(
-			"try move item %d from %d to %d. ",
+			"try move item %d from %d to %d. amount=%d",
 			current.item_id,
 			current.source_slot_id,
 			current.target_slot_id,

@@ -106,7 +106,7 @@ void lobby_client::on_error(
 	boost::system::error_code
 )
 {
-	LOG_ERROR	( "lobby client error. reconnecting" );
+	LOG_ERROR	( "lobby client error. reconnecting..." );
 
 	disconnect	( );
 
