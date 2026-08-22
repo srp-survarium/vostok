@@ -265,6 +265,8 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 	{
 		const u8 container_id = packet.r< u8 >( );
 
+		victory_items_container_core* container = m_game.get_game_world( ).get_project( )->get_items_container( container_id );
+
 		const u8 items_count = packet.r< u8 >( );
 		for ( u8 j = 0; j < items_count; ++j )
 		{
@@ -274,7 +276,7 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 			if ( item->is_inserted( ) )
 				item->unload( );
 
-			m_game.get_game_world( ).get_project( )->get_items_container( container_id )->put_item( item.c_ptr( ) );
+			container->put_item( item.c_ptr( ) );
 		}
 	}
 }
