@@ -53,10 +53,7 @@ class	btIDebugDraw
 
 	virtual ~btIDebugDraw() {};
 
-	// GSC addition: lets the game's drawer take over drawing an object entirely;
-	// returning true skips btCollisionWorld::debugDrawObject's default body.
-	// Shifts every later vtbl slot +4 (byte-verified: target drawTransform +0x38).
-	virtual bool	drawObject(const btTransform& /*worldTransform*/, const btCollisionShape* /*shape*/, const btVector3& /*color*/) { return false; }
+	virtual bool	debugDrawObject(const btTransform& worldTransform, const btCollisionShape* shape, const btVector3& color) = 0;
 
 	virtual void	drawLine(const btVector3& from,const btVector3& to,const btVector3& color)=0;
 		
