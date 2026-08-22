@@ -7,15 +7,12 @@
 
 #include <vostok/game_core/weapon_core_hide_state_base.h>
 
-namespace vostok { void use_game_core_pistol_weapon_core_hide_state( ); }
 
 namespace survarium {
 
 
 class pistol_weapon_core_hide_state : public weapon_core_hide_state_base {
-	// temp_include_all.cpp anchor; reaches the protected ctor / private virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_pistol_weapon_core_hide_state( );
 
 protected:
 			explicit							pistol_weapon_core_hide_state	(

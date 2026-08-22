@@ -29,10 +29,6 @@ class options_tab;
 
 // the canonical game_options_1.h variant is byte-identical - no union needed
 class game_options : public input::handler , public flash_external_handler , public boost::noncopyable {
-	// /OPT:REF anchor (anchor_game_options.cpp) needs to reference the private
-	// menu-input methods to keep their COMDATs; a friend is codegen-neutral (no
-	// layout/mangling impact). Retire with the anchor.
-	friend void use_game_options( );
 public:
 			explicit				game_options				( game& g );
 	virtual							~game_options				( );

@@ -20,10 +20,6 @@ public:
 	inline	game_material const*						first_material	( ) const { return m_first_material; }
 	inline	game_material const*						second_material	( ) const { return m_second_material; }
 	inline	resources::unmanaged_resource_ptr const&	sound			( ) const { return m_sound_emitter; }
-	// claude@NOTE: decal1/decal1_size/has_particle parked unpaired - same wall as the
-	// inventory.h accessors: target keeps LTCG custom-convention copies (this in
-	// eax, no frame), the address-taken anchor only emits standard-thiscall /Od
-	// shapes (decal1's even ICF-folds away into a single_sound.h twin).
 	__declspec(noinline)
 	inline	resources::unmanaged_resource_ptr const&	decal1			( ) const { return m_decal1; }
 	__declspec(noinline)

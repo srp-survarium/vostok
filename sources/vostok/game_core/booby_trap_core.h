@@ -23,10 +23,6 @@ namespace collision{
 }
 }
 
-// claude@NOTE: anchor in temp_include_all.cpp befriended to reach the PRIVATE
-// virtual get_speed() via a qualified devirtualized call (friend decls emit no bytes).
-namespace vostok { void use_game_core_booby_trap_core_get_speed( ); }
-
 namespace survarium {
 
 class booby_trap_core_cook;
@@ -121,7 +117,6 @@ private:
 	// is codegen-neutral (emits no bytes, not recorded in the PDB).
 	friend class booby_trap;
 	friend class booby_trap_core_cook;
-	friend void ::vostok::use_game_core_booby_trap_core_get_speed( );
 }; // class booby_trap_core
 
 STATIC_SIZE_ASSERT(booby_trap_core, 0x1B8);

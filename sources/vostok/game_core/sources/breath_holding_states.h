@@ -21,10 +21,6 @@ public:
 	virtual	void		finalize					( ) override { /* no source */ }
 
 protected:
-	// claude@NOTE: out-of-line ctor body in breath_holding_states_inline.h; the
-	// target emits it standalone (??0breath_state@@IAE@AAM@Z, 0xbb380) but the
-	// temp_include_all anchor's subclass ctors inline it, so it stays unpaired
-	// here (inline-vs-call wall - body is verified-correct via the inline def).
 			explicit	breath_state				( float& breath_holding_reserve );
 
 	/* 0x0000 */	/* ai::fsm_state */

@@ -32,13 +32,6 @@ namespace vostok {
 namespace ai {
 	class fsm;
 }
-	// claude@NOTE: temp_include_all anchor; friended below so it can call the
-	// private initialize_weapon_logic (target mangles it AAE).
-	void use_game_core_weapon_core_initialize_weapon_logic( );
-	// claude@NOTE: anchor for the private update_recoil/update_breath_vibration/
-	// get_body_part_mask_for_user (target mangles them AAE/ABE).
-	void use_game_core_weapon_core_small_setters( );
-	void use_game_core_weapon_core_ik_callbacks( );
 }
 
 namespace survarium {
@@ -347,7 +340,6 @@ private:
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
 	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
-	// in a private section. The temp_include_all anchor is a friend so it can call it.
 	// claude@NOTE: weapon_core_cook::on_weapon_states_ready calls it too (target @0x59fb16),
 	// so the cook must be a friend.
 	friend class weapon_core_cook;
@@ -364,9 +356,6 @@ private:
 													weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
 												);
 
-	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
-	friend void ::vostok::use_game_core_weapon_core_small_setters( );
-	friend void ::vostok::use_game_core_weapon_core_ik_callbacks( );
 
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:

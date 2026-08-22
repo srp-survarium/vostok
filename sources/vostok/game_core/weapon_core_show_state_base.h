@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
-namespace vostok { void use_game_core_weapon_core_show_state_base( ); }
 
 namespace survarium {
 
@@ -26,10 +25,6 @@ public:
 private:
 	// on_animation_end_impl mangles ...@@EAEXAA_N@Z -> private virtual
 	virtual	void	on_animation_end_impl		( bool& animation_player_tick_result ) override;
-
-	// temp_include_all.cpp anchor; needs to call the protected/private virtuals
-	// non-virtually to keep their out-of-line symbols. Friend decls emit no bytes.
-	friend void ::vostok::use_game_core_weapon_core_show_state_base( );
 
 private:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */

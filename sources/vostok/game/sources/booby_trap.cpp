@@ -11,12 +11,6 @@
 
 namespace survarium {
 
-// claude@NOTE: ctor/dtor pair only via the anchor's guarded construction, so objdiff
-// scores them against that instance (a stray `mov edi,[s_world]` shows up). The real
-// residual: the target inits m_models[4] with an explicit stlp __fill of a null
-// resource_ptr (the carcass's `__fill` call) plus the per-element vector-ctor loop,
-// where our base only zeroes the slots inline; and the dtor differs by a this-register
-// pick (target esi vs our edi). Both are reach/codegen artifacts, not a body divergence.
 booby_trap::booby_trap( game_world& gw ) :
 	m_game_world( gw )
 {

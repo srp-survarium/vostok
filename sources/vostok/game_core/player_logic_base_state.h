@@ -19,10 +19,6 @@ namespace network_core {
 }
 }
 
-// claude@NOTE: matching anchor in temp_include_all.cpp needs to reach the private
-// static movement_animation_index; befriend it (friend decls don't affect bytes).
-namespace vostok { void use_game_core_player_logic_base_state( ); }
-
 namespace survarium {
 
 struct base_player;
@@ -60,7 +56,7 @@ public:
 	inline	bool						is_smoothing_needed			( ) const { /* no source */ }
 	inline	bool						is_physics_transform_allowed( ) const { /* no source */ }
 
-	virtual								~player_logic_base_state	( );
+	virtual								~player_logic_base_state	( ) { }
 
 
 protected:
@@ -78,7 +74,6 @@ protected:
 
 
 private:
-	friend void ::vostok::use_game_core_player_logic_base_state( );
 
 	/* 0x0020 */	weapon_user_state_enum				m_weapon_user_state_id;
 	/* 0x0024 */	bool								m_is_weapon_weapon_visible;

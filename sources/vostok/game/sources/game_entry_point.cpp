@@ -23,13 +23,6 @@ namespace render {
 } // namespace vostok
 
 #include <vostok/game/api.h>
-// /OPT:REF reachability dispatcher: survarium::IncludeAll's ctor fans out to the
-// remaining per-module anchors, keeping
-// the whole carcass cone in the base EXE for the delinker. create_world is the real
-// engine entry point (the game_world ctor is a never-instantiated stub, so an anchor
-// there gets /OPT:REF-stripped). Replaces the old monolithic temp_include_all anchor.
-#include "../../game_core/sources/anchor.h"
-
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_input_allocator;
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_ui_allocator;
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_ai_navigation_allocator;
@@ -52,9 +45,6 @@ vostok::engine_user::world* game_module::create_world	(
 		vostok::network::world& network
 	)
 {
-	// Keeps the reconstructed carcass reachable until its real call graph owns every anchor.
-	survarium::IncludeAll	include_all_anchor;
-
 	game_core_initialize						( );
 	physics::set_memory_allocator			( &memory::g_mt_allocator );
 

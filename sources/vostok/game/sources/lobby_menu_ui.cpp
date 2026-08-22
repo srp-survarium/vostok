@@ -1763,16 +1763,4 @@ void lobby_menu::set_ping( u32 ping_val )
 	flash_value args; args.SetUInt( ping_val ); m_lobby_menu_ui->movie->Invoke( "root.set_ping", NULL, &args, 1 );
 }
 
-// /OPT:REF anchor hook for the TU-local relocate_item_func (no public header);
-// see anchor_game_lobby_ui.cpp.
-void use_game_relocate_item_func( game& g )
-{
-	static volatile bool s_run = false;
-	if( !s_run )
-		return;
-
-	relocate_item_func func( g );
-	func.call( *( flash_function_handler_params* )NULL );
-}
-
 } // namespace survarium

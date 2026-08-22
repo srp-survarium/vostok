@@ -22,7 +22,7 @@
 #include <vostok/physics/character_controller.h>
 #include <vostok/console_command.h>
 
-extern bool g_is_server;
+bool g_is_server = false;
 
 namespace vostok { namespace animation {
 math::float4x4 calculated_head_matrix( math::float4x4 const& head_matrix, math::float4x4 const& object_matrix );
@@ -833,8 +833,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 }
 
 
-// claude@NOTE: 21/21 stmts. % walled by inline-vs-call (unsubscribe sites, get_user). g_is_server
-// is a global defined in the application module (link-only def in anchor_game_core.cpp).
+// claude@NOTE: 21/21 stmts. % walled by inline-vs-call (unsubscribe sites, get_user).
 void weapon_core::deactivate( )
 {
 	if ( g_is_server )

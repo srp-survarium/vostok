@@ -39,12 +39,6 @@ namespace animation {
 }
 }
 
-namespace vostok {
-	// claude@MATCH: temp_include_all anchor, befriended so it can ODR-use the
-	// protected leaf methods (tick_active_object / on_player_death).
-	void use_game_core_base_player( );
-}
-
 namespace survarium {
 
 struct engine;
@@ -60,7 +54,6 @@ bool query_animation_playback_state( pcvoid const object, u32 const mask, animat
 // sushi@TODO: <0x122e20>|0x000:'149'
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
-	friend void ::vostok::use_game_core_base_player( );
 public:
 	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );

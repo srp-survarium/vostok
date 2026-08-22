@@ -10,13 +10,6 @@
 
 namespace survarium {
 
-// claude@NOTE: target const-folds `this` for game::register_cooks' function-local
-// static cook. The generic construction in anchor_game_victory_item.cpp keeps
-// this form generic, but retiring that anchor changes global COMDAT ownership
-// and loses exact functions outside this TU. The ctor structure is faithful;
-// keep the anchor until the real call graph preserves the complete exact set,
-// then remeasure this ctor's constant-folded form. This is an LTCG ownership
-// boundary, not a reason to manufacture a second constructor specialization.
 victory_item_cook::victory_item_cook( game_world& game_world ) :
 	m_game_world( game_world )
 {

@@ -9,7 +9,6 @@
 #include <vostok/game_core/weapon_user_state_enum.h>
 #include <vostok/game_core/weapon_lexeme_pair.h>
 
-namespace vostok { void use_game_core_pistol_weapon_core_reload_state( ); }
 
 namespace survarium {
 
@@ -48,9 +47,7 @@ private:
 	/* 0x0148 */	resources::managed_resource_ptr		m_weapon_animations[2][2][2];
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2][2];
 
-	// temp_include_all.cpp anchor; reaches the protected ctor / private new_object+virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_pistol_weapon_core_reload_state( );
 }; // class pistol_weapon_core_reload_state
 
 STATIC_SIZE_ASSERT(pistol_weapon_core_reload_state, 0x188);
