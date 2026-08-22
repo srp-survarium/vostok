@@ -348,7 +348,7 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 		lobby_client( ).query_client_status( lobby::q_player_skills );	// 8
 		break;
 	default:
-		LOG_ERROR( "Unknown (operation permitted) type %d", op_type );
+		LOG_ERROR( "Unknown (operation permitted) type received %d", op_type );
 	}
 }
 // claude@NOTE: target keeps the four identical case bodies separate; the base folds them.
