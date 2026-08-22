@@ -11,6 +11,9 @@
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/collision/api.h>
 #include <vostok/animation/animation_player.h>
+#include <vostok/physics/animated_rigid_body.h>	// new_animated_bt_hit_model
+#include <vostok/game_core/damage_model.h>
+#include <vostok/game_core/affects_applying_type_enum.h>
 
 namespace vostok {
 namespace physics {
@@ -117,7 +120,7 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	new_model_instance->m_physics_model				= static_cast_resource_ptr< physics::animated_model_instance_ptr >( data[1].get_unmanaged_resource() );
 
 	configs::binary_config_ptr collision_config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[2].get_unmanaged_resource() );
-	new_model_instance->m_damage_collision			= collision::new_animated_object(
+	new_model_instance->m_damage_collision			= physics::new_animated_bt_hit_model(
 														collision_config->get_root(),
 														new_model_instance->m_physics_model->m_skeleton,
 														resources::unmanaged_allocator()
@@ -125,14 +128,22 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	vostok::animation::animation_player* player		= VOSTOK_NEW_IMPL( resources::unmanaged_allocator(), vostok::animation::animation_player );
 	new_model_instance->m_animation_player			= player;
 
-	parent->set_unmanaged_resource					(
-		new_model_instance,
-		resources::memory_usage_type(
-			resources::nocache_memory,
-			sizeof( animated_model_instance )
-		)
+	fs_new::virtual_path_string	hit_params_path;
+	hit_params_path.assignf							( "resources/gameplay/hit_params/%s", new_model_instance->m_render_model->m_hit_params.c_str( ) );
+
+	resources::user_data_variant	user_data;
+	user_data.set									( type_apply_directly );
+	resources::user_data_variant const* user_data_ptr[]	= { &user_data };
+
+	resources::request	request						= { resources::damage_model_class, hit_params_path.c_str( ) };
+	resources::query_resources						(
+		&request,
+		1,
+		boost::bind( &animated_model_instance_cook::on_hit_params_loaded, this, _1, new_model_instance ),
+		resources::unmanaged_allocator(),
+		user_data_ptr,
+		parent
 	);
-	parent->finish_query							( result_success );
 }
 
 // claude@NOTE: DECODED (target 0x7695c0 caller / 0x769893 tail + this fn 292B).
@@ -155,6 +166,23 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 //   sizeof(animated_model_instance) /*0x120*/ ) ); parent->finish_query( result_success );
 void animated_model_instance_cook::on_hit_params_loaded( resources::queries_result& data, animated_model_instance* new_model )
 {
+	resources::query_result_for_cook* const	parent	= data.get_parent_query();
+	if ( !data.is_successful() )
+	{
+		parent->finish_query						( result_error );
+		return;
+	}
+
+	new_model->m_damage_model						= static_cast_resource_ptr< damage_model_ptr >( data[0].get_unmanaged_resource() );
+
+	parent->set_unmanaged_resource					(
+		new_model,
+		resources::memory_usage_type(
+			resources::nocache_memory,
+			sizeof( animated_model_instance )
+		)
+	);
+	parent->finish_query							( result_success );
 }
 
 void animated_model_instance_cook::delete_resource( resources::resource_base* resource )
