@@ -34571,7 +34571,7 @@ sort32a	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	1	31	f	880
 splash_screen_main	vostok/survarium/pc/sources/survarium_pc_application_win.cpp	survarium	parked	QUANTITY	96.5116	96.5116	96.5116	1	1514		5d7509518632	survarium (optimized/FPO target): structure MATCH; residual = optimizer codegen (setne on live eax), not /Od-steerable.
 storage_access_handler	vostok/debug/sources/initialize_win_xbox360.cpp	debug	done	MATCH	100	100	100	1	18		100e6395ce6a	auto: at 100% ceiling, demoted from queue
 survarium::`dynamic atexit destructor for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	blocked				0	1	17			
-survarium::`dynamic atexit destructor for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	blocked				0	0	60	f		
+survarium::`dynamic atexit destructor for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	done	MATCH	100	100	100	1	60	f	44c1beed9fae	Moved cc_cam_fov from game_camera.cpp to its target camera_director.cpp owner; both compiler thunks measure byte-exact and downstream source line numbers remain fixed.
 survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	a9f0455c7e20	
 survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	a9f0455c7e20	
 survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	a9f0455c7e20	
@@ -34607,7 +34607,7 @@ survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_c
 survarium::`dynamic atexit destructor for 'set_mouse_invert_cc''	vostok/game/sources/key_binder.cpp	game	blocked				0	1	60	f		
 survarium::`dynamic atexit destructor for 'set_mouse_sensitivity_cc''	vostok/game/sources/key_binder.cpp	game	blocked				0	1	60	f		
 survarium::`dynamic initializer for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	done	MATCH	100	100	100	1	67		4cab5f28d6b9	
-survarium::`dynamic initializer for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	blocked				0	0	99	f		
+survarium::`dynamic initializer for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	done	MATCH	100	100	100	1	99	f	279ca7aa3ff1	Moved cc_cam_fov from game_camera.cpp to its target camera_director.cpp owner; both compiler thunks measure byte-exact and downstream source line numbers remain fixed.
 survarium::`dynamic initializer for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	94	f	5a32d6779e3a	
 survarium::`dynamic initializer for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	99	f	fc8278649eb7	
 survarium::`dynamic initializer for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	99	f	e5f2beaa114e	
