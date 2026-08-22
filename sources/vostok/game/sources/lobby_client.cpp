@@ -43,7 +43,6 @@ lobby_client::lobby_client( game& g ) :
 	m_items_compatibilities_count	( 0 ),
 	m_skills_tree_config			( NULL ),
 	m_discard_playing_order_on_connected	( false )
-#line 45
 {
 	m_connection_info.session_id	= -1;
 	m_connection_info.host[ 0 ]		= 0;
@@ -58,21 +57,18 @@ lobby_client::lobby_client( game& g ) :
 }
 
 lobby_client::~lobby_client( )
-#line 61
 {
 	clear_initial_info	( );
 	clear_profile_info	( );
 }
 
 void lobby_client::clear_initial_info( )
-#line 67
 {
 	FREE	( m_profile_slot_restrictions );
 	FREE	( m_items_compatibility );
 }
 
 void lobby_client::clear_profile_info( )
-#line 73
 {
 	m_profiles_count	= 0;
 	m_inventory_item_instances.clear	( );
@@ -85,7 +81,6 @@ void lobby_client::clear_profile_info( )
 }
 
 void lobby_client::on_connected( )
-#line 90
 {
 	m_packet_client.set_on_packet_received	( boost::bind( &lobby_client::sign_in_on_packet_received, this, _1 ) );
 
@@ -100,7 +95,6 @@ void lobby_client::on_connected( )
 // (call boost::function1<void,bool>::operator bool) but inlined to neg/sbb/test in our base,
 // so target shows 4 stmts vs our 1. Systematic boost-header artifact, same in disconnect()/on_error().
 void lobby_client::on_disconnected( )
-#line 100
 {
 	m_net_client_connected	= false;
 	if ( m_on_disconnected )
@@ -111,7 +105,6 @@ void lobby_client::on_error(
 	network_core::client_error_codes_enum,
 	boost::system::error_code
 )
-#line 107
 {
 	LOG_ERROR	( "lobby client error. reconnecting" );
 
@@ -121,14 +114,12 @@ void lobby_client::on_error(
 }
 
 void lobby_client::connect( server_connection_info const& lobby_connection_info )
-#line 115
 {
 	m_connection_info	= lobby_connection_info;
 	m_packet_client.connect	( m_connection_info.host, m_connection_info.port );
 }
 
 void lobby_client::disconnect( )
-#line 123
 {
 	m_net_client_connected	= false;
 
@@ -142,7 +133,6 @@ void lobby_client::disconnect( )
 }
 
 void lobby_client::sign_in_on_packet_received( network_core::packet_reader& reader )
-#line 133
 {
 	lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );
 
@@ -169,7 +159,6 @@ void lobby_client::sign_in_on_packet_received( network_core::packet_reader& read
 }
 
 u32 lobby_client::session_id( ) const
-#line 160
 {
 	return m_connection_info.session_id;
 }
@@ -177,7 +166,6 @@ u32 lobby_client::session_id( ) const
 void lobby_client::set_status_ready_for_match(
 	const u32		profile_id
 )
-#line 165
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::set_status_ready_for_match );
@@ -186,7 +174,6 @@ void lobby_client::set_status_ready_for_match(
 }
 
 void lobby_client::query_client_status( lobby::query_info_types type )
-#line 174
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
@@ -197,7 +184,6 @@ void lobby_client::query_client_status( lobby::query_info_types type )
 void lobby_client::query_prices(
 	const u32		faction_id
 )
-#line 184
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
@@ -209,7 +195,6 @@ void lobby_client::query_prices(
 void lobby_client::query_profile_contents(
 	const u32		profile_id
 )
-#line 194
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
@@ -223,7 +208,6 @@ void lobby_client::query_profile_contents(
 // are whole-program-inlined in the target but emitted as calls in our base. Match the
 // networking implementations before chasing the remaining bytes here.
 bool lobby_client::read_status_info( network_core::packet_reader& reader )
-#line 204
 {
 	m_status	= (lobby::client_state_enum)reader.r< u8 >( );
 
@@ -249,7 +233,6 @@ bool lobby_client::read_status_info( network_core::packet_reader& reader )
 }
 
 bool lobby_client::read_enumerate_profiles_info( network_core::packet_reader& reader )
-#line 240
 {
 	m_profiles_count	= reader.r< u8 >( );
 
@@ -264,7 +247,6 @@ bool lobby_client::read_enumerate_profiles_info( network_core::packet_reader& re
 }
 
 u8 lobby_client::read_profile_content_info( network_core::packet_reader& reader )
-#line 257
 {
 	player_profile profile;
 	reader.r	( &profile, sizeof( profile ), sizeof( profile ) );
@@ -283,7 +265,6 @@ u8 lobby_client::read_profile_content_info( network_core::packet_reader& reader 
 }
 
 bool lobby_client::read_enumerate_inventory_info( network_core::packet_reader& reader )
-#line 280
 {
 	u32 const count	= reader.r< u32 >( );
 
@@ -297,13 +278,11 @@ bool lobby_client::read_enumerate_inventory_info( network_core::packet_reader& r
 faction_price const& lobby_client::price(
 	const u8	faction_id
 )
-#line 291
 {
 	return m_prices[ faction_id ];
 }
 
 u8 lobby_client::read_price_items( network_core::packet_reader& reader )
-#line 297
 {
 	u8 const faction_id	= reader.r< u8 >( );
 
@@ -321,7 +300,6 @@ u8 lobby_client::read_price_items( network_core::packet_reader& reader )
 }
 
 bool lobby_client::read_profile_slots_restrictions( network_core::packet_reader& reader )
-#line 315
 {
 	FREE	( m_profile_slot_restrictions );
 
@@ -335,7 +313,6 @@ bool lobby_client::read_profile_slots_restrictions( network_core::packet_reader&
 }
 
 bool lobby_client::read_items_compatibility( network_core::packet_reader& reader )
-#line 329
 {
 	FREE	( m_items_compatibility );
 
@@ -349,7 +326,6 @@ bool lobby_client::read_items_compatibility( network_core::packet_reader& reader
 }
 
 bool lobby_client::read_player_skills( network_core::packet_reader& reader )
-#line 344
 {
 	FREE	( m_player_skills );
 
@@ -373,7 +349,6 @@ bool lobby_client::read_player_skills( network_core::packet_reader& reader )
 }
 
 bool lobby_client::read_player_skills_tree( network_core::packet_reader& reader )
-#line 372
 {
 	m_skills_tree_config = configs::create_binary_config(
 		mutable_buffer( reader.pointer(), reader.size_to_eof() ),
@@ -383,7 +358,6 @@ bool lobby_client::read_player_skills_tree( network_core::packet_reader& reader 
 }
 
 lobby::client_state_enum lobby_client::status( fixed_string< 128 >& dest ) const
-#line 378
 {
 	switch ( m_status )
 	{
@@ -405,7 +379,6 @@ lobby::client_state_enum lobby_client::status( fixed_string< 128 >& dest ) const
 }
 
 bool lobby_client::can_move_item( const u32 item_category_id, const u32 target_slot_id )
-#line 405
 {
 	if ( target_slot_id == 100 )
 		return true;
@@ -420,7 +393,6 @@ bool lobby_client::can_move_item( const u32 item_category_id, const u32 target_s
 }
 
 void lobby_client::move_item( vector< relocate_item_descr >& items )
-#line 419
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::inventory_action );
@@ -439,7 +411,6 @@ void lobby_client::buy_item(
 	const u8		faction_id,
 	const bool		use_premium_money
 )
-#line 434
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::shop_action );
@@ -452,7 +423,6 @@ void lobby_client::buy_item(
 }
 
 void lobby_client::set_player_skills( vectora< survarium::player_skill >& skills, vectora< u8 >& perks )
-#line 447
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::skills_tree_action );
@@ -470,7 +440,6 @@ void lobby_client::set_player_skills( vectora< survarium::player_skill >& skills
 }
 
 void lobby_client::reroll_player_skills( )
-#line 465
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::skills_tree_action );
@@ -479,7 +448,6 @@ void lobby_client::reroll_player_skills( )
 }
 
 bool lobby_client::check_compatibility( const u32 first_item_id, const u32 second_item_id )
-#line 474
 {
 	for ( u32 i = 0; i < m_items_compatibilities_count; ++i )
 	{
@@ -492,7 +460,6 @@ bool lobby_client::check_compatibility( const u32 first_item_id, const u32 secon
 }
 
 bool lobby_client::read_account_money( network_core::packet_reader& reader )
-#line 487
 {
 	m_account_money.generic_money	= reader.r< u32 >( );
 	m_account_money.premium_money	= reader.r< u32 >( );
@@ -502,7 +469,6 @@ bool lobby_client::read_account_money( network_core::packet_reader& reader )
 }
 
 bool lobby_client::read_service_prices( network_core::packet_reader& reader )
-#line 496
 {
 	m_service_prices.reroll_cost		= reader.r< u32 >( );
 	m_service_prices.add_profile_cost	= reader.r< u32 >( );
@@ -511,7 +477,6 @@ bool lobby_client::read_service_prices( network_core::packet_reader& reader )
 }
 
 bool lobby_client::read_player_reputations( network_core::packet_reader& reader )
-#line 502
 {
 	FREE	( m_player_reputations );
 
@@ -525,13 +490,11 @@ bool lobby_client::read_player_reputations( network_core::packet_reader& reader 
 }
 
 void lobby_client::discard_playing_order_on_connected( )
-#line 527
 {
 	m_discard_playing_order_on_connected	= true;
 }
 
 void lobby_client::discard_playing_order( )
-#line 532
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::discard_playing_order );
@@ -540,7 +503,6 @@ void lobby_client::discard_playing_order( )
 }
 
 void lobby_client::ping_server( )
-#line 541
 {
 	if ( !m_net_client_connected )
 		return;
@@ -552,7 +514,6 @@ void lobby_client::ping_server( )
 }
 
 bool lobby_client::read_ping_server_answer( network_core::packet_reader& reader )
-#line 552
 {
 	u32 const sent_time	= reader.r< u32 >( );
 	float const ping	= ( m_game.game_time_ms( ) - sent_time ) * 0.5f;

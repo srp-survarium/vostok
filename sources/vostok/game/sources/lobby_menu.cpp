@@ -39,7 +39,6 @@ namespace survarium {
 	, m_last_queries_count				( 0 )
 	, m_in_destroying					( false )
 	, m_match_stats						( )
-#line 33
 {
 	m_camera = NEW( lobby_camera )( *this );
 	get_camera_director( ).switch_to_camera( m_camera, "lobby camera" );
@@ -48,7 +47,6 @@ namespace survarium {
 }
 
  lobby_menu::~lobby_menu( )
-#line 51
 {
 	if ( m_update_status_handler.m_active )
 		scheduler( ).unregister( &m_update_status_handler );
@@ -65,7 +63,6 @@ namespace survarium {
 }
 
 void lobby_menu::on_activate( )
-#line 68
 {
 	base_game_scene::on_activate( );
 	get_game( ).input_world( ).add_handler( *this );
@@ -82,7 +79,6 @@ void lobby_menu::on_activate( )
 
 
 void lobby_menu::on_deactivate( )
-#line 83
 {
 	base_game_scene::on_deactivate( );
 	get_game( ).input_world( ).remove_handler( *this );
@@ -94,7 +90,6 @@ void lobby_menu::on_deactivate( )
 }
 
 void lobby_menu::on_disconnected_from_lobby( )
-#line 96
 {
 	if ( m_is_connected_to_lobby )
 	{
@@ -104,7 +99,6 @@ void lobby_menu::on_disconnected_from_lobby( )
 }
 
 void lobby_menu::on_connected_to_lobby( )
-#line 105
 {
 	query_lobby_info( );
 	if ( !m_is_connected_to_lobby )
@@ -115,7 +109,6 @@ void lobby_menu::on_connected_to_lobby( )
 }
 // claude@NOTE: source structure matches; target LTCG uses a different frame and register arguments.
 void lobby_menu::show_ui( bool b_show )
-#line 116
 {
 	if ( m_is_ui_shown != b_show )
 	{
@@ -143,7 +136,6 @@ void lobby_menu::tick(
 	const u32		current_time_in_ms,
 	const bool		is_game_paused
 )
-#line 138
 {
 	base_game_scene::tick( frame_delta_in_ms, current_time_in_ms, is_game_paused );
 
@@ -162,7 +154,6 @@ void lobby_menu::tick(
 }
 
 void lobby_menu::query_lobby_info( )
-#line 157
 {
 	if ( !m_ui_static_info_initialized ) {
 		lobby_client( ).query_client_status( lobby::q_profile_slots_restrictions );	// 4
@@ -181,7 +172,6 @@ void lobby_menu::query_lobby_info( )
 	lobby_client( ).query_client_status( lobby::q_client_state );	// 0
 }
 void lobby_menu::query_account_data( )
-#line 176
 {
 	lobby_client( ).query_client_status( lobby::q_enumerate_inventory );	// 3
 	lobby_client( ).query_client_status( lobby::q_account_money );		// 7
@@ -190,7 +180,6 @@ void lobby_menu::query_account_data( )
 }
 
 void lobby_menu::switch_to_level_loading( )
-#line 184
 {
 	get_game( ).lobby_menu( ).show_match_making( true );
 	m_match_making_ui->movie->Invoke( "root.switch_to_loading", NULL, NULL, 0 );
@@ -198,7 +187,6 @@ void lobby_menu::switch_to_level_loading( )
 
 // claude@NOTE: source and LOG geometry match; residual is LTCG register arguments/inlining.
 void lobby_menu::on_client_status_received( lobby::query_info_types type )
-#line 190
 {
 	switch ( type )
 	{
@@ -313,7 +301,6 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 void lobby_menu::on_friendship_status_recivied(
 	const messaging::friendship_actions_enum	type
 )
-#line 302
 {
 	switch ( type )
 	{
@@ -339,7 +326,6 @@ void lobby_menu::on_friendship_status_recivied(
 }
 // claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
 void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enum op_type )
-#line 329
 {
 	switch ( op_type )
 	{
@@ -367,7 +353,6 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 }
 // claude@NOTE: target keeps the four identical case bodies separate; the base folds them.
 void lobby_menu::on_operation_denied_received( lobby_client_message_types_enum op_type, pcstr description )
-#line 356
 {
 	switch ( op_type )
 	{
@@ -413,7 +398,6 @@ void lobby_menu::on_operation_denied_received( lobby_client_message_types_enum o
 }
 
 void lobby_menu::request_status_from_server( u32 delay_ms )
-#line 401
 {
 	if ( m_in_destroying )
 		return;
@@ -433,7 +417,6 @@ void lobby_menu::request_status_from_server( u32 delay_ms )
 }
 
 void lobby_menu::request_status_from_server_impl( const u32 frame_delta_ms, const u32 current_time_ms )
-#line 420
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );
 
@@ -443,7 +426,6 @@ void lobby_menu::request_status_from_server_impl( const u32 frame_delta_ms, cons
 }
 
 void lobby_menu::request_friends_status_from_server( u32 delay_ms )
-#line 429
 {
 	if ( m_in_destroying )
 		return;
@@ -457,7 +439,6 @@ void lobby_menu::request_friends_status_from_server( u32 delay_ms )
 }
 
 void lobby_menu::request_friends_status_from_server_impl( const u32 frame_delta_ms, const u32 current_time_ms )
-#line 442
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );
 	scheduler( ).unregister( &m_update_friends_status_handler );

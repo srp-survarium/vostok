@@ -31,7 +31,6 @@ static void process										( u32 const index, u32 const count, pcstr *strings 
 
 	*k								= 0;
 
-#line 36
 	FATAL							( "buffer overflow: cannot concatenate strings(%d):\r\n%s", index, temp	);
 }
 

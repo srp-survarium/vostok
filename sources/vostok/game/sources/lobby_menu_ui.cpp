@@ -68,12 +68,10 @@ static float const	clear_value		= 1.0f;
 
 relocate_item_func::relocate_item_func( game& g )
 	: m_game( g )
-#line 31
 {
 }
 
 void relocate_item_func::call( flash_function_handler_params& params )
-#line 34
 {
 	LOG_INFO( "TRY RELOCATE(FLASH)!!!" );
 
@@ -154,7 +152,6 @@ void lobby_menu_external_handler::callback(
 	flash_value const*		args,
 	u32						argCount
 )
-#line 148
 {
 	if ( strings::equal( methodName, "leave_queue" ) )
 	{
@@ -292,7 +289,6 @@ void lobby_menu_external_handler::callback(
 // the base wrappers call operator= and are then inlined here. Reopen only with the
 // exact Scaleform 4.2.21 inline-header/compiler partition.
 void lobby_menu::show_match_making( bool b_show )
-#line 321
 {
 	if ( m_is_in_match_making != b_show )
 	{
@@ -366,7 +362,6 @@ void lobby_menu::show_match_making( bool b_show )
 // guess (16 wide chars => the 4x movq + word copy the target emits); content is loaded
 // from rdata and does not affect this function's bytes, but the exact key is unverified.
 void lobby_menu::update_level_loading_progress( )
-#line 378
 {
 	char buff[64];
 	vostok::sprintf						( buff, "(%d)", resources::pending_queries_count( ) );
@@ -402,14 +397,12 @@ void lobby_menu::update_level_loading_progress( )
 }
 
 void lobby_menu::on_ui_destroy( )
-#line 414
 {
 	DELETE	( m_lobby_menu_external_handler );
 	DELETE	( m_relocate_item_func );
 }
 
 void lobby_menu::update_ui( const u32 frame_delta_in_ms, const u32 current_time_in_ms )
-#line 421
 {
 	if ( get_game( ).get_game_world( ).is_loading( ) )
 		update_level_loading_progress( );
@@ -443,7 +436,6 @@ void lobby_menu::update_ui( const u32 frame_delta_in_ms, const u32 current_time_
 // 0x28) have no accessor. Recover when network::login_client is matched. Also
 // byte-capped by the scaleform flash stubs.
 void lobby_menu::update_status( )
-#line 445
 {
 	flash_value b_val;
 
@@ -509,7 +501,6 @@ void lobby_menu::update_status( )
 // surfaces.
 // STATE[STUB]
 void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
-#line 484
 {
 	// LOCALS
 	// flash_value 						func
@@ -708,7 +699,6 @@ static ui_label lobby_labels_data[0x49] =
 ui_label* lobby_labels = lobby_labels_data;
 
 void lobby_menu::fill_inventory_labels( )
-#line 674
 {
 	flash_value labels;
 	m_lobby_menu_ui->movie->CreateObject( &labels );
@@ -734,7 +724,6 @@ void lobby_menu::fill_inventory_labels( )
 // items_dictionary exposes dict_config + dictionary_item.
 // STATE[STUB]
 void lobby_menu::fill_items_dictionary( )
-#line 698
 {
 	// LOCALS
 	// map< u32, dictionary_item, std::less< u32 > > const& itm_dict
@@ -915,7 +904,6 @@ void lobby_menu::fill_items_dictionary( )
 }
 
 void lobby_menu::fill_inventory_contents( )
-#line 846
 {
 	inventory_item_instance const* it	= lobby_client( ).inventory_item_instances( ).begin( );
 	inventory_item_instance const* it_e	= lobby_client( ).inventory_item_instances( ).end( );
@@ -950,7 +938,6 @@ void lobby_menu::fill_inventory_contents( )
 }
 
 void lobby_menu::on_items_compatibility_arrived( )
-#line 889
 {
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
@@ -974,7 +961,6 @@ void lobby_menu::on_items_compatibility_arrived( )
 }
 
 void lobby_menu::on_slot_restrictions_arrived( )
-#line 919
 {
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
@@ -998,7 +984,6 @@ void lobby_menu::on_slot_restrictions_arrived( )
 }
 
 void lobby_menu::fill_profiles( )
-#line 949
 {
 	flash_value profiles_array;
 	m_lobby_menu_ui->movie->CreateArray	( &profiles_array );
@@ -1031,7 +1016,6 @@ void lobby_menu::fill_profiles( )
 // here. Also scaleform flash /Od inline wall. Recover in the player-parameters cooker phase.
 // STATE[STUB]
 void lobby_menu::on_profile_changed( u8 profile_id )
-#line 981
 {
 	// LOCALS
 	// flash_value 						profile_descriptor
@@ -1144,14 +1128,12 @@ void lobby_menu::on_profile_changed( u8 profile_id )
 // is 8 bytes) - recover its name + accessors in the player-parameters cooker phase,
 // then this fills in. Also byte-capped by the scaleform flash stubs.
 void lobby_menu::player_parameters_ready( resources::queries_result& data, player_parameters_cooker_data* cook_data )
-#line 1064
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( data );
 	VOSTOK_UNREFERENCED_PARAMETER	( cook_data );
 }
 
 void lobby_menu::on_profile_arrived( u8 profile_id )
-#line 1082
 {
 	if ( m_selected_profile == profile_id )
 	{
@@ -1167,7 +1149,6 @@ void lobby_menu::on_profile_arrived( u8 profile_id )
 // Recover once items_dictionary exposes dict_config.
 // STATE[STUB]
 void lobby_menu::on_price_items_arrived( u8 trader_id )
-#line 1092
 {
 	// LOCALS
 	// configs::binary_config_value const& faction_levels
@@ -1247,7 +1228,6 @@ void lobby_menu::on_price_items_arrived( u8 trader_id )
 }
 
 void lobby_menu::reset_account_money( )
-#line 1151
 {
 	flash_value account_info;
 	m_lobby_menu_ui->movie->CreateObject( &account_info );
@@ -1269,7 +1249,6 @@ void lobby_menu::reset_account_money( )
 }
 
 void lobby_menu::on_shop_ui_ready( )
-#line 1174
 {
 	for ( u32 trader_id = 1; trader_id <= 3; ++trader_id )
 		lobby_client( ).query_prices( trader_id );
@@ -1281,7 +1260,6 @@ void lobby_menu::on_shop_ui_ready( )
 // scaleform flash /Od inline wall. Recover once items_dictionary exposes dict_config.
 // STATE[STUB]
 void lobby_menu::fill_skills_tree( )
-#line 1183
 {
 	// LOCALS
 	// configs::binary_config_value const& tree
@@ -1487,7 +1465,6 @@ void lobby_menu::fill_skills_tree( )
 // points_unlocked, experience_current/next_level/delta) and the fill_char_info Invoke
 // are faithful.
 void lobby_menu::fill_character_data( )
-#line 1343
 {
 	flash_value player_skills_value;
 	m_lobby_menu_ui->movie->CreateObject( &player_skills_value );
@@ -1543,7 +1520,6 @@ void lobby_menu::fill_character_data( )
 }
 
 void lobby_menu::fill_service_prices( )
-#line 1407
 {
 	flash_value reroll_cost_value;
 	reroll_cost_value.SetUInt		( lobby_client( ).get_service_prices( ).reroll_cost );
@@ -1551,7 +1527,6 @@ void lobby_menu::fill_service_prices( )
 }
 
 void lobby_menu::fill_friend_list( )
-#line 1416
 {
 	vectora< account_list_item > const& players_list = messaging_client( ).get_friend_list( );
 
@@ -1585,7 +1560,6 @@ void lobby_menu::fill_friend_list( )
 }
 
 void lobby_menu::fill_ignore_list( )
-#line 1452
 {
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
@@ -1612,7 +1586,6 @@ void lobby_menu::fill_ignore_list( )
 }
 
 void lobby_menu::fill_found_players( )
-#line 1478
 {
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
@@ -1637,7 +1610,6 @@ void lobby_menu::fill_found_players( )
 }
 
 void lobby_menu::set_cursor( u8 id )
-#line 1498
 {
 	flash_value c_id;
 	c_id.SetUInt					( id );
@@ -1645,7 +1617,6 @@ void lobby_menu::set_cursor( u8 id )
 }
 
 void lobby_menu::set_fps_stats( float fps )
-#line 1505
 {
 	flash_value f_val;
 	f_val.SetUInt					( ( u16 )fps );
@@ -1653,7 +1624,6 @@ void lobby_menu::set_fps_stats( float fps )
 }
 
 bool lobby_menu::is_mouse_over_ui( )
-#line 1511
 {
 	flash_value is_mouse_over_val;
 	m_lobby_menu_ui->movie->Invoke					( "root.get_mouse_over", &is_mouse_over_val, NULL, 0 );
@@ -1670,7 +1640,6 @@ bool lobby_menu::is_mouse_over_ui( )
 // length-matched guesses (loaded from rdata; do not affect this function's bytes), exact
 // keys unverified.
 void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
-#line 1530
 {
 	wchar_t const* player_joined_message	= wcsstr( w_text, L"joined" );
 	wchar_t const* player_left_message		= wcsstr( w_text, L"joined" );
@@ -1732,7 +1701,6 @@ void lobby_menu::on_stats_message_arrived(
 	wchar_t const*						w_sender_name,
 	messaging::message_channel_enum		message_channel
 )
-#line 1609
 {
 	wchar_t const* player_id	= wcsstr( w_text, L"player_id" );
 	wchar_t const* player_exp	= wcsstr( w_text, L"player_exp" );
@@ -1780,7 +1748,6 @@ void lobby_menu::on_stats_message_arrived(
 }
 
 void lobby_menu::show_disconnected_message( bool b_show )
-#line 1681
 {
 	if ( b_show )
 	{
@@ -1813,7 +1780,6 @@ void lobby_menu::show_disconnected_message( bool b_show )
 // "root.setup_player_progress". Restore the config nav once items_dictionary exposes
 // dict_config (or lobby_menu is friended). Also byte-capped by the scaleform stubs.
 void lobby_menu::on_player_reputations_arrived( )
-#line 1703
 {
 	for ( u8 reputation_id = 0; reputation_id < lobby_client( ).get_player_reputations_count( ); ++reputation_id )
 	{
@@ -1831,7 +1797,6 @@ void lobby_menu::on_player_reputations_arrived( )
 }
 
 void lobby_menu::set_ping( u32 ping_val )
-#line 1735
 {
 	flash_value args; args.SetUInt( ping_val ); m_lobby_menu_ui->movie->Invoke( "root.set_ping", NULL, &args, 1 );
 }

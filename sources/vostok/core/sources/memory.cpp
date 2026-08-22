@@ -322,7 +322,6 @@ void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_a
 	R_ASSERT_CMP				( allocated_size, >=, crt_allocated_size + process_allocated_size );
 	u64 const vostok_used			= allocated_size - (crt_allocated_size + process_allocated_size);
 
-#line 356
 	LOGF_INFO					( logging::format_message, "---------------overall memory stats---------------" );
 	LOGF_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );

@@ -175,17 +175,14 @@ void debug_log_callback(
 									core::log_to_stderr : core::log_flags_enum(0);
 	pstr debug_log = NULL;
 	STR_JOINA( debug_log, initiator, ":" );
-#line 194
 	if ( log_only_user_string )	__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
 									logging::format_message, &log_flags,
 									debug_log, "%s", message );
-#line 197
 	else
 		__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,
 									&g_log_format, &log_flags,
 									debug_log, "%s", message );
 
-#line 203
 	if ( g_log_file )
 		g_log_file->flush( NULL );
 }
@@ -268,7 +265,6 @@ static bool initialize_console( )
 	if ( !GetConsoleWindow( ) )
 		if ( !AttachConsole( ATTACH_PARENT_PROCESS ) )
 			if ( !AllocConsole( ) ) {
-#line 301
 				LOG_WARNING( "cannot neither attach parent console, nor create new" );
 				s_console_initialized = false;
 				return false;

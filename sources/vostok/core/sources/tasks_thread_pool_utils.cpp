@@ -159,7 +159,6 @@ void   thread_pool::log_columns_header ()
 		output								+=	column_output;
 	}
 
-#line 163
 	LOGIFD_FORCED								("tasks", logging::info, logging::format_message, core::log_to_console, "%s", output.c_str());
 }
 

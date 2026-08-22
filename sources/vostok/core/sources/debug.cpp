@@ -27,7 +27,6 @@ static vostok::core::engine * s_core_engine	=	NULL;
 void boost::throw_exception			( std::exception const& exception )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( exception );
-#line 31
 	FATAL							( "boost::throw_exception: %s", exception.what() );
 }
 #endif // #ifndef VOSTOK_STATIC_LIBRARIES

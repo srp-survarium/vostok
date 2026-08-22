@@ -228,7 +228,6 @@ bool geometry_collector::write_obj_file( pcstr fn, float const scale, bool save_
 	
 	if(!device->open(&f, fn, file_mode::create_always, file_access::write, assert_on_fail_false))
 	{
-#line 233
 		LOG_INFO					("unable to open file [%s]", fn);
 		return false;
 	}

@@ -381,7 +381,6 @@ void speedtree_forest::add_instance( speedtree_instance_ptr st_instance_ptr, flo
 void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 {
 	// Preserve target line metadata.
-#line 444
 	speedtree_instance_impl*	instance_impl			= static_cast_checked<speedtree_instance_impl*>(st_instance_ptr.c_ptr());
 	speedtree_tree*				tree					= static_cast_checked<speedtree_tree*>(instance_impl->m_speedtree_tree_ptr.c_ptr());
 	SpeedTree::CTree*			base_tree				= static_cast_checked<SpeedTree::CTree*>(tree);
@@ -421,7 +420,6 @@ void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 	}
 
 	// Four additional retail source lines were preprocessed out here.
-#line 486
 	print_speedtree_errors();
 }
 

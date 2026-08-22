@@ -15,7 +15,6 @@ static pcstr converted_texture_extension			=	"dds";
 static pcstr resources_textures_converted_string	=	"resources.converted/textures/";
 static pcstr resources_textures_string				=	"resources/textures/";
 
-#line 42
 static command_line::key s_gpu_compressor( "gpu_compressor", "", "", "use gpu compressor" );
 
 texture_cook_wrapper::texture_cook_wrapper( )
@@ -69,7 +68,6 @@ void texture_cook_wrapper::on_texture_loaded( resources::queries_result& result 
 
 void texture_cook_wrapper::delete_resource( resources::resource_base* )
 {
-#line 325
 	CURE_ASSERT						(identity(false), "should not end up here! Call Lain");
 }
 

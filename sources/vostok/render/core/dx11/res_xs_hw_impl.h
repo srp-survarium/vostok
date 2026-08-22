@@ -45,14 +45,12 @@ HRESULT res_xs_hw<shader_data>::create_hw_shader( ID3D10Blob* shader_code )
 	}
 	else
 	{
-#line 96
 		LOG_ERROR( "! CreateVertexShader hr == %08x", ( int)hr);
 	}
 
 	return hr;
 }
 
-#line 106
 template < typename shader_data >
 void res_xs_hw<shader_data>::parse_resources( ID3D11ShaderReflection* shader_reflection,
 	fixed_vector<sampler_slot, 16>& samplers,

@@ -1067,7 +1067,6 @@ void scene::dump_scene_statistics( ) const
 
 		if ( model_name.length( ) > 17 )
 			model_name = model_name.substr( 17 );
-#line 1250
 		LOG_INFO( "%d: surfaces: %d, model: %s", index, ( *it )->get_surfaces_count( ), model_name.c_str( ) );
 	}
 }

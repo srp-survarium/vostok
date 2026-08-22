@@ -131,7 +131,6 @@ bool   device_manager::open_file		(fs_new::file_type * *							out_file,
 											 				 assert_on_fail_false, fs_new::notify_watcher_true, 
 											 				 fs_new::use_buffering_true);
 
-#line 135
 	LOGI_INFO								("resources:device_manager", "%s opened %s for %s", 
 											opened_file ? "successfull" : "failed",
 											native_path.c_str(),

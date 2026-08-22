@@ -17,12 +17,10 @@ namespace survarium {
  animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world ) :
 	resources::translate_query_cook( resources::animation_space_graph_class, reuse_true, use_current_thread_id ),
 	m_navigation_world( navigation_world )
-#line 20
 {
 }
 
 void animation_space_graph_cook::translate_request_path( pcstr request, fs_new::virtual_path_string& new_request ) const
-#line 24
 {
 	new_request.assignf( "resources/npc/human/animation_space_graph/%s.space_graph", request );
 }
@@ -32,7 +30,6 @@ void animation_space_graph_cook::translate_request_path( pcstr request, fs_new::
 // `request requests[1]` array inits the path early. Call shape + args match; the
 // request-build evaluation order is the byte residual.
 void animation_space_graph_cook::translate_query( resources::query_result_for_cook& parent )
-#line 29
 {
 	resources::request requests[1] = {
 		{ parent.get_requested_path(), resources::binary_config_class_impl },
@@ -49,7 +46,6 @@ void animation_space_graph_cook::translate_query( resources::query_result_for_co
 }
 
 void animation_space_graph_cook::delete_resource( resources::resource_base* resource )
-#line 41
 {
 	animation_space_graph* graph = static_cast< animation_space_graph* >( resource );
 
@@ -95,7 +91,6 @@ std::pair< u32, u32 > get_animation_mixes_count( configs::binary_config_value co
 }
 
 void animation_space_graph_cook::on_options_received( resources::queries_result& data )
-#line 106
 {
 	resources::query_result_for_cook* const	parent	= data.get_parent_query();
 	if ( data.size() != 1 )
@@ -137,7 +132,6 @@ void animation_space_graph_cook::on_options_received( resources::queries_result&
 }
 
 void animation_space_graph_cook::generate_graph_edges( animation_space_graph* graph )
-#line 163
 {
 	u32 const mixes_count = graph->get_mixes_count( );
 	buffer_vector< u32 > offsets( ALLOCA( mixes_count * sizeof( u32 ) ), mixes_count );
@@ -180,7 +174,6 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 }
 
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
-#line 210
 {
 	resources::query_result_for_cook* const parent = data.get_parent_query( );
 

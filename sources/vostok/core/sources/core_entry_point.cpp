@@ -157,7 +157,6 @@ void vostok::core::initialize			(
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
 	threading::initialize	( );
 
-#line 162
 	LOG_INFO				( "working directory: '%s'", fs_new::get_current_directory().c_str() );
 	LOG_INFO				( "resources directory: '%s'", s_engine->get_resources_path() );
 

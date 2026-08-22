@@ -230,7 +230,6 @@ bool   file_system_impl::mount_disk_node (pcstr in_logical_path, fat_node<> * * 
 	if ( out_result_node )
 		* out_result_node				=	new_node;
 
-#line 234
 	LOGI_INFO								("file_system", "mount_disk_node '%s' with size (%d)", physical_path.c_str(), file_size);
 	return									true;
 }

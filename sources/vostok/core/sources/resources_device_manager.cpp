@@ -162,7 +162,6 @@ void   device_manager::on_query_processed	(query_result * query, bool result)
 											 boost::bind(& resources_manager::dispatch_callbacks, g_resources_manager.c_ptr(), false));
 
 		R_ASSERT							(virtual_path);
-#line 169
 		LOGI_INFO							("resources", "written generated resource to file: '%s'", physical_path.c_str());
 		query->late_set_fat_it				(iterator);
 	}

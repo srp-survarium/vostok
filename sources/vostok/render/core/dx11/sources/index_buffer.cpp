@@ -54,7 +54,6 @@ index_buffer::index_buffer( u32 const size ) :
 {
 	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_index, true, false);
 	R_ASSERT		( m_buffer );
-#line 24
 	LOG_INFO		("index buffer created: %dKb", m_size/1024);
 }
 

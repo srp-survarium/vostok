@@ -25,7 +25,6 @@ struct action_logger
 	~action_logger	()	
 	{ 
 		if ( grm_test_resource ) 
-#line 29
 			LOGI_INFO	("grm", "%s for %s : %s", action_message, grm_test_resource->name(), result ? "scheduled" : "failed"); 
 	}
 	
@@ -148,7 +147,6 @@ void   resource_freeing_functionality::release_sub_fat_from_parents (vfs_sub_fat
 		if ( !try_collect_to_free_resource(it_parent->resource) )
 		{
 			resource_base * const parent	=	it_parent->resource;
-#line 155
 			LOGI_WARNING					("resources", 
 											 "LEAK: %s or one of its parents is held by user"
 											 "when its sub-fat being unmounted, leak?",

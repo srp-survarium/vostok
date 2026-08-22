@@ -27,7 +27,6 @@
 // TU-local console-command statics (file scope, no namespace prefix in the PDB).
 // finger_corrector_enable gates weapon::process_finger_correction.
 static bool s_enable_finger_corrector_value = true;
-#line 38
 static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
 
 // hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
@@ -45,7 +44,6 @@ static float s_dispersion_gui_scale_coef_value = 1.0f;
 // instant_aim_start/end (the [s_aim_transition_time] float-pool memload). sushi@TODO:
 // seed unrecoverable from asm (data section); 0.3f matches the documented aim transition.
 static float s_aim_transition_time = 0.3f;
-#line 35
 static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_magic_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_user_specific );	// sushi@TODO: name string + min/max source unverified
 
 namespace survarium {
@@ -74,7 +72,6 @@ static u32 light_ids = 1000000;
 	m_first_view_death_animations_count		( first_view_death_animations_count ),
 	m_third_view_death_animations_count		( third_view_death_animations_count ),
 	m_preview_animations_count				( preview_animations_count )
-#line 69
 {
 	m_fire_pfx_list			= NULL;
 	m_shells_pfx_list		= NULL;
@@ -125,7 +122,6 @@ static u32 light_ids = 1000000;
 }
 
  weapon::~weapon( )
-#line 103
 {
 	if ( get_game_scene( ) && get_game_scene( )->render_scene( ) )
 	{
@@ -142,13 +138,11 @@ static u32 light_ids = 1000000;
 }
 
 void weapon::set_fire_bullet_transform( float4x4 const& transform )
-#line 131
 {
 	weapon_core::set_fire_bullet_transform( m_is_third_view ? m_barrel_transform : transform );
 }
 
 void weapon::instant_aim_start( )
-#line 143
 {
 	weapon_core::instant_aim_start( );
 
@@ -161,7 +155,6 @@ void weapon::instant_aim_start( )
 }
 
 void weapon::instant_aim_end( )
-#line 156
 {
 	weapon_core::instant_aim_end( );
 
@@ -173,7 +166,6 @@ void weapon::instant_aim_end( )
 }
 
 void weapon::tick( )
-#line 169
 {
 	weapon_core::tick( );
 }
@@ -187,7 +179,6 @@ void weapon::tick( )
 // inlines it). m_transform is private to weapon_core so the assignment cannot be spelled here.
 // Inline-vs-call LTCG wall, not source-steerable.
 void weapon::set_transform( float4x4 const& transform )
-#line 186
 {
 	weapon_core::set_transform( transform );
 }
@@ -244,7 +235,6 @@ void weapon::load_weapon(
 	render::skeleton_model_ptr const&	base_model,
 	rifle_scope_ptr const&		rifle_scope
 )
-#line 265
 {
 	m_rifle_scope = rifle_scope;
 	model = base_model;
@@ -281,7 +271,6 @@ float4x4 weapon::calculate_locator(
 	float4x4 const*							matrices,
 	const u32								matrices_count
 )
-#line 289
 {
 	static float4x4 add = math::create_rotation_y( math::pi );
 
@@ -297,7 +286,6 @@ float4x4 weapon::calculate_locator(
 // can't be spelled here without pulling player.h + player_input_handler.h. The other 10 statements
 // (model add x2, the m_game_ui UI refresh block) are recovered.
 void weapon::on_show( )
-#line 301
 {
 	m_is_in_scene = true;
 	render::scene_ptr scene = get_game_scene( )->render_scene( );
@@ -321,7 +309,6 @@ void weapon::on_show( )
 }
 
 void weapon::on_hide( )
-#line 323
 {
 	m_is_in_scene = false;
 	render::scene_ptr scene = get_game_scene( )->render_scene( );
@@ -353,7 +340,6 @@ void weapon::on_hide( )
 // convention) so our base CALLs it + the resource_ptr copy-ctor. Also the set_ammo_in_magazine arg
 // is register-passed (16-bit add) target-side vs our push. Both are cross-unit LTCG walls.
 void weapon::set_ui_ammo( bool update_total_count )
-#line 346
 {
 	if ( m_game_ui && m_inventory )
 	{
@@ -380,7 +366,6 @@ void weapon::set_ui_ammo( bool update_total_count )
 // `mov eax,ecx` and the call lands in tail position (attributed to no line). Calling-convention
 // LTCG wall on the set_ui_ammo callee, not source-steerable.
 void weapon::on_reload( )
-#line 364
 {
 	set_ui_ammo( true );
 }
@@ -389,14 +374,12 @@ void weapon::on_reload( )
 // set_ammo_in_magazine with a 16-bit `add ax,[47A]` register-arg; our base does the 32-bit add +
 // push/call/ret (no tail-call). LTCG call-convention cap, not source-steerable.
 void weapon::on_chamber_a_round( )
-#line 369
 {
 	if ( m_game_ui && m_inventory )
 		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
 }
 
 void weapon::on_unload_chambered_round( )
-#line 374
 {
 	if ( m_game_ui && m_inventory )
 		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
@@ -412,21 +395,18 @@ void weapon::on_unload_chambered_round( )
 // non-trivial out-of-line Invoke wrapper in another TU; its convention is whole-program-chosen.
 // Inline/calling-convention LTCG wall, not source-steerable.
 void weapon::show_crosshair( )
-#line 379
 {
 	if ( m_game_ui )
 		m_game_ui->show_crosshair( true );
 }
 
 void weapon::hide_crosshair( )
-#line 385
 {
 	if ( m_game_ui )
 		m_game_ui->show_crosshair( false );
 }
 
 void weapon::on_before_fire( )
-#line 391
 {
 }
 
@@ -435,7 +415,6 @@ void weapon::on_before_fire( )
 // set_ammo_in_magazine LTCG register-arg / tail-jmp wall as on_chamber_a_round (16-bit
 // `add ax,[47A]` + tail-call vs our 32-bit add + push/call); not source-steerable.
 void weapon::on_after_fire( )
-#line 395
 {
 	if ( m_game_ui )
 		m_game_ui->set_ammo_in_magazine( m_ammo_in_magazine );
@@ -453,7 +432,6 @@ void weapon::on_after_fire( )
 // source local that the optimizer register-allocates into esi (its name drops in the optimized
 // game-module PDB - do not delete it). Codegen/frame difference, not source-steerable.
 void weapon::set_target( const weapon_targets new_target )
-#line 405
 {
 	weapon_targets old_target = m_target;
 
@@ -485,7 +463,6 @@ void weapon::set_target( const weapon_targets new_target )
 // (`lea ecx,[eax+4]`) early; the base lands it in ecx with a late `add ecx,4`. Same
 // non-steerable /Od arg-eval scheduling as object_particle_visual::insert (96%).
 void weapon::play_weapon_fire_pfx( )
-#line 424
 {
 	if ( m_fire_pfx_list )
 	{
@@ -497,7 +474,6 @@ void weapon::play_weapon_fire_pfx( )
 }
 
 void weapon::play_weapon_shell_pfx( )
-#line 437
 {
 	if ( m_shells_pfx_list )
 	{
@@ -513,12 +489,10 @@ void weapon::play_weapon_shell_pfx( )
 // no-ops in gold; their exact form is unrecoverable from the carcass. Empty body
 // byte-matches but is structurally short by 6 statements.
 void weapon::show_laser_pointer( )
-#line 450
 {
 }
 
 void weapon::update_pfx_transform( )
-#line 460
 {
 	if ( m_firing_light_added )
 	{
@@ -532,7 +506,6 @@ void weapon::update_pfx_transform( )
 }
 
 void weapon::set_next_fire_queue_type( )
-#line 483
 {
 	weapon_core::set_next_fire_queue_type( );
 
@@ -541,7 +514,6 @@ void weapon::set_next_fire_queue_type( )
 }
 
 void weapon::set_next_ammo_type( )
-#line 491
 {
 	weapon_core::set_next_ammo_type( );
 
@@ -550,12 +522,10 @@ void weapon::set_next_ammo_type( )
 }
 
 void weapon::on_reload_started( )
-#line 499
 {
 }
 
 void weapon::on_ammo_empty( )
-#line 503
 {
 	if ( m_game_ui )
 		m_game_ui->show_screen_message( "st_empty_ammo_message" );
@@ -576,13 +546,11 @@ void weapon::on_ammo_empty( )
 // whole body (all other 12 statements are recovered above).
 // STATE[STUB]
 void weapon::activate( base_player& user, engine& engine )
-#line 509
 {
 }
 
 // The target inlines remove_animation_callback at these call sites.
 void weapon::deactivate( )
-#line 534
 {
 	remove_animation_callback( "sound_events", get_user( ) );
 	remove_animation_callback( "shell_extraction", get_user( ) );
@@ -593,7 +561,6 @@ void weapon::deactivate( )
 }
 
 animation::callback_return_type_enum weapon::on_foot_step( animation::animation_callback_params& params )
-#line 544
 {
 	if ( params.animated_object == get_user( ) && ( params.domain_data == 5 || params.domain_data == 6 ) )
 	{
@@ -625,7 +592,6 @@ void weapon::on_skeleton_matrices_changed(
 	float4x4* const				user_matrices_end,
 	float4x4 const&				__formal
 )
-#line 570
 {
 	// reconstruction parked - see note above
 }
@@ -636,7 +602,6 @@ void weapon::on_skeleton_matrices_changed(
 // drops the whole guarded statement, leaving our base a bare `ret 8`. Recovers once that
 // process() lands a real body; do NOT collapse the guard to hold a % - structure is correct.
 void weapon::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
-#line 656
 {
 	if ( s_enable_finger_corrector_value )
 		m_fingers_corrector.process( current_time_in_ms, user_matrices );
@@ -646,7 +611,6 @@ animation::callback_return_type_enum weapon::on_hand_correction_event(
 	animation::animation_callback_params&	params,
 	const fingers_to_weapon_corrector::hands_enum	hand
 )
-#line 663
 {
 	m_fingers_corrector.activate_hand( hand, params.domain_data == 9, params.callback_time_in_ms );
 	return animation::callback_return_type_call_me_again;
@@ -657,14 +621,12 @@ animation::callback_return_type_enum weapon::on_hand_correction_event(
 // `this` in esi across the call; our LTCG build, seeing the full play_weapon_shell_pfx def,
 // emits the leaf-minimal form (no esi save). Structure is correct (2 statements).
 animation::callback_return_type_enum weapon::on_shell_extraction_event( animation::animation_callback_params& params )
-#line 672
 {
 	play_weapon_shell_pfx( );
 	return animation::callback_return_type_call_me_again;
 }
 
 void weapon::update_dispersion_visual_representation( )
-#line 683
 {
 	static console_commands::cc_bool s_hide_crosshair_on_aim_cc( "hide_crosshair_on_aim", s_hide_crosshair_on_aim_value, true, console_commands::command_type_user_specific, console_commands::execution_filter_general );
 
@@ -686,7 +648,6 @@ void weapon::update_dispersion_visual_representation( )
 // did not split (the `||` short-circuit + inlined `if` schedule as one statement regardless).
 // Pure CSE/code-motion scheduling difference, no named local on either side - not source-steerable.
 void weapon::on_user_sprint( const bool user_is_sprinting )
-#line 703
 {
 	weapon_core::on_user_sprint( user_is_sprinting );
 
@@ -695,4 +656,3 @@ void weapon::on_user_sprint( const bool user_is_sprinting )
 }
 
 } // namespace survarium
-#line 0

@@ -51,9 +51,7 @@ void skeleton_render_model::load_bones( memory::reader& bones_chunk )
 		float4x4 frm_matrix			= frame_matrix( frm );
 		float4x4& bind_matrix_inv	= m_inverted_bones_matrices_in_bind_pose[i];
 		bind_matrix_inv.try_invert	( frm_matrix );
-#line 60
 		LOG_INFO("%s %f %f %f", bone_name, frm_matrix.c.x, frm_matrix.c.y, frm_matrix.c.z);
-#line 55
 	}
 
 }

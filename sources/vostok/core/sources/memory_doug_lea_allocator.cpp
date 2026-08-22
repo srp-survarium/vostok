@@ -44,11 +44,9 @@ static char __stdcall out_of_memory_with_crash	( mspace const space, void const*
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( parameter, space, first_time );
 
-#line 49
 	LOG_ERROR					( "out of memory in arena \"%s\"", (( doug_lea_allocator* )parameter)->arena_id( ) );
 
 	vostok::memory::dump_statistics( );
-#line 54
 	FATAL						( "not enough memory for arena [%s]", (( doug_lea_allocator* )parameter)->arena_id( ) );
 	return						0;
 }
@@ -61,7 +59,6 @@ static char __stdcall out_of_memory_silent		( mspace const space, void const* co
 		return					0;
 
 	vostok::memory::dump_statistics	( );
-#line 69
 	FATAL						( "not enough memory for arena [%s]", (( doug_lea_allocator* )parameter)->arena_id( ) );
 	return						1;
 }
@@ -129,7 +126,6 @@ pvoid doug_lea_allocator::malloc_impl	( size_t const size VOSTOK_CORE_DEBUG_PARA
 	if ( !result )
 	{
 		if ( !m_return_null_after_out_of_memory )
-#line 145
 			LOG_ERROR			( "out of memory!!!! (%s)", arena_id() ? arena_id() : "" );
 	}
 	m_out_of_memory				= m_return_null_after_out_of_memory & !result;

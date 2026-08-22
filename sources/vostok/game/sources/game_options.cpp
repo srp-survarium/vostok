@@ -47,7 +47,6 @@ static graphic_preset default_graphic_preset[10];
 key_bind_descr key_bind_descriptions[33];
 
 void game_options::apply_default_graphic( )
-#line 126
 {
 	for ( u32 i = 0; i < 10; ++i )
 	{
@@ -67,7 +66,6 @@ void game_options::callback(
 	flash_value const*		args,
 	u32						argCount
 )
-#line 142
 {
 	if ( strings::equal( methodName, "menu_button" ) )
 	{
@@ -122,7 +120,6 @@ void game_options::callback(
 }
 
 void game_options::show_options( bool b_val )
-#line 212
 {
 	flash_value b_show_value;
 	b_show_value.SetBoolean( b_val );
@@ -133,19 +130,16 @@ game_options::game_options( game& g ) :
 	m_game( g ),
 	m_mouse_pos( 0, 0 ),
 	m_waiting_for_bind_action( kLASTACTION )
-#line 222
 {
 }
 
 game_options::~game_options( )
-#line 226
 {
 	for ( u32 i = 0; i < 4; ++i )
 		DELETE( m_options[i] );
 }
 
 void game_options::initialize( )
-#line 234
 {
 	for ( u32 i = 0; i < options_count; ++i )
 		m_options[i] = NEW( options_tab )( m_game, m_options_ui, options_enum( i ) );
@@ -158,7 +152,6 @@ void game_options::initialize( )
 }
 
 void game_options::on_resources_ready( resources::queries_result& data )
-#line 252
 {
 	m_options_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[0].get_unmanaged_resource( ) );
 
@@ -184,7 +177,6 @@ void game_options::on_resources_ready( resources::queries_result& data )
 }
 
 void game_options::fill_labels( )
-#line 279
 {
 	options_name_to_label names_to_label[] = {
 		{ "s_friends",					"st_options_friends"			},
@@ -236,7 +228,6 @@ void game_options::fill_labels( )
 }
 
 void game_options::fill_menu_buttons( bool in_game_world )
-#line 331
 {
 	main_menu_button_name_to_action name_to_action_in_game_world[] = {
 		{ "st_mm_button_back",			"back"			},
@@ -291,7 +282,6 @@ void game_options::fill_menu_buttons( bool in_game_world )
 }
 
 void game_options::fill_settings_data( )
-#line 386
 {
 	fixed_string< 64 >* gameplay_options_labels = NEW_ARRAY( fixed_string< 64 >, 9 );
 	gameplay_options_labels[0] = "st_invite_from_friends_option";
@@ -401,7 +391,6 @@ void game_options::fill_settings_data( )
 }
 
 void game_options::activate( base_game_scene* parent_scene )
-#line 497
 {
 	if ( m_is_active )
 		return;
@@ -417,7 +406,6 @@ void game_options::activate( base_game_scene* parent_scene )
 }
 
 void game_options::deactivate( )
-#line 512
 {
 	if ( !m_is_active )
 		return;
@@ -431,7 +419,6 @@ void game_options::deactivate( )
 }
 
 void game_options::tick( const u32 frame_delta, const u32, const bool )	// PDB: last two params __formal, genuinely unused
-#line 524
 {
 	float deltaTime = frame_delta * math::epsilon_3;
 
@@ -452,13 +439,11 @@ void game_options::tick( const u32 frame_delta, const u32, const bool )	// PDB: 
 // (dik/binder/key_name/message_txt/w_text/action_txt) match. Next: validate the vector
 // push_back inline + the two-pass message build before bodying.
 bool game_options::process_key_input( s32 dik )
-#line 532
 {
 	return false;
 }
 
 void game_options::assign_binding( game_action_id action_id, pcstr key )
-#line 600
 {
 	bool is_default = false;
 	for ( u8 i = 0; i < 33; ++i )
@@ -486,7 +471,6 @@ void game_options::assign_binding( game_action_id action_id, pcstr key )
 }
 
 void game_options::finish_binding( )
-#line 631
 {
 	m_options_ui->movie->Invoke( "root.end_keybind", NULL, NULL, 0 );
 	m_parent_scene->show_movie( m_cursor_ui );
@@ -498,7 +482,6 @@ bool game_options::on_keyboard_action(
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		action
 )
-#line 638
 {
 	if ( m_waiting_for_bind_action != kLASTACTION && action == input::kb_key_down )
 	{
@@ -516,7 +499,6 @@ bool game_options::on_gamepad_action(
 	input::gamepad_button			button,
 	input::enum_gamepad_action		action
 )
-#line 652
 {
 	return true;
 }
@@ -526,7 +508,6 @@ bool game_options::on_mouse_key_action(
 	input::mouse_button				button,
 	input::enum_mouse_key_action	action
 )
-#line 658
 {
 	if ( m_waiting_for_bind_action != kLASTACTION && action == input::ms_key_down )
 	{
@@ -563,7 +544,6 @@ bool game_options::on_mouse_move(
 	s32					y,
 	s32					z
 )
-#line 686
 {
 	if ( m_waiting_for_bind_action == kLASTACTION )
 	{
@@ -583,7 +563,6 @@ bool game_options::on_mouse_move(
 }
 
 void game_options::refill_item_data( u8 options_tab_id, u8 options_item_id )
-#line 722
 {
 	flash_value options_item_data[3];
 	options_item_data[0].SetUInt( options_tab_id );
@@ -594,7 +573,6 @@ void game_options::refill_item_data( u8 options_tab_id, u8 options_item_id )
 }
 
 void game_options::initialize_bindings( )
-#line 734
 {
 	flash_value keybinds_array;
 	m_options_ui->movie->CreateArray( &keybinds_array );
@@ -628,7 +606,6 @@ void game_options::initialize_bindings( )
 }
 
 void game_options::reset_bindings( bool is_default )
-#line 773
 {
 	for ( u32 i = 0; i < 33; ++i )
 	{
@@ -657,7 +634,6 @@ void game_options::reset_bindings( bool is_default )
 }
 
 void game_options::apply_key_bindings( )
-#line 807
 {
 	for ( u32 i = 0; i < 33; ++i )
 	{
@@ -683,7 +659,6 @@ void game_options::apply_key_bindings( )
 }
 
 void game_options::reset_bindings_to_defaults( )
-#line 836
 {
 	m_game.get_key_binder( ).set_default_controls( );
 	reset_bindings( false );

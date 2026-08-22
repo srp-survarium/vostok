@@ -111,7 +111,6 @@ managed_node *   managed_allocator::allocate (u32 const size)
 void   managed_allocator::deallocate (managed_node * node)
 {
 
-#line 116
 	CURE_ASSERT								(node->is_allocated(),
 											 return,
 											 "resources:allocator",	"bah! already deallocated node: %s", node->owner()->log_string().c_str());
@@ -211,7 +210,6 @@ managed_node*	managed_allocator::deallocate_defrag (managed_node* node)
 
 void    managed_allocator::log_defragmenter_nodes (managed_allocator_base const& alloc) const
 {
-#line 215
 	LOGI_INFO("resources:defrag",  "<%s> size: %d, allocated: %d, free: %d", 
 											&alloc == this ? "Main arena" : "Temp arena",
 											alloc.m_arena_size - (&alloc == this ? m_reserved_size : 0), 

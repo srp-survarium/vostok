@@ -440,7 +440,6 @@ void   show_help_and_exit ( )
 										 adder_predicate.longest_short_key_name +
 										 adder_predicate.longest_full_key_name + 5);
 
-#line 455
 	LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console, "               " VOSTOK_ENGINE_ID ", build %d, %s\n                  Copyright(C) Vostok Games - 2013\n      Finger print info: %s", build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
 
 	pcstr previous_category			=	"";

@@ -22,15 +22,12 @@ state_cache<device_state, state_desc>::~state_cache( )
 
 template < typename device_state, typename state_desc >
 void state_cache<device_state, state_desc>::clear_state_array( )
-#line 37
 {
 	// One retail source line emitted no code before the loop.
-#line 39
 	for ( u32 i=0; i<states.size(); ++i)
 		safe_release( states[i].state);
 	states.erase(states.begin(),states.end());
 }
-#line 43
 template <>
 void state_cache<ID3D11RasterizerState, D3D11_RASTERIZER_DESC>::create_state(
 	D3D11_RASTERIZER_DESC desc,

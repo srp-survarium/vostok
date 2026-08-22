@@ -110,7 +110,6 @@ void vostok::build::preinitialize	( pcstr const build_date )
 void vostok::build::initialize	( core::engine *  )
 {
 	u32 const id	=	calculate_build_id ( s_build_date );
-#line 114
 	LOGIFD_FORCED
 	(
 		"core",

@@ -544,9 +544,7 @@ void static_render_surface::load( configs::binary_config_value const& properties
 
 	m_render_geometry.vertex_count = reader.r_u32( );
 	if ( m_render_geometry.vertex_count > 1024 * 64 )
-#line 790
 		LOG_ERROR( "vertex buffer size > 1024 * 64!" );
-#line 548
 	u32 vStride = D3DXGetDeclVertexSize( vFormat, 0 );
 	untyped_buffer_ptr vb = resource_manager::ref( ).create_buffer(
 		m_render_geometry.vertex_count * vStride,

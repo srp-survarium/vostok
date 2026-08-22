@@ -347,7 +347,6 @@ void network_client::on_http_result_ready( pcstr content, u8 type )
 
 void network_client::on_http_error( boost::system::error_code __formal )
 {
-#line 402
 	LOG_ERROR( "http client error!" );
 }
 
