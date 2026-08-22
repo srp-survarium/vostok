@@ -103,16 +103,32 @@ void login_menu::on_resources_ready( resources::queries_result& data )
 	get_game( ).on_queried_by_network_client_scene_ready( lobby_scene_ready );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked. Flash /Od wall now LIFTED (scaleform /Ox), but this body is
-// still blocked on DATA, not glue: it loops 5x over a file-scope ui_label
-// login_labels[] array (login_labels symbol not in our tree and the per-label id/text
-// strings are not recoverable from the binary without fabrication), translate_text
-// each into label_w, builds a flash_value per label and Movie::Invoke(
-// "root.set_localization_data"). Unblock needs the login_labels string table (data
-// table, unrecoverable - same wall as lobby_labels).
+ui_label login_labels[] =
+{
+	{ "login_str", "st_login_str" },
+	{ "password_str", "st_password_str" },
+	{ "registration_str", "st_registration_str" },
+	{ "save_password_str", "st_save_password_str" },
+	{ "exit", "st_exit_from_login" },
+};
+
 void login_menu::fill_labels( )
 {
+	flash_value labels;
+	m_login_menu_ui->movie->CreateObject( &labels );
+
+	for ( u32 i = 0; i < 5; ++i )
+	{
+		wchar_t label_w[512];
+		get_game( ).text_translator( ).translate_text( login_labels[i].label, label_w );
+
+		flash_value label_translate;
+		label_translate.SetStringW( label_w );
+
+		labels.SetMember( login_labels[i].name, label_translate );
+	}
+
+	m_login_menu_ui->movie->Invoke( "root.set_localization_data", NULL, &labels, 1 );
 }
 
 } // namespace survarium
