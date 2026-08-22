@@ -1252,6 +1252,13 @@ physics::world* player::get_physics_world( )
 	return m_game_scene.get_physics_world( );
 }
 
+// gold keeps the buffer ctor out of line at the select_animations site (folds
+// with the two-store group); a TU-local noinline forwarder reproduces that
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid const data, u32 const size )
+{
+	return mutable_buffer( data, size );
+}
+
 void player::select_animations( const u32 current_time_in_ms )
 {
 	tick_active_object( );
@@ -1261,7 +1268,7 @@ void player::select_animations( const u32 current_time_in_ms )
 	const bool is_current = m_game.network_client( ).is_player_current( id );
 	const input_mode_type_enum input_mode = s_first_person_animations_only ? first_person_mode : ( is_current ? m_local_input_controller->input_mode( ) : third_person_mode );
 
-	mutable_buffer buffer( ALLOCA( 0x4000 ), 0x4000 );
+	mutable_buffer buffer = make_stack_buffer( ALLOCA( 0x4000 ), 0x4000 );
 	animation::mixing::expression expression = m_current_active_object->selected_animations( buffer, input_mode == third_person_mode );
 
 
