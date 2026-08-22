@@ -7,13 +7,17 @@
 #include "login_menu.h"
 #include "login_menu_external_handler.h"
 #include "base_network_client.h"
+#include "ui_label.h"
 
 #include <vostok/network/login_client.h>
+#include <vostok/resources_queries_result.h>
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
 #include <vostok/memory_extensions.h>
+
+#include <GFx/GFx_Player.h>
 
 namespace survarium {
 
@@ -65,14 +69,38 @@ void login_menu_external_handler::callback(
 	}
 }
 
-// STATE[STUB]
-// claude@NOTE: parked. Flash /Od wall now LIFTED (scaleform /Ox); body still empty -
-// builds the login menu UI movie + external handler from the loaded resources,
-// SetVariable population, fill_labels(), create_network_client(). Remaining blockers:
-// the resource_ptr / movie-resource construction surface and the loaded-resource
-// member layout, plus fill_labels' login_labels table (below). Recover with on_resources_ready's resource surface.
 void login_menu::on_resources_ready( resources::queries_result& data )
 {
+	m_render_scene = static_cast_resource_ptr< render::scene_ptr >( data[0].get_unmanaged_resource( ) );
+	m_render_scene_view = static_cast_resource_ptr< render::scene_view_ptr >( data[1].get_unmanaged_resource( ) );
+
+	m_login_menu_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[2].get_unmanaged_resource( ) );
+	m_login_menu_ui->movie->SetBackgroundAlpha( 0.f );
+
+	m_cursor_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[3].get_unmanaged_resource( ) );
+	m_cursor_ui->movie->SetBackgroundAlpha( 0.f );
+
+	m_login_menu_ui->movie->SetExternalInterface( NEW( login_menu_external_handler )( get_game( ), *this ) );
+
+	m_login_menu_ui->movie->SetViewAlignment( flash_movie::Align_Center );
+	m_login_menu_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+
+	m_cursor_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_cursor_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+
+	show_movie( m_login_menu_ui );
+	show_movie( m_cursor_ui );
+
+	// The target bypasses flash_movie's deliberately-NoScale wrapper here.
+	m_login_menu_ui->movie->m_movie->SetViewScaleMode( Scaleform::GFx::Movie::SM_ExactFit );
+
+	fill_labels( );
+
+	flash_value v;
+	v.SetBoolean( s_store_user_pass );
+	m_login_menu_ui->movie->SetVariable( "root.save_checkbox.selected", v );
+
+	get_game( ).on_queried_by_network_client_scene_ready( lobby_scene_ready );
 }
 
 // STATE[STUB]
