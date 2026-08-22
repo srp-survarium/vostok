@@ -48,22 +48,22 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 				if ( action == messaging::add_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
-					else					LOG_ERROR( "add_friend: operation denied" );
+					else					LOG_INFO( "add_friend: operation denied " );
 				}
 				else if ( action == messaging::remove_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
-					else					LOG_ERROR( "remove_friend: operation denied" );
+					else					LOG_INFO( "remove_friend: operation denied " );
 				}
 				else if ( action == messaging::add_ignorable )
 				{
 					if ( result == '4' )	query_for_ignore_list( );
-					else					LOG_ERROR( "add_ignorable: operation denied" );
+					else					LOG_INFO( "add_ignorable: operation denied " );
 				}
 				else
 				{
 					if ( result == '4' )	query_for_ignore_list( );
-					else					LOG_ERROR( "remove_ignorable: operation denied" );
+					else					LOG_INFO( "remove_ignorable: operation denied " );
 				}
 			}
 
@@ -72,7 +72,7 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 		}
 
 		default:
-			LOG_ERROR( "messaging_client received unknown message %d", message_type );
+			LOG_INFO( "messaging_client received unknown message:%d", message_type );
 	}
 }
 
