@@ -49,22 +49,22 @@ namespace survarium {
 	);
 }
 
+// retail calls the two-store buffer ctor out-of-line here (ICF ctor group)
+static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
+{
+	return mutable_buffer( data, size );
+}
+
 void animations_selector::set_animation_player_target( animation::mixing::expression const& target_expression, const u32 time_in_ms )
 {
 	if ( !target_expression.is_empty( ) )
 		m_animation_player.set_target_and_tick( target_expression, time_in_ms, m_owner.get_transform( ) );
 	else
 	{
-		mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+		mutable_buffer buffer = make_stack_buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 		animation::mixing::animation_lexeme lexeme( animation::mixing::animation_lexeme_parameters( buffer, "default", m_default_animation, NULL, NULL ).weight_interpolator( animation::linear_interpolator( 0.25f ) ) );
 		m_animation_player.set_target_and_tick( lexeme, time_in_ms, m_owner.get_transform( ) );
 	}
-}
-
-// retail calls the two-store buffer ctor out-of-line here (ICF ctor group)
-static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
-{
-	return mutable_buffer( data, size );
 }
 
 void animations_selector::reset_animation_controller( const u32 time_in_ms )
