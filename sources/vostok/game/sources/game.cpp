@@ -17,6 +17,7 @@
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
 #include <vostok/sound/world.h>	// m_sound_world.get_logic_world_user (pause/resume)
 #include <vostok/sound/world_user.h>	// sound time-scale accessors (pause/resume)
+#include <vostok/sound/sound_debug_stats.h>	// update_stats: s_draw_snd_stats tail
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
 #include <vostok/resources.h>	// query_resources / request (query_base_resources) + fill_stats (draw_debug_window)
 #include <vostok/text_tree.h>	// strings::text_tree (draw_debug_window)
@@ -768,23 +769,18 @@ void game::update_stats( const u32 current_frame_id )
 	else
 		m_fps_graph->set_time_interval		( 1.f );
 
-	// claude@NOTE: PARKED tail (6 stmts, target lines 845-862) - the s_draw_snd_stats
-	// sound-debug block:
-	//   if ( s_draw_snd_stats_value && m_game_world.is_active( ) ) {
-	//     if ( !m_sound_stats )
-	//       m_sound_stats = NEW( sound::sound_debug_stats )( g_allocator,
-	//         m_sound_world.get_logic_world_user( ), m_game_world.get_sound_scene( ), *m_ui_world );
-	//     if ( m_sound_stats->is_stats_available( ) ) {
-	//       sound::sound_debug_stats::set_debug_draw_mode( sound::sound_debug_stats::overall );
-	//       m_sound_stats->draw( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ) );
-	//     }
-	//   }
-	// SOUND SIDE RESOLVED: sound_debug_stats.cpp is built for Master Gold and its
-	// ctor/create_statistic/draw_overall_stats/draw calls link. The remaining
-	// blocker is s_draw_snd_stats_value: its backing cc_bool's command-name
-	// string and command_type have not been recovered from target data, so the
-	// static cannot be defined faithfully. Restore this tail together with that
-	// static once its data-section evidence is available.
+	if ( s_draw_snd_stats_value && m_game_world.is_active( ) )
+	{
+		if ( !m_sound_stats )
+			m_sound_stats = NEW( sound::sound_debug_stats )( g_allocator,
+				m_sound_world.get_logic_world_user( ), m_game_world.get_sound_scene( ), *m_ui_world );
+
+		if ( m_sound_stats->is_stats_available( ) )
+		{
+			sound::sound_debug_stats::set_debug_draw_mode( sound::sound_debug_stats::overall );
+			m_sound_stats->draw( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ) );
+		}
+	}
 }
 
 void game::clear_resources( )
