@@ -423,33 +423,26 @@ void lobby_menu::update_ui( const u32 frame_delta_in_ms, const u32 current_time_
 		m_match_making_ui->movie->Advance( deltaTime, 0 );
 }
 
-// claude@NOTE: PARKED on cross-module network::login_client accessors. Recovered body:
-// fixed_string<128> status_str; flash_value b_val; if(lobby_client().status(status_str)
-// == <not ready-for-match>) b_val.SetBoolean(true); login = login_client(); build a
-// 4-element account_info array via SetElement: [0]=login.account_name(),
-// [1]=login.<browser addr 0x134>, [2]=port (login.<u16 0x174>), [3]=buff.assignf
-// ("%s:%d", login.<server 0x28>, login.<u16 0x28+>); Invoke
-// "root.lobby_menu.set_account_info"; Invoke "root.lock_play_button" (b_val); Invoke
-// "root.set_status_info" (status_str). login_client only exposes account_name() +
-// server_browser_address() publicly - the port/server-address members (0x134/0x174/
-// 0x28) have no accessor. Recover when network::login_client is matched. Also
-// byte-capped by the scaleform flash stubs.
 void lobby_menu::update_status( )
 {
 	flash_value b_val;
 
 	fixed_string< 128 > status_str;
-	lobby_client( ).status				( status_str );
+	if ( lobby_client( ).status( status_str ) == lobby::surf_lobby_menu )
+		b_val.SetBoolean( true );
 
-	// claude@NOTE: target builds FOUR elements (0x743190): [0]=account_name,
-	// [1]=login_client string member @+0x134 (server host), [2]=UInt u16 @+0x174
-	// (port), [3]=fixed_string.assignf("%s:%d", lobby host @lobby+0x2A, u16 port
-	// @lobby+0x28). SetElement/SetString/assignf are OUT-OF-LINE calls. Map the
-	// facade accessors (login_client host()/port(), lobby_client address pair)
-	// then reconstruct.
 	flash_value account_info;
 	m_lobby_menu_ui->movie->CreateArray	( &account_info );
 	account_info.SetElement				( 0, login_client( ).account_name( ) );
+	account_info.SetElement				( 1, login_client( ).m_server_host );
+
+	flash_value port_value;
+	port_value.SetUInt					( login_client( ).m_server_port );
+	account_info.SetElement				( 2, port_value );
+
+	fixed_string< 128 > lobby_address;
+	lobby_address.assignf				( "%s:%d", lobby_client( ).connection_info( ).host, lobby_client( ).connection_info( ).port );
+	account_info.SetElement				( 3, lobby_address.c_str( ) );
 
 	m_lobby_menu_ui->movie->Invoke		( "root.lobby_menu.set_account_info", NULL, &account_info, 1 );
 	m_lobby_menu_ui->movie->Invoke		( "root.lock_play_button", NULL, &b_val, 1 );
@@ -457,46 +450,6 @@ void lobby_menu::update_status( )
 	flash_value log_message;
 	log_message.SetString				( status_str.c_str( ) );
 	m_lobby_menu_ui->movie->Invoke		( "root.set_status_info", NULL, &log_message, 1 );
-
-	return;
-
-	// FUNCTION BODY[0x743190]: 35
-	// <0x7431a0>|0x010|+0x010:'446'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7431b0>|0x020|+0x051:'451'
-	// <0x743201>|0x071|+0x004:'452'
-	// <0>
-	// <1>
-	// <2>
-	// <0x743205>|0x075|+0x02e:'456'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x743233>|0x0a3|+0x013:'461'
-	// <0x743246>|0x0b6|+0x015:'462'
-	// <0>
-	// <1>
-	// <0x74325b>|0x0cb|+0x023:'465'
-	// <0x74327e>|0x0ee|+0x013:'466'
-	// <0x743291>|0x101|+0x011:'467'
-	// <0>
-	// <1>
-	// <0x7432a2>|0x112|+0x032:'470'
-	// <0x7432d4>|0x144|+0x01d:'471'
-	// <0x7432f1>|0x161|+0x018:'472'
-	// <0x743309>|0x179|+0x015:'473'
-	// <0>
-	// <0x74331e>|0x18e|+0x021:'475'
-	// <0>
-	// <1>
-	// <0x74333f>|0x1af|+0x018:'478'
-	// <0x743357>|0x1c7|+0x021:'479'
-	// <0x743378>|0x1e8|+0x01f:'480'
-	// ******
 }
 
 // claude@NOTE: PARKED - heavy cross-subsystem wall (sound::world_user listener setup,
