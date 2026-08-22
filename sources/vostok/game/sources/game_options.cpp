@@ -583,7 +583,7 @@ void game_options::initialize_bindings( )
 		m_options_ui->movie->CreateObject( &keybinds_value );
 
 		flash_value keybinds_value_prop;
-		keybinds_value_prop.SetString( key_bind_descriptions[i].str_description );
+		keybinds_value_prop.SetUInt( key_bind_descriptions[i].action_id );
 		keybinds_value.SetMember( "action_id", keybinds_value_prop );
 
 		keybinds_value_prop.SetUInt( key_bind_descriptions[i].group_id );
