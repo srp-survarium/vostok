@@ -441,6 +441,12 @@ void lobby_menu::update_status( )
 	fixed_string< 128 > status_str;
 	lobby_client( ).status				( status_str );
 
+	// claude@NOTE: target builds FOUR elements (0x743190): [0]=account_name,
+	// [1]=login_client string member @+0x134 (server host), [2]=UInt u16 @+0x174
+	// (port), [3]=fixed_string.assignf("%s:%d", lobby host @lobby+0x2A, u16 port
+	// @lobby+0x28). SetElement/SetString/assignf are OUT-OF-LINE calls. Map the
+	// facade accessors (login_client host()/port(), lobby_client address pair)
+	// then reconstruct.
 	flash_value account_info;
 	m_lobby_menu_ui->movie->CreateArray	( &account_info );
 	account_info.SetElement				( 0, login_client( ).account_name( ) );

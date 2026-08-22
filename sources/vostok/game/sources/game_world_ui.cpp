@@ -195,7 +195,7 @@ void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
 	else
 		vostok::sprintf( buff, "(%d/%d)", progress, stats.team_points_amount );
 
-	u32 const percent = (u32)math::floor( ( (float)progress / (float)stats.team_points_amount ) * 100.0f );
+	u32 const percent = (u32)( ( (float)progress / (float)stats.team_points_amount ) * 100.0f );
 
 	if ( m_game_mode == capture_enemy_base )
 	{
