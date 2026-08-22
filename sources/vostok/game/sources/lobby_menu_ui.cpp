@@ -367,9 +367,7 @@ void lobby_menu::update_level_loading_progress( )
 	vostok::sprintf						( buff, "(%d)", resources::pending_queries_count( ) );
 
 	if ( m_last_queries_count > resources::pending_queries_count( ) )
-		m_level_loading_progress += ( 1.0f - m_level_loading_progress ) *
-			( float )( m_last_queries_count - resources::pending_queries_count( ) )
-			/ ( float )m_last_queries_count;
+		m_level_loading_progress += ( 1.0f - m_level_loading_progress ) * ( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count;
 
 	m_last_queries_count = resources::pending_queries_count( );
 
