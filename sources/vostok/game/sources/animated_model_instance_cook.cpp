@@ -135,7 +135,7 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	user_data.set									( type_apply_directly );
 	resources::user_data_variant const* user_data_ptr[]	= { &user_data };
 
-	resources::request	request						= { resources::damage_model_class, hit_params_path.c_str( ) };
+	resources::request	request						= { hit_params_path.c_str( ), resources::damage_model_class };
 	resources::query_resources						(
 		&request,
 		1,
