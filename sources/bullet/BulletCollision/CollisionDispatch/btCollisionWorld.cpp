@@ -1315,7 +1315,7 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
 	{
 
 		/// for polyhedral shapes
-		if (shape->isPolyhedral())
+#if 0
 		{
 			btPolyhedralConvexShape* polyshape = (btPolyhedralConvexShape*) shape;
 
@@ -1362,9 +1362,11 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
 
 
 		}
-		else
-		{
-			switch (shape->getShapeType())
+#endif
+			{
+				static btVector3 prim_color(1,1,0);
+
+				switch (shape->getShapeType())
 			{
 
 			case BOX_SHAPE_PROXYTYPE:
