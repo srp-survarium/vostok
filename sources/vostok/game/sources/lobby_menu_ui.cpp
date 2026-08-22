@@ -1439,14 +1439,13 @@ void lobby_menu::fill_character_data( )
 	m_lobby_menu_ui->movie->CreateArray( &player_skills_value );
 
 	flash_value player_skills_value_prop;
-	flash_value skill_value;
-	flash_value skill_value_prop;
-	flash_value perk_value;
 
 	for ( u8 i = 0; i < lobby_client( ).player_skills_count( ); ++i )
 	{
+		flash_value skill_value;
 		m_lobby_menu_ui->movie->CreateObject( &skill_value );
 
+		flash_value skill_value_prop;
 		skill_value_prop.SetUInt		( lobby_client( ).player_skill( i ).skill_id );
 		skill_value.SetMember			( "id", skill_value_prop );
 
@@ -1483,6 +1482,7 @@ void lobby_menu::fill_character_data( )
 
 	for ( u8 i = 0; i < lobby_client( ).player_perks_count( ); ++i )
 	{
+		flash_value perk_value;
 		perk_value.SetUInt				( lobby_client( ).player_perk( i ) );
 		player_perks_value.SetElement	( i, perk_value );
 	}
