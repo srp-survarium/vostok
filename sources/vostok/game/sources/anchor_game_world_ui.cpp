@@ -21,6 +21,7 @@ namespace survarium {
 void anchor_game_world_ui( )
 {
 	static pcvoid volatile s_sink = 0;
+#if 0	// pin-retirement probe: is game_world_ui reachable through the real call graph now?
 
 	{ void ( game_world_ui::* const p )( match_options& )								= &game_world_ui::initialize;					s_sink = *( pcvoid const* )&p; }
 	{ void ( game_world_ui::* const p )( resources::unmanaged_resource_ptr const& )		= &game_world_ui::initialize_resources;			s_sink = *( pcvoid const* )&p; }
@@ -41,6 +42,8 @@ void anchor_game_world_ui( )
 	// update_quick_slot / create_slot_value are now private; they stay reachable through
 	// the anchored public callers (update_ui -> update_quick_slot -> create_slot_value,
 	// fill_quick_slots -> create_slot_value), so no direct member-pointer anchor is needed.
+#endif
+	( void )s_sink;
 }
 
 } // namespace survarium

@@ -217,15 +217,16 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	VOSTOK_UNREFERENCED_PARAMETER( weapon_parameters );
 
 	// first-view animations lead the trailing array, third-view ones follow
+	u32 const death_animation_index =
+		is_third_view
+			? m_weapon.first_view_death_animations_count( ) + m_random.random( m_weapon.third_view_death_animations_count( ) )
+			: m_random.random( m_weapon.first_view_death_animations_count( ) );
+
 	animation::mixing::animation_lexeme	death_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			0,
-			m_weapon.death_animations( )[
-				is_third_view
-					? m_weapon.first_view_death_animations_count( ) + m_random.random( m_weapon.third_view_death_animations_count( ) )
-					: m_random.random( m_weapon.first_view_death_animations_count( ) )
-			],
+			m_weapon.death_animations( )[ death_animation_index ],
 			0,
 			0
 		)
