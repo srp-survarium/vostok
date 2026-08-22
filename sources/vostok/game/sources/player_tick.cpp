@@ -123,14 +123,13 @@ void player::update_history_item_from_previous(
 	float4x4&								previous_transform
 )
 {
-	math::quaternion target_rotation =
-		math::quaternion( previous_transform.get_angles_xyz( ) )
-		* math::quaternion( item_to_update.action.state.transform.get_angles_xyz( ) )
-		* math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
+	math::quaternion target_rotation( previous_transform.get_angles_xyz( ) );
+	math::quaternion const item_rotation( item_to_update.action.state.transform.get_angles_xyz( ) );
+	target_rotation = target_rotation * item_rotation;
+	target_rotation = target_rotation * math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
 
-	const float3 position =
-		previous_item.action.state.transform.c.xyz( )
-		+ ( item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( ) );
+	float3 position = previous_item.action.state.transform.c.xyz( );
+	position += item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( );
 
 	previous_transform = item_to_update.action.state.transform;
 
@@ -140,7 +139,8 @@ void player::update_history_item_from_previous(
 	set_physics_controller_walk_vector( m_target );
 
 	m_target.physics_controller->update_action( item_to_update.time_in_ms - previous_item.time_in_ms );
-	previous_transform = item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
+	item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
+	previous_transform = item_to_update.action.state.transform;
 }
 
 // claude@NOTE: STRUCTURE MATCH (target 4 stmts == base 4). Ring walk from_index->head,
