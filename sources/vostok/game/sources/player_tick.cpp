@@ -297,7 +297,7 @@ void player::smooth( const float time_delta )
 		{
 			math::quaternion left_rotation( current_angles );
 			math::quaternion right_rotation( target_angles );
-			result = math::create_matrix( ::slerp_optimized( left_rotation, right_rotation, math::min( ( s_smooth_angular_speed / 180.f * math::pi ) * time_delta, 0.f ) ), float3( 0.f, 0.f, 0.f ) );
+			result = math::create_matrix( ::slerp_optimized( left_rotation, right_rotation, math::min( ( s_smooth_angular_speed / 180.f ) * time_delta, 0.f ) ), float3( 0.f, 0.f, 0.f ) );
 		}
 		else
 			result = m_current.transform;
