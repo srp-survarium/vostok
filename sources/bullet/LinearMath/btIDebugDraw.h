@@ -25,6 +25,8 @@ subject to the following restrictions:
 ///Typical use case: create a debug drawer object, and assign it to a btCollisionWorld or btDynamicsWorld using setDebugDrawer and call debugDrawWorld.
 ///A class that implements the btIDebugDraw interface has to implement the drawLine method at a minimum.
 ///For color arguments the X,Y,Z components refer to Red, Green and Blue each in the range [0..1]
+class	btCollisionShape;
+
 class	btIDebugDraw
 {
 	public:
@@ -50,6 +52,11 @@ class	btIDebugDraw
 	};
 
 	virtual ~btIDebugDraw() {};
+
+	// GSC addition: lets the game's drawer take over drawing an object entirely;
+	// returning true skips btCollisionWorld::debugDrawObject's default body.
+	// Shifts every later vtbl slot +4 (byte-verified: target drawTransform +0x38).
+	virtual bool	drawObject(const btTransform& /*worldTransform*/, const btCollisionShape* /*shape*/, const btVector3& /*color*/) { return false; }
 
 	virtual void	drawLine(const btVector3& from,const btVector3& to,const btVector3& color)=0;
 		

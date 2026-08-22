@@ -1292,6 +1292,13 @@ public:
 
 void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const btCollisionShape* shape, const btVector3& color)
 {
+	if (!getDebugDrawer())
+		return;
+
+	// the game's drawer can take the object over entirely (GSC virtual)
+	if (getDebugDrawer()->drawObject(worldTransform, shape, color))
+		return;
+
 	// Draw a small simplex at the center of the object
 	getDebugDrawer()->drawTransform(worldTransform,1);
 
