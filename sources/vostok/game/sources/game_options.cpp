@@ -329,7 +329,7 @@ void game_options::fill_settings_data( )
 	controllers_options_labels[1] = "st_mouse_sensitivity_option";
 
 	fixed_string< 64 >* const options_labels_table[4]	= { gameplay_options_labels, video_options_labels, sound_options_labels, controllers_options_labels };
-	u8 const options_counts[4]							= { 9, 19, 7, 2 };
+	static u8 const options_counts[4]					= { 9, 19, 7, 2 };
 
 	flash_value options_args[2];
 	for ( u32 i = 0; i < 4; ++i )
