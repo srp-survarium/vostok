@@ -368,7 +368,8 @@ void lobby_menu::update_level_loading_progress( )
 
 	if ( m_last_queries_count > resources::pending_queries_count( ) )
 		m_level_loading_progress += ( 1.0f - m_level_loading_progress ) *
-			( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count;
+			( float )( m_last_queries_count - resources::pending_queries_count( ) )
+			/ ( float )m_last_queries_count;
 
 	m_last_queries_count = resources::pending_queries_count( );
 
@@ -388,12 +389,10 @@ void lobby_menu::update_level_loading_progress( )
 	text.SetStringW						( w_text );
 	m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
 
-	if ( clear_value - m_level_loading_progress < math::epsilon_3 )
-		m_level_loading_progress = clear_value;
+	if ( clear_value - m_level_loading_progress < math::epsilon_3 )	m_level_loading_progress = clear_value;
 
 	flash_value progress;
-	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );
-	m_match_making_ui->movie->Invoke	( "root.set_percent", NULL, &progress, 1 );
+	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );	m_match_making_ui->movie->Invoke( "root.set_percent", NULL, &progress, 1 );
 }
 
 void lobby_menu::on_ui_destroy( )
@@ -1466,8 +1465,11 @@ void lobby_menu::fill_skills_tree( )
 // are faithful.
 void lobby_menu::fill_character_data( )
 {
+	flash_value char_info_value;
+	m_lobby_menu_ui->movie->CreateObject( &char_info_value );
+
 	flash_value player_skills_value;
-	m_lobby_menu_ui->movie->CreateObject( &player_skills_value );
+	m_lobby_menu_ui->movie->CreateArray( &player_skills_value );
 
 	flash_value player_skills_value_prop;
 	flash_value skill_value;
@@ -1490,33 +1492,36 @@ void lobby_menu::fill_character_data( )
 
 		player_skills_value.SetElement	( i, skill_value );
 	}
-	player_skills_value.SetMember		( "skills", player_skills_value );
+	char_info_value.SetMember			( "skills", player_skills_value );
 
 	player_leveling_info const& leveling = lobby_client( ).get_player_leveling( );
 
 	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
-	player_skills_value.SetMember		( "points_available", player_skills_value_prop );
+	char_info_value.SetMember			( "points_available", player_skills_value_prop );
 
 	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
-	player_skills_value.SetMember		( "points_unlocked", player_skills_value_prop );
+	char_info_value.SetMember			( "points_unlocked", player_skills_value_prop );
 
 	player_skills_value_prop.SetUInt	( leveling.total_experience );
-	player_skills_value.SetMember		( "experience_current", player_skills_value_prop );
+	char_info_value.SetMember			( "experience_current", player_skills_value_prop );
 
 	player_skills_value_prop.SetUInt	( leveling.next_level_experience );
-	player_skills_value.SetMember		( "experience_next_level", player_skills_value_prop );
+	char_info_value.SetMember			( "experience_next_level", player_skills_value_prop );
 
 	player_skills_value_prop.SetUInt	( leveling.next_level_experience - leveling.prev_level_experience );
-	player_skills_value.SetMember		( "experience_delta", player_skills_value_prop );
+	char_info_value.SetMember			( "experience_delta", player_skills_value_prop );
+
+	flash_value player_perks_value;
+	m_lobby_menu_ui->movie->CreateArray( &player_perks_value );
 
 	for ( u8 i = 0; i < lobby_client( ).player_perks_count( ); ++i )
 	{
 		perk_value.SetUInt				( lobby_client( ).player_perk( i ) );
-		player_skills_value.SetElement	( i, perk_value );
+		player_perks_value.SetElement	( i, perk_value );
 	}
-	player_skills_value.SetMember		( "perks", player_skills_value );
+	char_info_value.SetMember			( "perks", player_perks_value );
 
-	m_lobby_menu_ui->movie->Invoke		( "root.fill_char_info", NULL, &player_skills_value, 1 );
+	m_lobby_menu_ui->movie->Invoke		( "root.fill_char_info", NULL, &char_info_value, 1 );
 }
 
 void lobby_menu::fill_service_prices( )
@@ -1639,22 +1644,27 @@ bool lobby_menu::is_mouse_over_ui( )
 // sushi@TODO: the L"joined"/L"left"/L"in_queue"/L"team" wcsstr prefix literals are
 // length-matched guesses (loaded from rdata; do not affect this function's bytes), exact
 // keys unverified.
+static wchar_t const player_joined_pref[]	= L"joined";
+static wchar_t const player_left_pref[]		= L"left";
+static wchar_t const player_queue_pref[]	= L"in_queue";
+static wchar_t const player_team_pref[]		= L"team";
+
 void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 {
-	wchar_t const* player_joined_message	= wcsstr( w_text, L"joined" );
-	wchar_t const* player_left_message		= wcsstr( w_text, L"joined" );
-	wchar_t const* queue_state_message		= wcsstr( w_text, L"in_queue" );
+	wchar_t const* player_joined_message	= wcsstr( w_text, player_joined_pref );
+	wchar_t const* player_left_message		= wcsstr( w_text, player_left_pref );
+	wchar_t const* queue_state_message		= wcsstr( w_text, player_queue_pref );
 
 	wchar_t w_player_name[32];
 	flash_value player_name_val;
 
 	if ( player_joined_message )
 	{
-		wcsncpy_s			( w_player_name, player_joined_message + 6, ( wcsstr( player_joined_message, L" =" ) - player_joined_message ) / 2 - 6 );
+		wcsncpy_s			( w_player_name, player_joined_message + 6, ( wcsstr( player_joined_message, L" ]" ) - player_joined_message ) / 2 - 6 );
 
-		wchar_t const* player_team = wcsstr( w_text, L"team" );
+		wchar_t const* player_team = wcsstr( w_text, player_team_pref );
 		wchar_t w_player_team[8];
-		wcsncpy_s			( w_player_team, player_team + 4, ( wcsstr( player_team, L"=" ) - player_team ) / 2 - 4 );
+		wcsncpy_s			( w_player_team, player_team + 4, ( wcsstr( player_team, L"]" ) - player_team ) / 2 - 4 );
 
 		game_team_id team = ( game_team_id )_wtoi( w_player_team );
 
@@ -1674,7 +1684,7 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 
 	if ( player_left_message )
 	{
-		wcsncpy_s			( w_player_name, player_left_message + 6, ( wcsstr( player_left_message, L" =" ) - player_left_message ) / 2 - 6 );
+		wcsncpy_s			( w_player_name, player_left_message + 6, ( wcsstr( player_left_message, L" ]" ) - player_left_message ) / 2 - 6 );
 
 		player_name_val.SetStringW	( w_player_name );
 		m_match_making_ui->movie->Invoke( "root.remove_player", NULL, &player_name_val, 1 );
@@ -1683,7 +1693,7 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 	if ( queue_state_message )
 	{
 		wchar_t w_player_in_queue[16];
-		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( wcsstr( queue_state_message, L"=" ) - queue_state_message ) / 2 - 4 );
+		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( wcsstr( queue_state_message, L"]" ) - queue_state_message ) / 2 - 4 );
 
 		flash_value players_in_queue_val;
 		players_in_queue_val.SetStringW	( w_player_in_queue );
