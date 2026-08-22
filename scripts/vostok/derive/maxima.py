@@ -13,6 +13,8 @@ observations folded on top, out.
 """
 
 import hashlib
+from functools import lru_cache
+from pathlib import Path, PurePosixPath
 
 from vostok.core.paths import SOURCES
 from vostok.derive import log
@@ -21,13 +23,34 @@ EXACT = 99.995  # objdiff reports byte-exact as >= this
 LEDGER_RESOLUTION = 1e-4  # the ledger stores percentages to 4 decimals
 
 
+@lru_cache(maxsize=None)
+def _source_file(source_root, relative):
+    """Resolve a PDB-normalized source path against the caseful checkout."""
+    parts = PurePosixPath(relative.replace("\\", "/")).parts
+    path = Path(source_root).joinpath(*parts)
+    if path.is_file():
+        return path
+
+    path = Path(source_root)
+    for part in parts:
+        try:
+            matches = [entry for entry in path.iterdir()
+                       if entry.name.casefold() == part.casefold()]
+        except OSError:
+            return None
+        if len(matches) != 1:
+            return None
+        path = matches[0]
+    return path if path.is_file() else None
+
+
 def _source_extent(rec):
     """Return ``(relative path, first line, last line, source text)``."""
     if rec is None:
         return None
-    path = SOURCES / rec["file"]
+    path = _source_file(str(SOURCES), rec["file"])
     lines = [s["line"] for s in rec["statements"] if s.get("line")]
-    if not path.is_file():
+    if path is None:
         return None
     try:
         with open(path, encoding="latin-1") as f:

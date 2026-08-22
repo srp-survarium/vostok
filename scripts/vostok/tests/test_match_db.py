@@ -560,6 +560,22 @@ class MaximaFoldTests(unittest.TestCase):
 
 
 class EffectiveSourceHashTests(unittest.TestCase):
+    def test_resolves_pdb_lowercase_path_against_caseful_checkout(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/Bullet/LinearMath/btIDebugDraw.h"
+            source.parent.mkdir(parents=True)
+            source.write_text("body line\n", encoding="latin-1")
+            record = {
+                "file": "bullet/linearmath/btidebugdraw.h",
+                "statements": [{"line": 1}],
+            }
+
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                self.assertEqual(
+                    effective_source_hash(record), maxima.source_hash("body line\n")
+                )
+
     def test_hash_ignores_other_functions_in_the_same_tu(self):
         """A sibling edit must NOT reset this function's banked max.
 
