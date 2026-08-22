@@ -682,7 +682,8 @@ void game_world_ui::update_minimap_objects( )
 		level_object_val_prop.SetUInt( bases_count );
 		level_object_val.SetMember( "id", level_object_val_prop );
 
-		level_object_val_prop.SetString( is_carrying_victory_item ? "base_highlighted" : "base" );
+		pcstr const type_string = is_carrying_victory_item ? "base_highlighted" : "base";
+		level_object_val_prop.SetString( type_string );
 		level_object_val.SetMember( "type", level_object_val_prop );
 
 		level_object_val_prop.SetNumber( position_x );
