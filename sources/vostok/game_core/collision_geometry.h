@@ -50,6 +50,12 @@ public:
 			u32							get_overlapping_objects_count	( ) const;
 			void						get_overlapping_objects			( physics::base_physics_objects_type& result ) const;
 
+	template< typename object_type >
+	inline	void						query_objects_by_type			(
+											vectora< object_type* >& results,
+											object_type* ( collision_geometry_subscriber::* functor_ptr )( )
+										);
+
 			bool						contact_test					( );
 			void						contact_test					( physics::base_physics_object* object, physics::contact_test_predicate& predicate );
 

@@ -25,6 +25,10 @@
 #include <vostok/physics/world.h>					// get_physics_world()->remove rigid body
 #include <vostok/game_core/player_actions_subscriber.h>	// on_player_action notify loop (on_fire/jump/notify)
 #include <vostok/game_core/hit_receiver.h>			// static_cast<hit_receiver const*>(this) in notify loop
+#include <vostok/game_core/collision_geometry.h>
+#include <vostok/game_core/usable_object.h>
+#include <vostok/physics/base_physics_object.h>
+#include <vostok/collision/game_object.h>
 #include "stats.h"						// m_game.get_stats().set_player_*_speed (update_speed_info)
 #include "stats_graph.h"				// m_*_speed_graph->add_value / average_value (update_speed_info)
 #include <vostok/network_core/packet_reader.h>		// reader.r<T>() in deserialize
@@ -597,98 +601,56 @@ void player::set_physics_controller_walk_vector( client_player_state& state )
 	state.physics_controller->set_walk_direction( state.transform.c.xyz( ) - physics_transform.c.xyz( ) );
 }
 
-// claude@NOTE: PARKED. Casts a physics ray (closest_ray_result) + collects usable_objects
-// into a vectora<usable_object*>, then filters them by a chain of usable_object_user_data
-// predicate calls (the 10+ bool < unknown >(usable_object_user_data*) call sites) and a
-// pcstr label read, picking the closest usable target for the "press use" prompt. Deep
-// physics raycast + the usable_object_user_data accessor cluster (game_core/usable_object).
-// Next step: identify the usable_object_user_data accessors + the physics ray helper, then
-// reconstruct the predicate filter loop.
-// STATE[STUB]
 void player::detect_usable_objects( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// physics::closest_ray_result 		ray_result
-	// vectora< usable_object* > 		results
-	// ******
+	usable_object_user_data( )->owner			= this;
+	usable_object_user_data( )->current_time_ms	= current_time_in_ms;
 
-	// CALL SITE INFO
-	// <0x5e35ef> -> physics::closest_ray_result < unknown >( float3 const&, float3 const&, const float, u16, u16 )
-	// <0x5e3605> -> collision_geometry* < unknown >()
-	// <0x5e3649> -> player_input const& < unknown >() const
-	// <0x5e3667> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e3677> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e3686> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e3690> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e36a0> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e36b4> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e36eb> -> pcstr < unknown >( usable_object_user_data* )
-	// <0x5e3709> -> bool < unknown >( usable_object_user_data* )
-	// <0x5e3720> -> bool < unknown >( usable_object_user_data* )
-	// ******
+	physics::closest_ray_result ray_result = m_game_scene.get_physics_world( )->ray_test(
+		m_character_head_transform.c.xyz( ),
+		m_character_head_transform.k.xyz( ),
+		s_usable_objects_detection_distance,
+		0x100,
+		0x80
+	);
 
-	// FUNCTION BODY[0x5e35a0]: 50
-	// <0x5e35a0>|0x000|+0x005:'741'	{
-	// <0x5e35a5>|0x005|+0x00b:'742'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5e35b0>|0x010|+0x041:'751'
-	// <0>
-	// <0x5e35f1>|0x051|+0x00c:'753'
-	// <0>
-	// <0x5e35fd>|0x05d|+0x00c:'755'
-	// <0>
-	// <0x5e3609>|0x069|+0x009:'757'
-	// <0x5e3612>|0x072|+0x02a:'758'
-	// <0>
-	// <1>
-	// <0x5e363c>|0x09c|+0x004:'761'
-	// <0>
-	// <0x5e3640>|0x0a0|+0x012:'763'
-	// <0>
-	// <0x5e3652>|0x0b2|+0x009:'765'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e365b>|0x0bb|+0x026:'769'
-	// <0>
-	// <1>
-	// <0x5e3681>|0x0e1|+0x007:'772'
-	// <0x5e3688>|0x0e8|+0x022:'773'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e36aa>|0x10a|+0x004:'779'
-	// <0x5e36ae>|0x10e|+0x008:'780'
-	// <0x5e36b6>|0x116|+0x022:'781'
-	// <0x5e36d8>|0x138|+0x00b:'782'
-	// <0x5e36e3>|0x143|+0x00a:'783'
-	// <0x5e36ed>|0x14d|-0x084:'784'
-	// <0>
-	// <1>
-	// <0x5e3669>|0x0c9|+0x029:'787'
-	// <0x5e3692>|0x0f2|+0x069:'787'
-	// <0x5e36fb>|0x15b|+0x018:'787'
-	// <0>
-	// <0x5e3713>|0x173|-0x09c:'789'
-	// <0x5e3677>|0x0d7|+0x029:'790'
-	// <0x5e36a0>|0x100|+0x069:'790'
-	// <0x5e3709>|0x169|+0x011:'790'
-	// <0x5e371a>|0x17a|-0x0a1:'790'
-	// <0>
-	// <0x5e3679>|0x0d9|+0x029:'792'
-	// <0x5e36a2>|0x102|+0x069:'792'
-	// <0x5e370b>|0x16b|+0x017:'792'
-	// <0x5e3722>|0x182|      :'792'	}
-	// ******
+	if ( ray_result.object )
+	{
+		collision_geometry* geometry = ray_result.object->user_data->cast_to_collision_geometry( );
+		vectora< usable_object* > results( g_allocator );
+		geometry->query_objects_by_type( results, &collision_geometry_subscriber::cast_to_usable );
+
+		usable_object* object = results[0];
+		if ( input( ).actions_mask & 0x10000000 )
+		{
+			if ( usable_object_user_data( )->current_object )
+			{
+				if ( usable_object_user_data( )->current_object == object )
+					object->use_execute( usable_object_user_data( ) );
+				else
+				{
+					usable_object_user_data( )->current_object->use_finalize( usable_object_user_data( ) );
+					object->use_initialize( usable_object_user_data( ) );
+				}
+			}
+			else
+				object->use_initialize( usable_object_user_data( ) );
+		}
+		else
+		{
+			if ( usable_object_user_data( )->current_object )
+				usable_object_user_data( )->current_object->use_finalize( usable_object_user_data( ) );
+
+			if ( m_game.network_client( ).is_player_current( id ) )
+				if ( m_game_ui )
+				{
+					pcstr const info = object->use_info( usable_object_user_data( ) );
+					m_game_ui->set_using_info_message( info );
+				}
+		}
+	}
+	else if ( usable_object_user_data( )->current_object )
+		usable_object_user_data( )->current_object->use_finalize( usable_object_user_data( ) );
 }
 
 void player::use_ladder( ladder* __formal )

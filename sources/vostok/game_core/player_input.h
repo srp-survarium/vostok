@@ -30,7 +30,7 @@ public:
 	inline	bool	is_walking			( ) const { /* no source */ }
 	inline	bool	is_crouching		( ) const { return ( actions_mask & 0x100 ) != 0; }
 	inline	bool	is_jumping			( ) const { return ( actions_mask & 0x10 ) != 0; }
-	inline	bool	is_using			( ) const { /* no source */ }
+	inline	bool	is_using			( ) const { return ( actions_mask & 0x10000000 ) != 0; }
 	inline	bool	is_aiming			( ) const { /* no source */ }
 	inline	bool	is_shooting			( ) const { /* no source */ }
 	inline	bool	is_holding_breath	( ) const { /* no source */ }
