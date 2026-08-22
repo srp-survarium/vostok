@@ -21,6 +21,7 @@
 #include "player_input_handler.h"
 #include "step_manager.h"
 #include "game_world.h"
+#include <vostok/render/facade/debug_renderer.h>
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/animation/mixing_animation_lexeme.h>			// dead-state selected_animations
@@ -30,6 +31,8 @@
 // finger_corrector_enable gates weapon::process_finger_correction.
 static bool s_enable_finger_corrector_value = true;
 static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
+
+static bool s_draw_fire_point = false;
 
 // hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
 // s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion. The
@@ -582,14 +585,6 @@ animation::callback_return_type_enum weapon::on_foot_step( animation::animation_
 	return animation::callback_return_type_call_me_again;
 }
 
-// claude@NOTE: STUB - the big one (82 stmts). Per-tick skeleton processing: computes
-// weapon_matrices_count from the begin/end range, runs the hand/legs IK + dispersion/recoil/breath
-// updates and the toe-transform extraction (m_left/right_toe_transform from user_matrices at the toe
-// bone indices), updates the pfx/light transforms, then the fingers corrector + UI. Locals scene
-// (base_scene_ptr), weapon_matrices_count (u32), renderer (render::game::renderer&). Parked: too
-// large to land in one pass and it threads player/IK-processor/render internals; recover statement
-// group by group later (structure list preserved in the target PDB).
-// STATE[STUB]
 void weapon::on_skeleton_matrices_changed(
 	const u32					current_time_in_ms,
 	float4x4 const&				weapon_transform,
@@ -601,7 +596,95 @@ void weapon::on_skeleton_matrices_changed(
 	float4x4 const&				__formal
 )
 {
-	// reconstruction parked - see note above
+	u32 const time_delta = current_time_in_ms - m_last_tick_time_in_ms;
+	m_last_tick_time_in_ms = current_time_in_ms;
+
+	if ( m_firing_light_added )
+	{
+		m_current_fire_light_anim_time += time_delta;
+		if ( m_current_fire_light_anim_time >= m_fire_light_anim_length )
+		{
+			m_weapon_fire_light_props.range = 0.f;
+			m_current_fire_light_anim_time = 0;
+		}
+		else
+			m_weapon_fire_light_props.range =
+				( m_fire_light_anim_length - m_current_fire_light_anim_time ) * 5.f /
+				m_fire_light_anim_length;
+
+		get_game_scene( )->renderer( ).scene( ).update_light(
+			get_game_scene( )->render_scene( ),
+			m_weapon_fire_light_id,
+			&m_weapon_fire_light_props
+		);
+	}
+
+	u32 const weapon_matrices_count = weapon_matrices_end - weapon_matrices_begin;
+	m_left_toe_transform = math::mul4x3( user_matrices_begin[ m_left_toe_bone_index ], user_transform );
+	m_right_toe_transform = math::mul4x3( user_matrices_begin[ m_right_toe_bone_index ], user_transform );
+	m_barrel_transform = calculate_locator( m_barrel_locator, weapon_matrices_begin, weapon_matrices_count );
+	m_scope_transform = calculate_locator( m_scope_locator, weapon_matrices_begin, weapon_matrices_count );
+	update_pfx_transform( );
+
+	render::base_scene_ptr scene = get_game_scene( )->render_scene( );
+	render::game::renderer& renderer = get_game_scene( )->renderer( );
+	if ( s_draw_fire_point )
+		renderer.debug( ).draw_origin( scene, m_barrel_transform, 0.5f, false );
+
+	if ( !m_is_third_view && m_aimed )
+	{
+		if ( !m_is_scope_aimed && m_rifle_scope )
+		{
+			float const scope_fov_factor = m_rifle_scope->fov_factor( );
+			float const fov_factor = user( ).fov_factor( current_time_in_ms );
+			if ( ( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) >= m_rifle_scope->change_scope_factor( ) )
+			{
+				m_is_scope_aimed = true;
+				renderer.scene( ).remove_model( scene, m_rifle_scope->idle_model( )->m_render_model );
+				renderer.scene( ).add_model( scene, m_rifle_scope->aimed_model( )->m_render_model, m_scope_transform );
+				if ( m_rifle_scope->hide_weapon_on_aim( ) )
+				{
+					renderer.scene( ).remove_model( scene, model->m_render_model );
+					renderer.scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 2 );
+				}
+			}
+		}
+	}
+	else if ( ( !m_is_third_view || !user( ).is_alive( ) ) && m_is_scope_aimed && m_rifle_scope )
+	{
+		float const scope_fov_factor = m_rifle_scope->fov_factor( );
+		float const fov_factor = user( ).fov_factor( current_time_in_ms );
+		if ( m_rifle_scope->change_scope_factor( ) >
+			( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) ||
+			!user( ).is_alive( ) )
+		{
+			m_is_scope_aimed = false;
+			renderer.scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, m_scope_transform );
+			renderer.scene( ).remove_model( scene, m_rifle_scope->aimed_model( )->m_render_model );
+			if ( m_rifle_scope->hide_weapon_on_aim( ) )
+			{
+				renderer.scene( ).add_model( scene, model->m_render_model, weapon_core::m_transform );
+				renderer.scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 3 );
+			}
+		}
+	}
+
+	if ( !( m_is_scope_aimed && m_rifle_scope.c_ptr( ) && m_rifle_scope->hide_weapon_on_aim( ) ) )
+	{
+		renderer.scene( ).update_model( scene, model->m_render_model, weapon_transform );
+		renderer.scene( ).update_skeleton( model->m_render_model, weapon_matrices_begin, weapon_matrices_count );
+	}
+
+	if ( m_rifle_scope )
+	{
+		if ( m_is_scope_aimed )
+			renderer.scene( ).update_model( scene, m_rifle_scope->aimed_model( )->m_render_model, m_scope_transform );
+		else
+			renderer.scene( ).update_model( scene, m_rifle_scope->idle_model( )->m_render_model, m_scope_transform );
+	}
+
+	VOSTOK_UNREFERENCED_PARAMETER( user_matrices_end );
+	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 }
 
 // claude@NOTE: faithful body (finger_corrector_enable guard + tail-call to
