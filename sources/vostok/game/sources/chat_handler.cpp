@@ -167,8 +167,7 @@ void chat_handler::add_message(
 	wchar_t const*		w_sender_name
 )
 {
-	flash_value obj;
-	get_movie( )->movie->CreateObject( &obj );
+	flash_value obj;	get_movie( )->movie->CreateObject( &obj );
 
 	flash_value ret_args;
 	ret_args.SetStringW( w_sender_name );
@@ -185,16 +184,11 @@ void chat_handler::add_message(
 	if( m_game_ui_mode && channel == messaging::player_match_channel )
 	{
 		char sender_name[ 32 ];
-		wcstombs_s( NULL, sender_name, w_sender_name, -1 );
-
-		network_client* net_client = static_cast< network_client* >( &m_game.network_client( ) );
-		game_team_id sender_team = net_client->get_player_team( sender_name );
+		wcstombs_s( NULL, sender_name, w_sender_name, -1 );	network_client* net_client = static_cast< network_client* >( &m_game.network_client( ) );	game_team_id sender_team = net_client->get_player_team( sender_name );
 
 		bool same_team = false;
 		if( sender_team != team_undefined )
-			same_team = net_client->get_local_player( )->team( ) == sender_team;
-
-		if( same_team )
+			same_team = net_client->get_local_player( )->team( ) == sender_team;	if( same_team )
 		{
 			ret_args.SetString( "Red" );
 			obj.SetMember( "color", ret_args );

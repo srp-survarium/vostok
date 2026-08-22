@@ -163,11 +163,10 @@ void human_npc_cook::on_subresources_loaded( resources::queries_result& data, hu
 
 	human->set_brain_unit								( brain_unit_ptr );
 
-	animated_model_instance_ptr model_ptr				= static_cast_resource_ptr< animated_model_instance_ptr >( data[1].get_unmanaged_resource() );	human->set_model( model_ptr );
+	animated_model_instance_ptr model_ptr				= static_cast_resource_ptr< animated_model_instance_ptr >( data[1].get_unmanaged_resource() );
+	human->set_model									( model_ptr );
 
-	resources::managed_resource_ptr default_animation	= data[2].get_managed_resource();
-
-	human->set_default_animation						( default_animation );
+	human->set_default_animation						( data[2].get_managed_resource() );
 
 	animation_space_graph_ptr new_graph					= static_cast_resource_ptr< animation_space_graph_ptr >( data[3].get_unmanaged_resource() );	human->set_animation_space_graph( new_graph );
 

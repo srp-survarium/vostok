@@ -933,24 +933,24 @@ void game_world_ui::fill_quick_slots( )
 	get_ui( )->movie->Invoke( "root.fill_slots", NULL, &slots_array, 1 );
 
 	inventory_item_ptr item_in_back_slot = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( back_slot );
-	if ( !item_in_back_slot )
-		return;
-
-	inventory_item_props item_in_back_slot_props;
-	item_in_back_slot->get_item_props( item_in_back_slot_props );
-
-	dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item_in_back_slot->get_dict_id( ) );
-
-	if ( dict_item.item_category == 4 )
+	if ( item_in_back_slot )
 	{
-		flash_value b_val;
-		b_val.SetBoolean( true );
-		get_ui( )->movie->Invoke( "root.show_oxygen", NULL, &b_val, 1 );
+		inventory_item_props item_in_back_slot_props;
+		item_in_back_slot->get_item_props( item_in_back_slot_props );
 
-		flash_value oxygene_props[2];
-		oxygene_props[0].SetUInt( item_in_back_slot_props.use_in_percents );
-		oxygene_props[1].SetUInt( item_in_back_slot_props.m_amount );
-		get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
+		dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item_in_back_slot->get_dict_id( ) );
+
+		if ( dict_item.item_category == 4 )
+		{
+			flash_value b_val;
+			b_val.SetBoolean( true );
+			get_ui( )->movie->Invoke( "root.show_oxygen", NULL, &b_val, 1 );
+
+			flash_value oxygene_props[2];
+			oxygene_props[0].SetUInt( item_in_back_slot_props.use_in_percents );
+			oxygene_props[1].SetUInt( item_in_back_slot_props.m_amount );
+			get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
+		}
 	}
 }
 
