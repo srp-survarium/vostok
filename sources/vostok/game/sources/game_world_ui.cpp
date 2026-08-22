@@ -149,7 +149,7 @@ void game_world_ui::initialize_base_points( network_core::packet_reader& packet 
 
 void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
 {
-	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
+	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->get_current_player( )->team( );
 
 	m_victory_points[0] += team_1_points;
 	flash_value args[2];
@@ -165,7 +165,7 @@ void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
 
 void game_world_ui::set_victory_points( s8 team_1_points, s8 team_2_points )
 {
-	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->current_player_team( );
+	game_team_id const local_player_team = m_game_world.get_game( ).get_network_client( )->get_current_player( )->team( );
 
 	m_victory_points[0] = team_1_points;
 	flash_value args[2];
@@ -888,14 +888,22 @@ void game_world_ui::create_slot_value(
 	bool const enabled	= item_props.m_amount > 0;
 
 	pcstr hotkey = "";
+	game_action_id action = game_action_id( -1 );
 	switch ( slot )
 	{
-		case quick_slot1:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_1, 0 ), false )->key_name;	break;
-		case quick_slot2:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_2, 0 ), false )->key_name;	break;
-		case quick_slot3:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_3, 0 ), false )->key_name;	break;
-		case quick_slot4:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_4, 0 ), false )->key_name;	break;
-		case quick_slot5:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_5, 0 ), false )->key_name;	break;
-		case quick_slot6:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_6, 0 ), false )->key_name;	break;
+		case quick_slot1:	action = kQUICK_USE_1;	break;
+		case quick_slot2:	action = kQUICK_USE_2;	break;
+		case quick_slot3:	action = kQUICK_USE_3;	break;
+		case quick_slot4:	action = kQUICK_USE_4;	break;
+		case quick_slot5:	action = kQUICK_USE_5;	break;
+		case quick_slot6:	action = kQUICK_USE_6;	break;
+		default:			action = game_action_id( -1 );
+	}
+
+	if ( action != game_action_id( -1 ) )
+	{
+		keyboard_key_descr const* const key = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( action, 0 ), false );
+		hotkey = key ? key->key_name : 0;
 	}
 
 	flash_value slot_descr_valuec_property;
@@ -993,6 +1001,7 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 	else
 	{
 		create_slot_value( slot, current_item_props, slot_descr_value[0] );
+		slot_descr_value[1].SetUInt( slot - quick_slot1 );
 		get_ui( )->movie->Invoke( "root.fill_slot", NULL, slot_descr_value, 2 );
 	}
 }

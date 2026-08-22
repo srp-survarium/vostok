@@ -8,7 +8,7 @@
 namespace survarium {
 
 struct inventory_item_props {
-	inline	inventory_item_props( ) { /* no source */ }
+	inline	inventory_item_props( ) : m_dict_id( 0 ), use_in_percents( u8(-1) ), m_amount( u16(-1) ) { }
 
 public:
 	/* 0x0000 */	u16		m_dict_id;
