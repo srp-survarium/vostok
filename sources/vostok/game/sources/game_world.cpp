@@ -39,7 +39,7 @@
 #include "match_client.h"			// match_client::m_match_options (on_project_loaded)
 #include "game_project.h"			// simple_game_project::insert/m_config (on_project_loaded)
 #include "game_camera.h"			// free_fly camera set_position_direction (on_project_loaded)
-#include "flash_factory.h"			// m_gfx_loader for flash_text_manager (on_project_loaded)
+#include <vostok/scaleform/sources/flash_factory.h>	// m_gfx_loader for flash_text_manager (on_project_loaded)
 #include <vostok/configs_binary_config.h>	// m_config->get_root() (on_project_loaded)
 #include <vostok/fixed_string.h>	// fixed_string<8> name (load)
 // register_cooks: the cook family + the resources::register_cook free function
