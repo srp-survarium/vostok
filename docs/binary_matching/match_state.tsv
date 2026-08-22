@@ -32213,8 +32213,8 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
-`dynamic atexit destructor for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`dynamic atexit destructor for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
+`dynamic atexit destructor for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`dynamic atexit destructor for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
 `dynamic atexit destructor for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH	100	100	100	1	60	f	d9e6711a2c29	
 `dynamic atexit destructor for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	60	f	714ed9ec19f6	
 `dynamic atexit destructor for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	60	f	714ed9ec19f6	
@@ -32236,15 +32236,15 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_propagated_radiance_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH	100	100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_radiance_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH	100	100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_radiance_occluders_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH	100	100	100	0	60	f	4b72e6fa9a69	
-`dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
-`dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
+`dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
+`dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	accc1b9f20fa	
 `dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH	100	100	100	3	60	f	bf9e2835b35c	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 's_localization''	vostok/game/sources/text_translator.cpp	game	done	MATCH	100	100	100	2	60	f	8214aac75ccc	Reconstructed the target global localization command and runtime path; all three bodies are byte-exact.
-`dynamic atexit destructor for 's_max_angular_velocity_command''	vostok/game/sources/game.cpp	game	blocked				0	1	60	f		
-`dynamic atexit destructor for 's_max_particles''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
+`dynamic atexit destructor for 's_max_angular_velocity_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	2	60	f	36ddd9be1046	Moved the command object to target global file scope; both generated bodies are byte-exact.
+`dynamic atexit destructor for 's_max_particles''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_net_client_account_name_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 `dynamic atexit destructor for 's_net_client_account_password_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 `dynamic atexit destructor for 's_net_max_position_discrepancy_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
@@ -32257,7 +32257,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_no_trees''	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	60	f	9ce32d91afe1	reconstructed visibility caller cone from target PDB/disassembly
 `dynamic atexit destructor for 's_npc_debug_draw_command''	vostok/game/sources/human_npc.cpp	game	done	MATCH	100	100	100	1	60	f	7f1b9dd8cd4c	
 `dynamic atexit destructor for 's_one_light_dip''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
-`dynamic atexit destructor for 's_particle_lod''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
+`dynamic atexit destructor for 's_particle_lod''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_particle_simulation_speed''	vostok/particle/sources/particle_world.cpp	particle	done	MATCH	100	100	100	0	17		8309698bdff0	
 `dynamic atexit destructor for 's_ph_debug_cmd01''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	da679c62dd90	
 `dynamic atexit destructor for 's_ph_debug_cmd02''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	da679c62dd90	
@@ -32270,7 +32270,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 's_shadow_z_near''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_short_statistics''	vostok/render/engine/sources/statistics.cpp	render	done	MATCH	100	100	100	0	60	f	5cdb712b03ea	
-`dynamic atexit destructor for 's_show_profiler_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
+`dynamic atexit destructor for 's_show_profiler_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_skeleton_animation_cook''	vostok/animation/sources/skeleton_animation_cook.cpp	animation	done	MATCH	100	100	100	1	11	f	4bb2896cdcde	animation root/callback reconstruction; baked cook blocked by target-only global inline scheduling
 `dynamic atexit destructor for 's_smooth_angular_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 's_smooth_linear_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
@@ -32281,7 +32281,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_use_poral_culling_cc''	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	0	60	f	810bfc7287b3	
 `dynamic atexit destructor for 's_use_screeen_space_portals_intersection_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH	100	100	100	0	60	f	26f7581b9f55	
 `dynamic atexit destructor for 's_visible_surfaces_limut''	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	60	f	9ce32d91afe1	reconstructed visibility caller cone from target PDB/disassembly
-`dynamic atexit destructor for 'show_detailed_statistics''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
+`dynamic atexit destructor for 'show_detailed_statistics''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 'survarium::damage_model_cook::m_hit_types''	boost/bind/placeholders.hpp	boost	blocked	MATCH			0	0	50			
 `dynamic atexit destructor for 'survarium::damage_model_cook::m_hit_types_strings''	boost/bind/placeholders.hpp	boost	blocked	MATCH			0	0	50			
 `dynamic initializer for 'CProfileManager::Root''	bullet/linearmath/btquickprof.cpp	bullet	blocked	MATCH			100	0	12	f		
@@ -33942,7 +33942,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 's_localization''	vostok/game/sources/text_translator.cpp	game	done	MATCH	100	100	100	2	77	f	00f2fd8de7b6	Reconstructed the target global localization command and runtime path; all three bodies are byte-exact.
 `dynamic initializer for 's_lost_packets''	vostok/game/sources/match_client.cpp	game	done	MATCH	100	100	100	1	19	f	9dc657773393	
 `dynamic initializer for 's_manager''	vostok/core/sources/strings_shared_manager.cpp	core	done	MATCH	100	100	100	0	13	f	518f1739e7a4	
-`dynamic initializer for 's_max_angular_velocity_command''	vostok/game/sources/game.cpp	game	blocked				0	1	17	f		
+`dynamic initializer for 's_max_angular_velocity_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	2	17	f	9f0af4074110	Moved the command object to target global file scope; both generated bodies are byte-exact.
 `dynamic initializer for 's_max_particles''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	87	f	98d86e5d1eac	
 `dynamic initializer for 's_max_ping''	vostok/game/sources/match_client.cpp	game	done	MATCH	100	100	100	1	19	f	5ce41428364f	
 `dynamic initializer for 's_max_resources_size''	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	0	19	f	238baca9d9fb	
@@ -34022,31 +34022,31 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `survarium::bullet_manager::register_console_commands'::`2'::`dynamic atexit destructor for 'displace_all_bullets_cc''	boost/bind/placeholders.hpp	game_core	done	MATCH	100	100	100	0	17		e7addf46204c	
 `survarium::bullet_manager::register_console_commands'::`2'::`dynamic atexit destructor for 'set_max_bullets_cc''	boost/bind/placeholders.hpp	game_core	done	MATCH	100	100	100	0	17		e7addf46204c	
 `survarium::camera_director::camera_director'::`2'::`dynamic atexit destructor for 'cc_cam_pos''	vostok/game/sources/camera_director.cpp	game	parked	MATCH			0	1	60	f		camera_director local-static cleanup alias: target and base bodies are instruction-for-instruction identical at 60 bytes, but target uses the scoped synthetic PDB name and base the raw dynamic-atexit name.
-`survarium::game::game'::`2'::`dynamic atexit destructor for 'commit_suicide_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 'pause_game_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 'resume_game_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_build_lpv_geometry''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_current_render_configuration_cc''	vostok/game/sources/game.cpp	game	blocked	MATCH			0	1	60	f		
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_inventory_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_items_dictionary_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_player_parameters_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_profile_skin_visual_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_reload_modified_textures''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_reload_shaders''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::game'::`2'::`dynamic atexit destructor for 's_scaleform_movie_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	Target synthetic belongs to the s_scaleform_movie_cook function-static in game::game. The current game constructor is still a stub and does not create that owner, so base correctly has no atexit helper. Restore with the real owner island; do not fabricate the synthetic symbol.
-`survarium::game::on_base_resources_created'::`2'::`dynamic atexit destructor for 'g_input_handler''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_load_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_load_level''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_unload_level''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'game_exit_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animated_model_instance_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_analysis_result_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_container_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_ladder_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	10	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_material_manager_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_simple_project_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_victory_item_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	9c10578f6a61	
-`survarium::game::update_stats'::`7'::`dynamic atexit destructor for 'fps_graph''	vostok/game/sources/game.cpp	game	blocked	MATCH			0	1	60	f		
+`survarium::game::game'::`2'::`dynamic atexit destructor for 'commit_suicide_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 'pause_game_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 'resume_game_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_build_lpv_geometry''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_current_render_configuration_cc''	vostok/game/sources/game.cpp	game	parked	MATCH			0	2	60	f		game local-static cleanup alias: target and base bodies are instruction-for-instruction identical at 60 bytes; target scoped synthetic names versus base raw dynamic-atexit names prevent pairing.
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_inventory_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_items_dictionary_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_player_parameters_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_profile_skin_visual_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_reload_modified_textures''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_reload_shaders''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::game'::`2'::`dynamic atexit destructor for 's_scaleform_movie_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	Target synthetic belongs to the s_scaleform_movie_cook function-static in game::game. The current game constructor is still a stub and does not create that owner, so base correctly has no atexit helper. Restore with the real owner island; do not fabricate the synthetic symbol.
+`survarium::game::on_base_resources_created'::`2'::`dynamic atexit destructor for 'g_input_handler''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_load_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_load_level''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'cfg_unload_level''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::register_console_commands'::`2'::`dynamic atexit destructor for 'game_exit_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animated_model_instance_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_analysis_result_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_container_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_ladder_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	10	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_material_manager_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_simple_project_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_victory_item_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	36ddd9be1046	
+`survarium::game::update_stats'::`7'::`dynamic atexit destructor for 'fps_graph''	vostok/game/sources/game.cpp	game	parked	MATCH			0	2	60	f		game local-static cleanup alias: target and base bodies are instruction-for-instruction identical at 60 bytes; target scoped synthetic names versus base raw dynamic-atexit names prevent pairing.
 `survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'add_enemy_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	714ed9ec19f6	
 `survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_enemies_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	714ed9ec19f6	
 `survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_player_spawn_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	714ed9ec19f6	

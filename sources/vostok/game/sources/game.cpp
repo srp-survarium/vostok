@@ -158,14 +158,14 @@ void max_angular_velocity_command::execute( pcstr args )
 	g_max_angular_velocity[ 0 ] = aspect_ratio * g_max_angular_velocity[ 1 ];
 }
 
-static max_angular_velocity_command s_max_angular_velocity_command(
+} // namespace survarium
+static survarium::max_angular_velocity_command s_max_angular_velocity_command(
 	"max_angular_velocity",
 	360.f,
 	3600.f,
-	true,
-	command_type_engine_internal,
-	console_commands::execution_filter_general
+	true, command_type_engine_internal, vostok::console_commands::execution_filter_general
 );
+namespace survarium {
 // claude@NOTE: exact statement/local structure; residual is LTCG register and call convention scheduling.
  game::game(
 	engine_user::engine&	engine,
