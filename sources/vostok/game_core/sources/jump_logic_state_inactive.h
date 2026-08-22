@@ -7,15 +7,9 @@
 
 #include "./jump_logic_base_state.h"
 
-// claude@MATCH: anchor (temp_include_all.cpp) befriended so its qualified call can
-// reach the private selected_animations override (target mangles it ?...@@EAE...,
-// i.e. private virtual). A friend decl emits no bytes.
-namespace vostok { void use_game_core_jump_logic_state_inactive( ); }
-
 namespace survarium {
 
 class jump_logic_state_inactive : public jump_logic_base_state {
-	friend void ::vostok::use_game_core_jump_logic_state_inactive( );
 
 public:
 	inline	explicit	jump_logic_state_inactive	( jump_logic& owner ) : jump_logic_base_state( owner ) { }

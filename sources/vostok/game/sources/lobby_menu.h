@@ -20,7 +20,6 @@ namespace network {
 namespace resources {
 	class queries_result;
 } // namespace resources
-	void use_game_menus( );	// /OPT:REF reachability anchor (anchor_game_menus.cpp)
 } // namespace vostok
 
 namespace survarium {
@@ -35,7 +34,6 @@ struct player_parameters_cooker_data;
 class profile_player_character;
 class relocate_item_func;
 
-void use_game_lobby_ui( );	// /OPT:REF anchor (anchor_game_lobby_ui.cpp), friend below
 
 class simple_game_project;
 typedef resources::resource_ptr<
@@ -46,12 +44,6 @@ typedef resources::resource_ptr<
 // void* lobby_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x92eb0]: <0x92ea0>|0x000|      :'63'	{
 
 class lobby_menu : public base_game_scene , public input::handler {
-	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
-	// address-take the private menu methods until the real menu call graph reaches them
-	friend void ::vostok::use_game_menus( );
-	// the lobby-menu UI carcass anchor (anchor_game_lobby_ui.cpp) address-takes the
-	// private fill_*/update_*/on_* UI methods; codegen-neutral friend.
-	friend void ::survarium::use_game_lobby_ui( );
 	// on_project_loaded aborts the load through m_match_making_ui / m_is_in_match_making
 	// (codegen-neutral friendship; PDB does not record it)
 	friend class game_world;

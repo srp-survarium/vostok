@@ -962,10 +962,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\anchor_render_facade.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\game_renderer.h"
 			>
 		</File>

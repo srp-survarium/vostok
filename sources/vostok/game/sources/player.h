@@ -39,7 +39,6 @@ struct server_player_update;
 class stats_graph;
 struct engine;
 
-void anchor_game_player( );
 
 // the canonical dump re-prints game_team_id here; the enum lives in game_core
 // (base_player.h already includes it)
@@ -47,15 +46,9 @@ void anchor_game_player( );
 //  resource_ptr<survarium::player,vostok::resources::unmanaged_intrusive_base>::~resource_ptr() // FUNCTION BODY[0x8e7e0]: <0x8e7d0>|0x000|      :'262'	{
 
 class player : public base_player , public resources::unmanaged_resource {
-	// codegen-neutral: /OPT:REF reachability anchor for the player_tick.cpp helpers
-	// (player.cpp owner TU is still a stub); references the private members. Retire
-	// with the anchor once the real call graph reaches them.
-	friend void use_game_player_input( );
 	// base_network_client reaches the private virtual overrides (position /
-	// damage_model) directly on a player_ptr; the /OPT:REF anchor reaches every
-	// private out-of-line body. friend grants are codegen-neutral.
+	// damage_model) directly on a player_ptr; friendship is codegen-neutral.
 	friend class base_network_client;
-	friend void anchor_game_player( );
 	// weapon::on_foot_step / instant_aim_* inline the private fov/near-plane/demo-player
 	// accessors directly on user() (a player&); codegen-neutral friend grant.
 	friend class weapon;

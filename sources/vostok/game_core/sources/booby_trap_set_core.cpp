@@ -299,10 +299,6 @@ void booby_trap_set_core::update_bones_matrices(
 	);
 }
 
-// claude@NOTE: static (target stores it under a plain demangled name => file-local).
-// Its only caller is the header-inline count_active_traps, which the target inlines into
-// a root in another TU; this TU has no in-TU caller, so /OPT:REF drops it here and it stays
-// unpaired. Anchoring from temp_include_all would emit it in that TU's obj, not this one.
 static bool trap_is_active( booby_trap_core_ptr const& trap )
 {
 	return trap->is_active( );

@@ -9,7 +9,6 @@
 #include <vostok/game_core/weapon_user_state_enum.h>
 #include <vostok/game_core/weapon_lexeme_pair.h>
 
-namespace vostok { void use_game_core_double_barreled_weapon_core_aimed_fire_state( ); }
 
 namespace survarium {
 
@@ -52,9 +51,7 @@ private:
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2];
 	/* 0x0178 */	u32									m_weapon_animation_index;
 
-	// temp_include_all.cpp anchor; reaches the protected ctor / private new_object+virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_aimed_fire_state( );
 }; // class double_barreled_weapon_core_aimed_fire_state
 
 STATIC_SIZE_ASSERT(double_barreled_weapon_core_aimed_fire_state, 0x180);

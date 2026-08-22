@@ -20,7 +20,6 @@ namespace ai {
 namespace animation {
 	class animation_player;
 } // namespace animation
-void use_game_npc( );
 } // namespace vostok
 
 namespace survarium {
@@ -68,8 +67,6 @@ private:
 	/* 0x00e8 */	human_npc&							m_owner;
 	/* 0x00ec */	resources::managed_resource_ptr		m_default_animation;
 
-	// reachability anchor needs the addresses of the private callbacks
-	friend void ::vostok::use_game_npc( );
 }; // class animations_selector
 
 STATIC_SIZE_ASSERT(animations_selector, 0xF0);

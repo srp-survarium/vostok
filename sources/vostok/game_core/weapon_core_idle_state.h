@@ -19,7 +19,6 @@ namespace mixing {
 }
 }
 
-namespace vostok { void use_game_core_weapon_core_idle_state( ); }
 
 namespace survarium {
 
@@ -45,9 +44,7 @@ private:
 	/* 0x0000 */	/* weapon_core_idle_state_base */
 	/* 0x0138 */	resources::managed_resource_ptr		m_weapon_animations[2][2];
 
-	// temp_include_all.cpp anchor; reaches the private ctor / private virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_weapon_core_idle_state( );
 }; // class weapon_core_idle_state
 
 STATIC_SIZE_ASSERT(weapon_core_idle_state, 0x148);

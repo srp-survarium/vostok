@@ -17,7 +17,6 @@ namespace input {
 } // namespace input
 } // namespace vostok
 
-namespace vostok { void use_game_small_utils( ); }
 
 namespace survarium {
 
@@ -42,7 +41,6 @@ STATIC_SIZE_ASSERT(dik_to_swf_bind, 0x10);
 struct flash_movie;
 
 class swf_input_translator {
-	friend void ::vostok::use_game_small_utils( );
 public:
 								swf_input_translator	( );
 

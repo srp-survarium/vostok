@@ -32,21 +32,6 @@ static vostok::network_core::udp_network_flow_emulator_options const* network_fl
 
 namespace survarium {
 
-// claude@NOTE: this TU's structure is matched; the residual is non-steerable
-// tooling/LTCG, banked until networking is fully enabled and the anchors retire:
-//  - ctor (STRUCTURE MATCH, byte-capped): the target inlines the orderer ctor to
-//    a vtable store and out-of-lines match_options::match_options; our /Od base
-//    makes the opposite inline choices (LTCG inline wall, not source-steerable).
-//  - connect (STRUCTURE MATCH, byte-capped): the anchor is the sole caller, so
-//    LTCG gives the target a custom calling convention (ret 18h) our base can't
-//    reproduce; lifts when the real game call graph reaches connect.
-//  - the 4 s_*-key dynamic initializers are byte-correct (0x13 bytes) but stay
-//    "unpaired": the delinker names the target's compiler-generated dynamic
-//    initializers with friendly symbols (no @@ mangling) that objdiff can't pair
-//    against our raw ??__E... names - a delinker naming wall hitting EVERY game
-//    dynamic initializer (cf. weapon.cpp s_attach_fingers_to_weapon_cc), not a
-//    source defect.
-
  match_client::match_client( network::world& world ) :
 	m_client( world, m_packets_orderer, network_flow_emulator_options( ) ),
 	m_last_send_queed_packets_time_in_ms( 0 ),

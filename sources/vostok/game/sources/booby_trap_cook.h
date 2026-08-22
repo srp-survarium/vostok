@@ -12,8 +12,6 @@ namespace survarium {
 
 class game_world;
 
-// temp_include_all.cpp's use_booby_trap_cook anchor defines FUNCTION-LOCAL
-// stand-in classes with this name - different scope, no clash
 class booby_trap_cook : public booby_trap_core_cook {
 public:
 			explicit			booby_trap_cook				( game_world& gw );

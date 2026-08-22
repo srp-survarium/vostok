@@ -21,10 +21,6 @@ class game_world;
 // void* player_input_handler::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96900]: <0x968f0>|0x000|      :'39'	{
 
 class player_input_handler : public input::handler , public game_camera {
-	// codegen-neutral: /OPT:REF reachability anchor for the player_input_handler.cpp
-	// out-of-line members (player.cpp owner TU is still a stub). Retire with the
-	// anchor once the real call graph reaches them.
-	friend void use_game_player_input( );
 public:
 	enum action_state_enum
 	{

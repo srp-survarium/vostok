@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_aimed_fire_state_base.h>
 
-namespace vostok { void use_game_core_pistol_weapon_core_aimed_fire_state( ); }
 
 namespace survarium {
 
@@ -46,9 +45,7 @@ private:
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2];
 	/* 0x0178 */	u32									m_weapon_animation_index;
 
-	// temp_include_all.cpp anchor; reaches the protected ctor/initialize and private virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
 }; // class pistol_weapon_core_aimed_fire_state
 
 STATIC_SIZE_ASSERT(pistol_weapon_core_aimed_fire_state, 0x180);

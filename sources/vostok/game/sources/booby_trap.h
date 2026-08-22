@@ -9,14 +9,12 @@
 #include <vostok/render/facade/model.h>
 #include <vostok/resources_unmanaged_resource.h>
 
-namespace vostok { void use_game_booby_trap( ); }
 
 namespace survarium {
 
 class game_world;
 
 class booby_trap : public booby_trap_core {
-	friend void ::vostok::use_game_booby_trap( );
 private:
 			explicit	booby_trap				( game_world& gw );
 	virtual				~booby_trap				( );

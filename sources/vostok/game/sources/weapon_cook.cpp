@@ -20,10 +20,6 @@
 
 namespace survarium {
 
-// claude@NOTE: STRUCTURE MATCH (0 stmts, base-ctor call + vtable store + m_game init).
-// Capped ~89%: reached only via the carcass anchor's singleton s_weapon_cook, so the
-// target loads `this` as the absolute &s_weapon_cook instead of the register the real
-// caller (game_world) would pass. Anchor-convention residual, not source-steerable.
 weapon_cook::weapon_cook( game& g ) :
 	m_game( g )
 {

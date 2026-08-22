@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
-namespace vostok { void use_game_core_weapon_core_fire_state_base( ); }
 
 namespace survarium {
 
@@ -26,8 +25,6 @@ protected:
 	virtual	animation::callback_return_type_enum
 							on_shot_event				( animation::animation_callback_params& params );
 
-	// temp_include_all.cpp anchor; needs the protected ctor + virtuals.
-	friend void ::vostok::use_game_core_weapon_core_fire_state_base( );
 
 protected:
 	// m_animation_timescale / m_playback_type read by the derived

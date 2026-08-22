@@ -19,7 +19,6 @@ namespace mixing {
 }
 }
 
-namespace vostok { void use_game_core_weapon_core_chamber_a_round_state( ); }
 
 namespace survarium {
 
@@ -60,9 +59,7 @@ private:
 	/* 0x0148 */	resources::managed_resource_ptr		m_weapon_animations[2][2];
 	/* 0x0158 */	resources::managed_resource_ptr		m_user_animations[2][2];
 
-	// temp_include_all.cpp anchor; reaches the protected ctor / private virtuals.
 	template < typename T > friend class weapon_core_state_cook_template;
-	friend void ::vostok::use_game_core_weapon_core_chamber_a_round_state( );
 }; // class weapon_core_chamber_a_round_state
 
 STATIC_SIZE_ASSERT(weapon_core_chamber_a_round_state, 0x168);

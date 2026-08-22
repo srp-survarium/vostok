@@ -104,13 +104,6 @@ void base_game_scene::destroy_physics( )
 	physics::destroy_world( &memory::g_mt_allocator, m_physics_world );
 }
 
-// claude@NOTE: scheduler / input_translator / scene_renderer are body-correct; the only
-// residual is the entry register for `this` - the target keeps these tiny ref-returning
-// accessors out-of-line with `this` in EAX (the LTCG eax-this convention, like the matched
-// renderer() above), my base gets canonical thiscall ECX. Per patterns/eax-this-convention.md
-// this is caused BY the anchor's member-fn-ptr address-take (it forces __thiscall ECX) and
-// is verified non-steerable - base_game_scene is abstract so a real EAX-this CALL site
-// cannot be created here. Structurally 100%; residual is the address-escape penalty.
 scheduler& base_game_scene::scheduler( )
 {
 	return m_game.scheduler( );

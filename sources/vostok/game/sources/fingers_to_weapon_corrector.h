@@ -19,10 +19,6 @@ namespace animation {
 namespace survarium {
 
 class fingers_to_weapon_corrector : public core::noncopyable {
-	// /OPT:REF reachability anchor (anchor_game_fingers.cpp); references the private
-	// out-of-line bodies so the linker keeps them for the delinker to score.
-	friend void use_game_fingers( );
-
 public:
 	enum hands_enum {
 		left			= 0x0,

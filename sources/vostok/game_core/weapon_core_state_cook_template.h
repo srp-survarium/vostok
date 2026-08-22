@@ -7,32 +7,6 @@
 
 #include <vostok/resources_cook_classes.h>
 
-namespace vostok {
-	void use_game_core_weapon_core_idle_state( );
-	void use_game_core_weapon_core_aimed_state( );
-	void use_game_core_pistol_weapon_core_idle_state( );
-	void use_game_core_pistol_weapon_core_show_state( );
-	void use_game_core_pistol_weapon_core_hide_state( );
-	void use_game_core_weapon_core_show_state( );
-	void use_game_core_double_barreled_weapon_core_show_state( );
-	void use_game_core_double_barreled_weapon_core_hide_state( );
-	void use_game_core_weapon_core_hide_state( );
-	void use_game_core_double_barreled_weapon_core_idle_state( );
-	void use_game_core_pistol_weapon_core_aimed_idle_state( );
-	void use_game_core_double_barreled_weapon_core_aimed_idle_state( );
-	void use_game_core_pistol_weapon_core_fire_state( );
-	void use_game_core_pistol_weapon_core_reload_state( );
-	void use_game_core_weapon_core_aimed_fire_state( );
-	void use_game_core_pistol_weapon_core_aimed_fire_state( );
-	void use_game_core_weapon_core_reload_state( );
-	void use_game_core_weapon_core_fire_state( );
-	void use_game_core_weapon_core_chamber_a_round_state( );
-	void use_game_core_double_barreled_weapon_core_fire_state( );
-	void use_game_core_weapon_core_chamber_a_round_aimed_state( );
-	void use_game_core_double_barreled_weapon_core_aimed_fire_state( );
-	void use_game_core_double_barreled_weapon_core_reload_state( );
-}
-
 namespace survarium {
 
 struct weapon_state_creation_params;
@@ -57,30 +31,6 @@ template <>	inline	resources::class_id_enum	weapon_core_state_cook_class< pistol
 
 template < typename T >
 class weapon_core_state_cook_template : public resources::unmanaged_cook {
-	// temp_include_all.cpp anchors reach the private new_object directly.
-	friend void ::vostok::use_game_core_weapon_core_idle_state( );
-	friend void ::vostok::use_game_core_weapon_core_aimed_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_idle_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_show_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_hide_state( );
-	friend void ::vostok::use_game_core_weapon_core_show_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_show_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_hide_state( );
-	friend void ::vostok::use_game_core_weapon_core_hide_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_idle_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_idle_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_aimed_idle_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_fire_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_reload_state( );
-	friend void ::vostok::use_game_core_weapon_core_aimed_fire_state( );
-	friend void ::vostok::use_game_core_pistol_weapon_core_aimed_fire_state( );
-	friend void ::vostok::use_game_core_weapon_core_reload_state( );
-	friend void ::vostok::use_game_core_weapon_core_fire_state( );
-	friend void ::vostok::use_game_core_weapon_core_chamber_a_round_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_fire_state( );
-	friend void ::vostok::use_game_core_weapon_core_chamber_a_round_aimed_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_aimed_fire_state( );
-	friend void ::vostok::use_game_core_double_barreled_weapon_core_reload_state( );
 public:
 	inline	explicit	weapon_core_state_cook_template		( );
 	virtual				~weapon_core_state_cook_template	( );

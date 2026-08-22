@@ -9,14 +9,12 @@
 #include <vostok/resources_managed_resource.h>
 #include <vostok/math_randoms_generator.h>	// math::random32
 
-namespace vostok { void use_game_small_utils( ); }
 
 namespace survarium {
 
 class empty_hands_cook;
 
 class empty_hands : public interactive_object {
-	friend void ::vostok::use_game_small_utils( );
 	friend class empty_hands_cook;
 private:
 												empty_hands					( resources::managed_resource_ptr* animations, u32 animations_count );

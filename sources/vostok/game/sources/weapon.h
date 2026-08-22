@@ -24,7 +24,6 @@ namespace resources {
 } // namespace resources
 } // namespace vostok
 
-namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
 
 namespace survarium {
 
@@ -36,9 +35,6 @@ class weapon_cook;
 class weapon_sound_effect;
 
 class weapon : public weapon_core {
-	// /OPT:REF anchor reaches the private (AAE/EAE) methods below by address-take;
-	// codegen-neutral friend, no layout/symbol impact
-	friend	void	::vostok::use_game_weapons	( );
 	// the cook constructs/tears down weapon directly, touching private pfx/animation
 	// members; codegen-neutral
 	friend	class	weapon_cook;

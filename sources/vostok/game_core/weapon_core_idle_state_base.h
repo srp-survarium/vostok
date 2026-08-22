@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_base_state.h>
 
-namespace vostok { void use_game_core_weapon_core_idle_state_base( ); }
 
 namespace survarium {
 
@@ -19,9 +18,6 @@ private:
 	virtual	void		initialize					( ) override;
 	virtual	void		finalize					( ) override;
 
-	// temp_include_all.cpp anchor; needs to call the private virtuals
-	// non-virtually to keep their out-of-line symbols. Friend decls emit no bytes.
-	friend void ::vostok::use_game_core_weapon_core_idle_state_base( );
 }; // class weapon_core_idle_state_base
 
 STATIC_SIZE_ASSERT(weapon_core_idle_state_base, 0x138);

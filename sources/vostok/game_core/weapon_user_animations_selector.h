@@ -24,10 +24,6 @@ namespace animation {
 }
 }
 
-namespace vostok {
-	void use_game_core_weapon_user_animations_selector( );
-}
-
 namespace survarium {
 
 struct base_player;
@@ -35,9 +31,6 @@ class player_logic_base_state;
 struct weapon_animation_parameters;
 
 class weapon_user_animations_selector : public boost::noncopyable {
-	// claude@MATCH: anchor takes member-fn pointers to private leaves to keep them
-	// as standalone COMDATs; needs access to the private members.
-	friend void ::vostok::use_game_core_weapon_user_animations_selector( );
 public:
 	explicit				weapon_user_animations_selector	( );
 							~weapon_user_animations_selector( );

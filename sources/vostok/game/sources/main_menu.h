@@ -13,7 +13,6 @@ namespace vostok {
 namespace resources {
 	class queries_result;
 } // namespace resources
-	void use_game_menus( );	// /OPT:REF reachability anchor (anchor_game_menus.cpp)
 } // namespace vostok
 
 namespace survarium {
@@ -24,10 +23,6 @@ class game;
 // void* main_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x91bf0]: <0x427c0>|0x000|      :'43'	{
 
 class main_menu : public base_game_scene , public input::handler {
-	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
-	// address-take the private query_resources / on_resources_ready until the real
-	// menu call graph reaches them
-	friend void ::vostok::use_game_menus( );
 public:
 			explicit			main_menu			( game& g );
 	virtual						~main_menu			( );

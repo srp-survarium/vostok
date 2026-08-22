@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
-namespace vostok { void use_game_core_weapon_core_chamber_a_round_state_base( ); }
 
 namespace survarium {
 
@@ -23,8 +22,6 @@ private:
 
 	virtual	void		on_animation_end_impl					( bool& animation_player_tick_result ) override;
 
-	// temp_include_all.cpp anchor; needs the protected/private virtuals + ctor.
-	friend void ::vostok::use_game_core_weapon_core_chamber_a_round_state_base( );
 
 protected:
 	// protected so the concrete subclass reads it in get_weapon_lexeme_pair

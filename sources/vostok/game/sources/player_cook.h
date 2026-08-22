@@ -34,8 +34,6 @@ private:
 public:
 	virtual			~player_cook			( ) { /* no source */ }
 
-	// Lets the /OPT:REF reachability anchor address-take the private callbacks.
-	friend	void	use_game_player_cook	( );
 }; // class player_cook
 
 STATIC_SIZE_ASSERT(player_cook, 0x20);

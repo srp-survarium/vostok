@@ -28,13 +28,8 @@ namespace survarium {
 class items_dictionary;
 class player_profile;
 
-void use_game_lobby_scene( );	// /OPT:REF anchor (anchor_game_lobby_scene.cpp), friend below
 
 class profile_character : private boost::noncopyable {
-	// codegen-neutral: lets the lobby-scene reachability anchor address-take the
-	// private *_ready callbacks until the real query_resources call graph reaches
-	// them (their callers - query_character_animations etc. - are still STUBs).
-	friend void ::survarium::use_game_lobby_scene( );
 public:
 	inline			profile_character			(
 						items_dictionary&			arg_0,

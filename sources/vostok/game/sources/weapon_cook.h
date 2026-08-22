@@ -7,7 +7,6 @@
 
 #include <vostok/game_core/weapon_core_cook.h>
 
-namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
 
 namespace survarium {
 
@@ -15,8 +14,6 @@ class game;
 class weapon_core;
 
 class weapon_cook : public weapon_core_cook {
-	// /OPT:REF anchor address-takes the private methods below; codegen-neutral friend
-	friend	void	::vostok::use_game_weapons	( );
 public:
 			explicit	weapon_cook					( game& g );
 

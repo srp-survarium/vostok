@@ -21,7 +21,6 @@ namespace survarium {
 // scheduler buffer copy (the `movq xmm0` moves) wants - where our /Ox base uses a plain
 // `sub esp` frame and tail-calls the trailing base call. The bodies match; the frame
 // shape + tail-call are an MSVC stack-alignment heuristic difference, not a body change.
-// (The ctor also pairs against the anchor's guarded construction, hence a stray s_world load.)
 booby_trap_set::booby_trap_set( game_world& game_world ) :
 	m_player_death_subscriber( boost::bind( &booby_trap_set::on_player_death, this ) ),
 	m_game_world( game_world )

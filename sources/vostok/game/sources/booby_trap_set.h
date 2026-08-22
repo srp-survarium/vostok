@@ -10,9 +10,6 @@
 #include <vostok/game_core/scheduler.h>
 #include <vostok/render/facade/model.h>
 
-// anchor_game_booby_trap.cpp's /OPT:REF keep() needs to address-take the private
-// helpers; the friend decl is codegen-neutral (emits no bytes). Retire with the anchor.
-namespace vostok { void use_game_booby_trap( ); }
 
 namespace survarium {
 
@@ -21,7 +18,6 @@ class game_world;
 // void* booby_trap_set::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96b50]: <0x96a90>|0x000|      :'41'	{
 
 class booby_trap_set : public booby_trap_set_core {
-	friend void ::vostok::use_game_booby_trap( );
 	friend class booby_trap_set_cook;
 public:
 			void									on_trap_placed_message		( u8 index, float3 const& position, float3 const& angles );

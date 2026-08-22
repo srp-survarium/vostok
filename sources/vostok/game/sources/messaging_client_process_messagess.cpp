@@ -262,12 +262,6 @@ void messaging_client::find_players_by_name( pcstr player_name )
 	m_network_client.send	( packet );
 }
 
-// claude@NOTE: anchor-capped. The target builds a single `bool` (set by the
-// type==account && find!=end() test) and returns its negation through one unified
-// epilogue (sete); our base compiles to 0 statements because the carcass anchor's
-// freshly-built client has an empty m_ignore_list (begin==end), so LTCG const-folds
-// the whole find away to `return true`. Lifts once a real client with a populated
-// ignore list reaches this and the anchor is removed.
 bool messaging_client::accept_message_from( const u32 sender_account_id, messaging::client_type_enum sender_type )
 {
 	if ( sender_type == messaging::account_client_type )
