@@ -11,9 +11,13 @@
 #include <vostok/animation/mixing_addition_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/resources.h>
 #include <vostok/resources_queries_result.h>	// queries_result [] / size / is_successful
 #include <vostok/resources_query_result.h>		// query_result_for_user accessors
+#include <vostok/render/facade/common_types.h>
 #include <vostok/render/facade/scene_renderer.h>	// *_ready: add_model / remove_model
+#include <vostok/sound/sound_scene_creation_params.h>
+#include <boost/bind.hpp>
 
 namespace survarium {
 
@@ -27,18 +31,64 @@ void lobby_menu::clear_resources( )
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED. 51-stmt body building sound::sound_scene_creation_params +
-// render::scene_configuration, a resources::request[9] array and variant<32> data[10],
-// then resources::query_resources with an on_render_scenes_ready boost::bind callback.
-// Named LOCALS (structure): variant<32> sound_scene_data; variant<32> const* data[10];
-// variant<32> temp_data; sound::sound_scene_creation_params sound_configuration;
-// resources::request[9] requests; render::scene_configuration render_configuration;
-// variant<32> lobby_scene_data. Walled by the request-array assembly + scene_configuration /
-// sound_scene_creation_params field layout (not declared in our tree). NEXT: recover the
-// request fill order from --view target then reconstruct.
 void lobby_menu::query_scene_resources( )
 {
+	render::scene_configuration render_configuration;
+	render_configuration.m_create_terrain			= false;
+	render_configuration.m_create_particle_world	= true;
+	render_configuration.m_has_clouds				= false;
+	render_configuration.m_create_speedtree_world	= false;
+	render_configuration.m_create_grass_world		= false;
+	render_configuration.m_sky_enabled				= true;
+	render_configuration.m_use_occlusion_culling	= false;
+
+	resources::user_data_variant temp_data;
+	temp_data.set( render_configuration );
+
+	resources::user_data_variant lobby_scene_data;
+	lobby_scene_data.set( static_cast< base_game_scene* >( this ) );
+
+	sound::sound_scene_creation_params sound_configuration;
+	sound_configuration.proxies_count		= 5;
+	sound_configuration.propagators_count	= 5;
+	sound_configuration.receivers_count		= 2;
+
+	resources::user_data_variant sound_scene_data;
+	sound_scene_data.set( sound_configuration );
+
+	resources::user_data_variant const* data[] =
+	{
+		&temp_data,
+		NULL,
+		&sound_scene_data,
+		&lobby_scene_data,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		NULL
+	};
+
+	resources::request requests[] =
+	{
+		{ "game_scene", resources::scene_class },
+		{ "game_scene_view", resources::scene_view_class },
+		{ "sound_scene", resources::sound_scene_class },
+		{ "lobby_scene", resources::client_game_project_class },
+		{ "resources/flash_movies/cursor.swf", resources::flash_movie_class },
+		{ "resources/flash_movies/inventory.swf", resources::flash_movie_class },
+		{ "resources/flash_movies/message.swf", resources::flash_movie_class },
+		{ "resources/flash_movies/match_making.swf", resources::flash_movie_class },
+		{ "resources/gameplay/players/default.player", resources::binary_config_class }
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &lobby_menu::on_render_scenes_ready, this, _1 ),
+		g_allocator,
+		data
+	);
 }
 
 profile_player_character::profile_player_character( lobby_menu& lobby_menu )

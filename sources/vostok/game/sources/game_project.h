@@ -88,6 +88,8 @@ private:
 	// network_client walks m_victory_items_containers directly (on_world_sync_request);
 	// PDB does not record friendship, codegen-neutral
 	friend class network_client;
+	// lobby_menu inserts the lobby project's objects, visuals, and collisions directly.
+	friend class lobby_menu;
 
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */

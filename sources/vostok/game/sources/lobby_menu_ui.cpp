@@ -38,6 +38,13 @@
 #include "price_item.h"
 #include "player_leveling_info.h"
 #include "profile_player_character.h"
+#include "game_project.h"
+#include "game_object_.h"
+#include "render_visual.h"
+#include "lobby_camera.h"
+#include <vostok/game_core/static_collision.h>
+#include <vostok/sound/world.h>
+#include <vostok/sound/world_user.h>
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_movie_resource.h>
 #include <vostok/scaleform/sources/flash_value.h>
@@ -452,123 +459,92 @@ void lobby_menu::update_status( )
 	m_lobby_menu_ui->movie->Invoke		( "root.set_status_info", NULL, &log_message, 1 );
 }
 
-// claude@NOTE: PARKED - heavy cross-subsystem wall (sound::world_user listener setup,
-// render::scene_renderer::add_model, game::create_network_client, flash_external_handler
-// ctor + CreateFunction/GetVariable glue) plus the scaleform flash /Od inline wall. The
-// camera/scene wiring members have no header here. Recover with the render/sound scene
-// surfaces.
-// STATE[STUB]
 void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 {
-	// LOCALS
-	// flash_value 						func
-	// float3 							pos
-	// float3 							dir
-	// flash_value 						proxy
-	// flash_value 						players_count
-	// configs::binary_config_ptr 		player_config
-	// ******
+	m_render_scene		= static_cast_resource_ptr< render::scene_ptr >( data[0].get_unmanaged_resource( ) );
+	m_render_scene_view	= static_cast_resource_ptr< render::scene_view_ptr >( data[1].get_unmanaged_resource( ) );
+	m_sound_scene			= data[2].get_unmanaged_resource( );
 
-	// CALL SITE INFO
-	// <0x74729d> -> sound::world_user& < unknown >() const
-	// <0x74797f> -> void < unknown >( bool )
-	// <0x7479d7> -> void < unknown >()
-	// ******
+	get_game( ).get_sound_world( ).get_logic_world_user( ).set_listener_properties_interlocked(
+		reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ),
+		float3( 0.31f, 2.9f, 26.07f ),
+		float3( 0.9f, -0.22f, 0.37f ),
+		float3( 0.f, 1.f, 0.f )
+	);
 
-	// FUNCTION BODY[0x747070]: 92
-	// <0>
-	// <1>
-	// <0x74707c>|0x00c|+0x078:'487'
-	// <0x7470f4>|0x084|+0x06f:'488'
-	// <0x747163>|0x0f3|+0x0a8:'489'
-	// <0>
-	// <0x74720b>|0x19b|+0x09b:'491'
-	// <0>
-	// <0x7472a6>|0x236|+0x0a5:'493'
-	// <0>
-	// <0x74734b>|0x2db|+0x024:'495'
-	// <0>
-	// <1>
-	// <0x74736f>|0x2ff|+0x0a5:'498'
-	// <0x747414>|0x3a4|+0x01f:'499'
-	// <0x747433>|0x3c3|+0x006:'500'
-	// <0>
-	// <0x747439>|0x3c9|+0x0af:'502'
-	// <0x7474e8>|0x478|+0x01f:'503'
-	// <0x747507>|0x497|+0x006:'504'
-	// <0>
-	// <0x74750d>|0x49d|+0x0af:'506'
-	// <0x7475bc>|0x54c|+0x01f:'507'
-	// <0x7475db>|0x56b|+0x006:'508'
-	// <0>
-	// <0x7475e1>|0x571|+0x0af:'510'
-	// <0x747690>|0x620|+0x023:'511'
-	// <0x7476b3>|0x643|+0x006:'512'
-	// <0>
-	// <0x7476b9>|0x649|+0x04f:'514'
-	// <0>
-	// <0x747708>|0x698|+0x03d:'516'
-	// <0>
-	// <0x747745>|0x6d5|+0x03d:'518'
-	// <0>
-	// <0x747782>|0x712|+0x026:'520'
-	// <0x7477a8>|0x738|+0x026:'521'
-	// <0>
-	// <0x7477ce>|0x75e|+0x018:'523'
-	// <0x7477e6>|0x776|+0x017:'524'
-	// <0>
-	// <0x7477fd>|0x78d|+0x018:'526'
-	// <0x747815>|0x7a5|+0x017:'527'
-	// <0>
-	// <0x74782c>|0x7bc|+0x018:'529'
-	// <0x747844>|0x7d4|+0x017:'530'
-	// <0>
-	// <0x74785b>|0x7eb|+0x018:'532'
-	// <0x747873>|0x803|+0x017:'533'
-	// <0x74788a>|0x81a|+0x026:'534'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7478b0>|0x840|+0x026:'538'
-	// <0x7478d6>|0x866|+0x023:'539'
-	// <0>
-	// <0x7478f9>|0x889|+0x02e:'541'
-	// <0x747927>|0x8b7|+0x02e:'542'
-	// <0>
-	// <0x747955>|0x8e5|+0x01f:'544'
-	// <0>
-	// <0x747974>|0x904|+0x00d:'546'
-	// <0>
-	// <1>
-	// <2>
-	// <0x747981>|0x911|+0x035:'550'
-	// <0>
-	// <0x7479b6>|0x946|+0x00c:'552'
-	// <0x7479c2>|0x952|+0x006:'553'
-	// <0>
-	// <0x7479c8>|0x958|+0x008:'555'
-	// <0>
-	// <0x7479d0>|0x960|+0x002:'557'
-	// <0x7479d2>|0x962|+0x00e:'558'
-	// <0>
-	// <1>
-	// <0x7479e0>|0x970|+0x01e:'561'
-	// <0x7479fe>|0x98e|+0x036:'562'
-	// <0>
-	// <0x747a34>|0x9c4|+0x01a:'564'
-	// <0x747a4e>|0x9de|+0x01a:'565'
-	// <0>
-	// <0x747a68>|0x9f8|+0x02d:'567'
-	// <0x747a95>|0xa25|+0x03b:'568'
-	// <0x747ad0>|0xa60|+0x0ca:'569'
-	// <0>
-	// <0x747b9a>|0xb2a|+0x008:'571'
-	// <0x747ba2>|0xb32|+0x006:'572'
-	// <0>
-	// <0x747ba8>|0xb38|+0x01f:'574'
-	// <0>
-	// <0x747bc7>|0xb57|+0x008:'576'
-	// ******
+	m_lobby_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[3].get_unmanaged_resource( ) );
+	m_character = NEW( profile_player_character )( *this );
+
+	m_cursor_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[4].get_unmanaged_resource( ) );
+	m_cursor_ui->movie->SetBackgroundAlpha( 0.f );
+	m_cursor_ui->movie->SetPriority( 100 );
+
+	m_lobby_menu_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[5].get_unmanaged_resource( ) );
+	m_lobby_menu_ui->movie->SetBackgroundAlpha( 0.f );
+	m_lobby_menu_ui->movie->SetPriority( 10 );
+
+	m_message_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[6].get_unmanaged_resource( ) );
+	m_message_ui->movie->SetBackgroundAlpha( 0.f );
+	m_message_ui->movie->SetPriority( 12 );
+
+	m_match_making_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[7].get_unmanaged_resource( ) );
+	m_match_making_ui->movie->SetBackgroundAlpha( 0.5f );
+	m_match_making_ui->movie->SetPriority( 15 );
+
+	configs::binary_config_ptr player_config = static_cast_resource_ptr< configs::binary_config_ptr >( data[8].get_unmanaged_resource( ) );
+	m_player_max_carried_weight = player_config->get_root( )["player"]["stamina_params"]["max_carried_weight"];
+
+	m_lobby_menu_external_handler = NEW( lobby_menu_external_handler )( get_game( ) );
+	m_lobby_menu_ui->movie->SetExternalInterface( m_lobby_menu_external_handler );
+	m_match_making_ui->movie->SetExternalInterface( m_lobby_menu_external_handler );
+
+	m_cursor_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_cursor_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+	m_lobby_menu_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_lobby_menu_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+	m_match_making_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_match_making_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+	m_message_ui->movie->SetViewAlignment( flash_movie::Align_TopLeft );
+	m_message_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
+	m_message_ui->movie->SetExternalInterface( m_lobby_menu_external_handler );
+
+	flash_value proxy;
+	m_lobby_menu_ui->movie->GetVariable( &proxy, "_root.player_profile" );
+	m_relocate_item_func = NEW( relocate_item_func )( get_game( ) );
+	flash_value func;
+	m_lobby_menu_ui->movie->CreateFunction( &func, m_relocate_item_func );
+	proxy.SetMember( "_relocateFunction", func );
+
+	m_lobby_menu_ui->movie->Advance( 0.f, 0 );
+	show_ui( true );
+
+	flash_value players_count;
+	players_count.SetUInt( 5 );
+	m_lobby_menu_ui->movie->Invoke( "root.lobby_menu.set_max_players", NULL, &players_count, 1 );
+
+	for ( vector< game_object_* >::iterator i = m_lobby_game_project->m_objects.begin( ),
+		e = m_lobby_game_project->m_objects.end( );
+		i != e;
+		++i )
+		( *i )->
+			insert( );
+
+	for ( u32 i = 0; i < m_lobby_game_project->m_render_visuals_count; ++i )
+		m_lobby_game_project->m_render_visuals[i].insert( *this );
+
+	for ( u32 i = 0; i < m_lobby_game_project->m_static_collision_objects_count; ++i )
+		m_lobby_game_project->m_static_collision_objects[i].insert( get_physics_world( ) );
+
+	float3 pos = m_lobby_game_project->m_config->get_root( )["camera"]["position"];
+	float3 dir = m_lobby_game_project->m_config->get_root( )["camera"]["direction"];
+	m_camera->set_position_direction( pos, dir );
+
+	fill_items_dictionary( );
+	fill_inventory_labels( );
+
+	get_game( ).on_queried_by_network_client_scene_ready( login_scene_ready );
+	show_disconnected_message( true );
+
 }
 
 // claude@NOTE: walks the file-scope survarium::lobby_labels ui_label table (73 {name,label}
