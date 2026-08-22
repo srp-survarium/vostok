@@ -132,7 +132,7 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 		for ( u32 i = m_next_key_point; i < m_navigation_path.size( ); ++i ) {
 			float const previous_to_current_length = ( m_navigation_path[i] - m_navigation_path[i - 1] ).length( );
 			if (
-				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) / previous_to_current_length ) < previous_to_current_length &&
+				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) ) / previous_to_current_length < previous_to_current_length &&
 				( movement_position - m_navigation_path[i] ).length( ) > s_aim_transition_time
 			)
 				break;
