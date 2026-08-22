@@ -47,6 +47,7 @@ public:
 	virtual	void	on_activate			( camera_director* cd ) override;
 	virtual	void	on_focus			( bool b_focus_enter ) override;
 
+private:
 			void	build_view_matrix	(
 						float2 const&		raw_angles,
 						float				shift_forward,
@@ -57,6 +58,7 @@ public:
 			bool	keyb_event_present	( s32 e );
 			bool	mouse_event_present	( s32 e );
 
+public:
 	virtual			~free_fly_camera	( ) { /* no source */ }
 
 private:
