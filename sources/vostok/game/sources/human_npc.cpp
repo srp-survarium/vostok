@@ -301,14 +301,14 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 
 
 	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
-	m_renderer.debug( ).draw_arrow	(
-		m_scene, get_eyes_position( ),
-		get_eyes_direction( ) * 3.f + get_eyes_position( ),
-		math::color( 0, 0, 255 ) );
+
+	float3 const eyes_position		= get_eyes_position( );
+	float3 const eyes_direction		= get_eyes_direction( ) * 3.f;
+	m_renderer.debug( ).draw_arrow	( m_scene, eyes_position, eyes_position + eyes_direction, math::color( 255, 0, 0 ) );
 
 	if ( m_sound_perceived )
 	{
-		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, create_translation( get_eyes_position( ) ), math::color( 0, 0, 255 ) );
+		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, create_translation( get_eyes_position( ) ), math::color( 255, 0, 0 ) );
 		m_sound_perceived			= false;
 	}
 	if ( m_sound_produced )
@@ -316,8 +316,8 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, m_transform, math::color( 0, 255, 0 ) );
 		m_sound_produced			= false;
 	}
-
-	m_animations_selector->debug_draw	( render, scene );
+	// target passes the members, not the (dead, LTCG-stripped) params
+	m_animations_selector->debug_draw	( m_renderer, m_scene );
 }
 
 void human_npc::set_transform( float4x4 const& transform )
