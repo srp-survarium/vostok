@@ -32239,7 +32239,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
 `dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	9c10578f6a61	
 `dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	accc1b9f20fa	
-`dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	blocked				0	2	60	f		
+`dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH	100	100	100	3	60	f	bf9e2835b35c	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	098ff45eff88	
 `dynamic atexit destructor for 's_localization''	vostok/game/sources/text_translator.cpp	game	done	MATCH	100	100	100	2	60	f	8214aac75ccc	Reconstructed the target global localization command and runtime path; all three bodies are byte-exact.
@@ -33895,7 +33895,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 'gRandomGenerator''	opcode/ice/icerandom.cpp	opcode	done	MATCH	100	100	100	0	12	f		
 `dynamic initializer for 'g_debug_render_device''	vostok/render/core/dx11/sources/device.cpp	render	done	MATCH	100	100	100	0	19	f	6772cd424658	
 `dynamic initializer for 'g_threads''	vostok/engine/sources/apc.cpp	engine	done	MATCH	100	100	100	0	12	f	8a696caf56a6	
-`dynamic initializer for 'is_ui_minimap_rotable_old''	vostok/game/sources/game_world_ui.cpp	game	blocked				0	2	11	f		
+`dynamic initializer for 'is_ui_minimap_rotable_old''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH	100	100	100	3	11	f	383d079b3292	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic initializer for 'ps_cst_minus_inf''	vostok/collision/sources/colliders_ray_aabb_win.cpp	collision	done	MATCH	100	100	100	0	48	f	5162180ce3cf	
 `dynamic initializer for 'ps_cst_plus_inf''	vostok/collision/sources/colliders_ray_aabb_win.cpp	collision	done	MATCH	100	100	100	0	41	f	a1845964291c	
 `dynamic initializer for 's_ai_allocator''	vostok/game/sources/game_entry_point.cpp	game	done	MATCH	100	100	100	0	13	f	77b3748fb4d1	
@@ -33936,7 +33936,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 's_generate_shaders_world''	vostok/game/sources/game_entry_point.cpp	game	done	MATCH	100	100	100	0	13	f	1fdcd7e55d86	
 `dynamic initializer for 's_input_allocator''	vostok/game/sources/game_entry_point.cpp	game	done	MATCH	100	100	100	0	13	f	0d8fc101f0b5	
 `dynamic initializer for 's_is_spectator''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	2	19	f	ebaaeb662af7	G12 reconstructed resource-owner callback and target command-line statics; 28/28 PDB statements and exact locals; caller remains dependent on core is_set_as_string inline ownership
-`dynamic initializer for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	blocked				0	2	79	f		
+`dynamic initializer for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH	100	100	100	3	79	f	4193093d0806	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic initializer for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	79	f	32816c4f8e44	
 `dynamic initializer for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	79	f	56a55f1bf644	
 `dynamic initializer for 's_localization''	vostok/game/sources/text_translator.cpp	game	done	MATCH	100	100	100	2	77	f	00f2fd8de7b6	Reconstructed the target global localization command and runtime path; all three bodies are byte-exact.

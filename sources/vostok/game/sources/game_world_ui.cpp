@@ -28,15 +28,15 @@
 #include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/console_command.h>
 
-namespace survarium {
+
 
 static bool is_ui_minimap_rotable		= true;
 static bool is_ui_minimap_rotable_old	= is_ui_minimap_rotable;
-// claude@NOTE: cc_bool console-command registration is /Od + cross-module-walled
-// (the ctor inlines into a dynamic initializer + atexit destructor; the cc_bool
-// vtable/console-command-root linkage is the known cross-module cc_bool park).
-static console_commands::cc_bool s_is_ui_minimap_rotable( "is_ui_minimap_rotable", is_ui_minimap_rotable, true, console_commands::command_type_user_specific );
+// The retained previous value detects user-specific console changes.
 
+
+static console_commands::cc_bool s_is_ui_minimap_rotable( "is_ui_minimap_rotable", is_ui_minimap_rotable, true, console_commands::command_type_user_specific );
+namespace survarium {
 game_world_ui::game_world_ui( game_world& w ) :
 	m_game_world( w ),
 	m_players_list_visible( false ),
