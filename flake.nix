@@ -62,9 +62,15 @@
       url = "github:srp-survarium/pdb_fetch.nvim";
       flake = false;
     };
+    bullet-2_79-src = {
+      # The first official 2.79 revision. Multiple stock target-PDB MD5s land
+      # exactly on this commit after the repository's LF -> CRLF conversion.
+      url = "github:bulletphysics/bullet3/ce62d7615ecb1faa876d11172c418244c7246b5c";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src, pdb-fetch-nvim-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src, pdb-fetch-nvim-src, bullet-2_79-src }:
     let
       system = "x86_64-linux";
 
@@ -442,6 +448,7 @@
           export VOSTOK_LIBS_DIR="${vostok-libs}"
           export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
           export SURVARIUM_BIN="${survarium}"
+          export BULLET_2_79_SOURCE="${bullet-2_79-src}/src"
 
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
@@ -458,6 +465,7 @@
               "vcproj2ninja:${vcproj2ninja}" \
               "survarium-game:${survarium}" \
               "survarium-keys:${survarium.keys}" \
+              "bullet-2.79-source:${bullet-2_79-src}" \
               "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
