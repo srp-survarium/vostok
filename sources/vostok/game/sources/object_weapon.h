@@ -51,7 +51,7 @@ public:
 
 	virtual	float						get_velocity			( ) const override { /* no source */ return 0.0f; }
 
-	virtual	float						get_luminosity			( ) const override { /* no source */ return 0.0f; }
+	virtual	float						get_luminosity			( ) const override { return 0.003f; }
 
 	// inline override the canonical PDB did not emit (never out-of-lined); the
 	// concrete object_weapon needs it (it is constructed in on_npc_attributes_received)
