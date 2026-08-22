@@ -34,7 +34,7 @@ static bool s_enable_finger_corrector_value = true;
 static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
 
 static bool s_draw_fire_point = false;
-
+static vostok::console_commands::cc_bool s_draw_fire_point_cc( "weapon_draw_fire_point", s_draw_fire_point, true, vostok::console_commands::command_type_user_specific );
 // hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
 // s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion. The
 // cc_float registration (dispersion_magic_coef_cc) takes the value's address, which keeps
