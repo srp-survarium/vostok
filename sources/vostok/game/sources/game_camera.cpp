@@ -12,8 +12,6 @@ namespace survarium {
 float s_camera_far_plane	= 5000.0f;
 float default_vertical_fov	= 57.5f;
 
-static vostok::console_commands::cc_float	cc_cam_fov( "fov", default_vertical_fov, 60.0f, 70.0f, true, vostok::console_commands::command_type_user_specific );
-
 game_camera::game_camera( base_game_scene& w ) :
 	m_game_scene( w ),
 	m_near_plane( 0.05f ),

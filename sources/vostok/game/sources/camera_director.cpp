@@ -10,7 +10,7 @@
 #include <vostok/console_command.h>
 
 namespace survarium {
-
+static vostok::console_commands::cc_float	cc_cam_fov( "fov", default_vertical_fov, 60.0f, 70.0f, true, vostok::console_commands::command_type_user_specific );
 camera_director::camera_director( base_game_scene& w ) :
 	m_game_scene		( w ),
 	m_active_camera		( NULL )
