@@ -78,15 +78,24 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > animation_space_graph_ptr;
 
-inline bool operator!=( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
+__declspec( noinline ) inline bool operator!=( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
 {
 	return	!(
 				left.rotation.x == right.rotation.x &&
 				left.rotation.y == right.rotation.y &&
 				left.rotation.z == right.rotation.z &&
 				left.rotation.w == right.rotation.w &&
-				left.translation.is_similar( right.translation )
+					left.translation.is_similar( right.translation, 0.3f )
 			);
+}
+
+inline bool operator==( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
+{
+	return	left.rotation.x == right.rotation.x &&
+			left.rotation.y == right.rotation.y &&
+			left.rotation.z == right.rotation.z &&
+			left.rotation.w == right.rotation.w &&
+			left.translation.is_similar( right.translation, 0.3f );
 }
 
 } // namespace survarium

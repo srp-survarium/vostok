@@ -27,7 +27,17 @@ public:
 		m_graph( arg_0 )
 	{ /* no source */ }
 
-	inline	u32		get_start_vertices_count			( ) const { /* no source */ return 0; }
+	template < typename VertexType >
+	inline	bool	accessible						(
+					animation_space_vertex_id const& neighbour_vertex_id,
+					VertexType const& current_vertex,
+					const u32 iterator
+				) const
+	{
+		return true;
+	}
+
+	inline	u32		get_start_vertices_count			( ) const { return 1; }
 
 	inline			~animation_space_search_restrictor	( ) { /* no source */ }
 
