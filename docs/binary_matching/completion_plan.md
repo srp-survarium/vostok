@@ -90,13 +90,19 @@ generalizes: any module whose files hash-land is settled file-by-file
 
 ## Phase 3 — The grind: open rows where source shape is wrong
 
-Remaining open (post-wiring numbers will shrink these): game ~291,
-boost 244, vostok 122, stlport 113, render 40, bullet 38 (→ Phase 2),
-core 18, vorbis 7, animation 3, ai 2.
+Scope: ENGINE code only — game ~291, vostok 122, render tail 40, core 18,
+vorbis 7 (-> Phase 2 hash), animation 3, ai 2. Work order: game → vostok →
+render tail → core.
 
-Work order: game → vostok → stlport → render tail → boost pool. Boost and
-stlport are template pools — one header-shape fix fans out across
-instantiations, so prefer family diagnoses over row-by-row work.
+**stlport (113) and boost (244) are NOT ground.** They are vendored template
+pools: every instantiation is compiled from an *engine* usage site, so their
+divergences are instantiation context — inline decisions, fold
+representatives, comparator shapes — owned by the engine TUs that
+instantiate them. They move to Phase 4 (convergence) and are expected to
+lift as engine callers land; the only direct interventions permitted there
+are engine-header truths that gold attests globally (the
+`operator<(buffer_string)` out-of-line decision was one — a vostok header,
+not an stlport edit). Vendored template sources stay pristine.
 
 The validated lever kit (memory: `matching-lever-mechanics.md`) — in
 descending order of evidence strength:
