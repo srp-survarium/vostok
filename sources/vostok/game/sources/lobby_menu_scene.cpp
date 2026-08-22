@@ -13,6 +13,7 @@
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
 #include <vostok/resources_queries_result.h>	// queries_result [] / size / is_successful
 #include <vostok/resources_query_result.h>		// query_result_for_user accessors
+#include <vostok/render/facade/scene_renderer.h>	// *_ready: add_model / remove_model
 
 namespace survarium {
 
@@ -128,33 +129,54 @@ void profile_character::update( const u32 current_time_in_ms )
 	VOSTOK_UNREFERENCED_PARAMETER		( current_time_in_ms );
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED. 8 stmts: if(m_character_model){remove_model} -> m_character_model=NULL
-// -> if(data.is_successful()){ m_character_model = data[0] skeleton_model_ptr; m_skeleton =
-// m_character_model->m_skeleton; m_weapon_bone_index = skeleton_bone_index(*m_skeleton,"Weapon");
-// m_scene_renderer.add_model(m_scene, m_character_model->m_render_model, m_initial_matrix); }
-// The render facade layouts (skeleton_model_instance m_render_model@+0x108) are correct, but the
-// queries_result extraction inherits the same cross-module 8-byte queries_result header shift as
-// character_animation_ready (data.is_successful() reads [eax+40h] target vs +0x48 base), so this
-// can pair only at a capped % with that residual; the intricate intrusive_ptr ref-count temps
-// also need exact scheduling. NEXT: write the 8-stmt body above; residual stays until core
-// resources_query_result.h layout matches (out of scope here).
 void profile_character::character_model_ready( resources::queries_result& data )
 {
+	if ( m_character_model )
+	{
+		m_scene_renderer.remove_model( m_scene, m_character_model->m_render_model );
+		m_character_model	= 0;
+	}
+
+	if ( data.is_successful( ) )
+	{
+		m_character_model	= static_cast_resource_ptr< render::skeleton_model_ptr >( data[ 0 ].get_unmanaged_resource( ) );
+		m_skeleton			= m_character_model->m_skeleton;
+		m_weapon_bone_index	= m_skeleton->get_bone_index( "Weapon" ) - m_skeleton->get_root_bones_count( );
+		m_scene_renderer.add_model( m_scene, m_character_model->m_render_model, m_initial_matrix );
+	}
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED. 16-stmt loop over m_preview_weapon[2] (stride at +0x859C): for each
-// entry remove the old m_model/m_addon from the scene, then if data[i] is_successful rebind
-// model+addon+animation and resolve the addon bone via m_model->m_render_model->get_locator(
-// name, m_addon_locator ) (the unknown bool(pcstr, render::model_locator_item&) const = the
-// render_model_instance::get_locator virtual in render/facade/model.h). Same cross-module
-// queries_result 8-byte header shift as character_animation_ready ([esi+12Ch]/[edi+8688h]
-// extraction) plus the preview_weapon m_model/m_addon @+0x108 render-layout dances. NEXT:
-// reconstruct the per-entry loop; residual capped by the core queries_result layout (out of
-// scope) - body left as STUB.
+// 3 queries per weapon slot: [3i] model, [3i+1] animation, [3i+2] addon; the
+// addon attach point resolves off the MODEL's render model into m_addon_locator
 void profile_character::weapon_resources_ready( resources::queries_result& data )
 {
+	for ( u32 i = 0; i < 2; ++i )
+	{
+		if ( m_preview_weapon[ i ].m_visible )
+		{
+			if ( m_preview_weapon[ i ].m_model )
+				m_scene_renderer.remove_model( m_scene, m_preview_weapon[ i ].m_model->m_render_model );
+			if ( m_preview_weapon[ i ].m_addon )
+				m_scene_renderer.remove_model( m_scene, m_preview_weapon[ i ].m_addon->m_render_model );
+		}
+
+		m_preview_weapon[ i ].m_model		= 0;
+		m_preview_weapon[ i ].m_addon		= 0;
+		m_preview_weapon[ i ].m_animation	= 0;
+		m_preview_weapon[ i ].m_visible		= false;
+
+		if ( data[ 3 * i ].is_successful( ) )
+		{
+			m_preview_weapon[ i ].m_model		= static_cast_resource_ptr< render::skeleton_model_ptr >( data[ 3 * i ].get_unmanaged_resource( ) );
+			m_preview_weapon[ i ].m_animation	= data[ 3 * i + 1 ].get_managed_resource( );
+		}
+
+		if ( data[ 3 * i + 2 ].is_successful( ) )
+		{
+			m_preview_weapon[ i ].m_addon		= static_cast_resource_ptr< render::static_model_ptr >( data[ 3 * i + 2 ].get_unmanaged_resource( ) );
+			m_preview_weapon[ i ].m_model->m_render_model->get_locator( "scope_point", m_preview_weapon[ i ].m_addon_locator );
+		}
+	}
 }
 
 // claude@NOTE: structure matches (for / if(!is_successful) LOG_ERROR / two array
