@@ -111,63 +111,24 @@ consequences, both measured 2026-08-16 (see
    two sources of evidence conflict. Deliberately NOT changed; needs a decision
    plus a full-build measurement, since libgfx is linked by render too.
 
-## zlib reads 0.99% - three causes, none of them "unmatched source" (2026-08-16)
+## zlib link provenance resolved (2026-08-22)
 
-We do not MATCH vendor deps; built from the same source with the same toolchain
-they should be exact by construction. zlib scoring ~0 therefore means our BUILD
-differs from theirs. Investigated; it decomposes into three independent faults.
+Retail and the reconstructed executable now link one implementation: engine
+zlib 1.2.3. Both contain one deflate 1.2.3 banner and one inflate 1.2.3 banner,
+with no 1.2.7 implementation banner. All nine target zlib translation units are
+present on the base side.
 
-**1. `_deflate0` is a delinker artifact, and it costs deflate.c its whole score.**
-The base PDB contains **no** `_deflate0` (0 occurrences) - the rich index has a
-normal `_deflate`. The name appears only in the delinked
-`binaries/objdiff/base/zlib/deflate.c.obj`, where the delinker disambiguated a
-DUPLICATE definition by appending a counter. There are two zlibs in the link:
-`sources/zlib` and GFx's bundled `libgfx_zlib.lib`, which also defines
-`_deflate`/`_inflate`. objdiff then cannot match target `_deflate` against base
-`_deflate0`, so every function in the unit scores 0.0 - hence the suspiciously
-exact zeros across all nine zlib units. **Tooling, not source.**
+The target xrefs show that the real `inflate*` callers are the shipped
+Scaleform objects (`ByteArray::uncompress`, `ZLibFile`, and `ZlibSupport`), not
+the resource decompression path; resources use PPMd. Retail compiled those GFx
+objects against the 1.2.7 headers but resolved their calls against zlibN 1.2.3.
 
-**1b. ROOT CAUSE (2026-08-16): we link TWO zlibs; retail linked one.**
-Banner counts settle it - retail has the 1.2.3 copyright twice and the 1.2.7
-copyright ZERO times; ours has each once:
+The discrepancy was the `libgfx_zlib.lib` default-library pragma in
+`engine_scaleform_initialize.cpp`. It introduced the bundled 1.2.7 archive,
+caused duplicate zlib definitions, and kept the engine inflate units out of the
+link. Removing that pragma lets the existing GFx callers pull zlibN directly,
+so the temporary application-level inflate pin is also gone.
 
-    retail   deflate 1.2.3 (1995-2005) + inflate 1.2.3 (1995-2005)
-    ours     deflate 1.2.3 (1995-2005) + inflate 1.2.7 (1995-2012)
-
-The GFx SDK bundles its own zlib (`scaleform_sdk/3rdParty/zlib-1.2.7/`), and
-`engine_scaleform_initialize.cpp:13` does
-`#pragma comment( lib, "libgfx_zlib.lib" )`, so that archive joins the link and
-satisfies `_inflate` before our `sources/zlib` (1.2.3) is reached. Our own
-inflate.c is then never pulled in - which is exactly fault 3 - and the duplicate
-`_deflate` definition is what makes the delinker emit `_deflate0`, which is
-fault 1. One cause, three symptoms.
-
-Retail's PDB DOES reference `3rdParty\zlib-1.2.7` headers, so retail compiled
-GFx against 1.2.7 - it just did not link 1.2.7's code. Its GFx zlib calls
-resolved against the engine's 1.2.3.
-
-NEXT: drop the libgfx_zlib.lib pragma (and the identical one in
-maya_library_linkage.cpp:30) so GFx resolves against the engine zlib as retail
-did, rebuild, and check the banner counts match retail's 2/0. Reversible; it
-changes link composition, so measure paired-count before/after.
-
-**2. Our `_deflate` is nearly twice the target's.**
-    target  _deflate  rva=0x534b10  size=0x7d9  (2,009 B)
-    base    _deflate  rva=0x52fea0  size=0xe50  (3,664 B)
-Same function, 1.8x the code. Different flags or a different zlib build. Our
-tree is ZLIB_VERSION 1.2.3. Not explained yet - this is the real question.
-
-**3. The entire inflate side is absent from our build.**
-Target delinks nine zlib TUs; we emit three (compress.c, deflate.c, trees.c).
-No base object exists for adler32.c, crc32.c, inflate.c, inffast.c, inftrees.c
-or zutil.c, and the base index has no `_inflate` at all (target: 0x1510 bytes).
-Either those TUs are not in the vcproj, or nothing reachable calls them and
-/OPT:REF strips them - the same reachability question the anchors exist for.
-
-Order to attack: (1) is mechanical and unblocks measurement of (2); (3) is a
-build-graph question answerable without touching source. NONE of this is
-matching work.
-
-Note the same class of question applies to `gfx` (96.55%, 90 KB unmatched) and
-`boost`/`stlport`: for a vendor dep, a residual is a build-input discrepancy to
-explain, not a queue to work.
+The ledger is 99.99% over 46 zlib functions. The remaining 12-byte `_zcfree`
+and 19-byte `_zcalloc` residuals are relocation/ICF attribution details; the
+large deflate and inflate bodies are byte-exact.

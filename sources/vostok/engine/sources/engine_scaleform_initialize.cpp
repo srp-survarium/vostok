@@ -10,7 +10,6 @@
 #include <vostok/scaleform/sources/scaleform_engine.h>
 
 #pragma comment( lib, "libgfx.lib" )
-#pragma comment( lib, "libgfx_zlib.lib" )
 #pragma comment( lib, "libgfx_libpng.lib" )
 #pragma comment( lib, "libgfx_as2.lib" )
 #pragma comment( lib, "libgfx_as3.lib" )
