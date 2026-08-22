@@ -776,6 +776,8 @@ void game_world_ui::update_minimap_players( )
 		float position_x = current_player->get_current( ).transform.c.x;
 		float position_y = -current_player->get_current( ).transform.c.z;
 
+		bool const is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
+
 		flash_value player_descr_value;
 		get_ui( )->movie->CreateObject( &player_descr_value );
 		flash_value player_descr_value_property;
@@ -796,7 +798,6 @@ void game_world_ui::update_minimap_players( )
 		player_descr_value_property.SetUInt( current_player->team( ) );
 		player_descr_value.SetMember( "team", player_descr_value_property );
 
-		bool is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
 		player_descr_value_property.SetBoolean( is_carrying_item );
 		player_descr_value.SetMember( "is_carrying_item", player_descr_value_property );
 
