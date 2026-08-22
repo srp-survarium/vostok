@@ -24422,7 +24422,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?initialize_ai@game_world@survarium@@AAEXXZ	vostok/game/sources/game_world_npc.cpp	game	inprogress	QUANTITY	71.4286	71.4286	71.4286	1	44	f	818a2da1c015	
 ?initialize_ai_navigation@game_world@survarium@@AAEXXZ	vostok/game/sources/game_world_npc.cpp	game	inprogress	QUANTITY	81.25	81.25	81.25	1	50	f	2b9db4a8e9ad	
 ?initialize_base_points@game_world_ui@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	vostok/game/sources/game_world_ui.cpp	game	inprogress	SIZE	95.9608	95.9608	95.9608	2	147	f	07a972d8d989	
-?initialize_bindings@game_options@survarium@@QAEXXZ	vostok/game/sources/game_options.cpp	game	inprogress	QUANTITY	62.5618	62.5618	62.5618	1	773	f	4466bd45e22e	
+?initialize_bindings@game_options@survarium@@QAEXXZ	vostok/game/sources/game_options.cpp	game	inprogress	QUANTITY	62.7928	62.7928	62.7928	1	773	f	4466bd45e22e	
 ?initialize_bones_indices@fingers_to_weapon_corrector@survarium@@AAEXABVskeleton@animation@vostok@@@Z	vostok/game/sources/fingers_to_weapon_corrector.cpp	game	inprogress	SIZE	73.3966	73.3966	73.3966	1	196	f	d1b8a2008efb	
 ?initialize_build@engine_world@engine@vostok@@AAEXQBD@Z	vostok/engine/sources/engine_world_build.cpp	engine	done	MATCH	100	100	100	1	231	f	77409a765b7a	auto: at 100% ceiling, demoted from queue
 ?initialize_core@engine_world@engine@vostok@@AAEXXZ	vostok/engine/sources/engine_world_win.cpp	engine	done	MATCH	100	100	100	0	227		3c7e9d15b8e7	
@@ -29968,7 +29968,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?skip_string@reader@memory@vostok@@QAEXXZ	vostok/core/sources/memory_reader.cpp	core	done	MATCH	100	100	100	1	31	f	fa6178772f83	auto: at 100% ceiling, demoted from queue
 ?skip_time_if_needed@animation_player@animation@vostok@@AAEXI@Z	vostok/animation/sources/animation_player.cpp	animation	parked	SIZE	91.7	91.7	91.7	3	335		14a9daee2c47	Same 16-block CFG and seven PDB rows. Residual is rooted in the custom argument convention: target keeps this in EDI and current_time on stack, base passes this and time on stack; that changes serialize/deserialize conventions. Continue through tick, tick_to_nearest_user_handled_callback, and the game player tick caller.
 ?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z	vostok/core/sources/math_quaternion.cpp	core	parked	MATCH	27.3	27.3	27.3	1	25	f	d679c60732b1	Structure-exact one-block forwarding wrapper. Residual is solely slerp_optimized aggregate hidden-result and argument register selection at the real call boundary.
-?smooth@player@survarium@@AAEXM@Z	vostok/game/sources/player_tick.cpp	game	inprogress	SPLIT	75.1307	75.1307	75.1307	2	661	f	6572e4893c0d	G06 caller-cone reconstruction: projection body, smoothing temporaries, physics guard, animation substep, and nameplate tail
+?smooth@player@survarium@@AAEXM@Z	vostok/game/sources/player_tick.cpp	game	inprogress	SPLIT	75.1307	75.1307	75.1307	2	661	f	6aa15f92f282	G06 caller-cone reconstruction: projection body, smoothing temporaries, physics guard, animation substep, and nameplate tail
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	vostok/render/engine/sources/cloud_simulation.cpp	render	parked	SPLIT	73.2013	73.2013	73.2013	2	460	f	571f9e22c542	SPLIT with near-equal totals; neighbor-check chain attribution.
 ?smooth_voxels_around@cloud_simulation@render@vostok@@AAEXXZ	vostok/render/engine/sources/cloud_simulation.cpp	render	parked				0	1	1	f		target is an empty one-byte body with no emitted target caller; base strips it and no fabricated retention anchor is justified
 ?smoothingGet@Bitmap@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/display/as3_obj_display_bitmap.cpp	gfx	done	MATCH	100	100	100	0	12	f		
@@ -32210,9 +32210,9 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	100	37.8	100	1	12	f		Instruction streams 
 `dynamic atexit destructor for 'boost::asio::detail::service_base<boost::asio::stream_socket_service<boost::asio::ip::tcp> >::id''	boost/asio/placeholders.hpp	boost	done	MATCH	100	100	100	0	15		e7addf46204c	
 `dynamic atexit destructor for 'boost::asio::ssl::detail::openssl_init<1>::instance_''	boost/bind/placeholders.hpp	boost	blocked	MATCH			0	0	43			
 `dynamic atexit destructor for 'bullet_tracers_max_count_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	60	f	3a99b76cf949	
-`dynamic atexit destructor for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
-`dynamic atexit destructor for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
-`dynamic atexit destructor for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
+`dynamic atexit destructor for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
+`dynamic atexit destructor for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	1e31de05cd85	
 `dynamic atexit destructor for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	1e31de05cd85	
 `dynamic atexit destructor for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH	100	100	100	1	60	f	776709c59242	
@@ -32241,13 +32241,13 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	100	37.8	100	1	12	f		Instruction streams 
 `dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	accc1b9f20fa	
 `dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	blocked				0	2	60	f		
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
-`dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_localization''	vostok/game/sources/text_translator.cpp	game	blocked				0	1	60	f		
 `dynamic atexit destructor for 's_max_angular_velocity_command''	vostok/game/sources/game.cpp	game	blocked				0	1	60	f		
 `dynamic atexit destructor for 's_max_particles''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	1e31de05cd85	
 `dynamic atexit destructor for 's_net_client_account_name_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 `dynamic atexit destructor for 's_net_client_account_password_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-`dynamic atexit destructor for 's_net_max_position_discrepancy_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_net_max_position_discrepancy_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_no_background''	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	60	f	9ce32d91afe1	reconstructed visibility caller cone from target PDB/disassembly
 `dynamic atexit destructor for 's_no_bushes''	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	60	f	9ce32d91afe1	reconstructed visibility caller cone from target PDB/disassembly
 `dynamic atexit destructor for 's_no_flora''	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	60	f	9ce32d91afe1	reconstructed visibility caller cone from target PDB/disassembly
@@ -32264,19 +32264,19 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	100	37.8	100	1	12	f		Instruction streams 
 `dynamic atexit destructor for 's_ph_debug_cmd03''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	da679c62dd90	
 `dynamic atexit destructor for 's_physics_max_substeps_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	da679c62dd90	
 `dynamic atexit destructor for 's_portals_occlusion_culling_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH	100	100	100	0	60	f	26f7581b9f55	
-`dynamic atexit destructor for 's_print_animations_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_print_animations_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_process_allocator''	vostok/core/sources/memory.cpp	core	done	MATCH	100	100	100	0	11	f	accc1b9f20fa	
 `dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	da679c62dd90	
-`dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_shadow_z_near''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_short_statistics''	vostok/render/engine/sources/statistics.cpp	render	done	MATCH	100	100	100	0	60	f	5cdb712b03ea	
 `dynamic atexit destructor for 's_show_profiler_command''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	60	f	1e31de05cd85	
 `dynamic atexit destructor for 's_skeleton_animation_cook''	vostok/animation/sources/skeleton_animation_cook.cpp	animation	done	MATCH	100	100	100	1	11	f	4bb2896cdcde	animation root/callback reconstruction; baked cook blocked by target-only global inline scheduling
-`dynamic atexit destructor for 's_smooth_angular_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
-`dynamic atexit destructor for 's_smooth_linear_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
-`dynamic atexit destructor for 's_smooth_pitch_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_smooth_angular_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
+`dynamic atexit destructor for 's_smooth_linear_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
+`dynamic atexit destructor for 's_smooth_pitch_speed_command''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_speedtree_lod_index''	vostok/render/engine/sources/speedtree_forest.cpp	render	done	MATCH	100	100	100	0	60	f	23cc2c34dbc6	
-`dynamic atexit destructor for 's_test_players_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	9fd2c8225ae9	
+`dynamic atexit destructor for 's_test_players_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	60	f	834ad47dd63f	
 `dynamic atexit destructor for 's_ui_enabled_console_command''	vostok/render/engine/sources/renderer.cpp	render	done	MATCH	100	100	100	3	60	f	a2f68e621910	Restored opaque-model gather root, shader-LOD split, stage sorting helpers, and target material/texture predicates.
 `dynamic atexit destructor for 's_use_poral_culling_cc''	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	0	60	f	810bfc7287b3	
 `dynamic atexit destructor for 's_use_screeen_space_portals_intersection_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH	100	100	100	0	60	f	26f7581b9f55	
