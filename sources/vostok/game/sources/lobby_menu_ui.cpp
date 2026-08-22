@@ -938,19 +938,22 @@ void lobby_menu::fill_inventory_contents( )
 
 void lobby_menu::on_items_compatibility_arrived( )
 {
+	class lobby_client& client			= lobby_client( );
+
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	for ( u8 i = 0; i < lobby_client( ).item_compatibilities_count( ); ++i )
+	u8 const item_compatibilities_count	= client.item_compatibilities_count( );
+	for ( u8 i = 0; i < item_compatibilities_count; ++i )
 	{
 		flash_value items_compatibility_item;
 		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
 
 		flash_value items_compatibility_item_property;
-		items_compatibility_item_property.SetUInt	( lobby_client( ).get_items_compatibility( i ).first_item_dict_id );
+		items_compatibility_item_property.SetUInt	( client.get_items_compatibility( i ).first_item_dict_id );
 		items_compatibility_item.SetMember			( "first_item_dict_id", items_compatibility_item_property );
 
-		items_compatibility_item_property.SetUInt	( lobby_client( ).get_items_compatibility( i ).second_item_dict_id );
+		items_compatibility_item_property.SetUInt	( client.get_items_compatibility( i ).second_item_dict_id );
 		items_compatibility_item.SetMember			( "second_item_dict_id", items_compatibility_item_property );
 
 		slot_restrictions_array.SetElement			( i, items_compatibility_item );
@@ -961,19 +964,22 @@ void lobby_menu::on_items_compatibility_arrived( )
 
 void lobby_menu::on_slot_restrictions_arrived( )
 {
+	class lobby_client& client			= lobby_client( );
+
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	for ( u8 i = 0; i < lobby_client( ).slot_restrictions_count( ); ++i )
+	u8 const slot_restrictions_count	= client.slot_restrictions_count( );
+	for ( u8 i = 0; i < slot_restrictions_count; ++i )
 	{
 		flash_value slot_restriction_item;
 		m_lobby_menu_ui->movie->CreateObject( &slot_restriction_item );
 
 		flash_value slot_restriction_item_property;
-		slot_restriction_item_property.SetUInt	( lobby_client( ).slot_restriction( i ).slot_dict_id );
+		slot_restriction_item_property.SetUInt	( client.slot_restriction( i ).slot_dict_id );
 		slot_restriction_item.SetMember			( "slot_id", slot_restriction_item_property );
 
-		slot_restriction_item_property.SetUInt	( lobby_client( ).slot_restriction( i ).category_dict_id );
+		slot_restriction_item_property.SetUInt	( client.slot_restriction( i ).category_dict_id );
 		slot_restriction_item.SetMember			( "category_id", slot_restriction_item_property );
 
 		slot_restrictions_array.SetElement		( i, slot_restriction_item );
@@ -985,15 +991,17 @@ void lobby_menu::on_slot_restrictions_arrived( )
 void lobby_menu::fill_profiles( )
 {
 	flash_value profiles_array;
+	class lobby_client& client			= lobby_client( );
 	m_lobby_menu_ui->movie->CreateArray	( &profiles_array );
 
-	for ( u8 i = 0; i < lobby_client( ).profiles_count( ); ++i )
+	u8 const profiles_count				= client.profiles_count( );
+	for ( u8 i = 0; i < profiles_count; ++i )
 	{
 		flash_value profile_item;
 		m_lobby_menu_ui->movie->CreateObject( &profile_item );
 
 		wchar_t profile_name_w[512];
-		mbstowcs_s						( NULL, profile_name_w, 512, lobby_client( ).profile( i ).profile_name, _TRUNCATE );
+		mbstowcs_s						( NULL, profile_name_w, 512, client.profile( i ).profile_name, _TRUNCATE );
 
 		flash_value profile_item_property;
 		profile_item_property.SetStringW( profile_name_w );
@@ -1566,19 +1574,21 @@ void lobby_menu::fill_friend_list( )
 
 void lobby_menu::fill_ignore_list( )
 {
+	vectora< account_list_item > const& players_list = messaging_client( ).get_ignore_list( );
+
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	for ( u32 i = 0; i < messaging_client( ).get_ignore_list( ).size( ); ++i )
+	for ( u32 i = 0; i < players_list.size( ); ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
 		flash_value value;
-		value.SetUInt					( messaging_client( ).get_ignore_list( )[ i ].account_id );
+		value.SetUInt					( players_list[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
-		value.SetString					( messaging_client( ).get_ignore_list( )[ i ].account_name.c_str( ) );
+		value.SetString					( players_list[ i ].account_name.c_str( ) );
 		list_item.SetMember				( "name", value );
 
 		value.SetUInt					( 3 );
@@ -1592,20 +1602,21 @@ void lobby_menu::fill_ignore_list( )
 
 void lobby_menu::fill_found_players( )
 {
+	vectora< account_list_item > const& players_list = messaging_client( ).get_found_players_list( );
+
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	const u32 count = messaging_client( ).get_found_players_list( ).size( );
-	for ( u32 i = 0; i < count; ++i )
+	for ( u32 i = 0; i < players_list.size( ); ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
 		flash_value value;
-		value.SetUInt					( messaging_client( ).get_found_players_list( )[ i ].account_id );
+		value.SetUInt					( players_list[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
-		value.SetString					( messaging_client( ).get_found_players_list( )[ i ].account_name.c_str( ) );
+		value.SetString					( players_list[ i ].account_name.c_str( ) );
 		list_item.SetMember				( "name", value );
 
 		array_value.SetElement			( i, list_item );

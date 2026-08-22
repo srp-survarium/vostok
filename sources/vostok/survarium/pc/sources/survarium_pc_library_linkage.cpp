@@ -32,3 +32,21 @@
 #	include <vostok/linkage_helper.h>
 	VOSTOK_INCLUDE_TO_LINKAGE(sound_library_linkage)
 #endif // #ifdef VOSTOK_STATIC_LIBRARIES
+// Resolve the zlib inflate half from zlibN.lib (1.2.3) BEFORE the Scaleform
+// prebuilt's defaultlib can satisfy it with its bundled 1.2.7 copy: this TU is
+// an explicit link object, so its undefineds hit the command-line lib list
+// first. The retail exe carries inflate 1.2.3 (the game zlib), not 1.2.7.
+extern "C" int inflate( void* strm, int flush );
+extern "C" int inflateInit2_( void* strm, int windowBits, char const* version, int stream_size );
+extern "C" unsigned long adler32( unsigned long adler, unsigned char const* buf, unsigned int len );
+
+// a namespace-scope object's dynamic initializer is a /OPT:REF root (.CRT$XCU)
+static struct zlib_inflate_pin {
+	zlib_inflate_pin( )
+	{
+		static void* volatile s_zlib_pin = 0;
+		s_zlib_pin = ( void* )&inflate;
+		s_zlib_pin = ( void* )&inflateInit2_;
+		s_zlib_pin = ( void* )&adler32;
+	}
+} s_zlib_inflate_pin;
