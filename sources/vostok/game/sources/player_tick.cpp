@@ -123,13 +123,14 @@ void player::update_history_item_from_previous(
 	float4x4&								previous_transform
 )
 {
-	math::quaternion target_rotation( previous_transform.get_angles_xyz( ) );
-	math::quaternion const item_rotation( item_to_update.action.state.transform.get_angles_xyz( ) );
-	target_rotation = target_rotation * item_rotation;
-	target_rotation = target_rotation * math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
+	math::quaternion target_rotation =
+		math::quaternion( previous_transform.get_angles_xyz( ) )
+		* math::quaternion( item_to_update.action.state.transform.get_angles_xyz( ) )
+		* math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
 
-	float3 position = previous_item.action.state.transform.c.xyz( );
-	position += item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( );
+	const float3 position =
+		previous_item.action.state.transform.c.xyz( )
+		+ ( item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( ) );
 
 	previous_transform = item_to_update.action.state.transform;
 
@@ -139,8 +140,7 @@ void player::update_history_item_from_previous(
 	set_physics_controller_walk_vector( m_target );
 
 	m_target.physics_controller->update_action( item_to_update.time_in_ms - previous_item.time_in_ms );
-	item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
-	previous_transform = item_to_update.action.state.transform;
+	previous_transform = item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
 }
 
 // claude@NOTE: STRUCTURE MATCH (target 4 stmts == base 4). Ring walk from_index->head,
@@ -335,7 +335,8 @@ void player::tick( const u32 current_time_in_ms )
 	if( m_use_physics_controller_for_current )
 		m_current.update_transform( );
 
-	if( m_use_physics_controller_for_current && m_target.physics_controller->has_updates( )
+	if( m_use_physics_controller_for_current
+		&& m_target.physics_controller->has_updates( )
 		&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f )
 	{
 		m_current.transform = m_target.transform;
@@ -434,7 +435,11 @@ void player::tick( const u32 current_time_in_ms )
 	}
 
 	bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
-	if( name_visible && m_game.network_client( ).current_player_team( ) == m_team_id && m_game.get_game_world( ).get_camera_director( ).get_active_camera( ) )
+	if( name_visible
+		&& m_game.network_client( )
+			.current_player_team( ) == m_team_id
+		&& m_game.get_game_world( ).get_camera_director( )
+			.get_active_camera( ) )
 	{
 		float2 screen_p( math::SNaN, math::SNaN );
 		if( m_game_scene.point_to_screen( float3( m_character_head_transform.c.x, m_character_head_transform.c.y + 0.2f, m_character_head_transform.c.z ), screen_p ) )
@@ -455,8 +460,7 @@ void player::tick( const u32 current_time_in_ms )
 		}
 	}
 
-	if( m_text.visible )
-		m_text.set_visible( false );
+	if( m_text.visible )	m_text.set_visible( false );
 }
 
 } // namespace survarium
