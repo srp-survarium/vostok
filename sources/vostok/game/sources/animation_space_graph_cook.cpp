@@ -161,8 +161,8 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 
 		std::pair< animation_space_vertex const*, animation_space_vertex const* > const& mix = graph->get_mixes( )[ it - offsets.begin( ) ];
 
-		float const left_weight = ( i - offset ) /
-			(float)mix.first->intervals_count;
+		float const left_weight = ( i - offset ) *
+			( 1.f / mix.first->intervals_count );
 
 		new ( it_edges++ ) animation_space_edge(
 			animation_space_graph::get_movement( player, mix.first, mix.second, left_weight ),
@@ -186,9 +186,9 @@ void animation_space_graph_cook::on_animations_loaded( resources::queries_result
 	configs::binary_config_value const& groups =
 		(*config)["animation_space_graph"]["groups"];
 
-	std::pair< u32, u32 > mixes_count = get_animation_mixes_count( groups );
-
 	u32 const animations_count = data.size( );
+
+	std::pair< u32, u32 > mixes_count = get_animation_mixes_count( groups );
 
 	// sushi@TODO: the target ctor reads a file-scope `agent_radius` float the sources
 	// never declare; LTCG drops the argument at this call site. Passing 0.f until the
@@ -240,12 +240,10 @@ void animation_space_graph_cook::on_animations_loaded( resources::queries_result
 				pcstr const second_path = vertices[ u32( (*it_mix)["second"] ) ];
 				animation_space_vertex const* const first_mixable = graph->get_animation_by_path( vertices[ u32( (*it_mix)["first"] ) ] );
 
-				std::pair< animation_space_vertex const*, animation_space_vertex const* >* const edge = it_edges++;
-				if ( edge )
-				{
-					edge->first = first_mixable;
-					edge->second = graph->get_animation_by_path( second_path );
-				}
+				new ( it_edges++ ) std::pair< animation_space_vertex const*, animation_space_vertex const* >(
+					first_mixable,
+					graph->get_animation_by_path( second_path )
+				);
 			}
 		}
 	}

@@ -40,6 +40,12 @@ void use_game_lobby_scene( )
 	static void ( profile_character::* volatile s_anim_ready )( resources::queries_result& )
 		= &profile_character::character_animation_ready;
 	(void)s_anim_ready;
+	static void ( profile_character::* volatile s_model_ready )( resources::queries_result& )
+		= &profile_character::character_model_ready;
+	(void)s_model_ready;
+	static void ( profile_character::* volatile s_weapon_ready )( resources::queries_result& )
+		= &profile_character::weapon_resources_ready;
+	(void)s_weapon_ready;
 
 	static volatile bool s_run = false;
 	if( !s_run )
