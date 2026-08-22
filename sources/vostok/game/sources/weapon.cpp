@@ -659,8 +659,9 @@ void weapon::on_user_sprint( const bool user_is_sprinting )
 {
 	weapon_core::on_user_sprint( user_is_sprinting );
 
-	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left,  m_is_double_handed || !user_is_sprinting, m_last_tick_time_in_ms );
-	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, !user_is_sprinting,                        m_last_tick_time_in_ms );
+	bool const left_hand_active = m_is_double_handed || !user_is_sprinting;
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left,  left_hand_active,   m_last_tick_time_in_ms );
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, !user_is_sprinting, m_last_tick_time_in_ms );
 }
 
 } // namespace survarium
