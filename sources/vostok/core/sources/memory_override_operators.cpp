@@ -110,7 +110,9 @@ struct inplace_constructor {
 	}
 }; // struct inplace_constructor
 
-__declspec( noinline ) void initialize_crt_allocator			( )
+// no noinline: the retail binary inlines this whole lazy-init body at every
+// ogg/CRT hook site (preinitialize + log callback + bind_pointer_to_buffer)
+void initialize_crt_allocator			( )
 {
 	R_ASSERT					( g_crt_allocations_are_enabled );
 	if ( !g_crt_allocator ) {
