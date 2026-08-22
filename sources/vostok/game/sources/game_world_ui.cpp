@@ -92,8 +92,7 @@ void game_world_ui::initialize( match_options& options )
 
 	flash_value players_array;
 	get_ui( )->movie->CreateArray( &players_array );
-	u32 in_array_index = 0;
-	for ( u8 i = 0; i < 20; ++i )
+	u32 in_array_index = 0;	for ( u8 i = 0; i < 20; ++i )
 	{
 		if ( options.player_profiles[i].team == team_undefined )
 			continue;

@@ -1461,21 +1461,21 @@ void lobby_menu::fill_character_data( )
 	}
 	char_info_value.SetMember			( "skills", player_skills_value );
 
-	player_leveling_info const& leveling = lobby_client( ).get_player_leveling( );
-
-	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
+	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_skill_points );
 	char_info_value.SetMember			( "points_available", player_skills_value_prop );
 
-	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
+	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_skill_points );
 	char_info_value.SetMember			( "points_unlocked", player_skills_value_prop );
 
-	player_skills_value_prop.SetUInt	( leveling.total_experience );
+	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_experience - lobby_client( ).get_player_leveling( ).prev_level_experience );
 	char_info_value.SetMember			( "experience_current", player_skills_value_prop );
 
-	player_skills_value_prop.SetUInt	( leveling.next_level_experience );
+	u32 const next_level_experience = lobby_client( ).get_player_leveling( ).next_level_experience;
+	u32 const prev_level_experience = lobby_client( ).get_player_leveling( ).prev_level_experience;
+	player_skills_value_prop.SetUInt	( next_level_experience > prev_level_experience ? next_level_experience - prev_level_experience : 0 );
 	char_info_value.SetMember			( "experience_next_level", player_skills_value_prop );
 
-	player_skills_value_prop.SetUInt	( leveling.next_level_experience - leveling.prev_level_experience );
+	player_skills_value_prop.SetUInt	( m_match_stats.last_match_exp_delta );
 	char_info_value.SetMember			( "experience_delta", player_skills_value_prop );
 
 	flash_value player_perks_value;
