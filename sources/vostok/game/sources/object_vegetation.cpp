@@ -6,40 +6,47 @@
 #include "object_vegetation.h"
 #include "base_game_scene.h"
 #include "game.h"
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
+#include <vostok/render/engine/sources/grass_data.h>
 
 namespace survarium {
 
-// claude@NOTE: the old park cause for load / on_grass_loaded is stale -
-// render::grass_loading_data (render/engine/sources/grass_data.h) and
-// resources::query_resources (resources.h) both exist now. What is still open is the
-// queries_result accessor the target reads: on_grass_loaded builds the intrusive_ptr
-// temp from `&data + 0x12C` (a raw pointer inside the trailing m_queries[] array, not a
-// named member) before assigning m_grass, and load's variant<32>/boost::bind argument
-// pack is unreconstructed.
 object_vegetation::object_vegetation( base_game_scene& s ) :
 	game_object_( s )
 {
 }
 
-// STATE[STUB]
-// target: 2 stmts - stmt 1 = m_grass = <ptr at queries_result+0x12C> (intrusive_ptr
-// assign); stmt 2 = cb( *this ). See the note above the ctor.
 void object_vegetation::on_grass_loaded( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
+	m_grass = data[ 0 ].get_unmanaged_resource( );
+	cb( *this );
 }
 
-// STATE[STUB]
-// target: malloc variant<32> ud; ud = t; ud += project_resources_path; build the
-// on_grass_loaded callback via boost::bind; query_resources( "grass", ... ).
-// See the note above the ctor.
 void object_vegetation::load(
 	configs::binary_config_value const&		t,
 	pcstr									project_resources_path,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
+	render::grass_loading_data* grass_data = VOSTOK_NEW_IMPL( g_allocator, render::grass_loading_data );
+	grass_data->t_current = &t;
+	grass_data->project_resources_path = project_resources_path;
+
+	resources::user_data_variant ud;
+	ud.set( grass_data );
+
+	resources::query_resource(
+		"grass",
+		resources::grass_world_class,
+		boost::bind( &object_vegetation::on_grass_loaded, this, _1, cb ),
+		g_allocator,
+		&ud
+	);
 }
 
 void object_vegetation::insert( )
