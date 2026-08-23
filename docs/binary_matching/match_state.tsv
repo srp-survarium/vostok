@@ -8615,7 +8615,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gengine@core@vostok@@UAEPAXI@Z	vostok/resources_resource_ptr.h	vostok	done	MATCH	100	100	100	0	31	f	1310d5d88106	
 ??_Gengine_world@engine@vostok@@UAEPAXI@Z	vostok/engine/sources/engine_world.h	engine	done	MATCH	100	100	100	0	30	f	c5c62a7e991a	
 ??_Genqueue_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/enqueue_order.h	network	done	MATCH	100	100	100	0	46		9b7b0524962f	
-??_Gfree_fly_camera@survarium@@UAEPAXI@Z	vostok/game/sources/free_fly_camera.h	game	inprogress	MATCH	39.3846	39.3846	39.3846	0	77	f	fca435b2189f	
+??_Gfree_fly_camera@survarium@@UAEPAXI@Z	vostok/game/sources/free_fly_camera.h	game	parked	MATCH	39.3846	39.3846	39.3846	1	77	f	c95977a7e21e	target has no standalone ~free_fly_camera symbol and inlines the same two vector frees into the deleting destructor; base keeps the faithful class-body destructor out of line
 ??_Gfs_task@resources@vostok@@UAEPAXI@Z	boost/intrusive/detail/tree_algorithms.hpp	boost	done	MATCH	100	100	100	0	31	f	440cb9692a74	
 ??_Gfs_task_iterator@resources@vostok@@UAEPAXI@Z	vostok/core/sources/resources_fs_task_iterator.h	core	done	MATCH	100	100	100	0	90	f	a1d551764f56	
 ??_Gfs_task_mount@resources@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	30	f	440cb9692a74	
@@ -26689,7 +26689,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?on_activate@base_game_scene@survarium@@UAEXXZ	vostok/game/sources/base_game_scene.cpp	game	done	MATCH	100	100	100	1	81	f	399947465537	
 ?on_activate@console_impl@vostok@@UAEXXZ	vostok/engine/sources/console_impl.cpp	engine	done	MATCH	100	100	100	0	33	f	3d8d86a4a7d9	
 ?on_activate@editor_console@engine@vostok@@UAEXXZ	vostok/engine/sources/editor_console.cpp	engine	done	MATCH	100	100	100	0	33	f	f6b072a61ef2	
-?on_activate@free_fly_camera@survarium@@UAEXPAVcamera_director@2@@Z	vostok/game/sources/free_fly_camera.cpp	game	inprogress	SIZE	79.7544	79.7544	79.7544	0	210	f	e92403ae3948	
+?on_activate@free_fly_camera@survarium@@UAEXPAVcamera_director@2@@Z	vostok/game/sources/free_fly_camera.cpp	game	parked	SIZE	79.7544	79.7544	79.7544	1	210	f	e92403ae3948	target/base 3 statements, 0 locals, and one-block flow match; retail keeps the faithful xyz constants in XMM registers across the matrix copy and cross_product while base materializes the float3 temporary
 ?on_activate@game_camera@survarium@@UAEXPAVcamera_director@2@@Z	vostok/game/sources/game_camera.cpp	game	done	MATCH	100	100	100	0	24	f	95faf5b23a3c	
 ?on_activate@game_console@engine@vostok@@UAEXXZ	vostok/engine/sources/game_console.cpp	engine	done	MATCH	100	100	100	0	53	f	90006dc5d2c4	
 ?on_activate@game_world@survarium@@UAEXXZ	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	147	f	6981f6ae6c08	

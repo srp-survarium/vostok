@@ -59,7 +59,7 @@ private:
 			bool	mouse_event_present	( s32 e );
 
 public:
-	virtual			~free_fly_camera	( ) { /* no source */ }
+	virtual			~free_fly_camera	( ) { /* sushi@NOTE: Retail inlines member cleanup into its deleting destructor. */ }
 
 private:
 	/* 0x0000 */	/* game_camera */
