@@ -142,9 +142,9 @@ void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& 
 	static_cast_checked< human_npc* >( owner )->get_available_weapons( list_to_be_filled );
 }
 
-// claude@NOTE: structure matches (1 stmt). Byte residual is the repo-wide
-// logging-not-gold-stubbed wall: target ICF-folds has_passed_filters/append onto
-// empty_stub, base emits the real logging bodies. Verbosity/format from the asm.
+// claude@NOTE: Target/base are otherwise byte-identical. The sole residual is
+// LOG_ERROR's source-layout __LINE__ immediate (target 183, base 150); per the
+// log-line policy, do not pad this TU for one metadata operand.
 u32 game_world::get_node_by_name( pcstr node_name ) const
 {
 	LOG_ERROR						( "node with name %s wasn't found", node_name );
@@ -164,9 +164,9 @@ void delete_weapons( human_npc_ptr& owner )
 		DELETE						( weapon );
 }
 
-// claude@NOTE: cross-module cap - human_npc::clear_resources is still a stub in
-// base ({ret}), so the target's call inlines to nothing here; matches once that
-// sibling (human_npc.cpp) is bodied. Residual otherwise is LTCG this-in-register.
+// Target LTCG eliminates the faithful delete_weapons/clear_resources cleanup from
+// its PDB body while base retains the real calls. Do not remove cleanup to chase
+// the optimized projection.
 void game_world::kill_npc( human_npc_ptr& condemned )
 {
 	delete_weapons					( condemned );
@@ -180,9 +180,9 @@ void game_world::on_behaviour_created( resources::queries_result& data )
 		m_selected_npc->set_behaviour	( new_behaviour );
 }
 
-// claude@NOTE: structure (23 stmts) matches. The trailing finish_npc_creation is
-// inlined here, so the same human_npc::enable stub cap applies (TRGT_ONLY tail);
-// otherwise byte residual is the config operator[] / float-conversion codegen.
+// claude@NOTE: All statements, literals, and callees match. Target keeps the
+// object_weapon constructor out of line while base inlines it; iterator/register
+// differences follow from that call boundary.
 void game_world::on_npc_attributes_received( configs::binary_config_value const& attributes_config, human_npc_ptr owner )
 {
 	human_npc::npc_game_attributes		attributes;
@@ -216,10 +216,10 @@ void game_world::on_npc_attributes_received( configs::binary_config_value const&
 	finish_npc_creation					( owner, attributes );
 }
 
-// claude@NOTE: cross-module cap - human_npc::enable is still a stub in base
-// ({ret}), so the target's enable() call inlines to nothing (a TRGT_ONLY
-// statement); structure (3 stmts) is correct, byte-matches once human_npc.cpp's
-// enable is bodied. Residual otherwise is LTCG this-in-register.
+// claude@NOTE: Statement count, size, and all 18 instructions match. Only LTCG
+// assigns this to ECX in target and EAX in base at the custom-convention boundary;
+// the three callees and operands agree.
+
 void game_world::finish_npc_creation( human_npc_ptr& new_npc, human_npc::npc_game_attributes& attributes )
 {
 	new_npc->set_attributes			( attributes );
@@ -231,20 +231,20 @@ void game_world::query_npc_dictionary( )
 {
 }
 
-// claude@NOTE: cross-module cap - human_npc::tick is still a stub in base ({ret}),
-// so the target's per-npc tick() call inlines away (the loop-body resource_ptr
-// ref-count statements show as TRGT_ONLY); matches once human_npc.cpp's tick is
-// bodied.
+
+
+
+
 void game_world::tick_npcs( const u32 current_frame_id, const bool is_game_paused )
 {
 	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
 		it_npc->tick				( current_frame_id, is_game_paused );
 }
 
-// claude@NOTE: cross-module cap - npc_stats::set_stats is still a stub in base
-// ({ret}) so its call inlines to nothing (a TRGT_ONLY statement); also the
-// game/ui::world vtable layouts differ in base (ui_world()/get_renderer() land at
-// different vtable slots), shifting two call offsets. Structure is correct.
+
+
+
+
 void game_world::update_npc_stats( )
 {
 	if ( m_active_npc_set && m_selected_npc )
