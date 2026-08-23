@@ -34323,8 +34323,8 @@ boost::system::`dynamic initializer for 'native_ecat''	boost/system/error_code.h
 boost::system::`dynamic initializer for 'posix_category''	boost/system/error_code.hpp	boost	done	MATCH	100	100	100	0	15		460526cc6b8a	
 btAlignedAllocDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	MATCH	100	100	100	1	52	f	d159bf32ca4f	auto: at 100% ceiling, demoted from queue
 btAlignedFreeDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	MATCH	100	100	100	1	22	f	6caa3b292930	auto: at 100% ceiling, demoted from queue
-btAllocDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	QUANTITY	100	100	100	0	30	f	68dfb6fa5fbe	
-btFreeDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	QUANTITY	100	100	100	0	30	f	43b6cc800a74	
+btAllocDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	MATCH	100	100	100	1	30	f	1b337e65e98a	Restored pristine malloc/free source; target PDB structure and bytes match after CRT override inlining; file MD5 remains open.
+btFreeDefault	bullet/linearmath/btalignedallocator.cpp	bullet	done	MATCH	100	100	100	1	30	f	c8f00db8fc6f	Restored pristine malloc/free source; target PDB structure and bytes match after CRT override inlining; file MD5 remains open.
 btSimdDot3	bullet/bulletdynamics/constraintsolver/btsequentialimpulseconstraintsolver.cpp	bullet	done	MATCH	100	100	100	1	28	f	2de20f3cf44d	Phase 2 PDB MD5: restored pristine Bullet 2.79 solver TU with target-exact shared SSE source context.
 build_bl_tree	zlib/trees.c	zlib	done	MATCH	100	100	100	1	199	f	ff162aa442b2	audited zlib 1.2.3 target structure and restored Release Win32 /O2 compiler context
 build_id	vostok/core/sources/build_extensions.cpp	core	parked	MATCH	99.6429	99.6429	99.6429	1	177	f	898779878902	STRUCTURE MATCH and equal 177-byte CFG; remaining four substitutions only exchange EAX/ECX while pushing identical _stricmp arguments; archived wrapper, direct CRT, and &month_string[0] emit the same schedule
