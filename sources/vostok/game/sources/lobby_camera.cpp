@@ -68,9 +68,9 @@ bool lobby_camera::on_mouse_key_action(
 	return false;
 }
 
-// claude@NOTE: target and base share the five-block CFG and sole named local.
-// The target retains the horizontal-sensitivity statement and an 8-byte frame;
-// equivalent const/non-const declarations collapse into the later expressions here.
+
+
+
 bool lobby_camera::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -118,9 +118,9 @@ void lobby_camera::on_deactivate( )
 {
 }
 
-// claude@NOTE: target and base share the 14-statement, nine-block structure.
-// The target reuses the first matrix-product area for the pitch rotation; base
-// reserves another 0x10-byte temporary area.
+// The target reuses the first matrix-product temporary for the pitch rotation;
+// the base compiler reserves another 0x10-byte temporary area.
+
 void lobby_camera::tick( )
 {
 	m_yaw	+= m_rotation_delta.x;
@@ -162,9 +162,9 @@ void lobby_camera::process_collision(
 		distance_to_focus_point = ( result.hit_point_world - target_point ).length( );
 }
 
-// claude@NOTE: STRUCTURE MATCH. Sole residual is a vtable-slot delta: target calls
-// game::input_world() at slot [edx+28h], our game.h declares it at [edx+20h]. That is
-// a game.h virtual-ordering divergence (another unit's structure) - not fixable here.
+
+
+
 void lobby_camera::on_focus( bool b_focus_enter )
 {
 	if ( b_focus_enter )
