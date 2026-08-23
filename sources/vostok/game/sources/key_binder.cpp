@@ -58,9 +58,7 @@ void console_command_bind::save_to( console_commands::save_storage& f, memory::b
 	VOSTOK_UNREFERENCED_PARAMETER( a );
 	for ( s32 idx = 0; idx < 64; ++idx ) {
 		key_binding* binding	= &m_binder->m_key_bindings[idx];
-		if ( binding->m_keyboard[m_type] == NULL )
-			continue;
-		if ( binding->m_keyboard[m_type]->key_name == NULL )
+		if ( binding->m_keyboard[m_type] == NULL || binding->m_keyboard[m_type]->key_name == NULL )
 			continue;
 		pcstr out_str	= NULL;
 		STR_JOINA		( out_str, m_name, " ", binding->m_action->action_name, " ", binding->m_keyboard[m_type]->key_name );
