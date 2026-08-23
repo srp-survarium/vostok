@@ -645,15 +645,8 @@ void game_world_ui::on_damage_affect_applying(
 	}
 }
 
-// claude@NOTE: PARKED - 42-stmt minimap rebuild that iterates a
-// victory_items_container** range (locals show `it`) plus the m_base_points map, building
-// per-object flash_value level_objects with transform-derived position_x/position_y (.c.x /
-// -.c.z) and is_carrying_victory_item from the local player's inventory victory item. Needs
-// the victory_items_container iteration source (game_world accessor for the container range)
-// + the base-points loop shape. Structure is large but tractable once the container range
-// accessor is identified; heavy flash /Od + transform glue. Next: find the game_world
-// victory-items-container range accessor, then reconstruct the two object loops.
-// STATE[STUB]
+// sushi@NOTE: Retail keeps the reusable GFx property's cleanup inside each object-loop
+// latch; base emits two extra cleanup branches despite the target local/statement shape.
 void game_world_ui::update_minimap_objects( )
 {
 	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
@@ -668,14 +661,15 @@ void game_world_ui::update_minimap_objects( )
 
 	flash_value level_objects;
 	get_ui( )->movie->CreateArray( &level_objects );
+	flash_value level_object_val_prop;
 
 	player_ptr current_player = client->get_current_player( );
-	bool const is_carrying_victory_item = current_player && current_player->inventory( ).get_victory_item( ) != NULL;
+	bool is_carrying_victory_item = current_player.c_ptr( ) && current_player->inventory( ).get_victory_item( ) != NULL;
 
 	u8 bases_count = 0;
 	for ( victory_items_container** it = m_game_world.get_project( )->m_victory_items_containers.begin( );
-		  it != m_game_world.get_project( )->m_victory_items_containers.end( );
-		  ++it )
+		it != m_game_world.get_project( )->m_victory_items_containers.end( );
+		++it )
 	{
 		if ( (*it)->team( ) != local_player_team )
 			continue;
@@ -683,15 +677,13 @@ void game_world_ui::update_minimap_objects( )
 		flash_value level_object_val;
 		get_ui( )->movie->CreateObject( &level_object_val );
 
-		float const position_x = (*it)->get_transform( ).c.x;
-		float const position_y = (*it)->get_transform( ).c.z;
+		float position_x = (*it)->get_transform( ).c.x;
+		float position_y = -(*it)->get_transform( ).c.z;
 
-		flash_value level_object_val_prop;
-		level_object_val_prop.SetUInt( bases_count );
+		level_object_val_prop.SetUInt( (*it)->id( ) );
 		level_object_val.SetMember( "id", level_object_val_prop );
 
-		pcstr const type_string = is_carrying_victory_item ? "base_highlighted" : "base";
-		level_object_val_prop.SetString( type_string );
+		level_object_val_prop.SetString( is_carrying_victory_item ? "base_highlighted" : "base" );
 		level_object_val.SetMember( "type", level_object_val_prop );
 
 		level_object_val_prop.SetNumber( position_x );
@@ -700,13 +692,11 @@ void game_world_ui::update_minimap_objects( )
 		level_object_val_prop.SetNumber( position_y );
 		level_object_val.SetMember( "pos_y", level_object_val_prop );
 
-		level_objects.SetElement( bases_count, level_object_val );
+		level_objects.PushBack( level_object_val );
 		++bases_count;
 	}
 
-	for ( victory_item_ptr* it = m_game_world.get_victory_items( ).begin( );
-		  it != m_game_world.get_victory_items( ).end( );
-		  ++it )
+	for ( victory_item_ptr* it = m_game_world.get_victory_items( ).begin( ); it != m_game_world.get_victory_items( ).end( ); ++it )
 	{
 		if ( (*it)->get_spotted_to_team( ) != local_player_team )
 			continue;
@@ -714,11 +704,10 @@ void game_world_ui::update_minimap_objects( )
 		flash_value level_object_val;
 		get_ui( )->movie->CreateObject( &level_object_val );
 
-		float const position_x = (*it)->get_transform( ).c.x;
-		float const position_y = (*it)->get_transform( ).c.z;
+		float position_x = (*it)->get_transform( ).c.x;
+		float position_y = -(*it)->get_transform( ).c.z;
 
-		flash_value level_object_val_prop;
-		level_object_val_prop.SetUInt( 0 );
+		level_object_val_prop.SetUInt( (*it)->id + bases_count );
 		level_object_val.SetMember( "id", level_object_val_prop );
 
 		level_object_val_prop.SetString( "artifact" );
@@ -730,8 +719,7 @@ void game_world_ui::update_minimap_objects( )
 		level_object_val_prop.SetNumber( position_y );
 		level_object_val.SetMember( "pos_y", level_object_val_prop );
 
-		level_objects.SetElement( bases_count, level_object_val );
-		++bases_count;
+		level_objects.PushBack( level_object_val );
 	}
 
 	get_ui( )->movie->Invoke( "root.update_objects", NULL, &level_objects, 1 );
@@ -761,10 +749,8 @@ void game_world_ui::initialize_minimap( )
 	reset_map_rotatable( );
 }
 
-// claude@NOTE: PDB structure, locals, predicate fields, and call order match. Retail LTCG
-// hoists the later victory-item read above both Flash CreateObject calls; base preserves
-// source order, changing register allocation downstream. Reopen if that shared compiler
-// context changes; moving the read earlier in source would contradict the target line records.
+// sushi@NOTE: Retail hoists the inventory victory-item read above both GFx object creations.
+// Moving it earlier in source would contradict the target line records.
 void game_world_ui::update_minimap_players( )
 {
 	base_network_client* client = m_game_world.get_game( ).get_network_client( );
@@ -785,7 +771,7 @@ void game_world_ui::update_minimap_players( )
 		float position_x = current_player->get_current( ).transform.c.x;
 		float position_y = -current_player->get_current( ).transform.c.z;
 
-		bool const is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
+		bool is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
 
 		flash_value player_descr_value;
 		get_ui( )->movie->CreateObject( &player_descr_value );
@@ -915,20 +901,19 @@ void game_world_ui::create_slot_value(
 	slot_descr_value.SetMember( "hotkey", slot_descr_valuec_property );
 }
 
-// claude@NOTE: PDB locals/statements and the byte-exact caller agree. Retail
-// reuses the two dictionary_item stack lifetimes and counts the six-slot loop
-// down; base keeps separate slots and compares the running inventory offset.
+// sushi@NOTE: Keep the counter loop: it matches retail through the slot-fill cone.
+// The enum-iterator form diverges at loop entry.
 void game_world_ui::fill_quick_slots( )
 {
 	flash_value slots_array;
 	get_ui( )->movie->CreateArray( &slots_array );
 	u32 in_array_index = 0;
-	for ( profile_slot_enum slot = quick_slot1; slot <= quick_slot6; slot = (profile_slot_enum)( slot + 1 ) )
+	for ( u32 i = 0; i < 6; ++i )
 	{
 		flash_value slot_descr_value;
 		get_ui( )->movie->CreateObject( &slot_descr_value );
 
-		inventory_item_ptr item = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( slot );
+		inventory_item_ptr item = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( (profile_slot_enum)( quick_slot1 + i ) );
 		if ( !item )
 			continue;
 
@@ -937,7 +922,7 @@ void game_world_ui::fill_quick_slots( )
 
 		dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item->get_dict_id( ) );
 
-		create_slot_value( slot, current_item_props, slot_descr_value );
+		create_slot_value( (profile_slot_enum)( quick_slot1 + i ), current_item_props, slot_descr_value );
 		slots_array.SetElement( in_array_index, slot_descr_value );
 		++in_array_index;
 	}
