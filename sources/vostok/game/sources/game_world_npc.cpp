@@ -22,6 +22,11 @@
 #include <vostok/collision/common_types.h>	// ray_triangle_result (ray_query_predicate)
 #include <vostok/physics/ray_result.h>	// closest_ray_result (get_first_npc... predicate)
 
+#undef NEW
+#undef DELETE
+#define NEW( type )		VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
+#define DELETE( pointer )	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
+
 namespace survarium {
 
 void game_world::initialize_ai( )
@@ -142,22 +147,14 @@ void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& 
 	static_cast_checked< human_npc* >( owner )->get_available_weapons( list_to_be_filled );
 }
 
-// claude@NOTE: Target/base are otherwise byte-identical. The sole residual is
-// LOG_ERROR's source-layout __LINE__ immediate (target 183, base 150); per the
-// log-line policy, do not pad this TU for one metadata operand.
 u32 game_world::get_node_by_name( pcstr node_name ) const
 {
+#line 183
 	LOG_ERROR						( "node with name %s wasn't found", node_name );
+#line 185
 	return u32( -1 );
 }
 
-// claude@NOTE: source is byte-identical to the target (STRUCTURE MATCH, 0x8d==0x8d,
-// clean --view diff). Reports "unpaired" only because the delinker emits this free
-// function's TARGET symbol DEMANGLED ("survarium::delete_weapons") while the base
-// obj has the mangled "?delete_weapons@survarium@@YAX...", so objdiff can't pair the
-// two. Systemic delinker gap for game-module free functions (create_wire_visual_source
-// / parse_resolution / delete_weapons all hit it), NOT a matching gap - nothing to fix
-// in source. NEXT: delinker target-side name recovery for namespace-scoped free funcs.
 void delete_weapons( human_npc_ptr& owner )
 {
 	while ( object_weapon* weapon = owner->pop_weapon( ) )
@@ -180,9 +177,6 @@ void game_world::on_behaviour_created( resources::queries_result& data )
 		m_selected_npc->set_behaviour	( new_behaviour );
 }
 
-// claude@NOTE: All statements, literals, and callees match. Target keeps the
-// object_weapon constructor out of line while base inlines it; iterator/register
-// differences follow from that call boundary.
 void game_world::on_npc_attributes_received( configs::binary_config_value const& attributes_config, human_npc_ptr owner )
 {
 	human_npc::npc_game_attributes		attributes;
@@ -210,15 +204,11 @@ void game_world::on_npc_attributes_received( configs::binary_config_value const&
 		u32 const type								= gun[ "type" ];
 		ai::weapon_types_enum const weapon_type		= ( ai::weapon_types_enum )type;
 		u32 const weapon_id							= gun[ "id" ];
-		attributes.weapons.push_back				( NEW( object_weapon )( weapon_type, m_ai_world->get_weapon_name_by_id( weapon_type, weapon_id ), weapon_id, weapon_id ) );
+		attributes.weapons.push_back				( NEW( object_weapon )( weapon_type, m_ai_world->get_weapon_name_by_id( weapon_type, weapon_id ), weapon_id ) );
 	}
 
 	finish_npc_creation					( owner, attributes );
 }
-
-// claude@NOTE: Statement count, size, and all 18 instructions match. Only LTCG
-// assigns this to ECX in target and EAX in base at the custom-convention boundary;
-// the three callees and operands agree.
 
 void game_world::finish_npc_creation( human_npc_ptr& new_npc, human_npc::npc_game_attributes& attributes )
 {
@@ -231,19 +221,11 @@ void game_world::query_npc_dictionary( )
 {
 }
 
-
-
-
-
 void game_world::tick_npcs( const u32 current_frame_id, const bool is_game_paused )
 {
 	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
 		it_npc->tick				( current_frame_id, is_game_paused );
 }
-
-
-
-
 
 void game_world::update_npc_stats( )
 {
@@ -256,6 +238,5 @@ void game_world::update_npc_stats( )
 	else
 		get_game( ).hide_game_stats	= false;
 }
-
 
 } // namespace survarium

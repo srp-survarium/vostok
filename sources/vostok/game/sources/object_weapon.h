@@ -17,8 +17,6 @@ class human_npc;
 // member pointer &object_weapon::m_next needs the complete type); out-of-line
 // bodies in the object_weapon.cpp compiland
 
-// void* object_weapon::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xabef0]: <0xabee0>|0x000|      :'43'	{
-
 class object_weapon : public ai::weapon , public ai::game_object {
 	// human_npc::npc_game_attributes names &object_weapon::m_next (private)
 	friend class human_npc;
@@ -27,7 +25,7 @@ public:
 											ai::weapon_types_enum		type,
 											pcstr						name,
 											u32							id,
-											u32							ammo_count
+											u32							ammo_count = 32
 										);
 	virtual								~object_weapon			( );
 

@@ -7,6 +7,7 @@
 
 namespace survarium {
 
+#line 8
 object_weapon::object_weapon(
 	ai::weapon_types_enum		type,
 	pcstr						name,
