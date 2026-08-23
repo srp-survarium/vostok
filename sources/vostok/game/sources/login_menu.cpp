@@ -167,6 +167,8 @@ void login_menu::set_status( login_menu_status_enum status )
 		case login_menu_status_invalid_version:
 			status_str.append( "Invalid version" );
 			break;
+		default:
+			NODEFAULT( );
 	}
 
 	enable_button( false );
