@@ -21,6 +21,8 @@
 
 namespace survarium {
 
+extern float const agent_radius = 0.35f;
+
  animation_space_vertex::animation_space_vertex( resources::managed_resource_ptr const& animation_vertex, pcstr animation_caption ) :
 	animation		( animation_vertex ),
 	caption			( animation_caption ),
