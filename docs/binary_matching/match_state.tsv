@@ -30377,7 +30377,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?tick@flash_text_manager@survarium@@QAEXXZ	vostok/scaleform/sources/movie.cpp	scaleform	done	MATCH	100	100	100	2	20	f	6055d411b861	developer-wrapper TU audited through local wall
 ?tick@free_fly_camera@survarium@@UAEXXZ	vostok/game/sources/free_fly_camera.cpp	game	done	MATCH	100	100	100	0	1236		b636888c6307	
 ?tick@fsm@ai@vostok@@QAEXXZ	vostok/ai/sources/fsm.cpp	ai	done	MATCH	100	100	100	1	204		7a43e3b71ad9	matched fsm.cpp 7 fns; 3 effectively-done (96-100%), 4 SIZE-class at intrusive_list inline-vs-call wall (non-steerable, global de-inline off-limits)
-?tick@game@survarium@@UAEXI@Z	vostok/game/sources/game.cpp	game	inprogress	SIZE	98.4095	98.4095	98.4095	2	658		60bb41899611	Restored game/engine call cone for the clean-room game renderer; scene-view and output bodies remain queued for their downstream owners.
+?tick@game@survarium@@UAEXI@Z	vostok/game/sources/game.cpp	game	parked	SIZE	98.4095	98.4095	98.4095	3	658		60bb41899611	Target/base have the same 30 PDB statements, the same current_frame_id named parameter, and the same 22-block CFG. The remaining draw_scene statement drift is register/stack scheduling across the already parked facade draw_scene refcount/frame boundary; no call, branch, local, or argument is missing.
 ?tick@game_camera@survarium@@UAEXXZ	vostok/game/sources/game_camera.cpp	game	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
 ?tick@game_console@engine@vostok@@UAEXABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	vostok/engine/sources/game_console.cpp	engine	done	MATCH	100	100	100	0	11	f	137f554ee0f6	
 ?tick@game_options@survarium@@QAEXII_N@Z	vostok/game/sources/game_options.cpp	game	done	MATCH	100	100	100	1	89	f	acbd4c7c07be	
@@ -33886,8 +33886,8 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	94	f	61bc0a32916b	
 `dynamic initializer for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	99	f	c802248eeb9c	
 `dynamic initializer for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done	MATCH	100	100	100	1	99	f	bb03e028e2b9	
-`dynamic initializer for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	inprogress	MATCH	95.421	95.421	95.421	1	201		dfa05f2dc63a	
-`dynamic initializer for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	inprogress	MATCH	95.421	95.421	95.421	1	201		a8049acda4f6	
+`dynamic initializer for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	parked	MATCH	95.421	95.421	95.421	2	201		dfa05f2dc63a	Target/base have zero PDB statements, identical 0xc9 size, and the same 7-block CFG. Remaining instructions are equivalent cc_delegate construction with different inline store scheduling and Boost function/atexit ICF representative names; no source field, argument, or branch is absent.
+`dynamic initializer for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	parked	MATCH	95.421	95.421	95.421	2	201		a8049acda4f6	Target/base have zero PDB statements, identical 0xc9 size, and the same 7-block CFG. Remaining instructions are equivalent cc_delegate construction with different inline store scheduling and Boost function/atexit ICF representative names; no source field, argument, or branch is absent.
 `dynamic initializer for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH	100	100	100	1	94	f	088370b6f0d4	
 `dynamic initializer for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	79	f	44b875449df0	
 `dynamic initializer for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	79	f	5d49da30ebc5	
