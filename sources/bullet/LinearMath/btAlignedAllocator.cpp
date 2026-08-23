@@ -15,39 +15,18 @@ subject to the following restrictions:
 
 #include "btAlignedAllocator.h"
 
-#include <vostok/memory_extensions.h>
-#include <vostok/command_line_extensions.h>
-#include <vostok/threading_extensions.h>
-#include <vostok/memory_doug_lea_mt_allocator.h>
-
-namespace vostok {
-namespace memory {
-	void initialize_crt_allocator	( );
-} // namespace memory
-} // namespace vostok
-
 int gNumAlignedAllocs = 0;
 int gNumAlignedFree = 0;
 int gTotalBytesAlignedAllocs = 0;//detect memory leaks
 
-// claude@NOTE: inline-vs-call wall - the target keeps vostok::memory::initialize_crt_allocator
-// out-of-line (a plain call); our LTCG inlines its preinitialize + bind_pointer_to_buffer_mt_safe
-// body into both functions here. The source shape (route through g_crt_allocator->malloc_impl /
-// free_impl with a lazy initialize) matches the target.
 static void *btAllocDefault(size_t size)
 {
-	if ( !vostok::memory::g_crt_allocator )
-		vostok::memory::initialize_crt_allocator( );
-
-	return vostok::memory::g_crt_allocator->malloc_impl( size );
+	return malloc(size);
 }
 
 static void btFreeDefault(void *ptr)
 {
-	if ( !vostok::memory::g_crt_allocator )
-		vostok::memory::initialize_crt_allocator( );
-
-	vostok::memory::g_crt_allocator->free_impl( ptr );
+	free(ptr);
 }
 
 static btAllocFunc *sAllocFunc = btAllocDefault;
