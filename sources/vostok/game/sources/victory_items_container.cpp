@@ -27,18 +27,15 @@ pcstr victory_items_container::use_info( usable_object_user_data* user )
 	base_player*		player	= user->owner->cast_to_base_player( );
 	inventory_holder*	holder	= user->owner->cast_to_inventory_holder( );
 
-	if ( player )
-	{
-		game_team_id		team			= player->team( );
-		victory_item_core*	victory_item	= holder->inventory( ).get_victory_item( );
-		if ( team == m_owner_team )
-		{
-			if ( victory_item )
-				return "st_put_item";
-		}
-		else if ( !victory_item && m_victory_items.size( ) )
-			return "st_thief_item";
-	}
+	if ( !player )
+		return "";
+
+	game_team_id		team			= player->team( );
+	victory_item_core*	victory_item	= holder->inventory( ).get_victory_item( );
+	if ( team == m_owner_team && victory_item )
+		return "st_put_item";
+	if ( team != m_owner_team && !victory_item && m_victory_items.size( ) > 0 )
+		return "st_thief_item";
 
 	return "";
 }
