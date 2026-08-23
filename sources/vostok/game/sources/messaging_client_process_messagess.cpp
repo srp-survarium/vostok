@@ -18,10 +18,10 @@
 
 namespace survarium {
 
-// claude@NOTE: the source branch structure, message values, and logging calls are
-// target-attested. Gold tail-merges the repeated successful friend/ignore query
-// paths while the base duplicates them; logging expansion then changes statement
-// attribution. Revisit only with function-scoped compiler-context control.
+// claude@NOTE: target log line and severity values are fixed below. Remaining bytes
+// are LTCG register selection at the two successful query call boundaries plus an
+// ICF boost::function clear representative; target/base still share the same CFG.
+// Revisit only if the caller compiler context or fold representative changes.
 void messaging_client::on_packet_received( network_core::packet_reader& reader )
 {
 	const u8 message_type = reader.r< u8 >( );
@@ -48,21 +48,25 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 				if ( action == messaging::add_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
+#line 56
 					else					LOG_INFO( "add_friend: operation denied " );
 				}
 				else if ( action == messaging::remove_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
+#line 66
 					else					LOG_INFO( "remove_friend: operation denied " );
 				}
 				else if ( action == messaging::add_ignorable )
 				{
 					if ( result == '4' )	query_for_ignore_list( );
+#line 76
 					else					LOG_INFO( "add_ignorable: operation denied " );
 				}
 				else
 				{
 					if ( result == '4' )	query_for_ignore_list( );
+#line 85
 					else					LOG_INFO( "remove_ignorable: operation denied " );
 				}
 			}
@@ -72,13 +76,15 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 		}
 
 		default:
-			LOG_INFO( "messaging_client received unknown message:%d", message_type );
+#line 95
+			LOG_ERROR( "messaging_client received unknown message:%d", message_type );
 	}
 }
 
 // the localized substrings are the Russian + English channel-name tags
 // (\x043e\x0431\x0449\x0438\x0439 = general, etc.); spelled as code points so the
 // emitted UTF-16 is codepage-independent
+#line 82
 messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_t const* w_receiver_name, const bool in_match )
 {
 	if ( wcsstr( w_receiver_name, L"\x043e\x0431\x0449\x0438\x0439" ) || wcsstr( w_receiver_name, L"general" ) )	return messaging::player_general_channel;
