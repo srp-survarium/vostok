@@ -310,29 +310,36 @@ void game_world::on_project_loaded(
 
 void game_world::unload( )
 {
+#line 450
 	switch_to_free_fly_camera( );
 
 	if ( get_game( ).get_network_client( ) )
 		get_game( ).get_network_client( )->unload( );
 
-	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = it_npc->next_npc )
+	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
 	{
+#line 456
 		delete_weapons( it_npc );
+#line 456
 		it_npc->clear_resources( );
+#line 456
 	}
 
+#line 458
 	m_selected_npc = NULL;
 	m_active_npc_set = false;
 	m_npcs.clear( );
 
 	get_camera_director( ).switch_to_camera( NULL, "null" );
 
-	if ( m_game_project && m_game_project->is_inserted( ) )
+	if ( m_game_project && m_game_project->is_inserted( ) ) {
 		m_game_project->remove( );
+		m_game_project = NULL;
+	}
 
-	m_game_project = NULL;
-
+#line 469
 	for ( vectora< victory_item_ptr >::iterator it = m_victory_items.begin( ); it != m_victory_items.end( ); ++it )
+#line 471
 		if ( ( *it )->is_inserted( ) )
 			( *it )->unload( );
 
@@ -341,6 +348,7 @@ void game_world::unload( )
 	game_ui.on_unload( );
 }
 
+#line 344
 void game_world::load(
 	pcstr						project_resource_name,
 	resources::request*			requests_begin,

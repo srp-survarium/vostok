@@ -43,7 +43,7 @@ game_world_ui::game_world_ui( game_world& w ) :
 	m_game_mode( capture_enemy_base ),
 	m_match_time( 0 )
 {
-	m_victory_points[0] = m_victory_points[1] = 0;
+	memory::zero( m_victory_points );
 }
 
 void game_world_ui::initialize_resources( resources::unmanaged_resource_ptr const& game_hud )
@@ -333,12 +333,10 @@ void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 
 void game_world_ui::on_unload( )
 {
-	// claude@NOTE: capped by scaleform flash_movie - the inlined movie reset at
-	// vtable+0x58 forwards to a GFx::Movie virtual our flash_movie wrapper stubs out.
-	if ( m_game_hud_ui && m_game_hud_ui->movie )
+	if ( m_game_hud_ui )
 		m_game_hud_ui->movie->Restart( );
 
-	m_victory_points[0] = m_victory_points[1] = 0;
+	memory::zero( m_victory_points );
 }
 
 void game_world_ui::set_health( u8 health_in_percentage )
