@@ -19,7 +19,7 @@ main_menu::main_menu( game& g )
 	query_resources( );
 }
 
-// claude@NOTE: target structure matches; tail-call codegen follows the parked base destructor.
+
 main_menu::~main_menu( )
 {
 }
@@ -49,13 +49,13 @@ void main_menu::tick(
 	base_game_scene::tick( frame_delta_in_ms, current_time_in_ms, is_game_paused );
 }
 
-// claude@NOTE: structure faithful + locals match the target exactly (data is
-// variant<32> const*[3] = { &temp_data, 0, 0 } - the target records a 3-element array,
-// so the source carries the third null even though it costs fuzzy %). The remaining
-// QUANTITY gap (target 4 / base 5) is the target /Ox-folding temp_data's trivial default
-// ctor into the data-array statement; variant<32> has only a default ctor + set<T>(), so
-// the decl cannot be folded into a value-ctor at the call site without touching another
-// module. Byte residual is that fold plus the query_resources LTCG argument threading.
+
+
+
+
+
+
+
 void main_menu::query_resources( )
 {
 	render::scene_configuration				render_configuration;

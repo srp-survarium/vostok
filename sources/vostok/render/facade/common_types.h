@@ -57,7 +57,7 @@ struct terrain_buffer_fragment {
 STATIC_SIZE_ASSERT( terrain_buffer_fragment, 0x20 );
 
 struct scene_configuration {
-	inline scene_configuration( ) { }
+	inline scene_configuration( ) : m_create_terrain( false ), m_create_particle_world( false ), m_has_clouds( false ), m_create_speedtree_world( false ), m_create_grass_world( false ), m_sky_enabled( false ), m_use_occlusion_culling( false ) { }
 
 	bool m_create_terrain			: 1;
 	bool m_create_particle_world	: 1;

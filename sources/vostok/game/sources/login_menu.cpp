@@ -71,13 +71,13 @@ void login_menu::tick(
 	m_cursor_ui->movie->Advance( deltaTime, 0 );
 }
 
-// claude@NOTE: 4-stmt STRUCTURE MATCH. Byte residual (the ~90% SPLIT) is non-steerable from
-// this TU: the target frame is ebp-relative with no stack realignment, while our base emits
-// `and esp, 0FFFFFFF8h` because the engine EXE is built with VOSTOK_STATIC_LIBRARIES, which
-// turns on VOSTOK_DEFAULT_ALIGN on variant<>::m_helper_storage/m_storage (type_variant.h) and
-// forces the 8-byte stack alignment; the same config makes the base out-line the
-// concrete_type_helper<scene_configuration> placement-new (the SPLIT `call abstract_type_helper`)
-// that the target inlines. Both lift only by changing the engine-wide build config, not here.
+
+
+
+
+
+
+
 void login_menu::query_resources( )
 {
 	render::scene_configuration	render_configuration;
