@@ -144,8 +144,8 @@ void human_npc_cook::on_npc_options_received(
 	);
 }
 
-// claude@NOTE: PDB locals and line-record counts agree. The remaining CFG difference is
-// the target/base resource_ptr cast temporary RVO choice, plus the c_ptr inline boundary.
+
+
 void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
 {
 	resources::query_result_for_cook* const parent		= data.get_parent_query();
@@ -166,7 +166,8 @@ void human_npc_cook::on_subresources_loaded( resources::queries_result& data, hu
 	animated_model_instance_ptr model_ptr				= static_cast_resource_ptr< animated_model_instance_ptr >( data[1].get_unmanaged_resource() );
 	human->set_model									( model_ptr );
 
-	human->set_default_animation						( data[2].get_managed_resource() );
+	resources::managed_resource_ptr default_animation	= data[2].get_managed_resource();
+	human->set_default_animation						( default_animation );
 
 	animation_space_graph_ptr new_graph					= static_cast_resource_ptr< animation_space_graph_ptr >( data[3].get_unmanaged_resource() );
 	human->set_animation_space_graph					( new_graph );
