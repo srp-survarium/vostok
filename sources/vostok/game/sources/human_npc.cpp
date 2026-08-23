@@ -375,6 +375,7 @@ bool human_npc::is_at_node( ai::game_object const* const node ) const
 
 void human_npc::prepare_to_attack( ai::npc const* const target, ai::weapon const* const gun )
 {
+#line 388
 	LOG_INFO					( "%s: prepare to attack %s with %s", get_name(), target->cast_game_object()->get_name(), gun->cast_game_object()->get_name() );
 	m_current_target			= target;
 	m_current_weapon			= gun;
@@ -480,6 +481,7 @@ bool human_npc::debug_draw_allowed( ) const
 void human_npc::move_to_position( ai::movement_target const* const target )
 {
 	m_current_movement_target			= target;
+#line 503
 	LOG_INFO							(
 		"%s: trying to move to point %.2f %.2f %.2f",
 		get_name(),
@@ -490,11 +492,12 @@ void human_npc::move_to_position( ai::movement_target const* const target )
 	m_animations_selector->set_target	( *m_current_movement_target );
 }
 
-// Retail passes the path object itself through LOG_INFO; only the embedded source line differs.
+// LOG_INFO bakes the target source line into the generated code.
 void human_npc::on_animation_end( )
 {
 	if ( m_current_animation )
 	{
+#line 520
 		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name );
 		m_ai_world.on_animation_finish	( m_current_animation, m_brain_unit );
 		m_current_animation				= 0;
@@ -542,11 +545,12 @@ void human_npc::hit(
 	);
 }
 
-// Matching wall: only LOG_INFO's embedded original source line differs.
+// LOG_INFO bakes the target source line into the generated code.
 void human_npc::on_movement_end( )
 {
 	if ( m_current_movement_target )
 	{
+#line 560
 		LOG_INFO						(
 			"target reached: [%.2f][%.2f][%.2f]",
 			m_current_movement_target->target_position.x,
@@ -564,6 +568,7 @@ void human_npc::play_animation( ai::animation_item const* const target )
 	m_current_animation					= target;
 	animation::animation_expression_emitter_ptr animation_emitter	= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( target->animation );
 	m_animations_selector->set_target	( *m_current_animation );
+#line 579
 	LOG_INFO							( "%s: playing animation %s", get_name(), m_current_animation->name );
 }
 
@@ -609,6 +614,7 @@ void human_npc::on_affect_event(
 ) const
 {
 	pcstr event					= event_type == affect_applying ? "applied" : "recalled";
+#line 616
 	LOG_INFO					( "[%s] - death affect %s on body part %s", get_name(), event, body_part_name );
 }
 
