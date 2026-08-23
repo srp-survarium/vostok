@@ -4271,7 +4271,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0CJoint@btSoftBody@@QAE@XZ	bullet/bulletsoftbody/btsoftbodyinternals.h	bullet	done	MATCH	100	100	100	1	40	f	d7064cd3ebfa	auto: at 100% ceiling, demoted from queue
 ??0CProfileIterator@@IAE@PAVCProfileNode@@@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	16	f	28e01b31d261	auto: at 100% ceiling, demoted from queue
 ??0CProfileNode@@QAE@PBDPAV0@@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	47	f	d930051c1bc8	auto: at 100% ceiling, demoted from queue
-??0CProfileSample@@QAE@PBD@Z	bullet/linearmath/btquickprof.h	bullet	done	MATCH	100	100	100	1	51	f	207068a632a0	auto: at 100% ceiling, demoted from queue
+??0CProfileSample@@QAE@PBD@Z	bullet/linearmath/btquickprof.h	bullet	done	MATCH	100	100	100	2	51	f	207068a632a0	Target PDB structure and byte bodies match; btQuickprof file MD5 remains open.
 ??0CSMSettings@fl_text@ClassTraits@AS3@GFx@Scaleform@@QAE@AAVVM@345@@Z	src/gfx/as3/obj/text/as3_obj_text_csmsettings.cpp	gfx	inprogress	QUANTITY	63.8514	63.8514	63.8514	0	181	f		
 ??0CSSHolder@AvmTextField@AS2@GFx@Scaleform@@QAE@XZ	src/gfx/as2/as2_avmsprite.cpp	gfx	done	MATCH	100	100	100	0	77	f		
 ??0CSSHolder@AvmTextField@AS3@GFx@Scaleform@@QAE@XZ	src/gfx/as3/obj/text/as3_obj_text_font.cpp	gfx	done	MATCH	100	100	100	0	77	f		
@@ -6500,7 +6500,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1ButtonDef@GFx@Scaleform@@UAE@XZ	src/gfx/gfx_buttondef.cpp	gfx	done	MATCH	100	100	100	0	90	f		
 ??1CFunctionObject@AS2@GFx@Scaleform@@UAE@XZ	src/gfx/as2/as2_function.cpp	gfx	done	MATCH	100	100	100	0	18	f		
 ??1CProfileNode@@QAE@XZ	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	53	f	b3af2eef6af5	auto: at 100% ceiling, demoted from queue
-??1CProfileSample@@QAE@XZ	bullet/linearmath/btquickprof.h	bullet	done	MATCH	100	100	100	1	26	f	68c2fa837edc	auto: at 100% ceiling, demoted from queue
+??1CProfileSample@@QAE@XZ	bullet/linearmath/btquickprof.h	bullet	done	MATCH	100	100	100	2	26	f	68c2fa837edc	Target PDB structure and byte bodies match; btQuickprof file MD5 remains open.
 ??1CSSHolder@AvmTextField@AS3@GFx@Scaleform@@UAE@XZ	src/gfx/as3/as3_avmtextfield.h	gfx	done	MATCH	100	100	100	0	85	f		
 ??1CTraits@InstanceTraits@AS3@GFx@Scaleform@@UAE@XZ	src/gfx/as3/as3_instance.cpp	gfx	done	MATCH	100	100	100	0	124	f		
 ??1CacheEffectChain@Render@Scaleform@@QAE@XZ	src/render/render_cacheeffect.cpp	gfx	done	MATCH	100	100	100	0	26	f		
@@ -22061,7 +22061,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?dump@operator_impl@planning@ai@vostok@@UAEXPBD@Z	vostok/ai/sources/operator.cpp	ai	done	MATCH	100	100	100	1	13		355afa9b8e80	auto: at 100% ceiling, demoted from queue
 ?dump@udp_match_connection@network_core@vostok@@AAEXQBDI@Z	vostok/network_core/sources/udp_match_connection.cpp	network_core	done	MATCH	100	100	100	2	50		bf17c39bc7c5	[DONE 100%] paired after the QBDI top-level-const declaration fix.
 ?dumpAll@CProfileManager@@SAXXZ	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	71	f	db00cc1042f9	auto: at 100% ceiling, demoted from queue
-?dumpRecursive@CProfileManager@@SAXPAVCProfileIterator@@H@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	748		88037f26f78b	auto: at 100% ceiling, demoted from queue
+?dumpRecursive@CProfileManager@@SAXPAVCProfileIterator@@H@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	2	748		4bd783cafe40	Target PDB structure and byte bodies match; btQuickprof file MD5 remains open.
 ?dump_call_stack@debug@vostok@@YAXPBD_NIIPAU_EXCEPTION_POINTERS@@QAPAX@Z	vostok/debug/sources/debug_win.cpp	debug	done	SIZE	82.7059	100	100	1	323		1743d75d4d7c	auto: at 100% ceiling, demoted from queue
 ?dump_physics_profiler@@YAXPBD@Z	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	1	5	f	137f554ee0f6	auto: at 100% ceiling, demoted from queue
 ?dump_resource_leaks@managed_allocator_base@memory@vostok@@QAEXXZ	vostok/core/sources/managed_allocator_base.cpp	core	done	MATCH	100	100	100	0	228	f	7b51da4b9864	
@@ -29513,7 +29513,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?set_local_player_name@chat_handler@survarium@@QAEXPBD@Z	vostok/game/sources/chat_handler.cpp	game	inprogress	SIZE	77.8409	77.8409	77.8409	1	149	f	d0a99c018342	
 ?set_lod_params@render_model_instance@render@vostok@@UAEXE_NMMM@Z	vostok/render/facade/model.h	render	done	MATCH	100	100	100	0	3	f	c1be8531f8dc	
 ?set_lod_params@static_render_model_instance@render@vostok@@UAEXE_NMMM@Z	vostok/render/engine/sources/render_model_static.cpp	render	done	MATCH	100	100	100	1	62	f	de391b3e1e9e	get_surfaces/read_diffuse aligned; fill_source pair parked on the reclaim release-chain wall.
-?set_log_callback@CProfileManager@@SAXP6AXPAD@Z@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	1	11	f	7ac0cb0c21d0	auto: at 100% ceiling, demoted from queue
+?set_log_callback@CProfileManager@@SAXP6AXPAD@Z@Z	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	2	11	f	9381655356af	Target PDB structure and byte bodies match; btQuickprof file MD5 remains open.
 ?set_log_callback@debug@vostok@@YAP6AXPBD_N10@ZP6AX0110@Z@Z	vostok/debug/sources/debug.cpp	debug	done	MATCH	100	100	100	1	28		23ab0c2e5424	auto: at 100% ceiling, demoted from queue
 ?set_low_pass_filter_params@sound_voice@sound@vostok@@QAEXM@Z	vostok/sound/sources/sound_voice.cpp	sound	done	MATCH	100	100	100	0	31		5f7e50935ecc	
 ?set_low_pass_filter_params@voice_bridge@sound@vostok@@QAEXM@Z	vostok/sound/sources/voice_bridge.cpp	sound	done	MATCH	100	100	100	0	45		1ef95d29f4aa	
@@ -32218,7 +32218,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH	100	100	100	1	60	f	c936a5005c75	
 `dynamic atexit destructor for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	60	f	714ed9ec19f6	
 `dynamic atexit destructor for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	60	f	714ed9ec19f6	
-`dynamic atexit destructor for 'gProfileClock''	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	0	13	f	c3d2727e2961	
+`dynamic atexit destructor for 'gProfileClock''	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	0	13	f	e100c6132c0d	
 `dynamic atexit destructor for 'gRandomGenerator''	opcode/ice/icerandom.cpp	opcode	done	MATCH	100	100	100	0	1	f	25a7ff2b9b8b	
 `dynamic atexit destructor for 'g_threads''	vostok/engine/sources/apc.cpp	engine	done	MATCH	100	100	100	0	29	f	57bda59b68dd	
 `dynamic atexit destructor for 's_alpha_blending''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	0	60	f	b95d7a196c6c	

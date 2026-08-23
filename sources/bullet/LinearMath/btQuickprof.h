@@ -164,9 +164,7 @@ public:
 
 	static void	dumpAll();
 
-	// sushi@TODO: They actually included vostok headers here (bad).
-	typedef void (*PhysicsLogFn)(char *);
-	static void	set_log_callback( PhysicsLogFn log_fn );
+	static void	set_log_callback( void (*fn)(char*) );
 
 private:
 	static	CProfileNode			Root;
@@ -203,5 +201,4 @@ public:
 
 
 #endif //BT_QUICK_PROF_H
-
 
