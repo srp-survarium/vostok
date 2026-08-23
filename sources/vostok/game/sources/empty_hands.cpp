@@ -22,10 +22,10 @@ namespace survarium {
 
 static float s_aim_transition_time = 0.3f;
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Capped ~82%: target inlines interactive_object's
-// implicit default ctor and calls unmanaged_resource::unmanaged_resource(1) directly, while
-// base emits interactive_object::interactive_object() out-of-line. Inline-vs-call of a
-// different unit's (interactive_object) implicit ctor - not steerable from here.
+
+
+
+
  empty_hands::empty_hands( resources::managed_resource_ptr* animations, const u32 animations_count ) :
 	m_user( 0 ),
 	m_animations( animations ),
@@ -40,9 +40,9 @@ void empty_hands::activate( base_player& user, engine& engine )
 	m_transform	= user.get_transform( );
 }
 
-// claude@NOTE: STRUCTURE MATCH (2 stmts). Capped by the animation-lexeme inline-vs-call
-// wall shared with single_animation::emit - gold inlines animation_lexeme_parameters /
-// animation_lexeme / expression construction that our /Od base emits as the same calls.
+
+
+
 animation::mixing::expression empty_hands::selected_animations( mutable_buffer& buffer, const bool is_third_view ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( is_third_view );
