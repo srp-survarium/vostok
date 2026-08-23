@@ -75,6 +75,8 @@ void stats::set_resources_stats( pcstr str )
 	m_resources_activity->set_text	( str );
 }
 
+// sushi@NOTE: Retail hoists the final weapon-position loads across create_text;
+// keeping the reference here preserves the target statement order.
 void stats::create( )
 {
 	m_main_window						= m_ui_world.create_window();
