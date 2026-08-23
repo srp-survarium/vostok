@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,186 / 12,932 functions exact (71.03%) &middot; 9,602 / 12,932 functions exact-max (74.25%) &middot; 88.77% fuzzy &middot; 90.37% fuzzy-max.**
+**Overall: 9,187 / 12,932 functions exact (71.04%) &middot; 9,603 / 12,932 functions exact-max (74.26%) &middot; 88.77% fuzzy &middot; 90.37% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -32,7 +32,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `particle`      |    25 |     365 / 400 (91.2%) |     382 / 400 (95.5%) | 97.5% |     98.6% |
 | `vfs`           |    71 |     189 / 390 (48.5%) |     193 / 390 (49.5%) | 88.6% |     89.2% |
 | `ui`            |    27 |     213 / 227 (93.8%) |     214 / 227 (94.3%) | 98.6% |     99.1% |
-| `physics`       |    14 |     143 / 198 (72.2%) |     147 / 198 (74.2%) | 90.4% |     91.2% |
+| `physics`       |    14 |     144 / 198 (72.7%) |     148 / 198 (74.7%) | 90.5% |     91.3% |
 | `fs`            |    25 |      87 / 165 (52.7%) |     102 / 165 (61.8%) | 86.3% |     87.7% |
 | `engine`        |    22 |     145 / 162 (89.5%) |     151 / 162 (93.2%) | 97.7% |     98.0% |
 | `network`       |    25 |      64 / 159 (40.3%) |      77 / 159 (48.4%) | 87.8% |     90.5% |
