@@ -18,10 +18,6 @@
 
 namespace survarium {
 
-// claude@NOTE: init list + the on_animation_interval_end subscribe match in shape (1 stmt,
-// member set + the boost::function build). In our link env the subscribe worker is inlined
-// and DCE'd (callback + empty animation temp built then destroyed, no `call subscribe`)
-// while the target keeps the out-of-line subscribe call - an LTCG inlining residual.
  animations_selector::animations_selector(
 	animation::animation_player&		player,
 	animation_space_graph_ptr const&	space_graph,
@@ -72,21 +68,24 @@ void animations_selector::reset_animation_controller( const u32 time_in_ms )
 	mutable_buffer buffer = make_stack_buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 	if ( m_current_controller != m_target_controller )
 	{
-		animation::mixing::expression expression;
 		if ( m_current_controller )
-			expression = m_current_controller->try_finalize( *m_target_controller, buffer );
-
-		if ( expression.is_empty( ) )
 		{
-			m_current_controller = m_target_controller;
-			m_current_controller->initialize( );
-			m_current_controller->set_target( *m_target_controller_parameters );
-			m_target_controller_parameters->reset( );
-			expression = m_current_controller->selected_animations( buffer );
+			animation::mixing::expression expression = m_current_controller->try_finalize( *m_target_controller, buffer );
+			if ( !expression.is_empty( ) )
+			{
+				set_animation_player_target( expression, time_in_ms );
+				return;
+			}
 		}
 
-		set_animation_player_target( expression, time_in_ms );
+		m_current_controller = m_target_controller;
+		m_current_controller->initialize( );
+		m_current_controller->set_target( *m_target_controller_parameters );
+		m_target_controller_parameters->reset( );
 	}
+
+	animation::mixing::expression expression = m_current_controller->selected_animations( buffer );
+	set_animation_player_target( expression, time_in_ms );
 }
 
 animation::callback_return_type_enum animations_selector::on_animation_interval_end( animation::animation_callback_params& params )
@@ -110,8 +109,7 @@ void animations_selector::set_target( ai::animation_item const& animation_emitte
 	m_target_controller						= &m_simple_animation_controller;
 	m_target_controller_parameters			= &m_simple_animation_parameters;
 
-	if ( !m_current_controller )
-		reset_animation_controller( m_game_world.get_game().game_time_ms() );
+	on_set_target( );
 }
 
 void animations_selector::set_target( ai::movement_target const& target_position )
@@ -124,8 +122,7 @@ void animations_selector::set_target( ai::movement_target const& target_position
 	m_target_controller								= &m_single_position_animation_controller;
 	m_target_controller_parameters					= &m_movement_animation_parameters;
 
-	if ( !m_current_controller )
-		reset_animation_controller( m_game_world.get_game().game_time_ms() );
+	on_set_target( );
 }
 
 void animations_selector::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
