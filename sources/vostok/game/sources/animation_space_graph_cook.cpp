@@ -14,6 +14,8 @@
 
 namespace survarium {
 
+extern float const agent_radius;
+
  animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world ) :
 	resources::translate_query_cook( resources::animation_space_graph_class, reuse_true, use_current_thread_id ),
 	m_navigation_world( navigation_world )
@@ -25,19 +27,11 @@ void animation_space_graph_cook::translate_request_path( pcstr request, fs_new::
 	new_request.assignf( "resources/npc/human/animation_space_graph/%s.space_graph", request );
 }
 
-// claude@NOTE: target evaluates parent.get_requested_path() AFTER the boost::function
-// ctor and builds the request inline at the call (right-to-left arg eval); a local
-// `request requests[1]` array inits the path early. Call shape + args match; the
-// request-build evaluation order is the byte residual.
 void animation_space_graph_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	resources::request requests[1] = {
-		{ parent.get_requested_path(), resources::binary_config_class_impl },
-	};
-
-	resources::query_resources(
-		requests,
-		1,
+	resources::query_resource(
+		parent.get_requested_path(),
+		resources::binary_config_class_impl,
 		boost::bind( &animation_space_graph_cook::on_options_received, this, _1 ),
 		g_allocator,
 		NULL,
@@ -49,7 +43,8 @@ void animation_space_graph_cook::delete_resource( resources::resource_base* reso
 {
 	animation_space_graph* graph = static_cast< animation_space_graph* >( resource );
 
-	animation_space_vertex const* it = graph->get_animations( ), * const end = it + graph->get_animations_count( );
+	animation_space_vertex const* it = graph->get_animations( );
+	animation_space_vertex const* const end = it + graph->get_animations_count( );
 	for ( ; it != end; ++it )
 		it->~animation_space_vertex( );
 
@@ -57,26 +52,30 @@ void animation_space_graph_cook::delete_resource( resources::resource_base* reso
 	VOSTOK_FREE_IMPL( g_allocator, graph );
 }
 
-// claude@NOTE: target records 0 named locals (sum + iterators are temps), so the
-// per-group vertices fold is likely a std::accumulate; the natural hand loop below
-// keeps the accumulator + iterator as named locals. Structure (sum of each group's
-// "vertices" child count) is faithful; the 0-local fold is the byte residual.
+
+
+
+
 u32 get_animation_vertices_count( configs::binary_config_value const& groups_config )
 {
 	u32 vertices_count = 0;
-	for ( configs::binary_config_value const* it = groups_config.begin( ); it != groups_config.end( ); ++it )
+	configs::binary_config_value const* it = groups_config.begin( );
+	configs::binary_config_value const* const it_end = groups_config.end( );
+	for ( ; it != it_end; ++it )
 		vertices_count += ( *it )[ "vertices" ].size( );
 
 	return vertices_count;
 }
 
-// claude@NOTE: same 0-named-local fold shape as get_animation_vertices_count (likely a
-// std::accumulate). Per group: first += mixable.size(); second += (intervals_count+1) *
-// mixable.size(). Structure faithful; the 0-local fold is the byte residual.
+
+
+
 std::pair< u32, u32 > get_animation_mixes_count( configs::binary_config_value const& groups_config )
 {
 	std::pair< u32, u32 > mixes_count( 0, 0 );
-	for ( configs::binary_config_value const* it = groups_config.begin( ); it != groups_config.end( ); ++it )
+	configs::binary_config_value const* it = groups_config.begin( );
+	configs::binary_config_value const* const it_end = groups_config.end( );
+	for ( ; it != it_end; ++it )
 	{
 		const u32 intervals_count = ( *it )[ "intervals_count" ];
 		if ( ( *it ).value_exists( "mixable" ) )
@@ -102,7 +101,8 @@ void animation_space_graph_cook::on_options_received( resources::queries_result&
 	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr const>( data[0].get_unmanaged_resource() );
 	configs::binary_config_value const& groups_config	= (*config)["animation_space_graph"]["groups"];
 
-	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * get_animation_vertices_count( groups_config ) ), get_animation_vertices_count( groups_config ) );
+	u32 const vertices_count = get_animation_vertices_count( groups_config );
+	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * vertices_count ), vertices_count );
 
 	configs::binary_config_value const* it_groups		= groups_config.begin();
 	configs::binary_config_value const* it_end_groups	= groups_config.end();
@@ -173,11 +173,11 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 	}
 }
 
-// claude@NOTE: canon instruction-mix is ~96% identical; the score gap is block
-// ORDER (gold tail-places the error finish_query with the success one, our /Od
-// keeps it at the head, dragging both config-ptr dec calls with it) plus the
-// gold MALLOC path calling strip_pointer<doug_lea_allocator> and dropping the
-// fldz agent_radius arg (see sushi@TODO below). No statement-level lever left.
+
+
+
+
+
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	resources::query_result_for_cook* const parent = data.get_parent_query( );
@@ -195,16 +195,16 @@ void animation_space_graph_cook::on_animations_loaded( resources::queries_result
 
 	std::pair< u32, u32 > mixes_count = get_animation_mixes_count( groups );
 
-	// sushi@TODO: the target ctor reads a file-scope `agent_radius` float the sources
-	// never declare; LTCG drops the argument at this call site. Passing 0.f until the
-	// static's home and value are recovered.
+
+
+
 	animation_space_graph* graph = new ( MALLOC(
 		sizeof( animation_space_graph ) +
 		animations_count * sizeof( animation_space_vertex ) +
 		mixes_count.first * sizeof( std::pair< animation_space_vertex const*, animation_space_vertex const* > ) +
 		mixes_count.second * sizeof( animation_space_edge ),
 		"animation space graph"
-	) ) animation_space_graph( m_navigation_world, 0.f, animations_count, mixes_count.first, mixes_count.second );
+	) ) animation_space_graph( m_navigation_world, agent_radius, animations_count, mixes_count.first, mixes_count.second );
 
 	animation_space_vertex* it_animations = const_cast< animation_space_vertex* >( graph->get_animations( ) );
 	for ( u32 i = 0; i < animations_count; ++i, ++it_animations )
@@ -242,7 +242,7 @@ void animation_space_graph_cook::on_animations_loaded( resources::queries_result
 			configs::binary_config_value const* it_end_mix = mixable.end( );
 			for ( ; it_mix != it_end_mix; ++it_mix )
 			{
-				pcstr const second_path = vertices[ u32( (*it_mix)["second"] ) ];
+				pcstr second_path = vertices[ u32( (*it_mix)["second"] ) ];
 				animation_space_vertex const* const first_mixable = graph->get_animation_by_path( vertices[ u32( (*it_mix)["first"] ) ] );
 
 				new ( it_edges++ ) std::pair< animation_space_vertex const*, animation_space_vertex const* >(
