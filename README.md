@@ -43,7 +43,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       21 / 22 (95.5%) |       21 / 22 (95.5%) | 98.1% |     98.1% |
 | `ai_navigation` |     3 |       13 / 14 (92.9%) |      14 / 14 (100.0%) | 89.9% |    100.0% |
 
-_Updated 2026-08-22 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-08-23 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

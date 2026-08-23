@@ -25,8 +25,6 @@ class game;
 class options_item_base;
 class options_tab;
 
-// void* game_options::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x90b70]: <0x14c80>|0x000|      :'33'	{
-
 // the canonical game_options_1.h variant is byte-identical - no union needed
 class game_options : public input::handler , public flash_external_handler , public boost::noncopyable {
 public:

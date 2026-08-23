@@ -8626,7 +8626,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Ggame@survarium@@UAEPAXI@Z	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	0	30	f	fd158619e3e8	
 ??_Ggame_material_manager@survarium@@UAEPAXI@Z	stlport/stl/_tree.h	stlport	done	MATCH	100	100	100	0	44		8ffe6ec140fe	
 ??_Ggame_module_proxy@survarium@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	25	f	7ba251ded035	
-??_Ggame_options@survarium@@UAEPAXI@Z	vostok/game/sources/game_options.h	game	blocked			91.6667	91.6667	0	31	f	daf04ae624ff	
+??_Ggame_options@survarium@@UAEPAXI@Z	vostok/game/sources/game_options.h	game	parked			91.6667	91.6667	1	31	f	daf04ae624ff	compiler-generated deleting-dtor cap: target/base class topology and vtable slot match; target public ??_G versus base public ??_E is linker-selected flavor, and the 31B/30B bodies differ only by one pushed this argument at the call boundary
 ??_Ggame_world@survarium@@UAEPAXI@Z	vostok/game/sources/booby_trap_set_cook.h	game	done	MATCH	100	100	100	0	30	f	c2ab556b0520	
 ??_Ggame_world_object@survarium@@UAEPAXI@Z	boost/utility/addressof.hpp	boost	done	MATCH	100	100	100	0	60		ffd6d22c7056	
 ??_Ggame_world_ui@survarium@@UAEPAXI@Z	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	30	f	5aa6c963bb23	
