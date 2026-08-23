@@ -47,10 +47,11 @@ public:
 
 	inline	bool			is_inserted					( ) { return m_is_inserted; }
 
-protected:
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	/* resources::unmanaged_resource */
 	/* 0x0128 */	u8				id;
+
+protected:
 	/* 0x012c */	float4x4		m_transform;
 	/* 0x016c */	bool			m_is_inserted;
 	/* 0x0170 */	game_team_id	m_spoted_to_team;
