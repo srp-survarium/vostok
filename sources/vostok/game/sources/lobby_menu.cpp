@@ -130,7 +130,7 @@ void lobby_menu::show_ui( bool b_show )
 		m_is_ui_shown = b_show;
 	}
 }
-
+// claude@NOTE: residual is the update_ui this-register convention and an ICF c_ptr fold representative.
 void lobby_menu::tick(
 	const u32		frame_delta_in_ms,
 	const u32		current_time_in_ms,
