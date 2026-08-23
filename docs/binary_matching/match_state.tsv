@@ -8798,7 +8798,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gverify_callback_base@detail@ssl@asio@boost@@UAEPAXI@Z	boost/asio/ssl/detail/verify_callback.hpp	boost	done	MATCH	100	100	100	0	45		dca1fda47ead	
 ??_Gvfs_association@vfs@vostok@@UAEPAXI@Z	vostok/vfs/association.h	vfs	parked	MATCH			0	1	45			Target deleting destructor is an unretained COMDAT; ctor, dtor, and vtable source are present but no linked base caller keeps the association family.
 ??_Gvfs_sub_fat_resource@resources@vostok@@UAEPAXI@Z	vostok/core/sources/resources_hdd_manager.h	core	done	MATCH	100	100	100	0	85	f	2d8bd1eb3c1f	
-??_Gvictory_item@survarium@@UAEPAXI@Z	vostok/game/sources/victory_item.h	game	inprogress	MATCH	47.8261	47.8261	47.8261	0	74	f	08d86f3121c5	
+??_Gvictory_item@survarium@@UAEPAXI@Z	vostok/game/sources/victory_item.h	game	parked	MATCH	47.8261	47.8261	47.8261	1	74	f	56538000ab4f	Phase 4 LTCG boundary: target inlines the zero-statement destructor into its scalar-delete wrapper and suppresses the regular symbol; base emits that destructor solely for the same wrapper.
 ??_Gvictory_item_core@survarium@@UAEPAXI@Z	vostok/game_core/victory_item_core.h	game_core	done	MATCH	100	100	100	0	44		23ae959b3798	
 ??_Gvictory_items_container@survarium@@UAEPAXI@Z	vostok/game_core/victory_items_container_core.h	game_core	blocked				61.25	0	50	f		
 ??_Gvision_sensor@sensors@ai@vostok@@UAEPAXI@Z	vostok/ai/sensed_visual_object.h	ai	done	MATCH	100	100	100	0	44		e4cf1583b020	

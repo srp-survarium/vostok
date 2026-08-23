@@ -13,8 +13,6 @@ namespace survarium {
 
 class game_world;
 
-// void* victory_item::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xab110]: <0xab100>|0x000|      :'31'	{
-
 class victory_item : public victory_item_core {
 public:
 			explicit	victory_item	( game_world& w );
