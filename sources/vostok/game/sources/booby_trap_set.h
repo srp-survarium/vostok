@@ -15,8 +15,6 @@ namespace survarium {
 
 class game_world;
 
-// void* booby_trap_set::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96b50]: <0x96a90>|0x000|      :'41'	{
-
 class booby_trap_set : public booby_trap_set_core {
 	friend class booby_trap_set_cook;
 public:
