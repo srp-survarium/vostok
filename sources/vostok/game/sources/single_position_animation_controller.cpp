@@ -4,15 +4,15 @@
 
 #include "pch.h"
 #include "single_position_animation_controller.h"
-// mixing::expression returned by value -> needs the complete type at the definition
+// Complete types are required by the by-value expression and resource_ptr teardown.
 #include <vostok/animation/mixing_expression.h>
-// resource_ptr<animation_space_graph> dtor instantiates ->destroy() -> needs complete type
+// animation_space_graph is required by the resource_ptr destructor instantiation.
 #include "animation_space_graph.h"
-// NEW/DELETE the m_search_service / m_target_vertex members
+// The controller owns its search service and target vertex.
 #include "game_memory.h"
 #include "animations_search_service.h"
 #include "animation_space_vertex_id.h"
-// m_owner.on_movement_end() needs the complete human_npc
+// The movement-completion callback requires the complete owner type.
 #include "human_npc.h"
 #include <vostok/ai_navigation/world.h>
 #include <vostok/animation/linear_interpolator.h>
@@ -21,7 +21,7 @@
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
 #include <vostok/animation/mixing_multiplication_lexeme.h>
 #include <vostok/animation/mixing_weight_lexeme.h>
-// debug_draw: render.debug().draw_origin/draw_cube/draw_arrow + matrix/color builders
+// Debug drawing uses the facade renderer and its math builders.
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/math_float4x4.h>
@@ -30,12 +30,12 @@ namespace survarium {
 
 static float s_aim_transition_time = 0.3f;
 
-// claude@NOTE: ctor STRUCTURE MATCH (all members in the init list, 0 body statements).
-// Residual is LTCG: the target inlines vectora<float3>::vectora( base_allocator* ) (the
-// COMDAT does not exist in the target index) into 4 stores (begin/end/eos/allocator) and
-// reuses `xor ebx,ebx` for the zero stores; our base out-of-lines `call vectora<...>::
-// vectora` and emits `mov dword,0` per field. Same systematic vectora-inline gap hits
-// game_world / messaging_client ctors. Not source-steerable from this TU.
+// The initializer list is the complete retail constructor body.
+
+
+
+
+
 single_position_animation_controller::single_position_animation_controller(
 	animation_space_graph_ptr const&	graph,
 	ai::navigation::world const&		ai_navigation_world,
@@ -51,12 +51,12 @@ single_position_animation_controller::single_position_animation_controller(
 {
 }
 
-// claude@NOTE: dtor structure matches (the two DELETEs + the inlined member/base teardown).
-// Residual is LTCG/codegen: our base emits extra vtable resets the target omits during the
-// inlined member dtors (mov [ebp+30h]/[ebp+4],??_7movement_animation_controller_parameters
-// and mov [ebp],??_7base_animation_controller) and allocates `this` to ebp vs the target's
-// edi. The vtable writes come from the inlined empty ~movement_animation_controller_parameters
-// (fully inlined, no standalone symbol); not source-steerable from this TU.
+// Member destruction order is supplied by the compiler after these owned deletes.
+
+
+
+
+
 single_position_animation_controller::~single_position_animation_controller( )
 {
 	DELETE( m_search_service );
@@ -69,11 +69,11 @@ void single_position_animation_controller::initialize( )
 	m_target_vertex->translation									= m_owner.get_position( float3( 0.f, 0.f, 0.f ) );
 }
 
-// claude@NOTE: structure is correct (return empty expression). UNPAIRED because the
-// target inlines mixing::expression()'s intrusive_ptr default ctor to a single zero-store
-// (mov dword ptr [eax],0 / [eax+4],0) while our base out-of-lines the intrusive_ptr ctor
-// (extra `call intrusive_ptr<...>`); the structural divergence stops objdiff pairing it.
-// Pairs/matches once the intrusive_ptr default ctor inlines (toolchain inline threshold).
+// Retail returns the empty expression directly.
+
+
+
+
 animation::mixing::expression single_position_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
 {
 	return													animation::mixing::expression( );
@@ -82,10 +82,10 @@ animation::mixing::expression single_position_animation_controller::try_finalize
 void single_position_animation_controller::query_new_target_if_needed( )
 {
 	if ( m_next_key_point > m_navigation_path.size( ) - 1 ) {
-		// claude@NOTE: target emits a real `call human_npc::on_movement_end`; our base
-		// inlines it to nothing because human_npc::on_movement_end is still an empty STUB
-		// (human_npc.cpp - a different unit). Statement is correct; recovered when that
-		// unit is matched.
+		// Notify the owner before clearing both controller parameter sets.
+
+
+
 		m_owner.on_movement_end( );
 		m_current_parameters.reset( );
 		m_target_parameters.reset( );
@@ -211,12 +211,12 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 	return animation::mixing::expression( left_animation*( 1.f - left_weight ) + right_animation*left_weight );
 }
 
-// claude@NOTE: structure correct (the downcast assignment). Residual is an LTCG call-boundary
-// effect: the compiler-generated movement_animation_controller_parameters::operator= took a
-// custom register convention (this=esi, src=eax) so our base saves/restores `this` across it
-// (`push ecx`/`pop ecx`, reading the arg at [esp+8]); the target reads the arg at [esp+4] with
-// no temp slot. static_cast vs static_cast_checked makes no difference (both reduce to the same
-// cast in MASTER_GOLD - tested). Not source-steerable from this TU.
+// The checked downcast disappears in the retail build.
+
+
+
+
+
 void single_position_animation_controller::set_target( animation_controller_parameters const& target )
 {
 	m_target_parameters												= static_cast_checked< movement_animation_controller_parameters const& >( target );
