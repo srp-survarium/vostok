@@ -41,20 +41,7 @@ bool login_menu::on_mouse_key_action(
 	input::enum_mouse_key_action	action
 )
 {
-	u32 mouse_btn = 0;
-	switch ( button )
-	{
-		case input::mouse_button_left:		mouse_btn = 0; break;
-		case input::mouse_button_right:		mouse_btn = 1; break;
-		case input::mouse_button_middle:	mouse_btn = 2; break;
-	}
-
-	m_login_menu_ui->movie->HandleMouseBtn(
-		action == input::ms_key_down ? flash_movie::mouse_btn_down : flash_movie::mouse_btn_up,
-		mouse_btn,
-		( float )m_mouse_pos.x,
-		( float )m_mouse_pos.y );
-
+	get_game( ).input_translator( ).process_mouse_btn( input_world, button, action, ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, m_login_menu_ui->movie );
 	return true;
 }
 
