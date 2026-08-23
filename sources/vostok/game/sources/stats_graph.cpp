@@ -176,12 +176,12 @@ void stats_graph::render(
 		switch ( i ) {
 			case 0 : {
 				value				= m_important_value0;
-				color				= math::color_xrgb( 0, 0, 255 );
+				color				= math::color_xrgb( 255, 0, 0 );
 				break;
 			}
 			case 1 : {
 				value				= m_important_value1;
-				color				= math::color_xrgb( 0, 255, 255 );
+				color				= math::color_xrgb( 255, 255, 0 );
 				break;
 			}
 			case 2 : {
@@ -191,7 +191,7 @@ void stats_graph::render(
 			}
 			case 3 : {
 				value				= average_value();
-				color				= math::color_xrgb( 255, 255, 0 );
+				color				= math::color_xrgb( 0, 255, 255 );
 				break;
 			}
 			default :				{
