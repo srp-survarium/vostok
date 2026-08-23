@@ -68,6 +68,8 @@ void network_client::process_match_info( network_core::packet_reader& reader )
 
 void network_client::on_players_ready( resources::queries_result& data, const u32 players_count )
 {
+	// LOG_INFO embeds the target source lines 99 and 109.
+#line 99
 	LOG_INFO( "network_client::on_players_ready" );
 
 	for ( u32 i = 0; i < players_count; ++i )
@@ -76,6 +78,7 @@ void network_client::on_players_ready( resources::queries_result& data, const u3
 
 		m_net_players[ player->id ].player = static_cast_resource_ptr< resources::unmanaged_resource_ptr >( player );
 
+#line 109
 		LOG_INFO( "network_client::on_players_ready : %d => %s", player->id, player->is_local ? "local" : "remote" );
 
 		if ( player->is_local )
@@ -86,7 +89,7 @@ void network_client::on_players_ready( resources::queries_result& data, const u3
 	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x42 ) );
 	m_match_client.send_queued_packets( m_last_tick_time_in_ms );
 }
-
+#line 90
 void network_client::query_players( )
 {
 	struct match_options& options = match_client( ).get_match_options( );
