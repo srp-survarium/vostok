@@ -36,7 +36,7 @@ btBvhTriangleMeshShapeResource::btBvhTriangleMeshShapeResource(
 	geometry_resource_ptr const&		vertices_resource,
 	geometry_resource_ptr const&		indices_resource
 ) :
-	btBvhTriangleMeshShape	( meshInterface, true ),
+	btBvhTriangleMeshShape	( meshInterface, true, false ),
 	m_face_data				( face_data ),
 	m_raw_vertices			( vertices_resource ),
 	m_raw_indices			( indices_resource )
