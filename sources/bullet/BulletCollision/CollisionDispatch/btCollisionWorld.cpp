@@ -354,6 +354,7 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 						btCollisionWorld::LocalShapeInfo	shapeInfo;
 						shapeInfo.m_shapePart = partId;
 						shapeInfo.m_triangleIndex = triangleIndex;
+						shapeInfo.m_is_shape_index = false;
 
 						btVector3 hitNormalWorld = m_colObjWorldTransform.getBasis() * hitNormalLocal;
 
@@ -409,6 +410,7 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 						btCollisionWorld::LocalShapeInfo	shapeInfo;
 						shapeInfo.m_shapePart = partId;
 						shapeInfo.m_triangleIndex = triangleIndex;
+						shapeInfo.m_is_shape_index = false;
 
 						btVector3 hitNormalWorld = m_colObjWorldTransform.getBasis() * hitNormalLocal;
 
@@ -447,6 +449,7 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 					LocalInfoAdder2 (int i, RayResultCallback *user)
 						: m_userCallback(user), m_i(i)
 					{ 
+						m_shape_id = i;
 						m_closestHitFraction = m_userCallback->m_closestHitFraction;
 					}
 					virtual bool needsCollision(btBroadphaseProxy* p) const
@@ -504,7 +507,7 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 						btCollisionShape* saveCollisionShape = m_collisionObject->getCollisionShape();
 						m_collisionObject->internalSetTemporaryCollisionShape((btCollisionShape*)childCollisionShape);
 
-						LocalInfoAdder2 my_cb(i, &m_resultCallback);
+						LocalInfoAdder2 my_cb(m_resultCallback.getShapeId(i), &m_resultCallback);
 
 						rayTestSingle(
 							m_rayFromTrans,
@@ -638,6 +641,7 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 						btCollisionWorld::LocalShapeInfo	shapeInfo;
 						shapeInfo.m_shapePart = partId;
 						shapeInfo.m_triangleIndex = triangleIndex;
+						shapeInfo.m_is_shape_index = false;
 						if (hitFraction <= m_resultCallback->m_closestHitFraction)
 						{
 
@@ -730,6 +734,7 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 							btCollisionWorld::LocalShapeInfo	shapeInfo;
 							shapeInfo.m_shapePart = partId;
 							shapeInfo.m_triangleIndex = triangleIndex;
+							shapeInfo.m_is_shape_index = false;
 							if (hitFraction <= m_resultCallback->m_closestHitFraction)
 							{
 
@@ -890,6 +895,56 @@ void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const bt
 					if (dbvt->m_root)
 						dbvt->collideTV(dbvt->m_root, volume, rayCB);
 				}
+				else
+				{
+					int i=0;
+					for (i=0;i<compoundShape->getNumChildShapes();i++)
+					{
+						btTransform childTrans = compoundShape->getChildTransform(i);
+						const btCollisionShape* childCollisionShape = compoundShape->getChildShape(i);
+						btTransform childWorldTrans = colObjWorldTransform * childTrans;
+						// replace collision shape so that callback can determine the triangle
+						btCollisionShape* saveCollisionShape = collisionObject->getCollisionShape();
+						collisionObject->internalSetTemporaryCollisionShape((btCollisionShape*)childCollisionShape);
+						struct LocalInfoAdder : public ConvexResultCallback
+						{
+							ConvexResultCallback* m_userCallback;
+							int m_i;
+
+							LocalInfoAdder (int i, ConvexResultCallback *user)
+								: m_userCallback(user), m_i(i)
+							{
+								m_closestHitFraction = m_userCallback->m_closestHitFraction;
+							}
+							virtual bool needsCollision(btBroadphaseProxy* p) const
+							{
+								return m_userCallback->needsCollision(p);
+							}
+							virtual btScalar addSingleResult (btCollisionWorld::LocalConvexResult& r, bool b)
+							{
+								btCollisionWorld::LocalShapeInfo shapeInfo;
+								shapeInfo.m_shapePart = -1;
+								shapeInfo.m_triangleIndex = m_i;
+								shapeInfo.m_is_shape_index = true;
+								if (r.m_localShapeInfo == NULL)
+									r.m_localShapeInfo = &shapeInfo;
+								const btScalar result = m_userCallback->addSingleResult(r, b);
+								m_closestHitFraction = m_userCallback->m_closestHitFraction;
+								return result;
+							}
+						};
+
+						LocalInfoAdder my_cb(i, &resultCallback);
+
+						objectQuerySingle(castShape, convexFromTrans,convexToTrans,
+							collisionObject,
+							childCollisionShape,
+							childWorldTrans,
+							my_cb, allowedPenetration);
+						// restore
+						collisionObject->internalSetTemporaryCollisionShape(saveCollisionShape);
+					}
+				}
 			}
 		}
 	}
@@ -976,7 +1031,7 @@ struct btSingleRayCallback : public btBroadphaseRayCallback
 
 void	btCollisionWorld::rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, RayResultCallback& resultCallback) const
 {
-	BT_PROFILE("rayTest");
+	//BT_PROFILE("rayTest");
 	/// use the broadphase to accelerate the search for objects, based on their aabb
 	/// and for each object with ray-aabb overlap, perform an exact ray test
 	btSingleRayCallback rayCB(rayFromWorld,rayToWorld,this,resultCallback);
