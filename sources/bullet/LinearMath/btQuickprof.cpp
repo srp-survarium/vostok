@@ -19,7 +19,7 @@
 
 
 static btClock gProfileClock;
-static CProfileManager::PhysicsLogFn physics_log_fn = NULL;
+
 
 #ifdef __CELLOS_LV2__
 #include <sys/sys_time.h>
@@ -501,10 +501,15 @@ float CProfileManager::Get_Time_Since_Reset( void )
 
 #include <stdio.h>
 
+void (*physics_log_fn)(char*) = NULL;
+
+void	CProfileManager::set_log_callback( void (*fn)(char*) )
+{
+	physics_log_fn = fn;
+}
+
 void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spacing)
 {
-	char buffer[1024];
-
 	profileIterator->First();
 	if (profileIterator->Is_Done())
 		return;
@@ -513,6 +518,7 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 	int i;
 	int frames_since_reset = CProfileManager::Get_Frame_Count_Since_Reset();
 	for (i=0;i<spacing;i++)	printf(".");
+	char buffer[1024];
 	sprintf(buffer, "----------------------------------\n");
 	physics_log_fn(buffer);
 	for (i=0;i<spacing;i++)	printf(".");
@@ -532,7 +538,7 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 		{
 			int i;	for (i=0;i<spacing;i++)	printf(".");
 		}
-		sprintf(buffer, "%d -- %s (%.2f %%) :: %.3f ms / frame (%d calls)\n",i, profileIterator->Get_Current_Name(), fraction,(current_total_time / (double)frames_since_reset),profileIterator->Get_Current_Total_Calls());
+		sprintf(buffer, "%d -- %s (%.2f perc) :: %.3f ms / frame (%d calls)\n",i, profileIterator->Get_Current_Name(), fraction,(current_total_time / (double)frames_since_reset),profileIterator->Get_Current_Total_Calls());
 		physics_log_fn(buffer);
 		totalTime += current_total_time;
 		//recurse into children
@@ -543,7 +549,8 @@ void	CProfileManager::dumpRecursive(CProfileIterator* profileIterator, int spaci
 		printf("what's wrong\n");
 	}
 	for (i=0;i<spacing;i++)	printf(".");
-	sprintf(buffer, "%s (%.3f %%) :: %.3f ms\n", "Unaccounted:",parent_time > SIMD_EPSILON ? ((parent_time - accumulated_time) / parent_time) * 100 : 0.f, parent_time - accumulated_time);
+
+	sprintf(buffer, "%s (%.3f perc) :: %.3f ms\n", "Unaccounted:",parent_time > SIMD_EPSILON ? ((parent_time - accumulated_time) / parent_time) * 100 : 0.f, parent_time - accumulated_time);
 	physics_log_fn(buffer);
 	
 	for (i=0;i<numChildren;i++)
@@ -567,9 +574,6 @@ void	CProfileManager::dumpAll()
 }
 
 
-void	CProfileManager::set_log_callback( PhysicsLogFn log_fn )
-{
-	physics_log_fn = log_fn;
-}
+
 
 #endif //BT_NO_PROFILE
