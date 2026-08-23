@@ -31,6 +31,7 @@
 #include <vostok/ai/api.h>			// ai::create_world (ctor)
 #include <vostok/ai_navigation/api.h>	// ai::navigation::create_world (ctor)
 #include <vostok/render/facade/game_renderer.h>	// renderer().debug() (ctor)
+#include <vostok/render/facade/scene_renderer.h>	// set_portal_system (on_portal_system_loaded)
 #include <vostok/render/facade/common_types.h>	// render::scene_configuration (load)
 #include <vostok/sound/sound_scene_creation_params.h>	// sound::sound_scene_creation_params (load)
 #include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
@@ -455,17 +456,16 @@ void game_world::load(
 		user_data_ptrs.begin( ) );
 }
 
-// claude@NOTE: structure recovered (4 stmts: assign m_portal_sector_structure
-// from data[1], scene_renderer().set_portal_system(render_scene(), data[0]),
-// then set_active_sound_scene with the portal). Parked: needs cross-unit header
-// additions - render::scene_renderer::set_portal_system (scene_renderer.h, render
-// facade) and the 4-arg sound::world_user::set_active_sound_scene(scene, portal,
-// u32, u32) overload (world_user.h, sound) - and our world_user.h spells the
-// scene arg sound_scene_ptr& vs the canonical unmanaged_resource_ptr&, which the
-// other matched fns reinterpret_cast around; resolve in those units first.
 void game_world::on_portal_system_loaded( resources::queries_result& data )
 {
-	// STATE[STUB]
+	if ( data.is_successful( ) )
+	{
+		m_portal_sector_structure = static_cast_resource_ptr< render::culling::portal_sector_structure_ptr >( data[0].get_unmanaged_resource( ) );
+		scene_renderer( ).set_portal_system( render_scene( ).c_ptr( ), data[0].get_unmanaged_resource( ) );
+
+		if ( m_sound_scene )
+			m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( reinterpret_cast< sound::sound_scene_ptr& >( m_sound_scene ), m_portal_sector_structure, 0, 0 );
+	}
 }
 
 void game_world::on_activate( )
