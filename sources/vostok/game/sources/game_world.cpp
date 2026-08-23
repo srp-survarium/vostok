@@ -216,19 +216,6 @@ bool game_world::empty( )
 	return m_game_project == NULL;
 }
 
-// claude@NOTE: parked - 43-stmt / 0xb06-byte resource-loaded handler (RVA 0x5d0f40).
-// Reads the project + scene/sound/portal resources out of `data`, wires game_ui
-// (initialize, initialize_resources, initialize_minimap, show_capture_progress), the
-// camera (set_position_direction / switch_to_camera), the bullet_manager, the text
-// manager, and re-queries the npc/victory sub-resources via query_resources.
-// BLOCKED on cross-unit symbols still missing/stripped: the 4-arg
-// sound::world_user::set_active_sound_scene(scene, portal, u32, u32) overload and
-// render::scene_renderer::set_portal_system are not declared in our headers; and the
-// claude@NOTE: reconstructed from the 0xb06-byte target (43 stmts). Member offsets,
-// virtual slots (show_ui +0x14, has_bandwidth +0x14, match_options +0x34,
-// lobby_client +0x3C, match_client +0x40), the "unused string"/0x6E portal request,
-// match_client+0xFC m_match_options, lobby_client+0x190 m_status and the
-// lobby_menu m_match_making_ui/+0xF5 abort path are all byte-verified.
 void game_world::on_project_loaded(
 	resources::queries_result&		data,
 	const u32						results_offset,
@@ -246,19 +233,12 @@ void game_world::on_project_loaded(
 		game_ui.initialize_resources( data[resource_index++].get_unmanaged_resource( ) );
 
 		for ( u32 i = 0; i < s_max_tracers_count; ++i )
-		{
-			bullet_tracer tracer( NULL, static_cast_resource_ptr< render::tracer_model_instance_ptr >( data[resource_index++].get_unmanaged_resource( ) ) );
-			m_bullet_tracers.push_back( tracer );
-		}
+			m_bullet_tracers.push_back( bullet_tracer( NULL, static_cast_resource_ptr< render::tracer_model_instance_ptr >( data[resource_index++].get_unmanaged_resource( ) ) ) );
 
 		for ( u8 i = 0; i < 16; ++i )
 			death_particles[i] = data[resource_index++].get_unmanaged_resource( );
 
-		m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory( ).get_gfx_loader( ) );
-
-		math::uint2 const& output_size = output_window_size( );
-		m_text_manager->set_viewport( output_size.x, output_size.y );
-		renderer( ).show_text_manager( m_render_scene_view, m_text_manager );
+		show_text_manager( m_text_manager = new flash_text_manager( m_game.get_flash_factory( ).get_gfx_loader( ) ) );
 	}
 
 	if ( !m_game_material_manager )
@@ -273,11 +253,7 @@ void game_world::on_project_loaded(
 	{
 		unload( );
 
-		if ( m_game.lobby_menu( ).m_is_in_match_making )
-		{
-			hide_movie( m_game.lobby_menu( ).m_match_making_ui );
-			m_game.lobby_menu( ).m_is_in_match_making = false;
-		}
+		m_game.lobby_menu( ).show_match_making( false );
 
 		m_is_loading = false;
 		return;
@@ -286,7 +262,10 @@ void game_world::on_project_loaded(
 	show_ui( true );
 
 	for ( u8 i = 0; i < m_game.network_client( ).match_options( ).victory_items_count; ++i )
-		m_victory_items.push_back( static_cast_resource_ptr< victory_item_ptr >( data[resource_index++].get_unmanaged_resource( ) ) );
+	{
+		victory_item_ptr victory_item = static_cast_resource_ptr< victory_item_ptr >( data[resource_index++].get_unmanaged_resource( ) );
+		m_victory_items.push_back( victory_item );
+	}
 
 	m_game_project->insert( m_game.scheduler( ) );
 
@@ -308,30 +287,22 @@ void game_world::on_project_loaded(
 	variant< 32 > user_data;
 	user_data.set( m_game_project->m_config );
 
-	resources::user_data_variant const* user_data_ptrs[] = { &user_data };
-	resources::request request = { "unused string", resources::portal_sector_structure_class };
-	resources::query_resources(
-		&request,
-		1,
+	resources::query_resource(
+		"unused string",
+		resources::portal_sector_structure_class,
 		boost::bind( &game_world::on_portal_system_loaded, this, _1 ),
 		g_allocator,
-		user_data_ptrs );
+		&user_data );
 
 	game_ui.initialize_minimap( );
 
 	if ( m_game.network_client( ).has_bandwidth( ) )
 		game_ui.show_capture_progress( true );
 
-	if ( callback )
+	if ( !callback.empty( ) )
 		callback( data );
 
-	if ( m_game.m_active_scene != this )
-	{
-		if ( m_game.m_active_scene )
-			m_game.m_active_scene->on_deactivate( );
-		m_game.m_active_scene = this;
-		m_game.m_active_scene->on_activate( );
-	}
+	m_game.switch_to_game_world( );
 
 	m_is_loading = false;
 }
