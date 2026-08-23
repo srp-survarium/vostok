@@ -35,9 +35,9 @@ extern bool		g_mouse_invert;
 {
 }
 
-// claude@NOTE: target inlines all three fixed_vector<pair<...>>::push_back sites and
-// shares their null-end tail; base inlines two and calls the third. Explicit pair
-// construction emits the same base CFG, so revisit only after compiler context changes.
+// Target inlines all three action pushes; this compiler retains only the key-up call.
+
+
 bool player_input_handler::on_keyboard_action(
 	input::world* const				input_world,
 	input::enum_keyboard			key,
@@ -95,8 +95,8 @@ bool player_input_handler::on_gamepad_action(
 	return false;
 }
 
-// sushi@TODO: The target gives the multiline hold-action push closing line its own
-// epilogue PDB row; this compiler folds that row into the following return.
+
+
 bool player_input_handler::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
@@ -213,13 +213,13 @@ inline bool player_input_handler::action_present( const game_action_id action, a
 	return true;
 }
 
-// claude@NOTE: residual is the inline __find_if instantiation: this non-const method's
-// m_game_actions.begin()/.end() deduce a NON-const iterator (pair*), but the target's
-// __find_if takes pair CONST* (the source iterated m_game_actions const). The emitted
-// bytes are identical; only the called __find_if<pair*,..> vs <pair const*,..> symbol
-// differs. action_present (const) already yields const* for the quick_use sites; the
-// simple/rotation inline finds keep the * residual. Const-qualifying the whole iteration
-// here without adding a named local is the open lever.
+
+
+
+
+
+
+
 void player_input_handler::process_first_person_mode( const bool use_mouse_move )
 {
 	if ( m_game_actions.begin( ) == m_game_actions.end( ) && m_input.is_empty( ) )
@@ -354,36 +354,39 @@ void player_input_handler::process_third_person_mode( )
 		process_first_person_mode( true );
 }
 
-// claude@NOTE: paired (was an unpaired STUB). m_inverted_view_matrix is PROTECTED in the
-// game_camera base, so the write is direct (the old "needs a setter" park was wrong). The
-// math/members match the target asm (yaw via create_rotation_y, pitch via create_rotation
-// around the right vector i.xyz, third-person offset c.xyz = head + dist*(i*0.2 - k)). The
-// residual is statement BOUNDARIES: the target spreads the body over 8 line-table rows
-// (small per-call rows at lines 330-333) where this compact spelling emits 5 fat rows -
-// the original source broke the rotation/offset across more physical lines (no extra named
-// local; only new_inverted_view is recorded). Next: recover the exact per-line breaks.
+// Branch order follows the target; the third-person offset keeps its sign-mask evaluation.
+
+
+
+
+
+
+
 void player_input_handler::update_inverted_view( float4x4 const& player_head_transform )
 {
-	float4x4 new_inverted_view	= player_head_transform;
-
-	if ( m_input_mode != first_person_mode )
+	if ( m_input_mode == first_person_mode )
+		m_inverted_view_matrix = player_head_transform;
+	else
 	{
+		float4x4 new_inverted_view;
+		new_inverted_view	= player_head_transform;
 		new_inverted_view	= math::mul4x3( new_inverted_view, math::create_rotation_y( m_yaw ) );
 		new_inverted_view	= math::mul4x3( new_inverted_view, math::create_rotation( new_inverted_view.i.xyz( ), m_pitch ) );
 
-		new_inverted_view.c.xyz( )	= player_head_transform.c.xyz( ) + m_distance_to_focus_point * ( new_inverted_view.i.xyz( ) * 0.2f - new_inverted_view.k.xyz( ) );
+		new_inverted_view.c.xyz( )	= player_head_transform.c.xyz( ) + m_distance_to_focus_point * ( -new_inverted_view.k.xyz( ) + new_inverted_view.i.xyz( ) * 0.2f );
+
+		m_inverted_view_matrix		= new_inverted_view;
 	}
 
-	m_inverted_view_matrix		= new_inverted_view;
 	m_input_mode_changed		= false;
 }
 
-// claude@NOTE: the faithful body copies the 3 params into m_yaw / m_pitch /
-// m_distance_to_focus_point. The target's standalone copy reads the player.cpp
-// death-camera statics (s_death_camera_yaw/_pitch/_distance) DIRECTLY because LTCG
-// const-propagated kill()'s args (the sole caller passes exactly those globals) into
-// this body - so the byte residual here is an LTCG arg-source artifact, NOT a source
-// difference; do not read the globals here (that would fabricate the LTCG into source).
+
+
+
+
+
+
 void player_input_handler::set_yaw_pitch_distance( const float yaw, const float arg_1, const float arg_2 )
 {
 	m_yaw						= yaw;
