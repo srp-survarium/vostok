@@ -25,23 +25,23 @@ static float s_aim_transition_time = 0.3f;
 {
 }
 
-// claude@NOTE: parked - structure recovered (random m_animations[i] pick via
-// m_random, then an animation_lexeme built from animation_lexeme_parameters with a
-// linear_interpolator( s_aim_transition_time ) builder chain, returned as
-// make_pair( expression( movement_lexeme ), movement_lexeme )). Byte residual is the
-// module-wide animation_lexeme_parameters builder-chain inline-vs-call wall (the
-// VOSTOK_ANIMATION_API setters / create_animation_intervals go out-of-line in the
-// target but inline here) - same ceiling as player_logic_stand_state::movement_lexeme
-// and weapon_core_aimed_fire_state::get_user_hands_expression. NEXT: confirm the exact
-// builder-chain setters + the m_animations[i] identifier once that wall is broken;
-// the s_aim_transition_time + create_animation_intervals path is from the asm.
+// The target inlines the weight-group and bones-mask setters at this call site;
+// their shared declarations currently force the base calls out of line.
+
+
+
+
+
+
+
+
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > player_logic_preview_state::selected_animations(
 	mutable_buffer&							buffer,
 	weapon_animation_parameters const&		weapon_parameters,
 	const bool								is_third_view
 ) const
 {
-	u32 const							animation_index	= m_random.random( m_animations_count );
+	VOSTOK_UNREFERENCED_PARAMETER( is_third_view );
 
 	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
 
@@ -49,12 +49,14 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			NULL,
-			m_animations[ animation_index ],
+			m_animations[ m_random.random( m_animations_count ) ],
 			0,
 			0
 		)
-		.weight_interpolator	( l_interpolator )
-		.time_scale_interpolator( l_interpolator )
+		.weight_synchronization_group_id	( 0 )
+		.weight_interpolator				( l_interpolator )
+		.animated_object					( m_user )
+		.bones_mask						( weapon_parameters.body_part_mask )
 	);
 
 	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
