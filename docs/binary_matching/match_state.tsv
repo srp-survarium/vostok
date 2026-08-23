@@ -8737,7 +8737,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gsend_queued_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/send_queued_order.h	network	done	MATCH	100	100	100	0	46		11662145b880	
 ??_Gshotgun_weapon_reload_state@survarium@@UAEPAXI@Z	vostok/game/sources/shotgun_weapon_reload_state.h	game	done	MATCH	100	100	100	0	30	f	dea250c9001c	
 ??_Gsimple_game_project@survarium@@UAEPAXI@Z	vostok/vector_inline.h	vostok	done	MATCH	100	100	100	0	30	f	222f641982b5	
-??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	vostok/game/sources/animations_search_service.h	game	inprogress	MATCH	91.6667	91.6667	91.6667	0	32	f	fb69549f3322	
+??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	vostok/game/sources/animations_search_service.h	game	parked	MATCH	91.6667	91.6667	91.6667	1	32	f	fb69549f3322	Generated wrapper has 0/0 PDB statements, no locals, identical destructor/delete callees, and the same three-block flow. Target retains a redundant pre-call mov eax, esi; base emits the 30-byte COMDAT under a different header owner. Revisit during Phase 4 fold convergence.
 ??_Gsingle_sound@sound@vostok@@UAEPAXI@Z	vostok/sound/single_sound.h	sound	done	MATCH	100	100	100	0	44		459e30b17911	
 ??_Gsingle_sound_cook@sound@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	45		3b189dbadffe	
 ??_Gskeleton@animation@vostok@@UAEPAXI@Z	vostok/animation/skeleton_inline.h	animation	parked				100	2	36	f		Compiler-generated deleting-destructor presence/COMDAT residual.

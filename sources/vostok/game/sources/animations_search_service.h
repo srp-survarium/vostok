@@ -103,10 +103,6 @@ STATIC_SIZE_ASSERT(animations_search_service::vertex_allocator_impl_type, 0x10);
 STATIC_SIZE_ASSERT(animations_search_service::vertex_manager_impl_type, 0x1C);
 STATIC_SIZE_ASSERT(animations_search_service::priority_queue_impl_type, 0x10);
 
-// the PDB attributes single_position_animation_controller's scalar deleting
-// destructor to this header:
-// inline void* single_position_animation_controller::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xad060]: <0xad000>|0x000|+0x051:'99' { <0xad051>|0x051| :'100' }
-
 } // namespace survarium
 
 #endif // #ifndef ANIMATIONS_SEARCH_SERVICE_H_INCLUDED
