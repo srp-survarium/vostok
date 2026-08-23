@@ -52,7 +52,7 @@ void match_client::connect(
 )
 {
 	network_core::udp_match_packet* const	packet	= m_client.new_packet( ( u8 )0x40 );
-	packet->append			( &session_id, ( u32 )4 );
+	packet->append			( session_id );
 	m_client.connect		( host, port, current_time_in_ms, packet, callback );
 }
 
