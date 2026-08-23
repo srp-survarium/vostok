@@ -100,19 +100,19 @@ void lobby_client::on_disconnected( )
 	if ( m_on_disconnected )
 		m_on_disconnected	( );
 }
-
+// claude@NOTE: target PDB coalesces the final two stores; keep the source statements separate.
 void lobby_client::on_error(
 	network_core::client_error_codes_enum,
-	boost::system::error_code
-)
+	boost::system::error_code )
 {
 	LOG_ERROR	( "lobby client error. reconnecting..." );
-
 	disconnect	( );
 
 	++m_connection_info.connection_error_count;
 	m_connection_info.need_resolve	= true;
 }
+
+
 
 void lobby_client::connect( server_connection_info const& lobby_connection_info )
 {
