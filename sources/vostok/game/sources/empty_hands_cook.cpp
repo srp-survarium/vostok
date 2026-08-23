@@ -29,13 +29,13 @@ void empty_hands_cook::translate_query( resources::query_result_for_cook& parent
 	);
 }
 
-// claude@NOTE: parked - structure diverges on the request-array build. Target hoists
-// the ["user_animations"] node and request count differently and the per-element loop
-// (alloca'd request[count], each {(pcstr)node[i], animation_class}) does not match the
-// target's statement granularity (lines 38/42/43/47/48/49 vs my hoisted node + alloca +
-// loop). Named locals per carcass: animations_node + config. NEXT: match the exact VLA
-// (_alloca_probe_16) request build + the divide-by-sizeof(binary_config_value) count
-// computation seen at 0x766ac0.
+// claude@NOTE: Source and PDB structure are complete. Target preserves the Boost _1
+// load and has_empty_target call; base folds _1 to zero and selects an ICF-equivalent
+// helper. The request count, VLA, and per-element construction match the target.
+
+
+
+
 void empty_hands_cook::on_empty_hands_config_loaded( resources::queries_result& data )
 {
 	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
@@ -76,9 +76,9 @@ void empty_hands_cook::on_empty_hands_animations_loaded( resources::queries_resu
 	parent->finish_query( result_success );
 }
 
-// the animations array lives in the trailing region of the same malloc (see
-// on_empty_hands_animations_loaded), so the cook destroys it explicitly - the
-// empty_hands dtor does NOT own m_animations
+// The trailing animations share hands' allocation and must be destroyed first.
+// Target's final free uses the legacy RTTI/get_top_pointer helper unavailable in
+// the current allocator header.
 void empty_hands_cook::delete_resource( resources::resource_base* resource )
 {
 	empty_hands* hands = static_cast_checked< empty_hands* >( resource );
