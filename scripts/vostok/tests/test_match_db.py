@@ -1233,6 +1233,74 @@ class LedgerUnitEncodingTests(unittest.TestCase):
                              "vostok/game/sources/player.cpp")
 
 
+class ReportChangesTests(unittest.TestCase):
+    @staticmethod
+    def _report(score):
+        return {
+            "measures": {
+                "matched_code_percent": score or 0.0,
+                "matched_functions": int(score == 100.0),
+                "total_functions": 1,
+            },
+            "units": [
+                {
+                    "name": "module/header.h",
+                    "functions": [
+                        {
+                            "name": "?function@@YAXXZ",
+                            "fuzzy_match_percent": score,
+                            "metadata": {"demangled_name": "void function(void)"},
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def _changes(self, strict_exact):
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = pathlib.Path(temporary_directory)
+            previous = root / "previous.json"
+            current = root / "current.json"
+            previous.write_text(json.dumps(self._report(100.0)))
+            current.write_text(json.dumps(self._report(None)))
+            with (
+                mock.patch.object(G, "OBJDIFF_DIR", root),
+                mock.patch.object(
+                    G,
+                    "_strict_current_exact_symbols",
+                    return_value=strict_exact,
+                ),
+            ):
+                G._report_changes(previous, current)
+            return json.loads((root / "report-changes.json").read_text())
+
+    def test_rich_exact_owner_swap_is_fold_churn(self):
+        changes = self._changes({"?function@@YAXXZ"})
+        self.assertEqual(changes["regressed"], [])
+        self.assertEqual(len(changes["fold_churn"]), 1)
+
+    def test_unproven_drop_remains_a_regression(self):
+        changes = self._changes(set())
+        self.assertEqual(len(changes["regressed"]), 1)
+        self.assertEqual(changes["fold_churn"], [])
+
+    def test_zero_change_skips_rich_index_scan(self):
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = pathlib.Path(temporary_directory)
+            previous = root / "previous.json"
+            current = root / "current.json"
+            previous.write_text(json.dumps(self._report(100.0)))
+            current.write_text(json.dumps(self._report(100.0)))
+            with (
+                mock.patch.object(G, "OBJDIFF_DIR", root),
+                mock.patch.object(G, "_strict_current_exact_symbols") as scan,
+            ):
+                G._report_changes(previous, current)
+            scan.assert_not_called()
+
+
 class ReportArchivePruneTests(unittest.TestCase):
     """The archive is a ring: ~14 MB per build reached 11 GB unbounded."""
 

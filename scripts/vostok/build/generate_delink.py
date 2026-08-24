@@ -28,6 +28,7 @@ import argparse
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,11 @@ from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_TARGET_PREFIX,
                                OBJDIFF_DIR, RICH_DIR, SCALEFORM_SDK,
                                SOURCES, SYMBOL_MAP, SYMBOL_MAP_OVERRIDES,
                                WIN32_DIR, survarium_bin)
+from vostok.derive.aliases import (instruction_stream_exact,
+                                   load_exact_fold_aliases,
+                                   strict_source_alias_candidates)
+from vostok.derive.index import index_by_mangled, load_index_records
+from vostok.derive.names import qualified_name
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
@@ -128,6 +134,112 @@ def _rich_pdb_aliases() -> dict[str, str]:
         base_index,
         source_prefix="vostok/",
     )
+
+
+def _call_operand_aliases(records):
+    """Index the printable call/jump aliases contributed by each rich RVA."""
+    rvas_by_operand = {}
+    operands_by_rva = {}
+    for rec in records:
+        qualified = qualified_name(rec.get("name", ""))
+        if qualified is None:
+            continue
+        owner, leaf = qualified
+        operand = f"{owner}::{leaf}" if owner else leaf
+        operand = re.sub(r"\s+>", ">", operand)
+        rvas_by_operand.setdefault(operand, set()).add(rec["rva"])
+        operands_by_rva.setdefault(rec["rva"], set()).add(operand)
+    return rvas_by_operand, operands_by_rva
+
+
+def _strict_current_exact_symbols() -> set[str]:
+    """Return same-identity functions proven exact by current rich streams.
+
+    Raw objdiff can drop a COMDAT from 100 to unscored when LTCG selects the
+    same body from a different header owner.  The rich indexes still carry the
+    target and base identities and their normalized instruction streams, so an
+    equal stream is strict current-build evidence that this is attribution
+    churn rather than a source regression.
+    """
+    target_index = RICH_DIR / "target" / "index.jsonl"
+    base_index = RICH_DIR / "base" / "index.jsonl"
+    if not target_index.is_file() or not base_index.is_file():
+        return set()
+
+    target_records = load_index_records(target_index)
+    base_records = load_index_records(base_index)
+    target = index_by_mangled(target_records)
+    target_primary_signatures = {
+        mangled: rec["name"]
+        for mangled, rec in target.items()
+        if mangled == rec["mangled"]
+    }
+    target_owners = {
+        (rec["mangled"], rec["name"]): rec["file"] for rec in target.values()
+    }
+    base = index_by_mangled(
+        base_records,
+        target_owners,
+        target_primary_signatures,
+    )
+
+    target_rvas, target_operands = _call_operand_aliases(target_records)
+    base_rvas, base_operands = _call_operand_aliases(base_records)
+    base_aliases_by_name = {}
+    base_aliases_by_mangled = {}
+    target_alias_names_by_rva = {}
+    base_alias_names_by_rva = {}
+    for rec in target_records:
+        target_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
+    for rec in base_records:
+        base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
+        base_aliases_by_mangled.setdefault(rec["mangled"], {})[rec["rva"]] = rec
+        base_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
+
+    def call_alias_equivalent(target_operand, base_operand):
+        target_candidates = target_rvas.get(target_operand, set())
+        base_candidates = base_rvas.get(base_operand, set())
+        if len(target_candidates) != 1 or len(base_candidates) != 1:
+            return False
+        target_rva = next(iter(target_candidates))
+        base_rva = next(iter(base_candidates))
+        return bool(
+            target_operands.get(target_rva, set())
+            & base_operands.get(base_rva, set())
+        )
+
+    exact = set()
+    for mangled in target.keys() & base.keys():
+        if not instruction_stream_exact(
+            target[mangled],
+            base[mangled],
+            call_alias_equivalent,
+        ):
+            continue
+        exact.add(mangled)
+        compiler_name = normalize_objdiff_symbols.compiler_name(mangled)
+        if compiler_name:
+            exact.add(compiler_name)
+
+    exact_fold_aliases = load_exact_fold_aliases()
+    for mangled, target_rec in target.items():
+        candidates = strict_source_alias_candidates(
+            target_rec,
+            base_aliases_by_name,
+            set(),
+            allow_used=True,
+            target_alias_names_by_rva=target_alias_names_by_rva,
+            base_alias_names_by_rva=base_alias_names_by_rva,
+            exact_fold_aliases=exact_fold_aliases,
+            base_aliases_by_mangled=base_aliases_by_mangled,
+        )
+        if len(candidates) != 1:
+            continue
+        exact.add(mangled)
+        compiler_name = normalize_objdiff_symbols.compiler_name(mangled)
+        if compiler_name:
+            exact.add(compiler_name)
+    return exact
 
 
 # Archived reports are ~14 MB each and one is written per build. Unbounded, that
@@ -254,12 +366,15 @@ def _report_changes(previous: Path, current: Path) -> None:
             for fn in unit.get("functions", []):
                 name = fn.get("metadata", {}).get("demangled_name") or fn.get("name", "?")
                 key = (unit.get("name"), fn.get("name"))
-                pct = fn.get("fuzzy_match_percent", 0.0)
+                pct = fn.get("fuzzy_match_percent")
+                if pct is None:
+                    pct = 0.0
                 if key not in out or pct > out[key][0]:
                     out[key] = (pct, name)
         return out
 
     before, after = fuzzy_by_function(prev), fuzzy_by_function(cur)
+    strict_current_exact = None
 
     def best_by_symbol(by_function):
         """The best score each SYMBOL reaches over every unit that emitted it."""
@@ -286,7 +401,12 @@ def _report_changes(previous: Path, current: Path) -> None:
             # ops, btHashMap), and a reader who trusts the headline concludes
             # they broke every one of them.
             sym = key[1]
-            if best_after.get(sym, 0.0) >= best_before.get(sym, 0.0) - 1e-6:
+            best_did_not_drop = (
+                best_after.get(sym, 0.0) >= best_before.get(sym, 0.0) - 1e-6
+            )
+            if not best_did_not_drop and strict_current_exact is None:
+                strict_current_exact = _strict_current_exact_symbols()
+            if best_did_not_drop or sym in strict_current_exact:
                 fold_churn.append((was, now, name))
             else:
                 regressed.append((was, now, name))
@@ -344,8 +464,9 @@ def _report_changes(previous: Path, current: Path) -> None:
         "improved": [{"function": n, "from": a, "to": b} for a, b, n in improved],
         "removed": [{"function": n, "from": p} for p, n in removed],
         "added": [{"function": n, "to": p} for p, n in added],
-        # Bucketed OUT of `regressed` on purpose: same symbol, several units,
-        # linker-folded, and its best score across them is unchanged.
+        # Bucketed OUT of `regressed` on purpose: either the same symbol's best
+        # score merely moved between units, or current rich streams prove the
+        # raw unscored copy remains instruction-exact after an ICF owner swap.
         "fold_churn": [{"function": n, "from": a, "to": b} for a, b, n in fold_churn],
     }, indent=2) + "\n")
     log(f"Changes: {changes} (previous report kept at {previous})")
