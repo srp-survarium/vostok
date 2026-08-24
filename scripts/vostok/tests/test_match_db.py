@@ -1038,6 +1038,56 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             alias_base,
         )
 
+    def test_primary_recovers_generated_score_on_identical_alias_clusters(self):
+        primary = "?primary@@"
+        representative = "?representative@@"
+        target = self.record(
+            name="void primary()",
+            mangled=primary,
+            text="mov   eax, [111111h]",
+            rva=0x1000,
+        )
+        base = self.record(
+            name=target["name"],
+            mangled=primary,
+            text="mov   eax, [222222h]",
+            rva=0x2000,
+        )
+        target_alias = dict(target, name="void representative()")
+        base_alias = dict(base, name=target_alias["name"])
+        artifacts = SimpleNamespace(
+            target={primary: target},
+            base={primary: base},
+            target_records=[target, target_alias],
+            base_records=[base, base_alias],
+            fuzzy={representative: 100.0},
+            folded_fuzzy={},
+            folded_symbol_aliases={primary: representative},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        self.assertEqual(pair(artifacts).pairs[primary].fuzzy, 100.0)
+
+    def test_primary_rejects_generated_score_on_different_alias_clusters(self):
+        primary = "?primary@@"
+        representative = "?representative@@"
+        target = self.record(mangled=primary, text="ret   4", rva=0x1000)
+        base = self.record(mangled=primary, text="ret   8", rva=0x2000)
+        target_alias = dict(target, name="void target_alias()")
+        base_alias = dict(base, name="void base_alias()")
+        artifacts = SimpleNamespace(
+            target={primary: target},
+            base={primary: base},
+            target_records=[target, target_alias],
+            base_records=[base, base_alias],
+            fuzzy={representative: 100.0},
+            folded_fuzzy={},
+            folded_symbol_aliases={primary: representative},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        self.assertIsNone(pair(artifacts).pairs[primary].fuzzy)
+
     def test_generated_fold_score_runs_after_strict_rich_evidence(self):
         exact_target = self.record(
             name="void exact_alias()",

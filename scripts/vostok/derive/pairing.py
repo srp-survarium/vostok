@@ -7,7 +7,8 @@ one side and `??__E`/`??__F` on the other, and the retail PDB renders a handful
 of template arguments differently. Each recovery is a separate pass with its own
 evidence bar, applied in descending order of certainty:
 
-    primary          identical mangled names and exact or alias-normalized code
+    primary          identical mangled names and exact or alias-normalized code;
+                     measured fold representatives on identical PDB alias clusters
     compiler alias   the exact name MSVC would emit, proven by a report score
     report alias     a folded PDB alias the delink report already compared
     strict rich      unique same-source alias with a byte-identical stream
@@ -119,8 +120,11 @@ class _Pairer:
     def primary(self):
         """Identical mangled names. A function objdiff never scored but whose
         rich instruction streams are identical, including uniquely proven ICF
-        call aliases, is exact by construction."""
+        call aliases, is exact by construction. A generated folded-symbol score
+        also belongs to a primary identity when both physical RVAs expose the
+        exact same multi-name PDB alias cluster."""
         recovered = 0
+        folded = 0
         for mangled in sorted(self.primary_names):
             trec, brec = self.target[mangled], self.base[mangled]
             fuzzy = self.art.fuzzy.get(mangled)
@@ -129,6 +133,9 @@ class _Pairer:
             ):
                 fuzzy = 100.0
                 recovered += 1
+            if fuzzy is None:
+                fuzzy = self._primary_folded_score(mangled, trec, brec)
+                folded += fuzzy is not None
             self._add(mangled, trec, brec, fuzzy)
         self.used_target_rvas = {p.target_rva for p in self.pairs.values()}
         self.used_base_rvas = {p.base_rva for p in self.pairs.values()}
@@ -136,6 +143,11 @@ class _Pairer:
             log(
                 f"function-scoped rich-index exact attribution recovered "
                 f"{recovered} objdiff score gap(s)"
+            )
+        if folded:
+            log(
+                f"propagated {folded} generated fold score(s) through "
+                "identical primary PDB alias clusters"
             )
 
     def compiler_aliases(self):
@@ -404,6 +416,24 @@ class _Pairer:
             self.target_symbol_operands_by_rva[target_rva]
             & self.base_symbol_operands_by_rva[base_rva]
         )
+
+    def _primary_folded_score(self, mangled, target_rec, base_rec):
+        """Recover the measured representative score for one primary alias.
+
+        The generated fold map proves which report identity owns the target
+        body. Requiring the complete multi-name PDB alias set to be identical
+        at the selected target and base RVAs proves that the primary base name
+        is another label on that same measured physical body.
+        """
+        representative = getattr(self.art, "folded_symbol_aliases", {}).get(mangled)
+        score = self.art.fuzzy.get(representative)
+        if score is None:
+            return None
+        target_names = self.target_alias_names_by_rva.get(target_rec["rva"], set())
+        base_names = self.base_alias_names_by_rva.get(base_rec["rva"], set())
+        if len(target_names) < 2 or target_names != base_names:
+            return None
+        return score
 
     def _add(self, mangled, trec, brec, fuzzy):
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(trec, brec)
