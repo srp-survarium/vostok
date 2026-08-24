@@ -8,6 +8,8 @@
 namespace vostok {
 namespace render {
 
+static command_line::key s_target_test( "target_test", "", "", "" );
+
 u32 renderer_context_targets::s_new_id = 0;
 
 pcstr rt_index_to_name( enum_render_target_index index )
