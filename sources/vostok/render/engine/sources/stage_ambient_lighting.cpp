@@ -46,7 +46,8 @@ stage_ambient_lighting::stage_ambient_lighting(
 ) :
 	stage( in_renderer, context )
 {
-	set_ambient_multiplier( 0.0f ); effect_manager::ref( ).create_effect<effect_light_mask>( &m_effect_accum_mask );
+	set_ambient_multiplier( 0.0f );
+	effect_manager::ref( ).create_effect<effect_light_mask>( &m_effect_accum_mask );
 	use_probes( true );
 
 	effect_manager::ref( ).create_effect<effect_sky_ambient_occlusion>( &m_sky_ambient_occlusion_effect );
