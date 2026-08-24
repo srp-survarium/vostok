@@ -7005,7 +7005,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1lights_db@render@vostok@@QAE@XZ	vostok/render/engine/sources/lights_db.cpp	render	done	MATCH	100	100	100	1	178	f	36051e3de68d	
 ??1lobby_client@survarium@@QAE@XZ	vostok/game/sources/lobby_client.cpp	game	done	MATCH	100	100	100	1	235	f	c90cd71a7b6a	
 ??1lobby_menu@survarium@@UAE@XZ	vostok/game/sources/lobby_menu.cpp	game	inprogress	QUANTITY	85.1338	85.1338	85.1338	1	513	f	93d26aafd676	
-??1lod_entry@particle@vostok@@QAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	26		2f4cb894c8fb	
+??1lod_entry@particle@vostok@@QAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	26		d8af7619e572	
 ??1log_file@logging@vostok@@QAE@XZ	vostok/logging/sources/log_file.cpp	logging	done	MATCH	100	100	100	2	67		d8405dbb4be0	auto: at 100% ceiling, demoted from queue
 ??1login_client@network@vostok@@QAE@XZ	vostok/network/sources/login_client.cpp	network	parked	MATCH	99.7717	99.7717	99.7717	1	315		efde4643233d	Target statements and flow match. Residuals are Boost function/bind lowering, LOG callback scheduling, fixed-string call boundaries, or ICF/COMDAT ownership; reopen after shared-header or compiler-context changes.
 ??1login_client_impl@network@vostok@@QAE@XZ	vostok/network/sources/login_client_impl.cpp	network	done	MATCH	100	100	100	1	415		4e47618bb59f	Audited the complete login-client cone against target PDB structure, semantic flow, and call-site assembly.
@@ -7076,7 +7076,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1particle_beam_emitter_instance@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_beam_emitter_instance.cpp	particle	done	MATCH	100	100	100	1	36		7991cfff4819	auto: at 100% ceiling, demoted from queue
 ??1particle_emitter_instance@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_emitter_instance.cpp	particle	done	MATCH	100	100	100	1	145		43b671ed6edd	Reconstructed instance cook through emitter factory, layout, render preparation, reset, material binding, and real render callers from target PDB and assembly.
 ??1particle_system@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_system.cpp	particle	done	MATCH	100	100	100	1	42		f180a983765d	auto: at 100% ceiling, demoted from queue
-??1particle_system_instance@particle@vostok@@UAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	58		2f4cb894c8fb	
+??1particle_system_instance@particle@vostok@@UAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	58		d8af7619e572	
 ??1particle_system_instance_impl@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_system_instance_impl.cpp	particle	done	MATCH	100	100	100	1	66		2d5a2fc339d2	Recovered target resource_ptr ownership and intrusive-list layout, world traversal, vtable order, insertion/removal control flow, and interlocked instance construction from PDB structure and assembly.
 ??1particle_world@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_world.cpp	particle	done	MATCH	100	100	100	1	115		99169c2f934f	Recovered target resource_ptr ownership and intrusive-list layout, world traversal, vtable order, insertion/removal control flow, and interlocked instance construction from PDB structure and assembly.
 ??1particles_statistics_group@render@vostok@@QAE@XZ	vostok/render/engine/sources/statistics.h	render	done	MATCH	100	100	100	0	84	f	c1be8531f8dc	
@@ -7973,7 +7973,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_G?$btAxisSweep3Internal@G@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btaxissweep3.h	bullet	done	MATCH	100	100	100	0	45	f	74a00bfefdb0	
 ??_G?$cc_value@I@console_commands@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	70	f	440cb9692a74	
 ??_G?$concrete_type_helper@E@detail@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	45		03b7c39b74f2	
-??_G?$concrete_type_helper@Ubooby_trap_set_cook_data@survarium@@@detail@vostok@@UAEPAXI@Z	vostok/intrusive_ptr_inline.h	vostok	done			100	100	0	44		37f2d0fd908a	
+??_G?$concrete_type_helper@Ubooby_trap_set_cook_data@survarium@@@detail@vostok@@UAEPAXI@Z	vostok/intrusive_ptr_inline.h	vostok	done			100	100	0	44		03b7c39b74f2	
 ??_G?$deadline_timer_service@Vptime@posix_time@boost@@U?$time_traits@Vptime@posix_time@boost@@@asio@3@@asio@boost@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	69		440cb9692a74	
 ??_G?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@UAEPAXI@Z	vostok/intrusive_list_inline.h	vostok	done	MATCH	100	100	100	0	44		d8af7619e572	
 ??_G?$fixed_size_allocator@Vresource_link@resources@vostok@@Vmutex@threading@3@@memory@vostok@@UAEPAXI@Z	vostok/math_functions_inline.h	vostok	done	MATCH	100	100	100	0	44	f	6f848ccf97ba	
@@ -8654,7 +8654,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Glinear_interpolator@animation@vostok@@UAEPAXI@Z			parked				0	1	0			Compiler-generated deleting destructor (demangled alias reports instant_interpolator); target folds/owns the equivalent COMDAT differently.
 ??_Globby_menu@survarium@@UAEPAXI@Z	vostok/game/sources/lobby_menu.h	game	done	MATCH	100	100	100	0	30	f	dbe93dd09ee0	
 ??_Globby_menu_external_handler@survarium@@UAEPAXI@Z	vostok/game/sources/lobby_menu_ui.cpp	game	done	MATCH	100	100	100	0	46	f	cf3f7c2ecd4d	
-??_Glogic_error@stlp_std@@UAEPAXI@Z	boost/asio/detail/impl/win_iocp_socket_service_base.ipp	boost	done			100	100	0	44		03b7c39b74f2	
+??_Glogic_error@stlp_std@@UAEPAXI@Z	boost/asio/detail/impl/win_iocp_socket_service_base.ipp	boost	done			100	100	0	44		3067a5ecca62	
 ??_Glogin_menu@survarium@@UAEPAXI@Z	vostok/game/sources/login_menu.h	game	done	MATCH	100	100	100	0	30	f	440cb9692a74	
 ??_Gloose_oct_tree@collision@vostok@@UAEPAXI@Z	vostok/collision/sources/loose_oct_tree.cpp	collision	done	MATCH	100	100	100	0	63	f	600d7e8362b9	
 ??_Gmain_menu@survarium@@UAEPAXI@Z	vostok/game/sources/main_menu.h	game	done	MATCH	100	100	100	0	53	f	4e49b6a92009	
@@ -8704,7 +8704,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gparticle_event_on_play@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_actions.h	particle	done	MATCH	100	100	100	1	56		cc109bcc5a0a	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gparticle_system@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_system_cook.h	particle	done	MATCH	100	100	100	1	44		5801674ee7ff	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gparticle_system_instance_cook@particle@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done			100	100	0	64		440cb9692a74	
-??_Gparticle_system_instance_impl@particle@vostok@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	44		2f4cb894c8fb	
+??_Gparticle_system_instance_impl@particle@vostok@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done			100	100	0	44		d8af7619e572	
 ??_Gparticle_system_wrapper_cook@particle@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	64		972583414034	
 ??_Gparticle_world@particle@vostok@@UAEPAXI@Z	vostok/particle/base_particle_inline.h	particle	done	MATCH	100	100	100	1	44		63cfa5b506e8	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gphysical_path_mounter@vfs@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	44		2c6d1275b007	
@@ -29566,7 +29566,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?set_near_plane_factor@player@survarium@@QAEXM@Z	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	24	f	f3554147c917	
 ?set_need_cook@resource_base@resources@vostok@@IAEXXZ	vostok/core/sources/resources_resource_base.cpp	core	done	MATCH	100	100	100	0	15	f	a456ba10af83	
 ?set_network_client@game@survarium@@AAEXQAVbase_network_client@2@PBDG_N@Z	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	319	f	f3d16fb16dfe	
-?set_new_active_item@player@survarium@@EAE_NABV?$resource_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	vostok/game/sources/player.cpp	game	inprogress	QUANTITY	37.5652	37.5652	37.5652	2	134	f	05cbcb731c6a	
+?set_new_active_item@player@survarium@@EAE_NABV?$resource_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	vostok/game/sources/player.cpp	game	inprogress	QUANTITY	37.5652	37.5652	100	2	134	f	05cbcb731c6a	
 ?set_next_ammo_type@weapon@survarium@@EAEXXZ	vostok/game/sources/weapon.cpp	game	inprogress	SIZE	70.2632	70.2632	70.2632	1	55	f	be8c521ba7a7	
 ?set_next_ammo_type@weapon_core@survarium@@UAEXXZ	vostok/game_core/sources/weapon_core.cpp	game_core	parked	SIZE	88.029	88.029	88.029	4	233		239864e1b40a	game_core loop-2 closeout: non-steerable residual on VERIFIED structure (named-locals + statement structure match the target; bytes capped by toolchain). SIZE/SPLIT/unpaired = inline-vs-call (intrusive_ptr operator*/base-ctor/packet r<>+append/reset()/delete_helper/has_animation_ended/COMDAT). QUANTITY parked = cross-module-blocked (cc_bool/console_command recoil trio+on_skeleton+process_finger; scheduler optimized-COMDAT; get_weapon_lexeme temp idiom; finalize/apply inline wall) or structure-match-at-byte-ceiling. Per-fn detail in claude@NOTE.
 ?set_next_fire_queue_type@weapon@survarium@@EAEXXZ	vostok/game/sources/weapon.cpp	game	done	MATCH	100	100	100	1	43	f	0906744e3814	
@@ -30264,7 +30264,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?tabStopsSet@TextFormat@fl_text@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@PAVArray@fl@3456@@Z	src/gfx/as3/obj/text/as3_obj_text_textformat.cpp	gfx	done	MATCH	100	100	100	0	19	f		
 ?take@victory_item@survarium@@UAEXXZ	vostok/game/sources/victory_item.cpp	game	inprogress	SIZE	82.7391	82.7391	82.7391	1	85	f	176164cf14ae	
 ?take@victory_item_core@survarium@@UAEXXZ	vostok/game_core/sources/victory_item_core.cpp	game_core	done	MATCH	100	100	100	2	29		1082420491ef	auto: at 100% ceiling, demoted from queue
-?take_inventory_item@player@survarium@@EAEXABV?$resource_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	vostok/game/sources/player.cpp	game	inprogress	SIZE	91.6667	91.6667	91.6667	2	117	f	bb48729ca9f7	
+?take_inventory_item@player@survarium@@EAEXABV?$resource_ptr@Vinventory_item@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	3	117	f	249713c3e5e7	Recovered the target negated empty-slot branch and nested insertion block; full build is byte-exact with 5/5 structure and identical 10-block CFG.
 ?take_item@victory_items_container_core@survarium@@UAEPAVvictory_item_core@2@XZ	vostok/game_core/sources/victory_items_container_core.cpp	game_core	parked	SIZE	96.875	96.875	96.875	2	89		72cf5ce6e430	STLport pointer-specialization/compiler-context wall: target expands back() as end()+sub before cv_ref; base keeps _Impl_vector::back out-of-line. Revisit only after vector back/end header codegen or per-caller compiler-context steering changes.
 ?tan@Math@fl@Classes@AS3@GFx@Scaleform@@QAEXAANN@Z	src/gfx/as3/obj/as3_obj_math.cpp	gfx	done	MATCH	100	100	100	0	18	f		
 ?tan@math@vostok@@YAMM@Z	vostok/math_functions_inline.h	vostok	done	QUANTITY		100	100	0	17	f		
@@ -34572,38 +34572,38 @@ splash_screen_main	vostok/survarium/pc/sources/survarium_pc_application_win.cpp	
 storage_access_handler	vostok/debug/sources/initialize_win_xbox360.cpp	debug	done	MATCH	100	100	100	1	18		100e6395ce6a	auto: at 100% ceiling, demoted from queue
 survarium::`dynamic atexit destructor for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	blocked				0	1	17			
 survarium::`dynamic atexit destructor for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	done	MATCH	100	100	100	1	60	f	e26cf751f63a	Moved cc_cam_fov from game_camera.cpp to its target camera_director.cpp owner; both compiler thunks measure byte-exact and downstream source line numbers remain fixed.
-survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
-survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
-survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
+survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
+survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_position''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_target''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'g_file_opener''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	20	f	89f51b2de095	
 survarium::`dynamic atexit destructor for 'g_vostok_logger''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	10	f	89f51b2de095	
-survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
-survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
-survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
+survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
+survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_enable_breath_vibration_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_freeze_culling''	vostok/game/sources/base_game_scene.cpp	game	done	MATCH	100	100	100	1	60	f	e45b557ca39d	
 survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		aef68df26c83	
 survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
-survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_ik_use_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_ik_use_on_legs_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_recoil_back_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_enable_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_horizontal_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_use_pseudo_random_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_vertical_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_show_network_statistics_comand''	vostok/game/sources/network_client.cpp	game	done	MATCH	100	100	100	1	60	f	1dc6853707ea	
-survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 's_store_user_pass_cc''	vostok/game/sources/login_menu_ui.cpp	game	done	MATCH	100	100	100	1	60	f	5ccb0be11e3c	
-survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	68385a817ae5	
+survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	28beba304642	
 survarium::`dynamic atexit destructor for 'set_mouse_invert_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic atexit destructor for 'set_mouse_sensitivity_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic initializer for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	done	MATCH	100	100	100	1	67		4cab5f28d6b9	
