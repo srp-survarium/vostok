@@ -186,15 +186,6 @@ void player_cook::on_subresources_loaded(
 	);
 }
 
-// Keep the damage-model resource_ptr expression direct: a named temporary would
-// fabricate a PDB local. Its cleanup branches depend on resource_ptr::set ICF,
-// while player construction inherits the current player constructor's LTCG split.
-// Revisit when that constructor or the shared compiler context changes.
-
-
-
-
-
 void player_cook::on_hit_params_loaded( resources::queries_result& data, player_creation_params* params )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
@@ -204,6 +195,7 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 	player* player_resource								= NEW( player )( *params );
 	if ( !player_resource )
 	{
+		parent->set_out_of_memory						( resources::unmanaged_memory, sizeof( player ) );
 		parent->finish_query							( result_out_of_memory );
 		return;
 	}
