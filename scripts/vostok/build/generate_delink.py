@@ -38,10 +38,10 @@ from vostok.build import generate_objdiff_cross_unit
 from vostok.core import paths
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
-from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_TARGET_PREFIX,
-                               OBJDIFF_DIR, RICH_DIR, SCALEFORM_SDK,
-                               SOURCES, SYMBOL_MAP, SYMBOL_MAP_OVERRIDES,
-                               WIN32_DIR, survarium_bin)
+from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_BUILD_TREE,
+                               GFX_TARGET_PREFIX, OBJDIFF_DIR, RICH_DIR,
+                               SCALEFORM_SDK, SOURCES, SYMBOL_MAP,
+                               SYMBOL_MAP_OVERRIDES, WIN32_DIR, survarium_bin)
 from vostok.derive.aliases import (instruction_stream_exact,
                                    load_exact_fold_aliases,
                                    strict_source_alias_candidates)
@@ -490,6 +490,9 @@ def generate(side: str) -> None:
         # bare `c:/survarium/sources`.
         engine = ["--engine-path", _wine_path(SOURCES) + "\\"]
         # ...plus the GFx SDK, which is compiled in but lives outside sources/.
+        # The merged build tree first (TUs compile from it now), then the raw
+        # SDK so objs from before the tree existed still strip to Src\...
+        engine += ["--engine-path", _wine_path(GFX_BUILD_TREE) + "\\"]
         engine += ["--engine-path", _wine_path(SCALEFORM_SDK) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
