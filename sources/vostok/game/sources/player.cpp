@@ -880,17 +880,14 @@ void player::stand_up( )
 		m_current.physics_controller->set_crouch( false );
 }
 
-// claude@NOTE: structure matches (4 stmts, lines 1190/1191/1194/1195) but capped
-// on intrusive_ptr<interactive_object> inline-vs-call: the target inlines c_ptr()
-// and operator=(object_type*) (addref/release as inline lock-xadd), our base
-// out-lines them (calls). That inlining is a core-module template-instantiation
-// decision not steerable from player.cpp. Byte residual only.
 bool player::set_new_active_item( inventory_item_ptr const& item )
 {
-	if ( m_target_active_object != item.c_ptr( ) )
+	interactive_object_ptr const new_active_item = item.c_ptr( );
+
+	if ( m_target_active_object != new_active_item )
 		force_animation_selection( );
 
-	m_target_active_object = item.c_ptr( );
+	m_target_active_object = new_active_item;
 	return true;
 }
 
