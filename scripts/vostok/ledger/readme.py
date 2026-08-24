@@ -73,7 +73,7 @@ def _md_table(headers: list[str], aligns: str, rows: list[list[str]]) -> list[st
 # engine module auto-appears.
 _NON_ENGINE = frozenset({
     "boost", "stlport", "bullet", "vorbis", "ogg", "zlib", "opcode",
-    "speedtree", "wildmagic", "fastdelegate", "gfx",
+    "speedtree", "wildmagic", "fastdelegate", "gfx", "_msvc_internal",
 })
 
 

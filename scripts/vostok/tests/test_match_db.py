@@ -27,11 +27,98 @@ from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_source_ownership_overrides,
                                    logical_module)
 from vostok.derive.pairing import Pair, Pairing, pair
+from vostok.derive.roster import (enclosing_function_mangled,
+                                  report_only_observations)
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   rank_island_delta, report_fuzzy_scores,
                                   report_overload_scores,
                                   report_score_for_target)
 from vostok.ledger import store
+
+
+class ReportOnlyObservationTests(unittest.TestCase):
+    PARENT = (
+        "??$create_effect@Veffect_ssao_accumulation@render@vostok@@@"
+        "effect_manager@render@vostok@@QAEXPAV?$resource_ptr@Vres_effect@render@"
+        "vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z"
+    )
+    THUNK = "??__Fdescriptor_object@?1?" + PARENT + "@YAXXZ"
+
+    def test_recovers_enclosing_function_from_local_static_thunk(self):
+        self.assertEqual(enclosing_function_mangled(self.THUNK), self.PARENT)
+        self.assertIsNone(enclosing_function_mangled("??__Fglobal_static@@YAXXZ"))
+
+    def test_attributes_report_only_exact_to_enclosing_source(self):
+        owner = SimpleNamespace(
+            unit="vostok/render/core/dx11/effect_manager_inline.h",
+            module="render",
+        )
+        roster = SimpleNamespace(
+            target={self.PARENT: owner},
+            artifacts=SimpleNamespace(
+                report_fns=[
+                    (
+                        "vostok/render/engine/sources/stage_ambient_occlusion.cpp",
+                        self.THUNK,
+                        100.0,
+                        11,
+                    )
+                ]
+            ),
+        )
+        previous = {
+            self.THUNK: {
+                "mangled": self.THUNK,
+                "unit": "",
+                "module": "",
+                "size": 0,
+                "flags": "",
+                "cls": "",
+                "hash": "",
+            }
+        }
+
+        rows = list(
+            report_only_observations(
+                roster,
+                {self.PARENT: ("sourcehash", 100.0)},
+                previous,
+            )
+        )
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["unit"], owner.unit)
+        self.assertEqual(rows[0]["module"], "render")
+        self.assertEqual(rows[0]["cur"], 100.0)
+        self.assertEqual(rows[0]["size"], 11)
+        self.assertEqual(rows[0]["hash"], "sourcehash")
+
+    def test_does_not_invent_ownership_from_internal_delinker_bucket(self):
+        symbol = "??_Elobby_camera@survarium@@UAEPAXI@Z"
+        roster = SimpleNamespace(
+            target={},
+            artifacts=SimpleNamespace(
+                report_fns=[("_msvc_internal/survarium", symbol, 80.0, 25)]
+            ),
+        )
+        previous = {
+            symbol: {
+                "mangled": symbol,
+                "unit": "",
+                "module": "",
+                "size": 0,
+                "flags": "",
+                "cls": "",
+                "hash": "",
+            }
+        }
+
+        rows = list(report_only_observations(roster, {}, previous))
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["unit"], "")
+        self.assertEqual(rows[0]["module"], "")
+        self.assertEqual(rows[0]["cur"], 80.0)
 
 
 class CrossUnitEvidenceTests(unittest.TestCase):
