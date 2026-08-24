@@ -23,14 +23,6 @@ portable_path_string::portable_path_string (native_path_string const & other) : 
 	assign_with_conversion					(other.c_str());
 }
 
-// out-of-line: the retail binary keeps verify_self as a real call (the
-// ICF-folded ret-stub family); header-inline definition loses that call
-void   path_string_impl::verify_self ()
-{
-	m_string.verify_self					();
-	verify									(m_string.get_buffer());
-}
-
 void   path_string_impl::convert (iterator begin, iterator end)
 {
 	char const other_separator			=	(m_separator == '/') ? '\\' : '/';

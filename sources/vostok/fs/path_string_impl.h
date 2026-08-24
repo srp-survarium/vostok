@@ -174,9 +174,11 @@ public:
 	typedef pcstr				( path_string_impl::*unspecified_bool_type ) ( ) const;
 	operator unspecified_bool_type		() const { return length() ? (& path_string_impl::c_str) : NULL; }
 
-	// defined out-of-line: the target keeps verify_self as a real (empty in gold)
-	// call at every ctor/assign site - see the ICF-folded ret family
-	void						verify_self	();
+	void						verify_self	()
+	{
+		m_string.verify_self				();
+		verify								(m_string.get_buffer());
+	}
 
 protected:
 	void						verify		(char c)	{ char string[2] = { c, 0 }; verify(string); }
