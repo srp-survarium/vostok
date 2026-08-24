@@ -60,21 +60,35 @@ def dynamic_local_owner_modules(records):
     }
 
 
-def load_module_ownership_overrides(path=MODULE_OWNERSHIP_OVERRIDES):
-    """Load reviewed mangled-name owners for PDB records defeated by ICF."""
+def _load_ownership_overrides(path):
+    """Load reviewed module and source owners for PDB records defeated by ICF."""
     if not path.is_file():
-        return {}
-    overrides = {}
+        return {}, {}
+    modules = {}
+    sources = {}
     for number, fields in tsv.read(path, strip=False):
         if len(fields) != 3:
             raise ValueError(f"{path}:{number}: expected symbol, module, source file")
         mangled, module, source_file = fields
         if not mangled or not module or module_of(source_file) != module:
             raise ValueError(f"{path}:{number}: inconsistent module ownership row")
-        if mangled in overrides:
+        if mangled in modules:
             raise ValueError(f"{path}:{number}: duplicate symbol {mangled}")
-        overrides[mangled] = module
-    return overrides
+        modules[mangled] = module
+        sources[mangled] = source_file
+    return modules, sources
+
+
+def load_module_ownership_overrides(path=MODULE_OWNERSHIP_OVERRIDES):
+    """Load reviewed mangled-name module owners for PDB records defeated by ICF."""
+    modules, _sources = _load_ownership_overrides(path)
+    return modules
+
+
+def load_source_ownership_overrides(path=MODULE_OWNERSHIP_OVERRIDES):
+    """Load the reviewed source owner paired with each module override."""
+    _modules, sources = _load_ownership_overrides(path)
+    return sources
 
 
 def logical_module(mangled, rec, units, dynamic_owners, overrides):

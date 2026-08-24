@@ -30,7 +30,8 @@ from vostok.derive import log
 from vostok.derive.index import (authoritative_demangled_names,
                                  index_by_mangled, load_index_records)
 from vostok.derive.modules import (dynamic_local_owner_modules,
-                                   load_module_ownership_overrides)
+                                   load_module_ownership_overrides,
+                                   load_source_ownership_overrides)
 from vostok.derive.names import norm_name
 from vostok.derive.scores import report_fuzzy_scores, report_score_for_target
 
@@ -97,8 +98,10 @@ class Artifacts:
     demangled: dict               # {mangled: display name}, retail spelling wins
     dynamic_owners: dict
     module_overrides: dict
+    source_overrides: dict
     folded_symbol_aliases: dict
     folded_fuzzy: dict = field(default_factory=dict)
+    cross_unit_fuzzy: dict = field(default_factory=dict)
     rich_pdb_aliases: dict = field(default_factory=dict)
     declared_methods: set = field(default_factory=set)
     declared_free: set = field(default_factory=set)
@@ -162,6 +165,7 @@ def load(declarations=True):
         demangled=authoritative_demangled_names(target, base),
         dynamic_owners=dynamic_local_owner_modules(target_records),
         module_overrides=load_module_ownership_overrides(),
+        source_overrides=load_source_ownership_overrides(),
         folded_symbol_aliases=folded_symbol_aliases,
         rich_pdb_aliases=rich_pdb_aliases,
     )
@@ -222,12 +226,19 @@ def _load_report(artifacts):
     fuzzy = dict(scores)
     if CROSS_UNIT_REPORT.is_file():
         cross = json.loads(CROSS_UNIT_REPORT.read_text())
+        cross_unit_fuzzy = {}
         n = 0
         for function in cross.get("functions", []):
             score = function.get("fuzzy_match_percent")
             if score is not None:
-                fuzzy.setdefault(function["name"], score)
+                mangled = function["name"]
+                previous = cross_unit_fuzzy.get(mangled)
+                cross_unit_fuzzy[mangled] = (
+                    score if previous is None else max(previous, score)
+                )
+                fuzzy.setdefault(mangled, score)
                 n += 1
+        artifacts.cross_unit_fuzzy = cross_unit_fuzzy
         if n:
             log(f"loaded {n} cross-unit COMDAT scores")
         exact_units = set(cross.get("exact_units", []))

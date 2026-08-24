@@ -15,6 +15,7 @@ evidence bar, applied in descending order of certainty:
     folded report    a generated target-symbol-map identity with a report score
     dynamic thunk    ??__E/??__F <-> the backtick spelling, on a canonical owner
     PDB spelling     the audited target/candidate template-spelling map
+    cross-unit exact reviewed zero-source ownership plus an exact COFF comparison
 
 Order matters: every pass consumes RVAs, and a later pass may only claim what is
 still free. A wrong alias invents a match that is not there, so each pass
@@ -33,7 +34,9 @@ from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
+from vostok.derive.index import body_statements
 from vostok.derive.names import qualified_name
+from vostok.derive.scores import cross_unit_exact_score
 
 
 @dataclass(frozen=True)
@@ -80,6 +83,7 @@ def pair(artifacts):
     pairer.folded_report_aliases()
     pairer.dynamic_thunks()
     pairer.pdb_spelling_aliases()
+    pairer.cross_unit_no_source_exacts()
     return pairer.finish()
 
 
@@ -335,6 +339,32 @@ class _Pairer:
             n += 1
         if n:
             log(f"cross-name paired {n} exact PDB spelling aliases")
+
+    def cross_unit_no_source_exacts(self):
+        """Recover reviewed compiler bodies omitted from the base rich index.
+
+        The supplementary cross-unit report compares the actual COFF symbol,
+        but occasionally the base PDB contributes no function record at all.
+        Admit that evidence only for a body-less target PDB function with an
+        explicit reviewed source owner.  The synthetic base record exists only
+        to carry that owner into structure classification and source MAX; its
+        exact bytes come from objdiff, never from an inferred rich alias.
+        """
+        cross_scores = getattr(self.art, "cross_unit_fuzzy", {})
+        source_overrides = getattr(self.art, "source_overrides", {})
+        n = 0
+        for tm, trec in self._unclaimed_targets():
+            score = cross_unit_exact_score(tm, cross_scores)
+            source_file = source_overrides.get(tm)
+            if score is None or source_file is None or body_statements(trec):
+                continue
+            brec = dict(trec)
+            brec["rva"] = -trec["rva"] - 1
+            brec["file"] = source_file
+            self._add_cross(tm, tm, trec, brec, score)
+            n += 1
+        if n:
+            log(f"paired {n} reviewed zero-source cross-unit exact symbols")
 
     # -- shared machinery ---------------------------------------------------
 
