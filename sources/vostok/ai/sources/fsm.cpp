@@ -9,10 +9,6 @@
 namespace vostok {
 namespace ai {
 
-fsm_state::~fsm_state( )
-{
-}
-
 // claude@NOTE: STRUCTURE MATCH (init-list ctor). Capped by the global de-inline
 // knob - the target out-of-lines intrusive_list<fsm_state,...>::intrusive_list()
 // while our base inlines it (declared `inline` in intrusive_list_inline.h); flipping
