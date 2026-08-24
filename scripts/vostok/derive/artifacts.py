@@ -94,7 +94,7 @@ class Artifacts:
     base_records: list
     units_by_mangled: dict        # {mangled: [report.json TU, ...]}, sorted
     report_units: list            # every TU report.json compared, in file order
-    report_fns: list              # (unit, mangled, objdiff %) as report.json has it
+    report_fns: list              # (unit, mangled, objdiff %, target size) from report
     fuzzy: dict                   # {mangled: objdiff %}, target identities folded in
     demangled: dict               # {mangled: display name}, retail spelling wins
     dynamic_owners: dict
@@ -221,7 +221,12 @@ def _load_report(artifacts):
         artifacts.report_units.append(unit["name"])
         for fn in unit["functions"]:
             artifacts.report_fns.append(
-                (unit["name"], fn["name"], fn.get("fuzzy_match_percent"))
+                (
+                    unit["name"],
+                    fn["name"],
+                    fn.get("fuzzy_match_percent"),
+                    int(fn.get("size") or 0),
+                )
             )
 
     fuzzy = dict(scores)

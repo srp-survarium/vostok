@@ -26,6 +26,7 @@ from pathlib import Path
 
 from vostok.derive import artifacts as artifacts_module
 from vostok.derive import baseonly, inventory, log, maxima, pairing
+from vostok.derive.modules import module_of
 from vostok.ledger import store as match_state
 
 
@@ -80,6 +81,81 @@ def observations(roster, maxima_rows):
         }
 
 
+def enclosing_function_mangled(mangled):
+    """Return the source function enclosing an MSVC local-static thunk.
+
+    A function-local ``descriptor_object`` atexit destructor, for example, is
+    emitted as ``??__Fdescriptor_object@?1?<enclosing function>@YAXXZ``.  The
+    retail PDB can omit the thunk while objdiff still measures its COFF symbol;
+    the nested function identity is the authoritative source owner in that
+    case.
+    """
+    _prefix, marker, tail = mangled.partition("@?1?")
+    if not marker or not tail.endswith("@YAXXZ"):
+        return None
+    parent = tail[: -len("@YAXXZ")]
+    return parent if parent.startswith("?") and parent.endswith("Z") else None
+
+
+def report_only_observations(roster, maxima_rows, previous):
+    """Recover measured compiler thunks omitted from the current rich index.
+
+    These rows already belong to the committed target roster.  Keeping them as
+    permanently unpaired rows discarded current 100% object evidence and left
+    their unit/module/source hash blank.  A direct report identity plus the
+    mangled enclosing function supplies all of those without guessing a source
+    owner.
+    """
+    report_by_name = {}
+    for unit, mangled, fuzzy, size in roster.artifacts.report_fns:
+        report_by_name.setdefault(mangled, []).append((unit, fuzzy, size))
+
+    for mangled, old in previous.items():
+        if mangled in roster.target or mangled not in report_by_name:
+            continue
+
+        entries = report_by_name[mangled]
+        scored = [entry for entry in entries if entry[1] is not None]
+        if not scored:
+            continue
+        unit, fuzzy, size = max(scored, key=lambda entry: entry[1])
+
+        parent_mangled = enclosing_function_mangled(mangled)
+        parent = roster.target.get(parent_mangled)
+        banked = maxima_rows.get(parent_mangled)
+        if parent is not None:
+            unit = parent.unit
+            module = parent.module
+        else:
+            # `_msvc_internal/*` is a delinker bucket, not source ownership.
+            # Preserve its direct measurement, but leave ownership blank until
+            # a real enclosing source identity is available.
+            if unit.startswith("_msvc_internal/") and old.get("module") in {
+                None,
+                "",
+                "_msvc_internal",
+            }:
+                unit = ""
+                module = ""
+            else:
+                module = old.get("module") or module_of(unit)
+
+        body_hash = banked[0] if banked else old.get("hash", "")
+        yield {
+            "mangled": mangled,
+            "unit": unit,
+            "module": module,
+            "size": size or old.get("size") or 0,
+            "frameless": old.get("flags") == "f",
+            # There is no PDB statement record to classify. Exact object bytes
+            # remain exact evidence without inventing a statement verdict.
+            "cls": old.get("cls") or None,
+            "cur": fuzzy,
+            "hash": body_hash,
+            "max": fuzzy,
+        }
+
+
 def regen():
     """Re-derive everything from the already-built diff artifacts.
 
@@ -103,7 +179,9 @@ def regen():
     n = baseonly.write_report(base_only)
     log(f"base-only report: {n} rows")
 
-    written = match_state.project(observations(roster, maxima_rows))
+    measured = list(observations(roster, maxima_rows))
+    measured.extend(report_only_observations(roster, maxima_rows, previous))
+    written = match_state.project(measured)
     log(
         f"ledger {Path(match_state.STATE_PATH).name}: {written} rows "
         f"({len(roster.target)} target / {len(roster.base)} base / "
