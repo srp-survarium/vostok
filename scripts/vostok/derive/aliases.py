@@ -34,6 +34,15 @@ _LOCAL_SCOPE_RE = re.compile(r"::`\d+'::")
 _LOCAL_FUNCTION_SCOPE_RE = re.compile(r"^`([^'\r\n]+)'::`\d+'::")
 
 
+def local_scope_canon(name):
+    """Erase only MSVC's unstable numeric local-scope ordinal.
+
+    The enclosing function, local type/member signature, source owner, and
+    instruction stream remain available to the strict alias matcher.
+    """
+    return _LOCAL_SCOPE_RE.sub("::`#'::", name)
+
+
 def dyn_canon_rich(mangled):
     """Canonical identity for a rich-index dynamic-init thunk."""
     m = _DYN_RE.match(mangled)
@@ -257,9 +266,14 @@ def strict_source_alias_candidates(
     from linker alias selection, not a same-named internal helper in another
     TU.
     """
+    candidate_records = dict(base_aliases_by_name.get(target_rec["name"], {}))
+    canonical_name = local_scope_canon(target_rec["name"])
+    if canonical_name != target_rec["name"]:
+        candidate_records.update(base_aliases_by_name.get(canonical_name, {}))
+
     candidates = [
         rec
-        for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
+        for rva, rec in candidate_records.items()
         if (allow_used or rva not in used_base_rvas)
         and (
             rec["file"] == target_rec["file"]
