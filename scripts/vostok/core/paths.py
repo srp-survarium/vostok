@@ -119,6 +119,14 @@ SCALEFORM_SDK = Path(
 # the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
 GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 
+# The vostok-libs release ships the GFx suite PREBUILT, and its objects record
+# the tree the release was BUILT from - a foreign prefix to every other
+# checkout, exactly like the retail GFX_TARGET_PREFIX above. The base readers
+# strip it too, so release-staged libs key to the same `Src\...` paths as a
+# local rebuild. Bump this alongside any vostok-libs gfx release cut from a
+# different tree.
+GFX_RELEASE_PREFIX = r"z:\home\sheep\projects\survarium\vostok-gfx\binaries\gfx-sdk"
+
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
