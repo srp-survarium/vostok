@@ -33,7 +33,8 @@ from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
                                    load_source_ownership_overrides)
 from vostok.derive.names import norm_name
-from vostok.derive.scores import report_fuzzy_scores, report_score_for_target
+from vostok.derive.scores import (report_fuzzy_scores, report_overload_scores,
+                                  report_score_for_target)
 
 STALE_TARGET_SECONDS = 7 * 86400
 
@@ -224,6 +225,12 @@ def _load_report(artifacts):
             )
 
     fuzzy = dict(scores)
+    overload_scores = report_overload_scores(artifacts.target, report)
+    fuzzy.update(overload_scores)
+    for mangled in overload_scores:
+        artifacts.units_by_mangled[mangled] = [artifacts.target[mangled]["file"]]
+    if overload_scores:
+        log(f"attributed {len(overload_scores)} unit-scoped PDB overload score(s)")
     if CROSS_UNIT_REPORT.is_file():
         cross = json.loads(CROSS_UNIT_REPORT.read_text())
         cross_unit_fuzzy = {}
