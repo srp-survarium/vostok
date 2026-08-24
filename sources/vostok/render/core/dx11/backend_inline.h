@@ -251,7 +251,7 @@ inline void backend::reset_depth_stencil_target( )
 
 inline void backend::flush_rt_shader_resources( )
 {
-	ID3D11ShaderResourceView* rv[12] = { 0 };
+	ID3D11ShaderResourceView* rv[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	device::ref( ).d3d_context( )->PSSetShaderResources( 0, 12, rv );
 	device::ref( ).d3d_context( )->VSSetShaderResources( 0, 12, rv );
 	device::ref( ).d3d_context( )->GSSetShaderResources( 0, 12, rv );
