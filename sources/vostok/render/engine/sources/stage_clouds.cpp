@@ -125,7 +125,8 @@ stage_clouds::stage_clouds(
 	m_prev_right_vector			( 0.0f, 0.0f, 0.0f ),
 	m_prev_up_vector			( 0.0f, 0.0f, 0.0f )
 {
-	m_clouds_scale_multiplier *= options::ref( ).current.m_clouds_scale; m_clouds_scale = float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) * m_clouds_scale_multiplier;
+	m_clouds_scale_multiplier *= options::ref( ).current.m_clouds_scale;
+	m_clouds_scale = float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) * m_clouds_scale_multiplier;
 
 	for ( u32 i = 0; i < 2; ++i )
 	{
@@ -252,7 +253,8 @@ void stage_clouds::execute( )
 		sphere_to_clouds_matrix
 	);
 
-	float4x4 world_to_god_rays_matrix; math::try_invert4x4(
+	float4x4 world_to_god_rays_matrix;
+	math::try_invert4x4(
 		math::create_scale(
 			float3(
 				60000.0f * options::ref( ).current.m_clouds_scale,
@@ -286,9 +288,13 @@ void stage_clouds::execute( )
 	float const abs_ov_dot_dir_ground = offset_direction_ground | view_dir_2d;
 
 	if ( abs_ov_dot_dir_ground > 0.0f )
-	{ m_camera_offset += offset_vector_ground.length( ) / m_clouds_scale_multiplier * math::abs( abs_ov_dot_dir_ground ); }
+	{
+		m_camera_offset += offset_vector_ground.length( ) / m_clouds_scale_multiplier * math::abs( abs_ov_dot_dir_ground );
+	}
 	if ( abs_ov_dot_dir_ground < 0.0f )
-	{ m_camera_offset -= offset_vector_ground.length( ) / m_clouds_scale_multiplier * math::abs( abs_ov_dot_dir_ground ); }
+	{
+		m_camera_offset -= offset_vector_ground.length( ) / m_clouds_scale_multiplier * math::abs( abs_ov_dot_dir_ground );
+	}
 
 	m_previous_view_position = m_context->get_view_pos( );
 
@@ -335,7 +341,8 @@ void stage_clouds::execute( )
 
 	float4x4 proj_matrix = m_context->get_p( );
 
-	proj_matrix.k.z = 1.0000001f; proj_matrix.c.z = -1.0000001f;
+	proj_matrix.k.z = 1.0000001f;
+	proj_matrix.c.z = -1.0000001f;
 
 	m_context->push_set_p( proj_matrix );
 
@@ -374,7 +381,8 @@ void stage_clouds::execute( )
 
 			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
 
-			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position ); m_god_rays_effect->apply( 0, 0 );
+			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
+			m_god_rays_effect->apply( 0, 0 );
 
 			m_context->set_w( world_matrix );
 			backend::ref( ).set_ps_constant( m_c_sphere_to_sky_matrix, math::transpose( world_to_god_rays_matrix ) );
