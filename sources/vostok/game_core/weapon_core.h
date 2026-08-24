@@ -87,7 +87,7 @@ public:
 			bool								ready_to_reload					( ) const;
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
-			weapon_targets						get_target						( ) const { return m_target; }										// target out-lines+optimizes this trivial getter (inline-vs-call wall)
+	inline	weapon_targets						get_target						( ) const { return m_target; }
 
 	inline	void								set_fire_queue_type				( u8 arg_0 ) { /* no source */ }
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
