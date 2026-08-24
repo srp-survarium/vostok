@@ -34012,7 +34012,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 's_world''	vostok/engine/sources/engine_entry_point.cpp	engine	done	MATCH	100	100	100	0	13	f	389756b2d708	
 `dynamic initializer for 's_z_only_1''	vostok/render/engine/sources/stage_gbuffer.cpp	render	done	MATCH	100	100	100	1	19	f	871f7241d3b2	Reconstructed complete gbuffer caller cone; remaining target-only helper retention and execute quantity residuals are LTCG decisions.
 `dynamic initializer for 'show_detailed_statistics''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	79	f	68b50b651fe6	
-`dynamic initializer for 'survarium::damage_model_cook::m_hit_types''	vostok/game_core/sources/damage_model_cook.cpp	game_core	blocked	MATCH			100	1	33			
+`dynamic initializer for 'survarium::damage_model_cook::m_hit_types''	vostok/game_core/sources/damage_model_cook.cpp	game_core	parked	MATCH			100	2	33			Target/base are instruction-identical 33-byte, one-statement initializers with STRUCTURE MATCH and a historical 100% proof. The current blank score is an ICF canonical-alias attribution gap: target and base name different byte-identical fixed_vector ctor folds; no source mismatch remains.
 `dynamic initializer for 'survarium::damage_model_cook::m_hit_types_strings''	vostok/game_core/sources/damage_model_cook.cpp	game_core	done	MATCH		100	100	1	33			
 `dynamic initializer for 'vostok::ai::planning::base_lexeme::s_and_function_pointers''	vostok/ai/sources/base_lexeme.cpp	ai	done	MATCH	100	100	100	0	17		263bdce45559	
 `dynamic initializer for 'vostok::ai::planning::base_lexeme::s_or_function_pointers''	vostok/ai/sources/base_lexeme.cpp	ai	done	MATCH	100	100	100	0	17		42cc66ea30b1	
