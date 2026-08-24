@@ -139,6 +139,7 @@ bool vostok::core::initialized ( )
 	return					s_initialized;
 }
 
+#line 144
 void vostok::core::initialize			(
 		pcstr const lua_config_device_folder_to_save_to,
 		pcstr const debug_thread_id,
