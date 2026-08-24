@@ -136,8 +136,8 @@ def _rich_pdb_aliases() -> dict[str, str]:
     )
 
 
-def _call_operand_aliases(records):
-    """Index the printable call/jump aliases contributed by each rich RVA."""
+def _symbol_operand_aliases(records):
+    """Index the printable relocation aliases contributed by each rich RVA."""
     rvas_by_operand = {}
     operands_by_rva = {}
     for rec in records:
@@ -183,8 +183,8 @@ def _strict_current_exact_symbols() -> set[str]:
         target_primary_signatures,
     )
 
-    target_rvas, target_operands = _call_operand_aliases(target_records)
-    base_rvas, base_operands = _call_operand_aliases(base_records)
+    target_rvas, target_operands = _symbol_operand_aliases(target_records)
+    base_rvas, base_operands = _symbol_operand_aliases(base_records)
     base_aliases_by_name = {}
     base_aliases_by_mangled = {}
     target_alias_names_by_rva = {}
@@ -196,7 +196,7 @@ def _strict_current_exact_symbols() -> set[str]:
         base_aliases_by_mangled.setdefault(rec["mangled"], {})[rec["rva"]] = rec
         base_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
 
-    def call_alias_equivalent(target_operand, base_operand):
+    def symbol_alias_equivalent(target_operand, base_operand):
         target_candidates = target_rvas.get(target_operand, set())
         base_candidates = base_rvas.get(base_operand, set())
         if len(target_candidates) != 1 or len(base_candidates) != 1:
@@ -213,7 +213,7 @@ def _strict_current_exact_symbols() -> set[str]:
         if not instruction_stream_exact(
             target[mangled],
             base[mangled],
-            call_alias_equivalent,
+            symbol_alias_equivalent,
         ):
             continue
         exact.add(mangled)

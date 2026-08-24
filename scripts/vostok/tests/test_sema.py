@@ -169,6 +169,38 @@ class PairingTests(unittest.TestCase):
 
         self.assertEqual(pairing.pairs[caller].fuzzy, 100.0)
 
+    def test_unscored_primary_pair_accepts_icf_aliased_mov_relocations(self):
+        caller = "?caller@@YAXXZ"
+        target_caller = dict(
+            _full(0x1000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "mov   ecx, target_alias"}],
+        )
+        base_caller = dict(
+            _full(0x2000, caller, name="void caller()"),
+            size=5,
+            instructions=[{"off": 0, "len": 5, "text": "mov   ecx, base_alias"}],
+        )
+        target_records = [
+            target_caller,
+            _full(0x1100, "?target_alias@@YAXXZ", name="void target_alias()"),
+            _full(0x1100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+        ]
+        base_records = [
+            base_caller,
+            _full(0x2100, "?base_alias@@YAXXZ", name="void base_alias()"),
+            _full(0x2100, "?shared_alias@@YAXXZ", name="void shared_alias()"),
+        ]
+        pairing = derive_pair(_Inputs(
+            index_by_mangled(target_records),
+            index_by_mangled(base_records),
+            target_records,
+            base_records,
+            {},
+        ))
+
+        self.assertEqual(pairing.pairs[caller].fuzzy, 100.0)
+
     def test_icf_call_alias_evidence_refuses_an_ambiguous_operand(self):
         caller = "?caller@@YAXXZ"
         target_caller = dict(
