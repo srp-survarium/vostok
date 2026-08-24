@@ -67,10 +67,14 @@ static void fill_surface( render_target_ptr surf, renderer_context* context )
 
 	// Fill vertex buffer
 	vertex_formats::Tquad* pv = backend::ref().vertex.lock<vertex_formats::Tquad>( 4, offset);
-	pv->set( 0, h, z, 1.0, eye_rays[1].x, eye_rays[1].y, eye_rays[1].z, p0.x, p1.y); pv++;
-	pv->set( 0, 0, z, 1.0, eye_rays[0].x, eye_rays[0].y, eye_rays[0].z, p0.x, p0.y); pv++;
-	pv->set( w, h, z, 1.0, eye_rays[3].x, eye_rays[3].y, eye_rays[3].z, p1.x, p1.y); pv++;
-	pv->set( w, 0, z, 1.0, eye_rays[2].x, eye_rays[2].y, eye_rays[2].z, p1.x, p0.y); pv++;
+	pv->set( 0, h, z, 1.0, eye_rays[1].x, eye_rays[1].y, eye_rays[1].z, p0.x, p1.y);
+	pv++;
+	pv->set( 0, 0, z, 1.0, eye_rays[0].x, eye_rays[0].y, eye_rays[0].z, p0.x, p0.y);
+	pv++;
+	pv->set( w, h, z, 1.0, eye_rays[3].x, eye_rays[3].y, eye_rays[3].z, p1.x, p1.y);
+	pv++;
+	pv->set( w, 0, z, 1.0, eye_rays[2].x, eye_rays[2].y, eye_rays[2].z, p1.x, p0.y);
+	pv++;
 	backend::ref().vertex.unlock();
 
 	context->m_g_quad_eye_ray->apply();
@@ -141,7 +145,8 @@ void stage_gbuffer::render_models(
 	{
 		render_surface_instance& instance = **it;
 
-		render_surface* surface = instance.m_render_surface; material_effects& effects = surface->get_material_effects();
+		render_surface* surface = instance.m_render_surface;
+		material_effects& effects = surface->get_material_effects();
 		m_context->set_w(*instance.m_transform);
 
 		if (z_only)
@@ -227,7 +232,8 @@ bool sort_by_ps_predicate::operator()(
 	material_effects const& left_material_effects = left->m_render_surface->get_material_effects();
 
 	material_effects const& right_material_effects = right->m_render_surface->get_material_effects();
-	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0); res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0);
+	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0);
+	res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]->get_technique(m_tech_index)->get_pass(0);
 
 	return left_pass->get_vs()->hardware_shader()->hardware_shader() < right_pass->get_vs()->hardware_shader()->hardware_shader();
 }
@@ -317,7 +323,8 @@ void stage_gbuffer::execute( )
 
 	if (s_z_only_1.is_set())
 		z_only_pass();
-	u32 num_shader_lods = options::ref().current.m_use_shader_lods ? 2 : 1; u32 num_rendered = 0;
+	u32 num_shader_lods = options::ref().current.m_use_shader_lods ? 2 : 1;
+	u32 num_rendered = 0;
 
 	for (u32 shader_lod_index = 0; shader_lod_index < num_shader_lods; ++shader_lod_index)
 	{
