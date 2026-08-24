@@ -39,7 +39,7 @@ public:
 	inline	void						set_on_disconnected			( boost::function< void() > const& value ) { m_on_disconnected = value; /* no source */ }
 	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { m_on_packet_received = value; /* no source */ }
 	inline	void						set_on_error				(
-											boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	value
+											boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	value
 										) { m_on_error = value; /* no source */ }
 
 	inline	boost::asio::io_service&	io_service					( ) { return m_io_service; }
@@ -57,7 +57,7 @@ private:
 	/* 0x0900 */	boost::function< void() >									m_on_connected;
 	/* 0x0920 */	boost::function< void() >									m_on_disconnected;
 	/* 0x0940 */	boost::function< void( tcp_packet const& ) >				m_on_packet_received;
-	/* 0x0960 */	boost::function< void( client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	/* 0x0960 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;
 	/* 0x0980 */	boost::asio::io_service&									m_io_service;
 	/* 0x0984 */	tcp_packet*												m_first_packet;
 }; // class tcp_packet_client

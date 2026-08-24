@@ -26,16 +26,16 @@ public:
 	inline	void		resize			( u32 size );
 	inline	void		clone			( base_packet const& other );
 
-	inline	void		append			( bool value );
-	inline	void		append			( u8 value );
-	inline	void		append			( s8 value );
-	inline	void		append			( u16 value );
-	inline	void		append			( s16 value );
-	inline	void		append			( u32 value );
-	inline	void		append			( s32 value );
-	inline	void		append			( u64 value );
-	inline	void		append			( s64 value );
-	inline	void		append			( float value );
+	inline	void		append			( const bool value );
+	inline	void		append			( const u8 value );
+	inline	void		append			( const s8 value );
+	inline	void		append			( const u16 value );
+	inline	void		append			( const s16 value );
+	inline	void		append			( const u32 value );
+	inline	void		append			( const s32 value );
+	inline	void		append			( const u64 value );
+	inline	void		append			( const s64 value );
+	inline	void		append			( const float value );
 	inline	void		append			( float2 const& value );
 	inline	void		append			( float3 const& value );
 	inline	void		append			( pcstr string );

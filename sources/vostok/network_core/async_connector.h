@@ -32,7 +32,7 @@ public:
 						pcstr								host,
 						u16									host_port,
 						boost::function< void() > const&	on_connected,
-						boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	on_error
+						boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	on_error
 					);
 private:
 			void	connect						( boost::asio::ip::tcp::resolver::iterator const& iterator );
@@ -73,7 +73,7 @@ public:
 private:
 	/* 0x0000 */	boost::asio::ip::tcp::resolver::iterator	m_host;
 	/* 0x0010 */	boost::function< void() >			m_on_connected;
-	/* 0x0030 */	boost::function< void( client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	/* 0x0030 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;
 	/* 0x0050 */	handler_allocator					m_allocator;
 	/* 0x0458 */	boost::asio::ip::tcp::socket*		m_socket;
 	/* 0x045c */	connection_state_enum				m_connection_state;

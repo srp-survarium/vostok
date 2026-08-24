@@ -52,7 +52,7 @@ public:
 
 	// STATE[INLINED]: body from match_client_impl ctor 0x766240 +0x1f7 (folded
 	// function1::operator= into this+0x558 = m_on_disconnect)
-	inline	void								set_on_disconnect			( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
+	inline	void								set_on_disconnect			( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	inline	udp_match_packet*					new_packet					( u8 message_type ) { return NULL; }
 	// STATE[REMOVED]: no matched consumer calls these udp_match_client members - the
@@ -105,7 +105,7 @@ public:
 private:
 	/* 0x0000 */	udp_match_connection				m_connection;
 	/* 0x0538 */	boost::function< void( u8, packet_reader& ) >	m_on_packet_received;
-	/* 0x0558 */	boost::function< void( disconnect_event_types_enum ) >	m_on_disconnect;
+	/* 0x0558 */	boost::function< void( enum disconnect_event_types_enum ) >	m_on_disconnect;
 	/* 0x0578 */	timing::timer						m_timer;
 	/* 0x0590 */	boost::asio::ip::udp::socket		m_socket;
 	/* 0x05d4 */	boost::asio::ip::udp::endpoint		m_server_endpoint;

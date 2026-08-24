@@ -106,7 +106,7 @@ public:
 			void						disconnect						( );
 
 			void						instant_disconnect				( disconnect_event_types_enum type );
-	inline	void						set_on_disconnect				( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
+	inline	void						set_on_disconnect				( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	// STATE[REMOVED] (the `/* no source */` shams below): consumed only by the
 	// udp_match_server tick/delete_client path, which is dedicated-server code -
@@ -192,7 +192,7 @@ private:
 	/* 0x0090 */	udp_match_packet_list				m_outgoing_packets;
 	/* 0x00a0 */	udp_match_packet_list				m_unacknowledged_packets;
 	/* 0x00b0 */	boost::array< channel, 1 >			m_channels;
-	/* 0x00c8 */	boost::function< void( disconnect_event_types_enum ) >	m_on_disconnect;
+	/* 0x00c8 */	boost::function< void( enum disconnect_event_types_enum ) >	m_on_disconnect;
 	/* 0x00e8 */	boost::asio::ip::udp::socket&		m_socket;
 	/* 0x00ec */	boost::asio::ip::udp::endpoint const&	m_remote_endpoint;
 	/* 0x00f0 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
