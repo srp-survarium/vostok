@@ -9,18 +9,15 @@
 #include <vostok/game_core/weapon_ammunition.h>
 #include <vostok/console_command.h>
 
+static bool s_dispersion_enabled_value = true;
+static vostok::console_commands::cc_bool s_dispersion_enabled_cc(
+	"dispersion_enabled",
+	s_dispersion_enabled_value,
+	true,
+	vostok::console_commands::command_type_engine_internal
+);
+
 namespace survarium {
-
-static bool s_dispersion_enabled_value = true; // <0x7db?>
-static console_commands::cc_bool s_dispersion_enabled_cc( "dispersion_enabled", s_dispersion_enabled_value, false, console_commands::command_type_engine_internal );
-
-/*
-// STATE[STUB]
-// void `dynamic atexit destructor for 's_dispersion_enabled_cc''()
-void `dynamic atexit destructor for 's_dispersion_enabled_cc''( )
-{
-}
-*/
 
 dispersion_calculator::dispersion_calculator( ) :
 	m_weapon				( NULL ),
