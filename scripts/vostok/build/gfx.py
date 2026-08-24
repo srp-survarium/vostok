@@ -56,11 +56,11 @@ import sys
 from pathlib import Path
 
 from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
-from vostok.core.paths import PREBUILT, WIN32_DIR
+from vostok.core.paths import PREBUILT, SCALEFORM_SDK, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 
-SDK = Path(os.environ.get("SCALEFORM_SDK", "/home/sheep/Projects/scaleform_sdk")).resolve()
+SDK = SCALEFORM_SDK.resolve()
 SHIP = PREBUILT / "Win32/libraries/shipping"
 OBJ_ROOT = WIN32_DIR / "intermediates/gfx"
 
@@ -108,7 +108,19 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
 SOURCE_OVERRIDES = {
     "Src/Render/Render_BufferGeneric.cpp":
         VOSTOK_DIR / "sources/scaleform/Src/Render/Render_BufferGeneric.cpp",
+    "Src/Render/Render_CacheEffect.cpp":
+        VOSTOK_DIR / "sources/scaleform/Src/Render/Render_CacheEffect.cpp",
+    "Src/GFx/GFx_DisplayList.cpp":
+        VOSTOK_DIR / "sources/scaleform/Src/GFx/GFx_DisplayList.cpp",
+    "Src/GFx/GFx_SpriteDef.cpp":
+        VOSTOK_DIR / "sources/scaleform/Src/GFx/GFx_SpriteDef.cpp",
 }
+
+# Header reconstructions (4.2.21 shapes the 4.2.22 SDK drifted from). The SDK's
+# quote-includes are path-qualified ("GFx/GFx_CharPosInfo.h"), so they fall
+# through the includer-dir search and resolve via /I order - this dir goes
+# FIRST so its copies shadow the SDK's.
+OVERLAY_INCLUDE = VOSTOK_DIR / "sources/scaleform/sdk-overlay"
 
 
 def wine_path(p: Path) -> str:
@@ -134,7 +146,10 @@ def build_one(name):
     SHIP.mkdir(parents=True, exist_ok=True)
     out_lib = SHIP / f"{name}.lib"
 
-    inc_args = " ".join(f'-I"{wine_path(SDK / d)}"' for d in includes)
+    inc_args = " ".join(
+        [f'-I"{wine_path(OVERLAY_INCLUDE)}"']
+        + [f'-I"{wine_path(SDK / d)}"' for d in includes]
+    )
     def_args = " ".join(f"-D{d}" for d in defines)
     fd_arg = f'-Fd"{wine_path(obj_dir)}\\vc90.pdb"'
     base = f"{flags} {inc_args} {def_args} {fd_arg}"
