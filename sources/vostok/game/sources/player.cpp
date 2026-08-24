@@ -292,28 +292,13 @@ float4x4 player::get_transform_for_animation_player( pcvoid const animated_objec
 	return m_current_active_object->transform( );
 }
 
-// claude@NOTE: paired ~62%. Math chain reconstructed (create_rotation x2 / mul4x3 x2
-// / create_translation building player_state.transform, then a 3-way clamp of
-// look_pitch). Two residuals: (1) the target attributes the create_rotation/mul4x3
-// sub-calls to 3 separate source LINES (474/475/476) - our single multi-line
-// assignment statement carries the same bytes but on fewer line records (line-break
-// formatting, not a real structural divergence); (2) the look_pitch clamp is exactly
-// clamp_r's 3-branch body (if v<=-1 ret -1; if v<=hi ret v; ret hi) but our clamp_r
-// emits its ASSERT(min<=max) where the optimized target folds the constant assert
-// away (+0x2a bytes), and the upper bound is the unresolved float-pool symbol
-// `clear_value` (guessed 1.f). sushi@TODO below.
 void player::apply_input( client_player_state& player_state, float2 const& rotation_to_apply )
 {
-	player_state.transform = math::mul4x3(
-		math::mul4x3(
-			math::create_rotation( float3( 0.f, rotation_to_apply.x, 0.f ) ),
-			math::create_rotation( player_state.transform.get_angles_xyz() )
-		),
-		math::create_translation( player_state.transform.c.xyz() )
-	);
+	player_state.transform =
+		math::create_rotation( player_state.transform.get_angles_xyz() ) *
+		math::create_rotation( float3( 0.f, rotation_to_apply.x, 0.f ) ) *
+		math::create_translation( player_state.transform.c.xyz() );
 
-	// sushi@TODO: upper clamp bound is the unresolved float-pool const `clear_value`
-	// (delinker symbol); literal value unconfirmed - guessed 1.f.
 	player_state.look_pitch = math::clamp_r( player_state.look_pitch + rotation_to_apply.y, -1.f, 1.f );
 }
 

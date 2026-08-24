@@ -19626,7 +19626,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?apply_impulse@bt_animated_rigid_body@physics@vostok@@UAEXABVfloat3@math@3@0@Z	vostok/physics/sources/animated_rigid_body.cpp	physics	done	MATCH	100	100	100	1	3	f	137f554ee0f6	auto: at 100% ceiling, demoted from queue
 ?apply_impulse@bt_static_rigid_body@physics@vostok@@UAEXABVfloat3@math@3@0@Z	vostok/physics/sources/static_rigid_body.cpp	physics	parked	MATCH	83.2727	83.2727	83.2727	0	178		8543c098e2d5	[PARTIAL 83%] First statement used registers slightly differntly to retrieve `point_in_world`.
 ?apply_input@player@survarium@@AAEXAAUclient_player_state@2@ABVfloat2@math@vostok@@1M@Z	vostok/game/sources/player.cpp	game	done	SIZE	100	100	100	2	84	f	348023916a0a	
-?apply_input@player@survarium@@AAEXAAUclient_player_state@2@ABVfloat2@math@vostok@@@Z	vostok/game/sources/player.cpp	game	inprogress	QUANTITY	76.3143	76.3143	76.3143	2	255	f	53f131341382	
+?apply_input@player@survarium@@AAEXAAUclient_player_state@2@ABVfloat2@math@vostok@@@Z	vostok/game/sources/player.cpp	game	parked	QUANTITY	89.2714	89.2714	89.5	3	255	f	9e5e60c11e76	Recovered the retail current_rotation * input_rotation * translation operator chain; target/base now share the same five-block CFG and the same create_rotation/get_angles/mul4x3/create_translation call order with no named locals. The remaining target 255B/5-row versus base 267B/4-row gap begins at the first create_rotation boundary: retail uses LTCG-selected edi/esi temporary passing and a 0x114-byte frame, while base pushes the return/argument pointers and uses a 0x154-byte frame. Later call sequence aligns. No line folding or fabricated local.
 ?apply_input_before_new_transform@player@survarium@@AAEXAAUclient_player_state@2@ABUplayer_input@2@M@Z	vostok/game/sources/player_tick.cpp	game	parked	SIZE	82.4132	82.4132	82.4132	3	719	f	311573bbcac5	Eight-block FLOW-SAME transform/quaternion path with the target local set; residual is inline math scheduling and call convention.
 ?apply_key_bindings@game_options@survarium@@AAEXXZ	vostok/game/sources/game_options.cpp	game	parked	QUANTITY	80.6449	80.6449	80.6449	1	386		edf4ff25edb6	console-command lookup order now matches target; residual is target pointer+count induction and macro/debug-line lowering versus base offset induction/extra line rows, with no semantic or named-local delta. Reopen when TU compiler context or key_bind_descriptions ownership changes
 ?apply_lod@particle_system_instance_impl@particle@vostok@@QAEXI@Z	vostok/particle/sources/particle_system_instance_impl.cpp	particle	done	MATCH	100	100	100	0	97		4fff1fc5f9db	
@@ -34572,38 +34572,38 @@ splash_screen_main	vostok/survarium/pc/sources/survarium_pc_application_win.cpp	
 storage_access_handler	vostok/debug/sources/initialize_win_xbox360.cpp	debug	done	MATCH	100	100	100	1	18		100e6395ce6a	auto: at 100% ceiling, demoted from queue
 survarium::`dynamic atexit destructor for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	blocked				0	1	17			
 survarium::`dynamic atexit destructor for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	done	MATCH	100	100	100	1	60	f	e26cf751f63a	Moved cc_cam_fov from game_camera.cpp to its target camera_director.cpp owner; both compiler thunks measure byte-exact and downstream source line numbers remain fixed.
-survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
-survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
-survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
+survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
+survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_position''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_target''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'g_file_opener''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	20	f	89f51b2de095	
 survarium::`dynamic atexit destructor for 'g_vostok_logger''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	10	f	89f51b2de095	
-survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
-survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
-survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
+survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
+survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_enable_breath_vibration_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_freeze_culling''	vostok/game/sources/base_game_scene.cpp	game	done	MATCH	100	100	100	1	60	f	e45b557ca39d	
 survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		aef68df26c83	
 survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
-survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_ik_use_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_ik_use_on_legs_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_recoil_back_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_enable_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_horizontal_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_use_pseudo_random_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_vertical_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_show_network_statistics_comand''	vostok/game/sources/network_client.cpp	game	done	MATCH	100	100	100	1	60	f	1dc6853707ea	
-survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 's_store_user_pass_cc''	vostok/game/sources/login_menu_ui.cpp	game	done	MATCH	100	100	100	1	60	f	5ccb0be11e3c	
-survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	2a813120786f	
+survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	f81d7dd5593d	
 survarium::`dynamic atexit destructor for 'set_mouse_invert_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic atexit destructor for 'set_mouse_sensitivity_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic initializer for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	done	MATCH	100	100	100	1	67		4cab5f28d6b9	
