@@ -51,7 +51,8 @@ stage_rain::stage_rain(
 
 	m_rain_offsets = NEW_ARRAY( float2, 100 );
 
-	math::random32 r( 1000 ); for ( u32 i = 0; i < 100; ++i )
+	math::random32 r( 1000 );
+	for ( u32 i = 0; i < 100; ++i )
 	{
 		m_rain_offsets[i] = float2( r.random_f( 1.0f ) * 2.0f - 1.0f, r.random_f( 1.0f ) * 2.0f - 1.0f );
 		m_rain_rotation_x[i] = 0.0f;
@@ -163,7 +164,8 @@ void stage_rain::execute( )
 			m_rain_geometry.draw( );
 
 			m_rain_rotation_x[i] += m_context->get_time_delta( ) * m_context->get_scene_view( )->post_process_parameters( ).environment_rain_random_rotaion_speed;
-			m_rain_rotation_y[i] += m_context->get_time_delta( ) * m_context->get_scene_view( )->post_process_parameters( ).environment_rain_random_rotaion_speed; mult *= m_context->get_scene_view( )->post_process_parameters( ).environment_rain_radius_scale;
+			m_rain_rotation_y[i] += m_context->get_time_delta( ) * m_context->get_scene_view( )->post_process_parameters( ).environment_rain_random_rotaion_speed;
+			mult *= m_context->get_scene_view( )->post_process_parameters( ).environment_rain_radius_scale;
 		}
 	}
 
