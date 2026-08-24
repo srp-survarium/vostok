@@ -265,6 +265,8 @@ void backend::set_render_target( enum_render_target_enum target, render_target c
 	}
 }
 
+static timing::timer s_timer;
+
 void start_profiling( )
 {
 	// STATE[STUB]
