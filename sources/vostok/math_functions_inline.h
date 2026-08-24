@@ -53,44 +53,43 @@ inline T min			( T const& value1, T const& value2, T const& value3, T const& val
 	return		min(value1, min(value2, min(value3, value4)));
 }
 
-// sushi@TODO: remove the remaining force-inline matching constraints when the compiler boundary is understood.
 template < typename T >
-__forceinline T min_integral	( T const& left, T const& right )
+inline T min_integral	( T const& left, T const& right )
 {
 	return		( right + ( ( left - right) & -( left < right ) ) );
 }
 
-__forceinline s8 min			( s8 left, s8 right )
+inline s8 min			( s8 left, s8 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline s16 min			( s16 left, s16 right )
+inline s16 min			( s16 left, s16 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline s32 min			( s32 left, s32 right )
+inline s32 min			( s32 left, s32 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline s64 min			( s64 left, s64 right )
+inline s64 min			( s64 left, s64 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline u8 min			( u8 left, u8 right )
+inline u8 min			( u8 left, u8 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline u16 min			( u16 left, u16 right )
+inline u16 min			( u16 left, u16 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-__forceinline u32 min			( u32 left, u32 right )
+inline u32 min			( u32 left, u32 right )
 {
 	return		( min_integral( left, right ) );
 }
