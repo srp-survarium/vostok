@@ -641,3 +641,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 
 #endif
+
+// Retail initializer symbols prove the general 8-byte PMF representation.
+#pragma pointers_to_members(full_generality, multiple_inheritance)
