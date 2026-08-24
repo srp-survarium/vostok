@@ -13,7 +13,7 @@ namespace network_core {
 
 class udp_match_packet;
 
-class move_to_list_predicate : public boost::noncopyable {
+class move_to_list_predicate : private boost::noncopyable {
 public:
 	inline			move_to_list_predicate	(
 						udp_match_connection::udp_match_packet_list&	list_to_move_to,

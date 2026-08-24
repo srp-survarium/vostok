@@ -16,16 +16,18 @@ namespace memory {
 
 namespace network_core {
 
-class tcp_packet : public packet< tcp_packet >, public boost::noncopyable {
+class tcp_packet : public packet< tcp_packet >, private boost::noncopyable {
+	friend class packet< tcp_packet >;
+
 public:
 	inline	explicit	tcp_packet		( memory::base_allocator& allocator );
 	inline				~tcp_packet		( );
 
 	inline	u32			allocated_size	( ) const;
 
+private:
 	inline	void		reallocate		( u32 new_size );
 
-private:
 	/* 0x0008 */	memory::base_allocator&		m_allocator;
 	/* 0x000c */	u32							m_allocated_size;
 }; // class tcp_packet

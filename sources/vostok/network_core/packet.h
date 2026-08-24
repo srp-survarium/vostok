@@ -42,10 +42,10 @@ public:
 	inline	void		append			( pcstr string, u8 string_length );
 	inline	void		append			( pcvoid buffer, u32 buffer_size );
 
+private:
 	inline	T const&	implementation	( ) const;
 	inline	T&			implementation	( );
 
-private:
 	// target mangles AAE (private) - ?reallocate@?$packet@Vtcp_packet..@@AAEXI@Z; only
 	// reserve/resize call it, so the original kept it private.
 	inline	void		reallocate		( u32 new_size )

@@ -29,7 +29,7 @@ namespace network_core {
 class base_packet;
 class packet_reader;
 
-class udp_match_connection : public boost::noncopyable {
+class udp_match_connection : private boost::noncopyable {
 public:
 	enum state
 	{

@@ -20,10 +20,10 @@ class udp_match_packet;
 class udp_network_flow_emulator;
 
 // STATE[REMOVED] (every `/* no source */` member below): udp_match_client_session is
-// consumed only by udp_match_server (friend) - dedicated-server code with ZERO target
+// consumed only by udp_match_server - dedicated-server code with ZERO target
 // symbols, never instantiated in scope. So all its inline members are uninstantiated in
 // both binaries; the empty shams are correct. Reconstruct only if the server is matched.
-class udp_match_client_session : public boost::noncopyable {
+class udp_match_client_session : private boost::noncopyable {
 public:
 	inline								udp_match_client_session	(
 											boost::asio::ip::udp::socket&		socket,
@@ -72,13 +72,13 @@ public:
 
 	inline	void						on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
 
-	// the server's m_clients set names &udp_match_client_session::set_member_hook and its
-	// destroy list names &::next_in_destroy_list - both reach these private members.
-	friend	class						udp_match_server;
+protected:
+	/* 0x0008 */	udp_match_connection				m_connection;
 
 private:
-	/* 0x0008 */	udp_match_connection				m_connection;
 	/* 0x0540 */	boost::asio::ip::udp::endpoint		m_client_endpoint;
+
+public:
 	/* 0x055c */	boost::intrusive::set_member_hook<>	set_member_hook;
 	/* 0x056c */	udp_match_client_session*			next_in_destroy_list;
 }; // class udp_match_client_session

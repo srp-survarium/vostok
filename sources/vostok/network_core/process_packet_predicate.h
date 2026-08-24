@@ -13,7 +13,7 @@ namespace network_core {
 
 class packet_reader;
 
-class process_packet_predicate : public boost::noncopyable {
+class process_packet_predicate : private boost::noncopyable {
 public:
 	inline	explicit	process_packet_predicate	( udp_match_client& client ) :
 		m_client	( client )
