@@ -362,7 +362,7 @@ u32 calc_config_memory_usage_impl<effect_options_descriptor>(
 }
 
 template < typename value_type >
-custom_config* create_custom_config_impl(
+static custom_config* create_custom_config_impl(
 	value_type const& value,
 	mutable_buffer& data_buffer,
 	u32& out_data_crc,
@@ -387,7 +387,7 @@ custom_config* create_custom_config_impl(
 }
 
 template < typename value_type >
-custom_config_ptr create_custom_config_impl(
+static custom_config_ptr create_custom_config_impl(
 	value_type const& value,
 	u32& out_data_crc,
 	bool is_calc_data_crc
