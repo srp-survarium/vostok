@@ -301,6 +301,27 @@ class InstructionStreamExactTests(unittest.TestCase):
         base = self.record(text="call  pinned_ptr<animation const>::operator=")
         self.assertTrue(instruction_stream_exact(target, base))
 
+    def test_accepts_icf_aliased_trailing_relocation_operand(self):
+        target = self.record(text="mov   ecx, target_alias<class_a,class_b>::c_ptr")
+        base = self.record(text="mov   ecx, base_alias<class_c,class_d>::c_ptr")
+        self.assertTrue(
+            instruction_stream_exact(
+                target,
+                base,
+                lambda target_operand, base_operand: (
+                    target_operand == "target_alias<class_a,class_b>::c_ptr"
+                    and base_operand == "base_alias<class_c,class_d>::c_ptr"
+                ),
+            )
+        )
+
+    def test_rejects_icf_alias_when_instruction_destination_differs(self):
+        target = self.record(text="mov   ecx, target_alias")
+        base = self.record(text="mov   edx, base_alias")
+        self.assertFalse(
+            instruction_stream_exact(target, base, lambda _target, _base: True)
+        )
+
     def test_island_exact_stream_overrides_stale_report_pair(self):
         mangled = "??4bone_matrices_computer_data@@"
         target = self.record(text="movq  xmm0, [eax]")

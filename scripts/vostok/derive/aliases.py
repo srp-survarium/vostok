@@ -107,15 +107,15 @@ def dynamic_pair_score(target_mangled, base_mangled, target_rec, base_rec, score
     return fuzzy
 
 
-def instruction_stream_exact(target_rec, base_rec, call_alias_equivalent=None):
+def instruction_stream_exact(target_rec, base_rec, symbol_alias_equivalent=None):
     """Prove exact code when objdiff omitted a function score.
 
     The rich-index producer has already normalized branch labels and relocation
     operands to symbolic instruction text. Equal size plus an identical,
     non-empty ordered instruction stream is therefore strict function-scoped
     exact evidence. The optional callback may prove that otherwise identical
-    calls or jumps merely use different ICF representative names. An absent
-    instruction stream is never evidence.
+    relocation operands merely use different ICF representative names. An
+    absent instruction stream is never evidence.
     """
     if target_rec is None or base_rec is None:
         return False
@@ -144,22 +144,50 @@ def instruction_stream_exact(target_rec, base_rec, call_alias_equivalent=None):
     base_identity = identity(base_instructions)
     if target_identity == base_identity:
         return True
-    if call_alias_equivalent is None or len(target_identity) != len(base_identity):
+    if symbol_alias_equivalent is None or len(target_identity) != len(base_identity):
         return False
+
+    def trailing_symbol_operand(text):
+        """Split the operand position that can carry a rich-PDB function name.
+
+        Besides direct ``call``/``jmp`` operands, MSVC emits function addresses
+        as relocations in instructions such as ``mov ecx, <function>``.  Keep
+        the entire opcode/destination prefix in the identity; only the trailing
+        symbolic operand is eligible for ICF-alias reconciliation.
+        """
+        parts = text.split(None, 1)
+        if len(parts) != 2:
+            return None
+        mnemonic, operands = parts
+        depths = {"<": 0, "[": 0, "(": 0}
+        closers = {">": "<", "]": "[", ")": "("}
+        commas = []
+        for index, character in enumerate(operands):
+            if character in depths:
+                depths[character] += 1
+            elif character in closers:
+                opener = closers[character]
+                depths[opener] = max(0, depths[opener] - 1)
+            elif character == "," and not any(depths.values()):
+                commas.append(index)
+        if not commas:
+            return mnemonic, operands.strip()
+        split = commas[-1]
+        prefix, operand = operands[:split], operands[split + 1:]
+        return f"{mnemonic} {prefix.strip()},", operand.strip()
 
     for target, base in zip(target_identity, base_identity):
         if target == base:
             continue
         if target[:2] != base[:2]:
             return False
-        target_parts = target[2].split(None, 1)
-        base_parts = base[2].split(None, 1)
+        target_parts = trailing_symbol_operand(target[2])
+        base_parts = trailing_symbol_operand(base[2])
         if (
-            len(target_parts) != 2
-            or len(base_parts) != 2
+            target_parts is None
+            or base_parts is None
             or target_parts[0] != base_parts[0]
-            or target_parts[0] not in {"call", "jmp"}
-            or not call_alias_equivalent(target_parts[1], base_parts[1])
+            or not symbol_alias_equivalent(target_parts[1], base_parts[1])
         ):
             return False
     return True

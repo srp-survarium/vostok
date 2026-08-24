@@ -97,13 +97,13 @@ class _Pairer:
         self.target_alias_names_by_rva = _names_by_rva(artifacts.target_records)
         self.base_alias_names_by_rva = _names_by_rva(artifacts.base_records)
         (
-            self.target_call_rvas_by_operand,
-            self.target_call_operands_by_rva,
-        ) = _call_operand_aliases(artifacts.target_records)
+            self.target_symbol_rvas_by_operand,
+            self.target_symbol_operands_by_rva,
+        ) = _symbol_operand_aliases(artifacts.target_records)
         (
-            self.base_call_rvas_by_operand,
-            self.base_call_operands_by_rva,
-        ) = _call_operand_aliases(artifacts.base_records)
+            self.base_symbol_rvas_by_operand,
+            self.base_symbol_operands_by_rva,
+        ) = _symbol_operand_aliases(artifacts.base_records)
         self.exact_fold_aliases = load_exact_fold_aliases()
 
     # -- the passes ---------------------------------------------------------
@@ -117,7 +117,7 @@ class _Pairer:
             trec, brec = self.target[mangled], self.base[mangled]
             fuzzy = self.art.fuzzy.get(mangled)
             if fuzzy is None and instruction_stream_exact(
-                trec, brec, self._call_alias_equivalent
+                trec, brec, self._symbol_alias_equivalent
             ):
                 fuzzy = 100.0
                 recovered += 1
@@ -282,22 +282,22 @@ class _Pairer:
             base_aliases_by_mangled=self.base_aliases_by_mangled,
         )
 
-    def _call_alias_equivalent(self, target_operand, base_operand):
-        """Whether two printed call targets are PDB aliases of one body.
+    def _symbol_alias_equivalent(self, target_operand, base_operand):
+        """Whether two printed relocation targets are PDB aliases of one body.
 
         The linker may print a different representative name for the same ICF
-        group on each side. An overlapping alias label at both called RVAs is
-        strict PDB evidence that only the representative spelling changed.
+        group on each side. An overlapping alias label at both referenced RVAs
+        is strict PDB evidence that only the representative spelling changed.
         """
-        target_rvas = self.target_call_rvas_by_operand.get(target_operand, set())
-        base_rvas = self.base_call_rvas_by_operand.get(base_operand, set())
+        target_rvas = self.target_symbol_rvas_by_operand.get(target_operand, set())
+        base_rvas = self.base_symbol_rvas_by_operand.get(base_operand, set())
         if len(target_rvas) != 1 or len(base_rvas) != 1:
             return False
         target_rva = next(iter(target_rvas))
         base_rva = next(iter(base_rvas))
         return bool(
-            self.target_call_operands_by_rva[target_rva]
-            & self.base_call_operands_by_rva[base_rva]
+            self.target_symbol_operands_by_rva[target_rva]
+            & self.base_symbol_operands_by_rva[base_rva]
         )
 
     def _add(self, mangled, trec, brec, fuzzy):
@@ -362,7 +362,7 @@ def _names_by_rva(records):
     return out
 
 
-def _call_operand_aliases(records):
+def _symbol_operand_aliases(records):
     """Index the operand spelling each demangled PDB alias contributes."""
     rvas_by_operand = {}
     operands_by_rva = {}
