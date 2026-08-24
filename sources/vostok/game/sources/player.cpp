@@ -692,11 +692,6 @@ void player::set_near_plane_factor( const float near_plane_factor )
 		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
 }
 
-// claude@NOTE: 18-stmt structure + the 2 named locals (interpolation_time, transform)
-// match. Byte residual is the fov-ternary statement split (target records L1033/1034/1035
-// as 3 statements for the conditional fov computation; our base folds it to fewer) plus
-// the linear_interpolator::interpolated_value vtable-inline schedule - a math/codegen
-// inline residual, not source-steerable from this TU.
 void player::update_camera( )
 {
 	if ( !m_local_input_controller )
@@ -705,9 +700,9 @@ void player::update_camera( )
 	if ( m_start_fov_factor != m_target_fov_factor )
 	{
 		const float interpolation_time = ( m_current_time_in_ms - m_start_fov_factor_change_time_in_ms ) * math::epsilon_3;
-		m_current_fov_factor = interpolation_time < m_fov_factor_transition_time
-			? m_start_fov_factor + ( m_target_fov_factor - m_start_fov_factor ) * animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( interpolation_time )
-			: m_target_fov_factor;
+		m_current_fov_factor = interpolation_time >= m_fov_factor_transition_time
+			? m_target_fov_factor
+			: m_start_fov_factor + animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( interpolation_time ) * ( m_target_fov_factor - m_start_fov_factor );
 
 		m_local_input_controller->set_fov_factor( m_current_fov_factor );
 
