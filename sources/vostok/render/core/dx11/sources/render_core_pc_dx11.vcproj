@@ -1364,6 +1364,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_constant_binding_inline.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\shader_constant_bindings.h"
 			>
 		</File>
