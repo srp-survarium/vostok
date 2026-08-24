@@ -34,6 +34,9 @@ _LOCAL_SCOPE_RE = re.compile(r"::`\d+'::")
 _LOCAL_FUNCTION_SCOPE_RE = re.compile(r"^`([^'\r\n]+)'::`\d+'::")
 
 
+_LOCAL_STATIC_SYMBOL_RE = re.compile(r"^\$?S\d+$")
+
+
 def local_scope_canon(name):
     """Erase only MSVC's unstable numeric local-scope ordinal.
 
@@ -108,10 +111,67 @@ def dyn_owner_compatible(target_rec, base_rec, canon):
     )
 
 
-def dynamic_pair_score(target_mangled, base_mangled, target_rec, base_rec, scores):
-    """Use report score, or strict rich-stream exact evidence when unscored."""
+def matching_dynamic_initializer_owners(target_records, base_records):
+    """Global statics whose initializer proves the source owner on both sides.
+
+    An ICF-folded atexit destructor can inherit an unrelated header as its base
+    PDB owner.  Its companion initializer is not folded with the destructor and
+    retains the defining source file, so one unique agreeing initializer owner
+    is strict evidence for the destructor's canonical variable identity.
+    """
+    def owners(records, canonicalize):
+        result = {}
+        for rec in records:
+            canon = canonicalize(rec["mangled"])
+            owner = rec.get("file")
+            if canon and canon[0] == "E" and owner:
+                result.setdefault(canon[1], set()).add(owner)
+        return result
+
+    target_owners = owners(target_records, dyn_canon_rich)
+    base_owners = owners(base_records, dyn_canon_base)
+    result = set()
+    for identity in target_owners.keys() & base_owners.keys():
+        target_files = target_owners[identity]
+        base_files = base_owners[identity]
+        if len(target_files) == 1 and target_files == base_files:
+            result.add((identity, next(iter(target_files))))
+    return result
+
+
+def dynamic_pair_score(
+    target_mangled,
+    base_mangled,
+    target_rec,
+    base_rec,
+    scores,
+    symbol_alias_equivalent=None,
+):
+    """Use report score, or strict rich-stream exact evidence when unscored.
+
+    MSVC's local-static bookkeeping symbols are ordinal names (``$S3``,
+    ``S4``), not stable identities.  A unique canonical dynamic thunk may
+    therefore compare those operands by kind while ordinary relocations still
+    require the rich-PDB alias proof supplied by the pairing pass.
+    """
     fuzzy = scores.get(target_mangled, scores.get(base_mangled))
-    if fuzzy is None and instruction_stream_exact(target_rec, base_rec):
+
+    def dynamic_alias(target_operand, base_operand):
+        if (
+            _LOCAL_STATIC_SYMBOL_RE.fullmatch(target_operand)
+            and _LOCAL_STATIC_SYMBOL_RE.fullmatch(base_operand)
+        ):
+            return True
+        return bool(
+            symbol_alias_equivalent
+            and symbol_alias_equivalent(target_operand, base_operand)
+        )
+
+    if fuzzy is None and instruction_stream_exact(
+        target_rec,
+        base_rec,
+        dynamic_alias,
+    ):
         return 100.0
     return fuzzy
 

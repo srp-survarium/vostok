@@ -15,6 +15,7 @@ from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    exact_paired_source_alias,
                                    instruction_stream_exact,
                                    island_candidate_score,
+                                   matching_dynamic_initializer_owners,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
@@ -1335,6 +1336,27 @@ class DynamicThunkAliasTests(unittest.TestCase):
             )
         )
 
+    def test_initializer_owner_proves_folded_atexit_source(self):
+        target = [{
+            "mangled": "ns::`dynamic initializer for 'value''",
+            "file": "vostok/game_core/value.cpp",
+        }]
+        base = [{
+            "mangled": "`dynamic initializer for 'ns::value''",
+            "file": "vostok/game_core/value.cpp",
+        }]
+
+        self.assertEqual(
+            matching_dynamic_initializer_owners(target, base),
+            {("ns::value", "vostok/game_core/value.cpp")},
+        )
+
+        base[0]["file"] = "vostok/other/value.cpp"
+        self.assertEqual(
+            matching_dynamic_initializer_owners(target, base),
+            set(),
+        )
+
     def test_resolves_local_static_owner_from_enclosing_target_function(self):
         thunk = (
             "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
@@ -1379,6 +1401,59 @@ class DynamicThunkAliasTests(unittest.TestCase):
         }
         self.assertIsNone(
             dynamic_pair_score("target", "base", target, different, {})
+        )
+
+    def test_exact_dynamic_stream_accepts_local_ordinals_and_pdb_call_aliases(self):
+        target = {
+            "size": 11,
+            "instructions": [
+                {"off": 0, "len": 5, "text": "mov   ecx, $S3"},
+                {"off": 5, "len": 5, "text": "call  target::finalize"},
+                {"off": 10, "len": 1, "text": "ret"},
+            ],
+        }
+        base = {
+            "size": 11,
+            "instructions": [
+                {"off": 0, "len": 5, "text": "mov   ecx, S4"},
+                {"off": 5, "len": 5, "text": "call  base::finalize"},
+                {"off": 10, "len": 1, "text": "ret"},
+            ],
+        }
+
+        self.assertEqual(
+            dynamic_pair_score(
+                "target",
+                "base",
+                target,
+                base,
+                {},
+                lambda left, right: (left, right)
+                == ("target::finalize", "base::finalize"),
+            ),
+            100.0,
+        )
+
+    def test_dynamic_stream_rejects_unproved_nonlocal_relocation(self):
+        target = {
+            "size": 6,
+            "instructions": [
+                {"off": 0, "len": 5, "text": "mov   eax, target_global"},
+                {"off": 5, "len": 1, "text": "ret"},
+            ],
+        }
+        base = {
+            "size": 6,
+            "instructions": [
+                {"off": 0, "len": 5, "text": "mov   eax, base_global"},
+                {"off": 5, "len": 1, "text": "ret"},
+            ],
+        }
+
+        self.assertIsNone(
+            dynamic_pair_score(
+                "target", "base", target, base, {}, lambda _left, _right: False
+            )
         )
 
 
