@@ -304,6 +304,42 @@
       '';
 
       # ---------------------------------------------------------------------------
+      # Scaleform GFx 4.2.22 SDK - full source, from the DuckTales Remastered
+      # source release (its only public copy). vostok.build.gfx compiles the
+      # libgfx suite from this tree; retail's own gfx_4.2.21 tree is
+      # byte-identical for 806 of its 1,128 files (proven against the retail
+      # PDB's per-file MD5s: `pdb_diff --source-dir`), so it is the
+      # reconstruction baseline, not a lookalike. 5.1 GiB download - opt-in
+      # via `nix develop .#with-scaleform-sdk`; a local checkout via
+      # $SCALEFORM_SDK keeps working without realizing this.
+      # ---------------------------------------------------------------------------
+      ducktales-src = pkgs.fetchurl {
+        name = "ducktales_r326558.7z";
+        url = "https://archive.org/download/ducktales-remastered-src/ducktales_r326558.7z";
+        sha1 = "542945ecbba4dea4118ca9845130999fbf08af36";
+      };
+
+      scaleform-sdk = pkgs.runCommand "scaleform-sdk-4.2.22" {
+        nativeBuildInputs = [ pkgs.p7zip ];
+      } ''
+        # The SDK root inside the archive is not a path we control - find it
+        # as the directory holding Include/GFxVersion.h (either separator).
+        marker=$(7z l -slt ${ducktales-src} | sed -n 's/^Path = //p' \
+                 | grep -iE 'Include[\\/]GFxVersion\.h$' | head -1)
+        if [ -z "$marker" ]; then
+          echo "ERROR: Include/GFxVersion.h not found in archive listing"
+          exit 1
+        fi
+        root=$(printf '%s' "$marker" | sed 's![\\/]Include[\\/]GFxVersion\.h$!!I')
+        echo "SDK root in archive: $root"
+        7z x -oextract ${ducktales-src} "$root/*" > /dev/null
+        src_dir="extract/$(printf '%s' "$root" | tr '\\' '/')"
+        [ -d "$src_dir" ] || { echo "ERROR: extraction missing $src_dir"; exit 1; }
+        mkdir -p "$out"
+        cp -r "$src_dir"/. "$out"/
+      '';
+
+      # ---------------------------------------------------------------------------
       # Unpacked game resources: the packed resources.db (from survarium.resources)
       # expanded into its file tree with the vostok-resources-db unpacker. ~12.5k
       # files; useful for inspecting/diffing game assets without the engine. The
@@ -538,6 +574,25 @@
         '';
       };
 
+      # Opt-in shell for GFx lib rebuilds from a fresh clone:
+      #   nix develop .#with-scaleform-sdk
+      # Realizes and pins the 5.1 GiB DuckTales source fetch that carries the
+      # Scaleform SDK, and exports SCALEFORM_SDK from the store. With a local
+      # SDK checkout, the plain default shell + $SCALEFORM_SDK works instead
+      # (paths.py falls back to ~/Projects/survarium/scaleform_sdk).
+      withScaleformSdkDevShell = pkgs.mkShell {
+        name = "surv-decomp-with-scaleform-sdk";
+        inputsFrom = [ defaultDevShell ];
+        shellHook = ''
+          export SCALEFORM_SDK="${scaleform-sdk}"
+          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+          nix-store -r "${scaleform-sdk}" \
+            --add-root "$VOSTOK_DIR/binaries/nix-store/scaleform-sdk" \
+            --indirect >/dev/null
+          echo "[vostok] scaleform  : REALIZED -> SCALEFORM_SDK (opt-in shell)." >&2
+        '';
+      };
+
     in {
       packages.${system} = {
         inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
@@ -547,6 +602,8 @@
         # (`nix build .#survarium-resources-unpacked`), but the default devShell
         # does NOT realize it - see the `with-resources` shell below.
         inherit survarium-resources-unpacked;
+        # The Scaleform GFx SDK (5.1 GiB fetch) - on demand / with-scaleform-sdk.
+        inherit scaleform-sdk;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
         survarium-game = survarium;            # default `out` = game binaries
@@ -557,6 +614,7 @@
       devShells.${system} = {
         default = defaultDevShell;
         with-resources = withResourcesDevShell;
+        with-scaleform-sdk = withScaleformSdkDevShell;
       };
     };
 }
