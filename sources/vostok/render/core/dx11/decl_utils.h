@@ -10,13 +10,13 @@ namespace render {
 namespace decl_utils {
 
 struct VertexFormatPairs {
-	D3DDECLTYPE m_dx9_format;
-	DXGI_FORMAT m_dx11_format;
+	D3DDECLTYPE m_dx9FMT;
+	DXGI_FORMAT m_dx10FMT;
 };
 
 struct VertexSemanticPairs {
-	D3DDECLUSAGE m_dx9_semantic;
-	pcstr m_dx11_semantic;
+	D3DDECLUSAGE m_dx9Semantic;
+	pcstr m_dx10Semantic;
 };
 
 DXGI_FORMAT ConvertVertexFormat( D3DDECLTYPE format );

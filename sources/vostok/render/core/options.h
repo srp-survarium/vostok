@@ -377,9 +377,9 @@ public:
 private:
 	void load_impl( memory::reader& reader );
 	void on_config_loaded( resources::queries_result& data );
+	void on_config_loaded2( resources::queries_result& data );
 
 public:
-	void on_config_loaded2( resources::queries_result& data );
 	~options( ) { }
 
 private:
