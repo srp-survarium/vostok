@@ -211,7 +211,6 @@ public:
 		return m_shader_cache_info;
 	}
 
-private:
 	u32 get_sampler( pcstr ) { return 0; }
 	// claude@NOTE: the developer sources contain declarations but no DX11 bodies.
 	void set_samp_texture( u32, pcstr ) { /* STATE[STUB] */ }
@@ -221,18 +220,14 @@ private:
 	void set_samp_filter_mag( u32, u32 ) { /* STATE[STUB] */ }
 	void set_samp_filter( u32, D3D11_FILTER ) { /* STATE[STUB] */ }
 
-public:
+private:
+	friend class effect_cook;
+
 	binary_shader_sources_type* m_shader_sources;
 	resources::query_result_for_cook* m_parent_query;
-
-private:
 	shader_cache_info_vector m_shader_cache_info;
-
-public:
 	vector<texture_named_instance> m_ps_used_textures;
 	textures_for_query_type m_textures_for_query;
-
-private:
 	res_ps_hw_ptr m_ps_hw;
 	res_gs_hw_ptr m_gs_hw;
 	res_vs_hw_ptr m_vs_hw;

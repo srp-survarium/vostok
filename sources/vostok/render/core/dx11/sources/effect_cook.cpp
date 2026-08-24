@@ -82,8 +82,7 @@ void effect_cook::create_resource(
 	VOSTOK_UNREFERENCED_PARAMETER				(raw_file_data);
 	
 	effect_compile_data* compile_data		= 0;
-	resources::user_data_variant* user_data	= in_out_query.user_data();
-	if (user_data)
+	if (resources::user_data_variant* user_data = in_out_query.user_data())
 		user_data->try_get					(compile_data);
 	
 	if (!compile_data)
