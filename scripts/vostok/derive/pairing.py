@@ -14,6 +14,7 @@ evidence bar, applied in descending order of certainty:
     strict rich      unique same-source alias with a byte-identical stream
     shared RVA       a second target name on an already-consumed ICF body
     folded report    a generated target-symbol-map identity with a report score
+    shared folded    a folded-report identity on an already-consumed ICF body
     dynamic thunk    ??__E/??__F <-> the backtick spelling, on a canonical owner
     PDB spelling     the audited target/candidate template-spelling map
     cross-unit exact reviewed zero-source ownership plus an exact COFF comparison
@@ -31,10 +32,10 @@ from vostok.derive import log
 from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    dyn_owner_compatible, dynamic_pair_score,
                                    instruction_stream_exact,
-                                   local_scope_canon,
                                    load_exact_fold_aliases,
                                    matching_dynamic_initializer_owners,
                                    report_source_alias_candidates,
+                                   rich_name_canon,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
 from vostok.derive.index import body_statements
@@ -84,6 +85,7 @@ def pair(artifacts):
     pairer.shared_rva_aliases()
     pairer.shared_rva_report_aliases()
     pairer.folded_report_aliases()
+    pairer.shared_rva_folded_report_aliases()
     pairer.dynamic_thunks()
     pairer.pdb_spelling_aliases()
     pairer.cross_unit_no_source_exacts()
@@ -298,6 +300,44 @@ class _Pairer:
         if n:
             log(f"cross-name paired {n} target folded-symbol report aliases")
 
+    def shared_rva_folded_report_aliases(self):
+        """Retain a folded-report identity on an already paired base body.
+
+        The strict rich pass may consume an ICF representative before a second
+        target alias reaches the generated folded-symbol score.  Reuse that RVA
+        only when the base PDB records one owner-compatible full signature for
+        the remaining target; the generated score supplies the differing-body
+        measurement just as it does in ``folded_report_aliases``.
+        """
+        n = 0
+        for tm, trec in self._unclaimed_targets():
+            if tm not in self.art.folded_fuzzy:
+                continue
+            candidates = report_source_alias_candidates(
+                trec,
+                self.base_aliases_by_name,
+                self.used_base_rvas,
+                target_alias_names_by_rva=self.target_alias_names_by_rva,
+                base_alias_names_by_rva=self.base_alias_names_by_rva,
+                allow_used=True,
+            )
+            if (
+                len(candidates) != 1
+                or candidates[0]["rva"] not in self.used_base_rvas
+            ):
+                continue
+            self._add_cross(
+                tm,
+                candidates[0]["mangled"],
+                trec,
+                candidates[0],
+                self.art.folded_fuzzy[tm],
+                claim_base=False,
+            )
+            n += 1
+        if n:
+            log(f"cross-name paired {n} shared-RVA folded-report aliases")
+
     def dynamic_thunks(self):
         """Dynamic-init/atexit thunks across their several spellings. The
         target identity and its compatible base owner must each be unique;
@@ -450,6 +490,7 @@ class _Pairer:
             base_alias_names_by_rva=self.base_alias_names_by_rva,
             exact_fold_aliases=self.exact_fold_aliases,
             base_aliases_by_mangled=self.base_aliases_by_mangled,
+            symbol_alias_equivalent=self._symbol_alias_equivalent,
         )
 
     def _symbol_alias_equivalent(self, target_operand, base_operand):
@@ -523,7 +564,7 @@ def _by_name(records):
     out = {}
     for rec in records:
         out.setdefault(rec["name"], {})[rec["rva"]] = rec
-        canonical_name = local_scope_canon(rec["name"])
+        canonical_name = rich_name_canon(rec["name"])
         if canonical_name != rec["name"]:
             out.setdefault(canonical_name, {})[rec["rva"]] = rec
     return out
