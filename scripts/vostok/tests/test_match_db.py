@@ -7,7 +7,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from vostok.build.generate_objdiff_cross_unit import _identical_units
+from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
+                                                       _identical_units,
+                                                       _resolve_reviewed_aliases)
 from vostok.core import symbols as NORMALIZE
 from vostok.derive import maxima
 from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
@@ -123,6 +125,33 @@ class ReportOnlyObservationTests(unittest.TestCase):
 
 
 class CrossUnitEvidenceTests(unittest.TestCase):
+    def test_resolves_reviewed_base_pdb_identity_to_delinked_coff_name(self):
+        pairs = {"target": "base-pdb", "unchanged": "base-coff"}
+        choices = {"base-pdb": "selected-coff"}
+
+        self.assertEqual(
+            _resolve_reviewed_aliases(pairs, choices),
+            {"target": "selected-coff", "unchanged": "base-coff"},
+        )
+
+    @mock.patch("vostok.build.generate_objdiff_cross_unit.subprocess.run")
+    def test_defined_owners_deduplicates_repeated_symbols(self, run):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            object_path = root / "inline.h.obj"
+            object_path.write_bytes(b"object")
+            run.return_value = SimpleNamespace(
+                stdout=(
+                    f"{object_path}: 00000000 T symbol\n"
+                    f"{object_path}: 00000000 T symbol\n"
+                )
+            )
+
+            self.assertEqual(
+                _defined_owners(root, {"symbol"}, "llvm-nm"),
+                {"symbol": [object_path.resolve()]},
+            )
+
     def test_identifies_complete_exact_units(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
