@@ -7,6 +7,15 @@
 namespace vostok {
 namespace render {
 
+static fixed_string<16> s_r_resolution_value = "1280x720";
+static console_commands::cc_string s_r_resolution_cc(
+	"r_resolution",
+	s_r_resolution_value.c_str( ),
+	s_r_resolution_value.get_buffer_size( ),
+	true,
+	console_commands::command_type_engine_internal
+);
+
 render_cc::render_cc(
 	pcstr define_name,
 	enum_options_changes_result changed_result
@@ -326,8 +335,6 @@ static math::uint2 parse_resolution( pcstr in_str )
 }
 
 string256 s_current_render_configuration = "default";
-string16 s_r_resolution_value = "1280x720";
-static console_commands::cc_string s_r_resolution_cc( "r_resolution", s_r_resolution_value, sizeof( s_r_resolution_value ), true, console_commands::command_type_engine_internal );
 
 static float s_uro_fov_value = 0.f;
 static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_engine_internal );
@@ -499,7 +506,7 @@ enum_options_changes_result options::end_render_options_changing(
 	vector<fs_new::virtual_path_string>& out_changed_defines
 )
 {
-	math::uint2 res_str = parse_resolution( s_r_resolution_value );
+	math::uint2 res_str = parse_resolution( s_r_resolution_value.c_str( ) );
 	current.m_resolution_x = res_str.x;
 	current.m_resolution_y = res_str.y;
 	current.m_enabled_local_light_shadows = current.m_lighting_quality != uro_lighting_quality_low;
