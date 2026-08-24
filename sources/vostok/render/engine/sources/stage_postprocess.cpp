@@ -439,10 +439,14 @@ void stage_postprocess::fill_surface( render_target_ptr surf0, render_target_ptr
 	u32		offset;
 
 	vertex_formats::TL* pv = ( vertex_formats::TL*)backend::ref().vertex.lock( 4, sizeof(vertex_formats::TL), offset);
-	pv->set( 0,	  t_h, 0, 1.0, color, p0.x, p1.y); pv++;
-	pv->set( 0,	  0,   0, 1.0, color, p0.x, p0.y); pv++;
-	pv->set( t_w, t_h, 0, 1.0, color, p1.x, p1.y); pv++;
-	pv->set( t_w, 0,   0, 1.0, color, p1.x, p0.y); pv++;
+	pv->set( 0,	  t_h, 0, 1.0, color, p0.x, p1.y);
+	pv++;
+	pv->set( 0,	  0,   0, 1.0, color, p0.x, p0.y);
+	pv++;
+	pv->set( t_w, t_h, 0, 1.0, color, p1.x, p1.y);
+	pv++;
+	pv->set( t_w, 0,   0, 1.0, color, p1.x, p0.y);
+	pv++;
 	backend::ref().vertex.unlock();
 
 	m_context->m_g_quad_uv->apply( );
@@ -459,10 +463,14 @@ void stage_postprocess::fill_surface2( render_target_ptr surf )
 	u32		offset;
 
 	screen_vertex* pv = (screen_vertex*)backend::ref().vertex.lock(4, sizeof(screen_vertex), offset);
-	pv->set( float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f)); pv++;
-	pv->set( float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f)); pv++;
-	pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f)); pv++;
-	pv->set( float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f)); pv++;
+	pv->set( float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f));
+	pv++;
+	pv->set( float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f));
+	pv++;
+	pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f));
+	pv++;
+	pv->set( float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f));
+	pv++;
 	backend::ref().vertex.unlock();
 
 	m_screen_vertex_geometry->apply( );
