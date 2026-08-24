@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,393 / 13,009 functions exact (72.20%) &middot; 9,787 / 13,009 functions exact-max (75.23%) &middot; 89.15% fuzzy &middot; 90.80% fuzzy-max.**
+**Overall: 9,393 / 13,009 functions exact (72.20%) &middot; 9,787 / 13,009 functions exact-max (75.23%) &middot; 89.16% fuzzy &middot; 90.81% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -28,7 +28,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `ai`            |   124 |     585 / 691 (84.7%) |     631 / 691 (91.3%) | 96.8% |     98.8% |
 | `sound`         |    69 |     475 / 510 (93.1%) |     493 / 510 (96.7%) | 99.2% |     99.9% |
 | `collision`     |    52 |     440 / 503 (87.5%) |     457 / 503 (90.9%) | 95.0% |     97.9% |
-| `scaleform`     |    47 |     421 / 454 (92.7%) |     424 / 454 (93.4%) | 96.5% |     96.6% |
+| `scaleform`     |    47 |     421 / 454 (92.7%) |     424 / 454 (93.4%) | 96.8% |     96.9% |
 | `particle`      |    25 |     365 / 400 (91.2%) |     382 / 400 (95.5%) | 97.5% |     98.6% |
 | `vfs`           |    71 |     189 / 390 (48.5%) |     193 / 390 (49.5%) | 88.6% |     89.2% |
 | `ui`            |    27 |     213 / 227 (93.8%) |     214 / 227 (94.3%) | 98.6% |     99.1% |

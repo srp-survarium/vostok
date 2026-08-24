@@ -35,6 +35,7 @@ from vostok.core.paths import (
     BASE_EXE,
     BASE_PDB,
     GFX_BUILD_TREE,
+    GFX_RELEASE_PREFIX,
     GFX_TARGET_PREFIX,
     RICH_DIR,
     SCALEFORM_SDK,
@@ -76,6 +77,7 @@ def generate(side: str) -> None:
         # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
         engine = [_wine_path(ENGINE_DIR.parent) + "\\",
                   _wine_path(GFX_BUILD_TREE) + "\\",
+                  GFX_RELEASE_PREFIX + "\\",
                   _wine_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]
