@@ -78,6 +78,7 @@ class _Inputs:
     target_records: list
     base_records: list
     fuzzy: dict
+    folded_fuzzy: dict = field(default_factory=dict)
     rich_pdb_aliases: dict = field(default_factory=dict)
 
     def compiler_alias(self, mangled):

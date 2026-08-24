@@ -21,8 +21,10 @@ import sys
 from dataclasses import dataclass, field
 
 from vostok.core import symbols as normalize_objdiff_symbols
+from vostok.core import tsv
 from vostok.core.paths import (BASE_IDX, CROSS_UNIT_REPORT, DECLARATIONS,
-                               REPORT, REPORT_HEAD, TARGET_IDX)
+                               EFFECTIVE_SYMBOL_MAP, REPORT, REPORT_HEAD,
+                               SYMBOL_MAP, TARGET_IDX)
 from vostok.core.paths import REPO as VOSTOK
 from vostok.derive import log
 from vostok.derive.index import (authoritative_demangled_names,
@@ -95,6 +97,8 @@ class Artifacts:
     demangled: dict               # {mangled: display name}, retail spelling wins
     dynamic_owners: dict
     module_overrides: dict
+    folded_symbol_aliases: dict
+    folded_fuzzy: dict = field(default_factory=dict)
     rich_pdb_aliases: dict = field(default_factory=dict)
     declared_methods: set = field(default_factory=set)
     declared_free: set = field(default_factory=set)
@@ -139,9 +143,12 @@ def load(declarations=True):
     rich_pdb_aliases = normalize_objdiff_symbols.rich_pdb_aliases(
         TARGET_IDX, BASE_IDX, source_prefix="vostok/",
     )
+    folded_symbol_aliases = _load_folded_symbol_aliases()
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
     if rich_pdb_aliases:
         log(f"  Vostok rich-PDB aliases: {len(rich_pdb_aliases)}")
+    if folded_symbol_aliases:
+        log(f"  target folded-symbol aliases: {len(folded_symbol_aliases)}")
 
     artifacts = Artifacts(
         target=target,
@@ -155,12 +162,41 @@ def load(declarations=True):
         demangled=authoritative_demangled_names(target, base),
         dynamic_owners=dynamic_local_owner_modules(target_records),
         module_overrides=load_module_ownership_overrides(),
+        folded_symbol_aliases=folded_symbol_aliases,
         rich_pdb_aliases=rich_pdb_aliases,
     )
     _load_report(artifacts)
     if declarations:
         _load_declarations(artifacts)
     return artifacts
+
+
+def _load_folded_symbol_aliases():
+    """Read the identity map used to normalize highly-COMDAT target objects.
+
+    Report functions carry the delinker's selected COFF representative, while
+    the rich target index retains the retail PDB identity.  Keep that exact
+    generated mapping available so an unpaired target identity can recover its
+    measured report score before the same-signature rich alias pass selects the
+    corresponding base record.
+    """
+    path = EFFECTIVE_SYMBOL_MAP if EFFECTIVE_SYMBOL_MAP.is_file() else SYMBOL_MAP
+    if not path.is_file():
+        return {}
+    aliases = {}
+    for line_number, fields in tsv.read(path):
+        if len(fields) != 2 or not all(fields):
+            raise RuntimeError(
+                f"{path}:{line_number}: expected <alias>\t<target choice>"
+            )
+        alias, choice = fields
+        previous = aliases.setdefault(alias, choice)
+        if previous != choice:
+            raise RuntimeError(
+                f"{path}:{line_number}: conflicting choices for {alias!r}: "
+                f"{previous!r} vs {choice!r}"
+            )
+    return aliases
 
 
 def _load_report(artifacts):
@@ -214,6 +250,27 @@ def _load_report(artifacts):
         compiler = artifacts.compiler_alias(mangled)
         if compiler in fuzzy and mangled not in fuzzy:
             fuzzy[mangled] = fuzzy[compiler]
+
+    # Do not merge these representative scores into the ordinary report map:
+    # strict same-name and same-signature rich evidence must pair first.  A
+    # separate late pairing pass consumes this weaker evidence only for target
+    # identities that remain unclaimed after those function-scoped proofs.
+    artifacts.folded_fuzzy = {}
+    for mangled in set(artifacts.target) - set(artifacts.base):
+        if report_score_for_target(mangled, fuzzy) is not None:
+            continue
+        score = report_score_for_target(
+            mangled,
+            fuzzy,
+            artifacts.folded_symbol_aliases,
+        )
+        if score is not None:
+            artifacts.folded_fuzzy[mangled] = score
+    if artifacts.folded_fuzzy:
+        log(
+            f"made {len(artifacts.folded_fuzzy)} report score gap(s) "
+            "available through the target folded-symbol map"
+        )
     artifacts.fuzzy = fuzzy
 
 

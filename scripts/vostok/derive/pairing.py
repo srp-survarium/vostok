@@ -12,6 +12,7 @@ evidence bar, applied in descending order of certainty:
     report alias     a folded PDB alias the delink report already compared
     strict rich      unique same-source alias with a byte-identical stream
     shared RVA       a second target name on an already-consumed ICF body
+    folded report    a generated target-symbol-map identity with a report score
     dynamic thunk    ??__E/??__F <-> the backtick spelling, on a canonical owner
     PDB spelling     the audited target/candidate template-spelling map
 
@@ -75,6 +76,7 @@ def pair(artifacts):
     pairer.report_aliases()
     pairer.strict_rich_aliases()
     pairer.shared_rva_aliases()
+    pairer.folded_report_aliases()
     pairer.dynamic_thunks()
     pairer.pdb_spelling_aliases()
     return pairer.finish()
@@ -204,6 +206,38 @@ class _Pairer:
             n += 1
         if n:
             log(f"cross-name paired {n} shared-RVA same-source rich aliases")
+
+    def folded_report_aliases(self):
+        """Recover report scores hidden behind the delinker's ICF name choice.
+
+        This deliberately runs after both strict rich passes: a generated fold
+        representative proves which report score belongs to a target identity,
+        but complete byte-identical rich streams are stronger evidence and must
+        not be replaced by duplicate-COMDAT fuzzy noise.
+        """
+        n = 0
+        for tm, trec in self._unclaimed_targets():
+            if tm not in self.art.folded_fuzzy:
+                continue
+            candidates = report_source_alias_candidates(
+                trec,
+                self.base_aliases_by_name,
+                self.used_base_rvas,
+                target_alias_names_by_rva=self.target_alias_names_by_rva,
+                base_alias_names_by_rva=self.base_alias_names_by_rva,
+            )
+            if len(candidates) != 1:
+                continue
+            self._add_cross(
+                tm,
+                candidates[0]["mangled"],
+                trec,
+                candidates[0],
+                self.art.folded_fuzzy[tm],
+            )
+            n += 1
+        if n:
+            log(f"cross-name paired {n} target folded-symbol report aliases")
 
     def dynamic_thunks(self):
         """Dynamic-init/atexit thunks across their several spellings. The
