@@ -114,61 +114,51 @@ void player::update_history_item(
 		item.time_in_ms = server_action_time_in_ms;
 }
 
-// claude@NOTE: target and base share the three-block flow. The remaining line
-// attribution and byte differences are the two inlined quaternion products plus
-// the physics get_transform/from_bullet tail; the full transform update is present.
+#line 180
 void player::update_history_item_from_previous(
 	client_player_history_item const&		previous_item,
 	client_player_history_item&				item_to_update,
 	float4x4&								previous_transform
 )
 {
-	math::quaternion target_rotation =
-		math::quaternion( previous_transform.get_angles_xyz( ) )
-		* math::quaternion( item_to_update.action.state.transform.get_angles_xyz( ) )
-		* math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
+	math::quaternion target_rotation( previous_transform.get_angles_xyz( ) );
+	const math::quaternion item_rotation( item_to_update.action.state.transform.get_angles_xyz( ) );
+	target_rotation = item_rotation * math::conjugate( target_rotation );
+	target_rotation = math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) ) * target_rotation;
 
-	const float3 position =
-		previous_item.action.state.transform.c.xyz( )
-		+ ( item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( ) );
+	float3 position = item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( );
+	position = previous_item.action.state.transform.c.xyz( ) + position;
 
 	previous_transform = item_to_update.action.state.transform;
 
-	m_target.transform = math::create_matrix( target_rotation, float3( 0.f, 0.f, 0.f ) );
+	m_target.transform = math::create_rotation( target_rotation );
 	m_target.transform.c.xyz( ) = position;
 	m_target.look_pitch = item_to_update.action.state.look_pitch;
 	set_physics_controller_walk_vector( m_target );
 
 	m_target.physics_controller->update_action( item_to_update.time_in_ms - previous_item.time_in_ms );
-	previous_transform = item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
+	float4x4 const& transform = m_target.physics_controller->get_transform( );
+	item_to_update.action.state.transform = transform;
+	previous_transform = transform;
 }
 
-// claude@NOTE: STRUCTURE MATCH (target 4 stmts == base 4). Ring walk from_index->head,
-// update_history_item_from_previous + inventory().action per item, then
-// m_target.animation_player.set_object_transform. The loop line-table fusion is now matched:
-// the target fuses inventory().action + index=next into one statement (line 276), so they are
-// written on one source line here too (was 5 stmts -> 4). Byte residual (~69%, not structure):
-// our LTCG out-lines inventory() to a `call` where the target inlines the [this+8] deref, and
-// the target tail-duplicates the post-loop set_object_transform across the empty-loop edge.
+#line 268
 void player::replay_history( const u32 from_index, float4x4& previous_transform )
 {
-	u32 index = from_index;
-	while( index != m_history.head( ) )
+	for( u32 index = from_index; index != m_history.head( ); index = m_history.next( index ) )
 	{
-		update_history_item_from_previous( m_history[ m_history.previous( index ) ], m_history[ index ], previous_transform );
-		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );
-		index = m_history.next( index );
+		client_player_history_item& item = m_history[ index ];
+		update_history_item_from_previous( m_history[ m_history.previous( index ) ], item, previous_transform );
+		inventory( ).action( (profile_slot_enum)item.action.weapon_state.slot_id, true );
 	}
 
-	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
+	m_target.animation_player.set_object_transform( m_history.newest( ).action.state.transform, this );
 }
 
-// claude@NOTE: target and base share all fourteen CFG blocks and the complete
-// clamp/lower-bound/update/replay path. Residual statement splits come from ring-index
-// register selection, replay_history's call schedule, and the physics transform tail.
+#line 283
 void player::time_warp( server_player_update const& action, u32 time_in_ms )
 {
-	if( m_last_server_correction_time && time_in_ms < m_last_server_correction_time )
+	if( m_last_server_correction_time > 0 && time_in_ms < m_last_server_correction_time )
 		return;
 
 	if( m_history.empty( ) )
@@ -185,16 +175,15 @@ void player::time_warp( server_player_update const& action, u32 time_in_ms )
 		m_target.look_pitch		= action.state.look_pitch;
 		m_target.physics_controller->set_transform( m_target.transform );
 
-		process_quick_slots_for_proxy_player( );
-
 		m_last_server_correction_time = time_in_ms;
+		process_quick_slots_for_proxy_player( );
 		return;
 	}
 
 	if( time_in_ms > m_history[ m_history.previous( m_history.head( ) ) ].time_in_ms )
 		return;
 
-	if( time_in_ms + 1000 < m_history[ m_history.previous( m_history.tail( ) ) ].time_in_ms )
+	if( time_in_ms + 1000 < m_history[ m_history.previous( m_history.head( ) ) ].time_in_ms )
 		return;
 
 	time_in_ms = math::min( time_in_ms, m_current_time_in_ms );
@@ -242,30 +231,21 @@ void player::log_active_object( pcstr const header ) const
 	VOSTOK_UNREFERENCED_PARAMETER( header );
 }
 
-// claude@NOTE: byte residual is the inlined math::operator*(quaternion,quaternion) product
-// schedule (L515) + the create_matrix/mul4x3 inline tail (L528) + the LTCG custom call
-// convention into the apply_input overload. Structure is faithful: previous_rotation from
-// the animated/character transform, a per-frame angular-increment quaternion, the product
-// driving get_axis_and_angle, a tree resync, the is_local apply_input path, and the
-// angle-gated rotation re-application into the tree.
 void player::apply_input_before_new_transform(
 	client_player_state&	player_state,
 	player_input const&		previous_input,
 	const float				time_delta
 )
 {
-	math::quaternion previous_rotation(
+	float4x4 new_transform =
 		player_state.animation_player.are_there_any_animations( )
 			? player_state.animation_player.get_object_transform( this )
-			: player_state.transform );
+			: player_state.transform;
 
-	math::quaternion new_rotation( float3(
-		0.f,
-		( m_input.angular_acceleration.x * time_delta * 0.5f + previous_input.angular_velocity.x ) * time_delta,
-		( m_input.angular_acceleration.y * time_delta * 0.5f + previous_input.angular_velocity.y ) * time_delta
-	) );
+	math::quaternion previous_rotation( player_state.transform );
+	math::quaternion new_rotation( new_transform );
 
-	new_rotation = previous_rotation * new_rotation;
+	new_rotation = new_rotation * math::conjugate( previous_rotation );
 
 	float3 axe;
 	float angle;
@@ -277,13 +257,12 @@ void player::apply_input_before_new_transform(
 		apply_input( player_state, previous_input.angular_velocity, m_input.angular_acceleration, time_delta );
 
 	if( math::abs( angle ) >= math::epsilon_3 )
-	{
-		float4x4 new_transform = math::mul4x3(
-			math::create_matrix( new_rotation, float3( 0.f, 0.f, 0.f ) ),
+		player_state.transform = math::mul4x3(
+			math::create_rotation( new_rotation ),
 			player_state.transform );
-		player_state.transform.c.xyz( ) = new_transform.c.xyz( );
-		player_state.animation_player.set_object_transform( new_transform, this );
-	}
+
+	player_state.transform.c.xyz( ) = new_transform.c.xyz( );
+	player_state.animation_player.set_object_transform( player_state.transform, this );
 }
 
 void player::smooth( const float time_delta )
@@ -298,27 +277,24 @@ void player::smooth( const float time_delta )
 		{
 			math::quaternion left_rotation( current_angles );
 			math::quaternion right_rotation( target_angles );
-			result = math::create_matrix( ::slerp_optimized( left_rotation, right_rotation, math::min( ( s_smooth_angular_speed / 180.f ) * time_delta, 0.f ) ), float3( 0.f, 0.f, 0.f ) );
+			result = math::create_rotation( ::slerp_optimized( left_rotation, right_rotation, math::min( 1.f, math::deg2rad( s_smooth_angular_speed ) * time_delta ) ) );
 		}
 		else
 			result = m_current.transform;
 
 		if( m_current.transform.c.xyz( ) != m_target.transform.c.xyz( ) )
 		{
-			const float linear_factor = math::min( s_smooth_linear_speed * time_delta, 0.f );
-			result.c.xyz( ) = ( m_target.transform.c.xyz( ) - m_current.transform.c.xyz( ) ) * linear_factor + m_current.transform.c.xyz( );
+			const float linear_factor = math::min( 1.f, s_smooth_linear_speed * time_delta );
+			result.c.xyz( ) = math::lerp( m_current.transform.c.xyz( ), m_target.transform.c.xyz( ), linear_factor );
 		}
 		else
 			result.c.xyz( ) = m_current.transform.c.xyz( );
 
 		m_current.transform = result;
-		m_current.look_pitch += math::min( s_smooth_pitch_speed * time_delta, 0.f ) * ( m_target.look_pitch - m_current.look_pitch );
+		m_current.look_pitch += math::min( 1.f, s_smooth_pitch_speed * time_delta ) * ( m_target.look_pitch - m_current.look_pitch );
 	}
 }
 
-// claude@NOTE: std::max reproduces the target CFG through B63. The first remaining
-// skeleton divergence is animation-owned animation_player::tick: target inlines
-// skip_time_if_needed/n_ary_tree::tick/callback compaction, while base calls it.
 void player::tick( const u32 current_time_in_ms )
 {
 	if( m_is_first_tick )
