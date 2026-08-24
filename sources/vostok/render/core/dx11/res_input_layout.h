@@ -28,7 +28,7 @@ public:
 	}
 	bool is_registered( ) const { return m_is_registered; }
 	void mark_registered( ) { m_is_registered = true; }
-	ID3D11InputLayout* hardware_layout( ) const { return m_hw_input_layout; }
+	ID3D11InputLayout* hardware_layout( ) { return m_hw_input_layout; }
 
 private:
 	ID3D11InputLayout* m_hw_input_layout;

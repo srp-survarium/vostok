@@ -67,17 +67,17 @@ public:
 
 	u32 size( ) const { return m_container.size( ); }
 
-	res_texture_ptr const& operator[]( u32 index ) const
+	res_texture_ptr const& operator[]( const u32 index ) const
 	{
 		return m_container[index];
 	}
 
-	res_texture_ptr& operator[]( u32 index )
+	res_texture_ptr& operator[]( const u32 index )
 	{
 		return m_container[index];
 	}
 
-	void resize( u32 size, res_texture_ptr const& value )
+	void resize( const u32 size, res_texture_ptr const& value )
 	{
 		m_container.resize( size, value );
 	}

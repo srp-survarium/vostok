@@ -90,7 +90,6 @@ public:
 private:
 	u32 m_user : 1;
 	u32 m_seq_cycles : 1;
-	u32 m_reserved_flags : 30;
 	u32 m_mem_usage;
 	fastdelegate::FastDelegate1< u32 > m_bind;
 	D3D11_TEXTURE2D_DESC m_desc;

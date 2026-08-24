@@ -31,8 +31,8 @@ DXGI_FORMAT ConvertVertexFormat( D3DDECLTYPE dx9FMT )
 	int arrayLength = sizeof(VertexFormatList)/sizeof(VertexFormatList[0]);
 	for (int i=0; i<arrayLength; ++i)
 	{
-		if (VertexFormatList[i].m_dx9_format==dx9FMT)
-			return VertexFormatList[i].m_dx11_format;
+		if (VertexFormatList[i].m_dx9FMT==dx9FMT)
+			return VertexFormatList[i].m_dx10FMT;
 	}
 
 	ASSERT(!"ConvertVertexFormat didn't find appropriate dx10 vertex format!");
@@ -62,8 +62,8 @@ pcstr ConvertSemantic( D3DDECLUSAGE Semantic )
 	int arrayLength = sizeof(VertexSemanticList)/sizeof(VertexSemanticList[0]);
 	for (int i=0; i<arrayLength; ++i)
 	{
-		if (VertexSemanticList[i].m_dx9_semantic==Semantic)
-			return VertexSemanticList[i].m_dx11_semantic;
+		if (VertexSemanticList[i].m_dx9Semantic==Semantic)
+			return VertexSemanticList[i].m_dx10Semantic;
 	}
 
 	ASSERT(!"ConvertSemantic didn't find appropriate dx10 input semantic!");
