@@ -273,6 +273,18 @@ class PairingTests(unittest.TestCase):
                   size=8)]
         self.assertEqual(self._pair_of(t, b), {})
 
+    def test_a_local_predicate_pairs_across_scope_ordinal_drift(self):
+        target_mangled = "`a::build'::`9'::predicate::operator()"
+        base_mangled = "`a::build'::`2'::predicate::operator()"
+        target_name = "bool `a::build'::`9'::predicate::operator()() const"
+        base_name = "bool `a::build'::`2'::predicate::operator()() const"
+        t = [_full(0x1000, target_mangled, name=target_name)]
+        b = [_full(0x2000, base_mangled, name=base_name)]
+        self.assertEqual(
+            self._pair_of(t, b),
+            {target_mangled: (0x1000, 0x2000)},
+        )
+
 
 class DynamicInitializerNameTests(unittest.TestCase):
     """Either spelling of a dynamic initializer must find the same function.

@@ -31,6 +31,7 @@ from vostok.derive import log
 from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    dyn_owner_compatible, dynamic_pair_score,
                                    instruction_stream_exact,
+                                   local_scope_canon,
                                    load_exact_fold_aliases,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
@@ -500,6 +501,9 @@ def _by_name(records):
     out = {}
     for rec in records:
         out.setdefault(rec["name"], {})[rec["rva"]] = rec
+        canonical_name = local_scope_canon(rec["name"])
+        if canonical_name != rec["name"]:
+            out.setdefault(canonical_name, {})[rec["rva"]] = rec
     return out
 
 
