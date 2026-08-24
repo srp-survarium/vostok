@@ -30,14 +30,24 @@ def report_fuzzy_scores(report):
     return scores, units_by_mangled
 
 
-def report_score_for_target(mangled, scores):
-    """Map objdiff's normalized spellings back to the retail PDB identity."""
+def report_score_for_target(mangled, scores, folded_aliases=None):
+    """Map objdiff's normalized spellings back to the retail PDB identity.
+
+    ``folded_aliases`` is the delinker's generated target-identity -> selected
+    COFF-representative map.  Callers admit it only for identities absent from
+    the base rich index, after same-name function-scoped evidence has had first
+    refusal.
+    """
     fuzzy = scores.get(mangled)
     compiler = normalize_objdiff_symbols.compiler_name(mangled)
     if fuzzy is None and compiler:
         fuzzy = scores.get(compiler)
     if fuzzy is None and mangled.startswith("??_G"):
         fuzzy = scores.get(f"??_E{mangled[4:]}")
+    if fuzzy is None and folded_aliases:
+        folded = folded_aliases.get(mangled)
+        if folded:
+            fuzzy = scores.get(folded)
     return fuzzy
 
 

@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from vostok.build.generate_objdiff_cross_unit import _identical_units
@@ -24,7 +25,7 @@ from vostok.derive.maxima import effective_source_hash
 from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
                                    logical_module)
-from vostok.derive.pairing import Pair, Pairing
+from vostok.derive.pairing import Pair, Pairing, pair
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   rank_island_delta, report_fuzzy_scores,
                                   report_score_for_target)
@@ -399,6 +400,28 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         self.assertEqual(
             report_score_for_target(pdb_name, {report_name: 90.13513}),
             90.13513,
+        )
+
+    def test_maps_generated_fold_representative_to_report_name(self):
+        target = "?copy@concrete_type_helper@grass_loading_data@@"
+        representative = "?copy@concrete_type_helper@physics_world@@"
+        aliases = {target: representative}
+
+        self.assertEqual(
+            report_score_for_target(
+                target,
+                {representative: 46.125},
+                aliases,
+            ),
+            46.125,
+        )
+        self.assertEqual(
+            report_score_for_target(
+                target,
+                {target: 100.0, representative: 46.125},
+                aliases,
+            ),
+            100.0,
         )
 
     def test_uses_fuzzy_match_percent_not_unrelated_match_percent(self):
@@ -887,6 +910,52 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             ),
             [],
         )
+
+    def test_generated_fold_score_runs_after_strict_rich_evidence(self):
+        exact_target = self.record(
+            name="void exact_alias()",
+            mangled="?exact_target@@",
+            rva=0x1000,
+        )
+        exact_base = self.record(
+            name=exact_target["name"],
+            mangled="?exact_base@@",
+            rva=0x2000,
+        )
+        fuzzy_target = self.record(
+            name="void fuzzy_alias()",
+            mangled="?fuzzy_target@@",
+            rva=0x3000,
+        )
+        fuzzy_base = self.record(
+            name=fuzzy_target["name"],
+            mangled="?fuzzy_base@@",
+            rva=0x4000,
+            text="ret   8",
+        )
+        artifacts = SimpleNamespace(
+            target={
+                exact_target["mangled"]: exact_target,
+                fuzzy_target["mangled"]: fuzzy_target,
+            },
+            base={
+                exact_base["mangled"]: exact_base,
+                fuzzy_base["mangled"]: fuzzy_base,
+            },
+            target_records=[exact_target, fuzzy_target],
+            base_records=[exact_base, fuzzy_base],
+            fuzzy={},
+            folded_fuzzy={
+                exact_target["mangled"]: 46.125,
+                fuzzy_target["mangled"]: 46.125,
+            },
+            compiler_alias=lambda _mangled: None,
+        )
+
+        pairing = pair(artifacts)
+
+        self.assertEqual(pairing.pairs[exact_target["mangled"]].fuzzy, 100.0)
+        self.assertEqual(pairing.pairs[fuzzy_target["mangled"]].fuzzy, 46.125)
 
     def test_finds_exact_alias_already_represented_by_paired_rva(self):
         base = self.record(rva=0x2000)
