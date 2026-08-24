@@ -46,7 +46,7 @@ public:
 	// these callback setters; no other in-scope consumer instantiates the socket. Both sides.
 	inline	void						set_on_packet_received	( boost::function< void( tcp_packet const& ) > const& value ) { /* no source */ } // STATE[REMOVED]
 	inline	void						set_on_error			(
-											boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	value
+											boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	value
 										) { /* no source */ } // STATE[REMOVED]
 
 // claude@MATCH: target mangling is AAE (private) for the four members below -
@@ -80,7 +80,7 @@ public:
 
 private:
 	/* 0x0000 */	boost::function< void( tcp_packet const& ) >								m_on_packet_received;
-	/* 0x0020 */	boost::function< void( client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	/* 0x0020 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;
 	/* 0x0040 */	handler_allocator											m_allocator;
 	/* 0x0448 */	memory::base_allocator&										m_packet_allocator;
 	/* 0x044c */	Socket&														m_socket;

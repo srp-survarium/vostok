@@ -43,61 +43,61 @@ inline void packet< T >::clone( base_packet const& other )
 }
 
 template < typename T >
-inline void packet< T >::append( bool value )
+inline void packet< T >::append( const bool value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( u8 value )
+inline void packet< T >::append( const u8 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( s8 value )
+inline void packet< T >::append( const s8 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( u16 value )
+inline void packet< T >::append( const u16 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( s16 value )
+inline void packet< T >::append( const s16 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( u32 value )
+inline void packet< T >::append( const u32 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( s32 value )
+inline void packet< T >::append( const s32 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( u64 value )
+inline void packet< T >::append( const u64 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( s64 value )
+inline void packet< T >::append( const s64 value )
 {
 	append				( &value, sizeof( value ) );
 }
 
 template < typename T >
-inline void packet< T >::append( float value )
+inline void packet< T >::append( const float value )
 {
 	append				( &value, sizeof( value ) );
 }
