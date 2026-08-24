@@ -33,6 +33,7 @@ from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    instruction_stream_exact,
                                    local_scope_canon,
                                    load_exact_fold_aliases,
+                                   matching_dynamic_initializer_owners,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
@@ -308,6 +309,20 @@ class _Pairer:
         that spelling before this cross-name pass can compare source owners.
         """
         t_canon, b_canon, b_collapsed = {}, {}, {}
+        initializer_owners = matching_dynamic_initializer_owners(
+            self.art.target_records,
+            self.art.base_records,
+        )
+
+        def owner_compatible(trec, brec, canon):
+            return (
+                dyn_owner_compatible(trec, brec, canon)
+                or (
+                    canon[0] == "F"
+                    and (canon[1], trec.get("file")) in initializer_owners
+                )
+            )
+
         for mangled in set(self.target) - self.primary_names:
             canon = dyn_canon_rich(mangled)
             if canon:
@@ -336,7 +351,7 @@ class _Pairer:
                 candidate = self.base[bm_list[0]]
                 if (
                     candidate["rva"] not in self.used_base_rvas
-                    and dyn_owner_compatible(trec, candidate, canon)
+                    and owner_compatible(trec, candidate, canon)
                 ):
                     brec = candidate
 
@@ -345,7 +360,7 @@ class _Pairer:
                     candidate["rva"]: candidate
                     for candidate in b_canon[canon]
                     if candidate["rva"] not in self.used_base_rvas
-                    and dyn_owner_compatible(trec, candidate, canon)
+                    and owner_compatible(trec, candidate, canon)
                 }
                 if len(compatible_by_rva) != 1:
                     continue
@@ -353,7 +368,14 @@ class _Pairer:
             bm = brec["mangled"]
             self._add_cross(
                 tm, bm, trec, brec,
-                dynamic_pair_score(tm, bm, trec, brec, self.art.fuzzy),
+                dynamic_pair_score(
+                    tm,
+                    bm,
+                    trec,
+                    brec,
+                    self.art.fuzzy,
+                    self._symbol_alias_equivalent,
+                ),
             )
             n += 1
         if n:
