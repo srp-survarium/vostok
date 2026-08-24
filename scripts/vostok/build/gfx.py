@@ -50,6 +50,7 @@ Run inside `nix develop`. Idempotent: re-run to resume (skips objs already built
     python3 -m vostok.build.gfx            # all 8 (small first)
     python3 -m vostok.build.gfx libgfx     # one
 """
+import errno
 import os
 import subprocess
 import sys
@@ -105,8 +106,9 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
                  "libgfxexpat", "pcre",
                  "libgfx_as2", "libgfx_as3", "libgfx"]
 
-# The lib TUs compile from GFX_BUILD_TREE: the pristine SDK hardlinked
-# file-by-file with the repo's reconstructed 4.2.21 files copied over it.
+# The lib TUs compile from GFX_BUILD_TREE: the pristine SDK linked file-by-file
+# (hardlinks when possible, symlinks for a read-only/cross-filesystem SDK) with
+# the repo's reconstructed 4.2.21 files copied over it.
 # That makes EVERY include style see the reconstructions - bare
 # neighbor-includes ("Render_HAL.h") resolve inside the tree, which an -I
 # overlay can never shadow. materialize_tree() below keeps it current.
@@ -156,9 +158,9 @@ def _overlay_files():
 
 
 def materialize_tree():
-    """(Re)build GFX_BUILD_TREE: hardlink the pristine SDK, copy overlays over.
+    """(Re)build GFX_BUILD_TREE: link the pristine SDK, copy overlays over.
 
-    Idempotent and cheap: SDK files are hardlinks (created once); an overlay
+    Idempotent and cheap: SDK files are links (created once); an overlay
     file is re-copied only when its content is newer than the tree's. A file
     whose overlay was DELETED is re-linked back to the SDK (detected by inode:
     a tree file that is neither the SDK's inode nor overlay-fresh is stale).
@@ -181,7 +183,15 @@ def materialize_tree():
                     continue
                 dst.unlink()  # was an overlay copy; overlay is gone now
             dst.parent.mkdir(parents=True, exist_ok=True)
-            os.link(f, dst)
+            try:
+                os.link(f, dst)
+            except OSError as error:
+                # Nix outputs are immutable and cannot be hardlinked by the
+                # calling user. A symlink preserves the cheap merged-tree
+                # model and dst.stat() still identifies the SDK inode.
+                if error.errno not in {errno.EXDEV, errno.EPERM, errno.EROFS}:
+                    raise
+                os.symlink(f, dst)
             linked += 1
     for rel, src in overlays.items():
         dst = tree / rel
