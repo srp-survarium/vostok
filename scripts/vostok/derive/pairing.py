@@ -298,9 +298,15 @@ class _Pairer:
 
     def dynamic_thunks(self):
         """Dynamic-init/atexit thunks across their several spellings. The
-        canonical identity must be unique on each side; emitted size may
-        legitimately differ, which is exactly what the fuzzy matcher measures."""
-        t_canon, b_canon = {}, {}     # (kind, fqn) -> [mangled, ...]
+        target identity and its compatible base owner must each be unique;
+        emitted size may legitimately differ, which is exactly what the fuzzy
+        matcher measures.
+
+        Use the raw base records here. Several file-local statics can share one
+        readable PDB spelling, and ``index_by_mangled`` necessarily collapses
+        that spelling before this cross-name pass can compare source owners.
+        """
+        t_canon, b_canon, b_collapsed = {}, {}, {}
         for mangled in set(self.target) - self.primary_names:
             canon = dyn_canon_rich(mangled)
             if canon:
@@ -308,18 +314,42 @@ class _Pairer:
         for mangled in set(self.base) - self.primary_names:
             canon = dyn_canon_base(mangled)
             if canon:
-                b_canon.setdefault(canon, []).append(mangled)
+                b_collapsed.setdefault(canon, []).append(mangled)
+        for rec in self.art.base_records:
+            canon = dyn_canon_base(rec["mangled"])
+            if canon:
+                b_canon.setdefault(canon, []).append(rec)
         n = 0
         for canon in t_canon.keys() & b_canon.keys():
-            tm_list, bm_list = t_canon[canon], b_canon[canon]
-            if len(tm_list) != 1 or len(bm_list) != 1:
+            tm_list = t_canon[canon]
+            if len(tm_list) != 1:
                 continue  # ambiguous - leave for the Rust-side demangler
-            tm, bm = tm_list[0], bm_list[0]
-            trec, brec = self.target[tm], self.base[bm]
-            if trec["rva"] in self.used_target_rvas or brec["rva"] in self.used_base_rvas:
+            tm = tm_list[0]
+            trec = self.target[tm]
+            if trec["rva"] in self.used_target_rvas:
                 continue
-            if not dyn_owner_compatible(trec, brec, canon):
-                continue  # same-named statics in different known owners are not proven identical
+
+            brec = None
+            bm_list = b_collapsed.get(canon, [])
+            if len(bm_list) == 1:
+                candidate = self.base[bm_list[0]]
+                if (
+                    candidate["rva"] not in self.used_base_rvas
+                    and dyn_owner_compatible(trec, candidate, canon)
+                ):
+                    brec = candidate
+
+            if brec is None:
+                compatible_by_rva = {
+                    candidate["rva"]: candidate
+                    for candidate in b_canon[canon]
+                    if candidate["rva"] not in self.used_base_rvas
+                    and dyn_owner_compatible(trec, candidate, canon)
+                }
+                if len(compatible_by_rva) != 1:
+                    continue
+                brec = next(iter(compatible_by_rva.values()))
+            bm = brec["mangled"]
             self._add_cross(
                 tm, bm, trec, brec,
                 dynamic_pair_score(tm, bm, trec, brec, self.art.fuzzy),
