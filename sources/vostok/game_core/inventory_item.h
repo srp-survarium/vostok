@@ -24,12 +24,8 @@ public:
 
 public:
 									explicit	inventory_item					( inventory_item::action_behaviour_type type );
-	// sushi@MATCH: target keeps these header bodies out-of-line at every game_core call site.
-	__declspec( noinline )
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) { m_inventory = inv; m_slot_id = slot; }
-	__declspec( noinline )
 	inline	inventory&							get_inventory					( ) const { return *m_inventory; }
-	__declspec( noinline )
 	inline	profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
 	inline	inventory_item::action_behaviour_type const&
 											get_action_behaviuor			( ) const { return m_action_behaviuor; }
@@ -41,10 +37,8 @@ public:
 	virtual	void								holder_assigned					( ) { /* no source */ }
 	virtual	void								holder_removed					( ) { /* no source */ }
 
-	__declspec( noinline )
 	inline	void								set_amount						( const u16 value ) { m_amount = value; }
 
-	__declspec( noinline )
 	inline	u16									amount							( ) const { return m_amount; }
 
 	inline	void								set_dict_id						( u16 item_dict_id ) { m_dict_id = item_dict_id; }
