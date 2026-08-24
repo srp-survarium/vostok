@@ -59,6 +59,7 @@ struct find_resource_link_predicate
 	resource_link *		found_link_;
 };
 
+#line 63
 void   resource_children::unlink_parent_resource (resource_base * parent)
 {
 	find_resource_link_predicate			erase_predicate(parent);
