@@ -296,6 +296,8 @@ def report_source_alias_candidates(
     used_base_rvas,
     target_alias_names_by_rva=None,
     base_alias_names_by_rva=None,
+    *,
+    allow_used=False,
 ):
     """Find a unique owner-compatible alias for an objdiff-measured symbol.
 
@@ -307,7 +309,7 @@ def report_source_alias_candidates(
     return [
         rec
         for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
-        if rva not in used_base_rvas
+        if (allow_used or rva not in used_base_rvas)
         and (
             rec["file"] == target_rec["file"]
             or shared_icf_alias_owner_compatible(

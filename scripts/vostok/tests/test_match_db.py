@@ -911,6 +911,74 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             [],
         )
 
+    def test_report_alias_can_select_one_used_same_source_rva(self):
+        target = self.record(file="vostok/memory_buffer_inline.h", rva=0x1000)
+        base = self.record(file=target["file"], rva=0x2000)
+        aliases = {target["name"]: {base["rva"]: base}}
+
+        self.assertEqual(
+            report_source_alias_candidates(
+                target,
+                aliases,
+                {base["rva"]},
+                allow_used=True,
+            ),
+            [base],
+        )
+
+    def test_report_score_survives_an_exact_primary_on_the_base_rva(self):
+        primary_target = self.record(
+            name="boost::_bi::value<T>::value(T const&)",
+            mangled="?primary@@",
+            rva=0x1000,
+        )
+        primary_base = self.record(
+            name=primary_target["name"],
+            mangled=primary_target["mangled"],
+            rva=0x2000,
+        )
+        alias_target = self.record(
+            name="vostok::const_buffer::const_buffer(mutable_buffer const&)",
+            mangled="?target_alias@@",
+            file="vostok/memory_buffer_inline.h",
+            text="ret   8",
+            rva=0x3000,
+        )
+        alias_base = self.record(
+            name=alias_target["name"],
+            mangled=primary_base["mangled"],
+            file=alias_target["file"],
+            rva=primary_base["rva"],
+        )
+        artifacts = SimpleNamespace(
+            target={
+                primary_target["mangled"]: primary_target,
+                alias_target["mangled"]: alias_target,
+            },
+            base={primary_base["mangled"]: primary_base},
+            target_records=[primary_target, alias_target],
+            base_records=[primary_base, alias_base],
+            fuzzy={
+                primary_target["mangled"]: 100.0,
+                alias_target["mangled"]: 19.166666,
+            },
+            folded_fuzzy={},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        pairing = pair(artifacts)
+
+        self.assertEqual(pairing.pairs[primary_target["mangled"]].fuzzy, 100.0)
+        self.assertEqual(pairing.pairs[alias_target["mangled"]].fuzzy, 19.166666)
+        self.assertEqual(
+            pairing.pairs[alias_target["mangled"]].base_rva,
+            primary_base["rva"],
+        )
+        self.assertIs(
+            pairing.base_record_for[alias_target["mangled"]],
+            alias_base,
+        )
+
     def test_generated_fold_score_runs_after_strict_rich_evidence(self):
         exact_target = self.record(
             name="void exact_alias()",

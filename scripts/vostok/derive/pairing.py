@@ -76,6 +76,7 @@ def pair(artifacts):
     pairer.report_aliases()
     pairer.strict_rich_aliases()
     pairer.shared_rva_aliases()
+    pairer.shared_rva_report_aliases()
     pairer.folded_report_aliases()
     pairer.dynamic_thunks()
     pairer.pdb_spelling_aliases()
@@ -89,6 +90,7 @@ class _Pairer:
         self.pairs = {}
         self.primary_names = set(artifacts.target) & set(artifacts.base)
         self.cross_named = set()       # both sides' names, paired across a name gap
+        self.cross_base_records = {}   # target name -> exact matched PDB alias
         self.used_target_rvas = set()
         self.used_base_rvas = set()
 
@@ -206,6 +208,45 @@ class _Pairer:
             n += 1
         if n:
             log(f"cross-name paired {n} shared-RVA same-source rich aliases")
+
+    def shared_rva_report_aliases(self):
+        """Retain a measured non-exact alias on an already paired base body.
+
+        The base linker can ICF a second PDB identity onto an RVA already
+        claimed by an exact primary pair, while the target keeps that identity
+        as a different body.  A direct report score plus one owner-compatible
+        same-signature base alias proves which comparison belongs here; unlike
+        the strict shared-RVA pass, the different body is the evidence being
+        measured rather than a reason to discard it.
+        """
+        n = 0
+        for tm, trec in self._unclaimed_targets():
+            if tm not in self.art.fuzzy:
+                continue
+            candidates = report_source_alias_candidates(
+                trec,
+                self.base_aliases_by_name,
+                self.used_base_rvas,
+                target_alias_names_by_rva=self.target_alias_names_by_rva,
+                base_alias_names_by_rva=self.base_alias_names_by_rva,
+                allow_used=True,
+            )
+            if (
+                len(candidates) != 1
+                or candidates[0]["rva"] not in self.used_base_rvas
+            ):
+                continue
+            self._add_cross(
+                tm,
+                candidates[0]["mangled"],
+                trec,
+                candidates[0],
+                self.art.fuzzy[tm],
+                claim_base=False,
+            )
+            n += 1
+        if n:
+            log(f"cross-name paired {n} report-grounded shared-RVA aliases")
 
     def folded_report_aliases(self):
         """Recover report scores hidden behind the delinker's ICF name choice.
@@ -344,6 +385,7 @@ class _Pairer:
     def _add_cross(self, tm, bm, trec, brec, fuzzy, *, claim_rvas=True, claim_base=True):
         self._add(tm, trec, brec, fuzzy)
         self.cross_named.update((tm, bm))
+        self.cross_base_records[tm] = brec
         if claim_rvas:
             self.used_target_rvas.add(trec["rva"])
             if claim_base:
@@ -358,22 +400,11 @@ class _Pairer:
             paired=self.primary_names | self.cross_named,
             used_target_rvas=self.used_target_rvas,
             used_base_rvas=self.used_base_rvas,
-            base_record_for=self._base_records_by_name(),
+            base_record_for=self.cross_base_records,
             target_aliases_by_name=self.target_aliases_by_name,
             target_alias_names_by_rva=self.target_alias_names_by_rva,
             base_alias_names_by_rva=self.base_alias_names_by_rva,
         )
-
-    def _base_records_by_name(self):
-        """For a cross-name pair the target mangled is absent from `base`; keep
-        the matched record, found by base RVA, so MAX can hash its source."""
-        by_rva = {rec["rva"]: rec for rec in self.base.values()}
-        return {
-            mangled: by_rva.get(p.base_rva)
-            for mangled, p in self.pairs.items()
-            if mangled not in self.base
-        }
-
 
 def _by_name(records):
     out = {}
