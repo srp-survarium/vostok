@@ -1222,6 +1222,101 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         self.assertEqual(pairing.pairs[exact_target["mangled"]].fuzzy, 100.0)
         self.assertEqual(pairing.pairs[fuzzy_target["mangled"]].fuzzy, 46.125)
 
+    def test_strict_rich_pairs_enum_spelling_and_proven_call_aliases(self):
+        target = self.record(
+            name=(
+                "void vostok::buffer_vector<stlp_std::pair<object const *,"
+                "enum ignorance_type> >::push_back()"
+            ),
+            mangled="?target_buffer_push@@",
+            text="call  target::assert_sink",
+            rva=0x1000,
+        )
+        base = self.record(
+            name=target["name"].replace("enum ", ""),
+            mangled="?base_buffer_push@@",
+            text="call  base::assert_sink",
+            rva=0x2000,
+        )
+        target_assert = self.record(
+            name="void target::assert_sink()",
+            mangled="?target_assert@@",
+            rva=0x3000,
+        )
+        target_assert_alias = dict(
+            target_assert,
+            name="void shared::assert_alias()",
+        )
+        base_assert = self.record(
+            name="void base::assert_sink()",
+            mangled="?base_assert@@",
+            rva=0x4000,
+        )
+        base_assert_alias = dict(
+            base_assert,
+            name="void shared::assert_alias()",
+        )
+        artifacts = SimpleNamespace(
+            target={target["mangled"]: target},
+            base={base["mangled"]: base},
+            target_records=[target, target_assert, target_assert_alias],
+            base_records=[base, base_assert, base_assert_alias],
+            fuzzy={},
+            folded_fuzzy={},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        pairing = pair(artifacts)
+
+        self.assertEqual(pairing.pairs[target["mangled"]].fuzzy, 100.0)
+        self.assertEqual(
+            pairing.pairs[target["mangled"]].base_rva,
+            base["rva"],
+        )
+
+    def test_folded_report_alias_survives_exact_pair_on_shared_base_rva(self):
+        primary_target = self.record(
+            name="void primary()",
+            mangled="?primary@@",
+            rva=0x1000,
+        )
+        primary_base = self.record(
+            name=primary_target["name"],
+            mangled=primary_target["mangled"],
+            rva=0x2000,
+        )
+        folded_target = self.record(
+            name="void folded(enum state)",
+            mangled="?folded_target@@",
+            text="ret   8",
+            rva=0x3000,
+        )
+        folded_base_alias = self.record(
+            name="void folded(state)",
+            mangled=primary_base["mangled"],
+            rva=primary_base["rva"],
+        )
+        artifacts = SimpleNamespace(
+            target={
+                primary_target["mangled"]: primary_target,
+                folded_target["mangled"]: folded_target,
+            },
+            base={primary_base["mangled"]: primary_base},
+            target_records=[primary_target, folded_target],
+            base_records=[primary_base, folded_base_alias],
+            fuzzy={primary_target["mangled"]: 100.0},
+            folded_fuzzy={folded_target["mangled"]: 48.25},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        pairing = pair(artifacts)
+
+        self.assertEqual(pairing.pairs[folded_target["mangled"]].fuzzy, 48.25)
+        self.assertEqual(
+            pairing.pairs[folded_target["mangled"]].base_rva,
+            primary_base["rva"],
+        )
+
     def test_cross_unit_exact_recovers_reviewed_zero_source_pdb_gap(self):
         scalar = "??_Gstage_ambient_occlusion@@UAEPAXI@Z"
         vector = "??_Estage_ambient_occlusion@@UAEPAXI@Z"

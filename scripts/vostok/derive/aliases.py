@@ -19,6 +19,7 @@ from pathlib import Path
 
 from vostok.core import tsv
 from vostok.core.paths import EXACT_FOLD_ALIASES
+from vostok.derive.names import pdb_signature_canon
 from vostok.derive.scores import island_report_score
 
 
@@ -44,6 +45,11 @@ def local_scope_canon(name):
     instruction stream remain available to the strict alias matcher.
     """
     return _LOCAL_SCOPE_RE.sub("::`#'::", name)
+
+
+def rich_name_canon(name):
+    """Canonicalize the two non-semantic rich-PDB spelling differences."""
+    return pdb_signature_canon(local_scope_canon(name))
 
 
 def dyn_canon_rich(mangled):
@@ -315,6 +321,7 @@ def strict_source_alias_candidates(
     base_alias_names_by_rva=None,
     exact_fold_aliases=None,
     base_aliases_by_mangled=None,
+    symbol_alias_equivalent=None,
 ):
     """Find exact same-source bodies hidden behind a different ICF name.
 
@@ -327,7 +334,7 @@ def strict_source_alias_candidates(
     TU.
     """
     candidate_records = dict(base_aliases_by_name.get(target_rec["name"], {}))
-    canonical_name = local_scope_canon(target_rec["name"])
+    canonical_name = rich_name_canon(target_rec["name"])
     if canonical_name != target_rec["name"]:
         candidate_records.update(base_aliases_by_name.get(canonical_name, {}))
 
@@ -344,7 +351,9 @@ def strict_source_alias_candidates(
                 base_alias_names_by_rva,
             )
         )
-        and instruction_stream_exact(target_rec, rec)
+        and instruction_stream_exact(
+            target_rec, rec, symbol_alias_equivalent
+        )
     ]
 
     # A reviewed asymmetric ICF identity may bridge disjoint readable PDB
@@ -358,7 +367,9 @@ def strict_source_alias_candidates(
         for rva, rec in base_aliases_by_mangled.get(base_mangled, {}).items():
             if rva in seen_rvas or (not allow_used and rva in used_base_rvas):
                 continue
-            if instruction_stream_exact(target_rec, rec):
+            if instruction_stream_exact(
+                target_rec, rec, symbol_alias_equivalent
+            ):
                 candidates.append(rec)
                 seen_rvas.add(rva)
     return candidates
@@ -380,9 +391,13 @@ def report_source_alias_candidates(
     legitimately differ; requiring either to be exact would hide the mismatch
     that the report is meant to expose.
     """
+    candidate_records = dict(base_aliases_by_name.get(target_rec["name"], {}))
+    canonical_name = rich_name_canon(target_rec["name"])
+    if canonical_name != target_rec["name"]:
+        candidate_records.update(base_aliases_by_name.get(canonical_name, {}))
     return [
         rec
-        for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
+        for rva, rec in candidate_records.items()
         if (allow_used or rva not in used_base_rvas)
         and (
             rec["file"] == target_rec["file"]

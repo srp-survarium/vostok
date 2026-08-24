@@ -7,6 +7,8 @@ the mangled name for report rows, because a full demangled signature is
 unreadable in a table and the mangled form carries the scope unambiguously.
 """
 
+import re
+
 
 
 _OPERATOR_PLACEHOLDERS = [
@@ -19,6 +21,22 @@ _OPERATOR_PLACEHOLDERS = [
     ("operator>", "operator\x07"),
     ("operator()", "operator\x08"),
 ]
+
+
+_ELABORATED_ENUM_RE = re.compile(
+    r"(?<![A-Za-z0-9_])enum\s+(?=[A-Za-z_`])"
+)
+
+
+def pdb_signature_canon(text):
+    """Erase an optional PDB ``enum`` elaborated-type keyword.
+
+    Retail and candidate PDB demanglers can render the same decorated enum type
+    as either ``enum namespace::type`` or ``namespace::type``.  The keyword is
+    not part of the C++ type identity; all scopes, template arguments, pointer
+    qualifiers, and function parameters remain in the canonical signature.
+    """
+    return _ELABORATED_ENUM_RE.sub("", text) if text else text
 
 
 def qualified_name(demangled):
