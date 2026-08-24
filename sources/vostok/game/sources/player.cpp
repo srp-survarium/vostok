@@ -786,9 +786,9 @@ struct player_movement_notifier {
 		if ( math::abs( m_movement ) >= math::epsilon_3 )
 		{
 			if ( m_sprinting )
-				subscriber->on_player_action( m_receiver, player_actions_subscriber::run, m_movement );
+				subscriber->on_player_action( m_receiver, player_actions_subscriber::sprint, m_movement );
 			else
-				subscriber->on_player_action( m_receiver, player_actions_subscriber::walk, m_movement );
+				subscriber->on_player_action( m_receiver, player_actions_subscriber::run, m_movement );
 		}
 	}
 };
@@ -829,21 +829,19 @@ struct player_action_notifier {
 // statements 1127-1131); our STLport for_each / vector::begin()/end() stay
 // OUT-OF-LINE (one `call stlp_std::for_each`), so we emit 1 statement vs 4. The
 // for_each functor form is structurally correct; the residual is the STLport
-// header-template inline boundary, not steerable from player.cpp. The pushed
-// action byte 3 = player_actions_subscriber::jump under the current header enum
-// (game_core's enum is off-by-one vs the real walk0/run1/jump2/shoot3 - on_fire
-// is semantically `shoot`; match the literal 3, a game_core enum fix is separate).
+// header-template inline boundary, not steerable from player.cpp. The retail
+// action value is the named `shoot` enumerator.
 void player::on_fire( )
 {
 	std::for_each(
 		m_player_actions_subscribers.begin( ),
 		m_player_actions_subscribers.end( ),
-		player_action_notifier( this, player_actions_subscriber::jump ) );
+		player_action_notifier( this, player_actions_subscriber::shoot ) );
 }
 
 // claude@NOTE: stand_up() (virtual, this->vtable+0x44) then the same for_each
-// subscriber notify (action byte 2 = sprint under the current header enum;
-// semantically `jump`), then bullet_character_controller::jump on both controllers.
+// subscriber notify with the named `jump` action, then
+// bullet_character_controller::jump on both controllers.
 // Same STLport for_each inline-vs-call wall as on_fire for the notify loop.
 void player::jump( )
 {
@@ -851,7 +849,7 @@ void player::jump( )
 	std::for_each(
 		m_player_actions_subscribers.begin( ),
 		m_player_actions_subscribers.end( ),
-		player_action_notifier( this, player_actions_subscriber::sprint ) );
+		player_action_notifier( this, player_actions_subscriber::jump ) );
 
 	m_target.physics_controller->jump( );
 	if ( m_use_physics_controller_for_current )

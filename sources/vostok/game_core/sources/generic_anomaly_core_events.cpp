@@ -11,9 +11,6 @@ void generic_anomaly_core::on_player_action( hit_receiver const* receiver, playe
 {
 	switch ( action )
 	{
-		case player_actions_subscriber::walk:
-			inc_energy( energy_on_walk * param );
-		break;
 		case player_actions_subscriber::run:
 			inc_energy( energy_on_run * param );
 		break;
@@ -21,14 +18,17 @@ void generic_anomaly_core::on_player_action( hit_receiver const* receiver, playe
 			inc_energy( energy_on_sprint * param );
 		break;
 		case player_actions_subscriber::jump:
-			inc_energy( energy_on_jump * param );
-			m_was_zone_trigger_event = true;
+			inc_energy( (float)energy_on_jump );
 		break;
 		case player_actions_subscriber::shoot:
-			inc_energy( energy_on_shoot * param );
+			inc_energy( (float)energy_on_shoot );
+			m_was_shoot_trigger_event = true;
 		break;
 		case player_actions_subscriber::character_hit:
-			inc_energy( energy_on_character_hit * param );
+			inc_energy( (float)energy_on_character_hit );
+		break;
+		case player_actions_subscriber::character_kill:
+			inc_energy( (float)energy_on_character_kill );
 		break;
 		default:
 			NODEFAULT( );
