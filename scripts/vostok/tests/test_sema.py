@@ -244,6 +244,20 @@ class PairingTests(unittest.TestCase):
             self._pair_of(t, b),
             {"vostok::render::`dynamic initializer for 's_cc''": (0x1000, 0x2000)})
 
+    def test_a_dynamic_initializer_selects_the_same_source_owner(self):
+        target_name = "vostok::render::`dynamic initializer for 's_world''"
+        base_name = "`dynamic initializer for 'vostok::render::s_world''"
+        owner = "vostok/render/engine/sources/world.cpp"
+        t = [_full(0x1000, target_name, file=owner)]
+        b = [
+            _full(0x2000, base_name, file="vostok/render/facade/sources/world.cpp"),
+            _full(0x2100, base_name, file=owner),
+        ]
+        self.assertEqual(
+            self._pair_of(t, b),
+            {target_name: (0x1000, 0x2100)},
+        )
+
     def test_an_ambiguous_canonical_owner_is_left_unpaired(self):
         # two target spellings claim the same canonical owner, so neither is
         # proven to be the base's `??__Es@a@@YAXXZ` - refuse rather than guess
