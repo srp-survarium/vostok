@@ -32,13 +32,18 @@ void device::on_device_removed( )
 {
 	HRESULT const reason = device::ref( ).d3d_device( )->GetDeviceRemovedReason( );
 
-	// LOG_ERROR embeds __LINE__; keep these calls contiguous.
-	if ( reason == DXGI_ERROR_DEVICE_HUNG )					LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_HUNG" );
-	else if ( reason == DXGI_ERROR_DEVICE_REMOVED )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_REMOVED" );
-	else if ( reason == DXGI_ERROR_DEVICE_RESET )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_RESET" );
-	else if ( reason == DXGI_ERROR_DRIVER_INTERNAL_ERROR )	LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DRIVER_INTERNAL_ERROR" );
-	else if ( reason == DXGI_ERROR_INVALID_CALL )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_INVALID_CALL" );
-	else if ( reason == S_OK )								LOG_ERROR( "Device remove reason: %s", "S_OK" );
+	if ( reason == DXGI_ERROR_DEVICE_HUNG )
+		LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_HUNG" );
+	else if ( reason == DXGI_ERROR_DEVICE_REMOVED )
+		LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_REMOVED" );
+	else if ( reason == DXGI_ERROR_DEVICE_RESET )
+		LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_RESET" );
+	else if ( reason == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
+		LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DRIVER_INTERNAL_ERROR" );
+	else if ( reason == DXGI_ERROR_INVALID_CALL )
+		LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_INVALID_CALL" );
+	else if ( reason == S_OK )
+		LOG_ERROR( "Device remove reason: %s", "S_OK" );
 
 	m_device_removed = true;
 }
