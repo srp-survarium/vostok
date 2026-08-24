@@ -24,6 +24,7 @@ from vostok.derive.index import (authoritative_demangled_names,
 from vostok.derive.maxima import effective_source_hash
 from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
+                                   load_source_ownership_overrides,
                                    logical_module)
 from vostok.derive.pairing import Pair, Pairing, pair
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
@@ -1025,6 +1026,58 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         self.assertEqual(pairing.pairs[exact_target["mangled"]].fuzzy, 100.0)
         self.assertEqual(pairing.pairs[fuzzy_target["mangled"]].fuzzy, 46.125)
 
+    def test_cross_unit_exact_recovers_reviewed_zero_source_pdb_gap(self):
+        scalar = "??_Gstage_ambient_occlusion@@UAEPAXI@Z"
+        vector = "??_Estage_ambient_occlusion@@UAEPAXI@Z"
+        target = self.record(
+            mangled=scalar,
+            file="vostok/math_color.h",
+            rva=0x1000,
+        )
+        target["statements"] = [{"off": 0, "size": 3, "line": 0}]
+        source = "vostok/render/engine/sources/stage_ambient_occlusion.h"
+        artifacts = SimpleNamespace(
+            target={scalar: target},
+            base={},
+            target_records=[target],
+            base_records=[],
+            fuzzy={scalar: 100.0},
+            folded_fuzzy={},
+            cross_unit_fuzzy={vector: 100.0},
+            source_overrides={scalar: source},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        pairing = pair(artifacts)
+
+        recovered = pairing.pairs[scalar]
+        self.assertEqual(recovered.fuzzy, 100.0)
+        self.assertEqual(recovered.cls, "MATCH")
+        self.assertLess(recovered.base_rva, 0)
+        self.assertEqual(pairing.base_record_for[scalar]["file"], source)
+
+    def test_cross_unit_exact_does_not_synthesize_a_source_body(self):
+        mangled = "?ordinary_function@@YAXXZ"
+        target = self.record(mangled=mangled, rva=0x1000)
+        target["statements"] = [
+            {"off": 0, "size": 1, "line": 10},
+            {"off": 1, "size": 1, "line": 11},
+            {"off": 2, "size": 1, "line": 12},
+        ]
+        artifacts = SimpleNamespace(
+            target={mangled: target},
+            base={},
+            target_records=[target],
+            base_records=[],
+            fuzzy={mangled: 100.0},
+            folded_fuzzy={},
+            cross_unit_fuzzy={mangled: 100.0},
+            source_overrides={mangled: "vostok/render/example.h"},
+            compiler_alias=lambda _mangled: None,
+        )
+
+        self.assertNotIn(mangled, pair(artifacts).pairs)
+
     def test_finds_exact_alias_already_represented_by_paired_rva(self):
         base = self.record(rva=0x2000)
         target = self.record(rva=0x1000)
@@ -1145,6 +1198,10 @@ class ModuleOwnershipOverrideTests(unittest.TestCase):
             self.assertEqual(
                 load_module_ownership_overrides(path),
                 {"?symbol@@": "game_core"},
+            )
+            self.assertEqual(
+                load_source_ownership_overrides(path),
+                {"?symbol@@": "vostok/game_core/example.h"},
             )
             path.write_text(
                 "?symbol@@\tanimation\tvostok/game_core/example.h\n",

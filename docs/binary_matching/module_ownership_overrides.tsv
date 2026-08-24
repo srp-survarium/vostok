@@ -15,3 +15,5 @@
 ??0interactive_object@survarium@@QAE@XZ	game_core	vostok/game_core/interactive_object.h
 ??1interactive_object@survarium@@UAE@XZ	game_core	vostok/game_core/interactive_object.h
 ??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	game	vostok/game/sources/single_position_animation_controller.h
+??1stage_ambient_occlusion@render@vostok@@UAE@XZ	render	vostok/render/engine/sources/stage_ambient_occlusion.h
+??_Gstage_ambient_occlusion@render@vostok@@UAEPAXI@Z	render	vostok/render/engine/sources/stage_ambient_occlusion.h
