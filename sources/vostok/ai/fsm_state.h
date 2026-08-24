@@ -10,7 +10,7 @@
 namespace vostok {
 namespace ai {
 
-struct fsm_state {
+struct VOSTOK_NOVTABLE fsm_state {
 	virtual			~fsm_state					( ) = 0;
 
 	virtual	void	initialize					( ) = 0;
@@ -22,6 +22,10 @@ public:
 	/* 0x0004 */	fsm_state*					next;
 	/* 0x0008 */	fsm_state_transition_list	transitions;
 }; // struct fsm_state
+
+inline fsm_state::~fsm_state( )
+{
+}
 
 STATIC_SIZE_ASSERT(fsm_state, 0x18);
 
