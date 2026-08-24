@@ -98,12 +98,10 @@ private:
 
 	inline	u32								unacknowledged_packets_count( ) const { return 0; }
 
-public:
-	inline	void							handle_receive				( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ }
+	inline	void							handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred ) { /* no source */ }
 
-	inline	void							on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
+	inline	void							on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code ) { /* no source */ }
 
-private:
 	inline	bool							try_reopen_socket			( ) { return false; }
 
 private:

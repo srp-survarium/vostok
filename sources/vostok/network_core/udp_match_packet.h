@@ -95,7 +95,10 @@ public:
 	}
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
-	inline	void		reallocate			( u32 new_size ) { UNREACHABLE_CODE( new_size ); }
+private:
+	friend	class		packet< udp_match_packet >;
+
+	inline	void		reallocate			( const u32 new_size ) { UNREACHABLE_CODE( new_size ); }
 
 	// the placement-new factory constructs through the private default ctor.
 	friend	class		udp_match_connection;

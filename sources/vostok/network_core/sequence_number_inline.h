@@ -16,7 +16,7 @@ namespace vostok {
 namespace network_core {
 
 template < typename T >
-inline sequence_number< T >::sequence_number( T number ) :
+inline sequence_number< T >::sequence_number( const T number ) :
 	m_number	( number )
 {
 	/* no source */

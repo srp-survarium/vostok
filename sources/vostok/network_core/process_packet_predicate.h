@@ -23,7 +23,7 @@ public:
 	// claude@MATCH: the inlined body at both call_predicate sites is the boost::function
 	// safe-bool guard (empty()-fold call + `empty ? 0 : &dummy::nonnull` and-mask) then
 	// the function2::operator() call on m_client.m_on_packet_received (@0x538).
-	inline	void		operator()					( u8 message_type, packet_reader& reader ) const
+	inline	void		operator()					( const u8 message_type, packet_reader& reader ) const
 	{
 		if ( m_client.m_on_packet_received )
 			m_client.m_on_packet_received	( message_type, reader );

@@ -14,7 +14,7 @@ inline packet_reader::packet_reader( base_packet const& packet ) :
 {
 }
 
-inline void packet_reader::r( void* destination, u32 destination_size, u32 const size )
+inline void packet_reader::r( void* destination, u32 destination_size, u32 size )
 {
 	ASSERT_U		( m_pointer >= m_packet.buffer( ) );
 	ASSERT_U		( m_pointer <= m_packet.buffer( ) + m_packet.buffer_size( ) );

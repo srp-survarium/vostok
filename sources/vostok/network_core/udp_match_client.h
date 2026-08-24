@@ -54,7 +54,7 @@ public:
 	// function1::operator= into this+0x558 = m_on_disconnect)
 	inline	void								set_on_disconnect			( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
-	inline	udp_match_packet*					new_packet					( u8 message_type ) { return NULL; }
+	inline	udp_match_packet*					new_packet					( const u8 message_type ) { return NULL; }
 	// STATE[REMOVED]: no matched consumer calls these udp_match_client members - the
 	// network module's match_client(_impl) wrapper uses its own new_packet/construct_packet
 	// and routes packets through udp_match_connection directly. Uninstantiated both sides.
@@ -87,7 +87,7 @@ private:
 			// const u32 here is load-bearing: __FUNCSIG__ in the LOG_ERROR sites renders from
 			// the FIRST declaration, and the target literal reads "...,const unsigned int)".
 			void								handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred );
-	inline	void								handle_send					( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ } // STATE[REMOVED]
+	inline	void								handle_send					( boost::system::error_code const& error_code, const u32 bytes_transferred ) { /* no source */ } // STATE[REMOVED]
 
 			void								on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code );
 

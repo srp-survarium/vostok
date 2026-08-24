@@ -21,7 +21,7 @@ struct udp_match_items_stats {
 	}
 
 	inline	void	operator+=				( udp_match_items_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=				( u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator/=				( const u32 value ) { /* no source */ } // STATE[REMOVED]
 
 	inline	void	reset					( ) { /* no source */ } // STATE[REMOVED]
 
@@ -38,10 +38,10 @@ struct udp_match_stream_stats {
 	{
 	}
 
-	inline	void	dump					( pcstr title, pcstr prefix ) const { /* no source */ } // STATE[REMOVED]
+	inline	void	dump					( pcstr const title, pcstr const prefix ) const { /* no source */ } // STATE[REMOVED]
 
 	inline	void	operator+=				( udp_match_stream_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=				( u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator/=				( const u32 value ) { /* no source */ } // STATE[REMOVED]
 
 	inline	void	reset					( ) { /* no source */ } // STATE[REMOVED]
 
@@ -60,10 +60,10 @@ struct udp_match_stats {
 	{
 	}
 
-	inline	void	dump			( pcstr title ) const { /* no source */ } // STATE[REMOVED]
+	inline	void	dump			( pcstr const title ) const { /* no source */ } // STATE[REMOVED]
 
 	inline	void	operator+=		( udp_match_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=		( u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator/=		( const u32 value ) { /* no source */ } // STATE[REMOVED]
 
 	inline	void	reset			( ) { /* no source */ } // STATE[REMOVED]
 
