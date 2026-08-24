@@ -56,7 +56,7 @@ import sys
 from pathlib import Path
 
 from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
-from vostok.core.paths import PREBUILT, SCALEFORM_SDK, WIN32_DIR
+from vostok.core.paths import GFX_BUILD_TREE, PREBUILT, SCALEFORM_SDK, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 
@@ -105,26 +105,99 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
                  "libgfxexpat", "pcre",
                  "libgfx_as2", "libgfx_as3", "libgfx"]
 
-SOURCE_OVERRIDES = {
-    "Src/Render/Render_BufferGeneric.cpp":
-        VOSTOK_DIR / "sources/scaleform/Src/Render/Render_BufferGeneric.cpp",
-    "Src/Render/Render_CacheEffect.cpp":
-        VOSTOK_DIR / "sources/scaleform/Src/Render/Render_CacheEffect.cpp",
-    "Src/GFx/GFx_DisplayList.cpp":
-        VOSTOK_DIR / "sources/scaleform/Src/GFx/GFx_DisplayList.cpp",
-    "Src/GFx/GFx_SpriteDef.cpp":
-        VOSTOK_DIR / "sources/scaleform/Src/GFx/GFx_SpriteDef.cpp",
+# The lib TUs compile from GFX_BUILD_TREE: the pristine SDK hardlinked
+# file-by-file with the repo's reconstructed 4.2.21 files copied over it.
+# That makes EVERY include style see the reconstructions - bare
+# neighbor-includes ("Render_HAL.h") resolve inside the tree, which an -I
+# overlay can never shadow. materialize_tree() below keeps it current.
+#
+# Overlay roots, applied in order (later wins):
+#   sources/scaleform/{Src,Include}  - the vendored reconstruction tree
+#                                      (engine-side TUs compile these same
+#                                      files, so both sides agree)
+#   sources/scaleform/sdk-overlay/   - lib-only shapes; GFxConfig.h maps to
+#                                      Include/, the rest map under Src/
+OVERLAY_ROOT = VOSTOK_DIR / "sources/scaleform"
+OVERLAY_LIB_ONLY = OVERLAY_ROOT / "sdk-overlay"
+OVERLAY_SKIP = {
+    # engine-pch macro armor (parenthesized CRT calls, trimmed Realloc) - an
+    # engine-side workaround, not a 4.2.21 truth; the lib compiles the
+    # pristine SDK file.
+    "Src/Kernel/HeapMH/HeapMH_SysAllocMalloc.h",
 }
-
-# Header reconstructions (4.2.21 shapes the 4.2.22 SDK drifted from). The SDK's
-# quote-includes are path-qualified ("GFx/GFx_CharPosInfo.h"), so they fall
-# through the includer-dir search and resolve via /I order - this dir goes
-# FIRST so its copies shadow the SDK's.
-OVERLAY_INCLUDE = VOSTOK_DIR / "sources/scaleform/sdk-overlay"
 
 
 def wine_path(p: Path) -> str:
     return "Z:" + str(p).replace("/", "\\")
+
+
+def _overlay_files():
+    """Yield (rel_path_in_tree, source_file) for every reconstruction file."""
+    for sub in ("Src", "Include"):
+        root = OVERLAY_ROOT / sub
+        if not root.is_dir():
+            continue
+        for f in root.rglob("*"):
+            if not f.is_file():
+                continue
+            rel = str(Path(sub) / f.relative_to(root))
+            if rel in OVERLAY_SKIP:
+                continue
+            yield rel, f
+    if OVERLAY_LIB_ONLY.is_dir():
+        for f in OVERLAY_LIB_ONLY.rglob("*"):
+            if not f.is_file():
+                continue
+            r = f.relative_to(OVERLAY_LIB_ONLY)
+            # map into the SDK layout: Include/ if the SDK has it there,
+            # else under Src/
+            rel = f"Include/{r}" if (SDK / "Include" / r).is_file() else f"Src/{r}"
+            yield rel, f
+
+
+def materialize_tree():
+    """(Re)build GFX_BUILD_TREE: hardlink the pristine SDK, copy overlays over.
+
+    Idempotent and cheap: SDK files are hardlinks (created once); an overlay
+    file is re-copied only when its content is newer than the tree's. A file
+    whose overlay was DELETED is re-linked back to the SDK (detected by inode:
+    a tree file that is neither the SDK's inode nor overlay-fresh is stale).
+    """
+    from shutil import copy2
+    tree = GFX_BUILD_TREE
+    overlays = dict(_overlay_files())
+    linked = copied = 0
+    for sub in ("Src", "Include", "3rdParty"):
+        src_root = SDK / sub
+        for f in src_root.rglob("*"):
+            if not f.is_file():
+                continue
+            rel = str(Path(sub) / f.relative_to(src_root))
+            dst = tree / rel
+            if rel in overlays:
+                continue  # overlay pass handles it
+            if dst.is_file():
+                if dst.stat().st_ino == f.stat().st_ino:
+                    continue
+                dst.unlink()  # was an overlay copy; overlay is gone now
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            os.link(f, dst)
+            linked += 1
+    for rel, src in overlays.items():
+        dst = tree / rel
+        if dst.is_file():
+            st_d, st_s = dst.stat(), src.stat()
+            sdk_f = SDK / rel
+            is_link = sdk_f.is_file() and st_d.st_ino == sdk_f.stat().st_ino
+            if not is_link and st_d.st_mtime >= st_s.st_mtime \
+                    and st_d.st_size == st_s.st_size:
+                continue
+            dst.unlink()
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        copy2(src, dst)
+        copied += 1
+    if linked or copied:
+        print(f"[tree] {tree.name}: +{linked} sdk links, {copied} overlay copies")
 
 
 def lib_config(name):
@@ -146,10 +219,7 @@ def build_one(name):
     SHIP.mkdir(parents=True, exist_ok=True)
     out_lib = SHIP / f"{name}.lib"
 
-    inc_args = " ".join(
-        [f'-I"{wine_path(OVERLAY_INCLUDE)}"']
-        + [f'-I"{wine_path(SDK / d)}"' for d in includes]
-    )
+    inc_args = " ".join(f'-I"{wine_path(GFX_BUILD_TREE / d)}"' for d in includes)
     def_args = " ".join(f"-D{d}" for d in defines)
     fd_arg = f'-Fd"{wine_path(obj_dir)}\\vc90.pdb"'
     base = f"{flags} {inc_args} {def_args} {fd_arg}"
@@ -162,7 +232,7 @@ def build_one(name):
     built = skipped = failed = 0
     fails, objs = [], []
     for i, rel in enumerate(tu_list, 1):
-        src = SOURCE_OVERRIDES.get(rel, SDK / rel)
+        src = GFX_BUILD_TREE / rel
         if not src.is_file():
             print(f"[{name}] [{i}] MISSING SRC {rel}")
             failed += 1
@@ -211,6 +281,7 @@ def build_one(name):
 def main():
     if not SDK.is_dir():
         raise SystemExit(f"pristine SDK not found: {SDK} (set SCALEFORM_SDK)")
+    materialize_tree()
     names = sys.argv[1:] or DEFAULT_ORDER
     for n in names:
         if build_one(n) == 1:

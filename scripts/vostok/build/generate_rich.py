@@ -34,6 +34,7 @@ from pathlib import Path
 from vostok.core.paths import (
     BASE_EXE,
     BASE_PDB,
+    GFX_BUILD_TREE,
     GFX_TARGET_PREFIX,
     RICH_DIR,
     SCALEFORM_SDK,
@@ -74,6 +75,7 @@ def generate(side: str) -> None:
         # Strip the Wine form of <repo>/sources (trailing sep) so file paths in the
         # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
         engine = [_wine_path(ENGINE_DIR.parent) + "\\",
+                  _wine_path(GFX_BUILD_TREE) + "\\",
                   _wine_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]

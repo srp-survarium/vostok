@@ -111,6 +111,14 @@ SCALEFORM_SDK = Path(
     os.environ.get("SCALEFORM_SDK", str(Path.home() / "Projects/survarium/scaleform_sdk"))
 )
 
+# Merged GFx build tree: the pristine SDK hardlinked file-by-file, with the
+# repo's reconstructed 4.2.21 files (sources/scaleform/...) copied over it.
+# vostok.build.gfx materializes it and compiles the lib TUs FROM it, so bare
+# neighbor-includes ("Render_HAL.h") resolve to the reconstructed copies -
+# an -I overlay cannot reach those. Both PDB readers strip this prefix on
+# the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
+GFX_BUILD_TREE = BINARIES / "gfx-sdk"
+
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
