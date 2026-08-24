@@ -1247,15 +1247,6 @@ void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum 
 	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
-// claude@NOTE: /Ox-target-vs-/Od-base inlining wall. The shipped game TU is /Ox and
-// fully inlines every reader.r<T>() (float3/float/bool/profile_slot_enum) into raw
-// m_pointer reads AND inlines item_in_slot().c_ptr() + the intrusive_ptr refcount
-// dance (the TRGT_ONLY lock-xadd statements). Our /Od base out-of-lines all of it,
-// now compounded by packet_reader::r<T> __declspec(noinline) (header owned elsewhere,
-// a net win for the out-of-line-r<T> handlers). Source structure/order is faithful;
-// the 2 extra base named locals (orientation, look_pitch) are real source locals the
-// /Ox target register-allocated away - NOT deleted (release structure is the
-// post-optimization projection). Residual is non-steerable from this TU.
 void player::deserialize( network_core::packet_reader& reader )
 {
 	float3 const position		= reader.r< float3 >( );
@@ -1269,8 +1260,8 @@ void player::deserialize( network_core::packet_reader& reader )
 	set_character_transform( position, orientation, look_pitch );
 	insert( is_alive );
 
-	const profile_slot_enum server_current_active_slot	= reader.r< profile_slot_enum >( );
-	const profile_slot_enum server_target_active_slot	= reader.r< profile_slot_enum >( );
+	const profile_slot_enum server_current_active_slot	= (profile_slot_enum)reader.r< u8 >( );
+	const profile_slot_enum server_target_active_slot	= (profile_slot_enum)reader.r< u8 >( );
 
 	interactive_object_ptr server_current_active_object = inventory( ).item_in_slot( server_current_active_slot ).c_ptr( );
 	if ( m_current_active_object != server_current_active_object )
@@ -1279,10 +1270,10 @@ void player::deserialize( network_core::packet_reader& reader )
 		m_current_active_object->deactivate( );
 		on_before_active_object_changed( m_current_active_object, server_current_active_object );
 		m_current_active_object = server_current_active_object;
-		m_current_active_object->activate( *this, get_engine( ) );
+		m_current_active_object->activate( *this, player::get_engine( ) );
 	}
 
-	m_target_active_object = inventory( ).item_in_slot( server_target_active_slot ).c_ptr( );
+	m_target_active_object = interactive_object_ptr( inventory( ).item_in_slot( server_target_active_slot ).c_ptr( ) );
 
 	stamina( ).deserialize( reader );
 	inventory( ).deserialize( reader );
