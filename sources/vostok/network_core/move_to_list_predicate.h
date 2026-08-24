@@ -17,9 +17,9 @@ class move_to_list_predicate : private boost::noncopyable {
 public:
 	inline			move_to_list_predicate	(
 						udp_match_connection::udp_match_packet_list&	list_to_move_to,
-						pcstr							logging_id,
-						u32								current_time_in_ms,
-						u32								max_time_delta
+						pcstr const						logging_id,
+						const u32						current_time_in_ms,
+						const u32						max_time_delta
 					) :
 		m_list_to_move_to	( list_to_move_to ),
 		m_logging_id		( logging_id ),
@@ -28,7 +28,7 @@ public:
 	{
 	}
 
-	inline	bool	operator()				( udp_match_packet* packet ) const
+	inline	bool	operator()				( udp_match_packet* const packet ) const
 	{
 		if ( m_current_time_in_ms < packet->last_send_time_in_ms + m_max_time_delta )
 			return false;

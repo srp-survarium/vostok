@@ -53,8 +53,8 @@ public:
 	// via sequence_number<u16>::operator<.
 	struct comparer {
 		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { return left.order_id < right.order_id; }
-		inline	bool	operator()	( sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
-		inline	bool	operator()	( udp_match_packet const& left, sequence_number< u16 > right ) const { return left.order_id < right; }
+		inline	bool	operator()	( const sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
+		inline	bool	operator()	( udp_match_packet const& left, const sequence_number< u16 > right ) const { return left.order_id < right; }
 	}; // struct comparer
 
 	struct channel {
@@ -122,10 +122,10 @@ public:
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
 	inline	void						set_disconnected				( ) { /* no source */ } // STATE[REMOVED]
 
-	inline	udp_match_packet*			new_packet						( u8 message_type ) { return NULL; /* no source */ } // STATE[REMOVED]
+	inline	udp_match_packet*			new_packet						( const u8 message_type ) { return NULL; /* no source */ } // STATE[REMOVED]
 	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
-	inline	void						set_max_packet_wait_time_in_ms	( u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { /* no source */ } // STATE[REMOVED]
 
 	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ } // STATE[REMOVED]
 

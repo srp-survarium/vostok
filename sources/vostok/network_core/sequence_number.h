@@ -19,7 +19,7 @@ public:
 	// aggregates need it to be default-constructible.
 	inline						sequence_number	( ) { /* no source */ }
 
-	inline	explicit			sequence_number	( T number );
+	inline	explicit			sequence_number	( const T number );
 
 	inline	void				serialize		( udp_match_packet& packet );
 	inline	void				serialize		( pbyte& pointer );

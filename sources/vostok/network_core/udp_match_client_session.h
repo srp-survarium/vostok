@@ -52,7 +52,7 @@ public:
 
 	inline	void						instant_disconnect			( ) { /* no source */ }
 
-	inline	udp_match_packet*			new_packet					( u8 message_type ) { return NULL; }
+	inline	udp_match_packet*			new_packet					( const u8 message_type ) { return NULL; }
 	inline	void						delete_packet				( udp_match_packet*& packet ) { /* no source */ }
 
 	inline	bool						are_there_any_queued_packets( ) const { return false; }
@@ -70,7 +70,8 @@ public:
 	inline	bool						is_disconnected				( ) const { return false; }
 	inline	bool						is_ready_to_be_destroyed	( ) const { return false; }
 
-	inline	void						on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
+private:
+	inline	void						on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code ) { /* no source */ }
 
 protected:
 	/* 0x0008 */	udp_match_connection				m_connection;

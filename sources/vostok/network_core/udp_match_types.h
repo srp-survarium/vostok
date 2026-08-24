@@ -21,7 +21,7 @@ enum udp_match_packets_count_enum
 }; // enum udp_match_packets_count_enum
 
 struct udp_match_message_type_info {
-	inline	udp_match_message_type_info	( bool reliable, bool ordered, u8 channel ) :
+	inline	udp_match_message_type_info	( const bool reliable, const bool ordered, const u8 channel ) :
 		channel_id	( channel ),
 		is_reliable	( reliable ),
 		is_ordered	( ordered )
