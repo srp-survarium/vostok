@@ -16,6 +16,8 @@
 namespace vostok {
 namespace render {
 
+static command_line::key s_z_only_0( "z_only_0", "", "", "" );
+
 static u32 get_stencil_mask( enum_vertex_input_type vit, bool )
 {
 
