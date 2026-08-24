@@ -767,8 +767,7 @@ void player::subscribe_on_actions( player_actions_subscriber* subscriber )
 void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 {
 	m_player_actions_subscribers.erase(
-		std::remove( m_player_actions_subscribers.begin( ), m_player_actions_subscribers.end( ), subscriber ),
-		m_player_actions_subscribers.end( )
+		std::remove( m_player_actions_subscribers.begin( ), m_player_actions_subscribers.end( ), subscriber )
 	);
 }
 
