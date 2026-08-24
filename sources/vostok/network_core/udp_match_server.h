@@ -28,7 +28,7 @@ class udp_network_flow_emulator;
 // and no TU in scope instantiates it (only #included by network_core_entry_point.cpp,
 // never constructed). So all its inline members are uninstantiated in both binaries;
 // the empty shams are correct. Reconstruct only if a dedicated-server build is matched.
-class udp_match_server : public boost::noncopyable {
+class udp_match_server : private boost::noncopyable {
 public:
 	struct comparer {
 		inline	bool	operator()	( udp_match_client_session const& left, udp_match_client_session const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
@@ -36,7 +36,7 @@ public:
 		inline	bool	operator()	( udp_match_client_session const& left, boost::asio::ip::udp::endpoint const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
 	}; // struct comparer
 
-	struct destroy_predicate : public boost::noncopyable {
+	struct destroy_predicate : private boost::noncopyable {
 		inline	explicit	destroy_predicate	( udp_match_server& server ) : server( server ) { /* no source */ }
 		inline	bool		operator()			( udp_match_client_session* session ) const { return false; }
 		inline				~destroy_predicate	( ) { /* no source */ }
@@ -82,8 +82,10 @@ public:
 
 	inline	void							enqueue						( udp_match_client_session& session, udp_match_packet* packet ) { /* no source */ }
 
+protected:
 	virtual	void							delete_client				( udp_match_client_session*& session ) { /* no source */ }
 
+private:
 	inline	void							send_queued_packets			( u32 current_time_in_ms ) { /* no source */ }
 
 	virtual	udp_match_client_session*		new_client					( boost::asio::ip::udp::endpoint const& endpoint ) { return NULL; }
@@ -96,21 +98,30 @@ public:
 
 	inline	u32								unacknowledged_packets_count( ) const { return 0; }
 
+public:
 	inline	void							handle_receive				( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ }
 
 	inline	void							on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
 
+private:
 	inline	bool							try_reopen_socket			( ) { return false; }
 
 private:
 	/* 0x0008 */	boost::function< void( udp_match_client_session&, u8, packet_reader& ) >	m_on_packet_received;
+
+protected:
 	/* 0x0028 */	boost::asio::ip::udp::socket		m_socket;
+
+private:
 	/* 0x006c */	boost::asio::ip::udp::endpoint		m_remote_endpoint;
+
+protected:
 	/* 0x0088 */	boost::intrusive::set< udp_match_client_session, boost::intrusive::member_hook< udp_match_client_session, boost::intrusive::set_member_hook< boost::intrusive::none, boost::intrusive::none, boost::intrusive::none, boost::intrusive::none >, &udp_match_client_session::set_member_hook >, boost::intrusive::compare< udp_match_server::comparer >, boost::intrusive::none, boost::intrusive::none >	m_clients;
 	/* 0x009c */	udp_match_client_session_list		m_clients_to_destroy;
 	/* 0x00ac */	udp_match_packets_orderer&			m_packets_orderer;
 	/* 0x00b0 */	udp_network_flow_emulator* const	m_network_flow_emulator;
 	/* 0x00b4 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
+private:
 	/* 0x00b8 */	boost::array< u8, 256 >				m_receive_buffer;
 	/* 0x01b8 */	u32									m_time_in_ms;
 	/* 0x01bc */	bool								m_should_reopen_socket;

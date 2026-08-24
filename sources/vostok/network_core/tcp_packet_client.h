@@ -18,7 +18,7 @@ namespace network_core {
 
 class tcp_packet;
 
-class tcp_packet_client : public boost::noncopyable {
+class tcp_packet_client : private boost::noncopyable {
 public:
 			explicit					tcp_packet_client			( boost::asio::io_service& io_service );
 										~tcp_packet_client			( );

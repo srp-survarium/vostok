@@ -25,7 +25,7 @@ class packet_reader;
 class udp_match_packet;
 struct udp_network_flow_emulator_options;
 
-class udp_network_flow_emulator : public core::noncopyable {
+class udp_network_flow_emulator : private core::noncopyable {
 public:
 					udp_network_flow_emulator	(
 						memory::base_allocator&		allocator,

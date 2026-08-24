@@ -11,7 +11,7 @@
 namespace vostok {
 namespace network_core {
 
-class handler_allocator : public core::noncopyable {
+class handler_allocator : private core::noncopyable {
 public:
 	// claude@MATCH: no ASSERT here - both target inline sites (udp_match_connection ctor
 	// 0x205-0x219, udp_match_client ctor 0x191-0x1ad) show sub-ctor call + in_use_ store only,

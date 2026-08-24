@@ -23,7 +23,7 @@ namespace network_core {
 class tcp_packet;
 
 template < typename Socket >
-class tcp_packet_socket : public core::noncopyable {
+class tcp_packet_socket : private core::noncopyable {
 public:
 	inline								tcp_packet_socket		( Socket& socket, memory::base_allocator& packet_allocator ) :
 		m_packet_allocator	( packet_allocator ),

@@ -45,7 +45,7 @@ inline void delete_udp_match_packet(
 class udp_match_packet : public packet< udp_match_packet > {
 public:
 	class helper {
-	public:
+	private:
 		// STATE[REMOVED]: never referenced - the factory new_udp_match_packet uses placement
 		// new directly, not call_constructor. Uninstantiated both sides.
 		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ } // STATE[REMOVED]
@@ -77,12 +77,13 @@ private:
 		base_packet::m_buffer	= m_buffer.elems + 6;
 		m_buffer.elems[0]		= 0;
 	}
-public:
+private:
 	// trivial dtor (POD/aggregate members); the empty body is correct. Referenced via
 	// helper::call_destructor in delete_udp_match_packet but never emitted standalone
 	// (inlined into the destroying scope - no ??1 target symbol).
 	inline				~udp_match_packet	( ) { /* no source */ }
 
+public:
 	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }
 
 	inline	pcbyte		buffer_to_send		( ) const { return m_buffer.elems; }
@@ -96,27 +97,15 @@ public:
 
 	inline	void		reallocate			( u32 new_size ) { UNREACHABLE_CODE( new_size ); }
 
-	// the channel's boost::intrusive::set names &udp_match_packet::set_member_hook and
-	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach
-	// these private members (a friend's nested types share its access).
-	friend	class		udp_match_connection;
-	friend	class		::delayed_packets_predicate;
-	friend	class		udp_network_flow_emulator;
-	friend	class		move_to_list_predicate;
-	friend	class		::sequence_id_predicate;
-	friend	class		::remove_all_predicate;
-	friend	class		::packets_in_list_predicate;
-	// match_client_impl::clone_packet copies the wire-header fields directly
-	friend	class		vostok::network::match_client_impl;
-	friend	udp_match_packet*	new_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >& );
-	friend	void				delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
-
 	// the placement-new factory constructs through the private default ctor.
+	friend	class		udp_match_connection;
+	friend	class		udp_network_flow_emulator;
+	friend	class		vostok::network::match_client_impl;
 	friend	udp_match_packet*	::vostok::network_core::new_udp_match_packet(
 		memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 	);
 
-private:
+public:
 	/* 0x0008 */	boost::intrusive::set_member_hook<>	set_member_hook;
 	/* 0x0018 */	udp_match_client_session*		client_session;
 	/* 0x001c */	udp_match_packet*				next;
@@ -128,6 +117,8 @@ private:
 	/* 0x002a */	u8								channel_id		: 6;
 	/* 0x002a */	u8								is_reliable		: 1;
 	/* 0x002a */	u8								is_ordered		: 1;
+
+private:
 	/* 0x002b */	boost::array< u8, 256 >			m_buffer;
 }; // class udp_match_packet
 
