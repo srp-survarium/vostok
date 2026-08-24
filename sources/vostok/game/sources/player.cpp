@@ -898,28 +898,19 @@ static const profile_slot_enum accept_slots[] = {
 	quick_slot1, quick_slot2, quick_slot3, quick_slot4, quick_slot5, quick_slot6
 };
 
-// claude@NOTE: structure mostly matches (for/if-occupied/set_item aligned to
-// target lines 1227/1229/1231). The local-player UI guard (target line 1231) is
-// m_game.network_client().is_player_current( id ) [== the standalone
-// base_network_client::is_player_current, 99.6%: reads m_current_player, c_ptr,
-// cmp id at +0x34] and the call (1232) is m_game_ui->fill_quick_slots(). BUT the
-// guard + UI call + trailing return are NOT being emitted by our compile (base
-// ends at set_item; ret) - the if-block vanishes with no /Od reason found yet.
-// Loop check item_in_slot is also intrusive_ptr inline-vs-call capped. Park: find
-// why the post-set_item guard block is dropped before banking. STATE[STUB]
 void player::take_inventory_item( inventory_item_ptr const& item )
 {
 	for ( u32 i = 0; i < array_size( accept_slots ); ++i )
 	{
-		if ( inventory( ).item_in_slot( accept_slots[ i ] ) )
-			continue;
+		if ( !inventory( ).item_in_slot( accept_slots[ i ] ) )
+		{
+			inventory( ).set_item( accept_slots[ i ], item );
 
-		inventory( ).set_item( accept_slots[ i ], item );
+			if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
+				m_game_ui->fill_quick_slots( );
 
-		if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
-			m_game_ui->fill_quick_slots( );
-
-		return;
+			return;
+		}
 	}
 }
 
