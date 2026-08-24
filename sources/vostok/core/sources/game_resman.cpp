@@ -63,6 +63,7 @@ void   game_resources_manager::capture_resource (resource_base * resource)
 		add_new_resource_to_increase_quality_tree	(resource);
 }
 
+#line 71
 void   game_resources_manager::on_node_unmount (vfs::vfs_iterator & it)
 {
 	resources::unmanaged_resource_ptr	unmanaged_resource	=	get_associated_unmanaged_resource_ptr(it);
