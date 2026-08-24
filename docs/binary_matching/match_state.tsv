@@ -24553,7 +24553,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?insert@usable_object@survarium@@QAEXPAUworld@physics@vostok@@@Z	vostok/game_core/sources/usable_object.cpp	game_core	done	MATCH	100	100	100	2	71		70e5e6f2eea6	auto: at 100% ceiling, demoted from queue
 ?insert@vfs_hashset@vfs@vostok@@QAEXIPAV?$base_node@$00@23@I@Z	vostok/vfs/sources/hashset.cpp	vfs	done	MATCH	100	100	100	1	111		a1db47ad4097	auto: at 100% ceiling, demoted from queue
 ?insertSpot@?$ArrayReserveLH_Mov@PAVMeshCacheItem@Render@Scaleform@@$01@Render@Scaleform@@AAEPAPAVMeshCacheItem@23@I@Z	src/render/render_containers.h	gfx	done	MATCH	100	100	100	0	236	f		
-?insert_alive@player@survarium@@AAEXXZ	vostok/game/sources/player.cpp	game	inprogress	SIZE	97.1468	97.1468	97.1468	2	424		2db1ed853463	
+?insert_alive@player@survarium@@AAEXXZ	vostok/game/sources/player.cpp	game	parked	SIZE	97.1468	97.1468	97.1468	3	424		2db1ed853463	MSVC code layout: equivalent drain loop gains a base-only short jump/alignment sequence; remaining activation scheduling is source-faithful.
 ?insert_character@ui_text_edit@ui@vostok@@QAEXD@Z	vostok/ui/sources/ui_text_edit.cpp	ui	parked	SIZE	96.1596	96.1596	96.1596	1	287	f	c8167bba4b7d	Target statement counts and control structure match; residual is STLport/helper inlining, register allocation, relocation bytes, or compiler-generated destruction state.
 ?insert_commit@?$tree_algorithms@U?$rbtree_node_traits@PAX$0A@@intrusive@boost@@@detail@intrusive@boost@@SAXPAU?$rbtree_node@PAX@34@0ABUinsert_commit_data@1234@@Z	boost/intrusive/detail/tree_algorithms.hpp	boost	blocked	QUANTITY			0	0	109	f		
 ?insert_environment@sound_scene@sound@vostok@@QAEXAAVsound_environment@23@ABVfloat4x4@math@3@@Z	vostok/sound/sources/sound_scene_environment.cpp	sound	done	MATCH	100	100	100	1	59		83a5fb0f1967	restored scene environment layout, lookup, cross-fade, and tick flow
@@ -25118,7 +25118,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?key_is_set_impl@command_line@vostok@@YA_NPBD0@Z	vostok/core/sources/command_line.cpp	core	inprogress	MATCH	99.9935	99.9935	100	0	382		4dc215b8469b	
 ?keyb_event_present@free_fly_camera@survarium@@AAE_NH@Z	vostok/game/sources/free_fly_camera.cpp	game	done	MATCH	100	100	100	1	31	f	ad39bf7d5003	target-private declaration restores the real symbol; body already exact
 ?keyname_to_ptr@key_binder@survarium@@AAEPAUkeyboard_key_descr@2@PBD@Z	vostok/game/sources/key_binder.cpp	game	parked	MATCH	99.9898	99.9898	100	3	289	f	7a1439312e28	Target-evidenced source and PDB structure are exact; target/base sizes and complete 18-block CFGs match. The 99.99% residue is address/operand normalization, not source shape.
-?kill@player@survarium@@QAEXI@Z	vostok/game/sources/player.cpp	game	inprogress	QUANTITY	86	86	86	2	255		79f0d5e66a7e	
+?kill@player@survarium@@QAEXI@Z	vostok/game/sources/player.cpp	game	parked	QUANTITY	86	86	86	3	255		79f0d5e66a7e	Proven call-boundary/LTCG scheduling: target call-plus-ret and base tail jump around select_animations, with equivalent source flow.
 ?kill_npc@game_world@survarium@@CAXAAV?$resource_ptr@Vhuman_npc@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	vostok/game/sources/game_world_npc.cpp	game	parked			5	5	1	18	f	fcbc8faea129	faithful; target is 0-stmt (optimizer fully inlined delete_weapons/clear_resources), base keeps real calls - release-projection cross-module DCE cap. Do NOT delete the calls to chase the count
 ?knockOut@GlyphCache@Render@Scaleform@@AAEXPAE@Z	src/render/render_glyphcache.cpp	gfx	done	MATCH	100	100	100	0	76	f		
 ?knockoutGet@BevelFilter@fl_filters@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/filters/as3_obj_filters_bevelfilter.cpp	gfx	done	MATCH	100	100	100	0	24	f		
@@ -28438,7 +28438,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?remove_model@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	1	155	f	32c1210ac906	
 ?remove_model@scene_renderer@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@Z	vostok/render/facade/sources/scene_renderer.cpp	render	parked	SIZE	88.9685	88.9685	100	4	350		33bc073c230a	Exact target statement structure across the command-forwarding family. Retail inlines intrusive_mpsc_queue owner_push_back\047s interlocked_exchange_pointer while the current base retains the sole extra callee; several identical source bodies have historical exact, so no caller-side force-inline edit is justified.
 ?remove_model@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@@Z	vostok/render/engine/sources/render_engine_world_pc_dx11.cpp	render	done	MATCH	100	100	100	3	102	f	d48da78ef29b	auto: at 100% ceiling, demoted from queue
-?remove_models_from_scene@player@survarium@@AAEXXZ	vostok/game/sources/player.cpp	game	inprogress	SPLIT	77.3454	77.3454	77.3454	2	176		505898e4eda4	
+?remove_models_from_scene@player@survarium@@AAEXXZ	vostok/game/sources/player.cpp	game	parked	SPLIT	77.3454	77.3454	77.3454	3	176		505898e4eda4	Equivalent optimized pointer scheduling: target hoists scene_renderer state while base reloads it at the same guarded calls.
 ?remove_movie@scene_view@render@vostok@@QAEXAAV?$resource_ptr@Uflash_movie_resource@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@3@@Z	vostok/render/engine/sources/scene_view.cpp	render	done	MATCH	100	100	100	1	37	f	bdf9476f09d2	Clean-room scene-view owner reconstructed from target structure; four methods are exact, while ctor/dtor retain vectora-inline and queued post-process child-owner residuals.
 ?remove_nodes@loose_oct_tree@collision@vostok@@AAEXPAUoct_node@23@@Z	vostok/collision/sources/loose_oct_tree.cpp	collision	done	MATCH	100	100	100	1	61	f	ec166368d4e0	auto: at 100% ceiling, demoted from queue
 ?remove_octant@loose_oct_tree@collision@vostok@@AAEXPAUoct_node@23@QAU423@@Z	vostok/collision/sources/loose_oct_tree.cpp	collision	done	MATCH	100	100	100	1	361	f	70f19e0d96ca	auto: at 100% ceiling, demoted from queue
@@ -29366,7 +29366,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?set_channel_volumes@voice_bridge@sound@vostok@@QAEXEPBM@Z	vostok/sound/sources/voice_bridge.cpp	sound	done	MATCH	100	100	100	0	44		5bd92f6ab06a	
 ?set_character_dispersion_params@character_dispersion_calculator@survarium@@QAEXPBUcharacter_dispersion_params@2@@Z	vostok/game_core/sources/character_dispersion_calculator.cpp	game_core	done	MATCH	100	100	100	1	68		944efe23e821	auto: at 100% ceiling, demoted from queue
 ?set_character_recoil_params@character_recoil_calculator@survarium@@QAEXPBUcharacter_recoil_params@2@@Z	vostok/game_core/sources/character_recoil_calculator.cpp	game_core	done	MATCH	100	100	100	1	21		7fa7ea6738fe	[DONE 100%] was unpaired (/OPT:REF - the target caller weapon_core::activate/ deactivate is unmatched); anchored via temp_include_all use_recoil_calculator -> 100.
-?set_character_transform@player@survarium@@QAEXABVfloat3@math@vostok@@MM@Z	vostok/game/sources/player.cpp	game	inprogress	SIZE	87.551	87.551	87.551	2	165		3f9919ea1dfe	
+?set_character_transform@player@survarium@@QAEXABVfloat3@math@vostok@@MM@Z	vostok/game/sources/player.cpp	game	parked	SIZE	87.6735	87.6735	87.6735	3	165		5d35c9695308	Equivalent one-block math temporary scheduling after exact target member-store order was restored.
 ?set_children@grass_render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	vostok/render/engine/sources/render_model_grass.cpp	render	parked	QUANTITY	80.2439	80.2439	80.2439	1	120	f	69e6d9dde677	Source and fallthrough switch match target; residual is byte-index/this register allocation.
 ?set_children@render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	vostok/render/engine/sources/render_model.cpp	render	parked	QUANTITY	13.8537	13.8537	79.4228	2	561		74cfc78fc3ea	Target/base assignments, loop, parameters and local set agree; target inlines math::aabb::modify while base calls it, producing the apparent 0x1fa QUANTITY tail.
 ?set_client_rect@render@vostok@@YA_NPAUHWND__@@HHHH@Z	vostok/render/core/dx11/sources/res_render_output.cpp	render	done	MATCH	100	100	100	2	124	f	3a3c2c71fb0c	
@@ -34572,38 +34572,38 @@ splash_screen_main	vostok/survarium/pc/sources/survarium_pc_application_win.cpp	
 storage_access_handler	vostok/debug/sources/initialize_win_xbox360.cpp	debug	done	MATCH	100	100	100	1	18		100e6395ce6a	auto: at 100% ceiling, demoted from queue
 survarium::`dynamic atexit destructor for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	blocked				0	1	17			
 survarium::`dynamic atexit destructor for 'cc_cam_fov''	vostok/game/sources/camera_director.cpp	game	done	MATCH	100	100	100	1	60	f	e26cf751f63a	Moved cc_cam_fov from game_camera.cpp to its target camera_director.cpp owner; both compiler thunks measure byte-exact and downstream source line numbers remain fixed.
-survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
-survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
-survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 'cc_death_camera_distance''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
+survarium::`dynamic atexit destructor for 'cc_death_camera_pitch''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
+survarium::`dynamic atexit destructor for 'cc_death_camera_yaw''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_position''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'cc_warmup_camera_target''	vostok/game/sources/network_client_processing.cpp	game	done	MATCH	100	100	100	2	60	f	de47508836db	
 survarium::`dynamic atexit destructor for 'g_file_opener''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	20	f	89f51b2de095	
 survarium::`dynamic atexit destructor for 'g_vostok_logger''	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	10	f	89f51b2de095	
-survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
-survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
-survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_crosshair_line_length_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
+survarium::`dynamic atexit destructor for 's_crosshair_size_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
+survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_enable_breath_vibration_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_freeze_culling''	vostok/game/sources/base_game_scene.cpp	game	done	MATCH	100	100	100	1	60	f	e45b557ca39d	
 survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		aef68df26c83	
 survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
 survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	2	17		4064e85c2e5d	
-survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_ik_use_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_ik_use_on_legs_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_player_show_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_recoil_back_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_enable_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_horizontal_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_use_pseudo_random_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_recoil_vertical_eanble_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
-survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_show_client_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_show_network_statistics_comand''	vostok/game/sources/network_client.cpp	game	done	MATCH	100	100	100	1	60	f	1dc6853707ea	
-survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_show_server_player_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 's_store_user_pass_cc''	vostok/game/sources/login_menu_ui.cpp	game	done	MATCH	100	100	100	1	60	f	5ccb0be11e3c	
-survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	b9e305cbba5c	
+survarium::`dynamic atexit destructor for 's_usable_objects_detection_distance_command''	vostok/game/sources/player.cpp	game	done	MATCH	100	100	100	2	60	f	ea822d833452	
 survarium::`dynamic atexit destructor for 'set_mouse_invert_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic atexit destructor for 'set_mouse_sensitivity_cc''	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	2	60	f	a6faa130976b	Recovered target command names and values from object data; constructor structure and all global command thunks are exact.
 survarium::`dynamic initializer for 'bullet_tracer_exposition''	vostok/game_core/sources/bullet.cpp	game_core	done	MATCH	100	100	100	1	67		4cab5f28d6b9	

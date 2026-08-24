@@ -569,14 +569,11 @@ void player::apply_damage_model_affect(
 		m_game_ui->on_damage_affect_applying( part_name, affect, event_type );
 }
 
-// claude@NOTE: STRUCTURE MATCH (2 stmts). Byte residual is the create_rotation_y /
-// create_translation / mul4x3 inline schedule (the chained matrix assignment's temp
-// re-use) - not source-steerable from here.
 void player::set_character_transform( float3 const& position, const float orientation, const float look_pitch )
 {
-	m_current.transform = m_current.previous_transform = m_target.transform = m_target.previous_transform =
+	m_target.previous_transform = m_target.transform = m_current.previous_transform = m_current.transform =
 		math::mul4x3( math::create_rotation_y( orientation ), math::create_translation( position ) );
-	m_current.look_pitch = m_target.look_pitch = look_pitch;
+	m_target.look_pitch = m_current.look_pitch = look_pitch;
 }
 
 void player::hit(
