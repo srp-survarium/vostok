@@ -29,6 +29,7 @@ from vostok.derive.modules import (dynamic_local_owner_modules,
 from vostok.derive.pairing import Pair, Pairing, pair
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   rank_island_delta, report_fuzzy_scores,
+                                  report_overload_scores,
                                   report_score_for_target)
 from vostok.ledger import store
 
@@ -377,6 +378,63 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             ["vostok/animation/a.cpp", "vostok/animation/z.cpp"],
         )
         self.assertEqual(units["?none@@"], ["vostok/animation/z.cpp"])
+
+    def test_attributes_placeholder_overload_by_unique_source_unit(self):
+        raw = "vostok::render::fill_surface"
+        overload = f"{raw}@@pdb-overload:signature"
+        target = {
+            raw: {
+                "mangled": raw,
+                "file": "vostok/render/engine/sources/stage_gbuffer.cpp",
+            },
+            overload: {
+                "mangled": raw,
+                "file": (
+                    "vostok/render/engine/sources/stage_ambient_occlusion.cpp"
+                ),
+            },
+        }
+        report = {
+            "units": [
+                {
+                    "name": target[raw]["file"],
+                    "functions": [
+                        {"name": raw, "fuzzy_match_percent": 75.0},
+                    ],
+                },
+                {
+                    "name": target[overload]["file"],
+                    "functions": [
+                        {"name": raw, "fuzzy_match_percent": 100.0},
+                    ],
+                },
+            ]
+        }
+
+        self.assertEqual(
+            report_overload_scores(target, report),
+            {overload: 100.0},
+        )
+
+    def test_rejects_same_unit_placeholder_overload_ambiguity(self):
+        raw = "vostok::render::fill_surface"
+        source = "vostok/render/engine/sources/example.cpp"
+        target = {
+            raw: {"mangled": raw, "file": source},
+            f"{raw}@@pdb-overload:second": {"mangled": raw, "file": source},
+        }
+        report = {
+            "units": [
+                {
+                    "name": source,
+                    "functions": [
+                        {"name": raw, "fuzzy_match_percent": 100.0},
+                    ],
+                },
+            ]
+        }
+
+        self.assertEqual(report_overload_scores(target, report), {})
 
     def test_maps_scalar_deleting_destructor_to_vector_report_name(self):
         scalar = "??_Gexample@@UAEPAXI@Z"

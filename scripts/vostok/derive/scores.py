@@ -30,6 +30,39 @@ def report_fuzzy_scores(report):
     return scores, units_by_mangled
 
 
+def report_overload_scores(indexed_target, report):
+    """Recover per-unit scores for stable PDB overload identities.
+
+    Some retail PDB procedures expose only a scope-qualified placeholder as
+    their mangled identity. ``index_by_mangled`` keeps the distinct signatures
+    under stable overload keys, while objdiff still reports the shared raw
+    spelling. Attribute a report row only when its source unit names exactly
+    one such target overload; same-file ambiguity remains unpaired.
+    """
+    candidates = {}
+    for key, record in indexed_target.items():
+        identity = record["file"], record["mangled"]
+        candidates.setdefault(identity, []).append(key)
+
+    report_rows = {}
+    for unit in report["units"]:
+        for function in unit["functions"]:
+            identity = unit["name"], function["name"]
+            report_rows.setdefault(identity, []).append(
+                function.get("fuzzy_match_percent")
+            )
+
+    scores = {}
+    for identity, keys in candidates.items():
+        rows = report_rows.get(identity, [])
+        if len(keys) != 1 or len(rows) != 1 or rows[0] is None:
+            continue
+        key = keys[0]
+        if key != indexed_target[key]["mangled"]:
+            scores[key] = rows[0]
+    return scores
+
+
 def report_score_for_target(mangled, scores, folded_aliases=None):
     """Map objdiff's normalized spellings back to the retail PDB identity.
 

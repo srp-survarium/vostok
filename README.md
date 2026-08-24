@@ -13,13 +13,13 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,280 / 12,932 functions exact (71.76%) &middot; 9,671 / 12,932 functions exact-max (74.78%) &middot; 89.02% fuzzy &middot; 90.65% fuzzy-max.**
+**Overall: 9,281 / 12,932 functions exact (71.77%) &middot; 9,672 / 12,932 functions exact-max (74.79%) &middot; 89.05% fuzzy &middot; 90.68% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | ----: | --------: |
-| `render`        |   351 | 1,638 / 2,655 (61.7%) | 1,697 / 2,655 (63.9%) | 85.5% |     87.3% |
+| `render`        |   351 | 1,639 / 2,655 (61.7%) | 1,698 / 2,655 (64.0%) | 85.6% |     87.4% |
 | `game`          |   141 |   980 / 1,528 (64.1%) | 1,005 / 1,528 (65.8%) | 80.2% |     81.9% |
 | `core`          |   136 | 1,014 / 1,325 (76.5%) | 1,052 / 1,325 (79.4%) | 92.2% |     93.7% |
 | `vostok`        |   112 |   921 / 1,250 (73.7%) |   980 / 1,250 (78.4%) | 89.9% |     92.5% |
@@ -35,7 +35,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `physics`       |    14 |     146 / 198 (73.7%) |     150 / 198 (75.8%) | 90.9% |     91.6% |
 | `fs`            |    25 |      99 / 165 (60.0%) |     102 / 165 (61.8%) | 86.7% |     87.7% |
 | `engine`        |    22 |     147 / 162 (90.7%) |     151 / 162 (93.2%) | 97.9% |     98.0% |
-| `network`       |    25 |      64 / 159 (40.3%) |      77 / 159 (48.4%) | 88.1% |     90.9% |
+| `network`       |    25 |      64 / 159 (40.3%) |      77 / 159 (48.4%) | 88.2% |     90.9% |
 | `network_core`  |    22 |      44 / 127 (34.6%) |      51 / 127 (40.2%) | 87.9% |     89.3% |
 | `debug`         |    16 |     105 / 122 (86.1%) |     118 / 122 (96.7%) | 98.1% |     98.8% |
 | `logging`       |    10 |       48 / 72 (66.7%) |       49 / 72 (68.1%) | 94.5% |     94.8% |
