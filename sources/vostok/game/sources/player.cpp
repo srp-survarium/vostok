@@ -114,6 +114,8 @@ static console_commands::cc_bool	s_show_client_player_command				( "show_client_
 
 player::~player( )
 {
+	inventory( ).unset_holder( );
+
 	DELETE( m_damage_collision );
 
 	DELETE( m_target.physics_controller );
