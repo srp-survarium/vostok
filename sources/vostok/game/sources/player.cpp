@@ -59,9 +59,6 @@ static console_commands::cc_bool	s_draw_linear_speed_graph_cc				( "draw_linear_
 static console_commands::cc_bool	s_show_server_player_command				( "show_server_player",						s_show_server_player,					false,	console_commands::command_type_user_specific );
 static console_commands::cc_bool	s_show_client_player_command				( "show_client_player",						s_show_client_player,					true,	console_commands::command_type_user_specific );
 
-// claude@NOTE: the complete target control flow is present. The remaining
-// entry-line store is animation_player::enable_logging, whose animation-owned
-// inline body is empty in this compiler context.
  player::player( player_creation_params const& params ) :
 	base_player( params, params.game_scene->scheduler( ) ),
 	m_history( *g_allocator, 64 ),

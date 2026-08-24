@@ -17,22 +17,29 @@ public:
 	typedef value_type*	pointer_type;
 
 public:
-	inline	explicit	circular_buffer		( memory::base_allocator& allocator, u32 arg_1 ) : m_allocator( allocator ) { /* no source */ }
+	inline				circular_buffer		( memory::base_allocator& allocator, const u32 max_count ) :
+		m_history	( VOSTOK_ALLOC_IMPL( allocator, T, max_count ) ),
+		m_allocator	( allocator ),
+		m_max_count	( max_count ),
+		m_head		( 0 ),
+		m_tail		( 0 )
+	{
+	}
 	inline				~circular_buffer	( );
 
 public:
-	inline	void		resize				( u32 arg_0 ) { /* no source */ }
+	inline	void		resize				( const u32 arg_0 ) { /* no source */ }
 	inline	u32			size				( ) const { /* no source */ }
 
 	inline	T&			new_item			( );
-	inline	T&			insert				( u32 arg_0 ) { /* no source */ }
+	inline	T&			insert				( const u32 arg_0 ) { /* no source */ }
 	inline	void		pop_tail			( ) { /* no source */ m_tail = next( m_tail ); }
 
-	inline	T const&	oldest				( ) const { /* no source */ return m_history[ m_tail ]; }
 	inline	T&			oldest				( ) { /* no source */ return m_history[ m_tail ]; }
+	inline	T const&	oldest				( ) const { /* no source */ return m_history[ m_tail ]; }
 
-	inline	T const&	newest				( ) const { /* no source */ return m_history[ previous( m_head ) ]; }
 	inline	T&			newest				( ) { /* no source */ return m_history[ previous( m_head ) ]; }
+	inline	T const&	newest				( ) const { /* no source */ return m_history[ previous( m_head ) ]; }
 
 	inline	bool		empty				( ) const { /* no source */ return m_head == m_tail; }
 	inline	bool		full				( ) const { /* no source */ }
@@ -40,8 +47,8 @@ public:
 	inline	u32			next				( u32 arg_0 ) const { /* no source */ return ( arg_0 + 1 ) % m_max_count; }
 	inline	u32			previous			( u32 arg_0 ) const { /* no source */ return ( arg_0 + m_max_count - 1 ) % m_max_count; }
 
-	inline	T const&	operator[]			( u32 arg_0 ) const { /* no source */ return m_history[ arg_0 ]; }
-	inline	T&			operator[]			( u32 arg_0 ) { /* no source */ return m_history[ arg_0 ]; }
+	inline	T&			operator[]			( const u32 arg_0 ) { /* no source */ return m_history[ arg_0 ]; }
+	inline	T const&	operator[]			( const u32 arg_0 ) const { /* no source */ return m_history[ arg_0 ]; }
 
 	inline	u32			head				( ) const { /* no source */ return m_head; }
 	inline	u32			tail				( ) const { /* no source */ return m_tail; }

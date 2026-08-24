@@ -112,7 +112,7 @@ public:
 
 public:
 	inline	bool		has_object					( pcvoid const arg_0 ) const { /* no source */ }
-	inline	void		enable_logging				( const bool arg_0 ) { /* no source */ }
+	inline	void		enable_logging				( const bool value ) { m_is_logging_enabled = value; }
 	inline	bool		are_there_any_animations	( ) const { return m_mixing_tree.are_there_any_animations(); }
 
 public:
