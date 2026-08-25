@@ -22,6 +22,24 @@ inline draw_lines_command::draw_lines_command(
 	ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
 }
 
+inline draw_lines_command::draw_lines_command(
+	base_scene_ptr const& scene,
+	engine::world& renderer,
+	memory::base_allocator& allocator,
+	vertices_type_iterator start_point,
+	vertices_type_iterator end_point,
+	indices_type const& indices,
+	bool use_depth
+)	:
+	super		( true, use_depth ),
+	m_vertices	( allocator, start_point, end_point ),
+	m_indices	( allocator, indices.begin( ), indices.end( ) ),
+	m_scene		( scene ),
+	m_renderer	( renderer )
+{
+	ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
+}
+
 template < int vertex_count, int index_count >
 inline draw_lines_command::draw_lines_command(
 	base_scene_ptr const& scene,

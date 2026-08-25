@@ -662,6 +662,18 @@ void renderer::draw_lines(
 }
 
 void renderer::draw_lines(
+	base_scene_ptr const&				scene,
+	vectora< vertex_colored >::const_iterator start_point,
+	vectora< vertex_colored >::const_iterator end_point,
+	vectora< u16 > const&			indices,
+	bool							use_depth
+)
+{
+	R_ASSERT_CMP				( end_point - start_point, <=, max_debug_vertices_count );
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, start_point, end_point, indices, use_depth ) );
+}
+
+void renderer::draw_lines(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
 	float const* const			vertices,

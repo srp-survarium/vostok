@@ -24,6 +24,7 @@ class draw_lines_command : public base_command, private boost::noncopyable {
 public:
 	typedef base_command super;
 	typedef vectora< vertex_colored > vertices_type;
+	typedef vertices_type::const_iterator vertices_type_iterator;
 	typedef vectora< u16 > indices_type;
 
 	inline draw_lines_command(
@@ -31,6 +32,15 @@ public:
 		base_scene_ptr const& scene,
 		engine::world& renderer,
 		vertices_type const& vertices,
+		indices_type const& indices,
+		bool use_depth = true
+	);
+	inline draw_lines_command(
+		base_scene_ptr const& scene,
+		engine::world& renderer,
+		memory::base_allocator& allocator,
+		vertices_type_iterator start_point,
+		vertices_type_iterator end_point,
 		indices_type const& indices,
 		bool use_depth = true
 	);
