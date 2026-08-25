@@ -60,11 +60,13 @@ particle::enum_particle_entity_type, resources::class_id_enum.
 ## Notes
 
 - The retail-vs-base record-name STYLE divergence (`T<enum E,...>` and
-  `const `-with-trailing-space in retail, bare in base) is a Wine artifact,
-  mechanism proven and fixed build-side — see
-  `patterns/pdb-names-undname-crt-wine.md`. The pdb-parser canon
-  normalization that fenced it becomes redundant once builds run on the
-  native msvcr90.
+  `const `-with-trailing-space in retail, bare in base) was a Wine artifact,
+  now fixed build-side (native VC90 CRT) — see
+  `patterns/pdb-names-undname-crt-wine.md`. The pdb-parser `canon_display()`
+  normalization that used to paper over it is REMOVED (parser e4ed03e); the
+  native CRT makes both PDBs spell records the same, and removing the proxy
+  un-masks ~55 real `class`-vs-`struct` drifts (base header types now 302, up
+  from the fenced 247) that ARE workable matching signal.
 - `[fn-order]` is dominated by top-level-`const`-on-value-param spelling diffs
   (target `const T`, base `T`) — byte-neutral but a real divergence; sweep them
   (see the const-param sweep). `uninitialized_reference<T>` `[size]` rows are

@@ -19,9 +19,8 @@ enums and postfix-const-plus-space —
     pair<unsigned int const,...>
 
 Uniformly, both sides: ~1,700 elaborated records in retail, zero in ours.
-Not full undname (no `class`/`struct` elaboration), so it looks like a third
-mystery printer. `pdb_divergence` drowns in the spelling delta unless its
-canon normalization fences it.
+It looks like a third mystery printer, and once made `pdb_divergence` drown
+in the spelling delta.
 
 ## Cause (proven 2026-08-25, probe A/B)
 
@@ -78,6 +77,10 @@ Traps, all hit while landing this:
   verify the override with a same-process disk read of user.reg; trust the
   `reg add /f`.
 
-The pdb-parser canon normalization (branch divergence-canon) compensated for
-this on the comparison side; with builds on native msvcr90 it becomes
-redundant rather than wrong.
+A pdb-parser `canon_display()` normalization (commit 93165d2) once compensated
+for this on the comparison side by stripping the elaboration keywords from both
+sides. It is now REMOVED (reverted in e4ed03e, flake re-pinned): the native CRT
+makes both PDBs spell records the same at the source, so the normalization was
+redundant for enums AND was masking real `class`-vs-`struct` source drifts
+(base over-elaborates `class`: 639 vs retail 599). With the proxy gone, those
+~55 residual drifts are visible as legitimate matching work rather than hidden.
