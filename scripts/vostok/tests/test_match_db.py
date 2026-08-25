@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from vostok.build import ninja as build_ninja
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
                                                        _resolve_reviewed_aliases)
@@ -37,6 +38,60 @@ from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   report_overload_scores,
                                   report_score_for_target)
 from vostok.ledger import store
+
+
+class CleanFinalPdbTests(unittest.TestCase):
+    def test_scheduled_link_removes_existing_pdb_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            exe = root / "base.exe"
+            pdb = root / "base.pdb"
+            exe.write_bytes(b"exe")
+            pdb.write_bytes(b"stale")
+            probe = SimpleNamespace(
+                returncode=0,
+                stdout=(
+                    b'cmd /c cd "Z:/source" && link '
+                    + build_ninja.FINAL_LINK_RSP_MARKER
+                ),
+            )
+            with (mock.patch.object(build_ninja, "BASE_EXE", exe),
+                  mock.patch.object(build_ninja, "BASE_PDB", pdb),
+                  mock.patch.object(build_ninja.subprocess, "run", return_value=probe)):
+                build_ninja._prepare_clean_final_pdb(Path("ninja.exe"), ["game"])
+
+            self.assertTrue(exe.exists())
+            self.assertFalse(pdb.exists())
+
+    def test_noop_build_keeps_existing_pdb(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            exe = root / "base.exe"
+            pdb = root / "base.pdb"
+            exe.write_bytes(b"exe")
+            pdb.write_bytes(b"current")
+            probe = SimpleNamespace(returncode=0, stdout=b"ninja: no work to do")
+            with (mock.patch.object(build_ninja, "BASE_EXE", exe),
+                  mock.patch.object(build_ninja, "BASE_PDB", pdb),
+                  mock.patch.object(build_ninja.subprocess, "run", return_value=probe)):
+                build_ninja._prepare_clean_final_pdb(Path("ninja.exe"), ["game"])
+
+            self.assertTrue(exe.exists())
+            self.assertEqual(pdb.read_bytes(), b"current")
+
+    def test_missing_pdb_forces_output_edge_dirty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            exe = root / "base.exe"
+            pdb = root / "base.pdb"
+            exe.write_bytes(b"exe")
+            probe = SimpleNamespace(returncode=0, stdout=b"ninja: no work to do")
+            with (mock.patch.object(build_ninja, "BASE_EXE", exe),
+                  mock.patch.object(build_ninja, "BASE_PDB", pdb),
+                  mock.patch.object(build_ninja.subprocess, "run", return_value=probe)):
+                build_ninja._prepare_clean_final_pdb(Path("ninja.exe"), ["game"])
+
+            self.assertFalse(exe.exists())
 
 
 class ReportOnlyObservationTests(unittest.TestCase):

@@ -56,16 +56,18 @@ import sys
 import time
 from pathlib import Path
 
+from vostok.core.paths import BASE_EXE
+from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
-from vostok.core.paths import WIN32_DIR
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
 # Outputs the final link writes; the watchdog waits for both to be refreshed.
 LINK_OUTPUTS = (
-    WIN32_DIR / "survarium-dx11-win32-gold.exe",
-    WIN32_DIR / "survarium-dx11-win32-gold.pdb",
+    BASE_EXE,
+    BASE_PDB,
 )
+FINAL_LINK_RSP_MARKER = f"{DEFAULT_TARGET}_link.rsp".encode()
 
 # Watchdog tuning.
 POLL_SECONDS = 5
@@ -180,6 +182,54 @@ def _reap_wine_children() -> None:
     _kill_prefix_processes(("cl", "cl.exe", "link", "link.exe", "conhost.exe"))
 
 
+def _prepare_clean_final_pdb(ninja_exe: Path, args: list[str]) -> None:
+    """Remove the executable PDB only when Ninja has already scheduled its link.
+
+    MSVC's linker reuses an existing output PDB even for a non-incremental LTCG
+    link. Its TPI stream can therefore retain obsolete class records after a
+    header correction: the new record is present, but the old one remains too.
+    That makes a truthful PDB structure comparison report both source states.
+
+    A dry-run tells us whether the final link is already dirty. Removing the PDB
+    after that decision cannot create an extra link (Ninja does not list it as a
+    separate output), but guarantees that a link which is happening anyway
+    writes one clean type stream. If the PDB is unexpectedly absent, remove the
+    EXE first so the normal output edge self-heals both files.
+    """
+    if "-t" in args:
+        return
+
+    if not BASE_PDB.exists() and BASE_EXE.exists():
+        BASE_EXE.unlink()
+
+    probe = subprocess.run(
+        ["wine", str(ninja_exe), "-n", "-v", "-k", "0", *args],
+        cwd=str(BUILD_DIR),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    output = probe.stdout or b""
+    if probe.returncode != 0:
+        print(
+            "[ninja] warning: could not probe whether the final link is dirty; "
+            "leaving the output PDB untouched",
+            flush=True,
+        )
+        return
+    if b"&& link " not in output or FINAL_LINK_RSP_MARKER not in output:
+        return
+
+    try:
+        BASE_PDB.unlink()
+    except FileNotFoundError:
+        pass
+    print(
+        "[ninja] final link scheduled: starting it with a fresh output PDB",
+        flush=True,
+    )
+
+
 def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
     """Run the full-game ninja build, reaping the post-link Wine zombie wait."""
     start = time.time()
@@ -279,6 +329,7 @@ def main() -> None:
     # it plainly.
     full_build = (not sys.argv[1:]) or (DEFAULT_TARGET in args)
     if full_build:
+        _prepare_clean_final_pdb(ninja_exe, args)
         rc = _run_with_watchdog(ninja_exe, args)
     else:
         rc = subprocess.run(
