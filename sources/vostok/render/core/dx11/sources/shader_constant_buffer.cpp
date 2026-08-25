@@ -23,7 +23,6 @@ m_is_registered	( false )
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags		= 0;
 
-	// Preserve target line metadata.
 	HRESULT res = device::ref().d3d_device()->CreateBuffer( &desc, 0, &m_hardware_buffer);
 	CHECK_RESULT(res);
 	ASSERT( m_hardware_buffer);
@@ -34,9 +33,15 @@ m_is_registered	( false )
 	memset( m_buffer_data, 0, m_buffer_size);
 }
 
+void shader_constant_buffer::destroy_impl() const
+{
+	resource_manager::ref().release( this);
+}
+
 shader_constant_buffer::~shader_constant_buffer()
 {
-	safe_release( m_hardware_buffer); FREE( m_buffer_data);
+	safe_release( m_hardware_buffer);
+	FREE( m_buffer_data);
 }
 
 void shader_constant_buffer::update()
@@ -48,11 +53,6 @@ void shader_constant_buffer::update()
 
 		m_changed = false;
 	}
-}
-
-void shader_constant_buffer::destroy_impl() const
-{
-	resource_manager::ref().release( this);
 }
 
 } // namespace render
