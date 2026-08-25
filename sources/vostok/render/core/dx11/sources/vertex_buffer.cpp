@@ -7,13 +7,16 @@ namespace render {
 
 int	rs_dvb_size = 512+1024;
 
-void vertex_buffer::unlock()
+vertex_buffer::vertex_buffer		( u32 const size ) :
+	m_size			( size ),
+	m_position		( 0 ),
+	m_discard_id	( 0 ),
+	m_lock_count	( 0 ),
+	m_lock_stride	( 0 )
 {
-	m_position += m_lock_count*m_lock_stride;
-
-	ASSERT(m_buffer);
-
-	m_buffer->unmap();
+	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_vertex, true, false );
+	R_ASSERT		( m_buffer );
+	LOG_INFO		(" vertex buffer created: %dKb", m_size/1024);
 }
 
 // This need to be reviewed
@@ -56,16 +59,13 @@ void* vertex_buffer::lock(u32 v_count, u32 v_stride, u32& v_offset)
 	return			p_data;
 }
 
-vertex_buffer::vertex_buffer		( u32 const size ) :
-	m_size			( size ),
-	m_position		( 0 ),
-	m_discard_id	( 0 ),
-	m_lock_count	( 0 ),
-	m_lock_stride	( 0 )
+void vertex_buffer::unlock()
 {
-	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_vertex, true, false );
-	R_ASSERT		( m_buffer );
-	LOG_INFO		(" vertex buffer created: %dKb", m_size/1024);
+	m_position += m_lock_count*m_lock_stride;
+
+	ASSERT(m_buffer);
+
+	m_buffer->unmap();
 }
 
 // void	vertex_buffer::reset_begin	()
