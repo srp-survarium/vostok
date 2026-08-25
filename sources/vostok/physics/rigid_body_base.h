@@ -18,7 +18,7 @@ public:
 	virtual					~bt_rigid_body_base		( )														= 0;
 	virtual btRigidBody*	get_rigid_body			( )														= 0;
 
-	virtual u16				get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			= 0;
+	virtual u16				get_triangle_material	( const s32 triangle_id, const bool is_shape_index ) const	= 0;
 	virtual void			apply_impulse			( float3 const& impulse, float3 const& point_in_world )	= 0;
 
 	virtual void			set_transform			( float4x4 const& transform )							= 0;

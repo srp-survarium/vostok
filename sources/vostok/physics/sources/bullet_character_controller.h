@@ -14,7 +14,7 @@ class btPairCachingGhostObject;
 namespace vostok {
 namespace physics {
 
-class bullet_character_controller : public btActionInterface, public boost::noncopyable {
+class bullet_character_controller : public btActionInterface, boost::noncopyable {
 public:
 											bullet_character_controller		(
 												btPairCachingGhostObject*	ghost_object,
@@ -53,15 +53,15 @@ public:
 	inline	float							get_gravity						( ) const { /* no source */ }
 	inline	bool							is_inserted						( ) const { /* no source */ } // STATE[REMOVED]
 
+private:
 	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }
 
-private:
 			void							player_step						( float dt );
 			void							pre_step						( float dt );
 
 	// STATE[REMOVED]: not inlined into pre_step (verified: pre_step only loops
 	// recover_from_penetration); no caller; absent from both binaries.
-	inline	void							prevent_max_slope_moving_prestep( float dt ) { /* no source */ }
+	inline	void							prevent_max_slope_moving_prestep( const float dt ) { /* no source */ }
 
 			float							recover_from_penetration		( );
 
@@ -84,7 +84,7 @@ private:
 	inline	void							prevent_step_bouncing			( ) { /* no source */ } // STATE[REMOVED]
 	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ } // STATE[REMOVED]
 	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ } // STATE[REMOVED]
-	inline	void							updata_slide_vector				( btVector3 const& arg_0, float arg_1 ) { /* no source */ } // STATE[REMOVED]
+	inline	void							updata_slide_vector				( btVector3 const& arg_0, const float arg_1 ) { /* no source */ } // STATE[REMOVED]
 
 	inline	u32								get_contacts_count				( ) { /* no source */ } // STATE[REMOVED]
 
@@ -97,7 +97,9 @@ private:
 public:
 	/* 0x0000 */	/* btActionInterface */
 	/* 0x0004 */	/* boost::noncopyable */
+	// target has this private too, but character_controller.cpp activate/deactivate read it directly
 	/* 0x0004 */	btDynamicsWorld*					m_collision_world;
+private:
 	/* 0x0010 */	btVector3							m_walk_vector;
 	/* 0x0020 */	btVector3							m_normalizedDirection;
 	/* 0x0030 */	btVector3							m_current_pos;

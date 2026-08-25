@@ -39,7 +39,6 @@ namespace physics {
 class bt_animated_rigid_body : public bt_rigid_body_base {
 public:
 								bt_animated_rigid_body	( btCompoundShape* shape, btRigidBody* body, u16 game_material_id );
-	virtual						~bt_animated_rigid_body	( ) {};
 
 	/* bt_rigid_body_base overrides */
 	virtual btRigidBody*		get_rigid_body			( )														override;
@@ -61,6 +60,8 @@ public:
 	void		update_bone_matrix	( const u32 index, float4x4 const& new_transform, bool recalculate_aabb );
 	math::aabb	get_aabb			( )				const;
 	float4x4	get_bone_transform	( const u32 index )	const;
+
+	virtual		~bt_animated_rigid_body	( ) {};
 
 private:
 	/* 0x0000 */ /* fields for physics::bt_rigid_body_base */

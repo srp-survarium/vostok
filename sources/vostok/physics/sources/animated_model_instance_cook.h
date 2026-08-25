@@ -10,7 +10,7 @@
 namespace vostok {
 namespace physics {
 
-class animated_model_instance_cook : resources::translate_query_cook {
+class animated_model_instance_cook : public resources::translate_query_cook {
 public:
 					animated_model_instance_cook	( );
 

@@ -452,7 +452,7 @@ void bullet_physics_world::object_query(
 	u16								filter_mask
 )
 {
-	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
+	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , private boost::noncopyable {
 	public:
 		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 const filter_group, u16 const filter_mask ) :
 								m_results	( results )
@@ -530,7 +530,7 @@ public:
 		return ( lhs.hit_point_world - m_from ).squared_length( ) < ( rhs.hit_point_world - m_from ).squared_length( );
 	}
 
-public:
+private:
 	/* 0x0000 */	float3		m_from;
 }; // struct distance_predicate
 
@@ -654,7 +654,7 @@ float contact_result_callback::addSingleResult(
 
 void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object )
 {
-	contact_result_callback cb( &predicate );
+	contact_result_callback cb( predicate );
 	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 

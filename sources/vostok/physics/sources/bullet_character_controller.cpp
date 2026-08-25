@@ -64,7 +64,7 @@ void setup_game_material_groups( u16 const* game_material_groups, u16 game_mater
 	g_game_materials_count = game_materials_count;
 }
 
-class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , public boost::noncopyable {
+class character_move_test_callback : public btCollisionWorld::ClosestConvexResultCallback , boost::noncopyable {
 public:
 						character_move_test_callback	( btCollisionObject* self, btVector3 const& up_vector, const float minSlopeDot ) :
 							ClosestConvexResultCallback	( btVector3( 0.0f, 0.0f, 0.0f ), btVector3( 0.0f, 0.0f, 0.0f ) ),
@@ -95,7 +95,7 @@ public:
 	}
 
 
-private:
+protected:
 	/* 0x0000 */	/* btCollisionWorld::ClosestConvexResultCallback */
 	/* 0x0060 */	/* boost::noncopyable */
 	/* 0x0060 */	const btVector3			m_up_vector;

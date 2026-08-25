@@ -26,10 +26,9 @@ public:
 
 STATIC_SIZE_ASSERT(contact_test_predicate, 0x4);
 
-// sushi@TODO: Might be private
 struct contact_result_callback : btCollisionWorld::ContactResultCallback {
 public:
-	inline				contact_result_callback( contact_test_predicate* predicate ) : m_predicate( predicate ) { }
+	inline	explicit	contact_result_callback( contact_test_predicate& predicate ) : m_predicate( &predicate ) { }
 
 	// sushi@TODO: The impl is in `bullet_physics_world.cpp`
 	virtual	btScalar	addSingleResult			(
@@ -42,8 +41,8 @@ public:
 							s32							index1
 						) override;
 
-public:
 	/* 0x0000 */	/* btCollisionWorld::ContactResultCallback */
+private:
 	/* 0x0008 */	contact_test_predicate*		m_predicate;
 }; // struct contact_result_callback
 

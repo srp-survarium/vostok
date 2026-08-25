@@ -15,7 +15,7 @@
 namespace vostok {
 namespace physics {
 
-class bullet_physics_world : public world, public boost::noncopyable {
+class bullet_physics_world : public world, boost::noncopyable {
 public:
 											bullet_physics_world		( memory::base_allocator& allocator, engine& engine );
 

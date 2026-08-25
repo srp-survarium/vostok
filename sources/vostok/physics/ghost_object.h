@@ -38,8 +38,8 @@ public:
 	void		get_overlapping_objects					( base_physics_objects_type& result ) const;
 	u32			get_overlapping_objects_count			( ) const;
 
-	bool		contact_test							( world* world );
 	void		contact_test							( world* world, base_physics_object* object, contact_test_predicate& predicate );
+	bool		contact_test							( world* world );
 
 
 	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
@@ -50,9 +50,9 @@ public:
 	virtual btCollisionObject*	get_bt_collision_obect	( )			override;
 	virtual u16					get_collision_group		( ) const	override;
 
-private:
 	/* 0x0000 */	/* base_physics_object */
 	/* 0x000c */	bt_collision_shape_ptr				m_shape;
+private:
 	/* 0x0010 */	btPairCachingGhostObject*			m_bt_object;
 }; // class bt_ghost_object
 

@@ -20,7 +20,6 @@ public:
 				geometry_resource_ptr const&		indices_resource
 			);
 
-private:
 	/* 0x0000 */	/* btBvhTriangleMeshShape */
 	/* 0x0060 */	u16*					m_face_data;
 	/* 0x0064 */	geometry_resource_ptr	m_raw_vertices;
