@@ -9,6 +9,8 @@ namespace vostok {
 namespace render {
 
 struct material_effects_instance_cook_data {
+	~material_effects_instance_cook_data( ) { }
+
 	material_effects_instance_cook_data(
 		enum_vertex_input_type				in_vertex_input_type,
 		resources::unmanaged_resource_ptr	in_material,

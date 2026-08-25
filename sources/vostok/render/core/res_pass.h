@@ -50,11 +50,12 @@ public:
 		res_state_ptr const& state
 	);
 
+	void mark_registered( ) { m_registered = true; }
+	bool is_registered( ) const { return m_registered; }
+
 	~res_pass( );
 	void destroy_impl( ) const;
 
-	void mark_registered( ) { m_registered = true; }
-	bool is_registered( ) const { return m_registered; }
 	void init_layout( res_declaration const& ) { }
 	bool equal( res_pass const& other ) const
 	{

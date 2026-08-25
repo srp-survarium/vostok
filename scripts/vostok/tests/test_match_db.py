@@ -41,6 +41,16 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    def test_ninja_options_only_select_default_full_build(self):
+        self.assertEqual(build_ninja._explicit_targets(["-j6"]), [])
+        self.assertEqual(build_ninja._explicit_targets(["-j", "6"]), [])
+
+    def test_explicit_module_is_not_default_full_build(self):
+        self.assertEqual(
+            build_ninja._explicit_targets(["render_engine_pc_dx11", "-j6"]),
+            ["render_engine_pc_dx11"],
+        )
+
     def test_scheduled_link_removes_existing_pdb_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
