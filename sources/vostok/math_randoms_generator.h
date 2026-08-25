@@ -10,15 +10,27 @@ public:
 	inline			random32	( u32 const start_seed = 0 ) : m_seed( start_seed ) { }
 	inline	u32		seed		( ) const											{ return m_seed; }
 	inline	void	seed		( u32 const seed )									{ m_seed = seed; }
-	inline	u32		random		( u32 const range )	
+	inline	u32		random		( u32 const range )
 	{
 		m_seed		= 0x08088405*m_seed + 1;
 		return		u32(u64(m_seed)*u64(range) >> 32);
 	}
 
-	inline	float	random_f	( float const range )	
+	// retail-declared two-arg overload (never emitted in the target)
+	inline	u32		random		( u32 const min, u32 const max )
+	{
+		return		min + random( max - min );
+	}
+
+	inline	float	random_f	( float const range )
 	{
 		return		range * ( random( 1024 * 1024 ) / ( 1024.f * 1024.f ) );
+	}
+
+	// retail-declared two-arg overload (never emitted in the target)
+	inline	float	random_f	( float const min, float const max )
+	{
+		return		min + random_f( max - min );
 	}
 
 	inline	size_t	operator ( )( u32 const range)	
@@ -52,11 +64,18 @@ public:
 	{
 	}
 
-	inline	u32		random		( u32 const range)	
+	inline	u32		random		( u32 const range)
 	{
 		//R_ASSERT	( m_thread_id == threading::current_thread_id() );
 		threading::interlocked_increment( m_count );
 		return		super::random( range );
+	}
+
+	// retail-declared two-arg overload (never emitted in the target)
+	inline	u32		random		( u32 const min, u32 const max )
+	{
+		threading::interlocked_increment( m_count );
+		return		super::random( min, max );
 	}
 
 	inline	size_t	operator ( )( u32 const range)	

@@ -69,7 +69,7 @@ convex::convex( aabb const& bbox )
 	}
 }
 
-convex::convex( planes_type planes, adjacencies_type adjacency ):
+convex::convex( planes_type const& planes, adjacencies_type const& adjacency ):
 m_planes( planes ),
 m_adjacencies( adjacency )
 {
@@ -196,7 +196,7 @@ void convex::sort_adjacencies( )
 		std::sort( it->begin(), it->end() );
 }
 
-std::vector<u8> convex::get_plane_flags( adjacencies_type adjacency_vector )
+std::vector<u8> convex::get_plane_flags( adjacencies_type const& adjacency_vector )
 {
 	std::vector<u8> plane_flags;
 	adjacencies_type::const_iterator const end_it = adjacency_vector.end();
@@ -222,7 +222,7 @@ void convex::convert_original_adjacency_to_new( buffer_vector<u8> const& dict, v
 	}
 }
 
-void convex::build_original_to_new_adjacency_dict( std::vector<u8> plane_flags, buffer_vector<u8>& dict )
+void convex::build_original_to_new_adjacency_dict( std::vector<u8> const& plane_flags, buffer_vector<u8>& dict )
 {
 	dict.resize( msc_max_plane_count );
 	for ( u32 i = 0; i < msc_max_plane_count; ++i )

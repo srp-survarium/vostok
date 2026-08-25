@@ -64,6 +64,9 @@ public:
 			float3		get_angles						( axis_rotation_order const order ) const;
 			float3		get_angles_xyz					( ) const;
 
+	// retail declares this (record-only); no body was ever emitted in the target
+	inline	void		compute_characteristic_polynom	( float ( &result )[ 5 ] ) const;
+
 	#ifndef MASTER_GOLD
 	inline	bool		valid							( ) const;
 	#endif

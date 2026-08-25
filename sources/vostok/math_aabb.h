@@ -60,6 +60,10 @@ public:
 
 	inline	bool	valid		( ) const;
 
+	// retail's record says private, but retail's own model_header ctor
+	// (render/engine/model_format.h) default-constructs an aabb member -
+	// access must have come through a friend no record can show. Public
+	// until that friend set is known.
 	inline			aabb		( );
 
 private:
