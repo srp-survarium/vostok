@@ -273,9 +273,16 @@ def main() -> None:
         "VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vostok-libs"),
     ))
 
-    wineprefix = Path(os.environ.get(
-        "WINEPREFIX", str(WINEPREFIX),
-    ))
+    # THIS worktree's prefix, always. An inherited WINEPREFIX from a sibling
+    # checkout's devshell would run our build inside THEIR prefix - and
+    # vostok.build.ninja reaps that prefix's mspdbsrv.exe after every run, so
+    # two sessions sharing one prefix kill each other's in-flight compiles
+    # (C1090/C2471/LNK1318 "randomly", each retry advancing further).
+    inherited = os.environ.get("WINEPREFIX")
+    wineprefix = Path(str(WINEPREFIX))
+    if inherited and Path(inherited) != wineprefix:
+        log(f"ignoring inherited WINEPREFIX {inherited} (another worktree's); "
+            f"using {wineprefix}")
     os.environ["WINEPREFIX"] = str(wineprefix)
     # Silence unactionable Wine debug spam (fixme stubs + kerberos err) while
     # keeping genuine errors visible. setdefault so `nix develop` can override.

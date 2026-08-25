@@ -59,6 +59,7 @@ from pathlib import Path
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
+from vostok.core.paths import WINEPREFIX as OWN_WINEPREFIX
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
@@ -336,6 +337,16 @@ def main() -> None:
             f"{BUILD_DIR}/build.ninja missing",
             "Run: python3 -m vostok tool toolchain",
         )
+
+    # THIS worktree's prefix, always - an inherited WINEPREFIX from a sibling
+    # checkout would run our compiles in THEIR prefix, where each session's
+    # post-run mspdbsrv reap kills the other's in-flight cl (C1090/C2471,
+    # LNK1318 RPC(23), seemingly at random).
+    inherited = os.environ.get("WINEPREFIX")
+    if inherited and Path(inherited) != OWN_WINEPREFIX:
+        print(f"[ninja] ignoring inherited WINEPREFIX {inherited} "
+              f"(another worktree's); using {OWN_WINEPREFIX}", flush=True)
+    os.environ["WINEPREFIX"] = str(OWN_WINEPREFIX)
 
     # Silence unactionable Wine debug spam (fixme stubs + kerberos err) from
     # ninja.exe and the cl.exe/link.exe it spawns. setdefault so an explicit
