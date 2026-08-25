@@ -1,8 +1,9 @@
 # Match queue — durable diff→0 worklist (pdb_divergence)
 
-The persistent, regenerable worklist for the ongoing [member]/[stmt]/[fn-order]/
-[size]/[values]/[const] matching + %-recovery. Snapshot below; **regenerate fresh**
-before working (the chain moves):
+The persistent, regenerable worklist for the ongoing [member]/[fn-order]/[size]/
+[values]/[const] matching + %-recovery. Raw CodeView line-table counts are an
+opt-in forensic diagnostic, not a default work category. Snapshot below;
+**regenerate fresh** before working (the chain moves):
 
     cd <vostok-pdb-parser clone>   # or any worktree with pdb_divergence on PATH
     pdb_divergence --base-pdb <wt>/binaries/Win32/survarium-dx11-win32-gold.pdb \
@@ -19,7 +20,12 @@ before working (the chain moves):
 
 ## Yield tiers (where +exact comes from)
 - **[member] / [size]** — HIGH: layout fixes ripple (math::color→light +, input::keyboard +11, particle +17, engine +38). Numeric/reliable. WORK THESE FIRST.
-- **[stmt]** — MIXED: genuine caller-source-shape fixes (init-list/guard/braces/ternary) are real; BUT many are pdb_divergence line-table noise (counts line-table records, not body stmts — pdb_fetch --view structure-diff is the cross-check), /Od frame walls, inline-vs-call, or stub-folds (the parked /* no source */). Verify each via pdb_fetch structure-diff; bank the walls.
+- **Legacy `[stmt]` snapshot rows** — these were raw line-table entry counts and
+  are no longer emitted by default. Re-query them only with
+  `--raw-line-table-counts` (reported as `[line-table]`), then use
+  `pdb_fetch --view structure-diff`, named locals, and assembly to establish any
+  real init-list/guard/braces/ternary divergence. Never line-pack source to make
+  the aggregate count agree.
 - **[fn-order]** — LOW: definition/decl reorder, structure-faithful, byte-neutral mostly.
 - **[values] / [const]** — small, genuine (enum value-set / const renames; overlaps enum_queue.md).
 

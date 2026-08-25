@@ -105,7 +105,7 @@ separate structure-verification and stale-comment audit before continuing.
   control flow, declaration order, access order, and const qualification.
 - Faithful source structure outranks fuzzy percentage. A 100% byte score can
   still have the wrong initializer-list, braces, lexical blocks, locals, or
-  statement count.
+  statement partitioning.
 - Read the target structure and assembly before writing a body. Build before
   comparing the new base side.
 - Preserve the target's named local set in non-optimized units. In optimized
@@ -165,6 +165,12 @@ separate structure-verification and stale-comment audit before continuing.
   only. The views print how many blocks they trimmed and flag the case where
   more was dropped than kept; when that flag appears, read the function with
   `pdb_fetch --view target|base` instead. See `sema_tools.md`, "Known limits".
+- `pdb_divergence` excludes raw CodeView line-table entry-count differences by
+  default. `--raw-line-table-counts` exposes them as `[line-table]` only for
+  forensics; optimization attribution and source-line packing affect the count,
+  so never change whitespace or combine statements to satisfy it. Verify real
+  statement structure with `pdb_fetch --view structure-diff`, named locals, and
+  the emitted assembly.
 
 ## Source comments and state
 

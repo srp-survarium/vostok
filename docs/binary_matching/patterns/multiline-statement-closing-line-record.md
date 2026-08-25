@@ -64,9 +64,10 @@ the first build. Worked example, `portal_sector_system::draw_portals`
 349	draw_quads( renderer );
 ```
 
-That source compiled to a base whose `--view structure` reproduced **every one of
-the target's line deltas** (`+6, +1, +1, +2, +1, +4, +1, +1, +7`), i.e. the
-whitespace was recovered, not merely the semantics. Two constraints do the work:
+That source compiled to a base whose `--view structure` reproduced every target
+statement partition. The line deltas helped distinguish one multi-line call from
+several separate statements; matching blank-line spacing itself is not an
+objective. Two constraints establish the grouping:
 
 * **the last element of an initializer usually has NO record** - its code folds
   into the following call's block, so `};` sits one line past the last recorded
@@ -91,10 +92,10 @@ first row 1642 is not five blank lines - it is `{` plus a **five-line
 `lines_time[count] = float3( ... );`** whose record lands on its `);` at 1642.
 
 ## Do not over-read
-Line numbers do not affect codegen, so a wrong guess costs nothing in bytes -
-but a right one is free evidence about statement COUNT and grouping, which do.
-Use it to choose between "one statement per component" and "one float3
-constructor", never to invent a statement that emits no code.
+Line numbers and blank spacing do not affect codegen and are not matching work.
+Use records only to choose between semantic shapes such as "one statement per
+component" and "one float3 constructor", never to invent a statement that emits
+no code or to chase whitespace.
 
 ## Related
 - `nested-if-vs-multiline-and.md` - the same last-line rule for a split `&&` condition.

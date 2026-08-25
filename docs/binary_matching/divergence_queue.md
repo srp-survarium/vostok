@@ -19,9 +19,12 @@ flake-pinned). Run from the parser clone:
 Categories — headers: `[size]` (instance size / STATIC_SIZE_ASSERT), `[member]`
 (type/offset/one-sided/reorder), `[fn-order]` (member-fn decl order), enum
 `[values]`/`[underlying]`. Sources (joined by engine-relative path): `[fn-order]`
-(definition order, LCS relative), `[stmt]` (per-fn statement count), `[const]`
-(constants by type+value; rename = misname). Use the base PDB from a FRESH tip
-build (a stale base shows already-fixed types).
+(definition order, LCS relative) and `[const]` (constants by type+value; rename =
+misname). `--raw-line-table-counts` additionally exposes `[line-table]`, a raw
+CodeView entry-count diagnostic that is excluded by default because optimized
+attribution and line packing are not semantic statement structure. Use
+`pdb_fetch --view structure-diff`, named locals, and assembly for structure. Use
+the base PDB from a FRESH tip build (a stale base shows already-fixed types).
 
 **Deferred (skipped above):** render (matched last), sound (dedicated rewrite),
 scaleform / `flash_*` / `Scaleform::` (vendor GFx), third-party
@@ -34,7 +37,7 @@ scaleform / `flash_*` / `Scaleform::` (vendor GFx), third-party
 | [size]   | 42 (26 our-type) |
 | [member] | 142 |
 | [fn-order] | 630 |
-| [stmt]   | 616 |
+| legacy raw [stmt] snapshot | 616 |
 | [values] (enum) | 15 |
 | [const]  | 4 |
 

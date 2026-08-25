@@ -20,7 +20,9 @@ edi/esi across statements) so the PDB records 0 named locals where your /Od base
 references as stack slots, and a COLLAPSED line table (several source statements folded onto
 one line entry). The /Od-faithful source is the READABLE multi-statement form (the optimizer
 collapsed it); reproducing the optimizer's lower statement count via multiple-ops-per-line is
-a fabricated structure - do NOT. Evidence: survarium::scheduler::register_object (0x92cf0,
+a fabricated structure - do NOT. The aggregate difference is available only through
+`pdb_divergence --raw-line-table-counts`; it is not a closure criterion. Evidence:
+survarium::scheduler::register_object (0x92cf0,
 records.size() via imul magic, records/record refs in edi/esi, 4 collapsed line entries vs the
 8-statement /Od readable form; sibling register_for_update is fully frameless FPO).
 

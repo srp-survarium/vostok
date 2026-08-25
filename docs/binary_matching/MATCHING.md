@@ -359,6 +359,13 @@ reproducing the target's statement count + order reproduces the original structu
 is why structure beats the byte %. (The `<N>` no-address lines below are the COMPLEMENT: a
 sub-expression the compiler set no breakpoint on - inlined, optimized out, or a continuation.)
 
+This evidence comes from the aligned `pdb_fetch --view structure-diff` rows, not
+from an aggregate line-table count. `pdb_divergence --raw-line-table-counts`
+counts raw CodeView entries and is deliberately opt-in: optimization attribution
+and source-line packing can change it without changing the semantic statement
+shape. Never combine statements or tune whitespace merely to make that count
+agree.
+
 **Named LOCALS are structure too, and structure beats the byte % for them as well.** The
 PDB records the source's named-local set; `pdb_fetch --view structure` prints a
 `locals (N): <name> <type>` block per side (or none). It is ground truth - "locals don't
