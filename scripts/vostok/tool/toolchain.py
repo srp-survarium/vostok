@@ -43,7 +43,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vostok.build import ninja_regen
+from vostok.build import native_crt, ninja_regen
 from vostok.core import paths
 from vostok.core.paths import (OBJDIFF_DIR, PREBUILT, RICH_DIR, SETUP_STAMP,
                                STRUCTURE_DIR, WINEPREFIX)
@@ -213,6 +213,11 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
     wineprefix.mkdir(parents=True, exist_ok=True)
     subprocess.run(["wineboot", "--init"], check=True)
     subprocess.run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
+    if native_crt.install(wineprefix):
+        log("Native VC90 CRT installed into winsxs (retail-style PDB names).")
+    else:
+        log("WARNING: native VC90 CRT install failed - PDB type names will "
+            "use Wine's undecorator.")
     log("Wine prefix ready.")
 
 
