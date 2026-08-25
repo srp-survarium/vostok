@@ -19,7 +19,6 @@ class decal_shader_constants_and_geometry :
 {
 public:
 	decal_shader_constants_and_geometry( );
-	~decal_shader_constants_and_geometry( ) { /* no source */ }
 
 	void set(
 		renderer_context*	context,
@@ -35,6 +34,9 @@ public:
 
 private:
 	void create_decal_geometry( );
+
+public:
+	~decal_shader_constants_and_geometry( ) { }
 
 private:
 	shader_constant_host*	m_world_to_decal_parameter;

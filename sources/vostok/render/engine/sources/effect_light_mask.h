@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_light_mask : public effect_descriptor {
 public:
-	effect_light_mask( ) { }
-	virtual ~effect_light_mask( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_light_mask( ) { }
+	virtual ~effect_light_mask( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_light_mask, 0x4 );

@@ -11,14 +11,13 @@ class effect_compiler;
 
 class effect_gstage_default_materials : public effect_material_base {
 public:
-	effect_gstage_default_materials( ) { }
-	virtual ~effect_gstage_default_materials( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
 
+	effect_gstage_default_materials( ) { }
+	virtual ~effect_gstage_default_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_gstage_default_materials, 0x4 );

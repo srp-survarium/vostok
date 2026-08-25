@@ -26,7 +26,6 @@ STATIC_SIZE_ASSERT( speedtree_data, 0x598 );
 
 struct speedtree_cook : public resources::translate_query_cook {
 	speedtree_cook( );
-	virtual ~speedtree_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -37,13 +36,15 @@ private:
 	void on_material_effects_created( resources::queries_result&, speedtree_data* ) { }
 	void query_materail_effects( speedtree_data* cook_data );
 	void finish_model_creation( speedtree_data* cook_data );
+
+public:
+	virtual ~speedtree_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( speedtree_cook, 0x20 );
 
 struct speedtree_instance_cook : public resources::translate_query_cook {
 	speedtree_instance_cook( );
-	virtual ~speedtree_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -53,6 +54,9 @@ private:
 		resources::queries_result& data,
 		resources::query_result_for_cook* parent_query
 	);
+
+public:
+	virtual ~speedtree_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( speedtree_instance_cook, 0x20 );

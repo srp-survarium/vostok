@@ -38,10 +38,10 @@ STATIC_SIZE_ASSERT( user_render_surface, 0x9C );
 
 class user_render_surface_editable : public user_render_surface {
 public:
-	user_render_surface_editable( ) { }
-	virtual ~user_render_surface_editable( ) { }
 	virtual void load_from_chunk_data( memory::chunk_reader& chunk );
 
+	user_render_surface_editable( ) { }
+	virtual ~user_render_surface_editable( ) { }
 	untyped_buffer* m_vb;
 };
 
@@ -49,9 +49,10 @@ STATIC_SIZE_ASSERT( user_render_surface_editable, 0xA0 );
 
 class user_render_surface_wire : public user_render_surface {
 public:
+	virtual void load_from_chunk_data( memory::chunk_reader& chunk );
+
 	user_render_surface_wire( ) { }
 	virtual ~user_render_surface_wire( ) { }
-	virtual void load_from_chunk_data( memory::chunk_reader& chunk );
 };
 
 STATIC_SIZE_ASSERT( user_render_surface_wire, 0x9C );

@@ -68,6 +68,9 @@ LINK_OUTPUTS = (
     BASE_PDB,
 )
 FINAL_LINK_RSP_MARKER = f"{DEFAULT_TARGET}_link.rsp".encode()
+NINJA_OPTIONS_WITH_VALUE = frozenset(
+    {"-C", "-d", "-f", "-j", "-k", "-l", "-t", "-w"}
+)
 
 # Watchdog tuning.
 POLL_SECONDS = 5
@@ -230,6 +233,30 @@ def _prepare_clean_final_pdb(ninja_exe: Path, args: list[str]) -> None:
     )
 
 
+def _explicit_targets(args: list[str]) -> list[str]:
+    """Return Ninja targets, excluding option arguments such as ``-j 6``."""
+    targets: list[str] = []
+    skip_next = False
+    options_done = False
+    for arg in args:
+        if skip_next:
+            skip_next = False
+            continue
+        if options_done:
+            targets.append(arg)
+            continue
+        if arg == "--":
+            options_done = True
+            continue
+        if arg in NINJA_OPTIONS_WITH_VALUE:
+            skip_next = True
+            continue
+        if arg.startswith("-"):
+            continue
+        targets.append(arg)
+    return targets
+
+
 def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
     """Run the full-game ninja build, reaping the post-link Wine zombie wait."""
     start = time.time()
@@ -327,7 +354,8 @@ def main() -> None:
     # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only
     # build (`vostok.build.ninja game_core`) doesn't relink and finishes fast, so run
     # it plainly.
-    full_build = (not sys.argv[1:]) or (DEFAULT_TARGET in args)
+    targets = _explicit_targets(args)
+    full_build = (not targets) or (DEFAULT_TARGET in targets)
     if full_build:
         _prepare_clean_final_pdb(ninja_exe, args)
         rc = _run_with_watchdog(ninja_exe, args)
