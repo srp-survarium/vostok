@@ -16,6 +16,9 @@ static console_commands::cc_string s_r_resolution_cc(
 	console_commands::command_type_engine_internal
 );
 
+static float s_uro_fov_value = 0.f;
+static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_engine_internal );
+
 render_cc::render_cc(
 	pcstr define_name,
 	enum_options_changes_result changed_result
@@ -156,7 +159,6 @@ bool render_cc_u32::fill_macro( shader_macro& out_macro ) const
 {
 	if (define_name())
 	{
-		// Three retail source lines at this point were compiled out.
 		if ((strings::equal(define_name(), "GLOBAL_SHADOWMAP_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_LIGHTING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_SHADING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_POST_PROCESS_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3))
 			out_macro.definition.assignf("%d", 3);
 		else
@@ -336,9 +338,6 @@ static math::uint2 parse_resolution( pcstr in_str )
 
 string256 s_current_render_configuration = "default";
 
-static float s_uro_fov_value = 0.f;
-static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_engine_internal );
-
 void options::register_console_commands( )
 {
 	using namespace console_commands;
@@ -472,7 +471,6 @@ void options::register_console_commands( )
 	static render_cc_u32 resolution_x_cc("r_resolution_x", ocr_need_resize_window, 0, current.m_resolution_x, previous.m_resolution_x, 1, 8192, true, command_type_engine_internal);
 	static render_cc_u32 resolution_y_cc("r_resolution_y", ocr_need_resize_window, 0, current.m_resolution_y, previous.m_resolution_y, 1, 8192, true, command_type_engine_internal);
 
-	// Five target source lines are absent under the retail preprocessor configuration.
 	static render_cc_u32 lighting_quality_cc("r_lighting_quality", ocr_need_reset_lighting, "GLOBAL_LIGHTING_QUALITY", current.m_lighting_quality, previous.m_lighting_quality, 0, 100, true, command_type_engine_internal);
 	static render_cc_u32 post_process_quality_cc("r_post_process_quality", static_cast<enum_options_changes_result>(ocr_need_reset_lighting | ocr_need_reset_postprocess), "GLOBAL_POST_PROCESS_QUALITY", current.m_post_process_quality, previous.m_post_process_quality, 0, 100, true, command_type_engine_internal);
 	static render_cc_u32 particles_quality_cc("r_particles_quality", ocr_need_nothing, 0, current.m_particles_quality, previous.m_particles_quality, 0, 100, true, command_type_engine_internal);
