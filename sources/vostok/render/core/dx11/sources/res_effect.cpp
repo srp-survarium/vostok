@@ -9,19 +9,13 @@
 namespace vostok {
 namespace render {
 
-// Kept out-of-line to avoid the res_effect/res_xs include cycle.
-res_pass::res_pass(
-	res_vs_ptr const& vs,
-	res_gs_ptr const& gs,
-	res_ps_ptr const& ps,
-	res_state_ptr const& state
-) :
-	m_state	( state ),
-	m_vs	( vs ),
-	m_gs	( gs ),
-	m_ps	( ps ),
-	m_registered( false )
+res_pass::~res_pass()
 {
+}
+
+void res_pass::destroy_impl	() const
+{
+	effect_manager::ref().delete_pass( this );
 }
 
 s32 compare( res_pass const& left, res_pass const& right )
@@ -48,6 +42,24 @@ s32 compare( res_pass const& left, res_pass const& right )
 		return result;
 
 	return 0;
+}
+
+void res_pass::apply() const
+{
+	m_vs->apply();
+	m_gs->apply();
+	m_ps->apply();
+
+	m_state->apply();
+}
+
+res_shader_technique::~res_shader_technique()
+{
+}
+
+void res_shader_technique::destroy_impl() const
+{
+	effect_manager::ref().delete_effect_technique(this);
 }
 
 s32 compare( res_shader_technique const& left, res_shader_technique const& right )
@@ -82,8 +94,7 @@ s32 compare( res_shader_technique const& left, res_shader_technique const& right
 	if ( result )
 		return result;
 
-	u32 const size = std::min( left.m_passes.size( ), right.m_passes.size( ) );
-	for ( u32 i = 0; i < size; ++i )
+	for ( u32 i = 0, size = std::min( left.m_passes.size( ), right.m_passes.size( ) ); i < size; ++i )
 	{
 		result = compare( *left.m_passes[i], *right.m_passes[i] );
 		if ( result )
@@ -93,57 +104,8 @@ s32 compare( res_shader_technique const& left, res_shader_technique const& right
 	return 0;
 }
 
-void res_effect::push_texture_unique( res_texture* in_texture, pcstr path )
+res_effect::~res_effect()
 {
-	struct find_texture_predicate {
-		find_texture_predicate( res_texture_ptr const& texture ) : m_texture( texture ) { }
-
-		bool operator()( texture_named_instance const& other ) const
-		{
-			return m_texture == other.texture;
-		}
-
-		res_texture_ptr m_texture;
-	};
-
-	if ( std::find_if(
-		m_used_textures.begin( ),
-		m_used_textures.end( ),
-		find_texture_predicate( in_texture )
-	) == m_used_textures.end( ) )
-	{
-		texture_named_instance instance;
-		instance.texture = in_texture;
-		instance.path = path;
-		m_used_textures.push_back( instance );
-	}
-}
-
-void res_pass::apply() const
-{
-	m_vs->apply();
-	m_gs->apply();
-	m_ps->apply();
-
-	m_state->apply();
-}
-
-res_pass::~res_pass()
-{
-}
-
-void res_pass::destroy_impl	() const
-{
-	effect_manager::ref().delete_pass( this );
-}
-
-res_shader_technique::~res_shader_technique()
-{
-}
-
-void res_shader_technique::destroy_impl() const
-{
-	effect_manager::ref().delete_effect_technique(this);
 }
 
 bool res_effect::apply_pass(u32 id)
@@ -160,8 +122,32 @@ bool res_effect::apply_pass(u32 id)
 	return true;
 }
 
-res_effect::~res_effect()
+void res_effect::push_texture_unique( res_texture* in_texture, pcstr path )
 {
+	struct find_texture_predicate {
+		find_texture_predicate( res_texture_ptr const& texture ) : m_texture( texture ) { }
+
+		bool operator()( texture_named_instance const& other ) const
+		{
+			return m_texture == other.texture;
+		}
+
+		res_texture_ptr m_texture;
+	};
+
+	texture_named_instance* found_texture = std::find_if(
+		m_used_textures.begin( ),
+		m_used_textures.end( ),
+		find_texture_predicate( in_texture )
+	);
+
+	if ( found_texture == m_used_textures.end( ) )
+	{
+		texture_named_instance instance;
+		instance.texture = in_texture;
+		instance.path = path;
+		m_used_textures.push_back( instance );
+	}
 }
 
 } // namespace render

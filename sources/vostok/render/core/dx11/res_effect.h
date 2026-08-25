@@ -5,7 +5,10 @@
 #include <vostok/fs/virtual_path_string.h>
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/render/core/dx11/res_input_layout.h>
 #include <vostok/render/core/res_shader_technique.h>
+#include <vostok/render/core/res_state.h>
+#include <vostok/render/core/res_xs.h>
 #include <vostok/render/core/shader_configuration.h>
 #include <vostok/render/core/shader_defines.h>
 #include <vostok/render/core/texture_named_instance.h>
@@ -16,6 +19,20 @@ struct ID3D10Blob;
 
 namespace vostok {
 namespace render {
+
+inline res_pass::res_pass(
+	res_vs_ptr const& vs,
+	res_gs_ptr const& gs,
+	res_ps_ptr const& ps,
+	res_state_ptr const& state
+) :
+	m_state( state ),
+	m_vs( vs ),
+	m_gs( gs ),
+	m_ps( ps ),
+	m_registered( false )
+{
+}
 
 class effect_compiler;
 class effect_cook;
