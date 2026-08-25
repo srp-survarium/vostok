@@ -11,7 +11,7 @@
  ********************************************************************
 
  function: #ifdef jail to whip a few platforms into the UNIX ideal.
- last mod: $Id: os_types.h 14997 2008-06-04 03:27:18Z ivo $
+ last mod: $Id: os_types.h 17712 2010-12-03 17:10:02Z xiphmont $
 
  ********************************************************************/
 #ifndef _OS_TYPES_H
@@ -19,21 +19,10 @@
 
 /* make it easy on the folks that want to compile the libs with a
    different malloc than stdlib */
-#if 1
-#	define _ogg_malloc  malloc
-#	define _ogg_calloc  calloc
-#	define _ogg_realloc realloc
-#	define _ogg_free    free
-#else // #if 1
-	void* vostok_ogg_malloc( size_t size );
-	void* vostok_ogg_calloc( size_t count, size_t element_size );
-	void* vostok_ogg_realloc( void* pointer, size_t size );
-	void vostok_ogg_free( void* pointer );
-#	define _ogg_malloc  vostok_ogg_malloc
-#	define _ogg_calloc  vostok_ogg_calloc
-#	define _ogg_realloc vostok_ogg_realloc
-#	define _ogg_free    vostok_ogg_free
-#endif // #if 1
+#define _ogg_malloc  malloc
+#define _ogg_calloc  calloc
+#define _ogg_realloc realloc
+#define _ogg_free    free
 
 #if defined(_WIN32) 
 
@@ -79,11 +68,11 @@
 
 #elif (defined(__APPLE__) && defined(__MACH__)) /* MacOS X Framework build */
 
-#  include <sys/types.h>
+#  include <inttypes.h>
    typedef int16_t ogg_int16_t;
-   typedef u_int16_t ogg_uint16_t;
+   typedef uint16_t ogg_uint16_t;
    typedef int32_t ogg_int32_t;
-   typedef u_int32_t ogg_uint32_t;
+   typedef uint32_t ogg_uint32_t;
    typedef int64_t ogg_int64_t;
 
 #elif defined(__HAIKU__)
@@ -101,9 +90,9 @@
    /* Be */
 #  include <inttypes.h>
    typedef int16_t ogg_int16_t;
-   typedef u_int16_t ogg_uint16_t;
+   typedef uint16_t ogg_uint16_t;
    typedef int32_t ogg_int32_t;
-   typedef u_int32_t ogg_uint32_t;
+   typedef uint32_t ogg_uint32_t;
    typedef int64_t ogg_int64_t;
 
 #elif defined (__EMX__)
@@ -131,7 +120,7 @@
    typedef unsigned ogg_uint32_t;
    typedef short ogg_int16_t;
 
-#elif defined(__SYMBIAN32__) || defined(SN_TARGET_PS3)
+#elif defined(__SYMBIAN32__)
 
    /* Symbian GCC */
    typedef signed short ogg_int16_t;
@@ -140,9 +129,17 @@
    typedef unsigned int ogg_uint32_t;
    typedef long long int ogg_int64_t;
 
+#elif defined(__TMS320C6X__)
+
+   /* TI C64x compiler */
+   typedef signed short ogg_int16_t;
+   typedef unsigned short ogg_uint16_t;
+   typedef signed int ogg_int32_t;
+   typedef unsigned int ogg_uint32_t;
+   typedef long long int ogg_int64_t;
+
 #else
 
-#  include <sys/types.h>
 #  include <ogg/config_types.h>
 
 #endif
