@@ -28,11 +28,11 @@ public:
 										 u32						thread_id,
 										 memory::base_allocator *	allocator,
 										 memory::base_allocator *	allocator_to_clean);
+	inline	verbosity	get_verbosity	(path_parts* path) const { return get_verbosity(path, silent); }
 private:
 			verbosity	get_verbosity	(path_parts* path, verbosity inherited_verbosity) const;
 
 public:
-	inline	verbosity	get_verbosity	(path_parts* path) const { return get_verbosity(path, silent); }
 			void		clean			(memory::base_allocator * allocator);
 
 private:

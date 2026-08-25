@@ -114,15 +114,15 @@ void log_format::set( format_specifier const & format_expression )
 	}
 }
 
-struct logger_predicate : public noncopyable {
+struct logger_predicate : private noncopyable {
 public:
 	inline			logger_predicate	( path_parts& path, logger const& helper ): m_path( path ), m_helper( helper ) { }
 
 			bool	operator()			(
-						u32			index,
+						u32 const	index,
 						pstr		string,
-						u32			length,
-						bool		is_last
+						u32 const	length,
+						bool const	is_last
 					) const;
 
 public:
@@ -157,10 +157,10 @@ void logger::operator()( pcstr const format, pstr const args )
 }
 
 bool logger_predicate::operator()(
-	u32			index,
+	u32 const	index,
 	pstr		string,
-	u32			length,
-	bool		is_last
+	u32 const	length,
+	bool const	is_last
 ) const
 {
 	u32 final_length = length + 128 + 1;																			// sushi@NOTE: Why 0x81? '\0'

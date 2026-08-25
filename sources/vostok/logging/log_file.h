@@ -36,7 +36,8 @@ enum log_file_usage_enum
 	append_log,
 }; // enum error_mode
 
-enum { max_line_groups	=	1024*4 };
+// not an enum: the retail unnamed-tag record holds only max_name_length
+static u32 const max_line_groups	=	1024*4;
 typedef fixed_vector< int, max_line_groups >	line_groups_type;
 
 template class VOSTOK_LOGGING_API uninitialized_reference<line_groups_type>;

@@ -28,10 +28,15 @@ private:
 			bool	filter_is_overwritten	( initiator_filter* filter ) const;
 			void	build_tree				( );
 
-public:
+	// save_to iterates the private stack, so retail must have granted the
+	// console command friendship (friends leave no trace in the pdb records).
+	friend class logging_filters_console_command;
+
 	/* 0x0000 */	threading::reader_writer_lock		lock;
 	/* 0x0008 */	node*								initiator_tree;
+public:
 	/* 0x000c */	memory::base_allocator&				allocator;
+private:
 	/* 0x0010 */	filter_stack						filter_stack;
 }; // class filter_tree
 
