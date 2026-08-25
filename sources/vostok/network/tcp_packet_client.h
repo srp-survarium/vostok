@@ -25,7 +25,7 @@ class network_world;
 
 // the evolved 2012 `client`: same deferred-order pimpl, the impl is now
 // network_core::tcp_packet_client
-class VOSTOK_NETWORK_API tcp_packet_client : public core::noncopyable {
+class VOSTOK_NETWORK_API tcp_packet_client : private core::noncopyable {
 public:
 	explicit	tcp_packet_client		( world& world );
 				~tcp_packet_client		( );

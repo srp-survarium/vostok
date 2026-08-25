@@ -16,7 +16,7 @@ namespace network {
 
 class receive_response :
 	public response,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	typedef boost::function< void ( network_core::packet_reader& ) >	on_packet_received_type;

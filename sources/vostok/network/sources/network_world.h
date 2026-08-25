@@ -21,7 +21,7 @@ namespace network {
 
 class network_world :
 	public network::world,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 					network_world		( network::engine& engine, memory::base_allocator& orders_allocator );
