@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "stage_particles.h"
+#include "effect_resolve_particles.h"
 
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
@@ -16,16 +17,6 @@
 
 namespace vostok {
 namespace render {
-
-static u32 s_particle_render_mode_value = 0;
-static console_commands::cc_u32 s_particle_render_mode(
-	"particle_render_mode",
-	s_particle_render_mode_value,
-	0,
-	100,
-	true,
-	console_commands::command_type_engine_internal
-);
 
 void effect_resolve_particles::compile(
 	effect_compiler& compiler,
@@ -44,6 +35,16 @@ void effect_resolve_particles::compile(
 	compiler.end_pass( );
 	compiler.end_technique( );
 }
+
+static u32 s_particle_render_mode_value = 0;
+static console_commands::cc_u32 s_particle_render_mode(
+	"particle_render_mode",
+	s_particle_render_mode_value,
+	0,
+	100,
+	true,
+	console_commands::command_type_engine_internal
+);
 
 particle_shader_constants::particle_shader_constants( )
 {

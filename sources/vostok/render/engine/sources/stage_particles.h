@@ -3,7 +3,6 @@
 
 #include <vostok/math_float3.h>
 #include <vostok/particle/particle_data_type.h>
-#include <vostok/render/core/effect_descriptor.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/quasi_singleton.h>
 #include <vostok/render/core/res_effect.h>
@@ -22,16 +21,6 @@ typedef resources::resource_ptr<
 	res_effect,
 	resources::unmanaged_intrusive_base
 > res_effect_ptr;
-
-class effect_resolve_particles : public effect_descriptor {
-public:
-	virtual void compile(
-		effect_compiler& compiler,
-		custom_config_value const& custom_config
-	) override;
-};
-
-STATIC_SIZE_ASSERT( effect_resolve_particles, 0x4 );
 
 class particle_shader_constants :
 	public quasi_singleton<particle_shader_constants>
