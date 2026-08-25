@@ -14,7 +14,7 @@ namespace vostok {
 namespace sound {
 
 class ogg_sound :	public resources::unmanaged_resource,
-					private boost::noncopyable
+					private noncopyable
 {
 public:
 							ogg_sound			( ogg_file_contents_ptr const& ogg_file_contents,

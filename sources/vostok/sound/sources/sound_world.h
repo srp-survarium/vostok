@@ -66,7 +66,7 @@ private:
 
 class sound_world :
 	public sound::world,
-	private boost::noncopyable
+	private noncopyable
 {
 public:
 							sound_world				( engine& engine, base_allocator_type& logic_allocator, base_allocator_type* editor_allocator );
@@ -101,7 +101,7 @@ public:
 
 	inline	bool			is_audio_device_exist	( ) const	{ return m_is_audio_device_exist; }
 
-			voice_bridge*	get_voice				( sound_voice* callback_handler, IXAudio2SubmixVoice* submix_voice, u8 channels_num, u32 sample_rate  );
+			voice_bridge*	get_voice				( sound_voice* callback_handler, IXAudio2SubmixVoice* submix_voice, u8 const channels_num, u32 const sample_rate  );
 			void			free_voice				( voice_bridge* voice );
 			sound_buffer*	get_sound_buffer		( encoded_sound_ptr const& encoded_sound, u32 pcm_offset, u32& next_pcm_offset );
 			sound_buffer*	get_no_cahceable_sound_buffer( encoded_sound_ptr const& encoded_sound, u32 pcm_offset, u32& next_pcm_offset );

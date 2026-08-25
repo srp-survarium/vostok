@@ -23,7 +23,7 @@ class sound_instance_proxy_internal;
 
 class encoded_sound_with_qualities : 
 	public resources::unmanaged_resource,
-	private boost::noncopyable
+	private noncopyable
 {
 public:
 	enum					{ max_quality_levels_count = 2 };

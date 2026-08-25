@@ -16,7 +16,7 @@ namespace vostok {
 namespace sound {
 namespace search {
 
-class search_restrictor : public noncopyable
+class search_restrictor : private noncopyable
 {
 public:
 	inline search_restrictor(
@@ -64,7 +64,7 @@ public:
 		u32 const iteration_count
 	) const;
 
-	inline fixed_vector< vertex_id_type, 4 > const& vertex_ids( ) const
+	inline fixed_vector< vertex_id_type, max_different_paths_count > const& vertex_ids( ) const
 	{
 		return m_vertex_ids;
 	}
@@ -74,7 +74,7 @@ public:
 	}
 
 private:
-	fixed_vector< vertex_id_type, 4 > m_vertex_ids;
+	fixed_vector< vertex_id_type, max_different_paths_count > m_vertex_ids;
 	render::culling::portal_sector_structure_ptr const& m_graph;
 	u32 const m_start_sector_id;
 	u32 const m_target_sector_id;

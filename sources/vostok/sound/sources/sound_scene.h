@@ -95,7 +95,7 @@ public:
 }; // struct receiver_collision
 
 class sound_scene :	public resources::unmanaged_resource,
-					private boost::noncopyable
+					private noncopyable
 {
 public:
 								sound_scene					(
@@ -279,10 +279,14 @@ private:
 																float* channels_result,
 																float& lp_filter_result
 															) const;
+			// declaration-only, as in retail: no body survives in the exe (fully inlined)
+			void		calculate_hdr_audio_frame			( );
 			void		x3daudio_calculate					( sound_world const&, sound_voice& );
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
+			// declaration-only, as in retail: no body survives in the exe (fully inlined)
+			void		cross_fade_submixes					( u32 fade_time_in_ms );
 			void		calculate_in_graph_position			( float3 const& proxy_position );
 	IXAudio2SubmixVoice*
 						create_environment_submix_voice	( sound_world const& world ) const;

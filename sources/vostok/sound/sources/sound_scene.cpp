@@ -239,7 +239,7 @@ void sound_scene::clear_resources	( )
 	m_world.free_submix_voice		( m_submix_voice );
 }
 
-struct receiver_unconditional_erasing_predicate : private boost::noncopyable
+struct receiver_unconditional_erasing_predicate : private noncopyable
 {
 	inline void operator()	( receiver_collision* receiver_container ) const
 	{
@@ -786,7 +786,7 @@ void sound_scene::calculate_channel_matrix
 	lp_filter_result				= 1.0f - iir_filter_coeff;
 }
 
-struct compare_receivers_predicate : private boost::noncopyable
+struct compare_receivers_predicate : private noncopyable
 {
 	inline compare_receivers_predicate	( sound_receiver* const receiver )
 		:	m_receiver					( receiver )

@@ -15,7 +15,7 @@ namespace vostok {
 namespace sound {
 namespace search {
 
-class graph_wrapper : public boost::noncopyable
+class graph_wrapper : private boost::noncopyable
 {
 public:
 	struct vertex_impl

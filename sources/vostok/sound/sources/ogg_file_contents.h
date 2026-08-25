@@ -15,7 +15,7 @@ namespace sound {
 
 class ogg_file_contents : 
 							public resources::unmanaged_resource,
-							private boost::noncopyable
+							private noncopyable
 {
 public:
 							ogg_file_contents			(resources::managed_resource_ptr raw_file);

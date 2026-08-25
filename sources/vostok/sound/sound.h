@@ -42,6 +42,13 @@ enum command_result_enum
 	command_result_postponed
 };
 
+// sound graph path search limits (retail keeps them in this unnamed enum)
+enum
+{
+	max_different_paths_count	= 4,
+	max_portals_in_path			= 32,
+};
+
 struct play_params
 {
 	float3					m_position;

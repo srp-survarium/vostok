@@ -14,7 +14,7 @@
 namespace vostok {
 namespace sound {
 
-struct sound_order : public boost::noncopyable
+struct sound_order : public noncopyable
 {
 			sound_order					( );
 	virtual	~sound_order				( );
@@ -25,7 +25,7 @@ struct sound_order : public boost::noncopyable
 	sound_order*				m_next_for_postponed_orders;
 }; // struct sound_order
 
-struct sound_response : public boost::noncopyable
+struct sound_response : public noncopyable
 {
 			sound_response				( );
 	virtual	~sound_response				( );

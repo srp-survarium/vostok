@@ -43,7 +43,6 @@ private:
 public:
 	inline	u32				get_bytes_per_sample	( ) { return m_encoded_sound->get_bytes_per_sample( ); }
 	inline	u32				get_bytes_per_pcm		( ) { return get_bytes_per_sample( ) * m_encoded_sound->get_channels_num( ); }
-	inline	u32				get_length_in_pcm		( ) const { return m_xaudio_buffer.PlayLength; }
 	inline	XAUDIO2_BUFFER*	get_xaudio_buffer		( )
 			{
 				return &m_xaudio_buffer;

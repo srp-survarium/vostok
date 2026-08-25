@@ -17,7 +17,7 @@ class sound_collection;
 
 class sound_collection_cook :
 	public resources::translate_query_cook,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 	typedef resources::translate_query_cook	super;
 

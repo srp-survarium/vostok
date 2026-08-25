@@ -21,12 +21,11 @@ struct align_helper {
 	};
 };
 
-enum {
-	real_sound_buffer_size = sizeof(sound_buffer) + sound_buffer_size,
-	real_sound_buffer_size_aligned = align_helper< real_sound_buffer_size, VOSTOK_DEFAULT_ALIGN_SIZE >::result,
-};
+// consts, not an unnamed enum: the retail PDB has no enum record with these values
+static u32 const real_sound_buffer_size = sizeof(sound_buffer) + sound_buffer_size;
+static u32 const real_sound_buffer_size_aligned = align_helper< real_sound_buffer_size, VOSTOK_DEFAULT_ALIGN_SIZE >::result;
 
-class sound_buffer_factory : private boost::noncopyable
+class sound_buffer_factory : private noncopyable
 {
 public:
 						sound_buffer_factory		( u8* buffer, u32 size, u32 max_buffers );

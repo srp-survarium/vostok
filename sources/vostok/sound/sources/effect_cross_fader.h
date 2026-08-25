@@ -11,7 +11,7 @@ namespace sound {
 class sound_environment;
 class sound_scene;
 
-struct effect_cross_fader : private boost::noncopyable
+struct effect_cross_fader : private noncopyable
 {
 								effect_cross_fader	(
 									sound_scene& scene,
