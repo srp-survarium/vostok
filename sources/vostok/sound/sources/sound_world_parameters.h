@@ -20,14 +20,8 @@ static vostok::command_line::key	s_speed_of_sound			( "speed_of_sound", "", "sou
 static vostok::command_line::key	s_xaudio_mono_voices_count	( "xaudio_mono_voices_count", "xaudio_mono_voices", "sound engine", "count of mono xaudio voices in voice_factory, default is " VOSTOK_MAKE_STRING( VOSTOK_MONO_VOICES_COUNT ) "." );
 static vostok::command_line::key	s_xaudio_stereo_voices_count( "xaudio_stereo_voices_count", "xaudio_stereo_voices", "sound engine", "count of stereo xaudio voices in voice_factory, default is " VOSTOK_MAKE_STRING( VOSTOK_STEREO_VOICES_COUNT ) "." );
 
-enum
-{
-	xaudio_mono_voices_count_default_value		= VOSTOK_MONO_VOICES_COUNT,
-	xaudio_stereo_voices_count_default_value	= VOSTOK_STEREO_VOICES_COUNT,
-}; // enum
-
-#undef VOSTOK_STEREO_VOICES_COUNT
-#undef VOSTOK_MONO_VOICES_COUNT
+// no default-value enum here in retail (its record lacks the values) -
+// the defaults reach sound_world.cpp as the macros themselves.
 
 // propagators
 #define VOSTOK_PROPAGATORS_COUNT 64

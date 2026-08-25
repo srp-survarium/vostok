@@ -118,12 +118,12 @@ sound_world::sound_world	(
 		if(s_xaudio_mono_voices_count.is_set())
 			s_xaudio_mono_voices_count.is_set_as_number(&params.mono_voices_count);
 		else
-			params.mono_voices_count	= xaudio_mono_voices_count_default_value;
+			params.mono_voices_count	= VOSTOK_MONO_VOICES_COUNT;
 
 		if(s_xaudio_stereo_voices_count.is_set())
 			s_xaudio_stereo_voices_count.is_set_as_number(&params.stereo_voices_count);
 		else
-			params.stereo_voices_count	= xaudio_stereo_voices_count_default_value;
+			params.stereo_voices_count	= VOSTOK_STEREO_VOICES_COUNT;
 	}
 	else
 	{
