@@ -37,11 +37,6 @@ namespace render {
 
 using namespace SpeedTree;
 
-// claude@NOTE: target proves namespace scope - `vostok::render::'dynamic initializer
-// for 's_speedtree_cook''` [0x7c5a80] / 's_speedtree_instance_cook' [0x7c5a90].
-static vostok::uninitialized_reference< vostok::render::speedtree_cook >				s_speedtree_cook;
-static vostok::uninitialized_reference< vostok::render::speedtree_instance_cook >	s_speedtree_instance_cook;
-
 void* speed_tree_allocator::Alloc( size_t size )
 {
 	void* block = MALLOC( size, "speed_tree_allocator" );
@@ -59,6 +54,9 @@ void speed_tree_allocator::Free( void* block )
 	if ( block )
 		FREE( block );
 }
+
+static vostok::uninitialized_reference< vostok::render::speedtree_cook >				s_speedtree_cook;
+static vostok::uninitialized_reference< vostok::render::speedtree_instance_cook >	s_speedtree_instance_cook;
 
 void initialize_speedtree( )
 {
@@ -91,7 +89,6 @@ void finalize_speedtree( )
 
 void print_speedtree_errors( )
 {
-	// Preserve target line metadata.
 	const char* pError = SpeedTree::CCore::GetError( );
 	while ( pError )
 	{
