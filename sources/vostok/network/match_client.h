@@ -26,7 +26,7 @@ struct world;
 class network_world;
 class match_client_impl;
 
-class VOSTOK_NETWORK_API match_client : public core::noncopyable {
+class VOSTOK_NETWORK_API match_client : private core::noncopyable {
 public:
 								match_client						(
 									world&		world,
@@ -76,6 +76,9 @@ public:
 
 			u32					last_receive_time_in_ms				( ) const;
 
+// the target manglings are AAE (private) for the whole create_*/on_* surface;
+// the type record puts the response-packet stubs at the head of that block
+private:
 	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	network_core::udp_match_packet*	new_response_packet		( )
 	{
@@ -88,8 +91,6 @@ public:
 		VOSTOK_UNREFERENCED_PARAMETER	( packet );
 	}
 
-// the target manglings are AAE (private) for the whole create_*/on_* surface
-private:
 			void				create_client						( network_core::udp_network_flow_emulator_options const* options );
 			void				create_responses_packets_allocator	( );
 

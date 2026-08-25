@@ -15,7 +15,7 @@ struct sign_up_info;
 
 namespace network {
 
-class login_client_impl : public boost::noncopyable {
+class login_client_impl : private boost::noncopyable {
 public:
 	enum client_state_enum
 	{

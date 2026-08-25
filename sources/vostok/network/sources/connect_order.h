@@ -21,7 +21,7 @@ public:
 			memory::base_allocator& strings_allocator,
 			pcstr const host,
 			network_core::udp_match_packets_allocator_ptr const& packets_allocator,
-			network_core::udp_match_packet const* const packet,
+			network_core::udp_match_packet const* packet,
 			boost::function< void ( pcstr, network_core::udp_match_packet const* ) > const& connector
 		) :
 		m_connector			( connector ),

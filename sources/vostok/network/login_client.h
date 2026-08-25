@@ -19,7 +19,7 @@ struct world;
 class network_world;
 class login_client_impl;
 
-class VOSTOK_NETWORK_API login_client : public core::noncopyable {
+class VOSTOK_NETWORK_API login_client : private core::noncopyable {
 public:
 	enum client_state_enum
 	{

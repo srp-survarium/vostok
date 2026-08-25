@@ -15,9 +15,7 @@
 namespace vostok {
 namespace network {
 
-struct two_way_threads_channel : public boost::noncopyable {
-	// member typedefs: the next_for_* member pointers are formed here, in the
-	// friend's context (the members are private in order/response)
+struct two_way_threads_channel : private boost::noncopyable {
 	typedef intrusive_spsc_queue< order, order, &order::next_for_orders >				orders_queue_type;
 	typedef intrusive_spsc_queue< response, response, &response::next_for_responses >	responses_queue_type;
 

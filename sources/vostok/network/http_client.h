@@ -18,7 +18,7 @@ namespace network {
 struct world;
 class network_world;
 
-class VOSTOK_NETWORK_API http_client : public core::noncopyable {
+class VOSTOK_NETWORK_API http_client : private core::noncopyable {
 public:
 			explicit	http_client					( world& world );
 						~http_client				( );

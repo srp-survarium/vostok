@@ -16,7 +16,7 @@ namespace network {
 
 class receive_udp_response :
 	public response,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	// Target emits this constructor only inline in match_client::on_packet_received.

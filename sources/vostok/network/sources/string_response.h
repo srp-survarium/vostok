@@ -12,7 +12,7 @@ namespace network {
 
 class string_response :
 	public response,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	// claude@NOTE: standalone target symbol at rva 0x49340 (NOT inlined-only); all
