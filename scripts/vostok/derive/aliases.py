@@ -52,6 +52,67 @@ def rich_name_canon(name):
     return pdb_signature_canon(local_scope_canon(name))
 
 
+# ThunkFuncN<Class, mid, ...>::Method template statics: their initializers
+# exist per-method (GFx AS3 emits ~1,500 under the retail PMF pragma), and the
+# two sides spell them differently (rich backtick vs raw ??__E template
+# mangling). Both reduce to a synthetic string identity - "?TF<n>:<class>:<mid>"
+# - that no real fqn can collide with. funcN + class + mid is unique: each AS3
+# method has one mid ordinal and one thunk instantiation.
+_TF_RICH_RE = re.compile(r"^(?:[A-Za-z_][A-Za-z0-9_:]*::)?ThunkFunc(\d+)<(.+)>::Method$")
+_TF_BASE_RE = re.compile(
+    r"^\?\?__([EF])\?Method@\?\$ThunkFunc(\d+)@"
+    r"V([A-Za-z_][A-Za-z0-9_]*(?:@[A-Za-z_][A-Za-z0-9_]*)*)@@"
+    r"\$0([0-9]|[A-P]+@)"
+)
+# Nested-scope statics (InstanceTraits::fl::X::ti and friends): plain
+# identifiers only - templated scopes stay deferred.
+_NESTED_STATIC_RE = re.compile(
+    r"^\?\?__([EF])\?([A-Za-z_][A-Za-z0-9_]*)@"
+    r"((?:[A-Za-z_][A-Za-z0-9_]*@)+)@"
+)
+
+
+def _mangled_int(tok):
+    """Decode MSVC's template-int encoding after `$0`.
+
+    A single digit d encodes d+1; hex letters A-P terminated by `@` encode 0
+    and values above 10 (A=0 .. P=15 per nibble).
+    """
+    if tok.isdigit():
+        return int(tok) + 1
+    value = 0
+    for ch in tok[:-1]:  # strip the '@' terminator
+        value = value * 16 + (ord(ch) - ord("A"))
+    return value
+
+
+def _template_args_toplevel(args):
+    """Split template argument text on depth-0 commas."""
+    parts, depth, cur = [], 0, []
+    for ch in args:
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+        if ch == "," and depth == 0:
+            parts.append("".join(cur).strip())
+            cur = []
+        else:
+            cur.append(ch)
+    parts.append("".join(cur).strip())
+    return parts
+
+
+def _thunkfunc_canon_rich(fqn):
+    m = _TF_RICH_RE.match(fqn)
+    if not m:
+        return None
+    args = _template_args_toplevel(m.group(2))
+    if len(args) < 2 or not args[1].isdigit():
+        return None
+    return f"?TF{m.group(1)}:{args[0]}:{args[1]}"
+
+
 def dyn_canon_rich(mangled):
     """Canonical identity for a rich-index dynamic-init thunk."""
     m = _DYN_RE.match(mangled)
@@ -68,6 +129,9 @@ def dyn_canon_rich(mangled):
         fqn = inner
     if not fqn or "\n" in fqn or "\r" in fqn:
         return None
+    tf = _thunkfunc_canon_rich(fqn)
+    if tf:
+        return (kc, tf)
     return (kc, fqn)
 
 
@@ -76,6 +140,16 @@ def dyn_canon_base(mangled):
     rich = dyn_canon_rich(mangled)
     if rich:
         return rich
+    m = _TF_BASE_RE.match(mangled)
+    if m:
+        scopes = m.group(3).split("@")
+        fqn = "::".join(reversed(scopes))
+        return (m.group(1), f"?TF{m.group(2)}:{fqn}:{_mangled_int(m.group(4))}")
+    m = _NESTED_STATIC_RE.match(mangled)
+    if m and mangled.endswith("@@YAXXZ"):
+        scopes = [s for s in m.group(3).split("@") if s]
+        fqn = "::".join(list(reversed(scopes)) + [m.group(2)])
+        return (m.group(1), fqn)
     if mangled.startswith("??__E"):
         kc = "E"
     elif mangled.startswith("??__F"):
@@ -177,12 +251,24 @@ def dynamic_pair_score(
         target_rec,
         base_rec,
         dynamic_alias,
+        # A canon-unique initializer stores through image-layout absolutes
+        # (the +4 word of an 8-byte PMF has no relocation symbol to render);
+        # those differ by construction, exactly like the $S ordinals above.
+        normalize_absolute_data=True,
     ):
         return 100.0
     return fuzzy
 
 
-def instruction_stream_exact(target_rec, base_rec, symbol_alias_equivalent=None):
+_ABSOLUTE_DATA_RE = re.compile(r"\[[0-9A-Fa-f]+h\]")
+
+
+def instruction_stream_exact(
+    target_rec,
+    base_rec,
+    symbol_alias_equivalent=None,
+    normalize_absolute_data=False,
+):
     """Prove exact code when objdiff omitted a function score.
 
     The rich-index producer has already normalized branch labels and relocation
@@ -200,6 +286,8 @@ def instruction_stream_exact(target_rec, base_rec, symbol_alias_equivalent=None)
         return False
 
     def normalized_text(text):
+        if normalize_absolute_data:
+            text = _ABSOLUTE_DATA_RE.sub("[imgaddr]", text)
         parts = text.split(None, 1)
         if len(parts) == 2 and parts[0] in {"call", "jmp"}:
             operand = {

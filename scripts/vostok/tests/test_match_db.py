@@ -1417,6 +1417,43 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
 
 
 class DynamicThunkAliasTests(unittest.TestCase):
+    def test_thunkfunc_method_template_static_canons_match_across_spellings(self):
+        target = (
+            "`dynamic initializer for 'Scaleform::GFx::AS3::ThunkFunc0<"
+            "Scaleform::GFx::AS3::Instances::fl::Date,0,double>::Method''"
+        )
+        base = (
+            "??__E?Method@?$ThunkFunc0@VDate@fl@Instances@AS3@GFx@Scaleform@@"
+            "$0A@N@AS3@GFx@Scaleform@@2Q8Date@fl@Instances@234@AEXAAN@Z"
+            "Q567234@@@YAXXZ"
+        )
+        expected = ("E", "?TF0:Scaleform::GFx::AS3::Instances::fl::Date:0")
+        self.assertEqual(dyn_canon_rich(target), expected)
+        self.assertEqual(dyn_canon_base(base), expected)
+
+    def test_thunkfunc_mangled_int_ordinals_decode(self):
+        base = (
+            "??__E?Method@?$ThunkFunc0@VDate@fl@Instances@AS3@GFx@Scaleform@@"
+            "$0{}N@@@YAXXZ"
+        )
+        for encoded, ordinal in [("A@", 0), ("0", 1), ("9", 10), ("L@", 11)]:
+            canon = dyn_canon_base(base.format(encoded))
+            self.assertIsNotNone(canon, encoded)
+            self.assertTrue(canon[1].endswith(f":{ordinal}"), (encoded, canon))
+
+    def test_nested_scope_static_initializer_canons_match(self):
+        target = (
+            "`dynamic initializer for '"
+            "Scaleform::GFx::AS3::InstanceTraits::fl::Date::ti''"
+        )
+        base = (
+            "??__E?ti@Date@fl@InstanceTraits@AS3@GFx@Scaleform@@"
+            "2QBUThunkInfo@456@B@@YAXXZ"
+        )
+        expected = ("E", "Scaleform::GFx::AS3::InstanceTraits::fl::Date::ti")
+        self.assertEqual(dyn_canon_rich(target), expected)
+        self.assertEqual(dyn_canon_base(base), expected)
+
     def test_canonicalizes_local_static_scope_in_both_rich_spellings(self):
         target = (
             "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
