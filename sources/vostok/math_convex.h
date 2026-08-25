@@ -53,20 +53,25 @@ public:
 public:
 								convex			( );
 	explicit					convex			( aabb const& bbox );
-								convex			( planes_type planes, adjacencies_type adjacency );
+								convex			( planes_type const& planes, adjacencies_type const& adjacency );
 	void						split			( plane const& p, cache const& c, convex& positive, convex& negative ) const;
 	intersection				test_inexact	( aabb const& aabb) const;
 	bool						inside			( math::float3 const& point ) const;
 	void						fill_cache		( cache& c ) const;
 	bool						empty			( ) const { return m_planes.empty(); }
-	planes_type					get_planes		( ) const { return m_planes; }
-	adjacencies_type			get_adjacencies	( ) const { return m_adjacencies; }
+	planes_type const&			get_planes		( ) const { return m_planes; }
+	adjacencies_type const&		get_adjacencies	( ) const { return m_adjacencies; }
+private:
 	void						sort_adjacencies( );
+public:
+	// explicit empty dtor pins the retail record position (between
+	// sort_adjacencies and the private statics)
+								~convex			( ) { }
 private:
 	typedef u64 vertex_flags;
 private:
-	static	std::vector<u8>	get_plane_flags							( adjacencies_type adjacency_vector );
-	static	void			build_original_to_new_adjacency_dict	( std::vector<u8> plane_flags, buffer_vector<u8>& dict );
+	static	std::vector<u8>	get_plane_flags							( adjacencies_type const& adjacency_vector );
+	static	void			build_original_to_new_adjacency_dict	( std::vector<u8> const& plane_flags, buffer_vector<u8>& dict );
 	static	void			convert_original_adjacency_to_new		( buffer_vector<u8> const& dict, vertex_adjacency& adjacency );
 private:
 #pragma warning ( push )

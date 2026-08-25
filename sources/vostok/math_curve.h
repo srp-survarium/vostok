@@ -96,7 +96,10 @@ struct curve_line_points
 	T evaluate				(float time, T default_value, enum_evaluate_time_type time_type = range_time_type, float left_range_alpha = 0.0f, float right_range_alpha = 0.0f) const;
 	
 	void calc_tangents		();
-	
+
+	// retail declares assignment returning void (deep copy of the points array)
+	void operator =			(curve_line_points const& other);
+
 	float					curve_time_min,
 							curve_time_max;
 	

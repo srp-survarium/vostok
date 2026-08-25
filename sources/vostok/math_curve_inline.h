@@ -443,6 +443,28 @@ inline void CURVE_LINE::calc_tangents()
 	}
 }
 
+// sushi@TODO: body is provisional - only the <float4_pod,1> instantiation is
+// emitted in the target (??4...QAEXABU012@@Z, ledger: blocked); match its bytes
+TEMPLATE_SIGNATURE
+inline void CURVE_LINE::operator =(curve_line_points const& other)
+{
+	clear			();
+	num_points		= other.num_points;
+	if (num_points)
+	{
+		points		= MT_ALLOC(point_type, num_points);
+
+		point_type* point_to_init = points;
+		for (u32 i=0; i<num_points; i++)
+			new(point_to_init++)point_type(other.points[i]);
+	}
+
+	curve_time_min	= other.curve_time_min;
+	curve_time_max	= other.curve_time_max;
+	curve_value_min	= other.curve_value_min;
+	curve_value_max	= other.curve_value_max;
+}
+
 // curve_line_color
 
 inline curve_line_color::curve_line_color( )
