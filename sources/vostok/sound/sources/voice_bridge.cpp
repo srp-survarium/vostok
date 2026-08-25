@@ -12,12 +12,6 @@
 namespace vostok {
 namespace sound {
 
-enum
-{
-	default_bits_per_sample = 16,
-	default_sample_rate		= 44100,
-};
-
 voice_bridge::voice_bridge			( creation_parametrs& params ) : 
 	m_next				( 0 ),
 	m_handler			( 0 ),
@@ -29,13 +23,13 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 
 	WAVEFORMATEX wfx_standard		= { 0 };
 	wfx_standard.wFormatTag			= WAVE_FORMAT_PCM;
-    wfx_standard.nSamplesPerSec		= default_sample_rate;
-    wfx_standard.wBitsPerSample		= default_bits_per_sample;
+    wfx_standard.nSamplesPerSec		= 44100;
+    wfx_standard.wBitsPerSample		= 16;
     wfx_standard.cbSize				= 0;
 	wfx_standard.nChannels			= params.channels_num;
 	wfx_standard.nBlockAlign		= wfx_standard.nChannels * ( wfx_standard.wBitsPerSample >> 3 ); 
 	wfx_standard.nAvgBytesPerSec	= wfx_standard.nSamplesPerSec * wfx_standard.nBlockAlign;
-	m_sample_rate					= default_sample_rate;
+	m_sample_rate					= 44100;
 	m_channels_num					= params.channels_num;
 	
 	HRESULT hr						= params.xaudio_engine->CreateSourceVoice	( 
