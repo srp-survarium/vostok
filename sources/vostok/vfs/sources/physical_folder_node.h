@@ -46,7 +46,7 @@ public:
 public:
 	const_buffer						children_arena;
 private:
-	flags_type<flags_enum, threading::multi_threading_policy>	m_folder_flags;
+	flags_type<enum flags_enum, threading::multi_threading_policy>	m_folder_flags;
 public:
 	base_folder_node<T>					folder;
 

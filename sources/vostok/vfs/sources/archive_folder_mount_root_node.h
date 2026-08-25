@@ -49,7 +49,7 @@ public:
 		return								sizeof(*this) + strings::length(folder.base.get_name()) + 1;
 	}
 
-	typedef typename	platform_pointer<char const,	T>::type	char_pointer;
+	typedef typename	platform_pointer<const char,	T>::type	char_pointer;
 	typedef	typename 	platform_pointer<base_node<T>,	T>::type	node_pointer;
 	
 	string_path							virtual_path_holder;

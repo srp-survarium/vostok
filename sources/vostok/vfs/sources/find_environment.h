@@ -34,7 +34,7 @@ struct find_environment
 	find_callback						callback;		// for async
 	base_node<> *						node;
 	base_node<> *						node_parent;
-	enum_flags<find_enum>				find_flags;
+	enum_flags<enum find_enum>			find_flags;
 	virtual_file_system *				file_system;
 	vfs_hashset *						hashset() const { return & file_system->hashset; }
 	memory::base_allocator *			allocator;

@@ -83,7 +83,7 @@ public:
 									 	    u32 const							file_size);
 public:
 	threading::atomic32_type			m_size;
-	flags_type<flags_enum, threading::multi_threading_policy>	m_file_flags;
+	flags_type<enum flags_enum, threading::multi_threading_policy>	m_file_flags;
 	node_type							base;
 }; // class fat_disk_node
 

@@ -28,6 +28,9 @@ public:
 	bool	finished_successfully		() const { return m_finished_successfully; }
 
 private:
+	// declaration only: present in the retail record, body not in the shipped exe
+	void			print				(base_node<> const * node, fat_node_info const * node_info);
+
 	bool			save_db				();
 
 	void			save_node_file		(fat_node_info * *				out_duplicate,
