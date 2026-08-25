@@ -255,6 +255,7 @@ def cmd_open(args):
     def mutate(row):
         if row["status"] == "parked":
             row["status"] = "inprogress"
+            row["note"] = ""
     _update(args.mangled, mutate)
 
 

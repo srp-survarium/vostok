@@ -1815,13 +1815,16 @@ class LedgerProjectionTests(unittest.TestCase):
         row.update(overrides)
         return row
 
-    def project(self, observations, previous=None):
+    def project(self, observations, previous=None, banked_previous=None):
         """Write `previous`, project `observations` onto it, read the result."""
         with tempfile.TemporaryDirectory() as d:
             ledger = str(Path(d) / "state.tsv")
             if previous is not None:
                 store.save({r["mangled"]: r for r in previous}, ledger)
-            store.project(observations, ledger)
+            proof = None
+            if banked_previous is not None:
+                proof = {r["mangled"]: r for r in banked_previous}
+            store.project(observations, ledger, banked_previous=proof)
             return store.load(ledger)
 
     def test_a_changed_body_resets_max_but_never_tries_or_hist(self):
@@ -1844,6 +1847,36 @@ class LedgerProjectionTests(unittest.TestCase):
         self.assertEqual(row["max"], 100.0, "the ledger owns the peak for this body")
         self.assertEqual(row["cur"], 62.5)
         self.assertEqual(row["status"], "done")
+
+    def test_an_uncommitted_probe_cannot_raise_the_committed_peak(self):
+        rows = self.project(
+            [self.observation(cur=62.5, max=62.5, hash="h")],
+            [self.banked(cur=62.5, max=100.0, hist=100.0, status="done")],
+            [self.banked(cur=62.5, max=75.0, hist=75.0)],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["max"], 75.0)
+        self.assertEqual(row["hist"], 75.0)
+        self.assertEqual(row["status"], "inprogress")
+
+    def test_working_annotations_survive_a_committed_proof_fold(self):
+        rows = self.project(
+            [self.observation(cur=75.0, max=75.0, hash="h")],
+            [self.banked(status="parked", tries=4, note="reviewed wall")],
+            [self.banked(status="inprogress", tries=3, note="")],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["status"], "parked")
+        self.assertEqual(row["tries"], 4)
+        self.assertEqual(row["note"], "reviewed wall")
+
+    def test_generated_status_drift_does_not_unpark_a_committed_wall(self):
+        rows = self.project(
+            [self.observation(cur=75.0, max=75.0, hash="h")],
+            [self.banked(status="inprogress", note="reviewed wall")],
+            [self.banked(status="parked", note="reviewed wall")],
+        )
+        self.assertEqual(rows[self.MANGLED]["status"], "parked")
 
     def test_an_unobserved_function_keeps_its_peak_and_the_body_it_proved_it_on(self):
         """max and hash only mean anything together, so they travel together."""
