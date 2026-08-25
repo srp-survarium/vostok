@@ -27,7 +27,7 @@ public:
 
 	bool is_effects_ready( ) const;
 
-private:
+public:
 	res_effect_ptr			m_translucency_effect;
 	shader_constant_host*	m_shadow[4];
 	shader_constant_host*	m_c_sun_direction;

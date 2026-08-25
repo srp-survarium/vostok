@@ -34,7 +34,7 @@ public:
 		u32& out_num_rendered
 	);
 
-private:
+public:
 	res_effect_ptr			m_resolve_lighting_effect;
 	shader_constant_host*	m_wind_info_parameters;
 	shader_constant_host*	m_sun_light_parameters;

@@ -33,7 +33,7 @@ typedef intrusive_ptr<
 
 class light :
 	public resource_intrusive_base,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	enum shadow_distribution_side {

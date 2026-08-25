@@ -19,11 +19,9 @@ enum enum_constant_type {
 	rc_INVALID = 0xFFFF,
 };
 
-enum {
-	constant_class_size_shift = 0x08,
-	constant_class_size_mask = 0x00FF,
-	constant_class_cast_mask = 0xFF00,
-};
+u32 const constant_class_size_shift = 0x08;
+u32 const constant_class_size_mask = 0x00FF;
+u32 const constant_class_cast_mask = 0xFF00;
 
 enum enum_constant_class {
 	rc_1x1 = (0 << constant_class_size_shift) + sizeof( float ),
@@ -44,6 +42,9 @@ enum {
 	cb_buffer_pixel_shader = 0x10,
 	cb_buffer_vertex_shader = 0x20,
 	cb_buffer_geometry_shader = 0x30,
+};
+
+enum {
 	cb_buffer_max_count = 15,
 };
 

@@ -19,6 +19,7 @@ struct sky_dome_geometry : public boost::noncopyable {
 	sky_dome_geometry( );
 	void draw( );
 
+private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;

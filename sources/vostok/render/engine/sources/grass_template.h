@@ -18,6 +18,10 @@ struct grass_template {
 	{
 	}
 
+private:
+	friend struct grass_patch;
+	friend struct grass_world;
+
 	grass_render_model_ptr m_render_model;
 	u32 m_index;
 	vector<grass_instance*> m_instances;

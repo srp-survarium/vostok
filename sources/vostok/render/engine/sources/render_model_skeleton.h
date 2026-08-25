@@ -102,6 +102,7 @@ private:
 	friend class skeleton_combined_model_instance_cook;
 	friend class skeleton_model_instance_cook;
 
+public:
 	vector< float4x4 >			m_prev_bones_matrices;
 	vector< float4x4 >			m_bones_matrices;
 	skeleton_render_model_ptr	m_original;

@@ -112,7 +112,7 @@ private:
 		bool sort_result
 	);
 
-public:
+private:
 	speedtree_wind_parameters		m_speedtree_wind_parameters;
 	speedtree_billboard_parameters	m_speedtree_billboard_parameters;
 	speedtree_tree_parameters		m_speedtree_tree_parameters;

@@ -18,7 +18,7 @@ typedef intrusive_list<
 	threading::single_threading_policy
 > base_command_list;
 
-class one_way_render_channel : public core::noncopyable {
+class one_way_render_channel : private core::noncopyable {
 private:
 	typedef intrusive_spsc_queue<
 		base_command,

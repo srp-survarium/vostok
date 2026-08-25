@@ -186,6 +186,60 @@ public:
 		}
 	};
 
+	template < >
+	struct compare_member_predicate< res_texture_list > {
+		bool operator()(
+			res_texture_list const* const left,
+			res_texture_list const* const right
+		) const
+		{
+			return left->compare( *right ) < 0;
+		}
+
+		bool operator()(
+			fixed_vector<texture_slot, 128> const& left,
+			res_texture_list const* const right
+		) const
+		{
+			return right->compare( left ) > 0;
+		}
+
+		bool operator()(
+			res_texture_list const* const left,
+			fixed_vector<texture_slot, 128> const& right
+		) const
+		{
+			return left->compare( right ) < 0;
+		}
+	};
+
+	template < >
+	struct compare_member_predicate< res_sampler_list > {
+		bool operator()(
+			res_sampler_list const* const left,
+			res_sampler_list const* const right
+		) const
+		{
+			return left->compare( *right ) < 0;
+		}
+
+		bool operator()(
+			fixed_vector<sampler_slot, 16> const& left,
+			res_sampler_list const* const right
+		) const
+		{
+			return right->compare( left ) > 0;
+		}
+
+		bool operator()(
+			res_sampler_list const* const left,
+			fixed_vector<sampler_slot, 16> const& right
+		) const
+		{
+			return left->compare( right ) < 0;
+		}
+	};
+
 	template < typename shader_data >
 	struct compare_shader_predicate {
 		bool operator()(

@@ -20,7 +20,7 @@ class world;
 
 namespace ui {
 
-class draw_vertices_command : public base_command, public boost::noncopyable {
+class draw_vertices_command : public base_command, private boost::noncopyable {
 public:
 	draw_vertices_command(
 		engine::world& render_engine_world,

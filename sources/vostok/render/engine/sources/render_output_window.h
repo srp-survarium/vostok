@@ -41,15 +41,18 @@ public:
 	}
 
 	void goto_fullscreen( );
-	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
 
 private:
+	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
+
 	friend class renderer;
 
 	renderer_context_targets m_targets;
 	res_render_output_ptr m_output;
 	HWND__* m_window;
 	bool m_windowed;
+
+public:
 	survarium::flash_renderer* m_flash_renderer;
 };
 

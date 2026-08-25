@@ -27,7 +27,7 @@ class res_signature : public resource_intrusive_base {
 
 public:
 	ID3D10Blob* hw_signature( ) const { return m_signature; }
-	bool equal( ID3D10Blob const* other ) const { return other == m_signature; }
+	bool equal( ID3D10Blob const* other ) { return other == m_signature; }
 	bool is_registered( ) const { return m_is_registered; }
 	void mark_registered( ) { m_is_registered = true; }
 

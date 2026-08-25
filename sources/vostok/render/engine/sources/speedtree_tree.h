@@ -64,7 +64,7 @@ public:
 protected:
 			void						load				( pcvoid data, u32 size );
 
-private:
+protected:
 	friend class speedtree_tree_component;
 	friend struct speedtree_cook;
 	friend struct speedtree_forest;

@@ -114,6 +114,7 @@
         # repository while it is evaluated for upstreaming into the parser.
         postPatch = ''
           patch -p1 < ${./tools/pdb_diff_all_files.patch}
+          patch -p1 < ${./tools/pdb_divergence_record_normalization.patch}
           cp ${./tools/pdb_topology.rs} src/bin/pdb_topology.rs
         '';
         cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";

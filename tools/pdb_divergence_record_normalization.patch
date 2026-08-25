@@ -1,0 +1,191 @@
+diff --git a/src/divergence.rs b/src/divergence.rs
+index 6f62540..ee9d8a1 100644
+--- a/src/divergence.rs
++++ b/src/divergence.rs
+@@ -335,17 +335,21 @@ fn handle_field(
+
+         TypeData::OverloadedMethod(ref data) => {
+             if let TypeData::MethodList(method_list) = finder.find(data.method_list)?.parse()? {
+-                // Mirror the generator's traversal order so a clean class shows
+-                // no spurious method-order divergence against itself.
+-                for entry in method_list.methods.into_iter().rev() {
++                // LF_METHODLIST order is not declaration order and differs between
++                // otherwise-equivalent incremental and retail PDBs. Keep the
++                // overload group in a stable signature order while preserving the
++                // group's position in the enclosing LF_FIELDLIST.
++                let start = class.methods.len();
++                for entry in method_list.methods {
+                     add_method(
+                         fmt,
+                         data.name,
+                         entry.method_type,
+                         entry.attributes.access(),
+                         class,
+                     )?;
+                 }
++                class.methods[start..].sort_by(|a, b| a.sig.cmp(&b.sig));
+             }
+         }
+
+@@ -393,20 +396,88 @@ fn walk_enum(
+ }
+
+ fn insert_class(out: &mut SideModel, name: String, class: ClassModel) {
+-    // Same-named definitions can appear more than once (a fieldless forward
+-    // shape alongside the real one); keep whichever carries more detail.
+-    match out.classes.get(&name) {
+-        Some(existing) if richness(existing) >= class.fields.len() + class.methods.len() => {}
+-        _ => {
+-            out.classes.insert(name, class);
++    // Different compilands can emit compatible partial records for one class:
++    // the layout is identical, but each record lists only the methods used by
++    // that compiland. Union those method sets. Treat conflicting layouts as the
++    // older richness case; they may be stale/incremental records and must not be
++    // combined into a class that never existed.
++    if let Some(existing) = out.classes.get_mut(&name) {
++        if same_class_layout(existing, &class) {
++            for incoming in class.methods {
++                if let Some(current) = existing
++                    .methods
++                    .iter_mut()
++                    .find(|method| method.sig == incoming.sig)
++                {
++                    if current.access == 0 {
++                        current.access = incoming.access;
++                    }
++                } else {
++                    existing.methods.push(incoming);
++                }
++            }
++            for (current, incoming) in existing.fields.iter_mut().zip(class.fields) {
++                if current.access == 0 {
++                    current.access = incoming.access;
++                }
++            }
++            canonicalize_overload_runs(&mut existing.methods);
++            return;
++        }
++
++        if richness(existing) >= richness(&class) {
++            return;
+         }
+     }
++    out.classes.insert(name, class);
+ }
+
+ fn richness(class: &ClassModel) -> usize {
+     class.fields.len() + class.methods.len()
+ }
+
++fn same_class_layout(left: &ClassModel, right: &ClassModel) -> bool {
++    left.kind == right.kind
++        && left.size == right.size
++        && left.fields.len() == right.fields.len()
++        && left.fields.iter().zip(&right.fields).all(|(left, right)| {
++            left.offset == right.offset
++                && left.type_name == right.type_name
++                && left.name == right.name
++        })
++}
++
++fn canonicalize_overload_runs(methods: &mut [MethodModel]) {
++    let mut start = 0;
++    while start < methods.len() {
++        let family = method_family(&methods[start].sig).to_string();
++        let mut end = start + 1;
++        while end < methods.len() && method_family(&methods[end].sig) == family {
++            end += 1;
++        }
++        if end - start > 1 {
++            methods[start..end].sort_by(|left, right| left.sig.cmp(&right.sig));
++        }
++        start = end;
++    }
++}
++
++fn method_family(signature: &str) -> &str {
++    let end = signature.find("operator()(")
++        .map(|position| position + "operator()".len())
++        .or_else(|| signature.find('('))
++        .unwrap_or(signature.len());
++    signature[..end].rsplit(' ').next().unwrap_or(&signature[..end])
++}
++
+ fn insert_enum(out: &mut SideModel, name: String, e: EnumModel) {
++    let name = if name.ends_with("::<unnamed-tag>") {
++        let mut enumerators: Vec<&str> = e.values.iter().map(|(name, _)| name.as_str()).collect();
++        enumerators.sort_unstable();
++        format!("{name}#{}", enumerators.join("|"))
++    } else {
++        name
++    };
++
+     match out.enums.get(&name) {
+         Some(existing) if existing.values.len() >= e.values.len() => {}
+@@ -1430,7 +1470,8 @@ fn clean_type(s: String) -> String {
+ /// only real drifts survive the comparison. Word-boundary checked: an
+ /// identifier merely ending in `..._enum` is left alone.
+ fn canon_display(s: &str) -> String {
+-    let b = s.as_bytes();
++    let normalized_ptr_alias = s.replace(" const _ptr", " const_ptr");
++    let b = normalized_ptr_alias.as_bytes();
+     let mut out = String::with_capacity(s.len());
+     let mut i = 0;
+     while i < b.len() {
+@@ -1587,6 +1636,46 @@ mod tests {
+         }
+     }
+
++    #[test]
++    fn duplicate_class_records_merge_compatible_method_sets() {
++        let mut side = SideModel::default();
++        insert_class(
++            &mut side,
++            "predicate".to_string(),
++            class_with(&[("m_value", 3)], &[("bool operator()(b)", 3)]),
++        );
++        insert_class(
++            &mut side,
++            "predicate".to_string(),
++            class_with(&[("m_value", 3)], &[("bool operator()(a)", 3)]),
++        );
++        let methods: Vec<&str> = side.classes["predicate"]
++            .methods.iter().map(|method| method.sig.as_str()).collect();
++        assert_eq!(methods, vec!["bool operator()(a)", "bool operator()(b)"]);
++    }
++
++    #[test]
++    fn unrelated_anonymous_enums_do_not_replace_each_other() {
++        let mut side = SideModel::default();
++        insert_enum(
++            &mut side,
++            "render::<unnamed-tag>".to_string(),
++            EnumModel {
++                underlying: "i32".to_string(),
++                values: vec![("terrain_size".to_string(), 1024)],
++            },
++        );
++        insert_enum(
++            &mut side,
++            "render::<unnamed-tag>".to_string(),
++            EnumModel {
++                underlying: "i32".to_string(),
++                values: vec![("component_count".to_string(), 5)],
++            },
++        );
++        assert_eq!(side.enums.len(), 2);
++    }
++
+     fn empty_seq() -> SeqDiff {
+         SeqDiff {
+             only_base: vec![],
+@@ -1870,5 +1959,9 @@ mod tests {
+             "helper< char const, 1 >".to_string(),
+         );
++        // The alias renderer appends `_ptr` to the first template argument;
++        // retail's demangler leaves a space after suffix-const, the frontend
++        // does not. This is one alias, not two source types.
++        assert_eq!(canon_display("res_signature const _ptr"), "res_signature const_ptr");
+         // an identifier merely ENDING in `..._enum ` keeps its name
+         // (the trailing space-before-`)` still collapses)
+         assert_eq!(
