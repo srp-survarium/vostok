@@ -18,19 +18,12 @@ semantics are not.
 
 ## Render-to-100 campaign
 
-The active render campaign is `campaign/render-to-100` in
-`/home/sheep/Projects/surv/vostok`. Keep all render investigation, source
-changes, builds, database writes, and commits in this one worktree. Do not
-dispatch render workers into sibling worktrees. Other modules may continue in
-their existing disjoint worktrees, but they must not touch render or this
-worktree's generated artifacts.
-
-The starting snapshot is 35.49% target-byte-weighted: 2,647 target functions,
-1,478 paired, 271 byte-exact, and 1,169 target-only. These are campaign-start
-figures only; the ledger and `report.json` remain authoritative. The goal is
-100% hash-scoped source MAX for every recoverable render function, with every
-irreducible remainder proved and queryably parked. Current fuzzy percentage or
-ordinary best-seen history is not MAX evidence.
+The ledger and `report.json` are the only authoritative progress snapshot. The
+goal is zero real render PDB divergences, target-faithful statement/local/
+declaration structure, and 100% hash-scoped source MAX for every recoverable
+render function. Every irreducible remainder must have a concrete, queryable
+wall; current fuzzy percentage or ordinary best-seen history is not MAX
+evidence.
 
 Work the optimized call graph from owning roots toward leaves:
 
@@ -61,9 +54,8 @@ Work the optimized call graph from owning roots toward leaves:
    convention, ICF, or LTCG claims only after proving the exact non-steerable
    boundary.
 7. When a remaining gap is caused by measurement rather than source, improve
-   the tool instead of falsifying code. In particular, finish function-scoped
-   compiler-context/MAX attribution and the highly-COMDAT source-tree matching
-   needed to preserve genuine islands up to 100%.
+   the tool instead of falsifying code. Preserve genuine function-scoped and
+   highly-COMDAT evidence through the hash-scoped MAX mechanisms.
 
 The campaign ledger is the linear Git history plus the per-commit database.
 For every complete TU or bounded caller cone: inspect target structure and
@@ -79,7 +71,7 @@ separate structure-verification and stale-comment audit before continuing.
 - Enter the Nix development environment; do not use sibling tool checkouts.
 - Use `python3 -m vostok build` with no module argument for the authoritative
   build, relink, delink, report, README score, and ledger refresh.
-- During render clean-room reconstruction, compile only the three retail render
+- During render iteration, compile only the three retail render
   libraries with `python3 -m vostok.build.ninja render_facade
   render_core_pc_dx11 render_engine_pc_dx11`. Fix compiler errors until all
   three libraries build; do not link or regenerate reports during this loop.
@@ -127,7 +119,6 @@ separate structure-verification and stale-comment audit before continuing.
   shape or record a concrete blocker.
 - Match one complete translation unit at a time. Descend into required callees
   outside `render` when necessary and when file ownership remains disjoint.
-  Match `render` last.
 - Preserve definition order, even when access specifiers repeat or interleave.
 - Use clangd helpers for source navigation and `pdb_fetch`/`pdb_rich_query` for
   binary evidence.
