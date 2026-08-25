@@ -56,6 +56,7 @@ import sys
 import time
 from pathlib import Path
 
+from vostok.build import native_crt
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
@@ -352,6 +353,16 @@ def main() -> None:
     # ninja.exe and the cl.exe/link.exe it spawns. setdefault so an explicit
     # WINEDEBUG (e.g. for debugging Wine itself) still wins.
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
+
+    # Native msvcr90 so cl/link render PDB type names the way retail's
+    # Windows builds did (Wine's builtin __unDName spells them differently -
+    # see vostok.build.native_crt). Only force it when the DLLs are really
+    # installed: the override with no native file kills every cl at load.
+    if native_crt.install(OWN_WINEPREFIX):
+        native_crt.export_override()
+    else:
+        print("[ninja] native msvcr90 not installed - PDB type names will use "
+              "Wine's undecorator (divergence vs retail)", flush=True)
 
     # Defaults for the matching workflow:
     #   -v      verbose - print the full cl.exe/link.exe command lines
