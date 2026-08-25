@@ -44,11 +44,27 @@ Proof chain:
 
 ## Resolution
 
-`scripts/vostok/build/native_crt.py`: install
-`$MSVC_DIR/VC/redist/x86/Microsoft.VC90.CRT/*.dll` into the build prefix's
-fake winsxs assembly dir (`winsxs/x86_microsoft.vc90.crt_*_deadbeef/`) and run
-cl/link with `WINEDLLOVERRIDES="msvcr90=n"`. ninja.py does both on every run;
-toolchain.py installs on prefix init.
+**Where the DLL comes from:** it ships INSIDE the toolchain -
+`$MSVC_DIR/VC/redist/x86/Microsoft.VC90.CRT/msvcr90.dll` (Microsoft's genuine
+"Visual C++ Runtime Library", 9.00.21022.8, 655,872 B). Nothing is downloaded;
+the correct CRT was always present, just never loaded.
+
+**Why the wrong one loaded:** Wine ships a from-scratch reimplementation of
+`msvcr90` (a ~1 MB Winelib stub). cl.exe's embedded SxS manifest requests the
+assembly `Microsoft.VC90.CRT`; Wine resolves it to a fake winsxs assembly
+(`…_deadbeef`) that maps to the builtin, unless told to prefer native. So the
+builtin always won. It went unnoticed because the CRT is functionally fine for
+RUNNING the compiler - only `__unDName`'s cosmetic name rendering differs.
+
+**The fix is prefix SETUP, not a per-build step** (`native_crt.py`,
+`provision()`): (1) copy the redist CRT into the winsxs assembly dir
+(`winsxs/x86_microsoft.vc90.crt_*_deadbeef/`), and (2) write a persistent
+`msvcr90=native` DllOverride into the prefix's Wine registry
+(`HKCU\Software\Wine\DllOverrides`). Then every `wine` in that prefix prefers
+the native CRT with NO `WINEDLLOVERRIDES` on the command line (proven: env var
+unset, cl still emits the elaborated spelling). `toolchain.py` provisions in
+the wine + registry stages; `ninja.py` only self-heals a pre-existing prefix
+once (no-op afterward), never touching the environment.
 
 Traps, all hit while landing this:
 - **wineboot pre-creates Wine STUB PEs at the winsxs paths** (~1MB vs native
@@ -58,8 +74,10 @@ Traps, all hit while landing this:
   Install must compare sizes and overwrite.
 - app-dir and system32 copies do NOT satisfy the loader: cl.exe's embedded
   manifest forces SxS resolution to the winsxs assembly.
-- An old prefix that misbehaves after all that is cheapest to delete and
-  reinitialize (`python3 -m vostok tool toolchain --force wine registry`).
+- `wine reg add` flushes user.reg only on wineserver shutdown, so verify the
+  override with a LIVE `wine reg query`, not a disk read of user.reg.
+- An old prefix that still misbehaves is cheapest to reinitialize
+  (`python3 -m vostok tool toolchain --force wine registry`).
 
 The pdb-parser canon normalization (branch divergence-canon) compensated for
 this on the comparison side; with builds on native msvcr90 it becomes

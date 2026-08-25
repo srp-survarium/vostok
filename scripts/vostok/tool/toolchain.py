@@ -213,11 +213,12 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
     wineprefix.mkdir(parents=True, exist_ok=True)
     subprocess.run(["wineboot", "--init"], check=True)
     subprocess.run(["wineserver", "--wait"], check=False, stderr=subprocess.DEVNULL)
-    if native_crt.install(wineprefix):
-        log("Native VC90 CRT installed into winsxs (retail-style PDB names).")
+    if native_crt.provision(wineprefix):
+        log("Native VC90 CRT provisioned (winsxs DLLs + registry override) - "
+            "PDBs spell type records the retail way.")
     else:
-        log("WARNING: native VC90 CRT install failed - PDB type names will "
-            "use Wine's undecorator.")
+        log("WARNING: native VC90 CRT not provisioned - PDB type names will "
+            "use Wine's undecorator (structure divergence vs retail).")
     log("Wine prefix ready.")
 
 
@@ -345,6 +346,11 @@ def main() -> None:
     if not setup_current or "registry" in force:
         log("Configuring Wine environment (PATH, INCLUDE, LIB) ...")
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
+        # Re-assert the native-CRT provisioning here too, so `--force registry`
+        # repairs an existing prefix without a full wine-stage reinit.
+        if not native_crt.provision(wineprefix):
+            log("WARNING: native VC90 CRT not provisioned - PDB type names will "
+                "use Wine's undecorator.")
     if not setup_current or "ninja" in force:
         generate_ninja(vcproj_exe)
         ensure_compdb(force=True)
