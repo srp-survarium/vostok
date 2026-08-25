@@ -7,12 +7,15 @@ namespace render {
 
 int	rs_dib_size = 512;
 
-void	index_buffer::unlock()
+index_buffer::index_buffer( u32 const size ) :
+	m_size			( size ),
+	m_position		( 0 ),
+	m_discard_id	( 0 ),
+	m_lock_size		( 0 )
 {
-//	LOG_INFO("pgo:ib_unlock:%d", i_count);
-	m_position += m_lock_size;
-
-	m_buffer->unmap();
+	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_index, true, false);
+	R_ASSERT		( m_buffer );
+	LOG_INFO		("index buffer created: %dKb", m_size/1024);
 }
 
 u16* index_buffer::lock(u32 i_count, u32& i_offset)
@@ -46,15 +49,12 @@ u16* index_buffer::lock(u32 i_count, u32& i_offset)
 	return	(u16*)locked_data;
 }
 
-index_buffer::index_buffer( u32 const size ) :
-	m_size			( size ),
-	m_position		( 0 ),
-	m_discard_id	( 0 ),
-	m_lock_size		( 0 )
+void	index_buffer::unlock()
 {
-	m_buffer		= resource_manager::ref().create_buffer( m_size, 0, enum_buffer_type_index, true, false);
-	R_ASSERT		( m_buffer );
-	LOG_INFO		("index buffer created: %dKb", m_size/1024);
+//	LOG_INFO("pgo:ib_unlock:%d", i_count);
+	m_position += m_lock_size;
+
+	m_buffer->unmap();
 }
 
 // void index_buffer::reset_begin()
