@@ -81,8 +81,8 @@ public:
 		ASSERT( false, "The texture could not be found in the pool!");
 	}
 
-	u32 memory_usage( ) const { return m_memory_usage; }
-	u32 unoccupied_count( ) const { return m_unoccupied_count; }
+	u32 memory_usage( ) { return m_memory_usage; }
+	u32 unoccupied_count( ) { return m_unoccupied_count; }
 
 private:
 	vector<slot> m_textures;

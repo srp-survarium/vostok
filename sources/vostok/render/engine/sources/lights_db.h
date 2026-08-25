@@ -17,7 +17,7 @@ struct space_partitioning_tree;
 namespace render {
 
 struct light_data {
-	explicit light_data( u32 in_id ) :
+ explicit light_data( u32 const in_id ) :
 		id( in_id )
 	{
 	}
@@ -27,7 +27,7 @@ struct light_data {
 		return id < other.id;
 	}
 
-	bool operator==( u32 other_id ) const
+ bool operator==( u32 const other_id ) const
 	{
 		return id == other_id;
 	}
