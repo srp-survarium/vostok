@@ -41,9 +41,9 @@ public:
 
 	void set_time( float time );
 	void set(
-		float3 up_vector,
-		float3 right_vector,
-		float3 view_location,
+		float3 const up_vector,
+		float3 const right_vector,
+		float3 const view_location,
 		particle::enum_particle_locked_axis locked_axis,
 		particle::enum_particle_screen_alignment screen_alignment
 	);
