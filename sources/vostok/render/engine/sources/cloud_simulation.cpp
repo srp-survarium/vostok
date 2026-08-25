@@ -205,9 +205,9 @@ void cloud_simulation::compute_indirect_light(
 							)
 						)
 						{
-							if ( math::floor( coord.x ) < m_clouds_size_x &&
-								math::floor( coord.y ) > m_clouds_size_y &&
-								math::floor( coord.z ) < m_clouds_size_z )
+							if ( static_cast<u32>( coord.x ) < m_clouds_size_x &&
+								static_cast<u32>( coord.y ) > m_clouds_size_y &&
+								static_cast<u32>( coord.z ) < m_clouds_size_z )
 							{
 								accumulated += 1.0f;
 								continue;
