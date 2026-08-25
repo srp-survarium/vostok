@@ -15,6 +15,11 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
+      #   93165d2  pdb_divergence headers side normalizes undname-style
+      #            record names (elaborated enum/struct/class keywords +
+      #            suffix-const spacing) - the retail PDB stores demangler
+      #            renderings, a fresh compile stores the frontend's; the
+      #            spelling split was ~150 fake header divergences.
       #   d0eb201  gitignores that checkout's own nix gcroots.
       #   c9ad86c  every printed address says whether it is a VA or an RVA
       #            (headers carry both; columns are `va`/`t.va`/`b.va`). The
@@ -32,7 +37,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/d13079f741379d599089aed2e3eedd04e3345a9c";
+      url = "github:srp-survarium/vostok-pdb-parser/93165d25adfb3a1f8c0326460699325649d07483";
       flake = false;
     };
     vcproj2ninja-src = {
