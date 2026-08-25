@@ -60,6 +60,25 @@ struct particle_sprite_vertex {
 
 STATIC_SIZE_ASSERT( particle_sprite_vertex, 0x40 );
 
+void particle_sprite_vertex::set(
+	float3	position_value,
+	float4	color_value,
+	float2	uv_value,
+	float2	size_value,
+	float	rotation_value,
+	float	gravity_value,
+	float3	old_position_value
+)
+{
+	position = position_value;
+	color = color_value;
+	uv = uv_value;
+	size = size_value;
+	rotation = rotation_value;
+	old_position = old_position_value;
+	gravity = gravity_value;
+}
+
 struct subuv_particle_sprite_vertex : public particle_sprite_vertex {
 	void set(
 		float3	position_value,
@@ -123,25 +142,6 @@ D3D11_INPUT_ELEMENT_DESC const v_particle_beamtrail_fvf[] = {
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 };
-
-void particle_sprite_vertex::set(
-	float3	position_value,
-	float4	color_value,
-	float2	uv_value,
-	float2	size_value,
-	float	rotation_value,
-	float	gravity_value,
-	float3	old_position_value
-)
-{
-	position = position_value;
-	color = color_value;
-	uv = uv_value;
-	size = size_value;
-	rotation = rotation_value;
-	old_position = old_position_value;
-	gravity = gravity_value;
-}
 
 render_particle_emitter_instance::render_particle_emitter_instance(
 	particle::world&					particle_world,
