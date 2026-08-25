@@ -22,21 +22,39 @@ Uniformly, both sides: ~1,700 elaborated records in retail, zero in ours.
 It looks like a third mystery printer, and once made `pdb_divergence` drown
 in the spelling delta.
 
-## Cause (proven 2026-08-25, probe A/B)
+## Cause (proven 2026-08-25, probe A/B — msvcr90; refined mechanism)
 
-MSVC composes these display names by **undecorating the mangled name through
-the CRT's `__unDName`** — `c1xx.dll`, `c2.dll` and `link.exe` all import it
-from `msvcr90.dll`. Under Wine, msvcr90 resolves to Wine's **builtin**
-reimplementation, whose undecorator renders enums bare and const without the
-trailing space. Retail compiled on real Windows with Microsoft's msvcr90.
+MSVC composes these display names using **`msvcr90`**: swapping ONLY that DLL
+(Wine builtin vs native) flips the emitted `.debug$T`/PDB type-record spellings.
+Under Wine, msvcr90 resolves to Wine's **builtin** reimplementation, which
+renders enums bare and const without the trailing space; native Microsoft
+`msvcr90` (what retail's Windows build used) elaborates them.
+
+**It is NOT the public undecorator** (an easy but wrong assumption — the earlier
+version of this note said "`__unDName`"; corrected here). A direct sweep of
+`__unDName` AND `__unDNameEx` over every flag `0x0000..0xFFFF` (NULL context)
+renders BYTE-IDENTICAL between Wine-builtin and native — 0 diverging lines. The
+front end `c1xx.dll` imports **`__unDNameEx`**, the extended undecorator that
+takes a **context/callback** the compiler uses to render template arguments; the
+divergence appears only on that callback path (which the NULL-context sweep
+bypasses). Working hypothesis: Wine's builtin `__unDNameEx` doesn't invoke /
+mishandles the caller callback, so the compiler's "spell it `enum X`" callback
+is skipped and the builtin falls back to bare. The FIX (native msvcr90) is
+validated empirically regardless of the exact internal path. Full write-up +
+Wine bug report: `../../../wine-msvcr90-undname-bug.md` (outside the repo).
 
 Proof chain:
 - Same probe TU, same `cl.exe 15.00.30729.01`, same flags, same machine —
-  swapping only the CRT flips every spelling to retail's exactly
+  swapping only msvcr90 flips every spelling to retail's exactly
   (compile-time `.debug$T`, `/Zi` and `/GL`+LTCG link paths all confirmed).
 - The GSC-era Windows-built boost vc90 libs in vostok-libs are full of
   elaborated names; Rich headers of retail and base exes carry identical
   toolchain fingerprints (all build 30729), ruling out a version difference.
+- CODEGEN-NEUTRAL: same TU under builtin vs native msvcr90 disassembles
+  byte-identical and the COFF mangled symbol table is identical; a controlled
+  same-session relink differs only in the PE timestamp + PDB-signature GUID
+  (25 bytes). The CRT touches ONLY demangled display strings, never code,
+  relocations, or mangled symbols — so it never moved the match %.
 - Both name-authoring stages render: struct records bake at COMPILE time
   (into /GL IL or `.debug$T`), method records render at LINK time — so
   changing the CRT needs a full clean rebuild to take effect everywhere.
