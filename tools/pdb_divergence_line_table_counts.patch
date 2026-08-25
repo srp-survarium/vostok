@@ -1,0 +1,299 @@
+diff --git a/src/bin/pdb_divergence.rs b/src/bin/pdb_divergence.rs
+index 7eae6a1..4206aa1 100644
+--- a/src/bin/pdb_divergence.rs
++++ b/src/bin/pdb_divergence.rs
+@@ -4,9 +4,10 @@
+ //! game) — and prints where their headers and sources diverge:
+ //!
+ //! * headers: class/struct/union/enum size, member layout, member-function order
+-//! * sources: function definition order, per-function statement count, and
+-//!   per-function constants (matched by value+type, so renames surface as
+-//!   misnames)
++//! * sources: function definition order and per-function constants (matched by
++//!   value+type, so renames surface as misnames). Raw CodeView line-table entry
++//!   counts are available only through `--raw-line-table-counts`; they are not
++//!   semantic statement counts.
+ //!
+ //! `--skip <pat>` (repeatable) drops any header (by qualified name) or source
+ //! (by engine-relative path) whose name contains the case-insensitive substring,
+@@ -63,6 +64,12 @@ struct Cli {
+     #[arg(long)]
+     list_presence_fns: bool,
+ 
++    /// Also report raw per-function CodeView line-table entry-count differences.
++    /// These counts reflect optimization attribution and source-line packing,
++    /// not semantic statement structure, so they are excluded by default.
++    #[arg(long)]
++    raw_line_table_counts: bool,
++
+     #[command(flatten)]
+     scope: Scope,
+ }
+@@ -97,6 +104,7 @@ fn main() {
+         do_sources: !cli.scope.headers_only,
+         list_presence: cli.list_presence,
+         list_presence_fns: cli.list_presence_fns,
++        compare_raw_line_table_counts: cli.raw_line_table_counts,
+     };
+ 
+     let base_engine = normalize_prefix(&cli.base_engine_path);
+diff --git a/src/divergence.rs b/src/divergence.rs
+index 498d730..c49fa3a 100644
+--- a/src/divergence.rs
++++ b/src/divergence.rs
+@@ -8,9 +8,10 @@
+ //!   instance size, member layout (offset / type / name / order), and
+ //!   member-function declaration order.
+ //! * **sources** (`.cpp` compilands, joined by engine-relative path): the order
+-//!   functions are defined in, per-function statement count, and per-function
+-//!   constants (matched by `(type, value)`, so a renamed-but-equal constant is
+-//!   surfaced as a *misname* rather than an add/remove).
++//!   functions are defined in and per-function constants (matched by `(type,
++//!   value)`, so a renamed-but-equal constant is surfaced as a *misname* rather
++//!   than an add/remove). Raw CodeView line-table entry counts can be compared
++//!   explicitly, but are not semantic statement counts and are off by default.
+ //!
+ //! Nothing is written to disk; the whole thing is a read + compare + print.
+ //! Headers are extracted straight off the type stream (no source join needed),
+@@ -25,12 +26,12 @@ use std::path::Path;
+ use pdb::FallibleIterator;
+ use pdb::TypeData;
+ 
+-use crate::GenFlags;
+-use crate::Namespace;
+ use crate::gen_sources;
+-use crate::helpers::FunctionLocation;
+ use crate::helpers::canonicalize_static_init_thunk;
++use crate::helpers::FunctionLocation;
+ use crate::pdb_parser::PdbParser;
++use crate::GenFlags;
++use crate::Namespace;
+ 
+ /// Library namespace roots whose types are skipped by default (overridable with
+ /// `include_external`). The engine's own source path filter already keeps the
+@@ -60,6 +61,10 @@ pub struct Config {
+     /// standalone out-of-line body in exactly one side's compilands) instead of
+     /// only counting them. See [`report_presence_functions`].
+     pub list_presence_fns: bool,
++    /// Compare raw per-function CodeView line-table entry counts. These vary
++    /// with optimization attribution and source-line packing, so they are a
++    /// forensic diagnostic rather than an actionable structural divergence.
++    pub compare_raw_line_table_counts: bool,
+ }
+ 
+ // ── Owned comparison model ──────────────────────────────────────────────────
+@@ -109,7 +114,7 @@ struct FnModel {
+     /// is the demangled signature, kept for DISPLAY only.
+     key: String,
+     name_orig: String,
+-    statement_count: usize,
++    raw_line_table_count: usize,
+     constants: Vec<ConstModel>,
+ }
+ 
+@@ -464,11 +469,15 @@ fn canonicalize_overload_runs(methods: &mut [MethodModel]) {
+ }
+ 
+ fn method_family(signature: &str) -> &str {
+-    let end = signature.find("operator()(")
++    let end = signature
++        .find("operator()(")
+         .map(|position| position + "operator()".len())
+         .or_else(|| signature.find('('))
+         .unwrap_or(signature.len());
+-    signature[..end].rsplit(' ').next().unwrap_or(&signature[..end])
++    signature[..end]
++        .rsplit(' ')
++        .next()
++        .unwrap_or(&signature[..end])
+ }
+ 
+ fn insert_enum(out: &mut SideModel, name: String, e: EnumModel) {
+@@ -543,7 +552,7 @@ fn extract_sources(
+             .push(FnModel {
+                 key,
+                 name_orig: fun.name_orig.clone(),
+-                statement_count: fun.statements.len(),
++                raw_line_table_count: fun.statements.len(),
+                 constants,
+             });
+     })
+@@ -842,7 +851,7 @@ fn report_sources(base: &SideModel, target: &SideModel, cfg: &Config) {
+         match (base.files.get(path), target.files.get(path)) {
+             (Some(b), Some(t)) => {
+                 counts.both += 1;
+-                if diff_file(path, b, t, &mut counts) {
++                if diff_file(path, b, t, cfg, &mut counts) {
+                     counts.diverged += 1;
+                 }
+             }
+@@ -864,13 +873,21 @@ fn report_sources(base: &SideModel, target: &SideModel, cfg: &Config) {
+         ob = counts.only_base.len(),
+         ot = counts.only_target.len(),
+     );
+-    println!(
+-        "        {order} files w/ fn-order diff, {stmt} functions w/ stmt-count diff, \
+-         {cst} functions w/ const diff",
+-        order = counts.order_diff,
+-        stmt = counts.stmt_diff,
+-        cst = counts.const_diff,
+-    );
++    if cfg.compare_raw_line_table_counts {
++        println!(
++            "        {order} files w/ fn-order diff, {lines} functions w/ raw line-table-count \
++             diff, {cst} functions w/ const diff",
++            order = counts.order_diff,
++            lines = counts.raw_line_table_diff,
++            cst = counts.const_diff,
++        );
++    } else {
++        println!(
++            "        {order} files w/ fn-order diff, {cst} functions w/ const diff",
++            order = counts.order_diff,
++            cst = counts.const_diff,
++        );
++    }
+     println!(
+         "        out-of-line presence: {pb} base-only (we emit standalone; target inlines), \
+          {pt} target-only (target emits standalone; we inline / no source)\n",
+@@ -884,7 +901,7 @@ fn report_sources(base: &SideModel, target: &SideModel, cfg: &Config) {
+ /// `extract_sources` collected, per side, the set of functions that have a
+ /// standalone out-of-line body (a real code symbol / compiland definition with
+ /// statements). Joining those two sets by `(engine-relative path, join key)` —
+-/// the same cross-PDB key the `[stmt]`/`[const]`/`[fn-order]` diffs use (the
++/// the same cross-PDB key the `[line-table]`/`[const]`/`[fn-order]` diffs use (the
+ /// decorated COFF symbol, or the canonical thunk form; see
+ /// [`function_join_key`]) — a function present in exactly one side's set is an
+ /// out-of-line presence divergence:
+@@ -1007,7 +1024,13 @@ fn file_functions(file: Option<&FileModel>) -> Vec<(String, String)> {
+     .unwrap_or_default()
+ }
+ 
+-fn diff_file(path: &str, b: &FileModel, t: &FileModel, counts: &mut SourceCounts) -> bool {
++fn diff_file(
++    path: &str,
++    b: &FileModel,
++    t: &FileModel,
++    cfg: &Config,
++    counts: &mut SourceCounts,
++) -> bool {
+     let mut lines: Vec<String> = Vec::new();
+ 
+     // [fn-order] reports only the relative DEFINITION ORDER of functions present
+@@ -1036,8 +1059,10 @@ fn diff_file(path: &str, b: &FileModel, t: &FileModel, counts: &mut SourceCounts
+         push_list(&mut lines, "    moved      ", &moved);
+     }
+ 
+-    // Per-function stmt/const comparison over functions present on both sides,
+-    // joined by the cross-PDB key.
++    // Per-function raw line-table/const comparison over functions present on
++    // both sides, joined by the cross-PDB key. The raw count is deliberately
++    // opt-in: CodeView line entries reflect source-line packing and optimized
++    // attribution, not the number of semantic C++ statements.
+     let target_by_key: HashMap<&str, &FnModel> =
+         t.functions.iter().map(|f| (f.key.as_str(), f)).collect();
+ 
+@@ -1046,11 +1071,11 @@ fn diff_file(path: &str, b: &FileModel, t: &FileModel, counts: &mut SourceCounts
+             continue;
+         };
+ 
+-        if bf.statement_count != tf.statement_count {
+-            counts.stmt_diff += 1;
++        if cfg.compare_raw_line_table_counts && bf.raw_line_table_count != tf.raw_line_table_count {
++            counts.raw_line_table_diff += 1;
+             lines.push(format!(
+-                "  [stmt]   {}: base={} target={}",
+-                bf.name_orig, bf.statement_count, tf.statement_count
++                "  [line-table]  {}: base={} target={}",
++                bf.name_orig, bf.raw_line_table_count, tf.raw_line_table_count
+             ));
+         }
+ 
+@@ -1388,7 +1413,7 @@ struct SourceCounts {
+     both: usize,
+     diverged: usize,
+     order_diff: usize,
+-    stmt_diff: usize,
++    raw_line_table_diff: usize,
+     const_diff: usize,
+     only_base: Vec<String>,
+     only_target: Vec<String>,
+@@ -1637,7 +1662,10 @@ mod tests {
+             class_with(&[("m_value", 3)], &[("bool operator()(a)", 3)]),
+         );
+         let methods: Vec<&str> = side.classes["predicate"]
+-            .methods.iter().map(|method| method.sig.as_str()).collect();
++            .methods
++            .iter()
++            .map(|method| method.sig.as_str())
++            .collect();
+         assert_eq!(methods, vec!["bool operator()(a)", "bool operator()(b)"]);
+     }
+ 
+@@ -1708,7 +1736,7 @@ mod tests {
+                         .map(|sig| FnModel {
+                             key: sig.to_string(),
+                             name_orig: sig.to_string(),
+-                            statement_count: 0,
++                            raw_line_table_count: 0,
+                             constants: Vec::new(),
+                         })
+                         .collect(),
+@@ -1732,7 +1760,7 @@ mod tests {
+                         .map(|(key, display)| FnModel {
+                             key: key.to_string(),
+                             name_orig: display.to_string(),
+-                            statement_count: 0,
++                            raw_line_table_count: 0,
+                             constants: Vec::new(),
+                         })
+                         .collect(),
+@@ -1742,6 +1770,48 @@ mod tests {
+         out
+     }
+ 
++    fn source_config(compare_raw_line_table_counts: bool) -> Config {
++        Config {
++            skip: Vec::new(),
++            include_external: false,
++            do_headers: false,
++            do_sources: true,
++            list_presence: false,
++            list_presence_fns: false,
++            compare_raw_line_table_counts,
++        }
++    }
++
++    #[test]
++    fn raw_line_table_count_diff_is_opt_in() {
++        let mut base = side_with(&[("m/u.cpp", &["void f()"])]);
++        let mut target = side_with(&[("m/u.cpp", &["void f()"])]);
++        base.files.get_mut("m/u.cpp").unwrap().functions[0].raw_line_table_count = 2;
++        target.files.get_mut("m/u.cpp").unwrap().functions[0].raw_line_table_count = 3;
++
++        let base_file = &base.files["m/u.cpp"];
++        let target_file = &target.files["m/u.cpp"];
++        let mut default_counts = SourceCounts::default();
++        assert!(!diff_file(
++            "m/u.cpp",
++            base_file,
++            target_file,
++            &source_config(false),
++            &mut default_counts,
++        ));
++        assert_eq!(default_counts.raw_line_table_diff, 0);
++
++        let mut opt_in_counts = SourceCounts::default();
++        assert!(diff_file(
++            "m/u.cpp",
++            base_file,
++            target_file,
++            &source_config(true),
++            &mut opt_in_counts,
++        ));
++        assert_eq!(opt_in_counts.raw_line_table_diff, 1);
++    }
++
+     #[test]
+     fn presence_self_compare_is_clean() {
+         // Identical source-function sets on both sides → zero presence diffs.
