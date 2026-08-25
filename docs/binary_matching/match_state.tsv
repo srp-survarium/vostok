@@ -32154,7 +32154,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_image_space_reflections>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	0	11	f	fc88e1c83d0e	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_lens_flares>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	0	11	f	fc88e1c83d0e	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_light_mask>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_ambient_lighting.cpp	render	done	MATCH	100	100	100	0	11	f	0a3ec1b9e5db	
-`dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_light_propagation_volumes>'::`2'::descriptor_object''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH	100	100	100	0	11	f	4b72e6fa9a69	
+`dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_light_propagation_volumes>'::`2'::descriptor_object''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH	100	100	100	0	11	f	ba712f4b5b75	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_motion_blur>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	0	11	f	fc88e1c83d0e	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_motion_vectors_accumulation>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	0	11	f	fc88e1c83d0e	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_olta>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	0	11	f	fc88e1c83d0e	
@@ -32234,7 +32234,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_lights''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_draw_portals_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH		100	100	0	60	f	26f7581b9f55	
 `dynamic atexit destructor for 's_draw_propagated_radiance_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
-`dynamic atexit destructor for 's_draw_radiance_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
+`dynamic atexit destructor for 's_draw_radiance_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	1	60	f	4b72e6fa9a69	Restored target PDB source order: the lpv1 static follows sliced-cube geometry and precedes radiance_volume construction.
 `dynamic atexit destructor for 's_draw_radiance_occluders_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	1	60	f	36ddd9be1046	
@@ -34926,7 +34926,7 @@ vostok::render::`dynamic atexit destructor for 's_fog_forward_pass_cc''	vostok/r
 vostok::render::`dynamic atexit destructor for 's_hiz_7''	vostok/render/engine/sources/renderer.cpp	render	done	MATCH		100	100	3	60	f	a2f68e621910	Restored opaque-model gather root, shader-LOD split, stage sorting helpers, and target material/texture predicates.
 vostok::render::`dynamic atexit destructor for 's_hiz_8''	vostok/render/engine/sources/renderer.cpp	render	done	MATCH		100	100	3	60	f	a2f68e621910	Restored opaque-model gather root, shader-LOD split, stage sorting helpers, and target material/texture predicates.
 vostok::render::`dynamic atexit destructor for 's_lpv0''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	60	f	b4873385e052	
-vostok::render::`dynamic atexit destructor for 's_lpv1''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
+vostok::render::`dynamic atexit destructor for 's_lpv1''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	1	60	f	4b72e6fa9a69	Restored target PDB source order: the lpv1 static follows sliced-cube geometry and precedes radiance_volume construction.
 vostok::render::`dynamic atexit destructor for 's_lpv_dips_skipping0_cc''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	60	f	b4873385e052	
 vostok::render::`dynamic atexit destructor for 's_lpv_dips_skipping1_cc''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	60	f	b4873385e052	
 vostok::render::`dynamic atexit destructor for 's_max_triagles_per_dip''	vostok/render/core/dx11/sources/backend.cpp	render	done	MATCH		100	100	0	60	f	c4fccc1d0d5b	
@@ -35000,7 +35000,7 @@ vostok::render::`dynamic initializer for 's_gpu_compressor''	vostok/render/core/
 vostok::render::`dynamic initializer for 's_hiz_7''	vostok/render/engine/sources/renderer.cpp	render	done	MATCH		100	100	3	79	f	9f0af4074110	Restored opaque-model gather root, shader-LOD split, stage sorting helpers, and target material/texture predicates.
 vostok::render::`dynamic initializer for 's_hiz_8''	vostok/render/engine/sources/renderer.cpp	render	done	MATCH		100	100	3	79	f	9f0af4074110	Restored opaque-model gather root, shader-LOD split, stage sorting helpers, and target material/texture predicates.
 vostok::render::`dynamic initializer for 's_lpv0''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	79	f	b4304ce3a30f	
-vostok::render::`dynamic initializer for 's_lpv1''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	79	f	9f0af4074110	
+vostok::render::`dynamic initializer for 's_lpv1''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	1	79	f	9f0af4074110	Restored target PDB source order: the lpv1 static follows sliced-cube geometry and precedes radiance_volume construction.
 vostok::render::`dynamic initializer for 's_lpv_dips_skipping0_cc''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	79	f	c647bdd640e7	
 vostok::render::`dynamic initializer for 's_lpv_dips_skipping1_cc''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	79	f	c2ca8823e4c4	
 vostok::render::`dynamic initializer for 's_max_triagles_per_dip''	vostok/render/core/dx11/sources/backend.cpp	render	done	MATCH		100	100	0	87	f	9f0af4074110	
