@@ -122,16 +122,6 @@ index 6f62540..ee9d8a1 100644
 +
      match out.enums.get(&name) {
          Some(existing) if existing.values.len() >= e.values.len() => {}
-@@ -1430,7 +1470,8 @@ fn clean_type(s: String) -> String {
- /// only real drifts survive the comparison. Word-boundary checked: an
- /// identifier merely ending in `..._enum` is left alone.
- fn canon_display(s: &str) -> String {
--    let b = s.as_bytes();
-+    let normalized_ptr_alias = s.replace(" const _ptr", " const_ptr");
-+    let b = normalized_ptr_alias.as_bytes();
-     let mut out = String::with_capacity(s.len());
-     let mut i = 0;
-     while i < b.len() {
 @@ -1587,6 +1636,46 @@ mod tests {
          }
      }
@@ -179,13 +169,3 @@ index 6f62540..ee9d8a1 100644
      fn empty_seq() -> SeqDiff {
          SeqDiff {
              only_base: vec![],
-@@ -1870,5 +1959,9 @@ mod tests {
-             "helper< char const, 1 >".to_string(),
-         );
-+        // The alias renderer appends `_ptr` to the first template argument;
-+        // retail's demangler leaves a space after suffix-const, the frontend
-+        // does not. This is one alias, not two source types.
-+        assert_eq!(canon_display("res_signature const _ptr"), "res_signature const_ptr");
-         // an identifier merely ENDING in `..._enum ` keeps its name
-         // (the trailing space-before-`)` still collapses)
-         assert_eq!(

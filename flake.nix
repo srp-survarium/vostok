@@ -15,11 +15,14 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
-      #   93165d2  pdb_divergence headers side normalizes undname-style
-      #            record names (elaborated enum/struct/class keywords +
-      #            suffix-const spacing) - the retail PDB stores demangler
-      #            renderings, a fresh compile stores the frontend's; the
-      #            spelling split was ~150 fake header divergences.
+      #   e4ed03e  reverts 93165d2: the undname-style record-name split was a
+      #            Wine artifact (its builtin msvcr90 __unDName renders enums
+      #            bare where Microsoft's elaborates them). The build now loads
+      #            the native VC90 CRT (see vostok.build.native_crt), so both
+      #            PDBs spell records the same natively - the normalization was
+      #            redundant AND masked real class-vs-struct source drifts.
+      #   93165d2  (reverted) pdb_divergence headers side normalized
+      #            undname-style record names.
       #   d0eb201  gitignores that checkout's own nix gcroots.
       #   c9ad86c  every printed address says whether it is a VA or an RVA
       #            (headers carry both; columns are `va`/`t.va`/`b.va`). The
@@ -37,7 +40,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/93165d25adfb3a1f8c0326460699325649d07483";
+      url = "github:srp-survarium/vostok-pdb-parser/e4ed03ee7496d2fb2703f93643c3e9c5a4bc6c6f";
       flake = false;
     };
     vcproj2ninja-src = {
