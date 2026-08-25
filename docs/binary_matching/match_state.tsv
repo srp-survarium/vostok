@@ -31770,7 +31770,7 @@ _mdct_init	vorbis/sources/lib/mdct.c	vorbis	done	MATCH	100	100	100	0	551	f	f1627
 _mmap	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	56	f	593bffdc2dd4	auto: at 100% ceiling, demoted from queue
 _munmap	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	63	f	e181e8aa9b5d	auto: at 100% ceiling, demoted from queue
 _ogg_page_bos	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	14	f	2a47ea2bd058	auto: at 100% ceiling, demoted from queue
-_ogg_page_checksum_set	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	136	f	2972c6f99fd7	auto: at 100% ceiling, demoted from queue
+_ogg_page_checksum_set	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	136	f	1f5abaacfb12	auto: at 100% ceiling, demoted from queue
 _ogg_page_continued	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	14	f	3f946e55c0ee	auto: at 100% ceiling, demoted from queue
 _ogg_page_eos	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	14	f	6363a3a88e65	auto: at 100% ceiling, demoted from queue
 _ogg_page_granulepos	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	144		4fde315ad9e4	auto: at 100% ceiling, demoted from queue
@@ -31778,18 +31778,18 @@ _ogg_page_pageno	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	34	f	581
 _ogg_page_serialno	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	38	f	f68a75ffd3ec	auto: at 100% ceiling, demoted from queue
 _ogg_page_version	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	7	f	6868d2a73ceb	auto: at 100% ceiling, demoted from queue
 _ogg_stream_check	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	16	f	51d9f20d518f	auto: at 100% ceiling, demoted from queue
-_ogg_stream_clear	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	126	f	42e8f81ba8b7	
-_ogg_stream_init	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	191	f	adf50c38b251	
+_ogg_stream_clear	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	126	f	4bbd446ff02a	
+_ogg_stream_init	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	191	f	3431eb3d10d2	
 _ogg_stream_packetout	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	33	f	53fe3e3c5607	auto: at 100% ceiling, demoted from queue
 _ogg_stream_packetpeek	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	33	f	beb85d2834f5	auto: at 100% ceiling, demoted from queue
-_ogg_stream_pagein	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	801		f262d7468408	auto: at 100% ceiling, demoted from queue
+_ogg_stream_pagein	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	801		b8e896956c90	auto: at 100% ceiling, demoted from queue
 _ogg_stream_reset	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	88	f	2e240b6ed9a7	auto: at 100% ceiling, demoted from queue
 _ogg_stream_reset_serialno	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	39	f	5103b703ff01	auto: at 100% ceiling, demoted from queue
 _ogg_sync_buffer	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	170	f	c5124de595ea	
 _ogg_sync_check	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	10	f	ce238582be2b	auto: at 100% ceiling, demoted from queue
 _ogg_sync_clear	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	0	71	f	a5c2ad56c411	
 _ogg_sync_init	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	43	f	8811e14fae0d	auto: at 100% ceiling, demoted from queue
-_ogg_sync_pageseek	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	284	f	ebc10f098743	auto: at 100% ceiling, demoted from queue
+_ogg_sync_pageseek	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	284	f	519ce49757c9	auto: at 100% ceiling, demoted from queue
 _ogg_sync_reset	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	33	f	c43f7b73e968	auto: at 100% ceiling, demoted from queue
 _ogg_sync_wrote	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	36	f	9f448b09860c	auto: at 100% ceiling, demoted from queue
 _oggpackB_write	ogg/sources/src/bitwise.c	ogg	done	MATCH	100	100	100	1	309	f	e41d9ed3532e	Replaced vendored 1.1.4 bitwise implementation with the retail line-matched official libogg 1.2.1 revision.
@@ -31848,7 +31848,7 @@ _ov_time_seek_page	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100
 _ov_time_seek_page_lap	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	31		5e1e3fb68620	auto: at 100% ceiling, demoted from queue
 _ov_time_tell	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	267		380c3acaa12c	auto: at 100% ceiling, demoted from queue
 _ov_time_total	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	160		53ab463b213c	auto: at 100% ceiling, demoted from queue
-_packetout	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	261	f	c5c4942b16bb	auto: at 100% ceiling, demoted from queue
+_packetout	ogg/sources/src/framing.c	ogg	done	MATCH	100	100	100	1	261	f	ab4b3676eaef	auto: at 100% ceiling, demoted from queue
 _pt3free	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	175	f	304a19ef7490	auto: at 100% ceiling, demoted from queue
 _pt3mallinfo	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	127	f	09798a7b8cc1	auto: at 100% ceiling, demoted from queue
 _pt3malloc	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	204	f	ef1dbf1a908f	auto: at 100% ceiling, demoted from queue

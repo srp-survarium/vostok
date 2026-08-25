@@ -49,6 +49,38 @@ and 29 differ.  That 29-file set is the source-recovery worklist; function
 scores on the 192 byte-certain files are compiler or link context, not evidence
 for editing those files.
 
+## xiph provenance (settled 2026-08-25)
+
+- **vorbis**: retail is the stock **libvorbis-1.3.3 release tarball**.  All 39
+  DIFF files differed ONLY in the svn `$Id$` keyword line - our checkout came
+  from git (unexpanded), retail from the tarball (expanded).  Restored from the
+  tarball; every record lands, scores untouched (the keyword is a comment).
+- **ogg**: retail is **libogg-1.3.0** (ours was 1.1.4-era).  `ogg.h`,
+  `os_types.h`, `framing.c` restored from the 1.3.0 tarball and land; ogg
+  stays 100.00% - the 1.3.0 code delta is not reachable in the linked set.
+- **ogg/src/bitwise.c**: lands NOWHERE in xiph history - every release tarball
+  1.1.4-1.3.2 and all 42 git/svn states (svn `$Id$` expansion emulated from the
+  conversion metadata) miss the record.  A retail-local edit; all nine linked
+  `oggpack_*` functions are 100% exact, so the edit is non-codegen
+  (comments/dead code).  File-level park - do not chase.
+
+## Bullet dev-edit recovery (begun 2026-08-25)
+
+No upstream bullet3 state lands ANY of the 26 bullet DIFF records: 930 unique
+pre-2015 blobs of those paths hashed (CRLF + canonical-CRLF variants; pipeline
+control-validated on a known-MATCH file).  All 26 are genuine GSC edits.
+The ledger splits them: only 4 files carry sub-100 functions (visible edits,
+recoverable from asm); the rest compile byte-identical - their textual deltas
+are invisible (comments/whitespace/unreached code) and unrecoverable blind.
+
+Recovered so far, hash as the finish line (the btManifoldPoint recipe:
+decode the semantic edit from the block diff, then iterate spellings against
+the recorded MD5 - ~10 ms per candidate, no compile):
+
+- **btManifoldPoint.h** = stock 2.79 + `m_index0(-1), m_index1(-1)` appended
+  after `m_lifeTime(0)` in BOTH ctor init lists.  MD5-MATCH; the two ctors
+  (82.4/91.7) were the only open rows attributed to the header.
+
 ## Pristine Bullet baseline
 
 The development shell pins official Bullet commit
