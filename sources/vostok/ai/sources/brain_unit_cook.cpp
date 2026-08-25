@@ -15,13 +15,13 @@
 namespace vostok {
 namespace ai {
 
-// sushi@TODO: target constructs an extra empty (size-0) derived member at this+0x20
-// before m_ai_world (delinker names its ctor allocator<char>); our header has only
-// m_ai_world. Structure-MATCH, byte residual only; identify the missing empty member
-// to close it (do NOT fabricate one).
+// The empty entity at this+0x20 is the boost::noncopyable base (retail record
+// places it at 0x20, folded with m_ai_world by EBO); its inline ctor is the
+// "allocator<char>" the delinker named via ICF.
+// sushi@TODO: verify the ctor byte residual closes now that the base is in place.
 brain_unit_cook::brain_unit_cook	( ai_world& world ) :
 	translate_query_cook			( resources::brain_unit_class, reuse_false, use_current_thread_id ),
-	m_ai_world						( &world )
+	m_ai_world						( world )
 {
 }
 
@@ -96,7 +96,7 @@ void brain_unit_cook::on_sound_player_loaded	( resources::queries_result& data, 
 													*brain_cook_params.npc,
 													sound_player,
 													navigation,
-													*m_ai_world,
+													m_ai_world,
 													value
 												);
 	behaviour_cook_params						behaviour_params;

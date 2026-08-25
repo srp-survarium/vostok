@@ -16,7 +16,7 @@ namespace ai {
 class ai_world;
 class brain_unit;
 
-class brain_unit_cook : public resources::translate_query_cook
+class brain_unit_cook : public resources::translate_query_cook , private boost::noncopyable
 {
 public:
 					brain_unit_cook			( ai_world& world );
@@ -31,7 +31,7 @@ private:
 			void	on_default_behaviour_loaded		( resources::queries_result& data, brain_unit* const new_brain );
 
 private:
-	ai_world*								m_ai_world;
+	ai_world&								m_ai_world;
 }; // class brain_unit_cook
 
 } // namespace ai
