@@ -166,9 +166,11 @@ def regen():
     """
     roster = derive()
     previous = match_state.load()
+    committed = match_state.load_committed()
+    proof = previous if committed is None else committed
     banked = {
         mangled: (row["hash"], row["max"])
-        for mangled, row in previous.items()
+        for mangled, row in proof.items()
         if row["hash"] and row["max"] is not None
     }
     maxima_rows = maxima.fold(roster.pairing, roster.artifacts, banked)
@@ -181,7 +183,7 @@ def regen():
 
     measured = list(observations(roster, maxima_rows))
     measured.extend(report_only_observations(roster, maxima_rows, previous))
-    written = match_state.project(measured)
+    written = match_state.project(measured, banked_previous=proof)
     log(
         f"ledger {Path(match_state.STATE_PATH).name}: {written} rows "
         f"({len(roster.target)} target / {len(roster.base)} base / "

@@ -33,8 +33,11 @@ belongs in the diagnosis, not in the gate.
 """
 
 import csv
+import io
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 from vostok.core import paths
 
@@ -103,37 +106,69 @@ def _num(text):
 UNIT_LEGEND = "# [units] "
 
 
+def _load_lines(lines):
+    """Parse ledger text lines into ``{mangled: row-dict}``."""
+    rows = {}
+    units = {}
+    body = []
+    for line in lines:
+        if line.startswith(UNIT_LEGEND):
+            ident, _, name = line[len(UNIT_LEGEND):].strip().partition("\t")
+            units[ident] = name
+        elif not line.startswith("#"):
+            body.append(line)
+    for rec in csv.DictReader(body, delimiter="\t"):
+        mangled = rec.get("mangled")
+        if not mangled:
+            continue
+        for key in ("cur", "max", "hist"):
+            rec[key] = _num(rec.get(key))
+        rec["tries"] = int(rec["tries"]) if rec.get("tries") else 0
+        rec["size"] = int(rec["size"]) if rec.get("size") else 0
+        unit = rec.get("unit") or ""
+        rec["unit"] = units.get(unit, unit) if units else unit
+        rows[mangled] = rec
+    return rows
+
+
 def load(path=STATE_PATH):
-    """Read the ledger into {mangled: row-dict}.
+    """Read the working ledger into {mangled: row-dict}.
 
     Revisions written before 2026-08-16 encode `unit` as an id into a
     `# [units]` legend; they still load, resolved through it. See `save` for
     why new writes spell the path out.
     """
-    rows = {}
     if not os.path.exists(path):
-        return rows
-    units = {}
+        return {}
     with open(path, encoding="utf-8", newline="") as fh:
-        body = []
-        for line in fh:
-            if line.startswith(UNIT_LEGEND):
-                ident, _, name = line[len(UNIT_LEGEND):].strip().partition("\t")
-                units[ident] = name
-            elif not line.startswith("#"):
-                body.append(line)
-        for rec in csv.DictReader(body, delimiter="\t"):
-            mangled = rec.get("mangled")
-            if not mangled:
-                continue
-            for key in ("cur", "max", "hist"):
-                rec[key] = _num(rec.get(key))
-            rec["tries"] = int(rec["tries"]) if rec.get("tries") else 0
-            rec["size"] = int(rec["size"]) if rec.get("size") else 0
-            unit = rec.get("unit") or ""
-            rec["unit"] = units.get(unit, unit) if units else unit
-            rows[mangled] = rec
-    return rows
+        return _load_lines(fh)
+
+
+def load_committed():
+    """Read the ledger from ``HEAD``, the last retained measurement state.
+
+    Iterative builds regenerate the working TSV. Folding the next build onto
+    that file would permanently bank peaks from every temporary source or link
+    graph, including experiments reverted before commit. The linear campaign
+    history is the proof boundary: a build may raise MAX over the ledger in
+    ``HEAD``, and the resulting TSV becomes banked only when it is committed
+    beside the measured source state.
+
+    Return ``None`` outside a Git worktree or before the ledger has a committed
+    version; callers then fall back to the working file.
+    """
+    relative = Path(STATE_PATH).relative_to(paths.REPO).as_posix()
+    result = subprocess.run(
+        ["git", "show", f"HEAD:{relative}"],
+        cwd=paths.REPO,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return _load_lines(io.StringIO(result.stdout))
 
 
 def save(rows, path=STATE_PATH):
@@ -182,7 +217,7 @@ def status_for(row, flagged=False, paired=True):
     return "inprogress"
 
 
-def project(observations, path=STATE_PATH):
+def project(observations, path=STATE_PATH, banked_previous=None):
     """Fold this build's observations into the committed ledger. THE build path.
 
     `vostok.derive` owns the roster columns (unit / module / size / flags), `cur`,
@@ -204,6 +239,19 @@ def project(observations, path=STATE_PATH):
     source-backed observation this build.
     """
     previous = load(path)
+    proof = previous if banked_previous is None else banked_previous
+
+    def working_flag(mangled):
+        """Preserve an explicit annotation edit, not a generated status drift."""
+        working = previous.get(mangled, {})
+        proven = proof.get(mangled, {})
+        annotation_changed = (
+            (working.get("tries") or 0) != (proven.get("tries") or 0)
+            or working.get("note", "") != proven.get("note", "")
+        )
+        owner = working if annotation_changed else proven
+        return owner.get("status") == "parked"
+
     rows = {}
     for observation in observations:
         mangled = observation["mangled"]
@@ -221,18 +269,24 @@ def project(observations, path=STATE_PATH):
             "tries": old.get("tries") or 0,
             "note": old.get("note", ""),
             "_paired": observation["cur"] is not None,
-            "_flagged": old.get("status") == "parked",
+            "_flagged": working_flag(mangled),
         }
 
     # rows banked in the ledger but absent from this build keep everything they
     # had; their proven work outlives the build that stopped emitting them.
-    for mangled, old in previous.items():
+    for mangled, old in {**proof, **previous}.items():
         if mangled not in rows:
-            rows[mangled] = dict(old, _paired=False,
-                                 _flagged=old.get("status") == "parked")
+            proven = proof.get(mangled, old)
+            rows[mangled] = dict(
+                proven,
+                tries=old.get("tries") or 0,
+                note=old.get("note", ""),
+                _paired=False,
+                _flagged=working_flag(mangled),
+            )
 
     for mangled, row in rows.items():
-        old = previous.get(mangled, {})
+        old = proof.get(mangled, {})
         if row["max"] is None:
             row["max"] = old.get("max") if old.get("max") is not None else row["cur"]
             row["hash"] = row["hash"] or old.get("hash") or ""
