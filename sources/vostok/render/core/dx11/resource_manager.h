@@ -279,12 +279,12 @@ public:
 
 	res_texture* create_texture(
 		pcstr physical_name,
-		resources::query_result_for_cook* parent,
-		u32 mip_level_cut,
-		bool use_pool,
-		bool load_async,
-		bool use_converter,
-		u32 num_last_mips_used
+		resources::query_result_for_cook* parent = NULL,
+		u32 mip_level_cut = 0,
+		bool use_pool = false,
+		bool load_async = true,
+		bool use_converter = true,
+		u32 num_last_mips_used = u32(-1)
 	);
 	res_texture* create_texture2d(
 		pcstr user_name,
