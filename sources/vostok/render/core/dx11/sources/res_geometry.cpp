@@ -7,6 +7,15 @@
 namespace vostok {
 namespace render {
 
+res_geometry::~res_geometry()
+{
+}
+
+void res_geometry::destroy_impl() const
+{
+	resource_manager::ref().release( this );
+}
+
 s32 res_geometry::compare( res_geometry const& other ) const
 {
 	if ( m_vb < other.m_vb )
@@ -38,15 +47,6 @@ void res_geometry::apply()
 	backend::ref().set_declaration( m_dcl.c_ptr());
 	backend::ref().set_vb( m_vb.c_ptr(), m_vb_stride);
 	backend::ref().set_ib( m_ib.c_ptr());
-}
-
-res_geometry::~res_geometry()
-{
-}
-
-void res_geometry::destroy_impl() const
-{
-	resource_manager::ref().release( this );
 }
 
 } // namespace render
