@@ -47,12 +47,6 @@ private:
 
 public:
 	void draw_line( base_scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
-	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float const half_size, bool use_depth = true );
-	void draw_cross( base_scene_ptr const& scene, float3 const& point, float const half_size, math::color const& color, bool use_depth = true );
-	void draw_triangle( base_scene_ptr const& scene, vertex_colored const (&vertices)[3], bool use_depth = true );
-	void draw_triangle( base_scene_ptr const& scene, float3 const& point_0, float3 const& point_1, float3 const& point_2, math::color const& color, bool use_depth = true );
-	void draw_triangle( base_scene_ptr const& scene, vertex_colored const& vertex_0, vertex_colored const& vertex_1, vertex_colored const& vertex_2, bool use_depth = true );
-
 	void draw_cube( base_scene_ptr const& scene, float4x4 const& matrix, float3 const& size, math::color const& color, bool use_depth = true );
 	void draw_frustum(
 		base_scene_ptr const& scene,
@@ -82,6 +76,13 @@ public:
 	void draw_lines( base_scene_ptr const& scene, vectora< vertex_colored > const& vertices, vectora< u16 > const& indices, bool use_depth = true );
 	void draw_lines(
 		base_scene_ptr const& scene,
+		vectora< vertex_colored >::const_iterator start_point,
+		vectora< vertex_colored >::const_iterator end_point,
+		vectora< u16 > const& indices,
+		bool use_depth = true
+	);
+	void draw_lines(
+		base_scene_ptr const& scene,
 		float4x4 const& matrix,
 		float const* vertices,
 		u32 vertex_count,
@@ -105,15 +106,20 @@ private:
 	);
 
 public:
+	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float const half_size, bool use_depth = true );
+	void draw_cross( base_scene_ptr const& scene, float3 const& point, float const half_size, math::color const& color, bool use_depth = true );
+	void draw_triangle( base_scene_ptr const& scene, float3 const& point_0, float3 const& point_1, float3 const& point_2, math::color const& color, bool use_depth = true );
+	void draw_triangle( base_scene_ptr const& scene, vertex_colored const& vertex_0, vertex_colored const& vertex_1, vertex_colored const& vertex_2, bool use_depth = true );
+	void draw_triangle( base_scene_ptr const& scene, vertex_colored const (&vertices)[3], bool use_depth = true );
 	void draw_triangles( base_scene_ptr const& scene, debug_vertices_type const& vertices, bool use_depth = true );
 	void draw_triangles( base_scene_ptr const& scene, debug_vertices_type const& vertices, debug_indices_type const& indices, bool use_depth = true );
 
 	void draw_frustum_solid(
 		base_scene_ptr const& scene,
-		float fov_in_radians,
-		float near_plane_distance,
-		float far_plane_distance,
-		float aspect_ratio,
+		float const fov_in_radians,
+		float const near_plane_distance,
+		float const far_plane_distance,
+		float const aspect_ratio,
 		float3 const& position,
 		float3 const& direction,
 		float3 up_vector,
@@ -144,6 +150,16 @@ private:
 		u32 index_count,
 		math::color const& color,
 		bool use_depth = true
+	);
+	void create_primitive(
+		base_scene_ptr const& scene,
+		vectora< float3 >& vertices,
+		vectora< u16 >& indices,
+		float4x4 transform,
+		float const* source_vertices,
+		u32 vertex_count,
+		u16 const* faces,
+		u32 index_count
 	);
 
 public:
