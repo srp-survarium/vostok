@@ -37,14 +37,6 @@ static vostok::console_commands::cc_bool s_draw_radiance_occluders_debug_cc(
 namespace vostok {
 namespace render {
 
-static bool s_lpv1_value = false;
-static console_commands::cc_bool s_lpv1(
-	"lpv1",
-	s_lpv1_value,
-	false,
-	console_commands::command_type_user_specific
-);
-
 const D3D_INPUT_ELEMENT_DESC injection_geometry_vertex_layout[] =
 {
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,			0, 0,  D3D_INPUT_PER_VERTEX_DATA, 0 },
@@ -181,6 +173,14 @@ void sliced_cube_geometry::draw( )
 	backend::ref().set_ib				(m_index_buffer.c_ptr(), 0);
 	backend::ref().render_indexed		(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, m_slices * 6, 0, 0);
 }
+
+static bool s_lpv1_value = false;
+static console_commands::cc_bool s_lpv1(
+	"lpv1",
+	s_lpv1_value,
+	false,
+	console_commands::command_type_user_specific
+);
 
 radiance_volume::radiance_volume(
 	u32 const	in_rsm_size,
