@@ -72,7 +72,8 @@ void render_output_window::set_size(
 	)
 		return;
 
-	m_current_size = math::uint2( width, height ); m_windowed = !fullscreen;
+	m_current_size = math::uint2( width, height );
+	m_windowed = !fullscreen;
 	m_targets.resize( m_current_size, force_resize );
 	m_output->set_size( width, height, fullscreen, force_resize );
 
