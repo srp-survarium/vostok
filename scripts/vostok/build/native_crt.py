@@ -12,10 +12,17 @@ records exactly like retail's (probe-proven end to end, /GL + LTCG included).
 The install must land INSIDE the prefix's fake winsxs assembly dir: cl.exe's
 embedded manifest requests Microsoft.VC90.CRT via SxS, and Wine resolves that
 to its own stub assembly, so app-dir or system32 copies are never consulted.
+
+This is prefix SETUP, not a per-build step: `provision()` both installs the
+DLLs and writes a persistent `msvcr90=native` DllOverride into the prefix's
+Wine registry, so every later `wine` in that prefix prefers the native CRT
+with no `WINEDLLOVERRIDES` on the command line. `vostok.tool.toolchain` calls
+it during the wine/registry setup stages; a plain build touches none of this.
 """
 
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 _ASSEMBLY_GLOB = "x86_microsoft.vc90.crt_*"
@@ -71,8 +78,51 @@ def installed(wineprefix: Path) -> bool:
                     for d in dirs))
 
 
-def export_override() -> None:
-    """Route msvcr90 to the native DLL for wine children (cl/link/mspdbsrv)."""
-    cur = os.environ.get("WINEDLLOVERRIDES", "")
-    if "msvcr90" not in cur:
-        os.environ["WINEDLLOVERRIDES"] = f"{cur};msvcr90=n" if cur else "msvcr90=n"
+_DLLOVERRIDES_KEY = r"HKEY_CURRENT_USER\Software\Wine\DllOverrides"
+
+
+def registry_override_set(wineprefix: Path) -> bool:
+    """True if the prefix's Wine registry already prefers native msvcr90.
+
+    Queries the LIVE registry (`wine reg query`) rather than parsing user.reg:
+    `wine reg add` only flushes the on-disk hive on wineserver shutdown, so a
+    disk read right after a write races. One cheap wine spawn, negligible
+    against a full build.
+    """
+    env = dict(os.environ, WINEPREFIX=str(wineprefix), WINEDEBUG="-all")
+    r = subprocess.run(
+        ["wine", "reg", "query", _DLLOVERRIDES_KEY, "/v", "msvcr90"],
+        check=False, capture_output=True, text=True, env=env)
+    return "native" in r.stdout.lower()
+
+
+def set_registry_override(wineprefix: Path) -> None:
+    """Persist msvcr90=native in the prefix registry (no per-build env var).
+
+    A registry DllOverride is read by every wine process in the prefix, so the
+    compiler prefers Microsoft's __unDName for the life of the prefix without
+    WINEDLLOVERRIDES on each invocation.
+    """
+    env = dict(os.environ, WINEPREFIX=str(wineprefix), WINEDEBUG="-all")
+    subprocess.run(
+        ["wine", "reg", "add", _DLLOVERRIDES_KEY,
+         "/v", "msvcr90", "/t", "REG_SZ", "/d", "native", "/f"],
+        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
+
+
+def provision(wineprefix: Path) -> bool:
+    """Prefix setup: install the native CRT and persist the native override.
+
+    Idempotent. Returns True once the prefix is set to build with native
+    msvcr90 (DLLs in winsxs + registry override). Called from the toolchain
+    setup stages; NOT from the per-build path.
+    """
+    ok = install(wineprefix)
+    if ok and not registry_override_set(wineprefix):
+        set_registry_override(wineprefix)
+    return ok and registry_override_set(wineprefix)
+
+
+def provisioned(wineprefix: Path) -> bool:
+    """True if this prefix will build with native msvcr90 (DLLs + override)."""
+    return installed(wineprefix) and registry_override_set(wineprefix)
