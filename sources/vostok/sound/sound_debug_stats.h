@@ -34,7 +34,7 @@ class world_user;
 class sound_scene;
 struct sound_scene_statistic;
 
-class VOSTOK_SOUND_API sound_debug_stats : public sound::noncopyable
+class VOSTOK_SOUND_API sound_debug_stats : private sound::noncopyable
 {
 public:
 					sound_debug_stats			( memory::base_allocator* allocator, world_user& user, resources::unmanaged_resource_ptr const& scene, ui::world& ui_world );

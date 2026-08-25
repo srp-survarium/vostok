@@ -16,7 +16,7 @@ namespace sound {
 
 class sound_environment_cook :
 	public resources::translate_query_cook,
-	private boost::noncopyable
+	public boost::noncopyable
 {
 	typedef resources::translate_query_cook super;
 

@@ -25,6 +25,7 @@ class voice_bridge :
 public:
 	inline	u8				get_channels_num				( ) const { return m_channels_num; }
 	inline	u32				get_sample_rate					( ) const { return m_sample_rate; }
+			void			set_sample_rate					( u32 new_sample_rate );
 
 			void			start							( );
 			void			stop							( );
@@ -37,7 +38,6 @@ public:
 			void			set_channel_volumes				( u8 channels_num, float const* level_matrix );
 			void			set_low_pass_filter_params		( float coeff );
 			void			set_output_voice				( IXAudio2SubmixVoice* output_voice  );
-			void			set_sample_rate					( u32 new_sample_rate );
 			void			set_frequency_ratio				( float ratio );
 	inline	IXAudio2SourceVoice*	get_xaudio_voice			( ) { return m_source_voice; }
 private:

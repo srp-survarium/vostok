@@ -110,7 +110,6 @@ public:
 
 	inline	void			set_callback_pending	( bool is_pending ) { threading::interlocked_exchange( m_callback_pending, is_pending ); }
 			void			execute_callback		( u32 playback_id );
-	inline	void			execute_callback		( ) { execute_callback( m_playback_id ); }
 	inline	bool			is_destruction_pending	( ) const { return m_destruction_pending == 1; }
 
 	inline	new_sound_propagator_list&		get_propagators				( ) { return m_propagators; }
@@ -134,9 +133,9 @@ public:
 			void			on_propagators_serialized		( boost::function < void ( memory::writer*, memory::writer* ) >& fn, memory::writer* sound_thread_writer, memory::writer* w );
 			void			on_finish_callback				( sound_instance_proxy_ptr last_reference );
 
-			void			calculate_graph_position		( float3 const& listener_position, vectora< std::pair< float, float3 > >& results );
-
 sound_emitter_ptr const&	get_sound_emitter				( ) const { return m_sound_emitter; }
+
+			void			calculate_graph_position		( float3 const& listener_position, vectora< std::pair< float, float3 > >& results );
 
 #ifndef MASTER_GOLD
 	virtual void			dbg_set_quality					( u32 quality );

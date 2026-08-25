@@ -21,7 +21,7 @@ namespace vostok {
 namespace sound {
 namespace search {
 
-class search_service : public noncopyable
+class search_service : private noncopyable
 {
 public:
 	struct vertex_type :
@@ -108,13 +108,13 @@ public:
 		float3 const& start_position,
 		float3 const& target_position,
 		float const& max_distance,
-		vectora< fixed_vector< u32, 32 > >& result_paths
+		vectora< fixed_vector< u32, max_portals_in_path > >& result_paths
 	);
 
 	inline ~search_service( )
 	{}
 
-private:
+public:
 	vertex_allocator_impl_type m_vertex_allocator;
 	vertex_manager_impl_type m_vertex_manager;
 	priority_queue_impl_type m_priority_queue;

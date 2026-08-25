@@ -15,7 +15,7 @@ namespace vostok {
 namespace sound {
 namespace search {
 
-class graph_heuristics : public boost::noncopyable
+class graph_heuristics : private boost::noncopyable
 {
 public:
 	inline graph_heuristics(
@@ -44,16 +44,17 @@ public:
 		vertex_id_type const& neighbour_vertex_id
 	) const;
 
+	// dtor before evaluate: retail's method list orders it here
+	inline ~graph_heuristics( )
+	{
+	}
+
 	template < typename vertex_type >
 	inline float evaluate(
 		vertex_type const& current_vertex,
 		vertex_type const& neighbour_vertex,
 		u32 const* const& iterator
 	) const;
-
-	inline ~graph_heuristics( )
-	{
-	}
 
 	static inline bool metric_euclidian( )
 	{

@@ -17,7 +17,7 @@ namespace sound {
 class sound_world;
 
 class ogg_sound_cook :	public resources::translate_query_cook,
-							public boost::noncopyable
+							public noncopyable
 {
 	typedef resources::translate_query_cook	super;
 public:
