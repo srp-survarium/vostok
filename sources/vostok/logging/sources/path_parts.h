@@ -20,9 +20,11 @@ class path_parts : private boost::noncopyable {
 public:
 					path_parts			(pcstr initiator);
 	inline			path_parts			() : m_index(0), m_current_element(0) {}
-	inline	pcstr	get_current_element () { return m_current_element; }
+	inline	pcstr	get_current_element () const { return m_current_element; }
 			void	add_part			(pcstr part);
 			void	to_next_element		();
+			// in the retail record but never emitted; declaration only
+			void	concat2buffer		(buffer_string& buffer);
 			void	concat2buffer		(format_string_type& buffer);
 
 private:

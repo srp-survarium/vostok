@@ -13,9 +13,9 @@ namespace logging {
 logging_filters_console_command::logging_filters_console_command(
 	filter_tree&						filter_tree,
 	pcstr const							name,
-	bool								serializable,
-	console_commands::command_type		command_type,
-	console_commands::execution_filter	execution_filter
+	bool const							serializable,
+	console_commands::command_type const	command_type,
+	console_commands::execution_filter const	execution_filter
 	):
 	console_commands::console_command	( name, serializable, command_type, execution_filter ),
 	m_filter_tree						( filter_tree )

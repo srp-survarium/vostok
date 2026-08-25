@@ -13,14 +13,14 @@ namespace logging {
 
 class filter_tree;
 
-class logging_filters_console_command : public console_commands::console_command , public boost::noncopyable {
+class logging_filters_console_command : public console_commands::console_command , private boost::noncopyable {
 public:
 			logging_filters_console_command	(
 						filter_tree&						filter_tree,
 						pcstr const							name,
-						bool								serializable,
-						console_commands::command_type		command_type,
-						console_commands::execution_filter	execution_filter
+						bool const							serializable,
+						console_commands::command_type const	command_type,
+						console_commands::execution_filter const	execution_filter
 					);
 
 	virtual	void	execute							( pcstr args ) override;

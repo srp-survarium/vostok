@@ -15,9 +15,9 @@ namespace logging {
 
 struct log_format
 {
-	inline	log_format		( format_specifier const& format_expression ) { set( format_expression ); }
 	// Target emits this empty constructor out of line; this LTCG context expands it at callers.
 	inline	log_format		( ) { }
+	inline	log_format		( format_specifier const& format_expression ) { set( format_expression ); }
 
 			void	set		( format_specifier const& format_expression );
 

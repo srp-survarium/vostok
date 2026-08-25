@@ -17,7 +17,7 @@ struct initiator_filter
 {
 	initiator_filter *						next;
 	initiator_filter *						prev;
-	int										verbosity;
+	verbosity								verbosity;
 	u32										thread_id;
 #pragma warning (push)
 #pragma warning (disable:4200)
