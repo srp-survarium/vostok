@@ -1,3 +1,9 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 07.02.2009
+//	Author		: Mykhailo Parfeniuk
+//	Copyright (C) GSC Game World - 2009
+////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include <vostok/render/core/res_texture.h>
 #include "com_utils.h"
@@ -11,12 +17,79 @@
 namespace vostok {
 namespace render {
 
-ID3D11Resource* res_texture::hw_texture()
-{
-// 	if (m_surface)
-// 		m_surface->AddRef();
 
-	return m_surface;
+#define		PRIORITY_HIGH	12
+#define		PRIORITY_NORMAL	8
+#define		PRIORITY_LOW	4
+
+//void ref_texture::create(LPCSTR name)
+//{
+//	resource_manager::ref().create_texture(name);
+//}
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+res_texture::res_texture( bool pool_texture):
+	m_loaded		(false),
+	num_mips		(0),
+	m_surface		(NULL),
+	m_mip_level_cut	(0),
+	m_desc_valid	(false),
+	m_sh_res_view	(NULL),
+	m_pool_texture	(pool_texture),
+	m_rescale_min	(float4(0.0f,0.0f,0.0f,0.0f)),
+	m_rescale_max	(float4(1.0f,1.0f,1.0f,1.0f)),
+	m_mem_usage		(0),
+	m_is_registered	( false ),
+	m_streamed		( true )
+{
+	ZeroMemory( &m_desc, sizeof(m_desc));
+
+	//pAVI				= NULL;
+	//pTheora				= NULL;
+	//desc_cache			= 0;
+	//seqMSPF				= 0;
+	//flags.MemoryUsage	= 0;
+	//flags.bLoaded		= false;
+	//flags.bUser			= false;
+	//flags.seqCycles		= FALSE;
+	//m_material			= 1.0f;
+	//m_bind = fastdelegate::FastDelegate1<u32>(this, &res_texture::apply_load);
+}
+
+res_texture::~res_texture()
+{
+	safe_release(m_surface);
+	safe_release(m_sh_res_view);
+
+	//unload				();
+	// release external reference
+}
+
+void res_texture::destroy_impl		() const
+{
+	resource_manager::ref().release( this );
+}
+
+void res_texture::save_as(pcstr file_name)
+{
+	// TODO:
+	// Saving flips R and B components...
+
+	HRESULT result;
+
+#ifndef MASTER_GOLD
+#	if USE_DX10
+		result = D3DX10SaveTextureToFile(device::ref().d3d_context(), hw_texture(), D3DX10_IFF_DDS, file_name);
+#	else // #if USE_DX10
+		result = D3DX11SaveTextureToFile(device::ref().d3d_context(), hw_texture(), D3DX11_IFF_DDS, file_name);
+#	endif // #if USE_DX10
+#else
+	VOSTOK_UNREFERENCED_PARAMETER(file_name);
+#endif // #ifndef MASTER_GOLD
+
+	(void)&result;
 }
 
 void res_texture::desc_update()
@@ -41,151 +114,33 @@ void res_texture::desc_update()
 	}
 }
 
-void res_texture::save_as(pcstr file_name)
+
+static DXGI_FORMAT get_srgb_format(DXGI_FORMAT format)
 {
-	// TODO:
-	// Saving flips R and B components...
-
-	HRESULT result;
-
-#ifndef MASTER_GOLD
-	result = D3DX11SaveTextureToFile(device::ref().d3d_context(), hw_texture(), D3DX11_IFF_DDS, file_name);
-#else
-	VOSTOK_UNREFERENCED_PARAMETER(file_name);
-#endif // #ifndef MASTER_GOLD
-
-	(void)&result;
-}
-
-void res_texture::clone 	( res_texture* other)
-{
-	safe_release(m_surface);
-	safe_release(m_sh_res_view);
-
-	// If you added any member to the class res_texture, than add it to this copy list as well,
-	// otherwise just set the new size of the class.
-//	COMPILE_ASSERT( sizeof(res_texture) == 92, The_res_texture_class_size_has_changed);
-
-	m_loaded					= other->m_loaded;
-	m_user						= other->m_user;
-	m_seq_cycles				= other->m_seq_cycles;
-	m_mem_usage					= other->m_mem_usage;
-
-	m_bind						= other->m_bind;
-
-	m_surface					= other->m_surface;
-	m_desc_cache_surface		= other->m_desc_cache_surface;
-	m_sh_res_view				= other->m_sh_res_view;
-	m_desc						= other->m_desc;
-	m_mip_level_cut				= other->m_mip_level_cut;
-	m_desc_valid				= other->m_desc_valid;
-	m_pool_texture				= other->m_pool_texture;
-
-	if( m_surface)
-		m_surface->AddRef();
-
-	if( m_sh_res_view)
-		m_sh_res_view->AddRef();
-}
-
-res_texture::~res_texture()
-{
-	safe_release(m_surface);
-	safe_release(m_sh_res_view);
-
-	//unload				();
-	// release external reference
-}
-
-void res_texture::unmap3D			( u32 mip_level)
-{
-	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels));
-}
-
-void* res_texture::map3D	( D3D_MAP mode, u32 mip_level, u32& row_pitch)
-{
-	if( m_surface && m_desc_3d_valid)
+	switch (format)
 	{
-		D3D_RESOURCE_DIMENSION	type;
-		m_surface->GetType(&type);
-		if (D3D_RESOURCE_DIMENSION_TEXTURE3D == type)
-		{
-			D3D11_MAPPED_SUBRESOURCE mapped_res;
-			device::ref().d3d_context()->Map( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels), mode, 0, &mapped_res);
-
-			row_pitch = mapped_res.RowPitch;
-			return mapped_res.pData;
-		}
-	}
-	ASSERT( 0, "The texture couldn't be mapped.");
-	return NULL;
+		case DXGI_FORMAT_BC1_UNORM:
+		case DXGI_FORMAT_BC1_TYPELESS:
+			return DXGI_FORMAT_BC1_UNORM_SRGB;
+		case DXGI_FORMAT_BC2_UNORM:
+		case DXGI_FORMAT_BC2_TYPELESS:
+			return DXGI_FORMAT_BC2_UNORM_SRGB;
+		case DXGI_FORMAT_BC3_UNORM:
+		case DXGI_FORMAT_BC3_TYPELESS:
+			return DXGI_FORMAT_BC3_UNORM_SRGB;
+		case DXGI_FORMAT_BC7_UNORM:
+		case DXGI_FORMAT_BC7_TYPELESS:
+			return DXGI_FORMAT_BC7_UNORM_SRGB;
+		default:
+			return format;
+	};
 }
 
-void res_texture::unmap2D			( u32 mip_level)
+
+void res_texture::set_hw_texture(
+	ID3D11Resource* surface, u32 mip_level_cut, bool staging, bool srgb, bool depth_stencil
+)
 {
-	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels));
-}
-
-void* res_texture::map2D	( D3D_MAP mode, u32 mip_level, u32& row_pitch, bool do_not_wait)
-{
-	if( m_surface && m_desc_valid)
-	{
-		D3D_RESOURCE_DIMENSION	type;
-		m_surface->GetType(&type);
-		if (D3D_RESOURCE_DIMENSION_TEXTURE2D == type)
-		{
-			D3D11_MAPPED_SUBRESOURCE mapped_res;
-			device::ref().d3d_context()->Map( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels), mode, do_not_wait ? D3D11_MAP_FLAG_DO_NOT_WAIT : 0, &mapped_res);
-
-			row_pitch = mapped_res.RowPitch;
-			return mapped_res.pData;
-		}
-	}
-	ASSERT( 0, "The texture couldn't be mapped.");
-	return NULL;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-res_texture::res_texture( bool pool_texture):
-m_loaded		(false),
-num_mips		(0),
-m_surface		(NULL),
-m_mip_level_cut	(0),
-m_desc_valid	(false),
-m_sh_res_view	(NULL),
-m_pool_texture	(pool_texture),
-m_rescale_min	(float4(0.0f,0.0f,0.0f,0.0f)),
-m_rescale_max	(float4(1.0f,1.0f,1.0f,1.0f)),
-m_mem_usage		(0),
-m_is_registered	( false ),
-m_streamed		( true )
-{
-	ZeroMemory( &m_desc, sizeof(m_desc));
-
-	//pAVI				= NULL;
-	//pTheora				= NULL;
-	//desc_cache			= 0;
-	//seqMSPF				= 0;
-	//flags.MemoryUsage	= 0;
-	//flags.bLoaded		= false;
-	//flags.bUser			= false;
-	//flags.seqCycles		= FALSE;
-	//m_material			= 1.0f;
-	//m_bind = fastdelegate::FastDelegate1<u32>(this, &res_texture::apply_load);
-}
-
-void res_texture::destroy_impl		() const
-{
-	resource_manager::ref().release( this );
-}
-
-void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, bool staging, bool srgb, bool depth_stencil)
-{
-	VOSTOK_UNREFERENCED_PARAMETER( srgb );
-	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
-	// Preserve target line metadata.
 	if (surface)
 		surface->AddRef();
 
@@ -248,8 +203,12 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 			}
 
 			view_desc.Format = m_desc.Format;
-
-			// Five additional retail source lines were preprocessed out here.
+#ifndef MASTER_GOLD
+			if (srgb)
+				view_desc.Format = get_srgb_format(m_desc.Format);
+			else
+				view_desc.Format = DXGI_FORMAT_UNKNOWN;
+#endif
 			switch(m_desc.Format)
 			{
 			case DXGI_FORMAT_R24G8_TYPELESS:
@@ -286,6 +245,128 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 		else
 			CHECK_RESULT(device::ref().d3d_device()->CreateShaderResourceView(m_surface, NULL, &m_sh_res_view));
 	}
+}
+
+void* res_texture::map2D	( D3D_MAP mode, u32 mip_level, u32& row_pitch, bool do_not_wait)
+{
+	if( m_surface && m_desc_valid)
+	{
+		D3D_RESOURCE_DIMENSION	type;
+		m_surface->GetType(&type);
+		if (D3D_RESOURCE_DIMENSION_TEXTURE2D == type)
+		{
+#if USE_DX10
+			D3D10_MAPPED_TEXTURE2D buffer;
+			((ID3DTexture2D*)m_surface)->Map(
+				D3D10CalcSubresource( mip_level, 0, m_desc.MipLevels), mode, 0, &buffer
+			);
+
+			row_pitch = buffer.RowPitch;
+			return buffer.pData;
+#else
+			D3D11_MAPPED_SUBRESOURCE mapped_res;
+			device::ref().d3d_context()->Map(
+				m_surface,
+				D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels), mode,
+				do_not_wait ? D3D11_MAP_FLAG_DO_NOT_WAIT : 0, &mapped_res
+			);
+			row_pitch = mapped_res.RowPitch;
+			return mapped_res.pData;
+#endif
+
+		}
+	}
+	ASSERT( 0, "The texture couldn't be mapped.");
+	return NULL;
+}
+void res_texture::unmap2D			( u32 mip_level)
+{
+#if USE_DX10
+	((ID3DTexture2D*)m_surface)->Unmap( D3D10CalcSubresource( mip_level, 0, m_desc.MipLevels));
+#else
+	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels));
+#endif
+}
+
+
+void* res_texture::map3D	( D3D_MAP mode, u32 mip_level, u32& row_pitch)
+{
+	if( m_surface && m_desc_3d_valid)
+	{
+		D3D_RESOURCE_DIMENSION	type;
+		m_surface->GetType(&type);
+		if (D3D_RESOURCE_DIMENSION_TEXTURE3D == type)
+		{
+#if USE_DX10
+			D3D10_MAPPED_TEXTURE2D buffer;
+			((ID3DTexture3D*)m_surface)->Map( D3D10CalcSubresource( mip_level, 0, m_desc_3d.MipLevels), mode, 0, &buffer);
+
+			row_pitch = buffer.RowPitch;
+			return buffer.pData;
+#else
+			D3D11_MAPPED_SUBRESOURCE mapped_res;
+			device::ref().d3d_context()->Map( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels), mode, 0, &mapped_res);
+
+			row_pitch = mapped_res.RowPitch;
+			return mapped_res.pData;
+#endif
+
+		}
+	}
+	ASSERT( 0, "The texture couldn't be mapped.");
+	return NULL;
+}
+void res_texture::unmap3D			( u32 mip_level)
+{
+#if USE_DX10
+	((ID3DTexture2D*)m_surface)->Unmap( D3D10CalcSubresource( mip_level, 0, m_desc_3d.MipLevels));
+#else
+	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels));
+#endif
+}
+
+ID3D11Resource* res_texture::hw_texture()
+{
+// 	if (m_surface)
+// 		m_surface->AddRef();
+
+	return m_surface;
+}
+
+void res_texture::clone 	( res_texture* other)
+{
+	safe_release(m_surface);
+	safe_release(m_sh_res_view);
+
+	// If you added any member to the class res_texture, than add it to this copy list as well,
+	// otherwise just set the new size of the class.
+//	COMPILE_ASSERT( sizeof(res_texture) == 92, The_res_texture_class_size_has_changed);
+
+	m_loaded					= other->m_loaded;
+	m_user						= other->m_user;
+	m_seq_cycles				= other->m_seq_cycles;
+	m_mem_usage					= other->m_mem_usage;
+
+#	ifdef	USE_DX10_OLD
+	m_is_loaded_as_staging		= other->m_is_loaded_as_staging;
+#	endif	//	USE_DX10
+
+	m_bind						= other->m_bind;
+
+	m_surface					= other->m_surface;
+	m_desc_cache_surface		= other->m_desc_cache_surface;
+	m_sh_res_view				= other->m_sh_res_view;
+	m_desc						= other->m_desc;
+	m_mip_level_cut				= other->m_mip_level_cut;
+	m_desc_valid				= other->m_desc_valid;
+	m_pool_texture				= other->m_pool_texture;
+
+
+	if( m_surface)
+		m_surface->AddRef();
+
+	if( m_sh_res_view)
+		m_sh_res_view->AddRef();
 }
 
 } // namespace render
