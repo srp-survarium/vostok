@@ -167,7 +167,7 @@ struct query_resources_and_wait_callback_proxy_pred
 
 	bool received_callback		() const { return receieved_callback_; }
 
-public:
+private:
 	bool						receieved_callback_;
 	query_callback				callback_;
 };
@@ -252,7 +252,7 @@ struct query_create_resources_and_wait_callback_proxy_pred
 
 	bool received_callback		() const { return receieved_callback_; }
 
-public:
+private:
 	bool						receieved_callback_;
 	query_callback				callback_;
 };

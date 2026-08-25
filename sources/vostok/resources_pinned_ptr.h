@@ -49,6 +49,8 @@ class pinned_ptr_const : public pinned_ptr_base<T const>
 {
 public:
 							explicit pinned_ptr_const	(managed_resource_ptr ptr) : pinned_ptr_base<T const>(ptr) { }
+							// explicit dtor so its record follows the ctor, as in target
+							~pinned_ptr_const	() { }
 };
 
 template <class T>

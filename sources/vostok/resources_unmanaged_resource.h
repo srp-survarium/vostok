@@ -79,7 +79,7 @@ private:
 	unmanaged_resource *			m_next_in_global_delay_delete_list;
 	unmanaged_resource *			m_prev_in_global_delay_delete_list;
 	u32								m_deallocation_thread_id;
-	flags_type<flag_enum>			m_flags;
+	flags_type<enum flag_enum>		m_flags;
 
 	bool							m_inlined_in_fat;
 

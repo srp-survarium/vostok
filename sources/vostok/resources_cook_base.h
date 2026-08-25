@@ -54,7 +54,7 @@ protected:
 public:
 			cook_base					(class_id_enum				resource_class,
 										 reuse_enum					reuse_type,
-										 enum_flags<flags_enum>		flags,
+										 enum_flags<enum flags_enum>	flags,
 										 u32 						creation_thread_id,
 										 u32						allocate_thread_id);
 
@@ -159,7 +159,7 @@ private:
 	threading::thread_id_type			m_allocate_thread_id;
 	threading::thread_id_type			m_translate_thread_id;
 	};
-	flags_type<flags_enum>				m_flags;
+	flags_type<enum flags_enum>			m_flags;
 
 	cook_base *							m_next;
 

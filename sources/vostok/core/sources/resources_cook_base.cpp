@@ -14,7 +14,7 @@ static u32	 correct_thread_id (u32 const id)
 
 cook_base::cook_base  (class_id_enum			resource_class, 
 					   reuse_enum				reuse_type,
-					   enum_flags<flags_enum>	flags,
+					   enum_flags<enum flags_enum>	flags,
 					   u32 						creation_thread_id,
 					   u32						allocate_thread_id)
 					   : 
