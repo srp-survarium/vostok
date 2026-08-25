@@ -12,6 +12,29 @@
 namespace vostok {
 namespace render {
 
+render_target::render_target() :
+	m_is_registered ( false )
+{
+	m_memory_usage = 0;
+	m_surface_3d = NULL;
+	m_surface = NULL;
+	m_rt	  = NULL;
+	m_width	  = 0;
+	m_height  = 0;
+	m_format  = DXGI_FORMAT_UNKNOWN;
+}
+
+render_target::~render_target()
+{
+	destroy();
+	resource_manager::ref().m_render_target_video_memory -= m_memory_usage;
+}
+
+void render_target::destroy_impl() const
+{
+	resource_manager::ref().release( this );
+}
+
 void render_target::save_as	(pcstr file_name)
 {
 #ifndef MASTER_GOLD
@@ -22,6 +45,56 @@ void render_target::save_as	(pcstr file_name)
 #else // #ifndef MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETER( file_name );
 #endif // #ifndef MASTER_GOLD
+}
+
+void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXGI_FORMAT format, enum_rt_usage usage, D3D11_USAGE memory_usage )
+{
+	if( m_surface_3d)
+		return;
+
+	//R_ASSERT( device::ref().d3d_context() && name && name[0] && width && height);
+
+	// Select usage
+	if( usage == enum_rt_usage_depth_stencil)
+	{
+		ASSERT(0, "3d depth stencil is not supported.");
+		return;
+	}
+
+	m_memory_usage = utils::calc_surface_size( width, height, format );
+	resource_manager::ref().m_render_target_video_memory += m_memory_usage;
+
+	D3D_TEXTURE3D_DESC		desc;
+	vostok::memory::zero		(&desc, sizeof(desc));
+	desc.Width				= width;
+	desc.Height				= height;
+	desc.Depth				= depth;
+	desc.MipLevels			= 1;
+	desc.Format				= format;
+	desc.Usage				= memory_usage;
+	desc.BindFlags			= D3D_BIND_SHADER_RESOURCE | D3D_BIND_RENDER_TARGET;
+
+	CHECK_RESULT( device::ref().d3d_device()->CreateTexture3D( &desc, NULL, &m_surface_3d ) );
+
+	D3D_RENDER_TARGET_VIEW_DESC				desc_rt;
+	vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
+	desc_rt.Format							= format;
+	desc_rt.ViewDimension					= D3D11_RTV_DIMENSION_TEXTURE3D;
+	desc_rt.Texture3D.MipSlice				= 0;
+	desc_rt.Texture3D.FirstWSlice			= 0;
+	desc_rt.Texture3D.WSize					= depth;
+
+	CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( m_surface_3d, &desc_rt, &m_rt ) );
+
+	if (name)
+		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
+	else
+	{
+		m_texture = NEW( res_texture);
+		m_texture->set_name( 0 );
+		m_texture->mark_registered();
+	}
+	m_texture->set_hw_texture( m_surface_3d);
 }
 
 void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT format, enum_rt_usage usage, res_texture_ptr in_texture, u32 first_array_slice_index, u32 mip_slice)
@@ -93,53 +166,6 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 
 		CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( in_texture->hw_texture(), &desc_rt, &m_rt ) );
 	}
-}
-
-render_target::render_target() :
-	m_is_registered ( false )
-{
-	m_memory_usage = 0;
-	m_surface_3d = NULL;
-	m_surface = NULL;
-	m_rt	  = NULL;
-	m_width	  = 0;
-	m_height  = 0;
-	m_format  = DXGI_FORMAT_UNKNOWN;
-}
-
-void render_target::destroy()
-{
-	if ( m_texture.c_ptr())
-	{
-		m_texture->set_hw_texture( 0);
-		m_texture = NULL;
-	}
-
-	safe_release( m_rt);
-
-	if (m_surface)
-	{
-		log_ref_count( name().c_str(), m_surface);
-	}
-
-	if (m_surface_3d)
-	{
-		log_ref_count( name().c_str(), m_surface_3d);
-	}
-
-	safe_release( m_surface);
-	safe_release( m_surface_3d);
-}
-
-render_target::~render_target()
-{
-	destroy();
-	resource_manager::ref().m_render_target_video_memory -= m_memory_usage;
-}
-
-void render_target::destroy_impl() const
-{
-	resource_manager::ref().release( this );
 }
 
 void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT format, enum_rt_usage usage, D3D11_USAGE memory_usage, u32 sample_count)
@@ -262,54 +288,28 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 	m_texture->set_hw_texture( m_surface);
 }
 
-void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXGI_FORMAT format, enum_rt_usage usage, D3D11_USAGE memory_usage )
+void render_target::destroy()
 {
-	if( m_surface_3d)
-		return;
-
-	//R_ASSERT( device::ref().d3d_context() && name && name[0] && width && height);
-
-	// Select usage
-	if( usage == enum_rt_usage_depth_stencil)
+	if ( m_texture.c_ptr())
 	{
-		ASSERT(0, "3d depth stencil is not supported.");
-		return;
+		m_texture->set_hw_texture( 0);
+		m_texture = NULL;
 	}
 
-	m_memory_usage = utils::calc_surface_size( width, height, format );
-	resource_manager::ref().m_render_target_video_memory += m_memory_usage;
+	safe_release( m_rt);
 
-	D3D_TEXTURE3D_DESC		desc;
-	vostok::memory::zero		(&desc, sizeof(desc));
-	desc.Width				= width;
-	desc.Height				= height;
-	desc.Depth				= depth;
-	desc.MipLevels			= 1;
-	desc.Format				= format;
-	desc.Usage				= memory_usage;
-	desc.BindFlags			= D3D_BIND_SHADER_RESOURCE | D3D_BIND_RENDER_TARGET;
-
-	CHECK_RESULT( device::ref().d3d_device()->CreateTexture3D( &desc, NULL, &m_surface_3d ) );
-
-	D3D_RENDER_TARGET_VIEW_DESC				desc_rt;
-	vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
-	desc_rt.Format							= format;
-	desc_rt.ViewDimension					= D3D11_RTV_DIMENSION_TEXTURE3D;
-	desc_rt.Texture3D.MipSlice				= 0;
-	desc_rt.Texture3D.FirstWSlice			= 0;
-	desc_rt.Texture3D.WSize					= depth;
-
-	CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( m_surface_3d, &desc_rt, &m_rt ) );
-
-	if (name)
-		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
-	else
+	if (m_surface)
 	{
-		m_texture = NEW( res_texture);
-		m_texture->set_name( 0 );
-		m_texture->mark_registered();
+		log_ref_count( name().c_str(), m_surface);
 	}
-	m_texture->set_hw_texture( m_surface_3d);
+
+	if (m_surface_3d)
+	{
+		log_ref_count( name().c_str(), m_surface_3d);
+	}
+
+	safe_release( m_surface);
+	safe_release( m_surface_3d);
 }
 
 } // namespace render
