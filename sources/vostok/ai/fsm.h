@@ -29,13 +29,14 @@ public:
 
 			fsm_state*				pop_state			( );
 
-	inline	fsm_state_list const&	states				( ) const { return m_states; }
 	// claude@MATCH: the non-const overload is OUT-OF-LINE in the target
 	// (`intrusive_list<...>& fsm::states()` is a real standalone target symbol,
 	// called with the LTCG this-in-EAX convention from jump_logic & friends);
 	// the const overload stays inline (const call sites, e.g.
 	// weapon_user_animations_selector::serialize, show no states() call).
+	// Declared before the const overload to match the target record order.
 			fsm_state_list&			states				( );
+	inline	fsm_state_list const&	states				( ) const { return m_states; }
 
 
 private:

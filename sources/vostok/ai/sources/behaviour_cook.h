@@ -25,7 +25,7 @@ enum behaviour_resource_type_enum
 
 typedef buffer_vector< resources::request >	requests_type;
 
-class behaviour_cook : public resources::translate_query_cook
+class behaviour_cook : public resources::translate_query_cook , private boost::noncopyable
 {
 public:
 					behaviour_cook			( ai_world& world );
@@ -70,7 +70,7 @@ private:
 			void	finish_creation			( resources::query_result_for_cook* const parent, behaviour* const new_behaviour );
 
 private:
-	ai_world*								m_ai_world;
+	ai_world&								m_ai_world;
 	configs::binary_config_ptr				m_loaded_binary_config;
 }; // class behaviour_cook
 

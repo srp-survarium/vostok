@@ -18,7 +18,8 @@ enum ignorance_types_enum
 	ignorance_type_until_hit
 }; // enum ignorance_types_enum
 
-typedef std::pair< game_object_ptr, ignorance_types_enum > ignorable_game_object;
+// 'enum' spelled to elaborate the record type, as in the target PDB
+typedef std::pair< game_object_ptr, enum ignorance_types_enum > ignorable_game_object;
 
 enum filter_types_enum
 {
