@@ -42,7 +42,23 @@ public:
 	bool	save_archive				(save_archive_args & args);
 	bool	unpack						(unpack_arguments & args);
 
-	bool	convert_physical_to_virtual_path	(fs_new::virtual_path_string *			out_path, 
+	// declarations only: present in the retail record, bodies not in the shipped exe
+	bool	strip						(base_node<> * node);
+	bool	strip						(bool strip_empty_folders);
+	void	print						(bool print_hashes);
+private:
+	void	print						(base_node<> * const node, pcstr indent);
+public:
+	void	check_consistency			(bool check_hashes);
+private:
+	void	check_consistency			(base_node<> * const node);
+public:
+	bool	convert_links_to_duplicates	(memory::base_allocator & allocator, const bool recursively);
+private:
+	bool	convert_links_to_duplicates	(memory::base_allocator & allocator, base_node<> * const node);
+public:
+
+	bool	convert_physical_to_virtual_path	(fs_new::virtual_path_string *			out_path,
 												 fs_new::native_path_string const &		path,
 												 pcstr mount_descriptor					= NULL);
 	bool	convert_virtual_to_physical_path	(fs_new::native_path_string *			out_path, 
@@ -101,6 +117,17 @@ private:
  	void	query_mount_impl			(query_mount_arguments & args);
 
 	bool	try_reference_to_pending_mount_unsafe	(query_mount_arguments & args, bool * out_of_memory);
+
+	// declarations only: present in the retail record, bodies not in the shipped exe.
+	// base_folder_node's default argument is not visible here (it lives in the
+	// module-internal base_folder_node.h), hence the spelled-out enumerator
+	base_node<> *	clone				(memory::base_allocator &						allocator,
+										 base_node<> * const							node,
+										 base_folder_node<platform_pointer_default> * const	parent,
+										 pcstr											name);
+	base_node<> *	clone_recursive		(memory::base_allocator &						allocator,
+										 base_node<> * const							node,
+										 base_folder_node<platform_pointer_default> * const	parent);
 
 private:
 	friend	class						vfs_intrusive_mount_base;

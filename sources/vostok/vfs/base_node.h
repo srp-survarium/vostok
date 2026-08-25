@@ -80,12 +80,12 @@ public:
 	void				get_full_path	(fs_new::virtual_path_string * out_string) const;
 	u16					get_flags		() const { return m_flags; }
 	bool				has_flags		(u32 flags) const { return ((u32)m_flags & flags) == flags; }
-	void				set_flags		(enum_flags<vfs_node_enum> flags) { m_flags	= (u16)(u32)flags; }
-	void				add_flags		(enum_flags<vfs_node_enum> flags) {
+	void				set_flags		(enum_flags<enum vfs_node_enum> flags) { m_flags	= (u16)(u32)flags; }
+	void				add_flags		(enum_flags<enum vfs_node_enum> flags) {
 		u32 const platformed_flags	=	((u32)flags) << (platform::big_endian() ? 16 : 0);
 		threading::interlocked_or((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)platformed_flags);
 	}
-	void				unset_flags		(enum_flags<vfs_node_enum> flags) {
+	void				unset_flags		(enum_flags<enum vfs_node_enum> flags) {
 		u32 const platformed_flags	=	((u32)flags) << (platform::big_endian() ? 16 : 0);
 		threading::interlocked_and((threading::atomic32_type &)m_flags, (threading::atomic32_value_type)~platformed_flags);
 	}
@@ -115,6 +115,9 @@ public:
 	void				set_hashset_next	(base_node * node) { m_hashset_next = node; }
 
 	u32					sizeof_with_name();
+
+	// declaration only: present in the retail record, body not in the shipped exe
+	u32					get_expected_node_size();
 
 	void				reverse_bytes_for_final_class	(reverse_direction_enum direction);
  	void				reverse_bytes	();

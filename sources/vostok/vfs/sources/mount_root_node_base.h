@@ -77,9 +77,9 @@ public:
 	typename	platform_pointer<fs_new::device_file_system_interface,	T>::type	device;
 	typename	platform_pointer<fs_new::asynchronous_device_interface,	T>::type	async_device;
 	
-	typename	platform_pointer<char const,	T>::type	virtual_path;
-	typename	platform_pointer<char const,	T>::type	physical_path;
-	typename	platform_pointer<char const,	T>::type	descriptor;
+	typename	platform_pointer<const char,	T>::type	virtual_path;
+	typename	platform_pointer<const char,	T>::type	physical_path;
+	typename	platform_pointer<const char,	T>::type	descriptor;
 	typename	platform_pointer<vfs_mount, T>::type		mount;
 
 	typename	node_type::node_pointer		node;

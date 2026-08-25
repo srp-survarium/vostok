@@ -12,12 +12,12 @@
 namespace vostok {
 namespace vfs {
 
-typedef	boost::function< void (vfs_locked_iterator const &, result_enum) >	find_callback;
+typedef	boost::function< void (vfs_locked_iterator const &, enum result_enum) >	find_callback;
 
 enum	find_enum					{	find_recursively	=	1 << 0,
 										find_file_only		=	1 << 1, };
 
-template class VOSTOK_VFS_API boost::function	< void (vfs_locked_iterator const &, result_enum) >;
+template class VOSTOK_VFS_API boost::function	< void (vfs_locked_iterator const &, enum result_enum) >;
 
 } // namespace vfs
 } // namespace vostok

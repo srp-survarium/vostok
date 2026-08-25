@@ -31,7 +31,7 @@ public:
 	}
 
 public:
-	typename platform_pointer<char const, T>::type	m_inlined_data;
+	typename platform_pointer<const char, T>::type	m_inlined_data;
 	u32												m_inlined_size;
 
 }; // class archive_inline_file_base

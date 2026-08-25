@@ -52,8 +52,10 @@ public:
 private:
 	bool   equal_nodes_impl					(fat_node_info * const first_info, fat_node_info * const second_info, bool check_name);
 	bool   equal_folder_nodes 				(fat_node_info * const first_info, fat_node_info * const second_info);
-	bool   equal_file_nodes					(base_node<> * const left, base_node<> * const right);
-	void   read_file_data					(allocated_buffer * const out_buffer, base_node<> * const node);
+	// retail signatures: infos are passed through; the node_info parameter of
+	// read_file_data is unused on this path (retail's file-handles path is not reconstructed)
+	bool   equal_file_nodes					(fat_node_info * const left_info, fat_node_info * const right_info);
+	void   read_file_data					(allocated_buffer * const out_buffer, base_node<> * const node, fat_node_info * const node_info);
 
 private:
 	synchronous_device_interface *		m_device;
@@ -61,8 +63,9 @@ private:
 	memory::base_allocator *			m_allocator;
 };
 
-void   compare_nodes::read_file_data	(allocated_buffer * const out_buffer, base_node<> * const node)
+void   compare_nodes::read_file_data	(allocated_buffer * const out_buffer, base_node<> * const node, fat_node_info * const node_info)
 {
+	VOSTOK_UNREFERENCED_PARAMETER			(node_info);
 	native_path_string const file_path	=	get_node_physical_path(node);
 
 	file_type_pointer const file			(file_path, * m_device, file_mode::open_existing, file_access::read);
@@ -85,8 +88,10 @@ void   compare_nodes::read_file_data	(allocated_buffer * const out_buffer, base_
 	}
 }
 
-bool   compare_nodes::equal_file_nodes	(base_node<> * const left_node, base_node<> * const right_node)
+bool   compare_nodes::equal_file_nodes	(fat_node_info * const left_info, fat_node_info * const right_info)
 {
+	base_node<> * const left_node		=	left_info->node;
+	base_node<> * const right_node		=	right_info->node;
 	R_ASSERT								(!left_node->is_link() && !right_node->is_link());
 
 	u32 const left_data_size			=	get_file_size(left_node);
@@ -94,10 +99,10 @@ bool   compare_nodes::equal_file_nodes	(base_node<> * const left_node, base_node
 	if ( left_data_size != right_data_size )
 		return								false;
 
-	allocated_buffer						left_data;			
-	read_file_data							(& left_data, left_node);
+	allocated_buffer						left_data;
+	read_file_data							(& left_data, left_node, left_info);
 	allocated_buffer						right_data;
-	read_file_data							(& right_data, right_node);
+	read_file_data							(& right_data, right_node, right_info);
 
 	bool const files_equal				=	memory::compare(left_data, right_data) == 0;
 	return									files_equal;
@@ -151,7 +156,7 @@ bool   compare_nodes::equal_nodes_impl	(fat_node_info * const first_info, fat_no
 	if ( first_node->is_folder() )
 		return								equal_folder_nodes		(real_first, real_second);
 
-	return									equal_file_nodes		(first_node, second_node);
+	return									equal_file_nodes		(real_first, real_second);
 }
 
 bool   compare_nodes::equal_nodes		(fat_node_info * const first_info, fat_node_info * const second_info)
