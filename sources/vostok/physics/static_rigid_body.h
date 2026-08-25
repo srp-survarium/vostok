@@ -34,7 +34,7 @@ public:
 	// the matched bt_static_rigid_body functions; absent from both binaries. Empty stubs correct.
 	inline	bool								is_active					( ) const { /* no source */ }
 	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ } // STATE[REMOVED]
-	inline	bt_collision_shape_ptr				get_collision_shape			( ) const { /* no source */ } // STATE[REMOVED]
+	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { /* no source */ } // STATE[REMOVED]
 	inline	void								predict_integrated_transform( float arg_0, float4x4& arg_1 ) const { /* no source */ } // STATE[REMOVED]
 
 private:

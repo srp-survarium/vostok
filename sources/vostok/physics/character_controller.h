@@ -38,15 +38,6 @@ public:
 	void					end_jump			( );
 	bool					has_updates			( ) const;
 
-	// @todo Recover this overload if a caller requiring it is restored.
-	inline	bool			adjust_foot_transform	(
-								float3 const&		arg_0,
-								float3 const&		arg_1,
-								float3 const&		arg_2,
-								float3&				arg_3,
-								float3&				arg_4
-							) const { /* no source */ }
-
 			bool			adjust_foot_transform	(
 								float3 const&		half_size,
 								float3 const&		start,
@@ -55,6 +46,15 @@ public:
 								float				__formal,
 								float4x4&			transform
 							);
+
+	// @todo Recover this overload if a caller requiring it is restored.
+	inline	bool			adjust_foot_transform	(
+								float3 const&		arg_0,
+								float3 const&		arg_1,
+								float3 const&		arg_2,
+								float3&				arg_3,
+								float3&				arg_4
+							) const { /* no source */ }
 
 	void					set_crouch			( bool crouch );
 	// @todo Recover the implementation when a caller is restored.

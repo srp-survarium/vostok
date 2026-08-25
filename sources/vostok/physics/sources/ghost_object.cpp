@@ -64,7 +64,7 @@ void destroy_ghost_object( bt_ghost_object* obj )
 
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
-	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, object->get_bt_collision_obect( ), contact_result_callback( &predicate ) );
+	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, object->get_bt_collision_obect( ), contact_result_callback( predicate ) );
 }
 
 bool bt_ghost_object::contact_test( world* world )
