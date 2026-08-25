@@ -65,7 +65,7 @@ namespace animation {
 
 	STATIC_SIZE_ASSERT(editor_animations_event, 0x10);
 
-	struct fixed_joint_camera_effector : public camera_effector , public core::noncopyable {
+	struct fixed_joint_camera_effector : public camera_effector , private core::noncopyable {
 		inline	explicit	fixed_joint_camera_effector	( float4x4 const& joint_matrix ) : m_joint_matrix( joint_matrix ) { }
 
 		virtual	void		process_camera				( float4x4& view_inverted ) override { /* no source */ }
@@ -86,7 +86,7 @@ namespace animation {
 										render::scene_ptr const& scene,
 										render::scene_renderer& scene_renderer,
 										render::debug::renderer& debug_renderer,
-										render::skeleton_model_ptr model,
+										render::skeleton_model_ptr& model,
 										bool todo_get_name
 									) = 0;
 		virtual 			void	set_target_and_tick			(
@@ -107,7 +107,7 @@ namespace animation {
 
 		virtual				void	subscribe_footsteps			(mixing::animation_lexeme& anim) = 0;
 		virtual				void	reset						() = 0;
-		virtual				void	set_model_transform			(float4x4& m) = 0;
+		virtual				void	set_model_transform			(float4x4& m, pcvoid animated_object) = 0;
 		virtual			float4x4	get_object_matrix_for_camera() const = 0;
 
 	public:

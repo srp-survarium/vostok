@@ -22,12 +22,6 @@ inline subtraction_lexeme::subtraction_lexeme					( T1& left, T2& right ) :
 	ASSERT					( left.buffer() == right.buffer() );
 }
 
-inline subtraction_lexeme::subtraction_lexeme					( subtraction_lexeme const& other, bool ) :
-	binary_tree_subtraction_node	( other ),
-	binary_operation_lexeme ( other, true )
-{
-}
-
 inline subtraction_lexeme* subtraction_lexeme::cloned_in_buffer	( )
 {
 	return					base_lexeme::cloned_in_buffer< subtraction_lexeme >( );

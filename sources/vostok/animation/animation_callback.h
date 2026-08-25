@@ -21,9 +21,9 @@ enum callback_return_type_enum {
 typedef boost::function< callback_return_type_enum ( skeleton_animation_ptr const& animation, pcstr channel_id, u32 callback_time_in_ms, u8 domain_data ) >	callback_type;
 
 struct animation_callback_params;
-typedef boost::function< callback_return_type_enum( animation_callback_params& ) > new_callback_type; // sushi@TODO: Once animations are recovered, rename this to callback_type
+typedef boost::function< enum callback_return_type_enum( animation_callback_params& ) > new_callback_type; // sushi@TODO: Once animations are recovered, rename this to callback_type
 
-struct animation_callback : public boost::noncopyable {
+struct animation_callback : private boost::noncopyable {
 	inline	explicit	animation_callback	(
 					new_callback_type const&		callback,
 					pcvoid const					callback_uid,

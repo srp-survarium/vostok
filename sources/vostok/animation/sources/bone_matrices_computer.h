@@ -21,7 +21,7 @@ struct bone_transform;
 enum animation_types_enum;
 class bone_animation;
 
-class bone_matrices_computer : public boost::noncopyable {
+class bone_matrices_computer : private boost::noncopyable {
 public:
 								bone_matrices_computer			(
 									pcvoid const				animated_object,

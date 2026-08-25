@@ -90,9 +90,8 @@ public:
 	//
 	inline	animation_state const*			get_animation_state					( ) const;
 	inline	animation_state&				animation_state						( ) const;
-#ifndef MASTER_GOLD
+	// declared unguarded to match the retail record; defined (and callable) only outside gold
 	inline	pcstr							identifier							( ) const;
-#endif // #ifndef MASTER_GOLD
 	inline	base_interpolator const&		weight_interpolator					( ) const;
 
 	//

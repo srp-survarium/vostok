@@ -15,7 +15,7 @@ namespace mixing {
 
 class n_ary_tree_target_time_scale_calculator :
 	public n_ary_tree_visitor,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	explicit n_ary_tree_target_time_scale_calculator	( n_ary_tree_animation_node& node );

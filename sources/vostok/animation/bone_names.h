@@ -56,10 +56,7 @@ public:
 			void			set_name		( bone_index_type bone_index, pcstr name );
 
 public:
-			void			read			( vostok::configs::binary_config_value const &cfg );
-			void			write			( vostok::configs::lua_config_value		&cfg )const; // sushi@NOTE: I don't see read and another write
-
-			void			write			( stream &file )const;
+			void			write			( vostok::configs::lua_config_value		&cfg )const;
 
 public:
 		//	void			create_index	( const skeleton &skel, vector< bone_index_type > &index )const; // sushi@NOTE: I don't see

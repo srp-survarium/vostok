@@ -26,6 +26,11 @@ public:
 	virtual	void	accept										( n_ary_tree_visitor& visitor );
 
 private:
+	// declared-only, retail-private noncopyable idiom
+	n_ary_tree_time_scale_transition_node						( n_ary_tree_time_scale_transition_node const& other );
+	n_ary_tree_time_scale_transition_node& operator=			( n_ary_tree_time_scale_transition_node const& other );
+
+private:
 	virtual	bool	is_time_scale								( ) { return true; }
 	virtual	bool	is_weight									( ) { return false; }
 	virtual bool	is_transition								( ) { return true; }

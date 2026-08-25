@@ -11,15 +11,9 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-inline base_lexeme::base_lexeme				( mutable_buffer& buffer, bool const cloned ) :
+inline base_lexeme::base_lexeme				( mutable_buffer& buffer ) :
 	m_buffer		( &buffer ),
-	m_cloned		( cloned )
-{
-}
-
-inline base_lexeme::base_lexeme				( base_lexeme const& other, bool ) :
-	m_buffer		( other.m_buffer ),
-	m_cloned		( true )
+	m_cloned		( false )
 {
 }
 

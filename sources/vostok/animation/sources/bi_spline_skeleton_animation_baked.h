@@ -32,6 +32,7 @@ public:
 			bones() + bones_count()
 		);
 	}
+private:
 	inline	bi_spline_skeleton_animation_baked_impl const&	impl								( ) const
 	{
 		return *reinterpret_cast< bi_spline_skeleton_animation_baked_impl const* >( this + 1 );

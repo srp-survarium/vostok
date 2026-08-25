@@ -101,21 +101,6 @@ void	bone_names::set_name( bone_index_type bone_index, pcstr name )
 	bone_names_idx()[bone_index] = bone_name_index( bone_index, name );
 }
 
-void	bone_names::read( vostok::configs::binary_config_value const &cfg )
-{
-	const bone_index_type size = cfg.size();
-	R_ASSERT( size == m_bone_count );
-
-	bone_name_index * my_idx = bone_names_idx();
-
-	for ( bone_index_type i = 0; i < size; ++i )
-	{
-		my_idx[i] = bone_name_index ( i, pcstr ( static_cast<pcstr>( cfg[i] ) ) ) ;
-	}
-
-	std::sort( my_idx, my_idx + m_bone_count, crc_compare_predicate( ) );
-}
-
 void	bone_names::write( vostok::configs::lua_config_value	&cfg )const
 {
 
@@ -131,13 +116,6 @@ void	bone_names::write( vostok::configs::lua_config_value	&cfg )const
 	VOSTOK_UNREFERENCED_PARAMETER					( cfg );
 	NODEFAULT();
 #endif // MASTER_GOLD
-}
-
-void	bone_names::write( stream &file )const
-{
-	const u32 size = m_bone_count;
-	fwrite( &(size), sizeof(size), 1, file );
-	fwrite( bone_names_idx(), sizeof(bone_name_index), size, file );
 }
 
 bone_index_type	bone_names::bone_index( pcstr name )const

@@ -340,7 +340,7 @@ void n_ary_tree::dispatch_callbacks		( u32 const target_time_in_ms ) const
 		if ( i->event_iterator->event_time_in_ms != target_time_in_ms )
 			continue;
 
-		if ( (i->event_iterator->event_type & time_event_channel_callback_should_be_fired) == 0 )
+		if ( (i->event_iterator->event_type & time_event_user_defined) == 0 )
 			continue;
 
 		i->event_iterator.dispatch_callbacks	( );
@@ -417,7 +417,7 @@ n_ary_tree::process_event_result_enum n_ary_tree::process_event	(
 			);
 	}
 
-	if ( event_type & time_event_channel_callback_should_be_fired ) { }
+	if ( event_type & time_event_user_defined ) { }
 	
 	if ( event_type & time_event_time_direction_changed ) {
 		if ( !current_animation_node->animation_to_synchronize_with() )
@@ -466,7 +466,7 @@ static pcstr get_event_id	( u32 const event )
 		case time_event_new_animation_started				: return "new animation started";
 		case time_event_animation_ended						: return "animation ended";
 		case time_event_animation_interval_ended			: return "animation interval ended";
-		case time_event_channel_callback_should_be_fired	: return "channel callback";
+		case time_event_user_defined	: return "channel callback";
 		case time_event_time_direction_changed				: return "time direction changed";
 		case time_event_weight_transitions_finished			: return "weight transitions finished";
 		default												: NODEFAULT( return "<unknown event id>" );

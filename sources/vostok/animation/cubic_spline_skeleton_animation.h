@@ -59,6 +59,8 @@ public:
 private:
 		explicit			cubic_spline_skeleton_animation	( bi_spline_skeleton_animation_baked const& animation );
 						~cubic_spline_skeleton_animation( );
+	// declaration-only: retail's record carries this helper; it never made it to a symbol
+			void			create_in_place_internals		( bi_spline_skeleton_animation_baked const& animation, pvoid memory );
 	inline	bone_animation*			bone_data			( )			{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 	inline	bone_animation const*	bone_data			( ) const	{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 

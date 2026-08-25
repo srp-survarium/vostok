@@ -22,7 +22,6 @@ class VOSTOK_ANIMATION_API subtraction_lexeme :
 public:
 	template < typename T1, typename T2 >
 	inline							subtraction_lexeme	( T1& left, T2& right );
-	inline							subtraction_lexeme	( subtraction_lexeme const& other, bool );
 	inline subtraction_lexeme* cloned_in_buffer			( );
 
 protected:

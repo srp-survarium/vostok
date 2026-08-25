@@ -34,8 +34,7 @@ private:
 	inline					weight_lexeme	(
 								mutable_buffer& buffer,
 								float const weight,
-								base_interpolator const* const interpolator,
-								bool const cloned
+								base_interpolator const* const interpolator
 							);
 }; // class weight_lexeme
 

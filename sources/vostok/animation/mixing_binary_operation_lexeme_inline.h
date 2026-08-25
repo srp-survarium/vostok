@@ -16,8 +16,8 @@ inline binary_operation_lexeme::binary_operation_lexeme					( mutable_buffer& bu
 {
 }
 
-inline binary_operation_lexeme::binary_operation_lexeme					( base_lexeme const& other, bool ) :
-	super	( other, true )
+inline binary_operation_lexeme::binary_operation_lexeme					( base_lexeme const& other ) :
+	super	( other )
 {
 }
 
@@ -28,11 +28,6 @@ inline T* binary_operation_lexeme::cloned_in_buffer						( T& value )
 }
 
 inline binary_tree_base_node* binary_operation_lexeme::cloned_in_buffer	( expression& value )
-{
-	return	&value.node();
-}
-
-inline binary_tree_base_node* binary_operation_lexeme::cloned_in_buffer	( expression const& value )
 {
 	return	&value.node();
 }
