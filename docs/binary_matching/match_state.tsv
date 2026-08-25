@@ -8542,7 +8542,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_GbtCompoundCollisionAlgorithm@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btcollisionobject.h	bullet	done	MATCH	100	100	100	0	30	f	45fc3a301512	
 ??_GbtCompoundShape@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btdbvt.h	bullet	done	MATCH	100	100	100	0	45	f	f4fe84fd6fd1	
 ??_GbtConstraintSolver@@UAEPAXI@Z	bullet/bulletdynamics/constraintsolver/btconstraintsolver.h	bullet	done	MATCH	100	100	100	0	31	f	5fe458f8f4a0	
-??_GbtConvexCast@@UAEPAXI@Z	bullet/bulletcollision/narrowphasecollision/btpointcollector.h	bullet	done	MATCH	100	100	100	0	31	f	de82788f765c	
+??_GbtConvexCast@@UAEPAXI@Z	bullet/bulletcollision/narrowphasecollision/btpointcollector.h	bullet	done			100	100	0	31	f	de82788f765c	
 ??_GbtConvexConvexAlgorithm@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btconvexconvexalgorithm.h	bullet	done	MATCH	100	100	100	0	61	f	e7e4fd970851	
 ??_GbtConvexHullShape@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btconvexhullshape.h	bullet	done	MATCH	100	100	100	0	45	f	5fc4e7bf6c4e	
 ??_GbtConvexInternalShape@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btcapsuleshape.h	bullet	done	MATCH	100	100	100	0	42	f	cb154abc9a69	
@@ -8563,7 +8563,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_GbtNullPairCache@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btaxissweep3.h	bullet	done	MATCH	100	100	100	0	79	f	aa8909894f46	
 ??_GbtOptimizedBvh@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btoptimizedbvh.h	bullet	done	MATCH	100	100	100	0	47	f	a29c6d4f0e20	
 ??_GbtOverlapCallback@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btcollisiondispatcher.h	bullet	done	MATCH	100	100	100	0	31	f	74a00bfefdb0	
-??_GbtOverlappingPairCallback@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btcollisionobject.h	bullet	done	MATCH	100	100	100	0	31	f	6c750592bfa2	
+??_GbtOverlappingPairCallback@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btcollisionobject.h	bullet	done	MATCH	100	100	100	0	31	f	15ee0a9e6ac4	
 ??_GbtPairCachingGhostObject@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btcollisionobject.h	bullet	done	MATCH	100	100	100	0	85	f	15ee0a9e6ac4	
 ??_GbtQuantizedBvh@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btquantizedbvh.h	bullet	done	MATCH	100	100	100	0	45	f	2de0569645c1	
 ??_GbtRigidBody@@UAEPAXI@Z	bullet/bulletdynamics/dynamics/btrigidbody.h	bullet	done	MATCH	100	100	100	0	45	f	6e8868619f12	
@@ -8578,7 +8578,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_GbtSortedOverlappingPairCache@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btoverlappingpaircache.h	bullet	done	MATCH	100	100	100	0	85	f	74a00bfefdb0	
 ??_GbtSphereSphereCollisionAlgorithm@@UAEPAXI@Z	bullet/bulletcollision/collisiondispatch/btspherespherecollisionalgorithm.h	bullet	done	MATCH	100	100	100	0	61	f	8335f5fdb701	
 ??_GbtStridingMeshInterface@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btstridingmeshinterface.h	bullet	done	MATCH	100	100	100	0	31	f	63a5e920e8f6	
-??_GbtTriangleCallback@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/bttrianglemeshshape.cpp	bullet	done	MATCH	100	100	100	0	31	f	21f82d8afdf0	
+??_GbtTriangleCallback@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/bttrianglemeshshape.cpp	bullet	done	MATCH	100	100	100	0	31	f	b1a155927244	
 ??_GbtTriangleIndexVertexArray@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/bttriangleindexvertexarray.h	bullet	done	MATCH	100	100	100	0	92	f	8c9c5fe31daf	
 ??_Gbt_animated_rigid_body@physics@vostok@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btsphereshape.h	bullet	done	MATCH	100	100	100	0	84	f	b6bef35b736b	
 ??_Gbt_collision_shape@physics@vostok@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btbvhtrianglemeshshape.h	bullet	done	MATCH	100	100	100	0	30	f	03738ac9a32b	
@@ -8608,7 +8608,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gdoug_lea_mt_allocator@memory@vostok@@UAEPAXI@Z	vostok/core/sources/memory_doug_lea_mt_allocator.cpp	core	done	MATCH	100	100	100	0	51	f	3dfe7a08dedb	
 ??_Gdraw_lines_command@debug@render@vostok@@UAEPAXI@Z	vostok/render/facade/sources/debug_draw_lines_command_inline.h	render	done	MATCH	100	100	100	0	30	f	b8a601b56f51	
 ??_Gdraw_triangles_command@debug@render@vostok@@UAEPAXI@Z	vostok/render/facade/sources/debug_draw_triangles_command_inline.h	render	done	MATCH	100	100	100	0	30	f	3919d0762bb1	
-??_Geffect_pick_light_luminance@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	31	f	440cb9692a74	
+??_Geffect_pick_light_luminance@render@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	31	f	440cb9692a74	
 ??_Gencoded_sound_with_qualities@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/encoded_sound_with_qualities.cpp	sound	done	MATCH	100	100	100	0	44		d5786a3b38f4	
 ??_Genemy_perceptor@perceptors@ai@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	44		03b7c39b74f2	
 ??_Genemy_target_selector@selectors@ai@vostok@@UAEPAXI@Z	stlport/stl/_algo.c	stlport	done	MATCH	100	100	100	0	46		9d744def2444	
@@ -20571,7 +20571,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?compile@effect_read_cloud_base@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/effect_read_cloud_base.cpp	render	parked	SIZE	97.3684	97.3684	97.3684	1	195		ac517b2b2388	Target and base preserve the same statement topology, CFG, and branch destinations. Remaining bytes are LTCG call-boundary conventions in the shared effect compiler cone (retail passes selected arguments in registers while base uses the ordinary stack ABI), with only register scheduling in complex descriptors; no descriptor-local source-shape lever remains.
 ?compile@effect_reflection_mask@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/effect_reflection_mask.cpp	render	parked	SIZE	96.6418	96.6418	96.6418	2	227		6e2e5208827e	Exact target statement structure and CFG; residual is retail set_texture final argument in EAX versus base stack setup, plus terminal alignment padding.
 ?compile@effect_resolve_lighting@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/effect_resolve_lighting.cpp	render	parked	SIZE	94.75	94.75	95.1	2	335		74d3b67d3902	Exact target statement structure and CFG; residual is retail set_texture final argument in EAX versus base stack setup, plus terminal alignment padding.
-?compile@effect_resolve_particles@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/stage_particles.cpp	render	parked	SIZE	98.9726	98.9726	99.0411	2	234		7eea17bf5361	Target passes num_last_mips_used = u32(-1); residual is LTCG internal argument passing in EAX at the set_texture boundary while base uses the ordinary stack convention.
+?compile@effect_resolve_particles@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/stage_particles.cpp	render	parked	SIZE	98.9726	98.9726	99.0411	3	234		7eea17bf5361	Target PDB ownership restored to effect_resolve_particles.h and num_last_mips_used = u32(-1); residual is proven LTCG argument passing at the set_texture boundary (retail EAX versus base stack).
 ?compile@effect_shadow_map@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/effect_shadow_map.cpp	render	done	MATCH	100	100	100	0	419		803e6634eebb	
 ?compile@effect_simple_fog@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/stage_volume_fog.cpp	render	parked	SIZE	98.6364	98.6364	98.7273	3	157		4b95f8c929fe	identical single-block 55-instruction body and 8 statements; only set_texture argument register/relocation selection differs
 ?compile@effect_sky_ambient_occlusion@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	vostok/render/engine/sources/effect_sky_ambient_occlusion.h	render	parked	SIZE	95.8889	95.8889	96.037	3	462		0f1752db82c4	Target and base preserve the same statement topology, CFG, and branch destinations. Remaining bytes are LTCG call-boundary conventions in the shared effect compiler cone (retail passes selected arguments in registers while base uses the ordinary stack ABI), with only register scheduling in complex descriptors; no descriptor-local source-shape lever remains.
@@ -32169,7 +32169,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_read_cloud_base>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_clouds.cpp	render	done	MATCH	100	100	100	0	11	f	d53a8310228d	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_reflection_mask>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_ambient_lighting.cpp	render	done	MATCH	100	100	100	0	11	f	0a3ec1b9e5db	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_resolve_lighting>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_resolve_lighting.cpp	render	done	MATCH	100	100	100	0	11	f	3d9799f9e90d	
-`dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_resolve_particles>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH	100	100	100	0	11	f	45ff736dbf6c	
+`dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_resolve_particles>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH	100	100	100	0	11	f	54405fa3978b	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_shadow_map>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_pre_rain.cpp	render	done	MATCH	100	100	100	0	11	f	0e91a8082704	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_simple_fog>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_volume_fog.cpp	render	done	MATCH	100	100	100	0	11	f	ce348d84386a	
 `dynamic atexit destructor for '`vostok::render::effect_manager::create_effect<vostok::render::effect_sky_ambient_occlusion>'::`2'::descriptor_object''	vostok/render/engine/sources/stage_ambient_lighting.cpp	render	done	MATCH	100	100	100	0	11	f	0a3ec1b9e5db	
@@ -34931,7 +34931,7 @@ vostok::render::`dynamic atexit destructor for 's_lpv_dips_skipping0_cc''	vostok
 vostok::render::`dynamic atexit destructor for 's_lpv_dips_skipping1_cc''	vostok/render/engine/sources/stage_light_propagation_volumes.cpp	render	done	MATCH		100	100	0	60	f	b4873385e052	
 vostok::render::`dynamic atexit destructor for 's_max_triagles_per_dip''	vostok/render/core/dx11/sources/backend.cpp	render	done	MATCH		100	100	0	60	f	c4fccc1d0d5b	
 vostok::render::`dynamic atexit destructor for 's_one_cascade''	vostok/render/engine/sources/stage_shadow_direct.cpp	render	done	MATCH		100	100	0	60	f	c4308f3292fb	
-vostok::render::`dynamic atexit destructor for 's_particle_render_mode''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH		100	100	1	60	f	45ff736dbf6c	reconstructed particle stage caller cone; residual shared layout/LTCG
+vostok::render::`dynamic atexit destructor for 's_particle_render_mode''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH		100	100	2	60	f	45ff736dbf6c	Restored target PDB order: effect compile precedes the particle render-mode static and constants constructor.
 vostok::render::`dynamic atexit destructor for 's_pp_map2d''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH		100	100	0	60	f	fc88e1c83d0e	
 vostok::render::`dynamic atexit destructor for 's_r_resolution_cc''	vostok/render/core/dx11/sources/options.cpp	render	done	MATCH		100	100	1	60	f	f6748738bb52	Restored option-change roots, previous-value tracking, and resolution/quality state from target PDB evidence.
 vostok::render::`dynamic atexit destructor for 's_rain_debug0_cc''	vostok/render/engine/sources/stage_pre_rain.cpp	render	done	MATCH		100	100	1	60	f	0e91a8082704	Reconstructed complete pre-rain shadow and wet-surface caller cone from target PDB/assembly.
@@ -35008,7 +35008,7 @@ vostok::render::`dynamic initializer for 's_no_effect_result''	vostok/render/cor
 vostok::render::`dynamic initializer for 's_no_effects_initialize''	vostok/render/core/dx11/sources/effect_manager.cpp	render	done	MATCH	100	100	100	0	19	f	095ff3463eb2	
 vostok::render::`dynamic initializer for 's_one_cascade''	vostok/render/engine/sources/stage_shadow_direct.cpp	render	done	MATCH		100	100	0	79	f	cb5533d46dd7	
 vostok::render::`dynamic initializer for 's_one_texture_result''	vostok/render/core/dx11/sources/effect_compiler.cpp	render	done	MATCH	100	100	100	0	19	f	93ac6e1cc922	
-vostok::render::`dynamic initializer for 's_particle_render_mode''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH		100	100	1	87	f	9f0af4074110	reconstructed particle stage caller cone; residual shared layout/LTCG
+vostok::render::`dynamic initializer for 's_particle_render_mode''	vostok/render/engine/sources/stage_particles.cpp	render	done	MATCH		100	100	2	87	f	9f0af4074110	Restored target PDB order: effect compile precedes the particle render-mode static and constants constructor.
 vostok::render::`dynamic initializer for 's_pp_map2d''	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH		100	100	0	79	f	9f0af4074110	
 vostok::render::`dynamic initializer for 's_r_resolution_cc''	vostok/render/core/dx11/sources/options.cpp	render	done	MATCH		100	100	2	79	f	9f0af4074110	Restored fixed_string<16> storage and c_str buffer registration; exact 49-byte value initializer and exact 79-byte cc_string initializer.
 vostok::render::`dynamic initializer for 's_r_resolution_value''	vostok/render/core/dx11/sources/options.cpp	render	done	MATCH		100	100	2	49	f	db2210ec9db4	Restored fixed_string<16> storage and c_str buffer registration; exact 49-byte value initializer and exact 79-byte cc_string initializer.

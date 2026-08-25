@@ -2309,6 +2309,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_resolve_particles.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_shadow_map.cpp"
 			>
 		</File>
