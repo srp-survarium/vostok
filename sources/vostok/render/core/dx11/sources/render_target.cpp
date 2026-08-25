@@ -87,7 +87,7 @@ void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXG
 	CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( m_surface_3d, &desc_rt, &m_rt ) );
 
 	if (name)
-		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
+		m_texture = resource_manager::ref().create_texture( name );
 	else
 	{
 		m_texture = NEW( res_texture);
@@ -278,7 +278,7 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 	}
 
 	if (name)
-		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
+		m_texture = resource_manager::ref().create_texture( name );
 	else
 	{
 		m_texture = NEW( res_texture);
