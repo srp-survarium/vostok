@@ -24,6 +24,8 @@ public:
 	base_command* deferred_next;
 	bool is_deferred_command;
 	bool use_depth;
+
+public:
 	VOSTOK_MAX_CACHE_LINE_PAD;
 	u32 remove_frame_id;
 };

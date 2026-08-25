@@ -144,6 +144,7 @@ private:
 	friend class system_renderer;
 	friend class engine::world;
 
+public:
 	float4x4 m_transform;
 	speedtree_tree_base_ptr m_speedtree_tree_ptr;
 };

@@ -45,6 +45,7 @@ private:
 		res_shader_technique const& right
 	);
 
+public:
 	sflags m_flags;
 	passes_array_type m_passes;
 	bool m_registered;

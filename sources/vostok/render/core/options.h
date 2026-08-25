@@ -142,6 +142,7 @@ public:
 
 	pcstr define_name( ) const { return m_define_name; }
 
+private:
 	virtual bool fill_macro( shader_macro& out_macro ) const = 0;
 
 	enum_options_changes_result get_changes_result( ) const
@@ -150,7 +151,6 @@ public:
 	}
 	virtual bool is_changed( ) const = 0;
 
-private:
 	friend class options;
 
 	render_cc* render_next;
@@ -177,7 +177,7 @@ public:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
-private:
+public:
 	bool& m_prev_value;
 };
 
@@ -202,7 +202,7 @@ public:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
-private:
+public:
 	float& m_prev_value;
 };
 
@@ -227,7 +227,7 @@ public:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
-private:
+public:
 	u32& m_prev_value;
 };
 

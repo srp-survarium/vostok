@@ -16,6 +16,7 @@ struct hw_hiz_point_list {
 	void render( u32 const num_points );
 	~hw_hiz_point_list( ) { }
 
+private:
 	res_declaration_ptr	m_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	u32					m_num_points;

@@ -257,7 +257,7 @@ public:
 			light_cuboid_polys[i].plane.d -= translate.dot_product	(light_cuboid_polys[i].plane.normal);
 	}
 
-private:
+public:
 	friend class stage_shadow_direct;
 
 	fixed_vector<ray, 8>	view_frustum_rays;

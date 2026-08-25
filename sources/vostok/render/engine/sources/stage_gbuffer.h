@@ -142,6 +142,7 @@ private:
 	res_effect_ptr			m_fill_depth_effect;
 	bool					m_is_pre_pass;
 
+public:
 	bool m_fill_view_space_depth;
 };
 
