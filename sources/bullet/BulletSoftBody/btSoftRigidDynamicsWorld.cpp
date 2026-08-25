@@ -301,11 +301,11 @@ void	btSoftRigidDynamicsWorld::rayTestSingle(const btTransform& rayFromTrans,con
 					shapeInfo.m_triangleIndex = softResult.index;
 					shapeInfo.m_is_shape_index = false;
 
-
 					// get the normal
 					btVector3 rayDir = rayToTrans.getOrigin() - rayFromTrans.getOrigin();
 					btVector3 normal=-rayDir;
 					normal.normalize();
+
 					if (softResult.feature == btSoftBody::eFeature::Face)
 					{
 						normal = softBody->m_faces[softResult.index].m_normal;

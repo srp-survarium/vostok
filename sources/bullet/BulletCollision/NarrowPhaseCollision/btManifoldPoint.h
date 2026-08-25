@@ -52,7 +52,9 @@ class btManifoldPoint
 				m_contactMotion2(0.f),
 				m_contactCFM1(0.f),
 				m_contactCFM2(0.f),
-				m_lifeTime(0)
+				m_lifeTime(0),
+				m_index0(-1),
+				m_index1(-1)
 			{
 			}
 
@@ -74,7 +76,9 @@ class btManifoldPoint
 					m_contactMotion2(0.f),
 					m_contactCFM1(0.f),
 					m_contactCFM2(0.f),
-					m_lifeTime(0)
+					m_lifeTime(0),
+					m_index0(-1),
+					m_index1(-1)
 			{
 				mConstraintRow[0].m_accumImpulse = 0.f;
 				mConstraintRow[1].m_accumImpulse = 0.f;
