@@ -80,10 +80,10 @@ public:
 	u32 cb_created;
 	u32 sl_created;
 
-	struct str_pred {
+	struct str_pred : public std::binary_function<char*, char*, bool> {
 		bool operator()(
-			fs_new::virtual_path_string const& left,
-			fs_new::virtual_path_string const& right
+			fs_new::virtual_path_string left,
+			fs_new::virtual_path_string right
 		) const
 		{
 			return left < right;
