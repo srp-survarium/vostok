@@ -6,11 +6,6 @@
 namespace vostok {
 namespace render {
 
-res_state::~res_state()
-{
-	// m_state is released in resource_manager cache.
-}
-
 res_state::res_state( ID3D11RasterizerState*	rasterizer_state,
 						ID3D11DepthStencilState*	depth_stencil_state,
 						ID3D11BlendState*			blend_state,
@@ -23,17 +18,22 @@ m_is_registered				( false )
 {
 }
 
+res_state::~res_state()
+{
+	// m_state is released in resource_manager cache.
+}
+
+void res_state::destroy_impl	() const
+{
+	resource_manager::ref().release( this );
+}
+
 void res_state::apply() const
 {
 	backend::ref().set_rasterizer_state		( m_rasterizer_state);
 	backend::ref().set_depth_stencil_state	( m_depth_stencil_state);
 	backend::ref().set_blend_state			( m_blend_state);
 	backend::ref().set_stencil_ref			( m_stencil_ref);
-}
-
-void res_state::destroy_impl	() const
-{
-	resource_manager::ref().release( this );
 }
 
 } // namespace render
