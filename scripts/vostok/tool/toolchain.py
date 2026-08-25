@@ -346,11 +346,6 @@ def main() -> None:
     if not setup_current or "registry" in force:
         log("Configuring Wine environment (PATH, INCLUDE, LIB) ...")
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
-        # Re-assert the native-CRT provisioning here too, so `--force registry`
-        # repairs an existing prefix without a full wine-stage reinit.
-        if not native_crt.provision(wineprefix):
-            log("WARNING: native VC90 CRT not provisioned - PDB type names will "
-                "use Wine's undecorator.")
     if not setup_current or "ninja" in force:
         generate_ninja(vcproj_exe)
         ensure_compdb(force=True)

@@ -56,15 +56,15 @@ assembly `Microsoft.VC90.CRT`; Wine resolves it to a fake winsxs assembly
 builtin always won. It went unnoticed because the CRT is functionally fine for
 RUNNING the compiler - only `__unDName`'s cosmetic name rendering differs.
 
-**The fix is prefix SETUP, not a per-build step** (`native_crt.py`,
-`provision()`): (1) copy the redist CRT into the winsxs assembly dir
+**The fix is prefix SETUP, done once** (`native_crt.provision()`, called from
+`toolchain.py`'s wine stage, i.e. on fresh-prefix creation or `--force wine`):
+(1) copy the redist CRT into the winsxs assembly dir
 (`winsxs/x86_microsoft.vc90.crt_*_deadbeef/`), and (2) write a persistent
 `msvcr90=native` DllOverride into the prefix's Wine registry
 (`HKCU\Software\Wine\DllOverrides`). Then every `wine` in that prefix prefers
 the native CRT with NO `WINEDLLOVERRIDES` on the command line (proven: env var
-unset, cl still emits the elaborated spelling). `toolchain.py` provisions in
-the wine + registry stages; `ninja.py` only self-heals a pre-existing prefix
-once (no-op afterward), never touching the environment.
+unset, cl still emits the elaborated spelling). A build touches none of this;
+if a pre-existing prefix ever needs it, recreate the prefix once.
 
 Traps, all hit while landing this:
 - **wineboot pre-creates Wine STUB PEs at the winsxs paths** (~1MB vs native
@@ -74,10 +74,9 @@ Traps, all hit while landing this:
   Install must compare sizes and overwrite.
 - app-dir and system32 copies do NOT satisfy the loader: cl.exe's embedded
   manifest forces SxS resolution to the winsxs assembly.
-- `wine reg add` flushes user.reg only on wineserver shutdown, so verify the
-  override with a LIVE `wine reg query`, not a disk read of user.reg.
-- An old prefix that still misbehaves is cheapest to reinitialize
-  (`python3 -m vostok tool toolchain --force wine registry`).
+- `wine reg add` flushes user.reg only on wineserver shutdown - don't try to
+  verify the override with a same-process disk read of user.reg; trust the
+  `reg add /f`.
 
 The pdb-parser canon normalization (branch divergence-canon) compensated for
 this on the comparison side; with builds on native msvcr90 it becomes

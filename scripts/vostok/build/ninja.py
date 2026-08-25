@@ -56,7 +56,6 @@ import sys
 import time
 from pathlib import Path
 
-from vostok.build import native_crt
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
@@ -354,21 +353,9 @@ def main() -> None:
     # WINEDEBUG (e.g. for debugging Wine itself) still wins.
     os.environ.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
 
-    # Native msvcr90 so cl/link render PDB type names the way retail's Windows
-    # builds did (Wine's builtin __unDName spells them differently - see
-    # vostok.build.native_crt). This is provisioned into the prefix at setup
-    # (winsxs DLLs + a persistent registry override), so a normal build needs
-    # nothing here. The guard only self-heals a prefix made before that landed;
-    # it is a no-op once provisioned, and never sets WINEDLLOVERRIDES.
-    if not native_crt.provisioned(OWN_WINEPREFIX):
-        if native_crt.provision(OWN_WINEPREFIX):
-            print("[ninja] provisioned native msvcr90 into this prefix "
-                  "(retail-style PDB type names)", flush=True)
-        else:
-            print("[ninja] native msvcr90 unavailable - PDB type names will use "
-                  "Wine's undecorator (divergence vs retail); run "
-                  "`python3 -m vostok tool toolchain --force wine registry`",
-                  flush=True)
+    # Native msvcr90 (so cl/link render PDB type names the retail way - see
+    # vostok.build.native_crt) is provisioned into the prefix at setup via a
+    # persistent registry override; a build needs nothing here.
 
     # Defaults for the matching workflow:
     #   -v      verbose - print the full cl.exe/link.exe command lines
