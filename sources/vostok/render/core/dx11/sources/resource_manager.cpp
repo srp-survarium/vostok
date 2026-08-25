@@ -5,6 +5,7 @@
 #pragma comment( lib, "d3dx11.lib" )
 #include <vostok/console_command.h>
 #include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
 #include "texture_storage.h"
 #include <vostok/render/core/shader_constant_table.h>

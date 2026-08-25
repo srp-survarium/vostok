@@ -6,13 +6,13 @@
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <fastdelegate/fastdelegate.h>
+#include <vostok/associative_vector.h>
 #include <vostok/configs_binary_config.h>
 #include <vostok/fixed_string.h>
 #include <vostok/fixed_vector.h>
 #include <vostok/fs/virtual_path_string.h>
 #include <vostok/math_int2.h>
 #include <vostok/math_rectangle.h>
-#include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/quasi_singleton.h>
 #include <vostok/render/core/render_target.h>
@@ -32,6 +32,8 @@ namespace vostok {
 namespace resources {
 class queries_result;
 class query_result_for_cook;
+class unmanaged_intrusive_base;
+template < typename object_type, typename base_type > class resource_ptr;
 } // namespace resources
 
 namespace vfs {
@@ -40,6 +42,18 @@ struct vfs_notification;
 } // namespace vfs
 
 namespace render {
+
+struct binary_shader_key_type;
+struct binary_shader_source;
+typedef resources::resource_ptr<
+	binary_shader_source,
+	resources::unmanaged_intrusive_base
+> binary_shader_source_ptr;
+typedef associative_vector<
+	binary_shader_key_type,
+	binary_shader_source_ptr,
+	render::vector
+> binary_shader_sources_type;
 
 class res_declaration;
 class res_geometry;
