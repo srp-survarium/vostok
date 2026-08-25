@@ -1016,7 +1016,7 @@ void resource_manager::on_texture_loaded(
 
 	fix_texture_name( name );
 
-	vector<fs_new::virtual_path_string>::iterator to_delete =
+	textures_to_reload_vector::iterator to_delete =
 		std::find( m_textures_to_reload.begin( ), m_textures_to_reload.end( ), name );
 	if ( to_delete != m_textures_to_reload.end( ) )
 		m_textures_to_reload.erase( to_delete );
@@ -1047,18 +1047,31 @@ void resource_manager::on_texture_loaded(
 	);
 
 	D3DX_IMAGE_LOAD_INFO load_info;
+
+	bool staging = false;
+	if ( staging )
+	{
+		load_info.Usage = D3D_USAGE_STAGING;
+		load_info.BindFlags = 0;
+		load_info.CpuAccessFlags = D3D_CPU_ACCESS_WRITE;
+	}
+	else
+	{
+		load_info.Usage = D3D_USAGE_DEFAULT;
+		load_info.BindFlags = D3D_BIND_SHADER_RESOURCE;
+	}
+
 	ID3DBaseTexture* base_tex = NULL;
-	CHECK_RESULT(
-		D3DXCreateTextureFromMemory(
-			device::ref( ).d3d_device( ),
-			ptr_man.c_ptr( ),
-			ptr_man.size( ),
-			&load_info,
-			NULL,
-			&base_tex,
-			NULL
-		)
+	HRESULT res = D3DXCreateTextureFromMemory(
+		device::ref( ).d3d_device( ),
+		ptr_man.c_ptr( ),
+		ptr_man.size( ),
+		&load_info,
+		NULL,
+		&base_tex,
+		NULL
 	);
+	CHECK_RESULT( res );
 
 	tex->set_hw_texture( base_tex, mip_level_cut );
 	base_tex->Release( );
