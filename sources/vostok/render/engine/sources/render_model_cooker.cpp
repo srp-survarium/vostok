@@ -822,7 +822,8 @@ void render_model_cook::finish_model_creation(
 		surfaces[model_index] = surface;
 	}
 
-	model_lods_descriptor* lods_descriptor = 0; arrange_surfaces_by_lod( cook_data, lods_descriptor );
+	model_lods_descriptor* lods_descriptor = 0;
+	arrange_surfaces_by_lod( cook_data, lods_descriptor );
 	cook_data->result_model->set_children(surfaces, cook_data->m_num_render_models, lods_descriptor);
 
 	parent_query->set_unmanaged_resource(cook_data->result_model.c_ptr(), resources::nocache_memory, sizeof(cook_intermediate_data));
