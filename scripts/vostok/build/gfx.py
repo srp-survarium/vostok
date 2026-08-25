@@ -42,8 +42,11 @@ the PDB's explicit -X + system -I list is equivalent (same headers found).
 
 Output: binaries.prebuilt/Win32/libraries/shipping/<name>.lib - exactly where the
 exe's `#pragma comment(lib,"<name>.lib")` resolves it. The exe links these as
-plain prebuilts (un-wired from the sln); vostok.tool.libs skips the foreign 4.0.15
-distribution libs so a setup pass never clobbers them.
+plain prebuilts (un-wired from the sln). The same suite ships prebuilt inside
+the vostok-libs release, which vostok.tool.libs stages here on FIRST toolchain
+setup (it overwrites; local rebuilds after that are never restaged over, but
+cut a fresh vostok-libs release when the suite changes so new clones link the
+current libs).
 
 Run inside `nix develop`. Idempotent: re-run to resume (skips objs already built).
 
