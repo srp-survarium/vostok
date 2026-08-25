@@ -53,7 +53,7 @@ public:
 	{
 	}
 
-private:
+public:
 	/* 0x0000 */	const resources::managed_resource_ptr	animation;
 	/* 0x0004 */	pcvoid const							animated_object;
 	/* 0x0008 */	callback_generator_info const*			next;
@@ -62,9 +62,6 @@ private:
 	/* 0x0014 */	const u16								event_type;
 	/* 0x0016 */	const u8								channel_ids;
 	/* 0x0017 */	const u8								animation_interval_id;
-
-	friend class n_ary_tree;
-	friend class ::vostok::animation::animation_player;
 }; // class callback_generator_info
 
 STATIC_SIZE_ASSERT(callback_generator_info, 0x18);

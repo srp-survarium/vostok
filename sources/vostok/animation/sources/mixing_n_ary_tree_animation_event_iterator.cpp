@@ -112,11 +112,11 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 
 			u8 const channel_bit		= u8( 1 ) << channel_id;
 			if ( knot_time == target_time ) {
-				event_type				|= time_event_channel_callback_should_be_fired;
+				event_type				|= time_event_user_defined;
 				channel_ids				|= channel_bit;
 			}
 			else {
-				event_type				= time_event_channel_callback_should_be_fired;
+				event_type				= time_event_user_defined;
 				channel_ids				= channel_bit;
 			}
 

@@ -24,7 +24,7 @@ class n_ary_tree_multiplication_node;
 
 class n_ary_tree_weight_transition_end_time_calculator :
 	public n_ary_tree_visitor,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	inline	n_ary_tree_weight_transition_end_time_calculator( ) : m_weight_transition_end_time_in_ms( u32(-1) ), m_event_type( 0 ) { }

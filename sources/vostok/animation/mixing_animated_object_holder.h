@@ -16,23 +16,18 @@ class n_ary_tree_transition_tree_constructor;
 
 class animated_object_holder {
 public:
-	inline	explicit	animated_object_holder	( pcvoid animated_object ) :
+	inline	explicit	animated_object_holder	( pcvoid const animated_object ) :
 		animated_object		( animated_object ),
 		need_new_transform	( false )
 	{
 	}
-	inline	bool		operator==				( pcvoid animated_object ) const { return this->animated_object == animated_object; }
+	inline	bool		operator==				( pcvoid const animated_object ) const { return this->animated_object == animated_object; }
 
-private:
-	/* 0x0000 */	float4x4	transform;
-	/* 0x0040 */	float4x4	new_transform;
-	/* 0x0080 */	pcvoid		animated_object;
-	/* 0x0084 */	bool		need_new_transform;
-
-private:
-	friend class ::vostok::animation::animation_player;
-	friend class n_ary_tree;
-	friend class n_ary_tree_transition_tree_constructor;
+public:
+	/* 0x0000 */	float4x4		transform;
+	/* 0x0040 */	float4x4		new_transform;
+	/* 0x0080 */	pcvoid const	animated_object;
+	/* 0x0084 */	bool			need_new_transform;
 }; // class animated_object_holder
 
 STATIC_SIZE_ASSERT(animated_object_holder, 0x88);

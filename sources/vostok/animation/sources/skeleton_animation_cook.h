@@ -31,6 +31,10 @@ private:
 	virtual	void	translate_query					( resources::query_result_for_cook& parent );
 	virtual void	delete_resource					( resources::resource_base* resource );
 
+public:
+	virtual			~skeleton_animation_cook		( ) { }
+
+private:
 	static	void	on_cubic_spline_animation_cooked(
 						resources::queries_result&				data,
 						bi_spline_skeleton_animation_baked_ptr	bi_spline_animation

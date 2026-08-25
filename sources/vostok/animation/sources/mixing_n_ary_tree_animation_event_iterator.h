@@ -33,8 +33,8 @@ public:
 								subscribed_channel*&			channels_head
 							);
 	inline	n_ary_tree_animation_event_iterator		( );
-	n_ary_tree_animation_event_iterator& operator ++( );
 			void			invert_times			( u32 time_in_ms );
+	n_ary_tree_animation_event_iterator& operator ++( );
 	inline	animation_event operator *				( );
 	inline	bool			is_equal				( n_ary_tree_animation_event_iterator const& other ) const;
 

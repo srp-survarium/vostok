@@ -13,7 +13,7 @@ namespace mixing {
 
 struct binary_tree_base_node;
 
-class binary_tree_initializer : public binary_tree_visitor , public boost::noncopyable {
+class binary_tree_initializer : public binary_tree_visitor , private boost::noncopyable {
 public:
 			explicit					binary_tree_initializer	( binary_tree_base_node& expression_node );
 

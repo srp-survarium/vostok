@@ -24,12 +24,13 @@ inline weight_lexeme::weight_lexeme							(
 inline weight_lexeme::weight_lexeme							(
 		mutable_buffer& buffer,
 		float const weight,
-		base_interpolator const* const interpolator,
-		bool const cloned
+		base_interpolator const* const interpolator
 	) :
 	binary_tree_weight_node		( weight, interpolator->clone(buffer) ),
-	base_lexeme					( buffer, cloned )
+	base_lexeme					( buffer )
 {
+	// private ctor is the clone path - mark in body, base ctor initializes false
+	m_cloned					= true;
 }
 
 inline weight_lexeme::weight_lexeme							( weight_lexeme const& other ) :
@@ -42,7 +43,7 @@ inline weight_lexeme& weight_lexeme::cloned_modified_lexeme	( float const new_we
 {
 	weight_lexeme* const result	= static_cast<weight_lexeme*>( buffer().c_ptr( ) );
 	buffer()					+= sizeof( weight_lexeme );
-	new (result) weight_lexeme	( buffer(), new_weight, &interpolator(), true );
+	new (result) weight_lexeme	( buffer(), new_weight, &interpolator() );
 	return						*result;
 }
 

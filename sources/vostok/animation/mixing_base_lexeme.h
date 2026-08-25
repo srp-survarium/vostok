@@ -15,9 +15,8 @@ class expression;
 
 class VOSTOK_ANIMATION_API base_lexeme {
 public:
-	explicit inline	base_lexeme		( mutable_buffer& buffer, bool const cloned = false );
+	explicit inline	base_lexeme		( mutable_buffer& buffer );
 	inline			base_lexeme		( base_lexeme const& other );
-	inline			base_lexeme		( base_lexeme const& other, bool );
 	inline mutable_buffer& buffer	( ) const;
 
 protected:
@@ -27,6 +26,8 @@ protected:
 
 private:
 	mutable_buffer*	m_buffer;
+
+protected:
 	bool			m_cloned;
 }; // class base_lexeme
 

@@ -19,7 +19,7 @@ struct base_interpolator;
 
 namespace mixing {
 
-class VOSTOK_ANIMATION_API animation_lexeme_parameters : public core::noncopyable {
+class VOSTOK_ANIMATION_API animation_lexeme_parameters : private core::noncopyable {
 public:
 	inline									animation_lexeme_parameters			(
 												mutable_buffer& buffer,
@@ -88,10 +88,10 @@ public:
 	// acceptors
 	//
 	inline	mutable_buffer&					buffer								( ) const { return m_buffer								; }
+	inline	animation_interval const*		animation_intervals					( ) const { return m_animation_intervals				; }
 	inline	time_calculator_fn const&		time_calculator						( ) const { return m_time_calculator					; }
 	inline	animation_lexeme* const			time_driving_animation				( ) const { return m_time_driving_animation				; }
 	inline	animation_lexeme* const			weight_driving_animation			( ) const { return m_weight_driving_animation			; }
-	inline	animation_interval const*		animation_intervals					( ) const { return m_animation_intervals				; }
 	inline	base_interpolator const*		weight_interpolator					( ) const { return m_weight_interpolator				; }
 	inline	base_interpolator const*		time_scale_interpolator				( ) const { return m_time_scale_interpolator			; }
 	inline	pcvoid							animated_object						( ) const { return m_animated_object					; }

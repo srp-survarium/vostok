@@ -17,7 +17,7 @@ enum time_event_types_enum {
 	time_event_animation_interval_ended					= u32(1) << 2,
 	time_event_animation_ended_in_positive_direction	= u32(1) << 3,
 	time_event_animation_ended_in_negative_direction	= u32(1) << 4,
-	time_event_channel_callback_should_be_fired			= u32(1) << 5,
+	time_event_user_defined			= u32(1) << 5,
 	time_event_time_direction_changed					= u32(1) << 6,
 	time_event_weight_transitions_started				= u32(1) << 7,
 	time_event_weight_transitions_ended					= u32(1) << 8,
@@ -37,7 +37,7 @@ enum time_event_types_enum {
 		time_event_animation_interval_ended |
 		time_event_animation_ended_in_positive_direction |
 		time_event_animation_ended_in_negative_direction |
-		time_event_channel_callback_should_be_fired |
+		time_event_user_defined |
 		time_event_time_direction_changed |
 		time_event_weight_transitions_started |
 		time_event_weight_transitions_ended,

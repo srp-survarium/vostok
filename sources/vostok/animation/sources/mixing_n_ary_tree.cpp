@@ -798,7 +798,7 @@ bool n_ary_tree::dispatch_callbacks(
 			}
 		}
 
-		if ( !( generator->event_type & time_event_channel_callback_should_be_fired ) )
+		if ( !( generator->event_type & time_event_user_defined ) )
 			continue;
 
 		cubic_spline_skeleton_animation_pinned pinned_animation( generator->animation );
@@ -944,7 +944,8 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 				continue;
 
 			if ( j != i )
-				*j						= *i;
+				// const animated_object forbids assignment - recreate in place
+				new ( j ) animated_object_holder( *i );
 			++j;
 		}
 
@@ -970,7 +971,7 @@ bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 			time_event_animation_interval_ended |
 			time_event_animation_ended_in_positive_direction |
 			time_event_animation_ended_in_negative_direction |
-			time_event_channel_callback_should_be_fired
+			time_event_user_defined
 		) ) )
 			continue;
 

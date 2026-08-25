@@ -22,7 +22,12 @@ class n_ary_tree_dumper :
 	private boost::noncopyable
 {
 public:
-	inline	n_ary_tree_dumper	( u32 const current_time_in_ms ) : m_offset(0), m_current_time_in_ms(current_time_in_ms) { }
+	inline	n_ary_tree_dumper	( logging::verbosity const verbosity, u32 const current_time_in_ms ) :
+		m_offset				( 0 ),
+		m_current_time_in_ms	( current_time_in_ms ),
+		m_verbosity				( verbosity )
+	{
+	}
 
 private:
 	virtual	void	visit		( n_ary_tree_animation_node& node );
@@ -46,7 +51,7 @@ private:
 private:
 	u32						m_offset;
 	u32 const				m_current_time_in_ms;
-	logging::verbosity		m_verbosity; // sushi@TODO: Add const
+	logging::verbosity const	m_verbosity;
 }; // class n_ary_tree_dumper
 
 STATIC_SIZE_ASSERT(n_ary_tree_dumper, 0x14);

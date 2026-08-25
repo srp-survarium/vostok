@@ -14,7 +14,7 @@ namespace animation {
 
 class cubic_spline_skeleton_animation_cook :
 	public resources::managed_cook,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	inline			cubic_spline_skeleton_animation_cook( ) :
