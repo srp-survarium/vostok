@@ -78,32 +78,12 @@ struct singletons_on_initialize {
 }; // struct singletons_on_initialize
 
 static vostok::command_line::key	s_no_level( "no_level", "", "", "" );
-static vostok::uninitialized_reference< vostok::render::options >						s_options;
-
-static vostok::uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
-static vostok::uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
-static vostok::uninitialized_reference< vostok::render::system_renderer >	s_system_renderer;
-
-singletons_on_preinitialize::singletons_on_preinitialize(
-	vostok::configs::binary_config_ptr const& config,
-	bool is_editor
-) :
-	resource_manager( config ),
-	device( is_editor )
-{
-}
-
-singletons_on_initialize::singletons_on_initialize( )
-{
-}
 
 namespace vostok {
 namespace render {
 
 void register_texture_cook	( );
 void unregister_texture_cook( );
-
-untyped_buffer_ptr		g_quad_ib;
 
 renderer_cook::renderer_cook( ) :
  resources::unmanaged_cook( resources::renderer_class, reuse_false, use_current_thread_id )
@@ -204,8 +184,29 @@ void initialize_options( )
 {
 }
 
+singletons_on_preinitialize::singletons_on_preinitialize(
+	vostok::configs::binary_config_ptr const& config,
+	bool is_editor
+) :
+	resource_manager( config ),
+	device( is_editor )
+{
+}
+
+singletons_on_initialize::singletons_on_initialize( )
+{
+}
+
+static vostok::uninitialized_reference< vostok::render::options >						s_options;
+
+static vostok::uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
+static vostok::uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
+static vostok::uninitialized_reference< vostok::render::system_renderer >	s_system_renderer;
+
 namespace vostok {
 namespace render {
+
+untyped_buffer_ptr		g_quad_ib;
 
 // Modified helper function from DirectX SDK
 static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
