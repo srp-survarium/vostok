@@ -50,7 +50,7 @@ private:
 		flag_pinned_for_safe_destroying				=	1 << 3,
 	};
 
-	flags_type<flag_pinned_by_enum, threading::multi_threading_policy>	m_flags;
+	flags_type<enum flag_pinned_by_enum, threading::multi_threading_policy>	m_flags;
 
 	friend	class			threading::multi_threading_policy;
 	friend	class			threading::single_threading_policy;

@@ -19,7 +19,7 @@ struct game_resources_manager_data
 
 	enum		flags_enum					{	flag_schedule_release_all_resources	=	1 << 0,		};
 
-	flags_type< flags_enum, threading::simple_lock >	flags;
+	flags_type< enum flags_enum, threading::simple_lock >	flags;
 	memory_type_list						memory_types;
 	target_satisfaction_tree_type			increase_quality_tree;
 	u64										current_increase_quality_tick;

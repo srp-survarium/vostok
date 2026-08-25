@@ -24,7 +24,7 @@ public:
 		managed_cook			(class_id_enum	resource_class,
 								 reuse_enum		reuse_type,
 								 u32 			creation_thread_id	=	use_cook_thread_id,
-								 enum_flags<flags_enum> flags	=	0);
+								 enum_flags<enum flags_enum> flags	=	0);
 	
 		virtual create_resource_if_no_file_delegate_type	get_create_resource_if_no_file_delegate	() { return NULL; }
 
@@ -53,7 +53,7 @@ public:
 		inplace_managed_cook	(class_id_enum	resource_class,
 								 reuse_enum		reuse_type,
 								 u32 			creation_thread_id	=	use_cook_thread_id, 
-								 enum_flags<flags_enum> flags				=	0);
+								 enum_flags<enum flags_enum> flags				=	0);
 
 		virtual create_resource_if_no_file_delegate_type	get_create_resource_if_no_file_delegate	() { return NULL; }
 
@@ -79,7 +79,7 @@ public:
 					 reuse_enum		reuse_type,
 					 u32 			creation_thread_id		=	use_cook_thread_id,
 					 u32 			allocate_thread_id		=	use_current_thread_id, 
-					 enum_flags<flags_enum> flags			=	0);
+					 enum_flags<enum flags_enum> flags			=	0);
 
 	virtual	void			translate_request_path	(pcstr request, fs_new::virtual_path_string & new_request) const { new_request = request; }
 
@@ -116,7 +116,7 @@ public:
 							 reuse_enum		reuse_type,
 					 		 u32 			creation_thread_id		=	use_cook_thread_id,
 					 		 u32 			allocate_thread_id		=	use_current_thread_id,
-							 enum_flags<flags_enum> flags					=	0);
+							 enum_flags<enum flags_enum> flags					=	0);
 
 	virtual create_resource_if_no_file_delegate_type	get_create_resource_if_no_file_delegate				() { return NULL; }
 
@@ -141,7 +141,7 @@ public:
 class VOSTOK_CORE_API translate_query_cook : public cook_base
 {
 public:
-							translate_query_cook	(class_id_enum resource_class, reuse_enum reuse_type, u32 translate_query_thread, enum_flags<flags_enum> flags = 0);
+							translate_query_cook	(class_id_enum resource_class, reuse_enum reuse_type, u32 translate_query_thread, enum_flags<enum flags_enum> flags = 0);
 
 	virtual	void			translate_request_path	(pcstr request, fs_new::virtual_path_string & new_request) const { new_request = request; }
 	virtual	void			translate_query			(resources::query_result_for_cook &	parent) = 0;

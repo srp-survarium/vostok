@@ -58,7 +58,7 @@ public:
 	void							unset_flags							(resource_flags_enum const flags) { m_flags.unset(flags); }
 	bool							has_flags							(resource_flags_enum const flags) const { return m_flags.has(flags); }
 private:
-	flags_type<	resource_flags_enum, threading::simple_lock	>	m_flags;
+	flags_type<	enum resource_flags_enum, threading::simple_lock	>	m_flags;
 };
 
 } // namespace resources

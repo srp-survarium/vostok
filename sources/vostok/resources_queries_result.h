@@ -77,8 +77,9 @@ private:
 	u32							m_thread_id;
 	enum result_enum			{ result_uninitialized	=	u32(-1), result_failed = 0, result_success = 1 };
 	threading::atomic32_type	m_result;
+public:
 	threading::atomic32_type	is_cancelled;
-
+private:
 	bool						m_is_queries_for_quality;
 	assert_on_fail_bool			m_assert_on_fail;
 
