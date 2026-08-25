@@ -16,12 +16,14 @@ sector_double_query_preventer::sector_double_query_preventer( spatial_sector con
 	m_buffer_for_rect_vectors( ALLOC( aab_rects_type, sectors_count ) ),
 	m_sectors_max_rects( NEW( sectors_max_rects_type )( m_buffer_for_rect_vectors, sectors_count ) )
 {
+	enum { reserve_koef = 2 };
+
 	m_sectors_max_frustums->resize( sectors_count );
 	m_sectors_max_rects->resize( sectors_count );
 	for ( u32 i = 0; i < sectors_count; ++i )
 	{
-		( *m_sectors_max_frustums )[i].reserve( sectors[i].get_portals_count( ) * 2 );
-		( *m_sectors_max_rects )[i].reserve( sectors[i].get_portals_count( ) * 2 );
+		( *m_sectors_max_frustums )[i].reserve( sectors[i].get_portals_count( ) * reserve_koef );
+		( *m_sectors_max_rects )[i].reserve( sectors[i].get_portals_count( ) * reserve_koef );
 	}
 }
 
