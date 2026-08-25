@@ -34,6 +34,8 @@ public:
 	inline	u32					size_to_eof		( ) const;
 
 private:
+	packet_reader&				operator=			( packet_reader const& other );
+
 	/* 0x0000 */	base_packet const&		m_packet;
 	/* 0x0004 */	pcbyte					m_pointer;
 }; // class packet_reader

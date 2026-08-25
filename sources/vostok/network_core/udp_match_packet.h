@@ -99,6 +99,7 @@ private:
 	friend	class		packet< udp_match_packet >;
 
 	inline	void		reallocate			( const u32 new_size ) { UNREACHABLE_CODE( new_size ); }
+	void				operator=			( udp_match_packet const& other );
 
 	// the placement-new factory constructs through the private default ctor.
 	friend	class		udp_match_connection;
