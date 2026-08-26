@@ -11,12 +11,12 @@ BASE   = survarium-dx11-win32-gold.pdb    (our VS2008 build)
 Reproduce:
 
 ```bash
-cargo run --release --bin pdb_build_info -- \
-  --pdb     ../vcproj2ninja/survarium.pdb \
-  --compare ../vcproj2ninja/survarium-dx11-win32-gold.pdb
+pdb_build_info \
+  --pdb binaries/nix-store/survarium-game/survarium.pdb \
+  --compare binaries/Win32/survarium-dx11-win32-gold.pdb
 ```
 
-Projects: **target = 69**, **base = 62**, in-both = 58, target-only = 11, base-only = 4.
+Projects: **target = 69**, **base = 68**, in-both = 65, target-only = 4, base-only = 3.
 
 > **Why some projects show `[no cmdline]`.** Projects compiled with `/GL`
 > (link-time code generation) emit no per-file command line into the env
@@ -37,43 +37,26 @@ Projects: **target = 69**, **base = 62**, in-both = 58, target-only = 11, base-o
 
 ## 1. Differences between target and base
 
-Of the 58 projects present in both, only the ones below differ. Everything
+Of the 65 projects present in both, only the ones below differ. Everything
 else matches byte-for-flag (see §3).
 
-### 1a. Real flag differences — `vostok_sound` and `zlib` — **FIXED**
+### 1a. Engine configurations
 
-These were the only two engine-relevant flag mismatches, and they were the same
-kind of mismatch: **the original built them WITHOUT LTCG (real per-file
-command line recorded), but our base build compiled them WITH LTCG.**
+Every shared `vostok_*` project now reports `MATCH`. In particular:
 
-| project | target flags | base flags (before fix) |
-|---|---|---|
-| `vostok_sound` | `/MT -GF -GS- -GT -MP -Ob2 -Od -Oi -Oy -TP -Zi -arch:SSE2` | `[no cmdline] LTCG` |
-| `zlib` | `/MT -GS- -GT -MP -O2 -Ob2 -Oi -Ot -Oy -TC -Zi -arch:SSE` | `[no cmdline] LTCG` |
+* `vostok_sound-static-gold` is `/Od`, SSE2, and non-LTCG on both sides.
+* `vostok_libfoundation-static` has 13 retained compilands on both sides, with
+  the same `Release(static)` archive identity and coarse `LTCG,/GS` flags.
+* All three render libraries report the same LTCG flag set as retail.
 
-**`vostok_sound` in the target was compiled with `-Od` (optimization disabled)**
-and *no* `/GL`, whereas our base build turned LTCG and `/Ox` on for it. `zlib`
-matched on everything but LTCG (the target built it `-O2`, non-LTCG, in its
-`Release` config — which the `.sln` maps `Master Gold|Win32` onto).
-
-**Fixed in the `.vcproj` on this branch** (the rest of both flag sets already
-matched the target verbatim — confirmed against the raw PDB command lines):
-
-* `sound.vcproj`, `Master Gold|Win32`: `Optimization` `3`→`0` (`/Ox`→`/Od`) and
-  `WholeProgramOptimization` `1`→`0` (drop `/GL`).
-* `zlib.vcproj`, `Release|Win32`: `WholeProgramOptimization` `1`→`0`
-  (`Optimization` was already `2` = `/O2`).
-
-> These edits change *how the base will build*; the comparison numbers in this
-> report still reflect the **pre-fix** base binary. Rebuild the base and re-run
-> `pdb_build_info --compare` to confirm both now report `MATCH`.
-
-### 1b. Nominal flag differences — CRT libs only (not our code)
+### 1b. Remaining shared-project differences
 
 | project | status | note |
 |---|---|---|
-| `libcmt` | DIFF-FLAGS | MSVC CRT. Same five `-O1` flag-sets; the diff is only a `-Z7` vs `-Zi` debug-format split and the count of files w/o cmdline (66 vs 67). Prebuilt CRT — not matched. |
-| `libgfx`  | DIFF-FLAGS | Scaleform GFx. Identical flags; base just has `(+1 file w/o cmdline)`. Prebuilt — not matched. |
+| `libcmt` | DIFF-FLAGS | Prebuilt MSVC CRT; the retained debug-format variants and source counts differ. |
+| `libgfxexpat` | PARTIAL | Retail retains only coarse `/GS,no-debug`; the from-source SDK build retains its full non-LTCG command line. |
+| `pcre` | PARTIAL | Same coarse-PDB-versus-full-command-line distinction as `libgfxexpat`. |
+| `survarium - PC - DirectX 11` | PARTIAL | Both sides are LTCG; retail additionally records `no-debug` in the coarse flags. |
 
 ### 1c. Projects only on one side
 
@@ -81,43 +64,40 @@ matched the target verbatim — confirmed against the raw PDB command lines):
 
 | project | sources | config |
 |---|---|---|
-| `libeay32-vc90-mt-s` | 420 | `-O2 -Ob2 -Ox` (OpenSSL) |
-| `ssleay32-vc90-mt-s` | 37 | `-O2 -Ob2 -Ox` (OpenSSL) |
+| `libcpmt` | 1 | Prebuilt MSVC C++ CRT member. |
 | `libjpeg` | 26 | `[no cmdline] /GS,no-debug` |
 | `libpng` | 14 | `[no cmdline] /GS,no-debug` |
-| `pcre` | 11 | `[no cmdline] /GS,no-debug` |
-| `libgfxexpat` | 3 | `[no cmdline] /GS,no-debug` |
-| `vostok_libfoundation-static` | 13 | `[no cmdline] LTCG,/GS` |
-| `vostok_scaleform-static-gold` | 12 | `[no cmdline] LTCG` |
-| `shell32` / `ws2_32` / `x3daudio` | 1 each | import libs |
+| `zlib` | 9 | `/MT /O2 /Ob2 /Oi /Ot /Oy`, SSE, non-LTCG. |
 
 **Base-only** (in our build, absent from the game):
 
 | project | sources | config |
 |---|---|---|
-| `libgfx_libjpeg` | 26 | `[no cmdline] /GS,no-debug` |
-| `libgfx_libpng` | 14 | `[no cmdline] /GS,no-debug` |
-| `libgfx_zlib` | 8 | `[no cmdline] /GS,no-debug` |
-| `vostok_rtp-static-gold` | 16 | `[no cmdline] LTCG` |
+| `libgfx_libjpeg` | 26 | From-source SDK JPEG archive. |
+| `libgfx_libpng` | 14 | From-source SDK PNG archive. |
+| `zlibn` | 9 | `/MD /O2 /Ob2 /Oi /Ot /Oy`, SSE, non-LTCG. |
 
-Most of the target-only/base-only split is **grouping/naming**, not a flag
-difference: the game ships JPEG/PNG/zlib as standalone `libjpeg`/`libpng`
-libs, while our build archives them into Scaleform's `libgfx_*` libs. Their
-underlying flags (`/GS,no-debug`) are identical.
+JPEG and PNG remain archive-grouping differences. The one-sided `zlib`/`zlibn`
+records are a real runtime-library identity difference and must not be treated
+as proof that their flags match.
 
-### 1d. Source-count drift (matching progress, not flags)
+### 1d. Retained-compiland count drift
 
-Many `vostok_*` libs carry the same flags on both sides but far fewer sources
-on base — these are simply the modules still being matched, not flag bugs:
+The remaining shared Vostok count differences are small:
 
 ```
-vostok_game            target 105  / base 46
-vostok_game_core       target 128  / base 62
-vostok_render_engine   target 211  / base 147
-vostok_animation       target  67  / base 41
-vostok_network         target  16  / base  6
-vostok_network_core    target   9  / base  3
+vostok_animation       target  67  / base  66
+vostok_core            target 136  / base 138
+vostok_game_core       target 128  / base 127
+vostok_physics         target  13  / base  12
+vostok_render_engine   target 211  / base 206
+vostok_render_facade   target  18  / base  16
+vostok_scaleform       target  12  / base  13
+vostok_sound           target  54  / base  56
 ```
+
+These counts describe final-PDB retention and COMDAT ownership, not the number
+of source files present in the repository.
 
 ---
 
@@ -170,8 +150,10 @@ Optimization is the per-project **`Optimization`** attribute (`/Od`,`/O1`,
 
 ### Third-party LTCG libs — `-O` not in PDB, no `.vcproj` here
 
-`bullet`, `ogg`, `opcode`, `vorbis`, `scaleform`, `libfoundation` ship as
-`[no cmdline] LTCG`; level unknown (no matching `.vcproj` in-tree).
+`bullet`, `ogg`, `opcode`, `vorbis`, `scaleform`, and `libfoundation` ship as
+`[no cmdline] LTCG`; the PDB proves their coarse flags but hides the `-O` level.
+Their reconstructed project/SDK configurations are therefore verified through
+the emitted code and retained PDB records as well as this flag report.
 
 ### Prebuilt libs — only coarse `S_COMPILE3` (`/GS,no-debug`), `-O` unknown
 
