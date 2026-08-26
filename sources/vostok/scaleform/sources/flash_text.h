@@ -16,17 +16,15 @@ namespace survarium {
 struct flash_text_manager;
 
 struct flash_text {
-	// nested enum has no PDB type record (referenced only); enumerators mirror
-	// Scaleform::GFx::DrawText::Alignment, unverifiable from the PDB
-	enum alignment {
-		align_left,
-		align_default,
-		align_right,
-		align_center,
-		align_justify
-	};
-
 	inline				flash_text		( ) : text_impl( NULL ), owner( NULL ), visible( false ) { }
+
+	enum alignment {
+		align_left		= 0,
+		align_default	= 0,
+		align_right		= 1,
+		align_center	= 2,
+		align_justify	= 3
+	};
 
 			float		get_width		( );
 			float		get_height		( );

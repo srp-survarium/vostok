@@ -12,6 +12,8 @@ namespace survarium {
 class base_game_scene;
 
 class generic_anomaly : public generic_anomaly_core {
+	typedef generic_anomaly_core super;
+
 public:
 			explicit	generic_anomaly	( base_game_scene& w );
 
@@ -25,7 +27,6 @@ public:
 
 	virtual	void		deactivate		( ) override;
 
-	virtual				~generic_anomaly( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* generic_anomaly_core */

@@ -11,7 +11,7 @@
 
 namespace survarium {
 
-class ai_collision_object : public collision::object , public ai::collision_object , public boost::noncopyable {
+class ai_collision_object : public collision::object , public ai::collision_object , private boost::noncopyable {
 public:
 	// ref member; the geometry overload builds an instance in the legacy code -
 	// a matcher supplies the real source when a TU instantiates this
@@ -63,10 +63,6 @@ public:
 
 	virtual	ai::game_object&						get_game_object		( ) const override { /* no source */ return m_ai_object; }
 	virtual	float3									get_origin			( ) const override { /* no source */ return float3( 0.f, 0.f, 0.f ); }
-	inline	collision::geometry_instance const&		get_geom_instance	( ) const { /* no source */ return m_geometry_instance; }
-
-	virtual											~ai_collision_object( ) { /* no source */ }
-
 	static	inline	ai_collision_object*			new_ai_geometry_object(
 														memory::base_allocator*		arg_0,
 														ai::game_object*			arg_1,
@@ -83,6 +79,8 @@ public:
 														void*								arg_4
 													) { /* no source */ return NULL; }
 	static	inline	void							delete_ai_collision_object( memory::base_allocator* arg_0, ai_collision_object* arg_1 ) { /* no source */ }
+
+	inline	collision::geometry_instance const&		get_geom_instance	( ) const { /* no source */ return m_geometry_instance; }
 
 private:
 	/* 0x0000 */	/* collision::object */

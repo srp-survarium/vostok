@@ -17,7 +17,9 @@ namespace survarium {
 
 class game_world;
 
-class damage_zone_cook : public resources::translate_query_cook , public boost::noncopyable {
+class damage_zone_cook : public resources::translate_query_cook , private boost::noncopyable {
+	typedef resources::translate_query_cook super;
+
 public:
 			explicit	damage_zone_cook		( game_world& game_world );
 
@@ -29,7 +31,6 @@ private:
 			void		on_sub_resources_loaded	( resources::queries_result& data, configs::binary_config_value const& cfg_val );
 
 public:
-	virtual				~damage_zone_cook		( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */

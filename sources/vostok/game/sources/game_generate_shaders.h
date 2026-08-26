@@ -56,11 +56,10 @@ public:
 
 	virtual	input::world&	input_world					( ) override { /* no source */ return *( input::world* )NULL; }
 
-	virtual					~generate_shaders_world		( ) { /* no source */ }
-
 private:
 			void			generate_renderer_shaders	( );
 			void			generate_materials_shaders	( );
+
 	/* 0x0000 */	/* engine_user::world */
 	/* 0x0004 */	render::game::renderer&		m_renderer;
 	/* 0x0008 */	bool						m_first_call_reset_renderer;

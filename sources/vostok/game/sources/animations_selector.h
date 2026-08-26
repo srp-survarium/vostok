@@ -26,7 +26,7 @@ namespace survarium {
 
 class game_world;
 
-class animations_selector : public boost::noncopyable {
+class animations_selector : private boost::noncopyable {
 public:
 					animations_selector			(
 						animation::animation_player&		player,
@@ -41,8 +41,6 @@ public:
 			void	set_target					( ai::movement_target const& target_position );
 
 			void	debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const;
-
-	inline			~animations_selector		( ) { /* no source */ }
 
 private:
 			animation::callback_return_type_enum	on_animation_interval_end	( animation::animation_callback_params& params );

@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "main_menu.h"
+#include "main_menu_external_handler.h"
 
 #include <vostok/input/world.h>
 #include <vostok/resources.h>

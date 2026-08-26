@@ -18,6 +18,8 @@ namespace resources {
 namespace survarium {
 
 class object_wire : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_wire		( base_game_scene& w );
 	virtual				~object_wire	( );
@@ -34,7 +36,7 @@ public:
 protected:
 			void		resources_ready	( resources::queries_result& data, boost::function< void( game_object_& ) >& cb );
 
-private:
+protected:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	float3*									m_points;
 	/* 0x0154 */	u32										m_points_count;

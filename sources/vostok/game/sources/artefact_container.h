@@ -12,6 +12,8 @@ namespace survarium {
 class base_game_scene;
 
 class artefact_container : public artefact_container_core {
+	typedef artefact_container_core super;
+
 public:
 			explicit	artefact_container	( base_game_scene& w );
 
@@ -23,7 +25,6 @@ public:
 
 	virtual	void		deactivate			( ) override;
 
-	virtual				~artefact_container	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* artefact_container_core */

@@ -36,7 +36,7 @@ void login_menu_external_handler::callback(
 		if ( m_login_menu.action_blocked( ) )
 			return;
 
-		network::login_client& login_client = m_game.network_client( ).login_client( );
+		network::login_client& login_client = m_game.get_network_client( )->login_client( );
 
 		flash_value sign_in_button_enable;
 		sign_in_button_enable.SetBoolean( false );
@@ -45,7 +45,7 @@ void login_menu_external_handler::callback(
 
 		pcstr account_name = args[ 0 ].GetString( );
 		pcstr account_password = args[ 1 ].GetString( );
-		m_game.network_client( ).connect_to_login(
+		m_game.get_network_client( )->connect_to_login(
 			login_client.m_server_host,
 			login_client.m_server_port,
 			account_name,

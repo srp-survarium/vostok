@@ -66,8 +66,6 @@ private:
 
 public:
 	struct preview_weapon {
-		inline		preview_weapon	( ) { /* no source */ }
-		inline		~preview_weapon	( ) { /* no source */ }
 
 	public:
 		/* 0x0000 */	render::skeleton_model_ptr			m_model;

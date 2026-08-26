@@ -14,6 +14,8 @@ namespace survarium {
 class game_world;
 
 class victory_item : public victory_item_core {
+	typedef victory_item_core super;
+
 public:
 			explicit	victory_item	( game_world& w );
 
@@ -33,7 +35,6 @@ public:
 	virtual	bool		use_execute		( usable_object_user_data* arg_0 ) override { /* no source */ return false; }
 	virtual	bool		use_finalize	( usable_object_user_data* arg_0 ) override { /* no source */ return false; }
 
-	virtual				~victory_item	( ) { /* no source */ }
 
 private:
 	friend class victory_item_cook;

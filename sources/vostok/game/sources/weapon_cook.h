@@ -15,6 +15,8 @@ class weapon_core;
 
 class weapon_cook : public weapon_core_cook {
 public:
+	static	void		register_cooks_for_logic_states( );
+
 			explicit	weapon_cook					( game& g );
 
 	// these methods mangle private (AAE / EAE / EBE) in the shipped PDB; declaring
@@ -32,9 +34,7 @@ private:
 	virtual	u32			cooked_object_size			( weapon_core& object_to_cook ) const override;
 
 public:
-	virtual				~weapon_cook				( ) { /* no source */ }
-
-	static	void		register_cooks_for_logic_states( );
+	typedef	weapon_core_cook	super;
 
 private:
 	/* 0x0000 */	/* weapon_core_cook */

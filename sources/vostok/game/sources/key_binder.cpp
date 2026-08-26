@@ -26,18 +26,17 @@ enum keyboard_key_group
 
 // TU-local console-command type (canonical headers/console_command_bind.h); the
 // ctor wires the per-binder s_bind_*_command statics through it.
-class console_command_bind : public console_commands::cc_delegate {
+class console_command_bind : private console_commands::cc_delegate {
 public:
 					console_command_bind	( key_binder* binder, s32 type );
-
-	virtual	void	save_to					( console_commands::save_storage& f, memory::base_allocator* a ) const override;
-
-	virtual			~console_command_bind	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* console_commands::cc_delegate */
 	/* 0x0060 */	s32				m_type;
 	/* 0x0064 */	key_binder*		m_binder;
+
+public:
+	virtual	void	save_to					( console_commands::save_storage& f, memory::base_allocator* a ) const override;
 }; // class console_command_bind
 
 STATIC_SIZE_ASSERT(console_command_bind, 0x68);

@@ -61,7 +61,9 @@ public:
 private:
 	/* 0x0000 */	/* ai::weapon */
 	/* 0x0004 */	/* ai::game_object */
+public:
 	/* 0x000c */	object_weapon*				m_next;
+private:
 	/* 0x0010 */	ai::weapon_types_enum		m_type;
 	/* 0x0014 */	pcstr						m_name;
 	/* 0x0018 */	u32							m_id;

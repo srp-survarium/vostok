@@ -26,8 +26,6 @@ struct flash_function_handler;
 struct flash_value;
 
 struct flash_movie {
-	// nested enums have no PDB type record (referenced only); AlignType and
-	// ScaleModeType wrap Scaleform::GFx::Movie's, the *_btn_action values are guesses
 	enum AlignType {
 		Align_Center,
 		Align_TopCenter,
@@ -47,14 +45,19 @@ struct flash_movie {
 		SM_NoBorder
 	};
 
-	enum keyb_btn_action {
-		keyb_btn_down,
-		keyb_btn_up
+	enum mouse_btn_action {
+		ms_key_down,
+		ms_key_up,
+		ms_key_hold,
+		ms_key_click,
+		ms_key_dbl_click
 	};
 
-	enum mouse_btn_action {
-		mouse_btn_down,
-		mouse_btn_up
+	enum keyb_btn_action {
+		kb_key_unknown,
+		kb_key_down,
+		kb_key_up,
+		kb_key_hold
 	};
 
 	inline			flash_movie			( )
@@ -63,13 +66,6 @@ struct flash_movie {
 			m_last_keyb_hold_time	( 0 ),
 			m_priority				( 0 )
 	{}
-	inline			~flash_movie		( )
-	{
-		m_movie_def	= NULL;
-		m_movie		= NULL;
-		m_handle	= NULL;
-	}
-
 			void	SetViewport			( u32 arg_0, u32 arg_1 );
 
 			void	Advance				( const float arg_0, const u32 arg_1 );
@@ -124,10 +120,11 @@ struct flash_movie {
 public:
 	/* 0x0000 */	Scaleform::GFx::MovieDef*		m_movie_def;
 	/* 0x0004 */	Scaleform::GFx::Movie*			m_movie;
-	/* 0x0008 */	Scaleform::Render::ContextImpl::DisplayHandle< Scaleform::Render::TreeRoot >*	m_handle;
+	/* 0x0008 */	Scaleform::Render::ContextImpl::DisplayHandle< Scaleform::Render::TreeRoot > const*	m_handle;
 	/* 0x000c */	u32								m_output_width;
 	/* 0x0010 */	u32								m_output_height;
 	/* 0x0014 */	u32								m_last_keyb_hold_time;
+private:
 	/* 0x0018 */	u8								m_priority;
 }; // struct flash_movie
 

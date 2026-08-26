@@ -17,7 +17,7 @@ public:
 			explicit	scaleform_render_command_queue	( scaleform_game_engine& arg_0 );
 						~scaleform_render_command_queue	( );
 
-private:
+public:
 	friend class flash_factory;
 	friend struct flash_renderer;
 

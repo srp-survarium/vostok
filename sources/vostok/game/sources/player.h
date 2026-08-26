@@ -120,7 +120,10 @@ public:
 			float									fov_factor							( const u32 current_time_in_ms ) const;
 	inline	float									target_fov_factor					( ) const { /* no source */ return m_target_fov_factor; }
 
-	inline	circular_buffer< client_player_history_item > const&	history				( ) const { /* no source */ return m_history; }
+	typedef circular_buffer< client_player_history_item > history_type;
+	typedef vector< player_actions_subscriber* > player_actions_subscribers;
+
+	inline	history_type const&							history				( ) const { /* no source */ return m_history; }
 
 	inline	float4x4 const&							get_target_character_transform		( ) const { /* no source */ return m_target.transform; }
 private:
@@ -275,6 +278,8 @@ private:
 														const u8		arg_4
 													) { /* no source */ return animation::callback_return_type_call_me_again; }
 
+	enum quick_slot_id;
+
 			void									detect_usable_objects				( const u32 current_time_in_ms );
 
 			void									notify_actions_subscribers			( );
@@ -312,18 +317,14 @@ private:
 
 			void									compute_bones						( const u32 current_time_in_ms );
 
-	inline	bool									is_demo_player						( ) const { /* no source */ return m_is_demo_player; }
-
-	inline	game_world_ui*							game_ui								( ) { /* no source */ return m_game_ui; }
-
 private:
 	/* 0x0000 */	/* base_player */
 	/* 0x0120 */	/* resources::unmanaged_resource */
 	/* 0x0228 */	client_player_state				m_current;
 	/* 0x87fc */	client_player_state				m_target;
 	/* 0x10dd0 */	float4x4						m_root_transform;
-	/* 0x10e10 */	vector< player_actions_subscriber* >	m_player_actions_subscribers;
-	/* 0x10e1c */	circular_buffer< client_player_history_item >	m_history;
+	/* 0x10e10 */	player_actions_subscribers			m_player_actions_subscribers;
+	/* 0x10e1c */	history_type						m_history;
 	/* 0x10e30 */	player_stamina					m_stamina;
 	/* 0x10e98 */	player_stealth					m_stealth;
 	/* 0x10ec4 */	float3							m_last_frame_position;
@@ -345,8 +346,14 @@ private:
 	/* 0x10f24 */	float							m_fov_factor_transition_time;
 	/* 0x10f28 */	u32								m_start_fov_factor_change_time_in_ms;
 	/* 0x10f2c */	game_team_id					m_team_id;
+public:
+	inline	bool									is_demo_player						( ) const { /* no source */ return m_is_demo_player; }
+
+	inline	game_world_ui*							game_ui								( ) { /* no source */ return m_game_ui; }
+
 	/* 0x10f30 */	u8								foot_3rd_view_game_material_id;
 	/* 0x10f31 */	u8								foot_1st_view_game_material_id;
+private:
 	/* 0x10f32 */	bool							m_show_server_player;
 	/* 0x10f33 */	bool							m_show_client_player;
 	/* 0x10f34 */	bool							m_is_visible;

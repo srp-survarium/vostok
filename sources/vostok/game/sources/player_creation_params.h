@@ -17,8 +17,6 @@ class base_game_scene;
 class items_dictionary;
 
 struct player_creation_params : public base_player_creation_params {
-	inline		player_creation_params	( ) { /* no source */ }
-	inline		~player_creation_params	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* base_player_creation_params */

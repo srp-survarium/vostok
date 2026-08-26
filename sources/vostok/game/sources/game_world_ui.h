@@ -37,7 +37,9 @@ typedef resources::resource_ptr<
 // the dump re-prints game_mode_type here; the real home is game_core (see
 // game_mode_type.h) - included via the header list above, not redefined
 
-class game_world_ui : public boost::noncopyable {
+class game_world_ui : private boost::noncopyable {
+	typedef map< u32, base_point_stats, std::less< u32 > > base_points;
+
 public:
 			explicit					game_world_ui					( game_world& w );
 	virtual								~game_world_ui					( );
@@ -143,7 +145,7 @@ private:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	flash_movie_resource_ptr			m_game_hud_ui;
 	/* 0x0008 */	game_world&							m_game_world;
-	/* 0x000c */	map< u32, base_point_stats, std::less< u32 > >	m_base_points;
+	/* 0x000c */	base_points							m_base_points;
 	/* 0x0024 */	bool								m_players_list_visible;
 	/* 0x0028 */	game_mode_type						m_game_mode;
 	/* 0x002c */	u8									m_victory_items_count;

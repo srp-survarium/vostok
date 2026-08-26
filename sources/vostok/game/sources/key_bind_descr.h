@@ -12,7 +12,6 @@
 namespace survarium {
 
 struct key_bind_descr {
-	inline		key_bind_descr	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	game_action_id			action_id;

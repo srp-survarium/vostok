@@ -24,8 +24,6 @@ namespace collision {
 namespace survarium {
 
 struct animated_model_instance : public resources::unmanaged_resource {
-	inline		animated_model_instance	( ) { /* no source */ }
-	virtual		~animated_model_instance( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* resources::unmanaged_resource */

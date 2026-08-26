@@ -24,7 +24,7 @@ class animation_space_graph;
 u32						get_animation_vertices_count	( configs::binary_config_value const& groups_config );
 std::pair< u32, u32 >	get_animation_mixes_count		( configs::binary_config_value const& groups_config );
 
-class animation_space_graph_cook : public resources::translate_query_cook , public boost::noncopyable {
+class animation_space_graph_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
 			explicit	animation_space_graph_cook	( ai::navigation::world& navigation_world );
 
@@ -32,8 +32,6 @@ public:
 	virtual	void		translate_query				( resources::query_result_for_cook& parent ) override;
 
 	virtual	void		delete_resource				( resources::resource_base* resource ) override;
-
-	virtual				~animation_space_graph_cook	( ) { /* no source */ }
 
 private:
 			void		on_options_received			( resources::queries_result& data );

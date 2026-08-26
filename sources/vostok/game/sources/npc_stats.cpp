@@ -39,7 +39,7 @@ ui::text* npc_stats::create_new_group(
 		m_wide_column_width + m_medium_column_width * 2.f
 	};
 
-	const float column_width			= ( column_number == column_types_enum(2) ) ? m_wide_column_width : m_medium_column_width;
+	const float column_width			= ( column_number == column_3 ) ? m_wide_column_width : m_medium_column_width;
 
 	ui::text* title_text				= m_ui_world.create_text();
 	title_text->w()->set_visible		( true );
@@ -83,7 +83,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 i = 0; i < stats.sensors_state.size(); ++i )
 	{
 		last_item						= create_new_group(
-											column_types_enum(0),
+											column_1,
 											m_caption_color,
 											stats.sensors_state[i].caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -91,7 +91,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 		for ( u32 j = 0; j < stats.sensors_state[i].content.size(); ++j )
 		{
 			last_item					= create_new_group(
-											column_types_enum(0),
+											column_1,
 											m_text_color,
 											stats.sensors_state[i].content[j].c_str(),
 											last_item ? last_item->w() : 0
@@ -102,7 +102,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 i = 0; i < stats.selectors_state.size(); ++i )
 	{
 		last_item						= create_new_group(
-											column_types_enum(0),
+											column_1,
 											m_caption_color,
 											stats.selectors_state[i].caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -110,7 +110,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 		for ( u32 j = 0; j < stats.selectors_state[i].content.size(); ++j )
 		{
 			last_item					= create_new_group(
-											column_types_enum(0),
+											column_1,
 											m_text_color,
 											stats.selectors_state[i].content[j].c_str(),
 											last_item ? last_item->w() : 0
@@ -122,7 +122,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 
 	// 2nd column: working memory and blackboard
 	last_item							= create_new_group(
-											column_types_enum(1),
+											column_2,
 											m_caption_color,
 											stats.working_memory_state.caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -130,7 +130,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 j = 0; j < stats.working_memory_state.content.size(); ++j )
 	{
 		last_item						= create_new_group(
-											column_types_enum(1),
+											column_2,
 											m_text_color,
 											stats.working_memory_state.content[j].c_str(),
 											last_item ? last_item->w() : 0
@@ -138,7 +138,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	}
 
 	last_item							= create_new_group(
-											column_types_enum(1),
+											column_2,
 											m_caption_color,
 											stats.blackboard_state.caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -146,7 +146,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 j = 0; j < stats.blackboard_state.content.size(); ++j )
 	{
 		last_item						= create_new_group(
-											column_types_enum(1),
+											column_2,
 											m_text_color,
 											stats.blackboard_state.content[j].c_str(),
 											last_item ? last_item->w() : 0
@@ -157,7 +157,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 
 	// 3rd column: general info and planning
 	last_item							= create_new_group(
-											column_types_enum(2),
+											column_3,
 											m_caption_color,
 											stats.general_state.caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -165,7 +165,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 j = 0; j < stats.general_state.content.size(); ++j )
 	{
 		last_item						= create_new_group(
-											column_types_enum(2),
+											column_3,
 											m_text_color,
 											stats.general_state.content[j].c_str(),
 											last_item ? last_item->w() : 0
@@ -178,7 +178,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 	for ( u32 i = 0; i < stats.body_state.size(); ++i )
 	{
 		last_item						= create_new_group(
-											column_types_enum(3),
+											column_4,
 											m_caption_color,
 											stats.body_state[i].caption.c_str(),
 											last_item ? last_item->w() : 0
@@ -186,7 +186,7 @@ void npc_stats::set_stats( human_npc const* const owner )
 		for ( u32 j = 0; j < stats.body_state[i].content.size(); ++j )
 		{
 			last_item					= create_new_group(
-											column_types_enum(3),
+											column_4,
 											m_text_color,
 											stats.body_state[i].content[j].c_str(),
 											last_item ? last_item->w() : 0

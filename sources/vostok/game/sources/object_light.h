@@ -11,6 +11,8 @@
 namespace survarium {
 
 class object_light : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit				object_light	( base_game_scene& w );
 	virtual							~object_light	( );
@@ -28,7 +30,7 @@ public:
 	virtual	void					insert			( ) override;
 	virtual	void					remove			( ) override;
 
-private:
+protected:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	render::light_props		m_props;
 	/* 0x0240 */	u32						m_light_id;

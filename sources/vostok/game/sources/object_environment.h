@@ -16,6 +16,8 @@ namespace resources {
 namespace survarium {
 
 class object_environment : public game_object_ {
+	typedef game_object_ super;
+
 public:
 			explicit	object_environment	( base_game_scene& w );
 	virtual				~object_environment	( );

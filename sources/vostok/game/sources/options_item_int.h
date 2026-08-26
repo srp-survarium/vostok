@@ -10,6 +10,8 @@
 namespace survarium {
 
 class options_item_int : public options_item_base {
+	typedef options_item_base super;
+
 public:
 					options_item_int	(
 						options_tab&	parent_tab,
@@ -30,7 +32,6 @@ public:
 
 	virtual	void	call				( flash_function_handler_params& params ) override;
 
-	inline			~options_item_int	( ) { /* no source */ }
 
 protected:
 	/* 0x0000 */	/* options_item_base */

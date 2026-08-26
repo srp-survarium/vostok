@@ -23,12 +23,12 @@ namespace survarium {
 
 lobby_client& lobby_menu::lobby_client( )
 {
-	return get_game( ).network_client( ).lobby_client( );
+	return get_game( ).get_network_client( )->lobby_client( );
 }
 
 messaging_client& lobby_menu::messaging_client( )
 {
-	return get_game( ).network_client( ).messaging_client( );
+	return get_game( ).get_network_client( )->messaging_client( );
 }
 
 bool lobby_menu::on_keyboard_action(

@@ -43,22 +43,6 @@ typedef resources::resource_ptr<
 
 class simple_game_project : public resources::unmanaged_resource , public base_project {
 public:
-	struct loading {
-		inline		loading	( ) :
-			loaded_count( 0 ),
-			all_queried( false ),
-			visuals_loaded( false ),
-			collision_loaded( false )
-		{ }
-
-	public:
-		/* 0x0000 */	u32		loaded_count;
-		/* 0x0004 */	bool	all_queried;
-		/* 0x0005 */	bool	visuals_loaded;
-		/* 0x0006 */	bool	collision_loaded;
-	}; // struct loading
-
-public:
 			explicit						simple_game_project	( base_game_scene& s );
 	virtual									~simple_game_project( );
 
@@ -72,8 +56,6 @@ public:
 	inline	pcstr							project_name		( ) { /* no source */ return NULL; }
 
 			victory_items_container_core*	get_items_container	( u8 id );
-
-			bool							all_loaded			( );
 
 private:
 	// game_world walks m_respawn_points directly (clear_player_spawn_info);
@@ -93,6 +75,7 @@ private:
 
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */
+public:
 	/* 0x0138 */	base_game_scene&						m_game_scene;
 	/* 0x013c */	configs::binary_config_ptr				m_config;
 	/* 0x0140 */	vector< game_object_* >					m_objects;
@@ -106,7 +89,28 @@ private:
 	/* 0x01ac */	render_visual*							m_render_visuals;
 	/* 0x01b0 */	u32										m_render_visuals_count;
 	/* 0x01b4 */	bool									m_is_inserted;
+
+public:
+	struct loading {
+		inline		loading	( ) :
+			loaded_count( 0 ),
+			all_queried( false ),
+			visuals_loaded( false ),
+			collision_loaded( false )
+		{ }
+
+	public:
+		/* 0x0000 */	u32		loaded_count;
+		/* 0x0004 */	bool	all_queried;
+		/* 0x0005 */	bool	visuals_loaded;
+		/* 0x0006 */	bool	collision_loaded;
+	}; // struct loading
+
+public:
 	/* 0x01b8 */	simple_game_project::loading			m_loaded;
+
+public:
+			bool							all_loaded			( );
 }; // class simple_game_project
 
 STATIC_SIZE_ASSERT(simple_game_project, 0x1C0);

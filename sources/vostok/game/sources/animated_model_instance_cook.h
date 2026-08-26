@@ -12,6 +12,8 @@ namespace survarium {
 struct animated_model_instance;
 
 class animated_model_instance_cook : public resources::translate_query_cook {
+	typedef	resources::translate_query_cook	super;
+
 public:
 					animated_model_instance_cook	( );
 
@@ -20,12 +22,11 @@ public:
 
 	virtual	void	delete_resource					( resources::resource_base* resource ) override;
 
-	virtual			~animated_model_instance_cook	( ) { /* no source */ }
-
 private:
 			void	on_config_loaded				( resources::queries_result& data );
 			void	on_subresources_loaded			( resources::queries_result& data );
 			void	on_hit_params_loaded			( resources::queries_result& data, animated_model_instance* new_model );
+
 }; // class animated_model_instance_cook
 
 STATIC_SIZE_ASSERT(animated_model_instance_cook, 0x20);

@@ -19,6 +19,8 @@ namespace resources {
 namespace survarium {
 
 class object_decal : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_decal	( base_game_scene& w );
 	virtual				~object_decal	( );
@@ -40,7 +42,7 @@ public:
 							boost::function< void( game_object_& ) >&	cb
 						);
 
-private:
+public:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	u32										m_decal_id;
 	/* 0x0154 */	float									m_alpha_angle;

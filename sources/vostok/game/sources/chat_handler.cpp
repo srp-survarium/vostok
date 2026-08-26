@@ -79,8 +79,8 @@ void chat_handler::call( flash_function_handler_params& params )
 	flash_value w_text;
 	params.pArgs[ 0 ].GetMember( "text", &w_text );
 
-	if( m_game.network_client( ).has_bandwidth( ) )
-		m_game.network_client( ).messaging_client( ).on_message_typed( w_text.GetStringW( ), messaging::player_general_channel );
+	if( m_game.get_network_client( )->has_bandwidth( ) )
+		m_game.get_network_client( )->messaging_client( ).on_message_typed( w_text.GetStringW( ), messaging::player_general_channel );
 }
 
 void chat_handler::callback(
@@ -159,8 +159,8 @@ bool chat_handler::on_mouse_move(
 
 void chat_handler::on_message_typed( wchar_t const* text, messaging::message_channel_enum message_chanel )
 {
-	if( m_game.network_client( ).has_bandwidth( ) )
-		m_game.network_client( ).messaging_client( ).on_message_typed( text, message_chanel );
+	if( m_game.get_network_client( )->has_bandwidth( ) )
+		m_game.get_network_client( )->messaging_client( ).on_message_typed( text, message_chanel );
 }
 
 void chat_handler::add_message(
@@ -189,7 +189,7 @@ void chat_handler::add_message(
 		char sender_name[ 32 ];
 		wcstombs_s( NULL, sender_name, w_sender_name, -1 );
 
-		network_client* net_client = static_cast< network_client* >( &m_game.network_client( ) );
+		network_client* net_client = static_cast< network_client* >( m_game.get_network_client( ) );
 		game_team_id sender_team = net_client->get_player_team( sender_name );
 
 		bool same_team = false;
@@ -243,7 +243,7 @@ void chat_handler::set_mode( bool is_game_mode )
 
 	chat_tab game_menu_tabs[ 2 ] =
 	{
-		{ "st_chat_channel_team",	"White",	is_game_mode ? ( m_game.network_client( ).messaging_client( ).local_player_team( ) != team_1 ? 7 : 6 ) : 6,	"/team" },
+		{ "st_chat_channel_team",	"White",	is_game_mode ? ( m_game.get_network_client( )->messaging_client( ).local_player_team( ) != team_1 ? 7 : 6 ) : 6,	"/team" },
 		{ "st_chat_channel_match",	"White",	5,	"/all" },
 	};
 
@@ -314,7 +314,7 @@ void chat_handler::set_local_player_name( pcstr account_name )
 
 void chat_handler::focus( bool b_focused )
 {
-	if( !m_game.network_client( ).has_bandwidth( ) )
+	if( !m_game.get_network_client( )->has_bandwidth( ) )
 		return;
 
 	if( m_focused == b_focused )

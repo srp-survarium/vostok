@@ -13,7 +13,6 @@ namespace survarium {
 struct animation_controller_parameters {
 	virtual	void	reset							( ) = 0;
 
-	inline			animation_controller_parameters	( ) { /* no source */ }
 }; // struct animation_controller_parameters
 
 STATIC_SIZE_ASSERT(animation_controller_parameters, 0x4);
@@ -21,8 +20,6 @@ STATIC_SIZE_ASSERT(animation_controller_parameters, 0x4);
 struct simple_animation_controller_parameters : public animation_controller_parameters {
 	virtual	void	reset	( ) override;
 
-	inline			simple_animation_controller_parameters	( ) { /* no source */ }
-	inline			~simple_animation_controller_parameters( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* animation_controller_parameters */
@@ -37,8 +34,6 @@ bool	operator!=	( simple_animation_controller_parameters const& first, simple_an
 struct movement_animation_controller_parameters : public animation_controller_parameters {
 	virtual	void	reset	( ) override;
 
-	inline			movement_animation_controller_parameters	( ) { /* no source */ }
-	inline			~movement_animation_controller_parameters	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* animation_controller_parameters */

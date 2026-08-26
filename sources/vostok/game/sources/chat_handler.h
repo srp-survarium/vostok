@@ -21,7 +21,7 @@ struct flash_function_handler_params;
 struct flash_movie;
 struct flash_value;
 
-class chat_handler : public input::handler , public flash_function_handler , public flash_external_handler , public boost::noncopyable {
+class chat_handler : public input::handler , public flash_function_handler , public flash_external_handler , private boost::noncopyable {
 public:
 			explicit						chat_handler			( game& game );
 	virtual									~chat_handler			( );

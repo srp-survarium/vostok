@@ -26,14 +26,7 @@ namespace survarium {
 
 class human_npc;
 
-class npc_stats : public boost::noncopyable {
-public:
-	// target PDB records this nested enum with NO enumerators (forward-decl
-	// only) - keep it empty so the base PDB matches; columns are referenced by
-	// integer cast at the call sites (see npc_stats.cpp)
-	enum column_types_enum {
-	};
-
+class npc_stats : private boost::noncopyable {
 public:
 	explicit		npc_stats		( ui::world& ui_world );
 					~npc_stats		( );
@@ -42,6 +35,15 @@ public:
 
 	void			set_stats		( human_npc const* const owner );
 
+public:
+	enum column_types_enum {
+		column_1,
+		column_2,
+		column_3,
+		column_4
+	};
+
+private:
 	ui::text*		create_new_group(
 						const column_types_enum		arg_0 /* npc_stats::column_types_enum column_number */,
 						const u32					font_color,

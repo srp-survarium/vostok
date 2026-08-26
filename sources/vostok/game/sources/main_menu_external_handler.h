@@ -13,7 +13,12 @@ class game;
 struct flash_movie;
 struct flash_value;
 
-class main_menu_external_handler : public flash_external_handler , public boost::noncopyable {
+class main_menu_external_handler : public flash_external_handler , private boost::noncopyable {
+private:
+	/* 0x0000 */	/* flash_external_handler */
+	/* 0x0008 */	/* boost::noncopyable */
+	/* 0x0008 */	game&		m_game;
+
 public:
 	inline	explicit	main_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { /* no source */ }
 
@@ -24,12 +29,6 @@ public:
 							u32						arg_3
 						) override { /* no source */ }
 
-	virtual				~main_menu_external_handler	( ) { /* no source */ }
-
-private:
-	/* 0x0000 */	/* flash_external_handler */
-	/* 0x0008 */	/* boost::noncopyable */
-	/* 0x0008 */	game&		m_game;
 }; // class main_menu_external_handler
 
 STATIC_SIZE_ASSERT(main_menu_external_handler, 0xC);

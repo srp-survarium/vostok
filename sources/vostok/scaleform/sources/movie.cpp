@@ -207,9 +207,9 @@ void flash_movie::HandleMouseBtn(
 	)
 {
 	Scaleform::GFx::Event::EventType	type	= Scaleform::GFx::Event::Unknown;
-	if ( action == mouse_btn_down )
+	if ( action == ms_key_down )
 		type	= Scaleform::GFx::Event::MouseDown;
-	else if ( action == mouse_btn_up )
+	else if ( action == ms_key_up )
 		type	= Scaleform::GFx::Event::MouseUp;
 
 	Scaleform::GFx::MouseEvent	mevent( type, button, x, y );
@@ -219,7 +219,7 @@ void flash_movie::HandleMouseBtn(
 void flash_movie::HandleKeyboard( flash_movie::keyb_btn_action action, s32 scan )
 {
 	Scaleform::GFx::KeyEvent	ev(
-		action == keyb_btn_up ? Scaleform::GFx::Event::KeyDown : Scaleform::GFx::Event::KeyUp,
+		action == kb_key_up ? Scaleform::GFx::Event::KeyDown : Scaleform::GFx::Event::KeyUp,
 		( Scaleform::Key::Code )scan
 	);
 	m_movie->HandleEvent( ev );

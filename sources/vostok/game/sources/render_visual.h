@@ -21,8 +21,6 @@ struct render_visual {
 			void	insert			( base_game_scene& w );
 			void	remove			( base_game_scene& w );
 
-	inline			render_visual	( ) { /* no source */ }
-	inline			~render_visual	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	float4x4					matrix;

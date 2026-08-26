@@ -35,6 +35,9 @@ class weapon_cook;
 class weapon_sound_effect;
 
 class weapon : public weapon_core {
+	typedef weapon_core super;
+	typedef render::skeleton_model_ptr weapon_model_ptr_type;
+
 	// the cook constructs/tears down weapon directly, touching private pfx/animation
 	// members; codegen-neutral
 	friend	class	weapon_cook;
@@ -56,8 +59,6 @@ public:
 	inline	u32					first_view_death_animations_count	( ) const { return m_first_view_death_animations_count; }
 	inline	u32					third_view_death_animations_count	( ) const { return m_third_view_death_animations_count; }
 	inline	u32					preview_animations_count			( ) const { return m_preview_animations_count; }
-	// the death animations live in the trailing region of the weapon's combined malloc
-	inline	resources::managed_resource_ptr const*	death_animations( ) const { return ( resources::managed_resource_ptr const* )( this + 1 ); }
 
 	// the methods below mangle private (AAE / EAE) in the shipped PDB - declaring
 	// them private keeps each out-of-line symbol pairable with the target
@@ -145,7 +146,7 @@ private:
 	// buildability cast through the incomplete player (weapon_core stores base_player*)
 	inline	player&				user								( ) const { return *( player* )get_user( ); }
 
-	inline	base_game_scene*	get_game_scene						( ) { return m_game_scene; }
+	typedef fixed_vector< resources::unmanaged_resource_ptr, 10 > bullet_shells;
 
 private:
 	/* 0x0000 */	/* weapon_core */
@@ -164,8 +165,13 @@ private:
 	/* 0x0fb1 */	u8										m_shells_pfx_count;
 	/* 0x0fb2 */	u8										m_current_shell_pfx_id;
 	/* 0x0fb3 */	u8										m_current_fire_pfx_id;
-	/* 0x0fb4 */	render::skeleton_model_ptr				model;
+public:
+	/* 0x0fb4 */	weapon_model_ptr_type					model;
 	/* 0x0fb8 */	game_world_ui*							m_game_ui;
+
+	inline	base_game_scene*	get_game_scene						( ) { return m_game_scene; }
+
+private:
 	/* 0x0fbc */	rifle_scope_ptr							m_rifle_scope;
 	/* 0x0fc0 */	base_game_scene*						m_game_scene;
 	/* 0x0fc4 */	u32										m_weapon_fire_light_id;

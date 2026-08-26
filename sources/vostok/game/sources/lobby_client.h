@@ -36,7 +36,12 @@ namespace survarium {
 class game;
 struct relocate_item_descr;
 
-class lobby_client : public core::noncopyable {
+class lobby_client : private core::noncopyable {
+	typedef boost::function< void( network_core::packet_reader& ) > client_on_packet_received_type;
+	typedef boost::function< void() > on_connected_callback_type;
+	typedef boost::function< void() > on_disconnected_callback_type;
+	typedef network_core::packet_reader packet_reader;
+
 public:
 			explicit								lobby_client						( game& g );
 													~lobby_client						( );
@@ -45,9 +50,9 @@ public:
 
 			void									disconnect							( );
 
-	inline	void									set_on_packet_received				( boost::function< void( network_core::packet_reader& ) > const& arg_0 ) { m_on_packet_received = arg_0; }
-	inline	void									set_on_connected					( boost::function< void() > const& arg_0 ) { m_on_connected = arg_0; }
-	inline	void									set_on_disconnected					( boost::function< void() > const& arg_0 ) { m_on_disconnected = arg_0; }
+	inline	void									set_on_packet_received				( client_on_packet_received_type const& arg_0 ) { m_on_packet_received = arg_0; }
+	inline	void									set_on_connected					( on_connected_callback_type const& arg_0 ) { m_on_connected = arg_0; }
+	inline	void									set_on_disconnected					( on_disconnected_callback_type const& arg_0 ) { m_on_disconnected = arg_0; }
 
 			u32										session_id							( ) const;
 
@@ -145,10 +150,6 @@ public:
 	inline	u8										get_player_reputations_count		( ) { /* no source */ return m_player_reputations_count; }
 	inline	fixed_string< 32 > const&				get_player_name						( ) const { /* no source */ return m_player_name; }
 
-	// inline accessor for the offset-0 account_nickname_ (reset_account_money reads it
-	// raw); no out-of-line symbol so the access char is irrelevant.
-	inline	pcstr									account_name						( ) const { /* no source */ return account_nickname_; }
-
 			void									ping_server							( );
 
 	// claude@MATCH: private from here - the on_*/sign_in_on_packet_received/
@@ -170,13 +171,15 @@ private:
 
 private:
 	/* 0x0000 */	/* core::noncopyable */
+public:
 	/* 0x0000 */	char									account_nickname_[32];
+private:
 	/* 0x0020 */	game&									m_game;
 	/* 0x0024 */	server_connection_info					m_connection_info;
 	/* 0x00a8 */	network::tcp_packet_client				m_packet_client;
-	/* 0x0130 */	boost::function< void( network_core::packet_reader& ) >	m_on_packet_received;
-	/* 0x0150 */	boost::function< void() >				m_on_connected;
-	/* 0x0170 */	boost::function< void() >				m_on_disconnected;
+	/* 0x0130 */	client_on_packet_received_type			m_on_packet_received;
+	/* 0x0150 */	on_connected_callback_type				m_on_connected;
+	/* 0x0170 */	on_disconnected_callback_type			m_on_disconnected;
 	/* 0x0190 */	lobby::client_state_enum				m_status;
 	/* 0x0194 */	bool									m_net_client_connected;
 	/* 0x0198 */	u32										m_match_id;

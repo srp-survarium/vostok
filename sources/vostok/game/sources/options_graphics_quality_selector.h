@@ -10,6 +10,8 @@
 namespace survarium {
 
 class options_graphics_quality_selector : public options_item_int {
+	typedef options_item_int super;
+
 public:
 			explicit	options_graphics_quality_selector	( options_tab& parent_tab );
 
@@ -17,7 +19,6 @@ public:
 
 	inline	u8			value								( ) { /* no source */ return m_current_value; }
 
-	inline				~options_graphics_quality_selector	( ) { /* no source */ }
 }; // class options_graphics_quality_selector
 
 STATIC_SIZE_ASSERT(options_graphics_quality_selector, 0x20);

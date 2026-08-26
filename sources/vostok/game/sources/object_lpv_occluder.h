@@ -10,6 +10,8 @@
 namespace survarium {
 
 class object_lpv_occluder : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_lpv_occluder	( base_game_scene& w );
 	virtual				~object_lpv_occluder( );
@@ -23,7 +25,7 @@ public:
 	virtual	void		insert				( ) override;
 	virtual	void		remove				( ) override;
 
-private:
+public:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	u32		m_occluder_id;
 }; // class object_lpv_occluder

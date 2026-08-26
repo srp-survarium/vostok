@@ -76,22 +76,25 @@ typedef resources::resource_ptr<
 
 class human_npc : public ai::npc , public ai::game_object , public sound::sound_producer , public sound::sound_receiver , public hit_receiver , public game_object_ {
 public:
-	struct npc_game_attributes {
-		typedef vostok::intrusive_list< object_weapon,
+			explicit							human_npc					( game_world& game_world );
+	virtual										~human_npc					( );
+
+	/* 0x0140 */	human_npc_ptr							next_npc;
+
+	typedef vostok::intrusive_list< object_weapon,
 			object_weapon *,
 			&object_weapon::m_next,
 			vostok::threading::mutex,
 			vostok::size_policy,
-			vostok::no_debug_policy > object_weapon_list;
+			vostok::no_debug_policy > weapons_type;
 
+	struct npc_game_attributes {
 											npc_game_attributes	( );
 
 				npc_game_attributes&		operator=			( npc_game_attributes& other );
 
-		inline								~npc_game_attributes( ) { /* no source */ }
-
-	public:
-		/* 0x0000 */	object_weapon_list		weapons;
+public:
+		/* 0x0000 */	weapons_type			weapons;
 		/* 0x0030 */	float3					initial_position;
 		/* 0x003c */	float3					initial_scale;
 		/* 0x0048 */	float3					initial_rotation;
@@ -106,11 +109,8 @@ public:
 		/* 0x00c4 */	u32						outfit_id;
 	}; // struct npc_game_attributes
 
-public:
-			explicit							human_npc					( game_world& game_world );
-	virtual										~human_npc					( );
-
 	virtual	math::aabb							get_aabb					( ) const override;
+
 	virtual	float4x4							get_eyes_matrix				( ) const override;
 
 	virtual	math::color							get_color					( ) const override
@@ -333,8 +333,6 @@ private:
 	/* 0x001c */	/* sound::sound_receiver */
 	/* 0x0024 */	/* hit_receiver */
 	/* 0x0030 */	/* game_object_ */
-public:
-	/* 0x0140 */	human_npc_ptr							next_npc;
 private:
 	/* 0x0144 */	ai::world&								m_ai_world;
 	/* 0x0148 */	sound::world&							m_sound_world;

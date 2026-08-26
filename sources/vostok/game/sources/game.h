@@ -60,7 +60,7 @@ typedef resources::resource_ptr<
 
 // void* game::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x8da10]: 8, <0x8d9a6>|0x006|+0x00f:'100' ...
 
-class game : public engine_user::world , public input::engine , public ui::engine , public physics::engine , public scaleform_game_engine , public boost::noncopyable {
+class game : public engine_user::world , private input::engine , private ui::engine , private physics::engine , private scaleform_game_engine , private boost::noncopyable {
 	// game_world reaches game's private hide_game_stats directly (game_world::
 	// update_npc_stats writes it) - the original befriends its game_world scene.
 	friend class game_world;
@@ -68,14 +68,7 @@ class game : public engine_user::world , public input::engine , public ui::engin
 	// (codegen-neutral friendship; PDB does not record it)
 	friend class network_client;
 public:
-	enum debug_window_enum
-	{
-		debug_window_none			= 0x0,
-		debug_window_resources		= 0x1,
-		debug_window_tasks			= 0x2,
-	};
-
-													game							(
+											game							(
 														engine_user::engine&	engine,
 														render::world&			render_world,
 														sound::world&			sound,
@@ -200,13 +193,9 @@ public:
 
 			void								discard_current_match			( );
 
-	inline	base_network_client*				get_network_client				( ) { /* no source */ return m_network_client; }
+	/* 0x000b */	bool								hide_game_stats;
 
-	// claude@NOTE: integration accessor the matched network clients call as
-	// m_game.network_client().login_client().session_id() - returns the same
-	// base_network_client* member by reference (login_client() is virtual on the
-	// base, so concrete network_client need not be exposed here).
-	inline	base_network_client&				network_client					( ) const { /* no source */ return *m_network_client; }
+	inline	base_network_client*				get_network_client				( ) { /* no source */ return m_network_client; }
 
 	inline	pcstr								project_resource_name			( ) { /* no source */ return m_project_resource_name.c_str( ); }
 
@@ -246,11 +235,6 @@ private:
 			void								on_render_output_window_created	( resources::queries_result& data );
 			void								on_renderer_created				( resources::queries_result& data );
 
-			void								create_debug_window				( );
-			void								destroy_debug_window			( );
-			void								draw_debug_window				( );
-	inline	void								toggle_debug_window				( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	/* engine_user::world */
 	/* 0x0008 */	/* input::engine */
@@ -258,7 +242,7 @@ private:
 	/* 0x000a */	/* physics::engine */
 	/* 0x0004 */	/* scaleform_game_engine */
 	/* 0x000b */	/* boost::noncopyable */
-	/* 0x000b */	bool								hide_game_stats;
+
 	/* 0x0010 */	timing::timer						m_timer;
 	/* 0x0028 */	timing::timer						m_permanent_timer;
 	/* 0x0040 */	threading::mutex					m_application_activation;
@@ -306,8 +290,21 @@ private:
 	/* 0x0610 */	fixed_string< 512 >					m_project_resource_name;
 	/* 0x081c */	game_options						m_game_options;
 	/* 0x086c */	sound::sound_debug_stats*			m_sound_stats;
+
+	enum debug_window_enum
+	{
+		debug_window_none			= 0x0,
+		debug_window_resources		= 0x1,
+		debug_window_tasks			= 0x2,
+	};
+
 	/* 0x0870 */	game::debug_window_enum				m_debug_window_type;
 	/* 0x0874 */	ui::window*							m_debug_window;
+
+			void								create_debug_window				( );
+			void								destroy_debug_window			( );
+			void								draw_debug_window				( );
+	inline	void								toggle_debug_window				( ) { /* no source */ }
 }; // class game
 
 STATIC_SIZE_ASSERT(game, 0x878);

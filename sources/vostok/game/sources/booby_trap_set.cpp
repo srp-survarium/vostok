@@ -35,12 +35,12 @@ booby_trap_set::booby_trap_set( game_world& game_world ) :
 // the holder() chain rides the inventory::holder() inliner wall (another unit).
 void booby_trap_set::action( bool key_down )
 {
-	if ( !m_game_world.get_game( ).network_client( ).has_bandwidth( )
+	if ( !m_game_world.get_game( ).get_network_client( )->has_bandwidth( )
 		&& !key_down )
 		booby_trap_set_core::try_place_trap( );
 
 	base_player* player = m_inventory->holder( ).cast_to_base_player( );
-	if ( m_game_world.get_game( ).network_client( ).is_player_current( player->id )
+	if ( m_game_world.get_game( ).get_network_client( )->is_player_current( player->id )
 		&& m_amount )
 		toggle_ghost_model( key_down );
 }

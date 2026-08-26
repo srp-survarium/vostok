@@ -19,8 +19,12 @@ public:
 					player_logic_preview_state	(
 						resources::managed_resource_ptr*	animations,
 						u32									animations_count,
-						weapon_user_animations_selector&	owner
-					);
+							weapon_user_animations_selector&	owner
+						);
+
+	typedef player_logic_base_state super;
+	typedef animation::mixing::expression expression;
+	typedef buffer_vector< resources::managed_resource_ptr > animations_type;
 
 private:
 	// PDB mangles these overrides E* (private virtual), unlike the public ctor/dtor.
@@ -29,14 +33,13 @@ private:
 
 	virtual	void	execute						( ) override { /* no source */ }
 
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >	selected_animations			(
+	virtual	std::pair< expression, animation::mixing::animation_lexeme >	selected_animations			(
 						mutable_buffer&							buffer,
 						weapon_animation_parameters const&		weapon_parameters,
 						const bool								is_third_view
 					) const override;
 
 public:
-	virtual			~player_logic_preview_state	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* player_logic_base_state */

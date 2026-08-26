@@ -13,7 +13,7 @@ namespace survarium {
 class game;
 class options_item_base;
 
-class options_tab : public boost::noncopyable {
+class options_tab : private boost::noncopyable {
 public:
 											options_tab		( game& g, flash_movie_resource_ptr& movie, options_enum type );
 											~options_tab	( );

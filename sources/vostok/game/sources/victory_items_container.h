@@ -12,6 +12,8 @@ namespace survarium {
 class base_game_scene;
 
 class victory_items_container : public victory_items_container_core {
+	typedef victory_items_container_core super;
+
 public:
 			explicit	victory_items_container	( base_game_scene& w );
 
@@ -19,7 +21,6 @@ public:
 
 	virtual	pcstr		use_info				( usable_object_user_data* user ) override;
 
-	virtual				~victory_items_container( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* victory_items_container_core */

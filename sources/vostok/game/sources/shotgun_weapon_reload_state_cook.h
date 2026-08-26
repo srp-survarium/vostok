@@ -12,7 +12,9 @@ namespace survarium {
 
 struct weapon_state_creation_params;
 
-class shotgun_weapon_reload_state_cook : public resources::unmanaged_cook , public core::noncopyable {
+class shotgun_weapon_reload_state_cook : public resources::unmanaged_cook , private core::noncopyable {
+	typedef resources::unmanaged_cook super;
+
 public:
 								shotgun_weapon_reload_state_cook	( );
 	virtual						~shotgun_weapon_reload_state_cook	( );

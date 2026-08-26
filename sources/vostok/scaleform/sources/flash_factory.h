@@ -22,6 +22,8 @@ class scaleform_game_engine;
 class scaleform_render_command_queue;
 
 class flash_factory {
+	friend class game_world;
+
 public:
 			explicit				flash_factory		( scaleform_game_engine& arg_0 );
 									~flash_factory		( );
@@ -36,8 +38,6 @@ public:
 
 private:
 	/* 0x0000 */	Scaleform::GFx::Loader*				m_gfx_loader;
-public:
-	inline	Scaleform::GFx::Loader*					get_gfx_loader	( ) { /* no source */ return m_gfx_loader; }
 
 public:
 	/* 0x0004 */	scaleform_render_command_queue*		m_render_thread_queue;

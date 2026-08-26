@@ -52,6 +52,7 @@ private:
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2][2];
 
 	template < typename T > friend class weapon_core_state_cook_template;
+	template < typename T > friend class weapon_sound_events_handler_state;
 }; // class double_barreled_weapon_core_reload_state
 
 STATIC_SIZE_ASSERT(double_barreled_weapon_core_reload_state, 0x188);

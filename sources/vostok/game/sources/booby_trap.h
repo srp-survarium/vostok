@@ -15,6 +15,8 @@ namespace survarium {
 class game_world;
 
 class booby_trap : public booby_trap_core {
+	typedef booby_trap_core super;
+
 private:
 			explicit	booby_trap				( game_world& gw );
 	virtual				~booby_trap				( );

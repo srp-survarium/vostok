@@ -52,7 +52,6 @@ private:
 	/* 0x0158 */	resources::managed_resource_ptr		m_user_animations[2][2];
 
 	template < typename T > friend class weapon_core_state_cook_template;
-	// game's sound-events wrapper derives from this state (dtor is private here).
 	template < typename T > friend class weapon_sound_events_handler_state;
 }; // class weapon_core_chamber_a_round_aimed_state
 

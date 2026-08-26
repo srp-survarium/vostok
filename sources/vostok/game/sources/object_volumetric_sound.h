@@ -14,6 +14,8 @@ class base_project;
 class collision_geometry;
 
 class object_volumetric_sound : public object_sound , public link_resolver {
+	typedef object_sound super;
+
 public:
 			explicit	object_volumetric_sound	( base_game_scene& w );
 	virtual				~object_volumetric_sound( );

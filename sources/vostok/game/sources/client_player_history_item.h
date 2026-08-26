@@ -9,7 +9,7 @@
 
 namespace survarium {
 
-struct client_player_history_item : public boost::noncopyable {
+struct client_player_history_item : private boost::noncopyable {
 		client_player_history_item	( );
 		~client_player_history_item	( );
 

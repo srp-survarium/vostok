@@ -56,13 +56,13 @@ void object_environment::material_ready( resources::queries_result& data, boost:
 	cb( *this );
 }
 
+void object_environment::remove( )
+{
+}
+
 void object_environment::insert( )
 {
 	get_game_scene().renderer().scene().set_post_process( get_game_scene().render_scene_view(), m_postprocess );
-}
-
-void object_environment::remove( )
-{
 }
 
 } // namespace survarium

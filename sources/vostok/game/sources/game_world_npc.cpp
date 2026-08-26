@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "game_world.h"
 #include "game_memory.h"	// DELETE (delete_weapons)
+#include "ai_collision_object.h"
 
 #include "game.h"	// get_game().hide_game_stats / ui_world() (update_npc_stats)
 #include "npc_stats.h"	// npc_stats::set_stats / draw (update_npc_stats)
@@ -21,6 +22,7 @@
 #include <vostok/ui/world.h>	// ui::world::get_renderer (update_npc_stats)
 #include <vostok/collision/common_types.h>	// ray_triangle_result (ray_query_predicate)
 #include <vostok/physics/ray_result.h>	// closest_ray_result (get_first_npc... predicate)
+#include <vostok/physics/contact_test_predicate.h>
 
 #undef NEW
 #undef DELETE
@@ -28,6 +30,45 @@
 #define DELETE( pointer )	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 
 namespace survarium {
+
+struct find_closest_collision_predicate {
+	inline find_closest_collision_predicate( ) :
+		m_result			( NULL ),
+		m_closest_fraction	( 1.0f )
+	{
+	}
+
+	inline void operator()( physics::closest_ray_result const& result );
+
+public:
+	/* 0x0000 */ physics::closest_ray_result const*	m_result;
+	/* 0x0004 */ float							m_closest_fraction;
+};
+
+STATIC_SIZE_ASSERT(find_closest_collision_predicate, 0x8);
+
+struct test_objects_in_shape_predicate : public physics::contact_test_predicate {
+	inline test_objects_in_shape_predicate( ) :
+		m_in_shape( false )
+	{
+	}
+
+	virtual float add_single_result(
+		void*,
+		physics::primitive_type,
+		float4x4 const&,
+		float3 const&,
+		physics::primitive_type,
+		float4x4 const&,
+		float3 const&
+	) override;
+
+public:
+	/* 0x0000 */ /* physics::contact_test_predicate */
+	/* 0x0004 */ bool	m_in_shape;
+};
+
+STATIC_SIZE_ASSERT(test_objects_in_shape_predicate, 0x8);
 
 void game_world::initialize_ai( )
 {
@@ -54,12 +95,10 @@ void game_world::get_visible_objects(
 // legacy lineage game_unused.cpp::get_first_npc_in_camera_direction - the new
 // shape operates on physics::closest_ray_result; consumer is game_world.h's
 // inline find_npc_in_camera_direction)
-struct get_first_npc_in_camera_direction_predicate : public boost::noncopyable {
+struct get_first_npc_in_camera_direction_predicate : private boost::noncopyable {
 	inline			get_first_npc_in_camera_direction_predicate( ) { /* no source */ }
 
 	inline	bool	operator()	( physics::closest_ray_result const& arg_0 ) { /* no source */ return false; }
-
-	inline			~get_first_npc_in_camera_direction_predicate( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* boost::noncopyable */
@@ -70,7 +109,7 @@ STATIC_SIZE_ASSERT(get_first_npc_in_camera_direction_predicate, 0x4);
 
 // TU-local (canonical headers/ray_query_predicate.h; legacy lineage
 // game.cpp/game_unused.cpp::ray_query - this compiland carries that family)
-struct ray_query_predicate : public boost::noncopyable {
+struct ray_query_predicate : private boost::noncopyable {
 	inline			ray_query_predicate	(
 						float&								arg_0,
 						collision::object const* const		arg_1,
@@ -83,8 +122,6 @@ struct ray_query_predicate : public boost::noncopyable {
 		transparency_threshold( arg_3 ) { /* no source */ }
 
 	inline	bool	predicate			( collision::ray_triangle_result const& arg_0 ) { /* no source */ return false; }
-
-	inline			~ray_query_predicate( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	/* boost::noncopyable */

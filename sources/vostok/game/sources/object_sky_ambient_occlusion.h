@@ -10,6 +10,8 @@
 namespace survarium {
 
 class object_sky_ambient_occlusion : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_sky_ambient_occlusion	( base_game_scene& w );
 	virtual				~object_sky_ambient_occlusion	( );
@@ -23,7 +25,7 @@ public:
 	virtual	void		insert							( ) override;
 	virtual	void		remove							( ) override;
 
-private:
+public:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	fixed_string< 260 >		m_texture_name;
 	/* 0x0260 */	bool					m_enabled;

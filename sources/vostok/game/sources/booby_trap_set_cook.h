@@ -17,14 +17,13 @@ public:
 	inline	explicit				booby_trap_set_cook			( game_world& arg_0 ) :
 		m_game_world( arg_0 ) { /* no source */ }
 
-	virtual							~booby_trap_set_cook		( ) { /* no source */ }
-
-private:
+public:
 	virtual	void					delete_resource				( resources::resource_base* resource ) override
 	{
 		VOSTOK_DELETE_IMPL( g_allocator, resource );
 	}
 
+private:
 	virtual	booby_trap_set_core*	new_derived_resource		( ) override
 	{
 		return VOSTOK_NEW_IMPL( g_allocator, booby_trap_set )( m_game_world );

@@ -16,7 +16,7 @@ namespace survarium {
 class base_game_scene;
 class game_camera;
 
-class camera_director : public boost::noncopyable {
+class camera_director : private boost::noncopyable {
 public:
 			explicit			camera_director			( base_game_scene& w );
 
@@ -36,7 +36,6 @@ public:
 
 	virtual	void				on_focus				( bool b_focus_enter );
 
-	inline						~camera_director		( ) { /* no source */ }
 
 private:
 	/* 0x0004 */	/* boost::noncopyable */

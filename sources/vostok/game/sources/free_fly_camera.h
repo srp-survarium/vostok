@@ -15,6 +15,8 @@ class base_game_scene;
 class camera_director;
 
 class free_fly_camera : public game_camera , public input::handler {
+	typedef game_camera super;
+
 public:
 					free_fly_camera		( base_game_scene& w, camera_director& cd );
 
@@ -59,7 +61,6 @@ private:
 			bool	mouse_event_present	( s32 e );
 
 public:
-	virtual			~free_fly_camera	( ) { /* sushi@NOTE: Retail inlines member cleanup into its deleting destructor. */ }
 
 private:
 	/* 0x0000 */	/* game_camera */

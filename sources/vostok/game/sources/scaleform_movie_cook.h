@@ -11,7 +11,9 @@ namespace survarium {
 
 class flash_factory;
 
-class scaleform_movie_cook : public resources::translate_query_cook , public boost::noncopyable {
+class scaleform_movie_cook : public resources::translate_query_cook , private boost::noncopyable {
+	typedef resources::translate_query_cook super;
+
 public:
 			explicit	scaleform_movie_cook	( flash_factory& factory );
 
@@ -19,7 +21,6 @@ public:
 
 	virtual	void		delete_resource			( resources::resource_base* resource ) override;
 
-	virtual				~scaleform_movie_cook	( ) { /* no source */ }
 
 private:
 			void		on_raw_data_loaded		( resources::queries_result& data, resources::query_result_for_cook* parent );

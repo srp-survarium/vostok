@@ -15,7 +15,6 @@ private:
 	virtual	void	LogMessageVarg			( Scaleform::LogMessageId arg_0, pcstr arg_1, va_list arg_2 ) override;
 
 public:
-	inline			vostok_scaleform_log	( ) { }
 }; // class vostok_scaleform_log
 
 STATIC_SIZE_ASSERT(vostok_scaleform_log, 0x8);

@@ -24,7 +24,7 @@ namespace ui {
 
 namespace survarium {
 
-class stats : public boost::noncopyable {
+class stats : private boost::noncopyable {
 public:
 			explicit	stats						( ui::world& ui_world );
 						~stats						( );

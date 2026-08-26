@@ -16,6 +16,8 @@ typedef resources::resource_ptr<
 > weapon_core_shotgun_reload_base_substate_ptr;
 
 class shotgun_weapon_reload_state : public weapon_core_shotgun_reload_state {
+	typedef weapon_core_shotgun_reload_state super;
+
 public:
 	inline		shotgun_weapon_reload_state	(
 					weapon_core&	weapon,
@@ -30,7 +32,6 @@ public:
 	{
 		set_delete_substates_on_destruction	( false );
 	}
-	virtual		~shotgun_weapon_reload_state( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* weapon_core_shotgun_reload_state */

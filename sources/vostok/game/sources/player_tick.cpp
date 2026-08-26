@@ -45,10 +45,8 @@ static float s_smooth_pitch_speed = 11.25f;
 static vostok::console_commands::cc_float s_smooth_pitch_speed_command( "smooth_pitch_speed", s_smooth_pitch_speed, 0.f, 720.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_min_font_size = 12.f;
-static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_max_font_size = 32.f;
-static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 
 static float s_player_name_decrease_koef = 0.3f;
 static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
@@ -265,6 +263,9 @@ void player::apply_input_before_new_transform(
 	player_state.animation_player.set_object_transform( player_state.transform, this );
 }
 
+static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+
 void player::smooth( const float time_delta )
 {
 	if( time_delta > 0.f )
@@ -323,7 +324,7 @@ void player::tick( const u32 current_time_in_ms )
 	if( m_target.physics_controller->has_updates( ) || m_current.physics_controller->has_updates( ) )
 		smooth( time_delta_in_ms * 0.001f );
 
-	const bool is_current = m_game.network_client( ).is_player_current( id );
+	const bool is_current = m_game.get_network_client( )->is_player_current( id );
 
 	player_input previous_input = m_input;
 	m_input = m_is_alive ? ( is_local ? local_input( ) : remote_input( ) ) : player_input( );
@@ -391,7 +392,7 @@ void player::tick( const u32 current_time_in_ms )
 		serialize_current_state( current_time_in_ms );
 
 	if( is_local && m_is_alive )
-		m_game_scene.get_game( ).network_client( ).send_local_player_input( m_input, current_time_in_ms, m_target.transform, m_target.look_pitch );
+		m_game_scene.get_game( ).get_network_client( )->send_local_player_input( m_input, current_time_in_ms, m_target.transform, m_target.look_pitch );
 
 	set_physics_controller_walk_vector( m_target );
 	if( m_use_physics_controller_for_current )
@@ -413,8 +414,8 @@ void player::tick( const u32 current_time_in_ms )
 
 	bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
 	if( name_visible
-		&& m_game.network_client( )
-			.current_player_team( ) == m_team_id
+		&& m_game.get_network_client( )
+			->current_player_team( ) == m_team_id
 		&& m_game.get_game_world( ).get_camera_director( )
 			.get_active_camera( ) )
 	{

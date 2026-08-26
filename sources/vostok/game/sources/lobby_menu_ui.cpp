@@ -55,13 +55,11 @@ namespace survarium {
 
 // TU-local (canonical headers/relocate_item_func.h; owner mapping in
 // temp/triage_log.md) - lobby_menu holds it through m_relocate_item_func
-class relocate_item_func : public flash_function_handler , public boost::noncopyable {
+class relocate_item_func : public flash_function_handler , private boost::noncopyable {
 public:
 			explicit	relocate_item_func	( game& g );
 
 	virtual	void		call				( flash_function_handler_params& params ) override;
-
-	inline				~relocate_item_func	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* flash_function_handler */
@@ -83,7 +81,7 @@ void relocate_item_func::call( flash_function_handler_params& params )
 	LOG_INFO( "TRY RELOCATE(FLASH)!!!" );
 
 	vector< relocate_item_descr > descriptions;
-	lobby_client& lobby = m_game.network_client( ).lobby_client( );
+	lobby_client& lobby = m_game.get_network_client( )->lobby_client( );
 
 	for ( u8 i = 0; i < params.pArgs[ 0 ].GetArraySize( ); ++i )
 	{
@@ -162,15 +160,15 @@ void lobby_menu_external_handler::callback(
 {
 	if ( strings::equal( methodName, "leave_queue" ) )
 	{
-		m_game.network_client( ).lobby_client( ).discard_playing_order( );
+		m_game.get_network_client( )->lobby_client( ).discard_playing_order( );
 	}
 	else if ( strings::equal( methodName, "play_button_clicked" ) )
 	{
-		if ( m_game.network_client( ).lobby_client( ).profiles_count( ) )
+		if ( m_game.get_network_client( )->lobby_client( ).profiles_count( ) )
 		{
 			u8 faction_id = m_game.lobby_menu( ).selected_profile( );
-			m_game.network_client( ).lobby_client( ).set_status_ready_for_match(
-				m_game.network_client( ).lobby_client( ).profile( faction_id ).profile_id );
+			m_game.get_network_client( )->lobby_client( ).set_status_ready_for_match(
+				m_game.get_network_client( )->lobby_client( ).profile( faction_id ).profile_id );
 		}
 	}
 	else if ( strings::equal( methodName, "profile_changed" ) )
@@ -196,7 +194,7 @@ void lobby_menu_external_handler::callback(
 		{
 			for ( u8 i = 1; i <= 4; ++i )
 			{
-				faction_price const& price = m_game.network_client( ).lobby_client( ).price( i );
+				faction_price const& price = m_game.get_network_client( )->lobby_client( ).price( i );
 				for ( u8 j = 0; j < price.count; ++j )
 				{
 					if ( price.items[ j ].item_dict_id == item_dict_id )
@@ -211,7 +209,7 @@ void lobby_menu_external_handler::callback(
 			}
 		}
 
-		m_game.network_client( ).lobby_client( ).buy_item( item_dict_id, items_count, faction_id, false );
+		m_game.get_network_client( )->lobby_client( ).buy_item( item_dict_id, items_count, faction_id, false );
 	}
 	else if ( strings::equal( methodName, "unlock_perks" ) )
 	{
@@ -248,34 +246,34 @@ void lobby_menu_external_handler::callback(
 			perks.push_back					( perk );
 		}
 
-		m_game.network_client( ).lobby_client( ).set_player_skills( skills, perks );
+		m_game.get_network_client( )->lobby_client( ).set_player_skills( skills, perks );
 	}
 	else if ( strings::equal( methodName, "reroll_ok_clicked" ) )
 	{
-		m_game.network_client( ).lobby_client( ).reroll_player_skills( );
+		m_game.get_network_client( )->lobby_client( ).reroll_player_skills( );
 	}
 	else if ( strings::equal( methodName, "find_players" ) )
 	{
 		pcstr player_name = args[ 0 ].GetString( );
 		enum { c_min_name_len_to_search = 3 };
 		if ( strlen( player_name ) >= c_min_name_len_to_search )
-			m_game.network_client( ).messaging_client( ).find_players_by_name( player_name );
+			m_game.get_network_client( )->messaging_client( ).find_players_by_name( player_name );
 	}
 	else if ( strings::equal( methodName, "add_friend" ) )
 	{
-		m_game.network_client( ).messaging_client( ).add_to_friend_list( args[ 0 ].GetUInt( ) );
+		m_game.get_network_client( )->messaging_client( ).add_to_friend_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "remove_friend" ) )
 	{
-		m_game.network_client( ).messaging_client( ).remove_from_friend_list( args[ 0 ].GetUInt( ) );
+		m_game.get_network_client( )->messaging_client( ).remove_from_friend_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "add_ignore" ) )
 	{
-		m_game.network_client( ).messaging_client( ).add_to_ignore_list( args[ 0 ].GetUInt( ) );
+		m_game.get_network_client( )->messaging_client( ).add_to_ignore_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "remove_ignored" ) )
 	{
-		m_game.network_client( ).messaging_client( ).remove_from_ignore_list( args[ 0 ].GetUInt( ) );
+		m_game.get_network_client( )->messaging_client( ).remove_from_ignore_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "start_friend_message" ) )
 	{
@@ -1175,7 +1173,7 @@ void lobby_menu::reset_account_money( )
 	m_lobby_menu_ui->movie->CreateObject( &account_info );
 
 	wchar_t an[256];
-	mbstowcs_s						( NULL, an, 256, lobby_client( ).account_name( ), _TRUNCATE );
+	mbstowcs_s						( NULL, an, 256, lobby_client( ).account_nickname_, _TRUNCATE );
 
 	flash_value account_info_property;
 	account_info_property.SetStringW( an );
@@ -1677,7 +1675,7 @@ void lobby_menu::on_stats_message_arrived(
 		char player_name[32];
 		wcstombs_s			( NULL, player_name, 32, w_player_id, _TRUNCATE );
 
-		if ( strings::equal( player_name, lobby_client( ).account_name( ) ) )
+		if ( strings::equal( player_name, lobby_client( ).account_nickname_ ) )
 		{
 			get_game( ).get_chat_handler( ).add_message( message_channel, w_text, w_sender_name );
 

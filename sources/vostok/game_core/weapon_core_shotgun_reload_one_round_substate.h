@@ -33,6 +33,8 @@ private:
 			animation::callback_return_type_enum
 						on_animation_end				( animation::animation_callback_params& params );
 
+	template < typename T > friend class weapon_sound_events_handler_state;
+
 }; // class weapon_core_shotgun_reload_one_round_substate
 
 STATIC_SIZE_ASSERT(weapon_core_shotgun_reload_one_round_substate, 0x168);

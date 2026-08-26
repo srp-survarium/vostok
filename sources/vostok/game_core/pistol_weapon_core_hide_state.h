@@ -52,6 +52,8 @@ private:
 	/* 0x0148 */	resources::managed_resource_ptr		m_weapon_animations[2][2][2];
 	/* 0x0168 */	resources::managed_resource_ptr		m_user_animations[2][2];
 	/* 0x0178 */	const float						m_time_scale;
+
+	template < typename T > friend class weapon_sound_events_handler_state;
 }; // class pistol_weapon_core_hide_state
 
 STATIC_SIZE_ASSERT(pistol_weapon_core_hide_state, 0x180);
