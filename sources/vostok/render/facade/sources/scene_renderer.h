@@ -212,11 +212,11 @@ public:
 	void set_portal_system( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& portal_system );
 	void test_action_portal_system( base_scene_ptr const& ) { /* no source */ }
 
-	void clear_grass( base_scene_ptr const& ) { /* no source */ }
-	void populate_grass( base_scene_ptr const& ) { /* no source */ }
-	void add_grass_layer( grass_layer_desc*, grass_layer_data*, base_scene_ptr const& ) { /* no source */ }
-	void update_grass_layer( grass_layer_desc*, grass_layer_data*, base_scene_ptr const&, bool ) { /* no source */ }
-	void remove_grass_layer( u8, base_scene_ptr const& ) { /* no source */ }
+	inline void clear_grass( base_scene_ptr const& scene );
+	inline void populate_grass( base_scene_ptr const& scene );
+	inline void add_grass_layer( grass_layer_desc* desc, grass_layer_data* data, base_scene_ptr const& scene );
+	inline void update_grass_layer( grass_layer_desc* desc, grass_layer_data* data, base_scene_ptr const& scene, bool is_set );
+	inline void remove_grass_layer( u8 id, base_scene_ptr const& scene );
 	void set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 	void reset_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 
