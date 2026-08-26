@@ -210,7 +210,7 @@ void options::set_default_values( )
 	current.m_organic_irradiance_texture_size = 1024;
 	current.m_shadow_map_size = 1024;
 	current.m_spot_shadow_map_size = 1024;
-	current.m_shadow_quality = 3;
+	current.m_shadow_quality = uro_shadow_quality_ultra;
 	current.m_light_propagation_volumes_rsm_size = 128;
 	current.m_num_radiance_volume_cells = 32;
 	current.m_num_propagate_iterations = 8;
@@ -224,18 +224,18 @@ void options::set_default_values( )
 	current.m_cascaded_shadow_map_size = 1024;
 	current.m_num_max_light_instances = 128;
 	current.m_texture_quality = 2;
-	current.m_max_anisotropic = 4;
+	current.m_max_anisotropic = uro_anisotrophic_filter_16x;
 	current.m_monitor_index = 0;
-	current.m_geometry_quality = 1;
-	current.m_lighting_quality = 3;
-	current.m_post_process_quality = 3;
-	current.m_particles_quality = 2;
-	current.m_motion_blur_quality = 3;
-	current.m_shading_quality = 3;
-	current.m_ambient_occlusion_quality = 1;
-	current.m_antialiasing_method = 2;
-	current.m_decorations_quality = 2;
-	current.m_graphics_quality = 4;
+	current.m_geometry_quality = uro_geometry_quality_high;
+	current.m_lighting_quality = uro_lighting_quality_ultra;
+	current.m_post_process_quality = uro_post_process_quality_high;
+	current.m_particles_quality = uro_particles_quality_high;
+	current.m_motion_blur_quality = uro_motion_blur_quality_high;
+	current.m_shading_quality = uro_shading_quality_ultra;
+	current.m_ambient_occlusion_quality = uro_ambient_occlusion_quality_ssao;
+	current.m_antialiasing_method = uro_antialiasing_method_2xTAA;
+	current.m_decorations_quality = uro_decorations_quality_high;
+	current.m_graphics_quality = uro_graphics_quality_ultra;
 	current.m_resolution_x = 1280;
 	current.m_resolution_y = 720;
 	current.m_fullscreen = false;
@@ -513,16 +513,16 @@ enum_options_changes_result options::end_render_options_changing(
 	{
 		switch ( current.m_antialiasing_method )
 		{
-		case 0:
+		case uro_antialiasing_method_off:
 			current.m_enabled_fxaa = false;
 			current.m_use_temporal_antialiasing = false;
 			break;
-		case 1:
+		case uro_antialiasing_method_FXAA:
 			current.m_enabled_fxaa = true;
 			current.m_enabled_sharpen = true;
 			current.m_use_temporal_antialiasing = false;
 			break;
-		case 2:
+		case uro_antialiasing_method_2xTAA:
 			current.m_use_temporal_antialiasing = true;
 			break;
 		}
@@ -548,7 +548,7 @@ enum_options_changes_result options::end_render_options_changing(
 		current.m_use_motion_blur = false;
 	else if ( current.m_motion_blur_quality < uro_motion_blur_quality_count )
 		current.m_use_motion_blur = true;
-	if ( !current.m_post_process_quality )
+	if ( current.m_post_process_quality == uro_post_process_quality_minimum )
 		current.m_ssao_use_temporal_filtering = false;
 
 	enum_options_changes_result result = ocr_need_nothing;

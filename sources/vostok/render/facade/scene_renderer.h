@@ -8,12 +8,29 @@
 #include <vostok/render/facade/cloud_key.h>
 #include <vostok/render/facade/one_way_render_channel.h>
 #include <vostok/render/facade/volume_fog_parameters.h>
+#include <vostok/render/facade/sources/editor_allocator.h>
 #include <vostok/render/facade/sources/functor_command.h>
 #include <vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
+#include <vostok/render/facade/sources/update_model_vertex_buffer_command.h>
 
 namespace vostok {
 namespace render {
+
+inline void scene_renderer::update_model_vertex_buffer(
+	render_model_instance_ptr const& object,
+	vectora< buffer_fragment > const& fragments
+)
+{
+	m_channel.owner_push_back(
+		VOSTOK_NEW_IMPL( m_allocator, update_model_vertex_buffer_command )(
+			m_render_engine_world,
+			object,
+			fragments,
+			*vostok::render::editor::g_allocator
+		)
+	);
+}
 
 inline void scene_renderer::set_speedtree_instance_material(
 	speedtree_instance_ptr const&			instance,
