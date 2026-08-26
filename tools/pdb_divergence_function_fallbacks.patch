@@ -1,0 +1,227 @@
+diff --git a/src/divergence.rs b/src/divergence.rs
+--- a/src/divergence.rs
++++ b/src/divergence.rs
+@@ -114,6 +114,7 @@
+     /// is the demangled signature, kept for DISPLAY only.
+     key: String,
+     name_orig: String,
++    definition_line: u32,
+     raw_line_table_count: usize,
+     constants: Vec<ConstModel>,
+ }
+@@ -552,6 +553,7 @@
+             .push(FnModel {
+                 key,
+                 name_orig: fun.name_orig.clone(),
++                definition_line: fun.proc_start,
+                 raw_line_table_count: fun.statements.len(),
+                 constants,
+             });
+@@ -964,9 +966,11 @@
+ /// COFF symbol / canonical thunk form — see [`function_join_key`]), so the same
+ /// logical function never shows up one-sided just because the two PDBs demangle
+ /// its signature differently; the readable demangled `name_orig` is what gets
+-/// reported for the surplus entries. Presence is set-valued: repeated module
+-/// procedure observations of one decorated symbol still describe one linked
+-/// out-of-line body and must not create a multiplicity divergence.
++/// reported for the surplus entries. Exact full signatures are a secondary join
++/// for anonymous/local symbols and functions without a Public record. Presence
++/// is set-valued: repeated module procedure observations of one function still
++/// describe one linked out-of-line body and must not create a multiplicity
++/// divergence.
+ fn presence_functions(base: &SideModel, target: &SideModel) -> PresenceDiff {
+     let mut base_only = Vec::new();
+     let mut target_only = Vec::new();
+@@ -976,21 +980,28 @@
+         let base_fns = file_functions(base.files.get(path));
+         let target_fns = file_functions(target.files.get(path));
+ 
+-        let target_keys: HashSet<&str> =
+-            target_fns.iter().map(|(key, _)| key.as_str()).collect();
+-        let base_keys: HashSet<&str> =
+-            base_fns.iter().map(|(key, _)| key.as_str()).collect();
++        let target_keys: HashSet<&str> = target_fns.iter().map(|(key, _)| key.as_str()).collect();
++        let target_names: HashSet<&str> =
++            target_fns.iter().map(|(_, name)| name.as_str()).collect();
++        let base_keys: HashSet<&str> = base_fns.iter().map(|(key, _)| key.as_str()).collect();
++        let base_names: HashSet<&str> = base_fns.iter().map(|(_, name)| name.as_str()).collect();
+ 
+         let mut reported = HashSet::new();
+         for (key, display) in &base_fns {
+-            if !target_keys.contains(key.as_str()) && reported.insert(key.as_str()) {
++            if !target_keys.contains(key.as_str())
++                && !target_names.contains(display.as_str())
++                && reported.insert(display.as_str())
++            {
+                 base_only.push((path.clone(), display.clone()));
+             }
+         }
+ 
+         let mut reported = HashSet::new();
+         for (key, display) in &target_fns {
+-            if !base_keys.contains(key.as_str()) && reported.insert(key.as_str()) {
++            if !base_keys.contains(key.as_str())
++                && !base_names.contains(display.as_str())
++                && reported.insert(display.as_str())
++            {
+                 target_only.push((path.clone(), display.clone()));
+             }
+         }
+@@ -1013,6 +1024,40 @@
+     .unwrap_or_default()
+ }
+ 
++fn cross_pdb_function_key(fun: &FnModel, other_names: &HashSet<&str>) -> String {
++    if other_names.contains(fun.name_orig.as_str()) {
++        format!("name|{}", fun.name_orig)
++    } else {
++        format!("symbol|{}", fun.key)
++    }
++}
++
++fn function_order(file: &FileModel, other: &FileModel) -> Vec<String> {
++    let other_names: HashSet<&str> = other
++        .functions
++        .iter()
++        .map(|fun| fun.name_orig.as_str())
++        .collect();
++    let mut order = Vec::with_capacity(file.functions.len());
++    let mut start = 0;
++    while start < file.functions.len() {
++        let line = file.functions[start].definition_line;
++        let mut end = start + 1;
++        while end < file.functions.len() && file.functions[end].definition_line == line {
++            end += 1;
++        }
++
++        let mut group: Vec<String> = file.functions[start..end]
++            .iter()
++            .map(|fun| cross_pdb_function_key(fun, &other_names))
++            .collect();
++        group.sort_unstable();
++        order.extend(group);
++        start = end;
++    }
++    order
++}
++
+ fn diff_file(
+     path: &str,
+     b: &FileModel,
+@@ -1027,22 +1072,31 @@
+     // on exactly one side are an out-of-line PRESENCE divergence, owned by the
+     // global [presence] report (report_presence_functions) so we never
+     // double-report a one-sided body here. Order is joined by the cross-PDB key
+-    // (so a demangle-only difference never reads as a reorder); `moved` keys are
+-    // mapped back to the readable `name_orig` for display.
+-    let base_order: Vec<String> = b.functions.iter().map(|f| f.key.clone()).collect();
+-    let target_order: Vec<String> = t.functions.iter().map(|f| f.key.clone()).collect();
++    // (so a demangle-only difference never reads as a reorder). Exact full
++    // signatures pair functions whose local/anonymous decorated names are not
++    // stable. Same-line groups are sorted because CodeView provides no source
++    // declaration order within one attributed line.
++    let base_order = function_order(b, t);
++    let target_order = function_order(t, b);
+     let order = seq_diff(&base_order, &target_order);
+     if !order.moved.is_empty() {
+         counts.order_diff += 1;
+-        let display: HashMap<&str, &str> = b
++        let target_names: HashSet<&str> =
++            t.functions.iter().map(|f| f.name_orig.as_str()).collect();
++        let display: HashMap<String, &str> = b
+             .functions
+             .iter()
+-            .map(|f| (f.key.as_str(), f.name_orig.as_str()))
++            .map(|f| {
++                (
++                    cross_pdb_function_key(f, &target_names),
++                    f.name_orig.as_str(),
++                )
++            })
+             .collect();
+         let moved: Vec<String> = order
+             .moved
+             .iter()
+-            .map(|k| display.get(k.as_str()).copied().unwrap_or(k).to_string())
++            .map(|k| display.get(k).copied().unwrap_or(k).to_string())
+             .collect();
+         lines.push("  [fn-order]".to_string());
+         push_list(&mut lines, "    moved      ", &moved);
+@@ -1054,9 +1108,17 @@
+     // attribution, not the number of semantic C++ statements.
+     let target_by_key: HashMap<&str, &FnModel> =
+         t.functions.iter().map(|f| (f.key.as_str(), f)).collect();
++    let target_by_name: HashMap<&str, &FnModel> = t
++        .functions
++        .iter()
++        .map(|f| (f.name_orig.as_str(), f))
++        .collect();
+ 
+     for bf in &b.functions {
+-        let Some(tf) = target_by_key.get(bf.key.as_str()) else {
++        let Some(tf) = target_by_name
++            .get(bf.name_orig.as_str())
++            .or_else(|| target_by_key.get(bf.key.as_str()))
++        else {
+             continue;
+         };
+ 
+@@ -1722,9 +1784,11 @@
+                 FileModel {
+                     functions: sigs
+                         .iter()
+-                        .map(|sig| FnModel {
++                        .enumerate()
++                        .map(|(index, sig)| FnModel {
+                             key: sig.to_string(),
+                             name_orig: sig.to_string(),
++                            definition_line: index as u32,
+                             raw_line_table_count: 0,
+                             constants: Vec::new(),
+                         })
+@@ -1746,9 +1810,11 @@
+                 FileModel {
+                     functions: fns
+                         .iter()
+-                        .map(|(key, display)| FnModel {
++                        .enumerate()
++                        .map(|(index, (key, display))| FnModel {
+                             key: key.to_string(),
+                             name_orig: display.to_string(),
++                            definition_line: index as u32,
+                             raw_line_table_count: 0,
+                             constants: Vec::new(),
+                         })
+@@ -1867,6 +1933,32 @@
+     }
+ 
+     #[test]
++    fn presence_joins_exact_signature_when_public_key_is_unstable() {
++        let base = side_with_keyed(&[("m/u.cpp", &[("?base_hash", "void local_f()")])]);
++        let target = side_with_keyed(&[("m/u.cpp", &[("?target_hash", "void local_f()")])]);
++        let diff = presence_functions(&base, &target);
++        assert!(diff.base_only.is_empty());
++        assert!(diff.target_only.is_empty());
++    }
++
++    #[test]
++    fn function_order_ignores_order_within_one_source_line() {
++        let mut base = side_with(&[("m/u.cpp", &["void f()", "void g()"])]);
++        let mut target = side_with(&[("m/u.cpp", &["void g()", "void f()"])]);
++        for side in [&mut base, &mut target] {
++            for fun in &mut side.files.get_mut("m/u.cpp").unwrap().functions {
++                fun.definition_line = 10;
++            }
++        }
++        let base_file = &base.files["m/u.cpp"];
++        let target_file = &target.files["m/u.cpp"];
++        assert_eq!(
++            function_order(base_file, target_file),
++            function_order(target_file, base_file)
++        );
++    }
++
++    #[test]
+     fn join_key_prefers_mangled_symbol() {
+         // With a Public symbol, the key is that decorated name verbatim — it is
+         // identical across the two PDBs even when their demangled signatures differ.

@@ -48,7 +48,6 @@ namespace render {
 
 bool g_enable_resource_sharing = true;
 static bool s_debug_clip_texture_quality = true;
-static console_commands::cc_bool s_debug_clip_texture_quality_cc( "r_debug_clip_texture_quality", s_debug_clip_texture_quality, false, console_commands::command_type_engine_internal );
 
 static command_line::key s_generate_shader_masks(
 	"generate_shader_masks",
@@ -101,6 +100,7 @@ static console_commands::cc_u32 s_debug_minus_mip_cc( "r_debug_minus_mip", s_deb
 
 static bool s_reload_all_textures = false;
 static console_commands::cc_bool s_reload_all_textures_cc( "r_reload_all_textures", s_reload_all_textures, false, console_commands::command_type_engine_internal );
+static console_commands::cc_bool s_debug_clip_texture_quality_cc( "r_debug_clip_texture_quality", s_debug_clip_texture_quality, false, console_commands::command_type_engine_internal );
 
 struct resource_manager_call_destructor_predicate {
 	template <typename T>

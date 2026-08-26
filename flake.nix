@@ -119,6 +119,13 @@
           patch -p1 < ${./tools/pdb_diff_all_files.patch}
           patch -p1 < ${./tools/pdb_divergence_record_normalization.patch}
           patch -p1 < ${./tools/pdb_divergence_line_table_counts.patch}
+          patch -p1 < ${./tools/pdb_source_line_collisions.patch}
+          patch -p1 < ${./tools/pdb_divergence_function_presence_sets.patch}
+          patch -p1 < ${./tools/pdb_divergence_function_fallbacks.patch}
+          patch -p1 < ${./tools/pdb_divergence_source_order.patch}
+          patch -p1 < ${./tools/pdb_divergence_zero_line_order.patch}
+          patch -p1 < ${./tools/pdb_divergence_line_group_order.patch}
+          patch -p1 < ${./tools/pdb_divergence_global_presence.patch}
           cp ${./tools/pdb_topology.rs} src/bin/pdb_topology.rs
         '';
         cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";

@@ -1,0 +1,104 @@
+diff --git a/src/gen_sources.rs b/src/gen_sources.rs
+--- a/src/gen_sources.rs
++++ b/src/gen_sources.rs
+@@ -123,7 +123,8 @@
+ /// Walk every compiland and hand each parsed [`Function`] to `visit`, without
+ /// writing anything to disk. Functions arrive grouped by their recorded source
+ /// file and, within a file, in ascending `proc_start` order (i.e. source-line
+-/// definition order) — exactly what a cross-PDB order comparison needs.
++/// definition order). Procedures sharing a start line retain their module-symbol
++/// order instead of overwriting each other.
+ ///
+ /// This shares [`Module::build`] with [`dump_sources`] so the parsed model
+ /// (statements, constants, locals, …) stays identical to what the generator
+@@ -169,9 +170,11 @@
+             }
+         };
+ 
+-        for (filename, funs) in &module.files {
+-            for fun in funs.values() {
+-                visit(filename, fun);
++        for (filename, line_groups) in &module.files {
++            for funs in line_groups.values() {
++                for fun in funs {
++                    visit(filename, fun);
++                }
+             }
+         }
+     }
+@@ -180,7 +183,7 @@
+ }
+ 
+ struct Module<'a> {
+-    files: BTreeMap<String, BTreeMap<u32, Function<'a>>>,
++    files: BTreeMap<String, BTreeMap<u32, Vec<Function<'a>>>>,
+     // typedef void* ptr;
+     //         ^     ^
+     //         type  name
+@@ -204,7 +207,7 @@
+ 
+         let mut symbols = module_info.symbols()?;
+ 
+-        let mut files: BTreeMap<String, BTreeMap<u32, Function>> = BTreeMap::new();
++        let mut files: BTreeMap<String, BTreeMap<u32, Vec<Function>>> = BTreeMap::new();
+         let mut typedefs: BTreeSet<(Type, Type)> = BTreeSet::new();
+ 
+         let mut function: Function = Function::new(flags);
+@@ -338,7 +341,9 @@
+                     files
+                         .entry(take_filename)
+                         .or_default()
+-                        .insert(take_function.proc_start, take_function);
++                        .entry(take_function.proc_start)
++                        .or_default()
++                        .push(take_function);
+ 
+                     depth -= 1;
+                 }
+@@ -559,9 +564,11 @@
+ 
+     fn update_cache(&self, cache: &mut FunctionCache, flags: GenFlags) {
+         if !flags.contains(GenFlags::NO_CACHE) {
+-            for funs in self.files.values() {
+-                for fun in funs.values() {
+-                    cache.insert_from_source(fun);
++            for line_groups in self.files.values() {
++                for funs in line_groups.values() {
++                    for fun in funs {
++                        cache.insert_from_source(fun);
++                    }
+                 }
+             }
+         }
+@@ -650,8 +657,10 @@
+             write_header(&mut file, path_to_file)?;
+             namespace.start_namespace(&mut file)?;
+ 
+-            for function in funs.into_values() {
+-                function.write(&namespace, &mut file)?;
++            for functions in funs.into_values() {
++                for function in functions {
++                    function.write(&namespace, &mut file)?;
++                }
+             }
+ 
+             Self::write_typedefs(&self.typedefs, &mut file)?;
+@@ -1012,12 +1021,14 @@
+     Ok(())
+ }
+ 
+-fn assume_namespace(funs: &BTreeMap<u32, Function>) -> Namespace {
++fn assume_namespace(funs: &BTreeMap<u32, Vec<Function>>) -> Namespace {
+     let mut namespace = Namespace::default();
+ 
+-    for fun in funs.values() {
+-        if fun.namespace != namespace && fun.namespace.depth() > namespace.depth() {
+-            namespace = fun.namespace.clone();
++    for line_group in funs.values() {
++        for fun in line_group {
++            if fun.namespace != namespace && fun.namespace.depth() > namespace.depth() {
++                namespace = fun.namespace.clone();
++            }
+         }
+     }
+ 

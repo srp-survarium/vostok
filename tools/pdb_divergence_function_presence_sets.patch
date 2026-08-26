@@ -1,0 +1,79 @@
+diff --git a/src/divergence.rs b/src/divergence.rs
+--- a/src/divergence.rs
++++ b/src/divergence.rs
+@@ -964,9 +964,9 @@
+ /// COFF symbol / canonical thunk form — see [`function_join_key`]), so the same
+ /// logical function never shows up one-sided just because the two PDBs demangle
+ /// its signature differently; the readable demangled `name_orig` is what gets
+-/// reported for the surplus entries. Multiple out-of-line bodies sharing a key
+-/// (overloads collapsing under the same mangled form) are paired positionally,
+-/// so only a genuine count surplus on one side is reported.
++/// reported for the surplus entries. Presence is set-valued: repeated module
++/// procedure observations of one decorated symbol still describe one linked
++/// out-of-line body and must not create a multiplicity divergence.
+ fn presence_functions(base: &SideModel, target: &SideModel) -> PresenceDiff {
+     let mut base_only = Vec::new();
+     let mut target_only = Vec::new();
+@@ -976,32 +976,21 @@
+         let base_fns = file_functions(base.files.get(path));
+         let target_fns = file_functions(target.files.get(path));
+ 
+-        let mut target_counts: HashMap<&str, usize> = HashMap::new();
+-        for (key, _) in &target_fns {
+-            *target_counts.entry(key.as_str()).or_default() += 1;
+-        }
+-        let mut base_counts: HashMap<&str, usize> = HashMap::new();
+-        for (key, _) in &base_fns {
+-            *base_counts.entry(key.as_str()).or_default() += 1;
+-        }
++        let target_keys: HashSet<&str> =
++            target_fns.iter().map(|(key, _)| key.as_str()).collect();
++        let base_keys: HashSet<&str> =
++            base_fns.iter().map(|(key, _)| key.as_str()).collect();
+ 
+-        // base-only: a body on base with no remaining target counterpart.
+-        let mut consumed: HashMap<&str, usize> = HashMap::new();
++        let mut reported = HashSet::new();
+         for (key, display) in &base_fns {
+-            let used = consumed.entry(key.as_str()).or_default();
+-            if *used < target_counts.get(key.as_str()).copied().unwrap_or(0) {
+-                *used += 1;
+-            } else {
++            if !target_keys.contains(key.as_str()) && reported.insert(key.as_str()) {
+                 base_only.push((path.clone(), display.clone()));
+             }
+         }
+-        // target-only: the mirror.
+-        let mut consumed: HashMap<&str, usize> = HashMap::new();
++
++        let mut reported = HashSet::new();
+         for (key, display) in &target_fns {
+-            let used = consumed.entry(key.as_str()).or_default();
+-            if *used < base_counts.get(key.as_str()).copied().unwrap_or(0) {
+-                *used += 1;
+-            } else {
++            if !base_keys.contains(key.as_str()) && reported.insert(key.as_str()) {
+                 target_only.push((path.clone(), display.clone()));
+             }
+         }
+@@ -1867,16 +1856,13 @@
+     }
+ 
+     #[test]
+-    fn presence_pairs_duplicate_signatures_positionally() {
+-        // Two out-of-line bodies share a formatted signature on base, one on
+-        // target → exactly one surplus base-only body, none target-only.
++    fn presence_deduplicates_repeated_symbol_observations() {
++        // A decorated symbol may be observed through more than one module
++        // procedure record, but the linked executable still contains one body.
+         let base = side_with(&[("m/u.cpp", &["void f()", "void f()"])]);
+         let target = side_with(&[("m/u.cpp", &["void f()"])]);
+         let diff = presence_functions(&base, &target);
+-        assert_eq!(
+-            diff.base_only,
+-            vec![("m/u.cpp".to_string(), "void f()".to_string())]
+-        );
++        assert!(diff.base_only.is_empty());
+         assert!(diff.target_only.is_empty());
+     }
+ 
