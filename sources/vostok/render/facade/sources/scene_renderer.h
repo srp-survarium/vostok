@@ -106,7 +106,10 @@ public:
 	void add_model( base_scene_ptr const& scene, render_model_instance_ptr const& model, float4x4 const& transform );
 	void update_model( base_scene_ptr const& scene, render_model_instance_ptr const& model, float4x4 const& model_to_world );
 	void remove_model( base_scene_ptr const& scene, render_model_instance_ptr const& model );
-	void update_model_vertex_buffer( render_model_instance_ptr const&, vectora< buffer_fragment > const& ) { /* no source */ }
+	inline void update_model_vertex_buffer(
+		render_model_instance_ptr const& object,
+		vectora< buffer_fragment > const& fragments
+	);
 	void update_skeleton( render_model_instance_ptr const& model, float4x4 const* matrices, u32 count );
 	void set_model_ghost_mode( render_model_instance_ptr const&, bool ) { /* no source */ }
 	inline void set_speedtree_instance_material(
