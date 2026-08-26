@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vostok/render/core/state_utils.h>
+#include <boost/crc.hpp>
 
 namespace vostok {
 namespace render {
@@ -7,17 +8,19 @@ namespace state_utils {
 
 namespace crc {
 
-static inline void process( processor & proc, u8 value)
+typedef boost::crc_optimal<32, 0x04c11db7, 0, 0, true, false> processor;
+
+inline void process( processor & proc, u8 value)
 {
 	proc.process_byte( value);
 }
 
-static inline void process( processor & proc, bool value)
+inline void process( processor & proc, bool value)
 {
 	proc.process_byte( value);
 }
 
-void process( processor& proc, u32 value )
+inline void process( processor& proc, u32 value )
 {
 	proc.process_byte( (u8)((value) & 0xff));
 	proc.process_byte( (u8)((value>>8) & 0xff));
@@ -25,12 +28,12 @@ void process( processor& proc, u32 value )
 	proc.process_byte( (u8)((value>>24) & 0xff));
 }
 
-static inline void process( processor & proc, int value)
+inline void process( processor & proc, int value)
 {
 	process( proc, (u32)value);
 }
 
-static inline void process( processor & proc, float value)
+inline void process( processor & proc, float value)
 {
 	process( proc, horrible_cast<float,u32>(value).second);
 }

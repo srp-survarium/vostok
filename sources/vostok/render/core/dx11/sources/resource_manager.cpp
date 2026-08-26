@@ -254,24 +254,6 @@ static ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 	}
 }
 
-template <>
-resource_manager::map_vs_hw& resource_manager::xs_hw_registry<vs_data>( )
-{
-	return m_vs_hw_registry;
-}
-
-template <>
-resource_manager::map_gs_hw& resource_manager::xs_hw_registry<gs_data>( )
-{
-	return m_gs_hw_registry;
-}
-
-template <>
-resource_manager::map_ps_hw& resource_manager::xs_hw_registry<ps_data>( )
-{
-	return m_ps_hw_registry;
-}
-
 template <typename shader_data>
 res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 	pcstr name,
@@ -287,7 +269,7 @@ res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 	if (!name)
 		return NULL;
 
-	xs_registry_type& registry = xs_hw_registry<shader_data>();
+	xs_registry_type& registry = get_xs_container<shader_data>();
 
 	// TODO: Add check of global defines to shader_configuration
 	typename xs_registry_type::iterator it = registry.find(
@@ -407,7 +389,7 @@ void resource_manager::release_impl( res_xs_hw<shader_data> const* xs_hw )
 	if( !xs_hw->is_registered())
 		return;
 
-	xs_registry_type& registry = xs_hw_registry<shader_data>();
+	xs_registry_type& registry = get_xs_container<shader_data>();
 	typename xs_registry_type::iterator begin = registry.begin(), end = registry.end(), it = registry.begin();
 
 	while( identity(true))

@@ -562,9 +562,12 @@ private:
 	);
 	void release_impl( res_texture const* texture );
 
-	// One template selects the per-shader registry for all three shader types.
 	template < typename shader_data >
-	map<shader_name_config_pair, res_xs_hw<shader_data>*>& xs_hw_registry( );
+	map<shader_name_config_pair, res_xs_hw<shader_data>*>& get_xs_container( ) { }
+	template <> map_vs_hw& get_xs_container<vs_data>( ) { return m_vs_hw_registry; }
+	template <> map_gs_hw& get_xs_container<gs_data>( ) { return m_gs_hw_registry; }
+	template <> map_ps_hw& get_xs_container<ps_data>( ) { return m_ps_hw_registry; }
+
 	template < typename shader_data >
 	res_xs_hw<shader_data>* create_xs_hw_impl(
 		pcstr name,
