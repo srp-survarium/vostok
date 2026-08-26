@@ -506,8 +506,8 @@ Global
 		{9D1B540F-5E44-4ECA-B371-2BBF93B9DBC2}.Master Gold|Win32.Build.0 = Master Gold|Win32
 		{92742045-96DC-424A-883F-F4E463F4C39A}.Master Gold|Win32.ActiveCfg = Master Gold|Win32
 		{92742045-96DC-424A-883F-F4E463F4C39A}.Master Gold|Win32.Build.0 = Master Gold|Win32
-		{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}.Master Gold|Win32.ActiveCfg = Release|Win32
-		{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}.Master Gold|Win32.Build.0 = Release|Win32
+		{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}.Master Gold|Win32.ActiveCfg = Release(static)|Win32
+		{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}.Master Gold|Win32.Build.0 = Release(static)|Win32
 		{5E1D4E5F-E10C-4BA3-B663-F33014FD21D9}.Master Gold|Win32.ActiveCfg = Release|Win32
 		{5E1D4E5F-E10C-4BA3-B663-F33014FD21D9}.Master Gold|Win32.Build.0 = Release|Win32
 		{912A2D43-35A3-4AF2-B2EB-0D81EFFDA6DC}.Master Gold|Win32.ActiveCfg = Release|Win32
