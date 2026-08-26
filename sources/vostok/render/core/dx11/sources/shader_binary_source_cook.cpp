@@ -71,7 +71,7 @@ void shader_binary_source_cook::converted_shader_loaded(
 	DELETE										(data);
 }
 
-static pcstr shader_type_to_ext( enum_shader_type const type )
+static pcstr shader_type_to_ext( enum_shader_type type )
 {
 	switch(type)
 	{

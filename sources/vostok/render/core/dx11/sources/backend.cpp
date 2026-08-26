@@ -269,12 +269,10 @@ static timing::timer s_timer;
 
 void start_profiling( )
 {
-	// STATE[STUB]
 }
 
 double end_profiling( pcstr, bool )
 {
-	// STATE[STUB]
 	return 0.0f;
 }
 

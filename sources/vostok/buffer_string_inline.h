@@ -132,8 +132,12 @@ void   buffer_string::erase (input_iterator const& begin_src, input_iterator con
 inline
 buffer_string const&   buffer_string::operator = (value_type const* s)
 {
-	clear						();
-	return						*this += s;
+	if ( m_begin != s )
+	{
+		clear					();
+		*this					+= s;
+	}
+	return						*this;
 }
 
 inline

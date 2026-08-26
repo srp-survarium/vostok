@@ -2,10 +2,10 @@
 #include <vostok/render/facade/sources/render_facade_entry_point.h>
 #include <vostok/render/world.h>
 
+static vostok::uninitialized_reference< vostok::render::world > s_world;
+
 namespace vostok {
 namespace render {
-
-static uninitialized_reference< world >	s_world;
 
 logic_allocator_type* logic::g_allocator = 0;
 editor_allocator_type* editor::g_allocator = 0;
