@@ -1084,7 +1084,9 @@ void renderer::render(
 		{
 
 			scene_view const* s	= m_renderer_context->scene_view( );
-			survarium::flash_text_manager* text_manager = s->m_flash_text_manager; vector< survarium::flash_movie* > movies_vec; for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
+			survarium::flash_text_manager* text_manager = s->m_flash_text_manager;
+			vector< survarium::flash_movie* > movies_vec;
+			for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
 				movies_vec.push_back( s->m_flash_movies[i]->movie );
 
 			backend::ref( ).reset_depth_stencil_target( );

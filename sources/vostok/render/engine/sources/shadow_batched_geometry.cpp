@@ -39,6 +39,34 @@ void shadow_batched_geometry::build(
 		render_surface*	surface;
 	};
 
+	typedef vector<surface_set> surfaces_type;
+
+	invalidate( );
+
+	surfaces_type surfaces;
+	render_model_instance_impl_ptr* it = model_instances.begin( );
+	render_model_instance_impl_ptr* end = model_instances.end( );
+	for ( ; it != end; ++it )
+	{
+		vector<render_surface_instance*> model_surfaces;
+		( *it )->get_surfaces( NULL, NULL, model_surfaces, false, 0, 3 );
+
+		render_surface_instance** it_surf = model_surfaces.begin( );
+		render_surface_instance** end_surf = model_surfaces.end( );
+		for ( ; it_surf != end_surf; ++it_surf )
+		{
+			if ( !( *it_surf )->m_render_surface->m_materail_effects_instance )
+			{
+				continue;
+			}
+
+			surface_set set;
+			set.transform = *( *it_surf )->m_transform;
+			set.surface = ( *it_surf )->m_render_surface;
+			surfaces.push_back( set );
+		}
+	}
+
 	struct sort_predicate {
 		bool operator()( surface_set const& left, surface_set const& right ) const
 		{
@@ -46,32 +74,10 @@ void shadow_batched_geometry::build(
 		}
 	};
 
-	typedef vector<surface_set> surfaces_type;
-
-	invalidate( );
-
-	surfaces_type surfaces;
-	render_model_instance_impl_ptr* it = model_instances.begin( );
-	render_model_instance_impl_ptr* end = model_instances.end( ); for ( ; it != end; ++it )
-	{
-		vector<render_surface_instance*> model_surfaces;
-		( *it )->get_surfaces( NULL, NULL, model_surfaces, false, 0, 3 );
-
-		render_surface_instance** it_surf = model_surfaces.begin( );
-		render_surface_instance** end_surf = model_surfaces.end( ); for ( ; it_surf != end_surf; ++it_surf )
-		{
-			if ( !( *it_surf )->m_render_surface->m_materail_effects_instance )
-				continue;
-
-			surface_set set;
-			set.transform = *( *it_surf )->m_transform;
-			set.surface = ( *it_surf )->m_render_surface; surfaces.push_back( set );
-		}
-	}
-
 	std::sort( surfaces.begin( ), surfaces.end( ), sort_predicate( ) );
 
-	surface_set* surface = surfaces.begin( ); for ( ; surface != surfaces.end( ); ++surface )
+	surface_set* surface = surfaces.begin( );
+	for ( ; surface != surfaces.end( ); ++surface )
 		surface->surface->add_shadow_vertices( this, surface->transform );
 
 	finalize_batch( );

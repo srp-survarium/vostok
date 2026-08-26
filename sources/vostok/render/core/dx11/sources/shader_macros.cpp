@@ -205,7 +205,7 @@ void shader_macros::register_available_macros( )
 
 	m_available_macros.push_back(str_cfg_reflection_mask);
 
-	std::sort( m_available_macros.begin(), m_available_macros.end(), shader_macros_sort_predicate());
+	std::sort( m_available_macros.begin(), m_available_macros.end(), shader_macros_dort_predicate());
 }
 
 void shader_macros::fill_shader_macro_list(
