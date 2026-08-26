@@ -11,7 +11,6 @@ class frustum;
 
 namespace render {
 
-struct lpv_render_surface;
 struct render_surface_instance;
 
 struct remove_model_if_in_frustum_predicate {
@@ -21,7 +20,6 @@ struct remove_model_if_in_frustum_predicate {
 	}
 
 	bool operator()( render_surface_instance* in_model );
-	bool operator()( lpv_render_surface const& surface );
 
 	math::frustum* m_frustum;
 };
