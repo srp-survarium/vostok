@@ -93,7 +93,8 @@ void game_world_ui::initialize( match_options& options )
 
 	flash_value players_array;
 	get_ui( )->movie->CreateArray( &players_array );
-	for ( u8 i = 0, in_array_index = 0; i < 20; ++i )
+	u32 in_array_index = 0;
+	for ( u8 i = 0; i < 20; ++i )
 	{
 		if ( options.player_profiles[i].team == team_undefined )
 			continue;
@@ -186,8 +187,6 @@ game_world_ui::~game_world_ui( )
 {
 }
 
-// claude@NOTE: flash /Od wall - the two flash_value[3] branches share a folded
-// SetString/Invoke tail; the percent fistp + flash glue is /Od-shaped.
 void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
 {
 	base_point_stats& stats = m_base_points[point_id];
@@ -276,17 +275,17 @@ void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths
 	flash_value out_event_property;
 	get_ui( )->movie->CreateObject( &out_event_property );
 
-	out_event_property.SetUInt( player_id );
+	out_event_property.SetInt( player_id );
 	out_event.SetMember( "id", out_event_property );
-	out_event_property.SetUInt( kills );
+	out_event_property.SetInt( kills );
 	out_event.SetMember( "kills", out_event_property );
-	out_event_property.SetUInt( deaths );
+	out_event_property.SetInt( deaths );
 	out_event.SetMember( "deaths", out_event_property );
-	out_event_property.SetUInt( 0 );
+	out_event_property.SetInt( 66 );
 	out_event.SetMember( "ping", out_event_property );
-	out_event_property.SetUInt( 0 );
+	out_event_property.SetInt( 0 );
 	out_event.SetMember( "rank", out_event_property );
-	out_event_property.SetUInt( 0 );
+	out_event_property.SetInt( 0 );
 	out_event.SetMember( "artifacts", out_event_property );
 
 	get_ui( )->movie->Invoke( "root.list_update_player", NULL, &out_event, 1 );
@@ -724,9 +723,6 @@ void game_world_ui::update_minimap_objects( )
 }
 
 
-// claude@NOTE: flash /Od wall - project_name fetch reuses one get_project() temp in
-// the target (register-only, unrecorded local); the value_exists/operator[] ternary +
-// CreateObject/SetMember/Invoke glue is /Od-shaped. Structure faithful, bytes parked.
 void game_world_ui::initialize_minimap( )
 {
 	pcstr const project_name = m_game_world.get_project( )->m_config->get_root( ).value_exists( "project_name" )
@@ -849,8 +845,6 @@ void game_world_ui::show_quick_slots( bool b_show )
 		m_slots_to_update.clear( );
 }
 
-// claude@NOTE: flash /Od wall - the SetMember/CreateObject glue and the hotkey
-// switch -> key_binder lookup are /Od-shaped; structure faithful, bytes parked.
 void game_world_ui::create_slot_value(
 	profile_slot_enum			slot,
 	inventory_item_props&		item_props,
@@ -943,7 +937,7 @@ void game_world_ui::fill_quick_slots( )
 
 			flash_value oxygene_props[2];
 			oxygene_props[0].SetUInt( item_in_back_slot_props.use_in_percents );
-			oxygene_props[1].SetUInt( item_in_back_slot_props.m_amount );
+			oxygene_props[1].SetUInt( item_in_back_slot_props.m_amount_ms );
 			get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
 		}
 	}
@@ -967,7 +961,7 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 		{
 			flash_value oxygene_props[2];
 			oxygene_props[0].SetUInt( current_item_props.use_in_percents );
-			oxygene_props[1].SetUInt( current_item_props.m_amount );
+			oxygene_props[1].SetUInt( current_item_props.m_amount_ms );
 			get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
 		}
 	}
@@ -999,8 +993,8 @@ void game_world_ui::set_using_progress_message( u32 progress_value )
 
 	flash_value message_val[3];
 	message_val[0].SetStringW( message );
-	message_val[1].SetUInt( progress_value );
-	message_val[2].SetUInt( 20 );
+	message_val[1].SetInt( progress_value );
+	message_val[2].SetInt( 20 );
 	get_ui( )->movie->Invoke( "root.set_context", NULL, message_val, 3 );
 }
 
@@ -1011,8 +1005,8 @@ void game_world_ui::set_using_info_message( pcstr str )
 
 	flash_value message_val[3];
 	message_val[0].SetStringW( message );
-	message_val[1].SetUInt( 0 );
-	message_val[2].SetUInt( 1000 );
+	message_val[1].SetInt( 0 );
+	message_val[2].SetInt( 1000 );
 	get_ui( )->movie->Invoke( "root.set_context", NULL, message_val, 3 );
 }
 
@@ -1047,7 +1041,7 @@ void game_world_ui::set_broken_connection_message( pcstr str )
 
 	flash_value message_val[2];
 	message_val[0].SetStringW( w_message );
-	message_val[1].SetUInt( 1000 );
+	message_val[1].SetInt( 1000 );
 	get_ui( )->movie->Invoke( "root.set_warning_message", NULL, message_val, 2 );
 }
 
@@ -1087,8 +1081,10 @@ void game_world_ui::on_detached_from_player( )
 
 void game_world_ui::show_item_container( u8 visual_id )
 {
+	VOSTOK_UNREFERENCED_PARAMETER( visual_id );
+
 	flash_value visual_id_val;
-	visual_id_val.SetUInt( visual_id );
+	visual_id_val.SetUInt( 0 );
 	get_ui( )->movie->Invoke( "root.show_container_icon", NULL, &visual_id_val, 1 );
 }
 
