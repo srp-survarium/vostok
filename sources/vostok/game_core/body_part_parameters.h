@@ -28,7 +28,7 @@ namespace network_core {
 
 namespace survarium {
 
-class body_part_parameters : public boost::noncopyable {
+class body_part_parameters : private boost::noncopyable {
 public:
 									body_part_parameters	(
 										pcstr				name,
@@ -57,9 +57,9 @@ public:
 
 			void					regenerate				( const u32 time_delta_ms, const u32 current_time_in_ms );
 
-			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, const u32 index ) const;
-	inline	void					dump_state				( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
 			void					dump_state				( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
+	inline	void					dump_state				( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
+			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, const u32 index ) const;
 
 	inline	void					remove_edges			( body_part_parameters* arg_0 ) { /* no source */ }
 
@@ -136,8 +136,9 @@ public:
 		vostok::size_policy,
 		vostok::no_debug_policy >  damage_protectors_list;
 
-public:
 	/* 0x0000 */	body_part_parameters*			next;
+
+private:
 	/* 0x0004 */	hit_type_parameters_list		m_hit_types;
 	/* 0x0014 */	affects_thresholds_list			m_thresholds;
 	/* 0x0024 */	hit_affects_types_type			m_affects;
@@ -149,8 +150,8 @@ public:
 	/* 0x0098 */	u32								m_regeneration_timeout;
 	/* 0x009c */	u32								m_last_hit_time;
 	/* 0x00a0 */	float							m_last_hit_health;
-	/* 0x00a4 */	bool							m_assignable;
-	/* 0x00a5 */	u8								m_damage_group;
+	/* 0x00a4 */	const bool						m_assignable;
+	/* 0x00a5 */	const u8						m_damage_group;
 	/* 0x00a8 */	damage_protectors_list			m_damage_protectors;
 }; // class body_part_parameters
 

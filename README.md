@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,069 / 13,009 functions exact (69.71%) &middot; 9,914 / 13,009 functions exact-max (76.21%) &middot; 88.30% fuzzy &middot; 91.18% fuzzy-max.**
+**Overall: 9,066 / 13,009 functions exact (69.69%) &middot; 9,914 / 13,009 functions exact-max (76.21%) &middot; 88.30% fuzzy &middot; 91.18% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -22,8 +22,8 @@ _All figures come from the ledger over every target function (paired plus inline
 | `render`        |   351 | 1,606 / 2,726 (58.9%) | 1,900 / 2,726 (69.7%) | 84.4% |     88.5% |
 | `game`          |   141 |   885 / 1,528 (57.9%) | 1,012 / 1,528 (66.2%) | 78.2% |     82.0% |
 | `core`          |   136 |   966 / 1,325 (72.9%) | 1,052 / 1,325 (79.4%) | 91.5% |     93.7% |
-| `vostok`        |   112 |   913 / 1,250 (73.0%) |   985 / 1,250 (78.8%) | 90.4% |     93.1% |
-| `game_core`     |   189 |   751 / 1,181 (63.6%) |   802 / 1,181 (67.9%) | 91.4% |     94.3% |
+| `vostok`        |   112 |   909 / 1,250 (72.7%) |   985 / 1,250 (78.8%) | 90.2% |     93.1% |
+| `game_core`     |   189 |   752 / 1,181 (63.7%) |   802 / 1,181 (67.9%) | 91.4% |     94.3% |
 | `animation`     |   102 |     553 / 730 (75.8%) |     577 / 730 (79.0%) | 87.3% |     88.3% |
 | `ai`            |   124 |     589 / 691 (85.2%) |     636 / 691 (92.0%) | 96.8% |     99.0% |
 | `sound`         |    69 |     475 / 510 (93.1%) |     492 / 510 (96.5%) | 99.2% |     99.8% |
@@ -43,7 +43,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       20 / 22 (90.9%) |       21 / 22 (95.5%) | 97.6% |     98.1% |
 | `ai_navigation` |     3 |       13 / 14 (92.9%) |      14 / 14 (100.0%) | 89.9% |    100.0% |
 
-_Updated 2026-08-25 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-08-26 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

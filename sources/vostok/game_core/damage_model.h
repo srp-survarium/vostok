@@ -30,7 +30,7 @@ namespace network_core {
 
 namespace survarium {
 
-struct affect_subscriber: public boost::noncopyable {
+struct affect_subscriber: private boost::noncopyable {
 public:
 	typedef boost::function<void (
 		pcstr,
@@ -39,9 +39,8 @@ public:
 	)> subscription_functor;
 
 public:
-	inline	affect_subscriber	( ) : next( NULL ) { }
-	inline	affect_subscriber	( subscription_functor const& subscription_callback ) : subscription_callback( subscription_callback ), next( NULL ) { }
-	//		~affect_subscriber	( ); sushi@TODO: Where is the definition coming from
+	inline	explicit affect_subscriber	( subscription_functor const& subscription_callback ) : subscription_callback( subscription_callback ), next( NULL ) { }
+	inline	         affect_subscriber	( ) : next( NULL ) { }
 
 public:
 	subscription_functor	subscription_callback;

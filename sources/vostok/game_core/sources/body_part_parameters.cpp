@@ -59,16 +59,16 @@ void body_part_parameters::add_threshold( affects_threshold* const new_threshold
 	m_thresholds.push_back( new_threshold );
 }
 
-struct find_hit_parameters_by_type_predicate : public boost::noncopyable {
+struct find_hit_parameters_by_type_predicate : private boost::noncopyable {
 public:
 	explicit		find_hit_parameters_by_type_predicate	( pcstr hit_t ) : hit_type( hit_t ) {  }
 
 	// sushi@TODO: This method seems to be inlined into `find_if`, so we need to match that instead
-	inline	bool	operator()								( hit_type_parameters* hit_type_params ) const {
+	inline	bool	operator()								( hit_type_parameters* const hit_type_params ) const {
 		return strings::equal( hit_type, hit_type_params->get_type( ) );
 	}
 
-private:
+public:
 	/* 0x0000 */	pcstr	hit_type;
 }; // struct find_hit_parameters_by_type_predicate
 
