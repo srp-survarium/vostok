@@ -12,7 +12,7 @@ namespace vostok {
 namespace render {
 
 enum {
-	shader_macros_max_count = 128,
+	shader_macros_max_cout = 128,
 };
 
 struct shader_macro {
@@ -20,15 +20,15 @@ struct shader_macro {
 	fixed_string<256> definition;
 };
 
-typedef fixed_vector<shader_macro, shader_macros_max_count>
+typedef fixed_vector<shader_macro, shader_macros_max_cout>
 	shader_defines_list;
-typedef fixed_vector<pcstr, shader_macros_max_count>
+typedef fixed_vector<pcstr, shader_macros_max_cout>
 	shader_defines_names_list;
-typedef fixed_vector<fs_new::virtual_path_string, shader_macros_max_count>
+typedef fixed_vector<fs_new::virtual_path_string, shader_macros_max_cout>
 	shader_declarated_macroses_list;
 
-struct shader_macros_sort_predicate {
-	bool operator()( pcstr left, pcstr right ) const
+struct shader_macros_dort_predicate {
+	bool operator()( pcstr left, pcstr right )
 	{
 		return std::strcmp( left, right ) < 0;
 	}

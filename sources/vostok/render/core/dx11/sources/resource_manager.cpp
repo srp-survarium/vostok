@@ -1,5 +1,4 @@
 #include "pch.h"
-#include <ddraw.h>
 #include <d3dx11tex.h>
 
 #pragma comment( lib, "d3dx11.lib" )
@@ -44,6 +43,8 @@ static vostok::command_line::key s_no_srgb_textures_result(
 
 namespace vostok {
 namespace render {
+
+#include <ddraw.h>
 
 bool g_enable_resource_sharing = true;
 static bool s_debug_clip_texture_quality = true;

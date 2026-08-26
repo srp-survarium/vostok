@@ -7,8 +7,6 @@
 namespace vostok {
 namespace render {
 
-enum { num_speedtree_components = 5 };
-
 speedtree_cook::speedtree_cook( ) :
 	resources::translate_query_cook(
 		resources::speedtree_class,
@@ -67,7 +65,7 @@ void speedtree_cook::on_speedtree_raw_data_loaded( resources::queries_result& da
 	configs::binary_config_ptr model_config = static_cast_resource_ptr<configs::binary_config_ptr>(data[1].get_unmanaged_resource());
 	configs::binary_config_value const& root = model_config->get_root();
 
-	resources::request materials_request[num_speedtree_components]= {
+	resources::request materials_request[5]= {
 		{strings::length(root["branch"]["material"]) ? pcstr(pcstr(root["branch"]["material"])) : "nomaterial", resources::material_class},
 		{strings::length(root["frond"]["material"]) ? pcstr(pcstr(root["frond"]["material"])) : "nomaterial", resources::material_class},
 		{strings::length(root["leafmesh"]["material"]) ? pcstr(pcstr(root["leafmesh"]["material"])) : "nomaterial", resources::material_class},
@@ -86,7 +84,7 @@ void speedtree_cook::on_speedtree_raw_data_loaded( resources::queries_result& da
 void speedtree_cook::on_model_materials_loaded( resources::queries_result& data, speedtree_data* d )
 {
 	bool has_valid_material			= false;
-	for(int i=0; i<num_speedtree_components; ++i)
+	for(int i=0; i<5; ++i)
 	{
 		if(data[i].is_successful())
 		{

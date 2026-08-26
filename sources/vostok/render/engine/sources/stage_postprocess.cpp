@@ -110,23 +110,28 @@ struct screen_vertex {
 
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
 
-namespace {
-
-struct color_grading_pixel {
-	byte red;
-	byte green;
-	byte blue;
-	byte alpha;
-};
-
-STATIC_SIZE_ASSERT( color_grading_pixel, 0x4 );
-
-} // namespace
-
 static res_texture_ptr create_color_grading_base_lut( u32 const size )
 {
-	u32 const data_size = size * size * size * sizeof(color_grading_pixel);
-	color_grading_pixel* temp_data = (color_grading_pixel*)ALLOCA(data_size);
+	struct pixel
+	{
+#	pragma warning(push)
+#	pragma warning(disable:4201)
+		union
+		{
+			u32 clr;
+			struct
+			{
+				u8 r;
+				u8 g;
+				u8 b;
+				u8 a;
+			};
+		};
+#	pragma warning(pop)
+	};
+
+	u32 const data_size = size * size * size * sizeof(pixel);
+	pixel* temp_data = (pixel*)ALLOCA(data_size);
 
 	for ( u32 z = 0; z < size; ++z )
 	{
@@ -134,11 +139,11 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 		{
 			for ( u32 x = 0; x < size; ++x )
 			{
-				color_grading_pixel* p = temp_data + z * size * size + y * size + x;
-				p->red = static_cast_checked<u8>( x * size );
-				p->green = static_cast_checked<u8>( y * size );
-				p->blue = static_cast_checked<u8>( z * size );
-				p->alpha = 255;
+				pixel* p = temp_data + z * size * size + y * size + x;
+				p->r = static_cast_checked<u8>( x * size );
+				p->g = static_cast_checked<u8>( y * size );
+				p->b = static_cast_checked<u8>( z * size );
+				p->a = 255;
 			}
 		}
 	}

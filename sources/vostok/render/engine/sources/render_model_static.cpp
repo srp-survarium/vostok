@@ -515,14 +515,6 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 
 void static_render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
 {
-	struct static_vertex {
-		float3 position;
-		math::color normal;
-		math::color tangent;
-		math::color binormal;
-		float2 uv;
-	};
-
 	render_surface::load( properties, chunk );
 
 	memory::reader reader = chunk.open_reader( model_chunk_vertices );
@@ -544,7 +536,9 @@ void static_render_surface::load( configs::binary_config_value const& properties
 
 	m_render_geometry.vertex_count = reader.r_u32( );
 	if ( m_render_geometry.vertex_count > 1024 * 64 )
+	{
 		LOG_ERROR( "vertex buffer size > 1024 * 64!" );
+	}
 	u32 vStride = D3DXGetDeclVertexSize( vFormat, 0 );
 	untyped_buffer_ptr vb = resource_manager::ref( ).create_buffer(
 		m_render_geometry.vertex_count * vStride,
@@ -582,6 +576,13 @@ void static_render_surface::load( configs::binary_config_value const& properties
 
 	reader = chunk.open_reader( model_chunk_vertices );
 	reader.advance( dcl_len * sizeof( D3DVERTEXELEMENT9 ) + sizeof( u32 ) );
+	struct static_vertex {
+		float3 position;
+		math::color normal;
+		math::color tangent;
+		math::color binormal;
+		float2 uv;
+	};
 	static_vertex* vertices = (static_vertex*)reader.pointer( );
 	reader = chunk.open_reader( model_chunk_indices );
 	reader.advance( sizeof( u32 ) );

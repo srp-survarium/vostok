@@ -128,6 +128,14 @@ struct sort_by_texture_predicate {
 };
 
 struct sort_by_textures_predicate {
+	bool operator()(
+		render_surface_instance const*,
+		render_surface_instance const*
+	) const
+	{
+		// STATE[STUB]
+		return false;
+	}
 };
 
 class renderer : public boost::noncopyable {
