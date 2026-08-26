@@ -20,7 +20,7 @@ namespace survarium {
 
 class game_world_object;
 
-class inventory_holder : public boost::noncopyable {
+class inventory_holder : private boost::noncopyable {
 public:
 	inline	explicit							inventory_holder		( survarium::scheduler& scheduler, inventory_ptr inventory ) : m_scheduler( scheduler ), m_inventory( inventory ) { }
 	virtual										~inventory_holder		( ) { }

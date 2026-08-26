@@ -14,7 +14,7 @@ class inventory;
 struct inventory_item_props;
 class game_world_object;
 
-class inventory_item : public interactive_object , public boost::noncopyable {
+class inventory_item : public interactive_object , private boost::noncopyable {
 public:
 	enum action_behaviour_type {
 		disabled				= 0x0000,

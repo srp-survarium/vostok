@@ -19,6 +19,8 @@ struct engine;
 
 class weapon_ammunition : public inventory_item {
 public:
+	typedef inventory_item super;
+
 	explicit			weapon_ammunition			( );
 
 	inline	float		distance					( ) const { return m_distance; }
@@ -34,6 +36,8 @@ public:
 	inline	bool		tracer						( ) const { return m_tracer; }
 
 			void		load						( configs::binary_config_value const& cfg );
+
+private:
 	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
 	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones;
 	// the idiomatic bodies below are the faithful shapes.
@@ -54,7 +58,7 @@ public:
 	virtual	bool		is_ready_to_be_deactivated	( ) const override { return true; /* sushi@TODO no source */ }
 
 	virtual	animation::mixing::expression
-						selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
+						selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void		on_player_model_added		( ) override { /* no source */ }
 	virtual	void		on_player_model_removed		( ) override { /* no source */ }

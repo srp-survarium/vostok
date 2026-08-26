@@ -11,7 +11,7 @@ class game_material;
 class game_material_manager_cook;
 class material_pair;
 
-class game_material_manager : public resources::unmanaged_resource , public boost::noncopyable {
+class game_material_manager : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 									game_material_manager		( );
 	virtual							~game_material_manager		( );
@@ -20,8 +20,8 @@ public:
 
 	inline	u16						get_material_id				( pcstr arg_0 ) const { /* no source */ }
 
-	inline	bool					material_exist				( pcstr arg_0, u16* arg_1 ) const { /* no source */ }
 			bool					material_exist				( u16 id ) const;
+	inline	bool					material_exist				( pcstr arg_0, u16* arg_1 ) const { /* no source */ }
 
 			material_pair const*	get_pair					( u16 first_mtrl_id, u16 second_mtrl_id ) const;
 
@@ -36,11 +36,15 @@ private:
 			void					delete_pairs				( );
 			void					delete_materials			( );
 
+	typedef map< u16, game_material const* > material_container;
+	typedef map< u16, material_pair const* > material_pairs_type;
+	typedef map< u16, material_pairs_type > material_pair_container;
+
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* boost::noncopyable */
-	/* 0x0108 */	map< u16, game_material const * >				m_materials;
-	/* 0x0120 */	map< u16, map< u16, material_pair const * > >	m_pairs;
+	/* 0x0108 */	material_container				m_materials;
+	/* 0x0120 */	material_pair_container			m_pairs;
 	/* 0x0138 */	u16												m_default_material_id;
 private:
 	friend class game_material_manager_cook; // sushi@TODO: For `m_default_material_id`, though maybe this comes from some inlined function.

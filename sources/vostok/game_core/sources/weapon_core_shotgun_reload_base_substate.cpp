@@ -50,17 +50,17 @@ weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substa
 	m_hand_animation_captions[1] = hands_crouch_animation_id;
 	m_hand_animation_captions[2] = hands_jump_animation_id;
 
-	ASSERT_CMP_U( animations_count, ==, 8 );
+	ASSERT_CMP_U( animations_count, ==, total_animations_count );
 
 	u32 animation_index = 0;
-	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
-		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+	for ( u32 view_index = 0 ; view_index != views_count ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != user_states_count ; ++user_state_index ) {
 			m_weapon_animations[view_index][user_state_index] = animations[animation_index++];
 		}
 	}
 
-	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
-		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+	for ( u32 view_index = 0 ; view_index != views_count ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != user_states_count ; ++user_state_index ) {
 			m_user_animations[view_index][user_state_index] = animations[animation_index++];
 		}
 	}

@@ -74,10 +74,24 @@ public:
 		/* 0x0014 */	float		heel_transition_time;
 		/* 0x0018 */	float		toe_transition_time;
 		/* 0x001c */	float3		rotation_axis;
+	private:
 		/* 0x0028 */	float		m_time_since_stance;
 		/* 0x002c */	bool		m_heel_on_ground;
 		/* 0x002d */	bool		m_toe_on_ground;
 	}; // struct leg_params
+
+private:
+	class transition_time_calculator {
+	public:
+		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
+
+		inline	void		reset						( ) { m_value = 0.0f; }
+		inline	void		tick						( float arg_0 ) { m_value += arg_0; }
+		inline	float		get_value					( ) const { return m_value; }
+
+	private:
+		/* 0x0000 */	float		m_value;
+	}; // class transition_time_calculator
 
 private:
 			void		set_heel_on_ground		( legs_ik_processor::leg_params& params, bool value );
@@ -109,20 +123,6 @@ private:
 private:
 	/* 0x0070 */	animation::fermi_interpolator		m_heel_interpolator;
 	/* 0x007c */	animation::fermi_interpolator		m_toe_interpolator;
-
-private:
-	class transition_time_calculator {
-	public:
-		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
-
-		inline	void		reset						( ) { m_value = 0.0f; }
-		inline	void		tick						( float arg_0 ) { m_value += arg_0; }
-		inline	float		get_value					( ) const { return m_value; }
-
-	private:
-		/* 0x0000 */	float		m_value;
-	}; // class transition_time_calculator
-
 
 	/* 0x0088 */	legs_ik_processor::transition_time_calculator	m_heel_transition_time_calculator;
 	/* 0x008c */	legs_ik_processor::transition_time_calculator	m_toe_transition_time_calculator;

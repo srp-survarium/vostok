@@ -304,16 +304,17 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 
 fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> weapon_user_animations_selector::look_time_calculator( ) const
 {
-	return look_time_functor( this, &weapon_user_animations_selector::look_time_factor_calculator );
+	return fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)>( this, &weapon_user_animations_selector::look_time_factor_calculator );
 }
 
 animation::callback_return_type_enum weapon_user_animations_selector::on_interval_ended( animation::animation_callback_params& params )
 {
-	enum { c_right_leg_interval_id };
-
 	ASSERT( UNKNOWN_EXPRESSION_T( &params ) );
-	if ( params.animation_user_data == 1 )
+	if ( params.animation_user_data == c_move_animation_user_data )
+	{
+		enum { c_right_leg_interval_id };
 		m_right_leg_is_supporting = params.animation_interval_id != c_right_leg_interval_id;
+	}
 
 	return animation::callback_return_type_call_me_again;
 }

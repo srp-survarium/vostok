@@ -28,7 +28,7 @@ class inventory_holder;
 
 struct base_player;
 
-class collision_user : public boost::noncopyable {
+class collision_user : private boost::noncopyable {
 public:
 	virtual								~collision_user				( ) { }
 
@@ -52,7 +52,7 @@ public:
 	inline	void						set_engineer_use_time_factor( float factor )	{ m_usable_object_user_data.booster_engineer_use_time_factor = factor; }
 	inline	float						get_engineer_use_time_factor( ) const			{ return m_usable_object_user_data.booster_engineer_use_time_factor; }
 
-private:
+protected:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	survarium::usable_object_user_data		m_usable_object_user_data;
 }; // class collision_user

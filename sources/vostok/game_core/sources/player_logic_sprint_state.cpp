@@ -42,14 +42,18 @@ player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_sel
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_sprint_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( weapon_parameters );
+	enum {
+		main_sprint_animation_index,
+		sprint_look_animation_index,
+	};
 
 	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
-			m_owner.animations( ).get_sprint_animation_caption( 0 ),
-			m_owner.animations( ).get_sprint_animation( 0, is_third_view ),
+			m_owner.animations( ).get_sprint_animation_caption( main_sprint_animation_index ),
+			m_owner.animations( ).get_sprint_animation( main_sprint_animation_index, is_third_view ),
 			0,
 			0
 		)
@@ -64,9 +68,9 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 
 	animation::instant_interpolator		interpolator;
 
-	pcstr const							look_animation_id	= m_owner.animations( ).get_sprint_animation_caption( 1 );
+	pcstr const							look_animation_id	= m_owner.animations( ).get_sprint_animation_caption( sprint_look_animation_index );
 
-	resources::managed_resource_ptr		look_animation		= m_owner.animations( ).get_sprint_animation( 1, is_third_view );
+	resources::managed_resource_ptr		look_animation		= m_owner.animations( ).get_sprint_animation( sprint_look_animation_index, is_third_view );
 
 	animation::mixing::animation_lexeme_parameters	look_lexeme_parameters( buffer, look_animation_id, look_animation, 0, &movement_lexeme );
 

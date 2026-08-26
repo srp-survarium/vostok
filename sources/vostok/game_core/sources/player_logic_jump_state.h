@@ -14,6 +14,9 @@ class player_logic_jump_state : public player_logic_base_state {
 public:
 	explicit				player_logic_jump_state	( weapon_user_animations_selector& owner );
 
+	typedef animation::mixing::expression expression;
+	typedef player_logic_base_state super;
+
 private:
 	virtual	void			initialize				( ) override;
 	virtual	void			finalize				( ) override;
@@ -21,7 +24,7 @@ private:
 
 	virtual	bool			is_ready_for_transition	( ) const override;
 
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+	virtual	selected_animations_result_type
 							selected_animations		(
 								mutable_buffer&						buffer,
 								weapon_animation_parameters const&	weapon_parameters,

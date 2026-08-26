@@ -11,8 +11,10 @@ namespace survarium {
 
 class items_dictionary;
 
-class items_dictionary_cook : public resources::translate_query_cook , public boost::noncopyable {
+class items_dictionary_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+
 					items_dictionary_cook				( );
 
 	virtual	void	translate_query						( resources::query_result_for_cook& parent ) override;

@@ -25,9 +25,14 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_aimed_state : public weapon_core_aimed_state_base {
+	typedef weapon_core_aimed_state_base super;
+
 private:
 	// ctor mangles ??0...@@AAE@... -> private, non-const (objdiff pairs by mangled name)
 				explicit							weapon_core_aimed_state		( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count );
+
+	enum { views_count = 2, user_states_count = 2, weapon_animations_count = 4, user_animations_count = 0, total_animations_count = 4 };
+	static resources::class_id_enum const resource_class = resources::weapon_aimed_state_class;
 
 	// mangles ?...@@EBE... -> private virtual, const
 	virtual	animation::mixing::expression		weapon_and_hands_expression	(

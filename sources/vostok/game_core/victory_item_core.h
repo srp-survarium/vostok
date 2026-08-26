@@ -20,6 +20,8 @@ struct usable_object_user_data;
 
 class victory_item_core : public usable_object , public resources::unmanaged_resource {
 public:
+	typedef usable_object super;
+
 			explicit		victory_item_core			( );
 	virtual					~victory_item_core			( );
 

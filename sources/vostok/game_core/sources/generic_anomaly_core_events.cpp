@@ -24,10 +24,10 @@ void generic_anomaly_core::on_player_action( hit_receiver const* receiver, playe
 			inc_energy( (float)energy_on_shoot );
 			m_was_shoot_trigger_event = true;
 		break;
-		case player_actions_subscriber::character_hit:
+		case player_actions_subscriber::hit:
 			inc_energy( (float)energy_on_character_hit );
 		break;
-		case player_actions_subscriber::character_kill:
+		case player_actions_subscriber::kill:
 			inc_energy( (float)energy_on_character_kill );
 		break;
 		default:

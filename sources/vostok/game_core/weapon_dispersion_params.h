@@ -8,8 +8,8 @@
 namespace survarium {
 
 struct weapon_dispersion_params {
+				weapon_dispersion_params( );
 	explicit	weapon_dispersion_params( configs::binary_config_value const& cfg );
-	explicit	weapon_dispersion_params( );
 
 public:
 	/* 0x0000 */	float		base_dispersion;

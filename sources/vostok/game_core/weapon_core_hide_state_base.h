@@ -11,6 +11,8 @@
 namespace survarium {
 
 class weapon_core_hide_state_base : public weapon_core_animation_end_aware_state {
+	typedef weapon_core_animation_end_aware_state super;
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected (objdiff pairs by mangled name)
 	explicit		weapon_core_hide_state_base	( weapon_core& weapon, bool& is_shown );

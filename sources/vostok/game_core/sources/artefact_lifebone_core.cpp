@@ -10,12 +10,12 @@
 
 namespace survarium {
 
-static hit_affects_type_enum protected_affects[artefact_lifebone_core::DAMAGE_PROTECTORS] = {
+static hit_affects_type_enum protected_affects[artefact_lifebone_core::protects_count] = {
 	affects_type_hand_damage, affects_type_hand_damage,
 	affects_type_leg_damage,  affects_type_leg_damage
 };
 
-static pcstr protected_body_patrs[artefact_lifebone_core::DAMAGE_PROTECTORS] = {
+static pcstr protected_body_patrs[artefact_lifebone_core::protects_count] = {
 	"left_hand", "right_hand",
 	"left_leg", "right_leg"
 };
@@ -26,7 +26,7 @@ artefact_lifebone_core::artefact_lifebone_core( ) :
 	m_cooldown_ms		( 0 ),
 	m_last_used_time_ms	( 0 )
 {
-	for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+	for ( u32 i = 0 ; i < protects_count ; ++i )
 	{
 		m_damage_protectors[i].protect_affect_functor	= boost::bind( &artefact_lifebone_core::protect_affect, this, _1, _2 );
 		m_damage_protectors[i].reduce_damage_functor	= boost::bind( &artefact_lifebone_core::reduce_damage, this, _1, _2, _3, _4 );
@@ -59,13 +59,13 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
 
 	if ( switch_on )
-		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+		for ( u32 i = 0 ; i < protects_count ; ++i )
 		{
 			( *dm ).cancel_affect( protected_body_patrs[i], protected_affects[i] );
 			( *dm ).register_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
 		}
 	else
-		for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+		for ( u32 i = 0 ; i < protects_count ; ++i )
 			( *dm ).unregister_body_part_damage_protector( protected_body_patrs[i], &m_damage_protectors[i] );
 
 	m_passive_mode = switch_on;
@@ -75,7 +75,7 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 void artefact_lifebone_core::activate_impl( )
 {
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
-	for ( u32 i = 0 ; i < DAMAGE_PROTECTORS ; ++i )
+	for ( u32 i = 0 ; i < protects_count ; ++i )
 	{
 		body_part_parameters* bp = ( *dm ).get_body_part( protected_body_patrs[i] );
 		bp->reset( );

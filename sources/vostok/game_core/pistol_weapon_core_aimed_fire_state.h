@@ -11,6 +11,12 @@
 namespace survarium {
 
 class pistol_weapon_core_aimed_fire_state : public weapon_core_aimed_fire_state_base {
+	typedef weapon_core_aimed_fire_state_base super;
+	enum { views_count = 2, weapon_states_count = 2, user_states_count = 2, weapon_animations_count = 8, user_animations_count = 4, total_animations_count = 12 };
+
+protected:
+	static resources::class_id_enum const resource_class = resources::pistol_weapon_aimed_fire_state_class;
+
 protected:
 			explicit							pistol_weapon_core_aimed_fire_state(
 													weapon_core&							weapon,

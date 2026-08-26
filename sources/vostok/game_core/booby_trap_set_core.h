@@ -17,23 +17,6 @@ class game_material_manager;
 
 class booby_trap_set_core : public inventory_item {
 public:
-	virtual	void								insert_trap						( booby_trap_core& trap, float4x4 const& transform );
-	virtual	void								remove_trap						( booby_trap_core& trap );
-
-	virtual	void								on_trap_fired					( booby_trap_core& trap ) { /* no source */ }
-	virtual	void								on_trap_disarmed				( booby_trap_core& trap ) { /* no source */ }
-
-public:
-	struct apply_damage {
-		/* 0x0000 */	char		body_part[16];
-		/* 0x0010 */	char		hit_type[16];
-		/* 0x0020 */	float		amount;
-		/* 0x0024 */	float		armor_piercing;
-	}; // struct apply_damage
-
-	inline buffer_vector< apply_damage > const& damage_parameters				( ) const { return m_damage_parameters; }
-
-public:
 	struct config_params {
 		inline	explicit	config_params	( ) :
 			max_slope_cos			( 0.0f ),
@@ -57,6 +40,23 @@ public:
 		/* 0x0019 */	bool		material_can_place_test;
 		/* 0x001a */	bool		material_can_stick_test;
 	}; // struct booby_trap_set_core::config_params
+
+	struct apply_damage {
+		/* 0x0000 */	char		body_part[16];
+		/* 0x0010 */	char		hit_type[16];
+		/* 0x0020 */	float		amount;
+		/* 0x0024 */	float		armor_piercing;
+	}; // struct apply_damage
+
+	typedef buffer_vector< apply_damage > damage_parameters_type;
+
+	virtual	void								insert_trap						( booby_trap_core& trap, float4x4 const& transform );
+	virtual	void								remove_trap						( booby_trap_core& trap );
+
+	virtual	void								on_trap_fired					( booby_trap_core& trap ) { /* no source */ }
+	virtual	void								on_trap_disarmed				( booby_trap_core& trap ) { /* no source */ }
+
+	inline damage_parameters_type const& damage_parameters				( ) const { return m_damage_parameters; }
 
 	// claude@NOTE: config()/traps() carry the correct one-line bodies and pair in this TU,
 	// but the target compiled them /Ox (frameless, this in eax/ecx, no ebp frame) while
@@ -88,7 +88,7 @@ private:
 	virtual	void								tick							( ) override { /* no source */ }
 	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
 
-	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override
+	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override
 	{
 		VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view );
 		VOSTOK_UNREACHABLE_CODE( );
@@ -117,17 +117,22 @@ protected:
 
 			void								load							( configs::binary_config_value const& config );
 
+	typedef buffer_vector< booby_trap_core_ptr > booby_traps_type;
+
 	virtual	game_material_manager const&		get_game_material_manager		( ) = 0;
 			bool								get_visible_place_transform		( float4x4& result );
 
 			booby_trap_core_ptr*				try_place_trap					( );
 	inline	void								remove_traps					( ) { /* no source */ }
 
-	inline	buffer_vector< booby_trap_core_ptr > const&	traps					( ) const	{ return m_traps; }
-			buffer_vector< booby_trap_core_ptr >&		traps					( )			{ return m_traps; }
+			booby_traps_type&						traps					( )			{ return m_traps; }
+	inline	booby_traps_type const&					traps					( ) const	{ return m_traps; }
 
 			u8									trap_index						( booby_trap_core const& trap ) const;
 
+	typedef inventory_item super;
+
+private:
 	inline	u8									count_active_traps				( ) const { /* no source */ }
 
 	inline	void								append_inactive_trap_index_to_packet(
@@ -141,8 +146,8 @@ private:
 
 private:
 	/* 0x0000 */	/* inventory_item */
-	/* 0x0118 */	buffer_vector< booby_trap_core_ptr >	m_traps;
-	/* 0x0120 */	buffer_vector< apply_damage >			m_damage_parameters;
+	/* 0x0118 */	booby_traps_type						m_traps;
+	/* 0x0120 */	damage_parameters_type				m_damage_parameters;
 	/* 0x0128 */	booby_trap_set_core::config_params		m_config;
 	/* 0x0144 */	booby_trap_core_ptr*					m_traps_buffer;
 private:

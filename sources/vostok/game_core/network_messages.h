@@ -75,6 +75,12 @@ namespace survarium {
 template < typename SendingMessageType, typename ReceivedMessageType >
 class network_packets_orderer : public network_core::udp_match_packets_orderer {
 private:
+	static	inline	network_core::udp_match_message_type_info	unreliable			( ) { return network_core::udp_match_message_type_info( false, false, 0 ); }
+	static	inline	network_core::udp_match_message_type_info	reliable			( ) { return network_core::udp_match_message_type_info( true, false, 0 ); }
+	static	inline	network_core::udp_match_message_type_info	ordered_reliable	( const u8 channel ) { return network_core::udp_match_message_type_info( true, true, channel ); }
+	static	inline	network_core::udp_match_message_type_info	get_message_type_info( SendingMessageType ) { return ordered_reliable( 0 ); }
+	static	inline	network_core::udp_match_message_type_info	get_message_type_info( ReceivedMessageType ) { return ordered_reliable( 0 ); }
+
 	virtual	network_core::udp_match_message_type_info	get_sending_message_info	( u8 message_type )
 	{
 		return get_message_type_info( ( SendingMessageType )message_type );
@@ -84,16 +90,6 @@ private:
 	{
 		return get_message_type_info( ( ReceivedMessageType )message_type );
 	}
-
-public:
-	inline	network_packets_orderer( ) { }
-
-private:
-	static	inline	network_core::udp_match_message_type_info	unreliable			( ) { return network_core::udp_match_message_type_info( false, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	reliable			( ) { return network_core::udp_match_message_type_info( true, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	ordered_reliable	( const u8 channel ) { return network_core::udp_match_message_type_info( true, true, channel ); }
-	static	inline	network_core::udp_match_message_type_info	get_message_type_info( SendingMessageType ) { return ordered_reliable( 0 ); }
-	static	inline	network_core::udp_match_message_type_info	get_message_type_info( ReceivedMessageType ) { return ordered_reliable( 0 ); }
 }; // class network_packets_orderer
 
 // comma in the template-id breaks the assert macro - alias first (the

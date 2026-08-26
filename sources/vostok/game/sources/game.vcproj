@@ -9012,10 +9012,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\statistics_item.h"
-				>
-			</File>
-			<File
 				RelativePath=".\stats.cpp"
 				>
 				<FileConfiguration

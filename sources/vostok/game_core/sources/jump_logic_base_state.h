@@ -23,17 +23,18 @@ struct weapon_animation_parameters;
 
 class jump_logic_base_state : public ai::fsm_state {
 public:
+	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
+
 	virtual				~jump_logic_base_state	( ) { /* no source */ }
 
 	virtual	void		set_user				( base_player& user ) { m_user = &user; }
 
 
-	typedef fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > animation_delegate;
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+	virtual	selected_animations_result_type
 						selected_animations		(
 							mutable_buffer&						buffer,
-							bool								is_third_view,
-							animation_delegate const&			look_calculator,
+							const bool						is_third_view,
+							fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > const& look_calculator,
 							weapon_animation_parameters const&	weapon_parameters
 						) = 0;
 

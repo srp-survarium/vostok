@@ -10,15 +10,15 @@
 
 namespace survarium {
 
-struct weapon_animation_parameters : public boost::noncopyable {
+struct weapon_animation_parameters : private boost::noncopyable {
 public:
 	inline		weapon_animation_parameters	(
-					float								arg_0,
-					float								arg_1,
-					float								arg_2,
-					animation::body_part_masks_enum		arg_3,
-					bool								arg_4,
-					bool								arg_5
+					const float							arg_0,
+					const float							arg_1,
+					const float							arg_2,
+					const animation::body_part_masks_enum	arg_3,
+					const bool							arg_4,
+					const bool							arg_5
 				) :
 					recoil_horizontal	( arg_0 ),
 					recoil_vertical		( arg_1 ),
@@ -28,15 +28,12 @@ public:
 					is_firing			( arg_5 )
 				{ }
 
-	inline		~weapon_animation_parameters( ) { }
-
-
 public:
 	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	float								recoil_horizontal;
-	/* 0x0004 */	float								recoil_vertical;
-	/* 0x0008 */	float								recoil_backward;
-	/* 0x000c */	animation::body_part_masks_enum		body_part_mask;
+	/* 0x0000 */	const float							recoil_horizontal;
+	/* 0x0004 */	const float							recoil_vertical;
+	/* 0x0008 */	const float							recoil_backward;
+	/* 0x000c */	const animation::body_part_masks_enum	body_part_mask;
 	/* 0x0010 */	bool								is_aimed;
 	/* 0x0011 */	bool								is_firing;
 }; // struct weapon_animation_parameters

@@ -17,7 +17,9 @@
 namespace survarium {
 
 class weapon_core_animation_end_aware_state : public weapon_core_base_state {
-public:
+	typedef weapon_core_base_state super;
+
+protected:
 	inline explicit			weapon_core_animation_end_aware_state( weapon_core& weapon, bool serialize_animation_state ) : weapon_core_base_state( weapon, serialize_animation_state ) { }
 
 protected:
@@ -32,6 +34,7 @@ protected:
 protected:
 			animation::callback_return_type_enum
 							on_animation_end				( animation::animation_callback_params& params );
+private:
 	virtual	void			on_animation_end_impl			( bool& animation_player_tick_result ) = 0;
 
 private:

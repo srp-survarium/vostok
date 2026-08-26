@@ -54,14 +54,6 @@ public:
 
 protected:
 	virtual	void				state_changed				( ) { /* no source */ }
-			anomaly_state*		select_state				( );
-
-			void				inc_energy					( float amount );
-			void				dec_energy					( float amount );
-
-			void				spawn_artefacts				( );
-
-private:
 	/* 0x0009 */	/* base_game_object */
 	/* 0x0000 */	/* link_resolver */
 	/* 0x0004 */	/* player_actions_subscriber */
@@ -87,6 +79,15 @@ private:
 	/* 0x0068 */	anomaly_state*						m_current_state;
 	/* 0x006c */	bool								m_was_zone_trigger_event;
 	/* 0x006d */	bool								m_was_shoot_trigger_event;
+
+			anomaly_state*		select_state				( );
+
+			void				inc_energy					( float amount );
+			void				dec_energy					( float amount );
+
+			void				spawn_artefacts				( );
+
+private:
 	/* 0x0070 */	physics::world*						m_physics_world;
 	/* 0x0074 */	survarium::scheduler*				m_scheduler;
 	/* 0x0078 */	scheduler::identifier				m_scheduler_identifier;

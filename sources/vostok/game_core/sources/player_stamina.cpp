@@ -103,8 +103,8 @@ void player_stamina::increase_value( const float amount )
 		m_lower_threshold_was_reached = false;
 }
 
-struct stamina_depletion_predicate : public boost::noncopyable {
-	inline	void	operator()					( player_stamina_subscriber* subscriber ) const
+struct stamina_depletion_predicate : private boost::noncopyable {
+	inline	void	operator()					( player_stamina_subscriber* const subscriber ) const
 	{
 		subscriber->subscription_callback( );
 	}

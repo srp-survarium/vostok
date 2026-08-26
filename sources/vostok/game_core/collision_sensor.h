@@ -34,8 +34,8 @@ public:
 
 	inline	bool					is_active						( ) const { /* no source */ }
 
-			bool					contact_test					( physics::base_physics_object* __formal );
 			void					contact_test					( physics::base_physics_object* object, physics::contact_test_predicate& predicate );
+			bool					contact_test					( physics::base_physics_object* __formal );
 
 	inline	void					dbg_render						( math::color const& arg_0 ) const { /* no source */ }
 
@@ -45,24 +45,30 @@ public:
 			collision_geometry*		get_collision_geometry			( u32 index );
 	inline	u32						collision_geometries_count		( ) const { return m_collision_geometries_count; }
 
+	typedef physics::base_physics_object* base_physics_object_ptr;
+	typedef buffer_vector< base_physics_object_ptr > local_container;
+	typedef vector< base_physics_object_ptr > objects_container;
+	typedef vector< collision_geometry* > collision_geometries;
+
 protected:	// claude@MATCH: target mangles these four overrides `MAE` (protected), not `UAE` - must be protected: to pair.
-	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_inside						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_leave						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_enter						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
+	virtual	void					on_objetcs_loosed				( vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 
 protected:
 			void					get_shapes_centers				( vectora<float3>& centers ) const;
 
 private:
-			void					notify_and_erase_left_objects	( buffer_vector<physics::base_physics_object *>& sensed_objects );
+			void					notify_and_erase_left_objects	( buffer_vector< physics::base_physics_object* >& sensed_objects );
 			void					notify_objects_inside			( );
-			void					notify_and_add_incoming_objects	( buffer_vector<physics::base_physics_object *>& sensed_objects );
+			void					notify_and_add_incoming_objects	( buffer_vector< physics::base_physics_object* >& sensed_objects );
 
-			void					filter_sensed_objects			( buffer_vector<physics::base_physics_object *>& sensed_objects );
+			void					filter_sensed_objects			( buffer_vector< physics::base_physics_object* >& sensed_objects );
 
+private:
+	/* 0x0008 */	objects_container						m_old_objects;
 protected:
-	/* 0x0008 */	vector< physics::base_physics_object* >	m_old_objects;
 	/* 0x0014 */	collision_geometry**					m_collision_geometries;
 	/* 0x0018 */	u32										m_collision_geometries_count;
 	/* 0x001c */	bool									m_is_active;

@@ -9,29 +9,30 @@ namespace survarium {
 
 class normal_random {
 public:
+	inline				normal_random	( ) : m_seed( 1 ) { }
 	inline	explicit	normal_random	( s32 arg_0 ) { /* no source */ }
-	inline	explicit	normal_random	( ) : m_seed( 1 ) { }
 
 			float		rand_n			( float sigma );
 
-	inline	void		set_seed		( s32 arg_0 ) { /* no source */ }
+	inline	void		set_seed		( const s32 arg_0 ) { /* no source */ }
 	inline	s32			seed			( ) const { return m_seed; }
 
+private:
 	inline	s32			maxI			( ) { return 32767; }
 
-	inline	s32			randI			( s32 arg_0, s32 arg_1 ) { /* no source */ }
-	inline	s32			randI			( s32 arg_0 ) { /* no source */ }
 	inline	s32			randI			( ) { return ( m_seed = m_seed * 0x343fd + 0x269ec3 ) >> 16 & 0x7fff; }
-	inline	s32			randIs			( s32 arg_0, s32 arg_1 ) { /* no source */ }
+	inline	s32			randI			( s32 arg_0 ) { /* no source */ }
+	inline	s32			randI			( s32 arg_0, s32 arg_1 ) { /* no source */ }
 	inline	s32			randIs			( s32 arg_0 ) { /* no source */ }
+	inline	s32			randIs			( s32 arg_0, s32 arg_1 ) { /* no source */ }
 
 	inline	float		maxF			( ) { return 32767.0f; }
 
-	inline	float		randF			( float arg_0, float arg_1 ) { /* no source */ }
-	inline	float		randF			( float arg_0 ) { /* no source */ }
 	inline	float		randF			( ) { return float( randI( ) ) / maxF( ); }
-	inline	float		randFs			( float arg_0, float arg_1 ) { /* no source */ }
+	inline	float		randF			( float arg_0 ) { /* no source */ }
+	inline	float		randF			( float arg_0, float arg_1 ) { /* no source */ }
 	inline	float		randFs			( float arg_0 ) { /* no source */ }
+	inline	float		randFs			( float arg_0, float arg_1 ) { /* no source */ }
 
 
 private:

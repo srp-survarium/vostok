@@ -14,6 +14,14 @@ namespace survarium {
 
 struct player_profile {
 public:
+	/* 0x0000 */	u32						account_id;
+	/* 0x0004 */	u32						profile_id;
+	/* 0x0008 */	char					profile_name[32];
+	/* 0x0028 */	skill_booster			boosters[11];
+	/* 0x0080 */	profile_slot			slots[max_slots_count];
+	/* 0x01b0 */	game_team_id			team;
+	/* 0x01b4 */	bool					is_local;
+
 			explicit	player_profile	( ) :
 				account_id	( 0 ),
 				profile_id	( 0 ),
@@ -25,15 +33,6 @@ public:
 
 	inline	void		serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
 			void		deserialize		( network_core::packet_reader& reader );
-
-public:
-	/* 0x0000 */	u32						account_id;
-	/* 0x0004 */	u32						profile_id;
-	/* 0x0008 */	char					profile_name[32];
-	/* 0x0028 */	skill_booster			boosters[11];
-	/* 0x0080 */	profile_slot			slots[max_slots_count];
-	/* 0x01b0 */	game_team_id			team;
-	/* 0x01b4 */	bool					is_local;
 }; // struct player_profile
 
 STATIC_SIZE_ASSERT(player_profile, 0x1B8);

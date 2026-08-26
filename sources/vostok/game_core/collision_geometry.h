@@ -30,13 +30,6 @@ class collision_geometry_subscriber;
 
 class collision_geometry : public base_game_object , public vostok::collision::game_object {
 public:
-	enum collision_geometry_mode
-	{
-		collision_geometry_mode_mesh_containment	= 0x0000,
-		collision_geometry_mode_mesh_intersection	= 0x0001,
-	};
-
-public:
 										collision_geometry				( );
 	virtual								~collision_geometry				( );
 
@@ -56,8 +49,8 @@ public:
 											object_type* ( collision_geometry_subscriber::* functor_ptr )( )
 										);
 
-			bool						contact_test					( );
 			void						contact_test					( physics::base_physics_object* object, physics::contact_test_predicate& predicate );
+			bool						contact_test					( );
 
 	inline	void						dbg_render						( math::color const& arg_0 ) const { /* no source */ }
 
@@ -73,11 +66,14 @@ private:
 			void						insert							( physics::world* world );
 			void						remove							( );
 
-private:
-	typedef std::vector< collision_geometry_subscriber* > collision_geometry_subscribers_type;
+	enum collision_geometry_mode
+	{
+		collision_geometry_mode_mesh_containment	= 0x0000,
+		collision_geometry_mode_mesh_intersection	= 0x0001,
+	};
 
 	/* 0x0004 */	physics::world*								m_physics_world;
-	/* 0x0008 */	collision_geometry_subscribers_type			m_subscribers;
+	/* 0x0008 */	std::vector< collision_geometry_subscriber* >	m_subscribers;
 	/* 0x0014 */	fixed_string<260>							m_name;
 	/* 0x0124 */	physics::bt_ghost_object*					m_ghost_object;
 	/* 0x0128 */	collision_geometry::collision_geometry_mode	m_mode;

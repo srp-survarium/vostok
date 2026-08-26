@@ -10,9 +10,6 @@
 namespace survarium {
 
 struct inventory_slot {
-	inline	inventory_slot	( ) { /* no source */ }
-	inline	~inventory_slot	( ) { /* no source */ }
-
 public:
 	/* 0x0000 */	inventory_item_ptr	item;
 }; // struct inventory_slot

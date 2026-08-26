@@ -17,7 +17,7 @@ struct player_profile;
 class items_dictionary;
 class victory_item_core;
 
-class inventory : public resources::unmanaged_resource , public boost::noncopyable {
+class inventory : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 												inventory					( );
 

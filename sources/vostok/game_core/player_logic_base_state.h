@@ -30,15 +30,17 @@ struct player_input;
 
 class player_logic_base_state : public ai::fsm_state {
 public:
+	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
+
 	explicit							player_logic_base_state		( weapon_user_animations_selector& owner, const weapon_user_state_enum weapon_user_state_id );
 
 	virtual	void						set_user					( base_player& user );
 
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+	virtual	selected_animations_result_type
 										selected_animations			(
 											mutable_buffer&						buffer,
 											weapon_animation_parameters const&	weapon_parameters,
-											bool								is_third_view
+											const bool							is_third_view
 										) const = 0;
 
 	// claude@NOTE: stub body must return a value or the abstract vtable fails LTCG
@@ -56,9 +58,6 @@ public:
 	inline	bool						is_smoothing_needed			( ) const { /* no source */ }
 	inline	bool						is_physics_transform_allowed( ) const { /* no source */ }
 
-	virtual								~player_logic_base_state	( ) { }
-
-
 protected:
 	// claude@MATCH: protected static -> mangled `K` (target). private would be `C`,
 	// public `S`; either mismatches the target's symbol so objdiff can't pair it.
@@ -73,9 +72,7 @@ protected:
 	/* 0x001c */	base_player*						m_user;
 
 
-private:
-
-	/* 0x0020 */	weapon_user_state_enum				m_weapon_user_state_id;
+	/* 0x0020 */	const weapon_user_state_enum		m_weapon_user_state_id;
 	/* 0x0024 */	bool								m_is_weapon_weapon_visible;
 	/* 0x0025 */	bool								m_is_smoothing_needed;
 	/* 0x0026 */	bool								m_is_physics_transform_allowed;

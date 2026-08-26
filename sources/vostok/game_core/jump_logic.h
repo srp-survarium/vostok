@@ -36,8 +36,11 @@ enum jump_animation_parts {
 
 u32 get_jump_animation_index( const move_direction_enum move_direction, const bool jump_from_right_leg, const jump_animation_parts animation_part );
 
-class jump_logic : public core::noncopyable {
+class jump_logic : private core::noncopyable {
 public:
+	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
+	typedef boost::function< void( resources::managed_resource_ptr const&, pcstr ) > animation_callback_type;
+
 			explicit							jump_logic				( weapon_user_animations_selector& owner );
 												~jump_logic				( );
 
@@ -46,7 +49,7 @@ public:
 
 	inline	weapon_user_animations_selector&	owner					( ) const { return m_owner; }
 
-			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+			selected_animations_result_type
 												selected_animations		( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const;
 
 			void								tick					( );

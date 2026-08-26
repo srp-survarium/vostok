@@ -41,6 +41,14 @@ protected:
 							pcstr									hands_jump_animation_id
 						);
 
+	enum {
+		views_count				= 2,
+		user_states_count		= 2,
+		weapon_animations_count	= 4,
+		user_animations_count	= 4,
+		total_animations_count	= 8,
+	};
+
 public:
 	virtual	void		initialize						( ) override { }
 	virtual	void		execute							( ) override { m_animation_playback_state->reset( ); }
@@ -55,25 +63,31 @@ public:
 						animation::mixing::animation_lexeme&	weight_driving_animation
 					) const;
 
-	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* animation_playback_state ) { m_animation_playback_state = animation_playback_state; }
+	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* const animation_playback_state ) { m_animation_playback_state = animation_playback_state; }
 
+
+protected:
 	inline	bool	deserializing						( ) const { /* no source */ }
+
+	/* 0x0000 */	/* ai::fsm_state */
+	/* 0x0018 */	/* resources::unmanaged_resource */
+	/* 0x0120 */	weapon_core&							m_weapon;
+	/* 0x0124 */	mutable resources::managed_resource_ptr	m_animation_to_wait_for;
 
 private:
 			weapon_lexeme_pair
 					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const;
 
-protected:
-	/* 0x0000 */	/* ai::fsm_state */
-	/* 0x0018 */	/* resources::unmanaged_resource */
-	/* 0x0120 */	weapon_core&							m_weapon;
-	/* 0x0124 */	mutable resources::managed_resource_ptr	m_animation_to_wait_for;
-	/* 0x0128 */	resources::managed_resource_ptr			m_weapon_animations[2][2];
-	/* 0x0138 */	resources::managed_resource_ptr			m_user_animations[2][2];
+	friend class weapon_core_shotgun_reload_start_substate;
+	friend class weapon_core_shotgun_reload_one_round_substate;
+	friend class weapon_core_shotgun_reload_finish_substate;
+
+	/* 0x0128 */	resources::managed_resource_ptr			m_weapon_animations[views_count][user_states_count];
+	/* 0x0138 */	resources::managed_resource_ptr			m_user_animations[views_count][user_states_count];
 	/* 0x0148 */	animation::animation_playback_state*	m_animation_playback_state;
-	/* 0x014c */	float									m_animation_timescale;
+	/* 0x014c */	const float							m_animation_timescale;
 	/* 0x0150 */	animation::mixing::playback_enum		m_playback_type;
-	/* 0x0154 */	u32										m_time_synchronization_group;
+	/* 0x0154 */	const u32							m_time_synchronization_group;
 	/* 0x0158 */	pcstr									m_animation_id;
 	/* 0x015c */	pcstr									m_hand_animation_captions[3];
 }; // class weapon_core_shotgun_reload_base_substate

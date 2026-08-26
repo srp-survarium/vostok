@@ -8,6 +8,17 @@
 namespace survarium {
 
 struct breath_holding_params {
+	/* 0x0000 */	float		max_breath_holding_time;
+	/* 0x0004 */	float		shortbreathing_repair_time;
+	/* 0x0008 */	float		breath_holding_multiplier;
+	/* 0x000c */	float		shortbreathing_multiplier;
+	/* 0x0010 */	float		multiplier_increase_speed;
+	/* 0x0014 */	float		multiplier_decrease_speed;
+	/* 0x0018 */	float		horizontal_amplitude;
+	/* 0x001c */	float		vertical_amplitude;
+	/* 0x0020 */	float		horizontal_peroid;
+	/* 0x0024 */	float		vertical_peroid;
+
 	inline	explicit	breath_holding_params	( ) :
 		max_breath_holding_time		( 2.5f ),
 		shortbreathing_repair_time	( 6.0f ),
@@ -46,19 +57,6 @@ struct breath_holding_params {
 		if ( cfg.value_exists( "vertical_peroid" ) )
 			vertical_peroid = (float)cfg["vertical_peroid"];
 	}
-
-
-public:
-	/* 0x0000 */	float		max_breath_holding_time;
-	/* 0x0004 */	float		shortbreathing_repair_time;
-	/* 0x0008 */	float		breath_holding_multiplier;
-	/* 0x000c */	float		shortbreathing_multiplier;
-	/* 0x0010 */	float		multiplier_increase_speed;
-	/* 0x0014 */	float		multiplier_decrease_speed;
-	/* 0x0018 */	float		horizontal_amplitude;
-	/* 0x001c */	float		vertical_amplitude;
-	/* 0x0020 */	float		horizontal_peroid;
-	/* 0x0024 */	float		vertical_peroid;
 }; // struct breath_holding_params
 
 STATIC_SIZE_ASSERT(breath_holding_params, 0x28);

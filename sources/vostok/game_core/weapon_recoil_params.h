@@ -15,10 +15,8 @@ namespace survarium {
 
 struct weapon_recoil_params {
 public:
-	weapon_recoil_params( configs::binary_config_value const& cfg );
-
 	weapon_recoil_params( );
-
+	explicit weapon_recoil_params( configs::binary_config_value const& cfg );
 
 public:
 	/* 0x0000 */	float		first_shoot_side_recoil;

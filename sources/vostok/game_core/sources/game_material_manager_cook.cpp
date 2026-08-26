@@ -112,7 +112,7 @@ void game_material_manager_cook::create_game_material_pairs(
 
 	user_datas.resize( 2 * pairs_root.size( ) );
 	u32 ud_idx = 0;
-	vector< query_ext_data >* ext_pair_data = VOSTOK_NEW_IMPL( g_allocator, vector< query_ext_data > );	// sushi@TODO: Is this vector leaked?
+	ext_data_vec* ext_pair_data = VOSTOK_NEW_IMPL( g_allocator, ext_data_vec );	// sushi@TODO: Is this vector leaked?
 
 	for ( ; it != end ; it++ )
 	{
@@ -215,7 +215,7 @@ void game_material_manager_cook::create_game_material_pairs(
 // claude@NOTE: target has one extra statement - a bare `jmp` (5 bytes) closing the decal1 block in
 // the if/else-if chain; base folds that jump into the decal2 else-if. Same source shape; a codegen
 // quirk of the first else-if arm, not steerable. Rest is LOG_ERROR / VOSTOK_DELETE inline residual.
-void game_material_manager_cook::on_decals_loaded( resources::queries_result& data, vector< query_ext_data >* ext_data )
+void game_material_manager_cook::on_decals_loaded( resources::queries_result& data, ext_data_vec* ext_data )
 {
 	if ( !data.is_successful( ) ) // sushi@TODO: I think this is the first place where multiple queries are processed?
 	{

@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include <vostok/game_core/animation_analyzer.h>
+#include <vostok/game_core/leg_info.h>
 
 namespace survarium {
 

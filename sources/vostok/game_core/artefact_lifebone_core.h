@@ -40,7 +40,7 @@ private:
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; /* no source */ }
 
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
@@ -52,8 +52,8 @@ private:
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
-													u32									user_matrices_count,
-													u32									current_time_in_ms,
+												const u32							user_matrices_count,
+												const u32							current_time_in_ms,
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
@@ -74,12 +74,12 @@ private:
 
 	virtual	bool								is_sprinting				( ) const override { return true; /* no source */ }
 public:
-	enum { DAMAGE_PROTECTORS = 4 };
+	enum { protects_count = 4 };
 
 private:
 	/* 0x0000 */	/* artefact_base */
 	/* 0x0120 */	/* damage_protector */
-	/* 0x0170 */	damage_protector		m_damage_protectors[DAMAGE_PROTECTORS];
+	/* 0x0170 */	damage_protector		m_damage_protectors[protects_count];
 	/* 0x02b0 */	bool					m_unlimited;
 	/* 0x02b1 */	bool					m_passive_mode;
 	/* 0x02b4 */	u32						m_cooldown_ms;

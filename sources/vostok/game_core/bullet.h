@@ -35,20 +35,20 @@ enum collision_result {
 	collision_result_reflected		= 0x3,
 };
 
-class bullet : public boost::noncopyable {
+class bullet : private boost::noncopyable {
 public:
-	explicit							bullet						( bullet const& other );
 	explicit							bullet						(
 											bullet_manager&					bullet_manager,
 											float3 const&					position,
 											float3 const&					velocity,
-											u32								born_time_in_ms,
+											const u32						born_time_in_ms,
 											float							air_resistance,
 											weapon_ammunition_ptr const&	wa,
 											weapon_core const&				wc,
 											hit_initiator const* const		initiator,
 											hit_receiver const*	const		ignorable_object
 										);
+	explicit							bullet						( bullet const& other );
 										~bullet						( );
 
 			void						tick						( u32 current_time_in_ms );
@@ -63,8 +63,8 @@ public:
 
 	inline	u8							get_initiator_id			( ) const { return m_initiator->id; }
 
-	inline	void						last_hitted_body_part		( body_part_parameters* last_hitted_body_part ) { m_last_hitted_body_part = last_hitted_body_part; }
 	inline	body_part_parameters*		last_hitted_body_part		( ) const { return m_last_hitted_body_part; }
+	inline	void						last_hitted_body_part		( body_part_parameters* const last_hitted_body_part ) { m_last_hitted_body_part = last_hitted_body_part; }
 
 private:
 			float3						compute_parabolic_velocity	( float time, float3 const& gravity );
@@ -80,7 +80,7 @@ private:
 											float3 const&		gravity
 										);
 
-			float						get_check_time				( float start_low, float high, float3 const& gravity );
+			float						get_check_time				( const float start_low, float high, float3 const& gravity );
 			float						get_check_time_in_vacuum	( float start_low, float high, float3 const& gravity );
 
 			float						compute_max_error			( float low, float high, float3 const& gravity );
@@ -101,7 +101,7 @@ private:
 											float&					collision_time,
 											float					start_time,
 											float					current_time,
-											triangle_orientation	orientation,
+											const triangle_orientation orientation,
 											float3 const&			triangle_normal,
 											float3 const&			gravity
 										);

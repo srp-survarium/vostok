@@ -40,10 +40,19 @@ public:
 			void				insert						( physics::world* world );
 			void				remove						( );
 
+	typedef intrusive_list<
+		usable_object_user_data,
+		usable_object_user_data*,
+		&usable_object_user_data::next,
+		threading::single_threading_policy,
+		size_policy,
+		no_debug_policy
+	> usable_object_users;
+
 protected:
 	/* 0x0000 */	/* collision_geometry_subscriber */
 	/* 0x0004 */	/* link_resolver */
-	/* 0x0008 */	usable_object_user_data_list	m_usable_object_users;
+	/* 0x0008 */	usable_object_users			m_usable_object_users;
 	/* 0x0018 */	collision_geometry**			m_collision_geometries;
 	/* 0x001c */	u32								m_collision_geometries_count;
 }; // class usable_object

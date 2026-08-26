@@ -11,6 +11,8 @@
 namespace survarium {
 
 class weapon_core_idle_state_base : public weapon_core_base_state {
+	typedef weapon_core_base_state super;
+
 protected:
 			explicit	weapon_core_idle_state_base	( weapon_core& weapon );
 

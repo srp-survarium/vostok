@@ -11,15 +11,15 @@ namespace survarium {
 
 struct weapon_lexeme_pair {
 public:
-	inline	explicit	weapon_lexeme_pair	(
-							animation::mixing::animation_lexeme const& main_lexeme,
-							animation::mixing::animation_lexeme const& offset_lexeme
-						) : main_lexeme( main_lexeme ), offset_lexeme( offset_lexeme ) { }
-	inline				~weapon_lexeme_pair	( ) { /* no source */ }
+	typedef animation::mixing::animation_lexeme lexeme_type;
 
+	inline	explicit	weapon_lexeme_pair	(
+							lexeme_type const& main_lexeme,
+							lexeme_type const& offset_lexeme
+						) : main_lexeme( main_lexeme ), offset_lexeme( offset_lexeme ) { }
 public:
-	/* 0x0000 */	animation::mixing::animation_lexeme	main_lexeme;
-	/* 0x0084 */	animation::mixing::animation_lexeme	offset_lexeme;
+	/* 0x0000 */	lexeme_type	main_lexeme;
+	/* 0x0084 */	lexeme_type	offset_lexeme;
 }; // struct weapon_lexeme_pair
 
 // STATIC_SIZE_ASSERT(weapon_lexeme_pair, 0x108); sushi@TODO

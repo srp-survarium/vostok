@@ -25,6 +25,12 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_chamber_a_round_state : public weapon_core_chamber_a_round_state_base {
+	typedef weapon_core_chamber_a_round_state_base super;
+	enum { views_count = 2, user_states_count = 2, weapon_animations_count = 4, user_animations_count = 4, total_animations_count = 8 };
+
+protected:
+	static resources::class_id_enum const resource_class = resources::weapon_chamber_a_round_state_class;
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected, non-const
 			explicit							weapon_core_chamber_a_round_state(

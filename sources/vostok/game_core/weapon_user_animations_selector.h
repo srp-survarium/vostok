@@ -30,8 +30,12 @@ struct base_player;
 class player_logic_base_state;
 struct weapon_animation_parameters;
 
-class weapon_user_animations_selector : public boost::noncopyable {
+class weapon_user_animations_selector : private boost::noncopyable {
 public:
+	typedef boost::function< void( resources::managed_resource_ptr const&, pcstr ) > animation_callback_type;
+	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
+	enum { c_move_animation_user_data = 1 };
+
 	explicit				weapon_user_animations_selector	( );
 							~weapon_user_animations_selector( );
 
@@ -41,21 +45,19 @@ public:
 							animations						( ) const { return *m_animations; }
 
 public:
-	typedef boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> animation_functor;
-
-			void			set_animation_callback			(
-								animation::reserved_channel_ids_enum	channel_id,
-								pcvoid									callback_uid,
-								animation_functor const&				animation_callback
-							);
 			void			set_animation_callback			(
 								pcstr						channel_id,
 								pcvoid						callback_uid,
-								animation_functor const&	animation_callback
+								boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback
+							);
+			void			set_animation_callback			(
+								animation::reserved_channel_ids_enum	channel_id,
+								pcvoid									callback_uid,
+								boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback
 							);
 
-			void			remove_animation_callback		( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid );
 			void			remove_animation_callback		( pcstr channel_id, pcvoid callback_uid );
+			void			remove_animation_callback		( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid );
 
 public:
 			void			serialize						( network_core::udp_match_packet& packet ) const;
@@ -66,7 +68,7 @@ public:
 			bool			is_sprinting					( ) const;
 			bool			is_in_jump						( ) const;
 
-			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+			selected_animations_result_type
 							selected_animations				( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const;
 
 			void			activate						(
@@ -80,9 +82,9 @@ public:
 			void			tick							( );
 
 public:
-	typedef fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > look_time_functor;
 			float				look_time_factor			( ) const;
-			look_time_functor	look_time_calculator		( ) const;
+			fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >
+							look_time_calculator		( ) const;
 
 public:
 			weapon_user_state_enum		get_current_state_id			( ) const;
@@ -93,9 +95,10 @@ public:
 	inline	bool			is_right_leg_supporting			( ) const { return m_right_leg_is_supporting; }
 
 	inline	void			set_player_logic_initial_state	( player_logic_base_state* value ) { m_player_logic_initial_state = value; }
-	inline	void			set_forced_not_to_sprint		( bool arg_0 ) { /* no source */ }
 
 private:
+	inline	void			set_forced_not_to_sprint		( const bool arg_0 ) { /* no source */ }
+
 	// claude@MATCH: target mangling `ABE` -> private const.
 			player_logic_base_state&		current_state	( ) const;
 

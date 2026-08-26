@@ -14,6 +14,8 @@ class victory_item_core;
 
 class victory_items_container_core : public usable_object {
 public:
+	typedef usable_object super;
+
 			explicit				victory_items_container_core	( );
 
 	virtual	void					load							( configs::binary_config_value const& cfg ) override;
@@ -30,12 +32,7 @@ public:
 	inline	bool					empty							( ) { return m_victory_items.empty( ); }
 	inline	u8						id								( ) { return m_container_id; }
 
-	// claude@NOTE: ??1 parked - declared per the PDB class decl, but /GL inlines it
-	// into the deleting dtors (??_E/??_G) at every site, so no standalone base COMDAT;
-	// the target keeps a custom-convention (this-in-esi) standalone copy.
-	virtual							~victory_items_container_core	( ) { }
-
-private:
+public:
 	// network_client clears m_victory_items directly (on_world_sync_request);
 	// PDB does not record friendship, codegen-neutral
 	friend class network_client;

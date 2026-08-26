@@ -39,10 +39,10 @@ public:
 	virtual	bool	attach_tracer			( bullet* bullet ) = 0;
 	virtual	bool	detach_tracer			( bullet* bullet ) = 0;
 	virtual	void	update_tracer			(
-						u16					tracer_idx,
+						const u16			tracer_idx,
 						float3 const&		position,
 						float3 const&		direction,
-						float				length
+						const float			length
 					) = 0;
 }; // class bullet_manager_engine
 

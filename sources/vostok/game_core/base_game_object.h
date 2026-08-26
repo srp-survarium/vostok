@@ -7,7 +7,7 @@
 
 namespace survarium {
 
-class base_game_object : public boost::noncopyable {
+class base_game_object : private boost::noncopyable {
 }; // class base_game_object
 
 } // namespace survarium

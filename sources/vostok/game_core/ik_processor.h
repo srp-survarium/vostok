@@ -13,7 +13,7 @@ namespace animation {
 
 namespace survarium {
 
-class ik_processor : public core::noncopyable {
+class ik_processor : private core::noncopyable {
 protected:
 			explicit	ik_processor	( );
 			void		activate		( animation::skeleton const& skeleton );

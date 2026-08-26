@@ -25,6 +25,12 @@ namespace survarium {
 class weapon_core;
 
 class double_barreled_weapon_core_hide_state : public weapon_core_hide_state_base {
+	typedef weapon_core_hide_state_base super;
+	enum { views_count = 2, weapon_states_count = 3, user_states_count = 2, weapon_animations_count = 12, user_animations_count = 4, total_animations_count = 16 };
+
+protected:
+	static resources::class_id_enum const resource_class = resources::double_barreled_weapon_hide_state_class;
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected, non-const
 			explicit							double_barreled_weapon_core_hide_state(
@@ -55,15 +61,11 @@ private:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
-public:
-	virtual	~double_barreled_weapon_core_hide_state	( ) { /* no source */ }
-
-
 private:
 	/* 0x0000 */	/* weapon_core_hide_state_base */
 	/* 0x0148 */	resources::managed_resource_ptr		m_weapon_animations[2][2][3];
 	/* 0x0178 */	resources::managed_resource_ptr		m_user_animations[2][2];
-	/* 0x0188 */	float								m_time_scale;
+	/* 0x0188 */	const float						m_time_scale;
 
 	template < typename T > friend class weapon_core_state_cook_template;
 }; // class double_barreled_weapon_core_hide_state

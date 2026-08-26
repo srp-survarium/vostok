@@ -13,7 +13,7 @@ void scheduler::on_frame( scheduler::record& record, const u32 frame_delta, cons
 	if ( current_time <= last_update_time )
 		return;
 
-	if ( record.m_type == 0 )
+	if ( record.m_type == type_on_frame )
 	{
 		record.m_last_update_time = current_time;
 		record.m_callback( frame_delta, current_time );
@@ -32,7 +32,7 @@ void scheduler::on_frame( scheduler::record& record, const u32 frame_delta, cons
 	ASSERT( UNKNOWN_EXPRESSION_T( record.m_id ) );
 
 	scheduler::identifier* id = record.m_id;
-	scheduler::callback callback = record.m_callback;
+	scheduler::callback_type callback = record.m_callback;
 	for ( s32 i = 0 ; i < count && id->m_active ; ++i )
 		callback( update_delta, current_time );
 }

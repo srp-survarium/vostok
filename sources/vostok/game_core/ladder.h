@@ -6,6 +6,7 @@
 #define LADDER_H_INCLUDED
 
 #include <vostok/game_core/usable_object.h>
+#include <vostok/game_core/landing_point.h>
 #include <vostok/math_plane.h>
 
 namespace vostok {
@@ -16,13 +17,12 @@ namespace physics {
 
 namespace survarium {
 
-class landing_point;
 class base_project;
-
-typedef intrusive_list< landing_point, landing_point *, 0, threading::single_threading_policy, size_policy, no_debug_policy >	landing_point_list;
 
 class ladder : public resources::unmanaged_resource , public usable_object {
 public:
+	typedef usable_object super;
+
 												ladder					( resources::managed_resource_ptr const& main_animation, math::plane const& p );
 	virtual										~ladder					( );
 
@@ -40,10 +40,12 @@ public:
 			void								add_landing_point		( landing_point* const new_point );
 			landing_point*						pop_landing_point		( );
 
-	inline	landing_point const*				select_landing_point	( float3 const& arg_0, bool arg_1 ) const { /* no source */ }
+	inline	landing_point const*				select_landing_point	( float3 const& arg_0, const bool arg_1 ) const { /* no source */ }
 	inline	landing_point const*				select_attachment_point	( float3 const& arg_0 ) const { /* no source */ }
 
 	inline	resources::managed_resource_ptr		get_animation			( ) const { return m_main_animation; }
+
+	typedef intrusive_list< landing_point, landing_point*, &landing_point::next, threading::single_threading_policy, size_policy, no_debug_policy > landing_points_type;
 
 private:
 	class ladder_occluder : public usable_object {
@@ -57,7 +59,7 @@ private:
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* usable_object */
-	/* 0x0128 */	landing_point_list					m_landing_points;
+	/* 0x0128 */	landing_points_type					m_landing_points;
 	/* 0x0138 */	resources::managed_resource_ptr		m_main_animation;
 	/* 0x013c */	math::plane							m_plane;
 	/* 0x014c */	ladder::ladder_occluder*			m_occluder;

@@ -10,7 +10,7 @@ namespace survarium {
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_inactive::selected_animations(
 	mutable_buffer&						buffer,
 	const bool								__formal1,
-	animation_delegate const&			__formal2,
+	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const& __formal2,
 	weapon_animation_parameters const&	__formal3
 )
 {
