@@ -481,6 +481,8 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 			m_lobby_scene_ready		= true;
 			break;
 		}
+		default:
+			return;
 	}
 
 	if ( m_lobby_scene_ready && m_login_scene_ready )
@@ -803,7 +805,7 @@ void game::clear_resources( )
 
 	if ( m_network_client )
 	{
-		m_network_client->unload	( );
+		m_network_client->disconnect( );
 		DELETE						( m_network_client );
 	}
 
