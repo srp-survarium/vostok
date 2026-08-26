@@ -18,12 +18,6 @@ const D3D_INPUT_ELEMENT_DESC layout[] =
 
 using namespace SpeedTree;
 
-speedtree_tree_component_billboard::speedtree_tree_component_billboard( speedtree_tree& parent ) :
-	speedtree_tree_component( parent ),
-	m_is_init( false )
-{
-}
-
 void speedtree_tree_component_billboard::init(
 	speedtree_forest& forest,
 	SpeedTree::CArray<SpeedTree::CInstance, 1> const& instances_of_tree
@@ -84,6 +78,12 @@ void speedtree_tree_component_billboard::init(
 	m_render_geometry.geom				= resource_manager::ref().create_geometry( &*decl, stride, *vb, *ib);
 
 	m_is_init							= true;
+}
+
+speedtree_tree_component_billboard::speedtree_tree_component_billboard( speedtree_tree& parent ) :
+	speedtree_tree_component( parent ),
+	m_is_init( false )
+{
 }
 
 void speedtree_tree_component_billboard::set_material( material_ptr mtl_ptr )

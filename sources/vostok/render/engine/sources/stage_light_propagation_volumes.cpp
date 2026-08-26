@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "stage_light_propagation_volumes.h"
 
-#include "remove_model_if_in_frustum_predicate.h"
-
 #include <vostok/collision/object.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
@@ -36,6 +34,18 @@
 
 namespace vostok {
 namespace render {
+
+struct remove_model_if_in_frustum_predicate {
+	explicit remove_model_if_in_frustum_predicate( math::frustum& frustum ) :
+		m_frustum( &frustum )
+	{
+	}
+
+	bool operator()( lpv_render_surface const& surface );
+
+	math::frustum* m_frustum;
+};
+STATIC_SIZE_ASSERT( remove_model_if_in_frustum_predicate, 0x4 );
 
 struct screen_vertex {
 	float4	position;
