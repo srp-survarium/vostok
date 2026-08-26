@@ -22,8 +22,7 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 
 	grass_world* result = NEW( grass_world );
 
-	configs::binary_config_value const& config = *loading_data->t_current;
-	u8 const layers_count = (u8)config["layers"].size( );
+	u8 const layers_count = (u8)(*loading_data->t_current)["layers"].size( );
 
 	grass_cook_data* cook_data = NEW( grass_cook_data );
 	cook_data->desc = NEW_ARRAY( grass_layer_desc*, layers_count );
@@ -41,7 +40,7 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 		grass_layer_desc* layer_desc = cook_data->desc[i];
 		grass_layer_data* layer_data = cook_data->data[i];
 
-		configs::binary_config_value const& t = config["layers"][i];
+		configs::binary_config_value const& t = (*loading_data->t_current)["layers"][i];
 		requests[i].id = resources::raw_data_class;
 
 		if ( t.value_exists( "intermediate_filename" ) )

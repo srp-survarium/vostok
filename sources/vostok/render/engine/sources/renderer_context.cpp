@@ -33,7 +33,6 @@ static vostok::console_commands::cc_float s_cc_shadow_map_z_bias(
 namespace vostok {
 namespace render {
 
-// claude@NOTE: texture destruction is inlined only in the target reset loop.
 renderer_context::renderer_context( ) :
 	m_targets				( NULL ),
 	m_t_null				( NULL ),
