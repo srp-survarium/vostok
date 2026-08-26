@@ -8,6 +8,7 @@
 #include "base_game_scene.h"
 #include "base_network_client.h"
 #include "game.h"
+#include "game_action_descr.h"
 #include "key_binder.h"
 #include "options_tab.h"
 #include "options_item_base.h"
@@ -17,7 +18,6 @@
 #include "options_name_to_label.h"
 #include "main_menu_button_name_to_action.h"
 #include "key_bind_descr.h"
-#include "keyboard_key_descr.h"
 
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
@@ -328,15 +328,27 @@ void game_options::fill_settings_data( )
 	controllers_options_labels[0] = "st_mouse_invertion_option";
 	controllers_options_labels[1] = "st_mouse_sensitivity_option";
 
-	fixed_string< 64 >* const options_labels_table[4]	= { gameplay_options_labels, video_options_labels, sound_options_labels, controllers_options_labels };
-	u8 const options_counts[4]							= { 9, 19, 7, 2 };
-
-	flash_value options_args[2];
 	for ( u32 i = 0; i < 4; ++i )
 	{
-		fixed_string< 64 >* options_labels	= options_labels_table[i];
-		u8 options_count					= options_counts[i];
+		fixed_string< 64 >* options_labels = NULL;
+		u8 options_count = 0;
+		switch ( i )
+		{
+			case 0:
+				options_labels = gameplay_options_labels, options_count = 9;
+				break;
+			case 1:
+				options_labels = video_options_labels, options_count = 19;
+				break;
+			case 2:
+				options_labels = sound_options_labels, options_count = 7;
+				break;
+			case 3:
+				options_labels = controllers_options_labels, options_count = 2;
+				break;
+		}
 
+		flash_value options_args[2];
 		options_args[0].SetUInt( i );
 		m_options_ui->movie->CreateArray( &options_args[1] );
 
@@ -422,21 +434,65 @@ void game_options::tick( const u32 frame_delta, const u32, const bool )	// PDB: 
 	m_cursor_ui->movie->Advance( deltaTime, 0 );
 }
 
-// STATE[STUB]
-// claude@NOTE: resolves dik -> keyboard_key_descr via key_binder::dik_to_ptr, then walks
-// key_bind_descriptions[33] collecting conflicting actions into m_conflicted_action_ids (a
-// profile_slot_enum vector whose growth inlines stlp_std _M_insert_overflow_aux + the
-// m_key_bindings group-mask overlap test). When no conflict it calls assign_binding directly;
-// otherwise it builds a wide conflict message (translate_text + repeated wcscat_s over the
-// conflicting action names) and Invokes "root.show_reassign_message"/"root.end_keybind".
-// PARKED: the conflict-detection vector ops + group-mask test are inlined from key_binder
-// internals (m_key_bindings is private; the overlap uses [binding+8] masks) and the wcscat_s
-// message loop needs byte validation against the dual m_conflicted_action_ids walk. Locals
-// (dik/binder/key_name/message_txt/w_text/action_txt) match. Next: validate the vector
-// push_back inline + the two-pass message build before bodying.
 bool game_options::process_key_input( s32 dik )
 {
-	return false;
+	if ( dik == input::key_escape )
+		return true;
+
+	key_binder& binder = m_game.get_key_binder( );
+	pcstr key_name = binder.dik_to_keyname( dik );
+	if ( !key_name )
+		return false;
+
+	m_conflicted_action_ids.clear( );
+	for ( u32 i = 0; i < 33; ++i )
+	{
+		if ( m_waiting_for_bind_action != key_bind_descriptions[i].action_id )
+		{
+			if ( !strings::compare( key_bind_descriptions[i].new_binded_key.c_str( ), key_name ) &&
+				( binder.m_key_bindings[key_bind_descriptions[i].action_id].m_action->key_group &
+				binder.m_key_bindings[m_waiting_for_bind_action].m_action->key_group ) )
+			{
+				m_conflicted_action_ids.push_back( key_bind_descriptions[i].action_id );
+			}
+		}
+	}
+
+	if ( !m_conflicted_action_ids.empty( ) )
+	{
+		m_conflicted_key_name = key_name;
+		m_conflicted_action_to_bind = m_waiting_for_bind_action;
+
+		flash_value message_txt;
+		wchar_t w_text[512];
+		m_game.text_translator( ).translate_text( "st_conflict_message", w_text );
+		wcscat_s( w_text, sizeof( w_text ), L"\n" );
+
+		for ( vector< game_action_id >::iterator it = m_conflicted_action_ids.begin( ); it != m_conflicted_action_ids.end( ); ++it )
+		{
+			wchar_t action_txt[512];
+			for ( u32 i = 0; i < 33; ++i )
+			{
+				if ( *it == key_bind_descriptions[i].action_id )
+					m_game.text_translator( ).translate_text( key_bind_descriptions[i].str_description, action_txt );
+			}
+
+			wcscat_s( w_text, sizeof( w_text ), L"\"" );
+			wcscat_s( w_text, sizeof( w_text ), action_txt );
+			wcscat_s( w_text, sizeof( w_text ), L"\"" );
+
+			if ( it != m_conflicted_action_ids.end( ) - 1 )
+				wcscat_s( w_text, sizeof( w_text ), L",\n" );
+		}
+
+		message_txt.SetStringW( w_text );
+		m_options_ui->movie->Invoke( "root.show_reassign_message", NULL, &message_txt, 1 );
+		finish_binding( );
+		return false;
+	}
+
+	assign_binding( m_waiting_for_bind_action, key_name );
+	return true;
 }
 
 void game_options::assign_binding( game_action_id action_id, pcstr key )
@@ -570,6 +626,7 @@ void game_options::refill_item_data( u8 options_tab_id, u8 options_item_id )
 
 void game_options::initialize_bindings( )
 {
+	flash_value keybinds_value_prop;
 	flash_value keybinds_array;
 	m_options_ui->movie->CreateArray( &keybinds_array );
 
@@ -578,7 +635,6 @@ void game_options::initialize_bindings( )
 		flash_value keybinds_value;
 		m_options_ui->movie->CreateObject( &keybinds_value );
 
-		flash_value keybinds_value_prop;
 		keybinds_value_prop.SetUInt( key_bind_descriptions[i].action_id );
 		keybinds_value.SetMember( "action_id", keybinds_value_prop );
 
