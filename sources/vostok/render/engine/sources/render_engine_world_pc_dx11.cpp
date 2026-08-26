@@ -1029,11 +1029,7 @@ void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v,
 
 void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bool value )
 {
-
 	VOSTOK_UNREFERENCED_PARAMETERS( v, value );
-	//render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	//polymorph_vector_base<render_model_instance> const* render_models = model->get_models_();
-	//system_renderer::ref().set_model_ghost_mode( *render_models, value);
 }
 
 void engine::world::update_model_vertex_buffer( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments )

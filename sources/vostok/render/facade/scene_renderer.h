@@ -358,6 +358,91 @@ inline void scene_renderer::set_editor_mode( base_scene_ptr const& scene, bool i
 	);
 }
 
+inline void scene_renderer::clear_grass( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::clear_grass,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::populate_grass( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::populate_grass,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::add_grass_layer(
+	grass_layer_desc*		desc,
+	grass_layer_data*		data,
+	base_scene_ptr const&	scene
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::add_grass_layer,
+				&m_render_engine_world,
+				desc,
+				data,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::update_grass_layer(
+	grass_layer_desc*		desc,
+	grass_layer_data*		data,
+	base_scene_ptr const&	scene,
+	bool					is_set
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::update_grass_layer,
+				&m_render_engine_world,
+				desc,
+				data,
+				scene,
+				is_set
+			)
+		)
+	);
+}
+
+inline void scene_renderer::remove_grass_layer( u8 id, base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_grass_layer,
+				&m_render_engine_world,
+				id,
+				scene
+			)
+		)
+	);
+}
+
 } // namespace render
 } // namespace vostok
 
