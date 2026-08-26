@@ -37,12 +37,10 @@
 #define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 #define DELETE_ARRAY( pointer ) VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, pointer )
 
-// claude@NOTE: g_num_monitors is defined by render/core/dx11 (device.h names this file as
-// its reader), but including that header drags d3d11/windows into a game TU and the winsdk
-// ole2.h/ocidl.h then fail on MSG (C2061). Declared here instead.
 namespace vostok {
 namespace render {
 	extern int g_num_monitors;
+	extern math::int2 g_monitor_resolutions[ 6 ][ 512 ];
 } // namespace render
 } // namespace vostok
 
@@ -52,11 +50,6 @@ namespace survarium {
 // .rdata and are recovered separately; the code here only relocates the symbol.
 graphic_preset g_graphic_presets[ 5 ][ 10 ];
 
-// claude@NOTE: structure matches (3 stmts: find, null-check, LOG_ERROR). Byte
-// residual is the flash_function_handler base ctor, which the target INLINES (the
-// Scaleform GlobalHeap alloc + flash_function_handler_impl construction); our
-// scaleform::flash_function_handler::flash_function_handler is an out-of-line stub
-// in value.cpp so the compiler emits a call instead - a cross-module scaleform cap.
  options_item_base::options_item_base(
 	options_tab&				parent_tab,
 	pcstr						console_command,
@@ -73,11 +66,6 @@ graphic_preset g_graphic_presets[ 5 ][ 10 ];
 		LOG_ERROR( "Console command [%s] not found for options_item [%d]", console_command, option_item_id );
 }
 
-// claude@NOTE: structure matches (flash_value[4] + 3 SetUInt + fill_value + Invoke).
-// Byte residual is the inlined scaleform flash_value setters/dtors + the inlined
-// flash_movie::Invoke (-> Scaleform::GFx::Movie::Invoke), an SDK cap we do not
-// reproduce. Matching this (real body, not inlined) also makes the derived
-// options_item_{int,float,bool}::revert emit their tail-jmp to it.
 void options_item_base::revert( )
 {
 	flash_value source_data[ 4 ];
@@ -105,7 +93,11 @@ void options_item_base::revert( )
 
 void options_item_int::initialize( )
 {
-	m_source_value	= m_console_command ? ( u8 )( ( console_commands::cc_u32* )m_console_command )->get_value( ) : 0;
+	if ( m_console_command )
+		m_source_value = ( u8 )( ( console_commands::cc_u32* )m_console_command )->get_value( );
+	else
+		m_source_value = 0;
+
 	m_current_value	= m_source_value;
 }
 
@@ -123,12 +115,6 @@ void options_item_int::fill_data( flash_value& val )
 	}
 }
 
-// claude@NOTE: scaleform cap (applies to every flash_value setter call in this TU -
-// fill_value/fill_data/apply/call/revert). The target INLINES flash_value::SetUInt/
-// SetNumber/SetBoolean/... (canonical flash_value.h declares them inline; the GFx::
-// Value body lives in the Scaleform SDK we do not reproduce). Our value.cpp has them
-// out-of-line, so the compiler emits a call - byte residual on an otherwise-correct
-// 1-statement structure.
 void options_item_int::fill_value( flash_value& val )
 {
 	val.SetUInt( m_current_value );
@@ -165,7 +151,7 @@ void options_item_int::call( flash_function_handler_params& params )
 			{
 				graphic_preset& preset = g_graphic_presets[ graphics_quality ][ i ];
 
-				if ( preset.option_id == m_option_item_id && preset.option_value < m_values_count && m_current_value != preset.option_value )
+				if ( preset.option_id == m_option_item_id && m_values_count > preset.option_value && m_current_value != preset.option_value )
 				{
 					flash_value new_resolution_data[ 4 ];
 					new_resolution_data[ 0 ].SetUInt( video_options_type );
@@ -179,7 +165,7 @@ void options_item_int::call( flash_function_handler_params& params )
 			}
 	}
 
-	if ( m_current_value >= m_values_count && m_values_count )
+	if ( m_current_value >= m_values_count && m_values_count > 0 )
 		m_current_value = m_values_count - 1;
 
 	params.pRetVal->SetUInt( m_current_value );
@@ -198,7 +184,11 @@ void options_item_int::call( flash_function_handler_params& params )
 
 void options_item_float::initialize( )
 {
-	m_source_value	= m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_value( ) : 0.0f;
+	if ( m_console_command )
+		m_source_value = ( ( console_commands::cc_value< float >* )m_console_command )->get_value( );
+	else
+		m_source_value = 0.0f;
+
 	m_current_value	= m_source_value;
 }
 
@@ -253,7 +243,11 @@ void options_item_float::call( flash_function_handler_params& params )
 
 void options_item_bool::initialize( )
 {
-	m_source_value	= m_console_command ? ( ( console_commands::cc_value< bool >* )m_console_command )->get_value( ) : false;
+	if ( m_console_command )
+		m_source_value = ( ( console_commands::cc_value< bool >* )m_console_command )->get_value( );
+	else
+		m_source_value = false;
+
 	m_current_value	= m_source_value;
 }
 
@@ -302,27 +296,61 @@ void options_gamma_selector::revert( )
 	m_parent_tab.get_game( ).active_scene( )->scene_renderer( ).set_gamma_correction_factor( m_current_value );
 }
 
-// claude@NOTE: base-init (r_resolution, id 1) matches; the find + fill_resolutions
-// call (lines 357/359) is DCE'd because fill_resolutions is an empty render-blocked
-// stub - the optimizer drops the whole call (and its find argument). Unblocks once
-// fill_resolutions gets its real body (see its render-cap NOTE below).
  options_resolution_selector::options_resolution_selector( options_tab& parent_tab )
 	: options_item_int( parent_tab, "r_resolution", 1, NULL, 0 )
 {
 	fill_resolutions( ( u8 )( ( console_commands::cc_u32* )console_commands::find( "r_monitor_index" ) )->get_value( ) );
 }
 
-// STATE[STUB]
-// claude@NOTE: the "render does not expose the monitor table" cause is stale -
-// g_monitor_resolutions / g_num_monitors are declared at render/core/dx11/device.h:65-66
-// and filled in device.cpp:103-105. Declare them locally as the ctor above does (that
-// header cannot be included from a game TU: it drags d3d11/windows in and the winsdk
-// ole2.h/ocidl.h then fail on MSG). What is left is the 27-statement body itself
-// (locals: fixed_string<32> old_resolution, u32 old_resolution_index,
-// flash_value new_resolution_data[4]) - not yet reconstructed.
 void options_resolution_selector::fill_resolutions( u8 monitor_number )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( monitor_number );
+	fixed_string< 32 > old_resolution;
+	u32 old_resolution_index = u32( -1 );
+
+	if ( m_values )
+	{
+		old_resolution = m_values[ m_current_value ];
+		DELETE_ARRAY( m_values );
+	}
+
+	u8 resolutions_count = 0;
+
+	for ( u32 i = 0; i < array_size( render::g_monitor_resolutions[ monitor_number ] ); ++i )
+		if ( render::g_monitor_resolutions[ monitor_number ][ i ].y >= 720 && render::g_monitor_resolutions[ monitor_number ][ i ].x >= 1280 )
+			m_cached_resolutions[ resolutions_count++ ].assignf(
+				"%dx%d",
+				render::g_monitor_resolutions[ monitor_number ][ i ].x,
+				render::g_monitor_resolutions[ monitor_number ][ i ].y
+			);
+
+	m_values = NEW_ARRAY( pcstr, resolutions_count );
+	m_values_count = resolutions_count;
+
+	for ( u32 i = 0; i < resolutions_count; ++i )
+	{
+		m_values[ i ] = m_cached_resolutions[ i ].c_str( );
+
+		if ( strings::equal( old_resolution.c_str( ), m_values[ i ] ) )
+			old_resolution_index = i;
+	}
+
+	if ( !strings::equal( old_resolution.c_str( ), "" ) )
+	{
+		if ( old_resolution_index == u32( -1 ) )
+		{
+			m_current_value = m_values_count - 1;
+
+			flash_value new_resolution_data[ 4 ];
+			new_resolution_data[ 0 ].SetUInt( video_options_type );
+			new_resolution_data[ 1 ].SetUInt( 1 );
+			new_resolution_data[ 2 ].SetUInt( m_current_value );
+			new_resolution_data[ 3 ].SetUInt( 0 );
+
+			m_parent_tab.get_movie( )->movie->Invoke( "root.set_value", NULL, new_resolution_data, 4 );
+		}
+		else
+			m_current_value = ( u8 )old_resolution_index;
+	}
 }
 
 void options_resolution_selector::initialize( )
@@ -330,7 +358,7 @@ void options_resolution_selector::initialize( )
 	pcstr current_resolution = ( ( console_commands::cc_string* )m_console_command )->get_value( );
 
 	for ( u8 i = 0; i < m_values_count; ++i )
-		if ( strings::equal( m_values[ i ], current_resolution ) )
+		if ( strings::equal( current_resolution, m_values[ i ] ) )
 		{
 			m_source_value = i;
 			m_current_value = m_source_value;
@@ -355,7 +383,7 @@ void options_resolution_selector::apply( )
 	m_values		= NEW_ARRAY( pcstr, render::g_num_monitors );
 	m_values_count	= ( u8 )render::g_num_monitors;
 
-	for ( u8 i = 0; i < m_values_count; ++i )
+	for ( u8 i = 0; i < render::g_num_monitors; ++i )
 		m_values[ i ] = m_cached_monitors_names[ i ].c_str( );
 }
 
@@ -370,23 +398,13 @@ void options_monitor_index_selector::revert( )
 	options_item_int::revert( ); refill_resolutions_data( );
 }
 
-// claude@NOTE: refill_resolutions_data is STRUCTURE MATCH; revert/call inline it.
-// Byte residual: fill_resolutions is still a STUB (render-blocked - it enumerates
-// resolutions via render display-mode data we do not expose), and refill_item_data is
-// tail-called with this passed in eax + the two u8 args elided by LTCG (the allowed
-// argument-passing exception). refill_item_data itself is scaleform-capped in
-// game_options.cpp.
 void options_monitor_index_selector::refill_resolutions_data( )
 {
 	( ( options_resolution_selector* )m_parent_tab.option_by_id( 1 ) )->fill_resolutions( m_current_value );
 	m_parent_tab.get_game( ).get_game_options( ).refill_item_data( m_parent_tab.type( ), m_option_item_id );
 }
 
-// claude@NOTE: graphics_quality_data is a .rdata pcstr[6] table absent from the
-// canonical dump; the exact preset strings are NOT recoverable from the available
-// binary/PDB, so these placeholders are best-guesses. The ctor match only needs the
-// table SYMBOL (it relocates the pointer); the table's own string bytes score as a
-// separate data symbol and will not match until the real strings are recovered.
+// The PDB identifies this table but not its initializer strings.
 static pcstr graphics_quality_data[ 6 ] =
 {
 	"minimal",
@@ -421,11 +439,7 @@ void options_graphics_quality_selector::call( flash_function_handler_params& par
 		}
 }
 
-// claude@NOTE: the per-option value tables (counts taken from the ctor's
-// options_item_int args). Like graphics_quality_data, the .rdata string bytes are
-// not recoverable from the available binary/PDB, so these are best-guess
-// placeholders; the ctor match only needs each table SYMBOL (it relocates the
-// pointer), the table's own string bytes score as separate data symbols.
+// The PDB identifies these tables and their element counts, but not their strings.
 static pcstr antialiasing_data[ 3 ]				= { "off", "fxaa", "msaa" };
 static pcstr anisotrophic_filtering_data[ 5 ]	= { "off", "x2", "x4", "x8", "x16" };
 static pcstr texture_quality_data[ 3 ]			= { "low", "medium", "high" };
@@ -439,8 +453,6 @@ static pcstr ambient_occlusion_data[ 4 ]		= { "off", "low", "medium", "high" };
 static pcstr particles_quality_data[ 3 ]		= { "low", "medium", "high" };
 static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" };
 
-// claude@NOTE: compiler-context wall: target retains strip_pointer( g_allocator )
-// at all four NEW_ARRAY sites; base inlines the same template calls.
  options_tab::options_tab( game& g, flash_movie_resource_ptr& movie, options_enum type )
 	: m_type( type )
 	, m_game( g )
@@ -519,8 +531,6 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 	}
 }
 
-// claude@NOTE: compiler-context wall: target retains strip_pointer( g_allocator )
-// at DELETE_ARRAY; base inlines the same template call.
  options_tab::~options_tab( )
 {
 	for ( u8 i = 0; i < m_options_count; ++i )
