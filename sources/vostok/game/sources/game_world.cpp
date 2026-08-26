@@ -158,13 +158,8 @@ void game_world::on_after_tick( )
 
 void game_world::tick( const u32 frame_delta_ms, const u32 current_time_in_ms, const bool is_game_paused )
 {
-	get_camera_director( ).tick( );
-
-	if ( !is_game_paused && get_physics_world( ) )
-		get_physics_world( )->tick( current_time_in_ms );
-
-	if ( m_bullet_manager && !is_game_paused )
-		m_bullet_manager->tick( get_game( ).game_time_ms( ) );
+	base_game_scene::tick( frame_delta_ms, current_time_in_ms, is_game_paused );
+	tick_bullet_manager_engine( is_game_paused );
 
 	if ( m_is_dictionary_created )
 		tick_npcs( current_time_in_ms, is_game_paused );
@@ -542,10 +537,12 @@ void game_world::clear_resources( )
 		hide_text_manager( get_text_manager( ) );
 
 	if ( m_game_material_manager )
+	{
 		m_game_material_manager->clear_resources( );
-	m_game_material_manager = NULL;
+		m_game_material_manager = NULL;
 
-	DELETE( m_bullet_manager );
+		DELETE( m_bullet_manager );
+	}
 }
 
 sound::world& game_world::get_sound_world( ) const
@@ -571,16 +568,11 @@ void game_world::clear_enemies_positions_for_team( pcstr const team_name )
 		m_enemies_for_team_2.clear( );
 }
 
-// claude@NOTE: target walks m_respawn_points with a forward std::map::iterator
-// (reads _M_leftmost/_M_header once, ++it via _Rb_global<bool>::_M_increment) and
-// sets selected_for_respawn=false. Our `map<...>::iterator` here resolves to a
-// reverse_iterator (begin()/end() rewrapped each pass), inflating the body - a
-// vostok::map iterator-typedef quirk to chase; structure (3 stmts: begin, loop,
-// body) is right.
 void game_world::clear_player_spawn_info( )
 {
 	map< u32, respawn_point_core*, std::less< u32 > >::iterator it = m_game_project->m_respawn_points.begin( );
-	for ( ; it != m_game_project->m_respawn_points.end( ); ++it )
+	map< u32, respawn_point_core*, std::less< u32 > >::iterator end = m_game_project->m_respawn_points.end( );
+	for ( ; it != end; ++it )
 		it->second->selected_for_respawn = false;
 }
 
