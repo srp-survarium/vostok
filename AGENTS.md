@@ -16,65 +16,58 @@ semantics are not.
 - Use the repository skills under `.agents/skills/` for unit matching,
   structure verification, match review, and module orchestration.
 
-## Render-to-100 campaign
+## Module-to-100 campaigns
 
 The ledger and `report.json` are the only authoritative progress snapshot. The
-goal is zero real render PDB divergences, target-faithful statement/local/
-declaration structure, and 100% hash-scoped source MAX for every recoverable
-render function. Every irreducible remainder must have a concrete, queryable
-wall; current fuzzy percentage or ordinary best-seen history is not MAX
-evidence.
+goal for the active non-vendor module is zero real PDB divergences,
+target-faithful statement/local/declaration structure, and 100% hash-scoped
+source MAX for every recoverable function. Establish PDB equality first, then
+byte equality. Every irreducible remainder must have a concrete, queryable wall;
+current fuzzy percentage or ordinary best-seen history is not MAX evidence.
 
 Work the optimized call graph from owning roots toward leaves:
 
-1. Establish world and renderer roots first: `render_engine_world_pc_dx11.cpp`,
-   `renderer.cpp`, and the stage-dispatch paths they own. Use `xref --callees`
+1. Audit the fresh retail/base PDBs before editing. Resolve access, declaration,
+   definition, layout, enum, local-scope, const, and ownership divergences in a
+   deliberate batch before paying for a full link.
+2. Establish the module's owning roots and dispatch paths. Use `xref --callees`
    to identify only the descendants blocking each root, implement those, then
-   immediately remeasure the root. Do not start with isolated effect/helper
-   leaves merely because the queue lists them first.
-2. Drain the large stage cones next: postprocess, light-propagation volumes,
-   shadow-direct, visibility, atmosphere/clouds, rain, and gbuffer. Preserve
-   execution order and target line structure; each stage and its necessary
-   callees form one bounded caller cone.
-3. Reconstruct resource and cook roots, including combined-model cooking,
-   render-model construction, options, effect/resource managers, and shader
-   callbacks. A stubbed/null accessor or empty callee that collapses a caller
-   is higher priority than a locally high-scoring leaf.
-4. Complete effect compiler/descriptor families and effect `compile` bodies
-   through real stage/registration callers. Prefer real reachability; use a
-   minimal target-evidenced anchor only while required, and retire it when the
-   real call graph keeps the symbol alive.
-5. Apply cross-cutting structural levers in deliberate batches: target header
+   immediately remeasure the root. Do not start with isolated helpers merely
+   because the queue lists them first.
+3. Drain each large caller cone while preserving execution order and target
+   statement structure. A stubbed/null accessor or empty callee that collapses
+   a caller is higher priority than a locally high-scoring leaf.
+4. Apply cross-cutting structural levers in deliberate batches: target header
    location and `*_inline.h` ownership, access/CV/struct mangling, declaration
    and vtable order, layouts, globals, and shared-header fixes. Batch shared
-   header changes so compiler-context hashes reset once, not piecemeal.
-6. Audit residuals with `structure-diff`, named locals, `vostok sema`, and real
+   header changes so compiler-context effects are measured once, not piecemeal.
+5. Audit residuals with `structure-diff`, named locals, `vostok sema`, and real
    call-site assembly. Work `QUANTITY`, `SPLIT`, wrong named locals, target-only bodies,
    and verified low-score shape mismatches. Park ordinary `SIZE`, frameless
    convention, ICF, or LTCG claims only after proving the exact non-steerable
    boundary.
-7. When a remaining gap is caused by measurement rather than source, improve
+6. When a remaining gap is caused by measurement rather than source, improve
    the tool instead of falsifying code. Preserve genuine function-scoped and
    highly-COMDAT evidence through the hash-scoped MAX mechanisms.
 
-The campaign ledger is the linear Git history plus the per-commit database.
+The campaign ledger is the linear Git history plus each commit's tracked ledger
+snapshot.
 For every complete TU or bounded caller cone: inspect target structure and
-assembly, record each worked function exactly once in `attempts`, run the full
-`python3 -m vostok build -j6`, inspect `report-changes.json`, and commit the
-source together with the regenerated README and ledger. Then run a
-clean-HEAD no-op rebuild and amend its provenance metadata into that same
-commit. Never borrow a later database snapshot. After each 10-15 TUs, perform a
-separate structure-verification and stale-comment audit before continuing.
+assembly, record each worked function exactly once with `vostok ledger tried`,
+run the full `python3 -m vostok build -j6`, inspect `report-changes.json`, and
+commit the source together with the regenerated README and ledger. Then run a
+clean-HEAD no-op rebuild and amend its provenance metadata into that same commit.
+Never borrow a later ledger snapshot. After each 10-15 TUs, perform a separate
+structure-verification and stale-comment audit before continuing.
 
 ## Build and measurement
 
 - Enter the Nix development environment; do not use sibling tool checkouts.
 - Use `python3 -m vostok build` with no module argument for the authoritative
   build, relink, delink, report, README score, and ledger refresh.
-- During render iteration, compile only the three retail render
-  libraries with `python3 -m vostok.build.ninja render_facade
-  render_core_pc_dx11 render_engine_pc_dx11`. Fix compiler errors until all
-  three libraries build; do not link or regenerate reports during this loop.
+- During iteration, compile only the directly affected libraries with
+  `python3 -m vostok.build.ninja <library>...`. Fix compiler errors before the
+  authoritative build; do not link or regenerate reports during this loop.
 - A module-only build does not relink the executable and cannot establish a
   current match score.
 - `python3 -m vostok derive refresh` only re-derives the database from the
@@ -95,9 +88,9 @@ separate structure-verification and stale-comment audit before continuing.
   `python3 -m vostok ...` (the dev shell puts `scripts/` on `PYTHONPATH`).
   Put any new repo path in `vostok/core/paths.py`, which is the only module
   allowed to spell one. See CLAUDE.md, "Where the tooling lives".
-- Treat `history.best_fuzzy_pct` as scheduling/ICF history only. Correctness-facing
-  MAX comes from `source_maxima`, is scoped to an effective source/compiler-context
-  hash, and must never be backfilled from ordinary best-seen history.
+- Treat historical fuzzy peaks as scheduling/ICF history only. The
+  correctness-facing `max` ledger column is scoped to the function's own
+  source-body hash and must never be backfilled from ordinary history.
 
 ## Matching invariants
 
@@ -118,7 +111,7 @@ separate structure-verification and stale-comment audit before continuing.
   argument passing at a call boundary. Investigate other differences as source
   shape or record a concrete blocker.
 - Match one complete translation unit at a time. Descend into required callees
-  outside `render` when necessary and when file ownership remains disjoint.
+  when necessary and when file ownership remains disjoint.
 - Preserve definition order, even when access specifiers repeat or interleave.
 - Use clangd helpers for source navigation and `pdb_fetch`/`pdb_rich_query` for
   binary evidence.
@@ -140,7 +133,7 @@ separate structure-verification and stale-comment audit before continuing.
   owns disassembly and PDB statement/local evidence; `pdb_rich_query --list`
   owns symbol and RVA listing; `vostok tool clangd symbol|def|refs|hover` owns
   source-semantic navigation; and `vostok ledger report|list|queue` owns
-  function/unit status, queues, attempts, flags, and hash-scoped MAX state.
+  function/unit status, queues, attempt records, flags, and hash-scoped MAX state.
 - Gruntz's `map`, `class`, and `vtable` commands compensate for a stripped
   binary. Vostok has the retail PDB: use `binaries/structure/target/headers` for
   class layout, inheritance, and virtual declaration order, target
@@ -199,12 +192,13 @@ separate structure-verification and stale-comment audit before continuing.
   `WINEPREFIX` values.
 - Keep matching stacks linear. Integrate parallel worker results one at a time
   onto the advancing tip; never merge a fan.
-- Preserve every per-commit README/database snapshot. Land an approved linear
+- Preserve every per-commit README/ledger snapshot. Land an approved linear
   stack by fast-forward, never squash it.
 - Before committing a matching step, record every function actually worked
-  exactly once in `attempts` (a whole-TU mark is appropriate when the whole TU
-  was reviewed). Put those marks and any flags in the same rebuilt database
-  snapshot as the source change so the per-commit diff identifies the work.
+  exactly once with `vostok ledger tried` (a whole-TU mark is appropriate when
+  the whole TU was reviewed). Put those marks and any flags in the same rebuilt
+  ledger snapshot as the source change so the per-commit diff identifies the
+  work.
 - Do not push, merge, close PRs, prune worktrees, or delete branches unless the
   user or the active orchestration task authorizes it.
 
@@ -216,6 +210,6 @@ separate structure-verification and stale-comment audit before continuing.
   correctness problem.
 - Flag fabricated symbols, stale state comments, leftover carcasses, ungrounded
   constants, accidental logs, cross-unit inlining hacks, and generated
-  README/database snapshots that do not correspond to their commit.
+  README/ledger snapshots that do not correspond to their commit.
 - Verify every proposed review fix with a full rebuild and report measured
   regressions, unresolved risks, and whether the stack is ready to fast-forward.
