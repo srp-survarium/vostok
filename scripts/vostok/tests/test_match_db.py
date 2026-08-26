@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from vostok.build import ninja as build_ninja
+from vostok.build import ninja_regen
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
                                                        _resolve_reviewed_aliases)
@@ -41,6 +42,50 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    def test_shipping_link_libraries_follow_retail_ltcg_order(self):
+        libraries = [
+            f"Z:/libs/{name}"
+            for name in reversed(ninja_regen.RETAIL_LINK_LIBRARY_ORDER)
+        ]
+        text = "header\nkernel32.lib " + libraries[0] + " keep.lib " + " ".join(
+            libraries[1:]
+        ) + "\nfooter\n"
+
+        self.assertEqual(
+            ninja_regen._normalize_link_rsp_library_order(text),
+            "header\nkernel32.lib "
+            + " ".join(
+                f"Z:/libs/{name}"
+                for name in ninja_regen.RETAIL_LINK_LIBRARY_ORDER
+            )
+            + " keep.lib\nfooter\n",
+        )
+
+    def test_incomplete_link_library_suite_is_unchanged(self):
+        text = "vostok_engine-static-gold.lib keep.lib\n"
+        self.assertEqual(
+            ninja_regen._normalize_link_rsp_library_order(text),
+            text,
+        )
+
+    def test_link_rsp_paths_crossing_solution_parent_are_normalized(self):
+        text = (
+            '/OUT:"Z:/work/vostok/sources\\../binaries/base.exe" '
+            '/IMPLIB:"Z:/work/vostok/sources\\/../binaries/base.lib" '
+            '"Z:/work/vostok/sources\\/render.lib"'
+        )
+
+        self.assertEqual(
+            ninja_regen._normalize_link_rsp_paths(
+                text,
+                solution_dir=Path("/work/vostok/sources"),
+                repo_dir=Path("/work/vostok"),
+            ),
+            '/OUT:"Z:/work/vostok/binaries/base.exe" '
+            '/IMPLIB:"Z:/work/vostok/binaries/base.lib" '
+            '"Z:/work/vostok/sources\\/render.lib"',
+        )
+
     def test_ninja_options_only_select_default_full_build(self):
         self.assertEqual(build_ninja._explicit_targets(["-j6"]), [])
         self.assertEqual(build_ninja._explicit_targets(["-j", "6"]), [])
