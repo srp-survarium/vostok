@@ -38,7 +38,7 @@ public:
 	virtual	bool		is_ready_to_be_deactivated	( ) const = 0;
 
 	virtual	animation::mixing::expression
-						selected_animations			( mutable_buffer& buffer, bool is_third_view ) const = 0;
+						selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const = 0;
 
 	virtual	void		on_player_model_added		( ) = 0;
 	virtual	void		on_player_model_removed		( ) = 0;
@@ -46,8 +46,8 @@ public:
 	virtual	void		update_bones_matrices		(
 							animation::skeleton_ptr const&		user_skeleton,
 							float4x4* const						user_matrices,
-							u32									user_matrices_count,
-							u32									current_time_in_ms,
+							const u32							user_matrices_count,
+							const u32							current_time_in_ms,
 							float4x4&							character_head_transform,
 							float4x4&							character_transform,
 							animation::animation_player const&	animation_player

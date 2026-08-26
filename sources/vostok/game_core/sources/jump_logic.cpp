@@ -130,29 +130,29 @@ u32 get_jump_animation_index(
 
 		on_site_jump				= 0,
 
-		forward_from_right_leg		= 4,
-		forward_from_left_leg		= 10,
+		forward_from_right_leg		= on_site_jump + animations_per_simple_jump_direction,
+		forward_from_left_leg		= forward_from_right_leg + animations_per_two_legged_jump_direction,
 
-		forward_right_from_right_leg	= 16,
-		forward_right_from_left_leg		= 22,
+		forward_right_from_right_leg	= forward_from_left_leg + animations_per_two_legged_jump_direction,
+		forward_right_from_left_leg		= forward_right_from_right_leg + animations_per_two_legged_jump_direction,
 
-		right_from_right_leg		= 28,
-		right_from_left_leg			= 34,
+		right_from_right_leg		= forward_right_from_left_leg + animations_per_two_legged_jump_direction,
+		right_from_left_leg			= right_from_right_leg + animations_per_two_legged_jump_direction,
 
-		backward_right_from_right_leg	= 40,
-		backward_right_from_left_leg	= 46,
+		backward_right_from_right_leg	= right_from_left_leg + animations_per_two_legged_jump_direction,
+		backward_right_from_left_leg	= backward_right_from_right_leg + animations_per_two_legged_jump_direction,
 
-		backward_from_right_leg		= 52,
-		backward_from_left_leg		= 58,
+		backward_from_right_leg		= backward_right_from_left_leg + animations_per_two_legged_jump_direction,
+		backward_from_left_leg		= backward_from_right_leg + animations_per_two_legged_jump_direction,
 
-		backward_left_from_right_leg	= 64,
-		backward_left_from_left_leg		= 70,
+		backward_left_from_right_leg	= backward_from_left_leg + animations_per_two_legged_jump_direction,
+		backward_left_from_left_leg		= backward_left_from_right_leg + animations_per_two_legged_jump_direction,
 
-		left_from_right_leg			= 76,
-		left_from_left_leg			= 82,
+		left_from_right_leg			= backward_left_from_left_leg + animations_per_two_legged_jump_direction,
+		left_from_left_leg			= left_from_right_leg + animations_per_two_legged_jump_direction,
 
-		left_forward_from_right_leg		= 88,
-		left_forward_from_left_leg		= 94,
+		left_forward_from_right_leg		= left_from_left_leg + animations_per_two_legged_jump_direction,
+		left_forward_from_left_leg		= left_forward_from_right_leg + animations_per_two_legged_jump_direction,
 	};
 
 	switch ( move_direction )

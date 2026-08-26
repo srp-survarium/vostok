@@ -25,6 +25,8 @@ class items_cook;
 
 class medkit : public inventory_item {
 public:
+	typedef inventory_item super;
+
 	virtual	void								action						( bool key_down ) override;
 
 private:
@@ -59,7 +61,7 @@ private:
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { /* no source sushi@TODO */ return false; }
 
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE(); }
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE(); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
@@ -67,8 +69,8 @@ private:
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
-													u32									user_matrices_count,
-													u32									current_time_in_ms,
+												const u32							user_matrices_count,
+												const u32							current_time_in_ms,
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
@@ -90,15 +92,17 @@ private:
 	virtual	bool								is_sprinting				( ) const override { /* no source sushi@TODO */ return false; }
 
 protected:
+	struct item_influence {
+		/* 0x0000 */	char					body_part_name[16];
+		/* 0x0010 */	float					health_amount;
+	}; // struct item_influence
+
 	struct affect {
 		/* 0x0000 */	char					body_part_name[16];
 		/* 0x0010 */	hit_affects_type_enum	type;
 	}; // struct affect
 
 	struct damage_protection {
-		inline	damage_protection	( ) { /* no source */ }
-		inline	~damage_protection	( ) { /* no source */ }
-
 		/* 0x0000 */	damage_protector		protector;
 		/* 0x0050 */	char					body_part_name[16];
 		/* 0x0060 */	char					hit_type[16];
@@ -106,15 +110,7 @@ protected:
 		/* 0x0074 */	float					threshold;
 	}; // struct damage_protection
 
-	struct item_influence {
-		/* 0x0000 */	char					body_part_name[16];
-		/* 0x0010 */	float					health_amount;
-	}; // struct item_influence
-
 protected:
-			medkit::damage_protection const*	find_damage_protection		( pcstr body_part_name, pcstr hit_type );
-
-private:
 	/* 0x0000 */	/* inventory_item */
 	/* 0x0118 */	item_influence*			m_influences;
 	/* 0x011c */	u8						m_influences_count;
@@ -129,6 +125,8 @@ private:
 	/* 0x0140 */	u32						m_delay_ms;
 	/* 0x0144 */	bool					m_active;
 	/* 0x0148 */	float					m_add_stamina_regen;
+
+			medkit::damage_protection const*	find_damage_protection		( pcstr body_part_name, pcstr hit_type );
 
 private:
 	friend class items_cook;

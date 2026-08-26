@@ -26,7 +26,6 @@ class player_actions_subscriber;
 
 struct hit_receiver : public collision::game_object , public loose_ptr_base {
 public:
-								hit_receiver				( ) {}
 	virtual						~hit_receiver				( ) {}
 
 	virtual	void				hit							(
@@ -65,8 +64,8 @@ STATIC_SIZE_ASSERT(hit_receiver, 0x8);
 struct hit_receiver_info {
 				hit_receiver_info	( hit_receiver* receiver, physics::base_physics_object* rigid_body );
 
-		bool	operator==			( hit_receiver const* rhs ) const { /* no source */ }
 		bool	operator==			( hit_receiver_info const& rhs ) const;
+		bool	operator==			( hit_receiver const* const rhs ) const { /* no source */ }
 
 public:
 	/* 0x0000 */	hit_receiver*						m_receiver;

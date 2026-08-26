@@ -18,8 +18,10 @@ namespace survarium {
 class game_material_manager;
 class material_pair;
 
-class game_material_manager_cook : public resources::translate_query_cook , public boost::noncopyable {
+class game_material_manager_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+
 					game_material_manager_cook	( bool server_usage );
 
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
@@ -38,9 +40,10 @@ private:
 		/* 0x0004 */	res_type		type;
 		/* 0x0008 */	vostok::render::material_effects_instance_cook_data*	cd;
 	}; // struct query_ext_data
+	typedef vector< query_ext_data > ext_data_vec;
 
 			void	on_configs_loaded			( resources::queries_result& data );
-			void	on_decals_loaded			( resources::queries_result& data, vector< query_ext_data >* ext_data );
+			void	on_decals_loaded			( resources::queries_result& data, ext_data_vec* ext_data );
 
 			void	create_game_materials		(
 						game_material_manager* const			manager,

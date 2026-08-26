@@ -11,6 +11,8 @@ namespace survarium {
 
 class weapon_core_inactive_state_cook : public resources::unmanaged_cook {
 public:
+	typedef resources::unmanaged_cook super;
+
 			explicit			weapon_core_inactive_state_cook	( );
 	virtual						~weapon_core_inactive_state_cook( );
 

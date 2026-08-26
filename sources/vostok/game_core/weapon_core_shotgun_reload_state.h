@@ -19,6 +19,9 @@ class weapon_core_shotgun_reload_base_substate;
 
 class weapon_core_shotgun_reload_state : public weapon_core_base_state {
 public:
+	typedef weapon_core_base_state super;
+	typedef weapon_core_shotgun_reload_base_substate substate_type;
+
 			explicit	weapon_core_shotgun_reload_state(
 							weapon_core&								weapon,
 							weapon_core_shotgun_reload_base_substate*	reload_start,
@@ -57,8 +60,8 @@ private:
 			bool		finish_reload_predicate			( ) const;
 
 
-public:
-	inline	void		set_delete_substates_on_destruction( bool delete_substates_on_destruction ) { m_delete_substates_on_destruction = delete_substates_on_destruction; }
+protected:
+	inline	void		set_delete_substates_on_destruction( const bool delete_substates_on_destruction ) { m_delete_substates_on_destruction = delete_substates_on_destruction; }
 
 private:
 	/* 0x0000 */	/* weapon_core_base_state */

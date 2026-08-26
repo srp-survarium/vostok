@@ -20,6 +20,8 @@ public:
 private:
 			void	on_config_loaded				( resources::queries_result& data );
 			void	on_animations_loaded			( resources::queries_result& data );
+
+	typedef resources::translate_query_cook super;
 }; // class weapon_user_animations_container_cook
 
 STATIC_SIZE_ASSERT(weapon_user_animations_container_cook, 0x20);

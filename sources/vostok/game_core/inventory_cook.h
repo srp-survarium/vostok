@@ -11,8 +11,10 @@ namespace survarium {
 
 struct inventory_cooker_data;
 
-class inventory_cook : public resources::translate_query_cook , public boost::noncopyable {
+class inventory_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+
 					inventory_cook				( );
 
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;

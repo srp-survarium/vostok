@@ -11,7 +11,7 @@ namespace survarium {
 
 class items_dictionary_cook;
 
-class items_dictionary : public resources::unmanaged_resource , public boost::noncopyable {
+class items_dictionary : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 	inline	dictionary_item const&				item_by_id					( u32 item_dictionary_id ) const
 	{
@@ -21,7 +21,6 @@ public:
 	inline	void								add_item_desc				( dictionary_item const& item ) { m_items_dict[item.item_id] = item; }
 	inline	map< u32, dictionary_item > const&	get_dictionary				( ) const						{ return m_items_dict; }
 
-												items_dictionary			( ) { }
 		/* 0x0108 */	configs::binary_config_ptr				dict_config;
 	private:
 		/* 0x010c */	mutable map< u32, dictionary_item >		m_items_dict;

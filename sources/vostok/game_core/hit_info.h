@@ -17,6 +17,8 @@ namespace survarium {
 class bullet;
 
 struct hit_info {
+					hit_info	( );
+
 					hit_info	(
 						const u8		hit_initiator,
 						const u8		being_hit,
@@ -26,8 +28,6 @@ struct hit_info {
 						const float	armor_piercing,
 						bullet* const	bullet
 					);
-
-					hit_info	( );
 
 			void	deserialize	( network_core::packet_reader& packet );
 			void	serialize	( network_core::udp_match_packet& packet ) const { /* no source */ }

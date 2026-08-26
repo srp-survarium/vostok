@@ -11,11 +11,9 @@ namespace survarium {
 
 struct base_player;
 
-struct player_parameters_modifyer : public resources::unmanaged_resource , public boost::noncopyable {
+struct player_parameters_modifyer : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 	explicit		player_parameters_modifyer	( );
-
-			void	apply						( base_player* player );
 
 public:
 	/* 0x0000 */	/* resources::unmanaged_resource */
@@ -36,6 +34,8 @@ public:
 	/* 0x0150 */	float			engineer_succ_chance_corr_perc;
 	/* 0x0154 */	u8				additional_artefact_slots;
 	/* 0x0155 */	u8				additional_devices_slots;
+
+			void	apply						( base_player* player );
 }; // struct player_parameters_modifyer
 
 STATIC_SIZE_ASSERT(player_parameters_modifyer, 0x158);

@@ -28,7 +28,33 @@ namespace network_core {
 
 namespace survarium {
 
+typedef vostok::intrusive_list<
+	hit_type_parameters,
+	hit_type_parameters*,
+	&hit_type_parameters::next,
+	vostok::threading::single_threading_policy,
+	vostok::size_policy,
+	vostok::no_debug_policy > hit_type_parameters_list;
+
+typedef vostok::intrusive_list<
+	affects_threshold,
+	affects_threshold*,
+	&affects_threshold::next,
+	vostok::threading::single_threading_policy,
+	vostok::size_policy,
+	vostok::no_debug_policy > affects_threshold_list;
+
+typedef vostok::intrusive_list<
+	damage_protector,
+	damage_protector*,
+	&damage_protector::next,
+	vostok::threading::single_threading_policy,
+	vostok::size_policy,
+	vostok::no_debug_policy > damage_protector_list;
+
 class body_part_parameters : private boost::noncopyable {
+	typedef boost::function< void( u32, float, float, pcstr ) > player_damage_model_callback_type;
+
 public:
 									body_part_parameters	(
 										pcstr				name,
@@ -59,7 +85,7 @@ public:
 
 			void					dump_state				( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
 	inline	void					dump_state				( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
-			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, const u32 index ) const;
+			void					dump_state				( boost::function< void( u32, float, float, pcstr ) > callback, const u32 index ) const;
 
 	inline	void					remove_edges			( body_part_parameters* arg_0 ) { /* no source */ }
 
@@ -98,6 +124,9 @@ public:
 			void					serialize				( network_core::udp_match_packet& packet, s32 client_offset ) const;
 			void					deserialize				( network_core::packet_reader& reader );
 
+public:
+	/* 0x0000 */	body_part_parameters*			next;
+
 private:
 			void					check_affects			( const u32 current_time_in_ms );
 			void					update_affects			( const u32 current_time_in_ms );
@@ -106,42 +135,14 @@ private:
 			template < class stats_item_type >
 			void					fill_new_stats_item		( stats_item_type& new_stats_item, const u32 current_time_in_ms ) const;
 
+	typedef hit_type_parameters_list hit_type;
+	typedef affects_threshold_list thresholds_type;
+	typedef std::pair< hit_affects_type_enum, u32 > affect_type;
+	typedef vostok::fixed_vector< affect_type, 8 > affects_type;
 
-public:
-	typedef vostok::intrusive_list<
-		hit_type_parameters,
-		hit_type_parameters*,
-		&hit_type_parameters::next,
-		vostok::threading::single_threading_policy,
-		vostok::size_policy,
-		vostok::no_debug_policy >  hit_type_parameters_list;
-
-	typedef vostok::intrusive_list<
-		affects_threshold,
-		affects_threshold*,
-		&affects_threshold::next,
-		vostok::threading::single_threading_policy,
-		vostok::size_policy,
-		vostok::no_debug_policy >  affects_thresholds_list;
-
-	typedef vostok::fixed_vector<
-		std::pair< hit_affects_type_enum, u32 >,
-		8 >							hit_affects_types_type;
-
-	typedef vostok::intrusive_list<
-		damage_protector,
-		damage_protector*,
-		&damage_protector::next,
-		vostok::threading::single_threading_policy,
-		vostok::size_policy,
-		vostok::no_debug_policy >  damage_protectors_list;
-
-	/* 0x0000 */	body_part_parameters*			next;
-
-private:
 	/* 0x0004 */	hit_type_parameters_list		m_hit_types;
-	/* 0x0014 */	affects_thresholds_list			m_thresholds;
-	/* 0x0024 */	hit_affects_types_type			m_affects;
+	/* 0x0014 */	affects_threshold_list			m_thresholds;
+	/* 0x0024 */	vostok::fixed_vector< std::pair< hit_affects_type_enum, u32 >, 8 >	m_affects;
 	/* 0x006c */	damage_model&					m_damage_model;
 	/* 0x0070 */	fixed_string<16>				m_name;
 	/* 0x008c */	float							m_max_health;
@@ -152,7 +153,7 @@ private:
 	/* 0x00a0 */	float							m_last_hit_health;
 	/* 0x00a4 */	const bool						m_assignable;
 	/* 0x00a5 */	const u8						m_damage_group;
-	/* 0x00a8 */	damage_protectors_list			m_damage_protectors;
+	/* 0x00a8 */	damage_protector_list			m_damage_protectors;
 }; // class body_part_parameters
 
 STATIC_SIZE_ASSERT(body_part_parameters, 0xB8);

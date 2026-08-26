@@ -1154,19 +1154,19 @@ float weapon_core::computed_vertical_recoil_time(
 	return vertical_recoil_value( ) * animation_length;
 }
 
-weapon_core::calculator_functor weapon_core::backward_recoil_time_calculator( )
+fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > weapon_core::backward_recoil_time_calculator( )
 {
-	return calculator_functor( this, &weapon_core::computed_backward_recoil_time );
+	return fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >( this, &weapon_core::computed_backward_recoil_time );
 }
 
-weapon_core::calculator_functor weapon_core::horizontal_recoil_time_calculator( )
+fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > weapon_core::horizontal_recoil_time_calculator( )
 {
-	return calculator_functor( this, &weapon_core::computed_horizontal_recoil_time );
+	return fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >( this, &weapon_core::computed_horizontal_recoil_time );
 }
 
-weapon_core::calculator_functor weapon_core::vertical_recoil_time_calculator( )
+fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > weapon_core::vertical_recoil_time_calculator( )
 {
-	return calculator_functor( this, &weapon_core::computed_vertical_recoil_time );
+	return fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >( this, &weapon_core::computed_vertical_recoil_time );
 }
 
 void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )

@@ -11,6 +11,8 @@ namespace survarium {
 
 class animation_analysis_result_cook : public resources::translate_query_cook {
 public:
+	typedef resources::translate_query_cook super;
+
 					animation_analysis_result_cook	( );
 
 	virtual	void	translate_query					( resources::query_result_for_cook& parent ) override;

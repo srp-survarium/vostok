@@ -10,20 +10,10 @@ namespace survarium {
 /* survarium::leg_info */
 
 //////////////////////////
-// FORWARD DECLARATIONS //
-//////////////////////////
-
-class float3;
-
-//////////////////////////
 //     DEFINITIONS      //
 //////////////////////////
 
 struct leg_info {
-public:
-	inline	leg_info( ) { /* no source */ }
-
-
 public:
 	/* 0x0000 */	u32			hip_index;
 	/* 0x0004 */	u32			ankle_index;

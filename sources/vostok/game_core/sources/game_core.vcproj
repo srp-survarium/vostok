@@ -996,10 +996,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\damage_info_type.h"
-				>
-			</File>
-			<File
 				RelativePath="..\game_net_defines.h"
 				>
 			</File>

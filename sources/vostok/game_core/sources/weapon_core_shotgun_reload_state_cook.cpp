@@ -68,9 +68,9 @@ void weapon_core_shotgun_reload_state_cook::create_resource( resources::query_re
 	ASSERT( UNKNOWN_EXPRESSION_T( cfg["finish_substate"]["user_animations"].size( ) == 4 ) );
 
 	enum {
-		requests_count			= 24,
 		total_weapon_anim_count	= 12,
 		total_user_anim_count	= 12,
+		requests_count			= total_weapon_anim_count + total_user_anim_count,
 	};
 
 	typedef fixed_vector< resources::request, requests_count >	requests_fixed_type;

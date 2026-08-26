@@ -49,11 +49,11 @@ void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 	}
 }
 
-struct objects_filter_predicate { // sushi@NOTE: Might be in a different place
+struct objects_filter_predicate {
 	inline	explicit	objects_filter_predicate( collision_sensor const* sensor ) : m_sensor( sensor ) { }
 	inline	bool		operator()				( base_physics_object* obj ) const { return m_sensor->is_filter_passed( obj ); }
 
-public:
+private:
 	/* 0x0000 */	collision_sensor const*		m_sensor;
 }; // struct objects_filter_predicate
 
@@ -133,7 +133,7 @@ struct left_objects_predicate {
 				return true;
 			}
 
-public:
+private:
 	/* 0x0000 */	buffer_vector< base_physics_object* > const*	m_current_objects;
 	/* 0x0004 */	buffer_vector< base_physics_object* >*			m_objects_to_delete;
 }; // struct left_objects_predicate

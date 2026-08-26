@@ -16,7 +16,6 @@ namespace network_core {
 namespace survarium {
 
 struct player_input {
-public:
 					player_input		( );
 
 			void	serialize			( network_core::udp_match_packet& packet ) const;
@@ -35,6 +34,7 @@ public:
 	inline	bool	is_shooting			( ) const { /* no source */ }
 	inline	bool	is_holding_breath	( ) const { /* no source */ }
 
+	typedef u32 actions_mask_type;
 
 public:
 	/* 0x0000 */	float2		angular_velocity;

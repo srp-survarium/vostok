@@ -14,6 +14,9 @@ struct weapon_state_creation_params;
 
 class weapon_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+	static	void	register_cooks_for_logic_states( ) { /* no source */ }
+
 	explicit		weapon_core_cook			( );
 
 public:
@@ -35,8 +38,6 @@ private:
 
 private:
 	virtual	u32		cooked_object_size			( weapon_core& object_to_cook ) const;
-
-	static	void	register_cooks_for_logic_states( ) { /* no source */ }
 }; // class weapon_core_cook
 
 STATIC_SIZE_ASSERT(weapon_core_cook, 0x20);

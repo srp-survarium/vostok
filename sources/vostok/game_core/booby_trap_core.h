@@ -56,8 +56,8 @@ public:
 	inline	bool							is_active					( ) const { return m_trap_state != booby_trap_state_removed; }
 
 private:
-	virtual	booby_trap_set_core*			owner						( ) override;
 	virtual	booby_trap_set_core const*		owner						( ) const override;
+	virtual	booby_trap_set_core*			owner						( ) override;
 
 	virtual	void							serialize					( network_core::udp_match_packet& packet ) const override;
 	virtual	void							deserialize					( network_core::packet_reader& reader ) override;
@@ -90,6 +90,10 @@ protected:
 	virtual	bool							use_finalize				( usable_object_user_data* user ) override;
 	virtual	pcstr							use_info					( usable_object_user_data* user ) override;
 
+	/* 0x0168 */	scheduler::identifier		m_scheduler_identifier;
+	/* 0x016c */	booby_trap_set_core*		m_owner;
+	/* 0x0170 */	booby_trap_state			m_trap_state;
+
 	virtual	void							defuse_completed			( );
 	virtual	void							switch_to_state				( booby_trap_state new_state );
 
@@ -101,14 +105,12 @@ private:
 			bool							can_defuse					( base_player const* user ) const;
 			void							on_state_timer_finished		( );
 
-private:
+protected:
 	/* 0x0000 */	/* game_world_object */
 	/* 0x0110 */	/* hittable_object */
 	/* 0x0124 */	/* collision_sensor */
 	/* 0x0148 */	/* usable_object */
-	/* 0x0168 */	scheduler::identifier		m_scheduler_identifier;
-	/* 0x016c */	booby_trap_set_core*		m_owner;
-	/* 0x0170 */	booby_trap_state			m_trap_state;
+private:
 	/* 0x0174 */	float4x4					m_transform;
 	/* 0x01b4 */	u32							m_state_timer;
 private:

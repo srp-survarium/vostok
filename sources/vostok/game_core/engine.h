@@ -12,7 +12,6 @@ class bullet_manager;
 struct engine {
 	virtual	bullet_manager&		get_bullet_manager	( ) const = 0;
 
-	inline						engine				( ) { /* no source */ }
 }; // struct engine
 
 STATIC_SIZE_ASSERT(engine, 0x4);

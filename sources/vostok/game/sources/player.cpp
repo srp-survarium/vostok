@@ -598,7 +598,7 @@ void player::hit(
 // GFx Movie::Invoke("root.crosshair_enemy_hit") when m_game's sound emitter bone matches,
 // the SECOND (if m_game_ui) builds a player_ptr (initiator from id or self) and calls
 // game_world_ui::on_hit_from_pos(float3) with intrusive_ptr churn; then a notify loop
-// (action 4 = shoot/character_hit) over the subscribers. Walls: Scaleform GFx Movie::Invoke
+// (action 4 = shoot/hit) over the subscribers. Walls: Scaleform GFx Movie::Invoke
 // + the sound emitter bone accessor (m_game+0x3B8) are cross-module (scaleform/sound), and
 // the player_ptr intrusive_ptr management is the same accessor-inline wall. Next step:
 // reconstruct once GFx Movie::Invoke wrapper + the sound emitter accessor are named.

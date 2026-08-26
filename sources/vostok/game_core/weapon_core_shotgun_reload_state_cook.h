@@ -14,6 +14,8 @@ struct weapon_state_creation_params;
 
 class weapon_core_shotgun_reload_state_cook : public resources::unmanaged_cook {
 public:
+	typedef resources::unmanaged_cook super;
+
 	// sushi@TODO
 	inline	explicit	weapon_core_shotgun_reload_state_cook	( ) :
 							resources::unmanaged_cook	( resources::weapon_shotgun_reload_state_class, reuse_true, use_current_thread_id ){ /* no source */ }

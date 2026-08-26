@@ -64,9 +64,9 @@ void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config
 	float const aim_near_plane_factor	= parameters["aim_near_plane_factor"];
 	object_to_cook->set_aim_near_plane_factor( aim_near_plane_factor );
 
-	object_to_cook->set_double_handed( parameters.value_exists( "double_handed" ) ? (bool)parameters["double_handed"] : true );
+	object_to_cook->m_is_double_handed = parameters.value_exists( "double_handed" ) ? (bool)parameters["double_handed"] : true;
 
-	object_to_cook->set_chamber_a_round_on_reload( parameters.value_exists( "chamber_a_round_on_reload" ) ? (bool)parameters["chamber_a_round_on_reload"] : false );
+	object_to_cook->m_chamber_a_round_on_reload = parameters.value_exists( "chamber_a_round_on_reload" ) ? (bool)parameters["chamber_a_round_on_reload"] : false;
 
 	configs::binary_config_value const& weapon_fire_queue_types_cfg = cfg_root["parameters"]["fire_queue_types"];	// claude@MATCH: target recomputes cfg_root["parameters"] here instead of reusing `parameters`
 
@@ -130,7 +130,7 @@ void weapon_core_cook::query_weapon_states( resources::query_result_for_cook* co
 {
 	float const rounds_per_second	= (float)config_ptr->get_root( )["parameters"]["rounds_per_minute"] / 60.f;
 	float const reload_time			= config_ptr->get_root( )["parameters"]["reload_time"];
-	weapon_state_creation_params const* params = VOSTOK_NEW_IMPL( g_allocator, weapon_state_creation_params )( config_ptr, *object_to_cook, rounds_per_second, reload_time, object_to_cook->is_shown( ) );
+	weapon_state_creation_params const* params = VOSTOK_NEW_IMPL( g_allocator, weapon_state_creation_params )( config_ptr, *object_to_cook, rounds_per_second, reload_time, object_to_cook->m_is_shown );
 	const_buffer params_buffer( (pcvoid)params, sizeof( weapon_state_creation_params ) );
 
 

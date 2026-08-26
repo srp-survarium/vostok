@@ -91,34 +91,31 @@ public:
 			bool								is_alive						( ) const { return m_is_alive; }
 
 	virtual	base_player*						cast_to_base_player				( ) override { return this; }
-	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
 	virtual	inventory_holder*					cast_to_inventory_holder		( ) override { return this; }
+	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
 
 			void								force_animation_selection		( ) { m_force_animation_selection = true; }
 
 	inline	bool								has_been_inserted				( ) const { return m_has_been_inserted; }
-
-public:
-	typedef boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > animation_callback;
 
 	// claude@MATCH: MSVC assigns vtable slots to same-name overloaded virtuals in
 	// REVERSE declaration order. Target wants enum-subscribe at vtable+0x4C (lower)
 	// and pcstr-subscribe at +0x50, so the enum overload must be declared LAST.
 	virtual	void								subscribe_animation_player		(
 													pcstr									arg_0,
-													animation_callback const&				arg_1,
+													boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > const& arg_1,
 													pcvoid									arg_2,
 													resources::managed_resource_ptr const&	arg_3,
-													u8										arg_4,
-													pcvoid									arg_5
+													const u8								arg_4,
+													pcvoid const							arg_5
 												) = 0;
 
 	virtual	void								subscribe_animation_player		(
 													animation::reserved_channel_ids_enum	arg_0,
-													animation_callback const&				arg_1,
+													boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > const& arg_1,
 													pcvoid									arg_2,
 													resources::managed_resource_ptr const&	arg_3,
-													pcvoid									arg_4
+													pcvoid const							arg_4
 												) = 0;
 
 	virtual	void								unsubscribe_animation_player	( pcstr arg_0, pcvoid arg_1 ) = 0;
@@ -129,7 +126,7 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize						( network_core::packet_reader& arg_0 )			{ /* no source */ }
 
-	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
+	virtual	u32									local_time						( const u32 arg_0 ) const = 0;
 
 	// claude@NOTE: inline COMDAT attributed to this header (target emits it from base_player.h).
 	// `object`/`mask` are top-level `const` (QBX/IBE mangle); result is passed BY VALUE to the
@@ -145,58 +142,74 @@ public:
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );
 			void								unsubscribe_from_player_death	( player_death_subscriber* subscriber );
 
-	inline	bool								animation_selection_is_forced	( ) const							{ return m_force_animation_selection; }
-	inline	void								set_force_animation_selection	( bool force_animation_selection )	{ m_force_animation_selection = force_animation_selection; } // sushi@TODO: Repeat
+	inline	bool								animation_selection_is_forced	( ) const { return m_force_animation_selection; }
+
+	inline	void								set_force_animation_selection	( bool force_animation_selection ) { m_force_animation_selection = force_animation_selection; }
+
+	typedef boost::function< network_core::udp_match_packet& ( ) > reciver_packet_allocator_type;
+	typedef boost::function< void( network_core::udp_match_packet& ) > reciver_enqueuer_type;
 
 	inline	void								send_game_world_objects			(
-													boost::function< network_core::udp_match_packet& ( ) > const&		arg_0,
-													boost::function< void ( network_core::udp_match_packet& ) > const&	arg_1
+													reciver_packet_allocator_type const&	arg_0,
+													reciver_enqueuer_type const&			arg_1
 												) const { /* no source */ } // sushi@TODO: There is `send_game_world_object`
 
 			void								deserialize_game_world_object	( network_core::packet_reader& reader );
 
-	virtual	engine&								get_engine						( ) = 0;
 protected:
+	virtual	engine&								get_engine						( ) = 0;
 			void								tick_active_object				( );
-public:
 
 	inline	game_world_object_list const&		game_world_objects				( ) const { return m_game_world_objects; }
 
 protected:
 			void								on_player_death					( );
+
+	/* 0x0040 */	interactive_object_ptr				m_current_active_object;
+	/* 0x0044 */	interactive_object_ptr				m_target_active_object;
+	/* 0x0048 */	float4x4							m_character_head_transform;
 private:
 	// target mangles ABE (private const) - ?send_game_world_object@..@@ABE..
 			void								send_game_world_object			(
 													game_world_object const*											object,
-													boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
-													boost::function< void( network_core::udp_match_packet& ) > const&	reciver_enqueuer
+													reciver_packet_allocator_type const&							reciver_packet_allocator,
+													reciver_enqueuer_type const&								reciver_enqueuer
 												) const;
-public:
+private:
 
-	virtual	animation::animation_player const&	animation_player				( ) const = 0;
 	virtual	animation::animation_player&		animation_player				( ) = 0;
+	virtual	animation::animation_player const&	animation_player				( ) const = 0;
 
 	virtual	void								on_before_active_object_changed	( interactive_object_ptr const& arg_0, interactive_object_ptr const& arg_1 ) const { /* no source */ }
 
-public:
+	typedef intrusive_list<
+		player_death_subscriber,
+		player_death_subscriber*,
+		&player_death_subscriber::next,
+		threading::single_threading_policy,
+		no_size_policy,
+		no_debug_policy
+	> player_death_subscribers_type;
+
 	/* 0x0000 */	/* inventory_holder */
 	/* 0x000c */	/* collision_user */
 	/* 0x0030 */	/* hit_initiator */
 	/* 0x0038 */	/* hit_receiver */
-	/* 0x0040 */	interactive_object_ptr				m_current_active_object;
-	/* 0x0044 */	interactive_object_ptr				m_target_active_object;
-	/* 0x0048 */	float4x4							m_character_head_transform;
-	/* 0x0088 */	player_death_subscriber_list		m_player_death_subscribers;
-	/* 0x0094 */	character_recoil_params				m_recoil_params;
-	/* 0x00a4 */	character_dispersion_params			m_dispersion_params;
-	/* 0x00dc */	breath_holding_params				m_breath_holding_params;
+private:
+	/* 0x0088 */	player_death_subscribers_type	m_player_death_subscribers;
+	/* 0x0094 */	const character_recoil_params		m_recoil_params;
+	/* 0x00a4 */	const character_dispersion_params	m_dispersion_params;
+	/* 0x00dc */	const breath_holding_params			m_breath_holding_params;
 	/* 0x0104 */	game_world_object_list				m_game_world_objects;
 	/* 0x0110 */	damage_model_ptr					m_damage_model;
 	/* 0x0114 */	float								m_movement_speed_factor;
 	/* 0x0118 */	bool								m_force_animation_selection;
+protected:
 	/* 0x0119 */	bool								m_is_alive;
 	/* 0x011a */	bool								m_is_replaying_history;
 	/* 0x011b */	bool								m_has_been_inserted;
+
+	friend class player;
 }; // struct base_player
 
 STATIC_SIZE_ASSERT(base_player, 0x11C);

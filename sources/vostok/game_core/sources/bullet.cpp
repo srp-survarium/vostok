@@ -26,7 +26,7 @@ bullet::bullet(
 	bullet_manager&					bullet_manager,
 	float3 const&					position,
 	float3 const&					velocity,
-	u32								born_time_in_ms,
+	const u32						born_time_in_ms,
 	float							air_resistance,
 	weapon_ammunition_ptr const&	wa,
 	weapon_core const&				wc,
@@ -469,7 +469,7 @@ void bullet::fix_collision_point_and_time(
 	float&					collision_time,
 	float					start_time,
 	float					current_time,
-	triangle_orientation	orientation,
+	const triangle_orientation orientation,
 	float3 const&			triangle_normal,
 	float3 const&			gravity
 )

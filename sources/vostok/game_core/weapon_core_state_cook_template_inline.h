@@ -9,7 +9,7 @@ namespace survarium {
 
 template < typename T >
 inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( ) :
-	resources::unmanaged_cook( weapon_core_state_cook_class< T >( ), reuse_false, use_current_thread_id, use_current_thread_id )
+	resources::unmanaged_cook( T::resource_class, reuse_false, use_current_thread_id, use_current_thread_id )
 {
 	resources::register_cook( this );
 }

@@ -174,8 +174,8 @@ void network_client::on_disconnected_from_lobby( )
 //    the target whole-program-inlines the byte/word reads to direct mov.
 //  - std::find emits a call to stlp __find<inventory_item_instance*,u32>; the target
 //    inlines that loop in place (its 4 stmts 296/297/299/301 vs our 1 call), so our
-//    statement count reads 12 vs 14 over the SAME source. operator==(u32) recovered on
-//    inventory_item_instance (asm cmp item.id==value, mirrors account_list_item).
+//    statement count reads 12 vs 14 over the SAME source. The comparison is the free
+//    inventory_item_instance/u32 overload; retail has no member operator record.
 void network_client::process_shop_action( network_core::packet_reader& packet )
 {
 	if ( packet.r< u8 >( ) )

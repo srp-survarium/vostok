@@ -12,7 +12,6 @@ namespace survarium {
 class artefact_base : public inventory_item {
 public:
 	inline			artefact_base	( ) : inventory_item( inventory_item::use_silent ) { }
-	virtual			~artefact_base	( ) { }
 }; // class artefact_base
 
 STATIC_SIZE_ASSERT(artefact_base, 0x118);

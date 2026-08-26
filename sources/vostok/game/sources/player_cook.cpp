@@ -19,6 +19,7 @@
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/affects_applying_type_enum.h>
+#include <vostok/game_core/artefact_spores_core.h>
 #include <vostok/physics/animated_rigid_body.h>
 #include <vostok/render/facade/skeleton_combined_cook_data.h>
 #include <vostok/render/facade/model.h>

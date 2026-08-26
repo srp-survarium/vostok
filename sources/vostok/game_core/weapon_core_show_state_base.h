@@ -11,6 +11,8 @@
 namespace survarium {
 
 class weapon_core_show_state_base : public weapon_core_animation_end_aware_state {
+	typedef weapon_core_animation_end_aware_state super;
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected (objdiff pairs by mangled name)
 	explicit		weapon_core_show_state_base	( weapon_core& weapon, bool& is_shown );
@@ -19,7 +21,7 @@ protected:
 	virtual	void	initialize					( ) override;
 	virtual	void	finalize					( ) override;
 
-public:
+private:
 	virtual	bool	is_ready_for_transition		( ) const override { return has_animation_ended( ); }
 
 private:

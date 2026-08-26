@@ -15,19 +15,25 @@
 
 namespace survarium {
 
-class scheduler : public boost::noncopyable {
+class scheduler : private boost::noncopyable {
 public:
-	// u32 const time_delta_ms, u32 const current_time_ms
-	typedef boost::function< void( u32, u32 ) >	callback;
-
 	struct identifier {
 		u32		m_id	: 31;
 		u32		m_active: 1;
 	};
+	typedef identifier id_type;
+
+	// u32 const time_delta_ms, u32 const current_time_ms
+	typedef boost::function< void( u32, u32 ) > callback_type;
 
 	struct callback_record {
 		scheduler::identifier*	m_id;
-		scheduler::callback		m_callback;
+		scheduler::callback_type	m_callback;
+	};
+
+	enum type {
+		type_on_frame = 0,
+		type_fixed_interval = 1,
 	};
 
 	struct scheduler_record {
@@ -38,43 +44,41 @@ public:
 	};
 
 	struct record : public scheduler::callback_record, public scheduler::scheduler_record { };
-	typedef vostok::vectora< scheduler::record >	records_type;
+	typedef vostok::vectora< scheduler::record > OBJECTS;
 
 private:
-	inline	void						change_status		( scheduler::identifier* identifier, scheduler::records_type& dest, scheduler::records_type& src );
-	inline	scheduler::records_type&	objects				( scheduler::identifier* identifier ) { return *m_objects[identifier->m_active]; }
-			scheduler::record&			register_object		( scheduler::identifier* identifier, scheduler::callback const& callback, const bool active );
+	/* 0x0000 */	OBJECTS		m_inactive_objects;
+	/* 0x0010 */	OBJECTS		m_active_objects;
+	/* 0x0020 */	OBJECTS*	m_objects[2];
+	/* 0x0028 */	u32			m_current_index;
 
-public:
-			void						on_frame			( const u32 frame_delta, const u32 current_time );
+private:
+	inline	void						change_status		( scheduler::id_type* identifier, scheduler::OBJECTS& dest, scheduler::OBJECTS& src );
+	inline	scheduler::OBJECTS&		objects				( scheduler::id_type* identifier ) { return *m_objects[identifier->m_active]; }
+			scheduler::record&			register_object		( scheduler::id_type* identifier, scheduler::callback_type const& callback, const bool active );
+
 private:
 			void						on_frame			( scheduler::record& record, const u32 frame_delta, const u32 current_time );
+public:
+			void						on_frame			( const u32 frame_delta, const u32 current_time );
 
 public:
 	inline explicit						scheduler			( vostok::memory::base_allocator* allocator );
 										~scheduler			( );
 
-			void						register_on_frame	( scheduler::identifier* identifier, scheduler::callback const& callback, const bool active );
+			void						register_on_frame	( scheduler::id_type* identifier, scheduler::callback_type const& callback, const bool active );
 			void						register_for_update	(
-											scheduler::identifier*		identifier,
-											scheduler::callback const&	callback,
+											scheduler::id_type*			identifier,
+											scheduler::callback_type const& callback,
 											const bool					active,
 											const u32					update_delta,
 											const u32					max_update_count,
 											const u32					time_start_from
 										);
-			void						unregister			( scheduler::identifier* identifier );
+			void						unregister			( scheduler::id_type* identifier );
 
-	inline	void						activate			( scheduler::identifier* identifier ) { /* no source */ }
-	inline	void						deactivate			( scheduler::identifier* identifier ) { /* no source */ }
-
-
-private:
-	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	scheduler::records_type		m_inactive_objects;
-	/* 0x0010 */	scheduler::records_type		m_active_objects;
-	/* 0x0020 */	scheduler::records_type*	m_objects[2];
-	/* 0x0028 */	u32							m_current_index;
+	inline	void						activate			( scheduler::id_type* identifier ) { /* no source */ }
+	inline	void						deactivate			( scheduler::id_type* identifier ) { /* no source */ }
 }; // class scheduler
 
 STATIC_SIZE_ASSERT(scheduler, 0x2C);

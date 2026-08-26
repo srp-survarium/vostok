@@ -10,6 +10,8 @@
 namespace survarium {
 
 class weapon_core_chamber_a_round_aimed_state_base : public weapon_core_animation_end_aware_state {
+	typedef weapon_core_animation_end_aware_state super;
+
 protected:
 	// target mangling: ctor @@IAE (protected), initialize/finalize @@MAE (protected
 	// virtual), serialize/deserialize/on_animation_end_impl @@EBE/@@EAE (private
@@ -29,7 +31,7 @@ private:
 protected:
 	// protected so the concrete subclass reads it in get_weapon_lexeme_pair
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
-	/* 0x0140 */	float		m_animation_timescale;
+	/* 0x0140 */	const float	m_animation_timescale;
 }; // class weapon_core_chamber_a_round_aimed_state_base
 
 STATIC_SIZE_ASSERT(weapon_core_chamber_a_round_aimed_state_base, 0x148);

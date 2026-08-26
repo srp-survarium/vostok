@@ -25,10 +25,6 @@ namespace survarium {
 
 struct base_player_creation_params {
 public:
-	explicit	base_player_creation_params	( ) { }
-	inline		~base_player_creation_params( ) { /* no source */ }
-
-public:
 	/* 0x0000 */	player_initial_info					initial_info;
 	/* 0x0010 */	character_recoil_params				recoil_params;
 	/* 0x0020 */	character_dispersion_params			dispersion_params;

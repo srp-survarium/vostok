@@ -9,7 +9,7 @@ namespace survarium {
 
 extern u16 g_material_physics_group[64];
 
-class game_material : public boost::noncopyable {
+class game_material : private boost::noncopyable {
 public:
 						game_material			( );
 
@@ -27,9 +27,11 @@ public:
 	inline	bool		can_place_mine			( ) const { return m_mine_can_place; }
 	inline	bool		can_stick_mine			( ) const { return m_mine_can_stick; }
 
+	typedef fixed_string< 64 > material_name;
+
 private:
 	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	fixed_string<64>	m_name;
+	/* 0x0000 */	material_name		m_name;
 	/* 0x004c */	float				m_material_resistance;
 	/* 0x0050 */	float				m_bullet_reflection_speed_down;
 	/* 0x0054 */	float				m_width;

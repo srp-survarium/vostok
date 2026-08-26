@@ -9,15 +9,15 @@ namespace survarium {
 
 struct hit_receiver;
 
-class player_actions_subscriber : public boost::noncopyable { // sushi@TODO: NO_VTABLE?
+class player_actions_subscriber : private boost::noncopyable { // sushi@TODO: NO_VTABLE?
 public:
 	enum action {
 		run				= 0,
 		sprint			= 1,
 		jump			= 2,
 		shoot			= 3,
-		character_hit	= 4,
-		character_kill	= 5
+		hit				= 4,
+		kill			= 5
 	};
 	virtual	void	on_player_action			( hit_receiver const* receiver, player_actions_subscriber::action action, float param ) = 0;
 }; // class player_actions_subscriber

@@ -35,6 +35,12 @@ enum apply_hit_type {
 
 class damage_zone_core : public collision_sensor , public hit_initiator , public player_actions_subscriber {
 public:
+	struct damage_zone_user_data {
+		/* 0x0000 */	configs::binary_config_value const*	config;
+		/* 0x0004 */	physics::world*						physics_world;
+		/* 0x0008 */	game_scene*							game_scene;
+	}; // struct damage_zone_user_data
+
 							damage_zone_core			( );
 	virtual					~damage_zone_core			( );
 
@@ -71,11 +77,8 @@ private:
 			void			hit_on_inside				( const u32 frame_delta, const u32 current_time );
 			void			hit_on_motion_inside		( const u32 frame_delta, const u32 current_time );
 
-	struct damage_zone_user_data {
-		/* 0x0000 */	configs::binary_config_value const*	config;
-		/* 0x0004 */	physics::world*						physics_world;
-		/* 0x0008 */	game_scene*							game_scene;
-	}; // struct damage_zone_user_data
+	typedef vector< hit_receiver_info > receivers_container;
+	typedef fixed_string< 16 > body_part_name_type;
 
 private:
 	/* 0x0000 */	/* collision_sensor */
@@ -86,8 +89,8 @@ private:
 	/* 0x0078 */	math::curve_line_float				m_motion_on_center_curve;
 	/* 0x0098 */	physics::world*						m_physics_world;
 	/* 0x009c */	zone_group*							m_owner;
-	/* 0x00a0 */	vector< hit_receiver_info >			m_receivers;
-	/* 0x00ac */	vector< fixed_string<16> >			m_body_parts_filter;
+	/* 0x00a0 */	receivers_container					m_receivers;
+	/* 0x00ac */	vector< body_part_name_type >		m_body_parts_filter;
 	/* 0x00b8 */	fixed_string<32>					m_damage_type;
 	/* 0x00e4 */	apply_hit_type						m_apply_hit_type;
 	/* 0x00e8 */	float								m_max_hit;

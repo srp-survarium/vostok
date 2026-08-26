@@ -112,7 +112,7 @@ struct find_by_damage_type_predicate {
 		return strings::equal( protector->m_hit_type, m_damage_type );
 	}
 
-private:
+public:
 	/* 0x0000 */	char	m_damage_type[16];
 }; // struct find_by_damage_type_predicate
 
@@ -203,7 +203,7 @@ void damage_model::subscribe_on_affect( hit_affects_type_enum const affect_type,
 
 void damage_model::unsubscribe_from_affect( const hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
 {
-	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
+	affect_subscribers_type* subscribers = &m_affect_subscriptions[affect_type];
 	ASSERT( UNKNOWN_EXPRESSION );
 	subscribers->erase( subscriber );
 }
@@ -230,7 +230,7 @@ STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
 
 void damage_model::notify_on_affect_event( pcstr body_part_name, const hit_affects_type_enum affect_type, const affect_event_type_enum event_type )
 {
-	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
+	affect_subscribers_type* subscribers = &m_affect_subscriptions[affect_type];
 	subscribers->for_each( affect_event_predicate( body_part_name, affect_type, event_type ) );
 }
 

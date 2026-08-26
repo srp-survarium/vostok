@@ -13,6 +13,9 @@
 namespace survarium {
 
 class pistol_weapon_core_reload_state : public weapon_core_reload_state_base {
+	typedef weapon_core_reload_state_base super;
+	enum { views_count = 2, weapon_states_count = 2, user_states_count = 2, weapon_animations_count = 8, user_animations_count = 8, total_animations_count = 16 };
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected, non-const
 			explicit							pistol_weapon_core_reload_state	(
@@ -21,6 +24,7 @@ protected:
 													resources::managed_resource_ptr const*	animations,
 													const u32										animations_count
 												);
+	static resources::class_id_enum const resource_class = resources::pistol_weapon_reload_state_class;
 
 private:
 	// weapon_and_hands_expression mangles ?...@@EBE... -> private virtual const

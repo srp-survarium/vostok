@@ -12,9 +12,9 @@ namespace survarium {
 class jump_logic_state_landing : public jump_logic_base_state {
 
 public:
-	explicit			jump_logic_state_landing	( jump_logic& owner );
+	typedef jump_logic_base_state super;
 
-	virtual	void		execute						( ) override { }
+	explicit			jump_logic_state_landing	( jump_logic& owner );
 
 private:
 	// claude@MATCH: target mangles every override below private (EAE/AAE/EBE); only the
@@ -23,12 +23,14 @@ private:
 						selected_animations			(
 							mutable_buffer&						buffer,
 							const bool								is_third_view,
-							animation_delegate const&			look_calculator,
+							fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > const& look_calculator,
 							weapon_animation_parameters const&	weapon_parameters
 						) override;
 
 	virtual	void		initialize					( ) override;
 	virtual	void		finalize					( ) override;
+	virtual	void		execute						( ) override { }
+	virtual	bool		is_ready_for_transition		( ) const override { return false; }
 
 			animation::mixing::animation_lexeme
 						get_main_lexeme				( mutable_buffer& buffer, const bool is_third_view, const animation::body_part_masks_enum bones_mask );
@@ -37,16 +39,12 @@ private:
 						get_look_lexeme				(
 							mutable_buffer&							buffer,
 							bool const								is_third_view,
-							animation_delegate const&				look_calculator,
+							fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > const& look_calculator,
 							animation::mixing::animation_lexeme&	weight_driving_animation
 						);
 
 			animation::callback_return_type_enum
 						on_interval_end				( animation::animation_callback_params& params );
-
-	// claude@MATCH: target mangles this override private virtual (?...@@EBE_NXZ),
-	// so it lives under private: (objdiff matches by symbol name -> access char).
-	virtual	bool		is_ready_for_transition		( ) const override { return false; }
 
 	/* 0x0000 */	/* jump_logic_base_state */
 	/* 0x0028 */	jump_animation_parts	m_landing_type;

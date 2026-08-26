@@ -12,7 +12,7 @@ namespace survarium {
 
 struct breath_holding_params;
 
-class breath_state : public ai::fsm_state, public core::noncopyable {
+class breath_state : public ai::fsm_state, private core::noncopyable {
 public:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) { /* no source */ }
 

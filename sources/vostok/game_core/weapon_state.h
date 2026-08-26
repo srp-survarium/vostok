@@ -16,6 +16,7 @@ namespace survarium {
 
 struct weapon_state {
 			explicit			weapon_state( );
+							weapon_state( weapon_state const& other );
 
 			weapon_state&		operator=	( weapon_state const& other );
 

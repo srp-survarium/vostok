@@ -12,9 +12,15 @@ namespace survarium {
 
 class player_logic_sprint_state : public player_logic_base_state {
 public:
+	typedef boost::function< void( ) > initialize_callback_type;
+	typedef boost::function< void( ) > finalize_callback_type;
+
 	explicit			player_logic_sprint_state	( weapon_user_animations_selector& owner );
 
-			void		set_callbacks				( boost::function<void()> const& initialize_callback, boost::function<void()> const& finalize_callback );
+			void		set_callbacks				( initialize_callback_type const& initialize_callback, finalize_callback_type const& finalize_callback );
+
+	typedef player_logic_base_state super;
+	typedef animation::mixing::expression expression;
 
 private:
 	// claude@MATCH: every virtual override mangles `E` (private); ctor/set_callbacks
@@ -25,7 +31,7 @@ private:
 	// the empty stub so objdiff pairs it to a different fold-rep (reads None).
 	virtual	void		execute						( ) override { /* no source */ }
 
-	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
+	virtual	selected_animations_result_type
 						selected_animations			(
 							mutable_buffer&						buffer,
 							weapon_animation_parameters const&	weapon_parameters,
@@ -35,8 +41,8 @@ private:
 			void		on_stamina_depleted			( );
 
 	/* 0x0000 */	/* player_logic_base_state */
-	/* 0x0028 */	boost::function< void() >		m_initialize_callback;
-	/* 0x0048 */	boost::function< void() >		m_finalize_callback;
+	/* 0x0028 */	initialize_callback_type		m_initialize_callback;
+	/* 0x0048 */	finalize_callback_type			m_finalize_callback;
 	/* 0x0068 */	player_stamina_subscriber		m_stamina_subscriber;
 }; // class player_logic_sprint_state
 

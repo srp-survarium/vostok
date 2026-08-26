@@ -25,6 +25,8 @@ struct usable_object_user_data;
 
 class artefact_container_core : public usable_object {
 public:
+	typedef usable_object super;
+
 						artefact_container_core		( );
 
 	virtual	void		load						( configs::binary_config_value const& cfg ) override;
@@ -47,8 +49,6 @@ protected:
 			void		artefact_spawned			( resources::queries_result& data );
 
 public:
-	virtual				~artefact_container_core	( ) { }
-
 protected:
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	artefact_base_ptr			m_artefact;

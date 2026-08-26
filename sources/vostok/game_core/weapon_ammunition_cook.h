@@ -9,8 +9,10 @@
 
 namespace survarium {
 
-class weapon_ammunition_cook : public resources::translate_query_cook , public boost::noncopyable {
+class weapon_ammunition_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+
 	explicit		weapon_ammunition_cook		( );
 
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;

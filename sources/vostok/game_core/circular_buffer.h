@@ -11,11 +11,7 @@ namespace survarium {
 // primary-template declaration (C2988). First real includer is
 // game/sources/player.h (m_history member).
 template < typename T >
-class circular_buffer : public boost::noncopyable {
-public:
-	typedef T			value_type;
-	typedef value_type*	pointer_type;
-
+class circular_buffer : private boost::noncopyable {
 public:
 	inline				circular_buffer		( memory::base_allocator& allocator, const u32 max_count ) :
 		m_history	( VOSTOK_ALLOC_IMPL( allocator, T, max_count ) ),

@@ -14,7 +14,7 @@ class collision_sensor;
 
 class collision_geometry_subscriber : public base_game_object {
 public:
-									~collision_geometry_subscriber	( ) {}
+	virtual						~collision_geometry_subscriber	( ) {}
 
 	virtual	usable_object*			cast_to_usable	( ) { return NULL; }
 	virtual	collision_sensor*		cast_to_sensor	( ) { return NULL; }

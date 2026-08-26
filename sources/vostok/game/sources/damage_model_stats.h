@@ -23,6 +23,27 @@ namespace ui {
 
 namespace survarium {
 
+template < int ItemSize, int ItemsCount >
+struct statistics_item {
+	typedef fixed_string< ItemSize > content_type;
+
+	inline	statistics_item	( ) { }
+	inline	~statistics_item	( ) { }
+
+public:
+	/* 0x0000 */	fixed_string< 32 >						caption;
+	/* 0x002c */	fixed_vector< content_type, ItemsCount >	content;
+}; // struct statistics_item
+
+struct damage_info_type : public boost::noncopyable {
+	inline	damage_info_type	( ) { }
+	inline	~damage_info_type	( ) { }
+
+public:
+	/* 0x0000 */	/* boost::noncopyable */
+	/* 0x0000 */	fixed_vector< statistics_item< 46, 16 >, 20 > damage_info;
+}; // struct damage_info_type
+
 class damage_model_stats : public boost::noncopyable {
 public:
 			explicit		damage_model_stats	( ui::world& ui_world );

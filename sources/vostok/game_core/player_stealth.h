@@ -12,13 +12,13 @@ struct player_input;
 
 class player_stealth {
 public:
+								player_stealth				( );
 			explicit			player_stealth				( player_stealth const& other );
-			explicit			player_stealth				( );
 
 			player_stealth&		operator=					( player_stealth const& other );
 
 			void				load						( configs::binary_config_value const& config );
-	inline	bool				can_be_detected				( player_stealth const& arg_0, player_input const& arg_1, float arg_2 ) const { /* no source */ }
+	inline	bool				can_be_detected				( player_stealth const& arg_0, player_input const& arg_1, const float arg_2 ) const { /* no source */ }
 
 	inline	float				get_armor_value				( ) const { /* no source */ }
 	inline	float				get_optics_value			( ) const { /* no source */ }

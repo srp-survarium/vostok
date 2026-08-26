@@ -13,6 +13,8 @@ class victory_item_core;
 
 class victory_item_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
+	typedef resources::translate_query_cook super;
+
 									victory_item_core_cook		( );
 
 	virtual	victory_item_core*		create_resource				( );

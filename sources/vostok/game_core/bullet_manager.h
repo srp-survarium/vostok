@@ -95,10 +95,9 @@ public:
 	inline	float							get_bullet_time_factor		( ) const { return s_bm_bullet_time_factor; }
 
 private:
-	struct bullet_functor {
-		inline	explicit	bullet_functor	( ) { }
-		inline				~bullet_functor	( ) { }
+	typedef buffer_vector<bullet*> bullets_type;
 
+	struct bullet_functor {
 	public:
 		/* 0x0000 */	boost::function< void() >			functor;
 		/* 0x0020 */	float3								position;
@@ -110,6 +109,7 @@ private:
 		/* 0x0050 */	bool								is_front_face;
 	}; // struct bullet_functor
 
+			void							add_decal_impl				( bullet_manager::bullet_functor* const functor );
 			void							add_decal_impl				(
 												resources::unmanaged_resource_ptr const&	decal,
 												float										size,
@@ -118,7 +118,6 @@ private:
 												float3 const&								normal,
 												bool										is_front_face
 											);
-			void							add_decal_impl				( bullet_manager::bullet_functor* const functor );
 			void							play_sound_impl				( resources::unmanaged_resource_ptr const& sound, float3 const& position );
 			void							play_particle_impl			(
 												resources::unmanaged_resource_ptr const&	particle,
@@ -157,22 +156,23 @@ private:
 			void							destroy_one_bullet			( );
 
 private:
-	typedef resources::unmanaged_allocation_resource_ptr	unmanaged_allocation_resource_ptr;
-	typedef resources::unmanaged_resource_ptr				unmanaged_resource_ptr;
-
-	typedef buffer_vector<bullet*>							bullets_type;
 	typedef memory::single_size_buffer_allocator<
 		sizeof( bullet ),
 		threading::simple_lock >							bullets_allocator;
 
+	typedef resources::unmanaged_allocation_resource_ptr	unmanaged_allocation_resource_ptr;
+	typedef resources::unmanaged_resource_ptr				unmanaged_resource_ptr;
+
 	typedef intrusive_mpmc_stack<
 		bullet_manager::bullet_functor,
 		bullet_manager::bullet_functor,
-		&bullet_manager::bullet_functor::next >				bullet_functor_mpmc_stack;
+		&bullet_manager::bullet_functor::next >				bullet_functors_type;
 
 private:
-	class bullet_functor_mt_allocator : public boost::noncopyable {
+	class bullet_functor_mt_allocator : private boost::noncopyable {
 	public:
+		typedef bullet_manager::bullet_functor bullet_functor;
+
 		explicit				bullet_functor_mt_allocator	( void* const buffer, const u32 buffer_size ) : m_buffer( buffer )
 		{
 			ASSERT( UNKNOWN_EXPRESSION );
@@ -213,7 +213,7 @@ private:
 
 	private:
 		/* 0x0000 */	/* boost::noncopyable */
-		/* 0x0000 */	bullet_functor_mpmc_stack	m_bullet_functors;
+		/* 0x0000 */	bullet_functors_type	m_bullet_functors;
 		/* 0x0008 */	void*						m_buffer;
 	}; // class bullet_functor_mt_allocator
 
@@ -221,7 +221,7 @@ private:
 	/* 0x0000 */	buffer_vector<bullet *>							m_bullets;
 	/* 0x0008 */	float3											m_gravity;
 	/* 0x0018 */	bullet_manager::bullet_functor_mt_allocator		m_mt_stack_allocator;
-	/* 0x0028 */	bullet_functor_mpmc_stack						m_functors;
+	/* 0x0028 */	bullet_functors_type							m_functors;
 	/* 0x0030 */	resources::unmanaged_allocation_resource_ptr	m_bullets_memory_ptr;
 	/* 0x0038 */	uninitialized_reference< bullets_allocator >	m_bullets_allocator_ref;
 	/* 0x0058 */	bullet_manager_engine*							m_engine;

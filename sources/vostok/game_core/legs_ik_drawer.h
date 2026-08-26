@@ -19,7 +19,7 @@ namespace debug {
 
 namespace survarium {
 
-class legs_ik_drawer : public core::noncopyable {
+class legs_ik_drawer : private core::noncopyable {
 public:
 	inline	explicit	legs_ik_drawer		( render::debug::renderer& renderer, render::scene_ptr scene ) : m_renderer( renderer ), m_scene( scene ) { }
 

@@ -9,14 +9,17 @@
 
 namespace survarium {
 
-struct damage_protector : public boost::noncopyable {
+struct damage_protector : private boost::noncopyable {
 public:
+	typedef boost::function< float ( pcstr, pcstr, float, float ) > reduce_damage_functor_type;
+	typedef boost::function< bool ( pcstr, hit_affects_type_enum ) > protect_affect_functor_type;
+
 			damage_protector	( ) : next( NULL ) {}
 	virtual ~damage_protector	( ) {}
 
 public:
-	boost::function< float ( pcstr, pcstr, float, float ) > reduce_damage_functor;
-	boost::function< bool ( pcstr, hit_affects_type_enum ) > protect_affect_functor;
+	reduce_damage_functor_type reduce_damage_functor;
+	protect_affect_functor_type protect_affect_functor;
 	damage_protector* next;
 }; // class damage_protector
 

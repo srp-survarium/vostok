@@ -14,8 +14,8 @@ public:
 	inline	explicit	weapon_state_creation_params	(
 							configs::binary_config_ptr const&	config,
 							weapon_core&						weapon,
-							float								rounds_per_second,
-							float								reload_time,
+							const float						rounds_per_second,
+							const float						reload_time,
 							bool&								shown
 						) : config				( config ),
 							weapon				( weapon ),

@@ -16,13 +16,6 @@ public:
 	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
 	inline	explicit	anomaly_state	( generic_anomaly_core* owner ) : owner	( owner ) { }
 
-	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
-
-			void		initialize		( );
-			void		execute			( const u32 time_delta_ms, const u32 current_time_ms );
-			void		finalize		( );
-
-public:
 	/* 0x0000 */	bool						enabled;
 	/* 0x0004 */	u32							debug_idx;
 	/* 0x0008 */	u32							energy_threshold;
@@ -34,6 +27,12 @@ public:
 	/* 0x001c */	vector<zone_group *>		groups;
 	/* 0x0028 */	generic_anomaly_core*		owner;
 	/* 0x002c */	u32							m_finish_time_ms;
+
+	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
+
+			void		initialize		( );
+			void		execute			( const u32 time_delta_ms, const u32 current_time_ms );
+			void		finalize		( );
 }; // struct anomaly_state
 
 STATIC_SIZE_ASSERT(anomaly_state, 0x30);

@@ -25,6 +25,10 @@ namespace survarium {
 class weapon_core;
 
 class double_barreled_weapon_core_idle_state : public weapon_core_idle_state_base {
+	typedef weapon_core_idle_state_base super;
+	enum { views_count = 2, weapon_states_count = 3, user_states_count = 2, weapon_animations_count = 12, user_animations_count = 0, total_animations_count = 12 };
+	static resources::class_id_enum const resource_class = resources::double_barreled_weapon_idle_state_class;
+
 private:
 	// ctor mangles ??0...@@AAE@... -> private, non-const (objdiff pairs by mangled name)
 				explicit							double_barreled_weapon_core_idle_state	( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count );

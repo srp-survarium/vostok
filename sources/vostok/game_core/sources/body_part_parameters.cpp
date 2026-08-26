@@ -78,7 +78,7 @@ hit_type_parameters* body_part_parameters::get_hit_parameters( pcstr hit_type ) 
 	return m_hit_types.find_if<find_hit_parameters_by_type_predicate>( find_predicate );
 }
 
-struct protect_damage_predicate : boost::noncopyable {
+struct protect_damage_predicate : private boost::noncopyable {
 public:
 	explicit			protect_damage_predicate	(
 							float		armor_piercing,
@@ -99,13 +99,13 @@ public:
 public:
 	/* 0x0000 */	pcstr		m_body_type_name;
 	/* 0x0004 */	pcstr		m_damage_type;
-	/* 0x0008 */	float		m_armor_piercing;
+	/* 0x0008 */	const float	m_armor_piercing;
 	/* 0x000c */	float		m_amount;
 }; // struct protect_damage_predicate
 
 STATIC_SIZE_ASSERT(protect_damage_predicate, 0x10);
 
-struct protect_affect_predicate : boost::noncopyable {
+struct protect_affect_predicate : private boost::noncopyable {
 public:
 	explicit				protect_affect_predicate	( pcstr body_type_name, hit_affects_type_enum affect_type ) :
 								m_body_type_name	( body_type_name ),

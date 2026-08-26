@@ -17,17 +17,18 @@ public:
 	virtual	void	translate_query				( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource				( resources::resource_base* resource ) override;
 
+public:
+	static	pcstr	get_current_hit_type		( ) { /* no source */ }
+
 private:
 			void	on_hit_params_received		( resources::queries_result& data );
 
-private:
-	static	pcstr	get_current_hit_type		( ) { /* no source */ }
-
-	static fixed_vector< console_commands::command_token, 12 >	m_hit_types;
-	static console_commands::cc_token*							m_hit_types_commands;
-
 public:
 	static fixed_vector< fixed_string<24>, 12 >					m_hit_types_strings;
+
+private:
+	static console_commands::cc_token*							m_hit_types_commands;
+	static fixed_vector< console_commands::command_token, 12 >	m_hit_types;
 
 }; // class damage_model_cook
 

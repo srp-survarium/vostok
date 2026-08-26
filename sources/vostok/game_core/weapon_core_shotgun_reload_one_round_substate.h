@@ -11,6 +11,9 @@ namespace survarium {
 
 class weapon_core_shotgun_reload_one_round_substate : public weapon_core_shotgun_reload_base_substate {
 public:
+	typedef weapon_core_shotgun_reload_base_substate super;
+	enum { weapon_animations_count = 4, user_animations_count = 4, total_animations_count = 8 };
+
 			explicit	weapon_core_shotgun_reload_one_round_substate(
 							weapon_core&							weapon,
 							const float									animation_time_scale,
@@ -19,6 +22,8 @@ public:
 						);
 
 protected:
+	static resources::class_id_enum const resource_class = resources::weapon_shotgun_reload_one_substate_class;
+
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
 

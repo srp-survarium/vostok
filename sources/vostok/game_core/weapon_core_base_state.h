@@ -24,7 +24,7 @@ namespace survarium {
 
 class weapon_core;
 
-class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
+class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , private boost::noncopyable {
 protected:
 	// ctor mangles ?? 0...@@IAE@... -> protected, non-const (objdiff pairs by mangled name)
 	explicit									weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
@@ -46,17 +46,17 @@ public:
 	virtual	animation::mixing::expression
 						weapon_and_hands_expression	(
 							mutable_buffer&							arg_0,
-							bool									arg_1,
-							weapon_user_state_enum					arg_2,
+							const bool							arg_1,
+							const weapon_user_state_enum			arg_2,
 							animation::mixing::animation_lexeme&	arg_3
 						) const = 0;
 
 	// claude@MATCH: real body proven by initialize_weapon_logic's target carcass -
 	// the inlined call stores the pointer at [state+0x12C] (m_is_firing_ptr).
 	inline	void		set_is_firing_ptr			( bool* is_firing ) { m_is_firing_ptr = is_firing; }
+protected:
 	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
 
-protected:
 	// mangles ?deserializing@...@@IBE_NXZ -> protected, const (objdiff pairs by mangled name)
 			bool		deserializing				( ) const;
 
@@ -69,7 +69,7 @@ protected:
 	/* 0x0130 */	animation::body_part_masks_enum		m_body_part_mask_for_user;
 	/* 0x0134 */	bool								m_is_ready_to_be_deactivated;
 	/* 0x0135 */	bool								m_animation_has_been_ended;
-	/* 0x0136 */	bool								m_serialize_animation_state;
+	/* 0x0136 */	const bool						m_serialize_animation_state;
 }; // class weapon_core_base_state
 
 STATIC_SIZE_ASSERT(weapon_core_base_state, 0x138);

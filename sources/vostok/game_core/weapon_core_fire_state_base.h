@@ -11,6 +11,8 @@
 namespace survarium {
 
 class weapon_core_fire_state_base : public weapon_core_animation_end_aware_state {
+	typedef weapon_core_animation_end_aware_state super;
+
 protected:
 			explicit		weapon_core_fire_state_base	( weapon_core& weapon, float animation_timescale );
 
@@ -30,7 +32,7 @@ protected:
 	// m_animation_timescale / m_playback_type read by the derived
 	// pistol_weapon_core_fire_state::get_weapon_lexeme_pair -> protected.
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
-	/* 0x0140 */	float								m_animation_timescale;
+	/* 0x0140 */	const float							m_animation_timescale;
 	/* 0x0144 */	animation::mixing::playback_enum	m_playback_type;
 }; // class weapon_core_fire_state_base
 

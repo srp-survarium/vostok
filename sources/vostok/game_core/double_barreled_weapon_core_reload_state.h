@@ -11,6 +11,12 @@
 namespace survarium {
 
 class double_barreled_weapon_core_reload_state : public weapon_core_reload_state_base {
+	typedef weapon_core_reload_state_base super;
+	enum { views_count = 2, weapon_states_count = 2, user_states_count = 2, weapon_animations_count = 8, user_animations_count = 8, total_animations_count = 16 };
+
+protected:
+	static resources::class_id_enum const resource_class = resources::double_barreled_weapon_reload_state_class;
+
 protected:
 	// ctor mangles ??0...@@IAE@... -> protected, non-const
 			explicit							double_barreled_weapon_core_reload_state(

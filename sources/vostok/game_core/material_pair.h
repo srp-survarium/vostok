@@ -10,9 +10,9 @@ namespace survarium {
 class game_material;
 class game_material_manager;
 
-class material_pair : public boost::noncopyable {
+class material_pair : private boost::noncopyable {
 public:
-														material_pair	( );
+												material_pair	( );
 														~material_pair	( );
 
 			void										load_from_config( game_material_manager const& manager, configs::binary_config_value const& val );
@@ -36,9 +36,12 @@ public:
 
 			void										add_particle	( resources::unmanaged_resource_ptr particle );
 
-private:
+	enum { particles_count = 8 };
+	typedef vectora< resources::unmanaged_resource_ptr > particles_container;
+
+public:
 	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	vectora< resources::unmanaged_resource_ptr >	m_particles;
+	/* 0x0000 */	particles_container							m_particles;
 	/* 0x0010 */	resources::unmanaged_resource_ptr				m_sound_emitter;
 	/* 0x0014 */	resources::unmanaged_resource_ptr				m_decal1;
 	/* 0x0018 */	float											m_decal1_size;

@@ -11,6 +11,8 @@
 namespace survarium {
 
 class weapon_core_reload_state_base : public weapon_core_animation_end_aware_state {
+	typedef weapon_core_animation_end_aware_state super;
+
 protected:
 	explicit		weapon_core_reload_state_base	( weapon_core& weapon, const float animation_time_scale );
 
@@ -24,7 +26,7 @@ private:
 
 protected:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
-	/* 0x0140 */	float		m_animation_timescale;	// protected: read directly by derived weapon_core_reload_state
+	/* 0x0140 */	const float	m_animation_timescale;	// protected: read directly by derived weapon_core_reload_state
 }; // class weapon_core_reload_state_base
 
 STATIC_SIZE_ASSERT(weapon_core_reload_state_base, 0x148);

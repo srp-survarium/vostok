@@ -26,11 +26,6 @@ public:
 		dict_id				( 0 )
 	{}
 
-	// process_shop_action does std::find( begin, end, new_item.id ); the target's
-	// inlined loop compares item.id == value (asm cmp [esi+8],ebx), mirroring
-	// account_list_item::operator==( const u32 )
-	inline	bool		operator==				( const u32 arg_0 ) const { /* no source */ return id == arg_0; }
-
 	inline	void		serialize				( network_core::udp_match_packet& arg_0, slot_serialize_mode_enum arg_1 ) const { /* no source */ }
 	inline	void		deserialize				( network_core::packet_reader& reader, slot_serialize_mode_enum mode )
 	{
@@ -53,6 +48,11 @@ public:
 }; // struct inventory_item_instance
 
 STATIC_SIZE_ASSERT(inventory_item_instance, 0x10);
+
+inline bool operator==( inventory_item_instance const& item, const u32 id )
+{
+	return item.id == id;
+}
 
 } // namespace survarium
 

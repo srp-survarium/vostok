@@ -70,7 +70,7 @@ void base_player::tick_active_object( )
 	}
 }
 
-void base_player::send_game_world_object( game_world_object const* object, boost::function<network_core::udp_match_packet &()> const& reciver_packet_allocator, boost::function<void(network_core::udp_match_packet &)> const& reciver_enqueuer ) const
+void base_player::send_game_world_object( game_world_object const* object, reciver_packet_allocator_type const& reciver_packet_allocator, reciver_enqueuer_type const& reciver_enqueuer ) const
 {
 	network_core::udp_match_packet&	packet	= reciver_packet_allocator( );
 
