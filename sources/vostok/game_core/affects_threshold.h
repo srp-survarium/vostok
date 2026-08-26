@@ -12,7 +12,7 @@ namespace survarium {
 class body_part_parameters;
 
 
-class affects_threshold : public boost::noncopyable {
+class affects_threshold : private boost::noncopyable {
 public:
 									affects_threshold	( const float value, const u32 affects_count, body_part_parameters* const bodypart );
 
@@ -25,13 +25,14 @@ public:
 		);
 	}
 
-	body_part_parameters*			bodypart			( )	const { return m_bodypart; }
+	body_part_parameters* const	bodypart			( )	const { return m_bodypart; }
 
-public:
 	affects_threshold*			next;
+
+private:
 	const float					m_value;
 	const u32					m_affects_count;
-	body_part_parameters*		m_bodypart;
+	body_part_parameters* const	m_bodypart;
 }; // class affects_threshold
 
 STATIC_SIZE_ASSERT(affects_threshold, 0x10);

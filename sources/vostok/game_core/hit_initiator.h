@@ -7,14 +7,14 @@
 
 namespace survarium {
 
-struct hit_initiator : public boost::noncopyable {
-	inline	explicit	hit_initiator	( u8 id, bool is_local ) : id( id ), is_local( is_local ) { }
+struct hit_initiator : private boost::noncopyable {
+	inline	explicit	hit_initiator	( const u8 id, const bool is_local ) : id( id ), is_local( is_local ) { }
 	virtual				~hit_initiator	( ) { }
 
 	virtual	void		on_fire			( ) { }
 
-	/* 0x0004 */	u8		id;
-	/* 0x0005 */	bool	is_local;
+	/* 0x0004 */	const u8	id;
+	/* 0x0005 */	const bool	is_local;
 }; // struct hit_initiator
 
 STATIC_SIZE_ASSERT(hit_initiator, 0x8);

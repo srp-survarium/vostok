@@ -47,19 +47,19 @@ body_part_parameters* damage_model::pop_body_part( )
 	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( );
 }
 
-struct regenerate_body_parts_predicate : public boost::noncopyable {
+struct regenerate_body_parts_predicate : private boost::noncopyable {
 public:
-	explicit			regenerate_body_parts_predicate		( u32 time_delta_ms, u32 current_time_in_ms ) :
+	explicit			regenerate_body_parts_predicate		( u32 time_delta_ms, const u32 current_time_in_ms ) :
 							time_delta_ms		( time_delta_ms ),
 							current_time_in_ms	( current_time_in_ms ) {}
 
-	inline		void	operator()							( body_part_parameters * body_part ) const {
+	inline		void	operator()							( body_part_parameters* const body_part ) const {
 		body_part->regenerate( time_delta_ms, current_time_in_ms );
 	}
 
 public:
-	/* 0x0000 */	u32		time_delta_ms;
-	/* 0x0004 */	u32		current_time_in_ms;
+	/* 0x0000 */	const u32	time_delta_ms;
+	/* 0x0004 */	const u32	current_time_in_ms;
 }; // struct regenerate_body_parts_predicate
 
 STATIC_SIZE_ASSERT(regenerate_body_parts_predicate, 0x8);
@@ -83,11 +83,11 @@ void damage_model::add_body_part( body_part_parameters* const new_body_part )
 	m_body_parts.push_back( new_body_part );
 }
 
-struct find_body_part_by_name_predicate : public boost::noncopyable {
+struct find_body_part_by_name_predicate : private boost::noncopyable {
 public:
 	explicit	find_body_part_by_name_predicate	( pcstr body_part_name ) : body_part_name( body_part_name ) {}
 
-	bool		operator()							( body_part_parameters* params ) const {
+	bool		operator()							( body_part_parameters* const params ) const {
 		return strings::equal( params->get_name( ), body_part_name );
 	}
 
@@ -155,13 +155,13 @@ void damage_model::apply_med_kit( pcstr part_name, const float amount )
 	part->increase_health( amount );
 }
 
-struct dump_npc_body_part_state_predicate : boost::noncopyable {
+struct dump_npc_body_part_state_predicate : private boost::noncopyable {
 public:
-	explicit		dump_npc_body_part_state_predicate	( vostok::ai::npc_statistics& npc_stats, u32 current_time ) :
+	explicit		dump_npc_body_part_state_predicate	( vostok::ai::npc_statistics& npc_stats, const u32 current_time ) :
 						npc_stats		( npc_stats ),
 						current_time	( current_time ) {}
 
-	inline	void	operator()							( body_part_parameters* params ) const {
+	inline	void	operator()							( body_part_parameters* const params ) const {
 		params->dump_state( npc_stats, current_time );
 	}
 
@@ -208,22 +208,22 @@ void damage_model::unsubscribe_from_affect( const hit_affects_type_enum affect_t
 	subscribers->erase( subscriber );
 }
 
-struct affect_event_predicate : public boost::noncopyable {
+struct affect_event_predicate : private boost::noncopyable {
 public:
-	explicit		affect_event_predicate	( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type ) :
+	explicit		affect_event_predicate	( pcstr body_part_name, const hit_affects_type_enum affect_type, const affect_event_type_enum event_type ) :
 						body_part_name		( body_part_name ),
 						affect_type			( affect_type ),
 						event_type			( event_type ) { }
 
-	inline	void	operator()				( affect_subscriber* subscriber ) const {
+	inline	void	operator()				( affect_subscriber* const subscriber ) const {
 		subscriber->subscription_callback( body_part_name, affect_type, event_type );
 	}
 
 
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	pcstr						body_part_name;
-	/* 0x0004 */	hit_affects_type_enum		affect_type;
-	/* 0x0008 */	affect_event_type_enum		event_type;
+	/* 0x0004 */	const hit_affects_type_enum	affect_type;
+	/* 0x0008 */	const affect_event_type_enum	event_type;
 }; // struct affect_event_predicate
 
 STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
@@ -234,13 +234,13 @@ void damage_model::notify_on_affect_event( pcstr body_part_name, const hit_affec
 	subscribers->for_each( affect_event_predicate( body_part_name, affect_type, event_type ) );
 }
 
-struct reset_predicate : boost::noncopyable {
+struct reset_predicate : private boost::noncopyable {
 public:
-	explicit			reset_predicate	( ) {}
-
-	inline		void	operator()		( body_part_parameters* params ) const {
+	inline		void	operator()		( body_part_parameters* const params ) const {
 		params->reset( );
 	}
+
+	explicit			reset_predicate	( ) {}
 }; // struct reset_predicate
 
 void damage_model::reset( )

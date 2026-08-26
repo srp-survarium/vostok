@@ -11,7 +11,7 @@ class body_part_parameters;
 
 typedef std::pair< body_part_parameters*, float > bdb_coeff;
 
-class hit_type_parameters : public boost::noncopyable {
+class hit_type_parameters : private boost::noncopyable {
 public:
 						hit_type_parameters	(
 							pcstr		type,
@@ -37,14 +37,14 @@ public:
 	inline	void		remove_vertex		( body_part_parameters* arg_0 ) { /* no source */ }
 			void		set_parameters		( float armor, float reduce, float absorbtion );
 
-public:
 	/* 0x0000 */	hit_type_parameters*	next;
+
 private:
-	/* 0x0004 */	fixed_string<16>		m_type;
+	/* 0x0004 */	const fixed_string<16>	m_type;
 	/* 0x0020 */	float					m_absorption_amount;
 	/* 0x0024 */	float					m_armor;
 	/* 0x0028 */	float					m_reduce;
-	/* 0x002c */	u32						m_bdb_count;
+	/* 0x002c */	const u32				m_bdb_count;
 }; // class hit_type_parameters
 
 STATIC_SIZE_ASSERT(hit_type_parameters, 0x30);
