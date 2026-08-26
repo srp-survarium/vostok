@@ -22,14 +22,6 @@ class game_world;
 
 class player_input_handler : public input::handler , public game_camera {
 public:
-	enum action_state_enum
-	{
-		down	= 0x0,
-		up		= 0x1,
-		hold	= 0x2,
-	};
-
-public:
 			explicit				player_input_handler		( game_world& world );
 	virtual							~player_input_handler		( ) { /* no source */ }
 
@@ -47,11 +39,7 @@ public:
 
 			bool					alt_is_held					( ) const;
 
-	inline	bool					action_present				( const game_action_id arg_0, action_state_enum& arg_1 ) const;
-
 private:
-	// the canonical dump prints these public; the mangled symbols say private
-	// (?on_keyboard_action@...@@EAE..., ?process_first_person_mode@...@@AAE...)
 	virtual	bool					on_keyboard_action			(
 										input::world*					input_world,
 										input::enum_keyboard			key,
@@ -87,10 +75,21 @@ private:
 			void					process_first_person_mode	( const bool use_mouse_move );
 			void					process_third_person_mode	( );
 
-private:
+	enum action_state_enum
+	{
+		down	= 0x0,
+		up		= 0x1,
+		hold	= 0x2,
+	};
+
+	inline	bool					action_present				( const game_action_id arg_0, action_state_enum& arg_1 ) const;
+
+	typedef std::pair< game_action_id, action_state_enum > generated_action_type;
+	typedef fixed_vector< generated_action_type, 32 > actions_type;
+
 	/* 0x0000 */	/* input::handler */
 	/* 0x0004 */	/* game_camera */
-	/* 0x0058 */	fixed_vector< std::pair< enum game_action_id, enum action_state_enum >, 32 >	m_game_actions;
+	/* 0x0058 */	actions_type			m_game_actions;
 	/* 0x0160 */	game_world&				m_game_world;
 	/* 0x0164 */	player_input			m_input;
 	/* 0x0178 */	u32						m_time_delta_in_ms;

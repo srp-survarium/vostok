@@ -68,6 +68,7 @@ private:
 	/* 0x0188 */	const float						m_time_scale;
 
 	template < typename T > friend class weapon_core_state_cook_template;
+	template < typename T > friend class weapon_sound_events_handler_state;
 }; // class double_barreled_weapon_core_hide_state
 
 STATIC_SIZE_ASSERT(double_barreled_weapon_core_hide_state, 0x190);

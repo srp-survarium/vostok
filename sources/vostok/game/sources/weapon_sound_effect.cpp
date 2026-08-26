@@ -87,7 +87,7 @@ animation::callback_return_type_enum weapon_sound_effect::on_sound_event( animat
 
 	base_game_scene& scene		= *m_weapon.get_game_scene( );
 	sound::world_user& user		= scene.get_game( ).get_sound_world( ).get_logic_world_user( );
-	const bool first_view		= scene.get_game( ).network_client( ).is_player_current( m_weapon.hit_initiator_holder( )->id );
+	const bool first_view		= scene.get_game( ).get_network_client( )->is_player_current( m_weapon.hit_initiator_holder( )->id );
 
 	sound::sound_instance_proxy_ptr instance;
 	if ( first_view )

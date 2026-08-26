@@ -14,7 +14,6 @@ class __declspec( novtable ) scaleform_game_engine {
 public:
 	virtual	void	execute_scaleform_command	( scaleform_render_command arg_0 ) = 0;
 
-	inline			scaleform_game_engine		( ) { }
 }; // class scaleform_game_engine
 
 STATIC_SIZE_ASSERT(scaleform_game_engine, 0x4);

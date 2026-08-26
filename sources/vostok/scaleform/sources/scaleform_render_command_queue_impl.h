@@ -23,7 +23,7 @@ class scaleform_game_engine;
 class flash_factory;
 struct flash_renderer;
 
-class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadCommandQueue , public boost::noncopyable {
+class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadCommandQueue , private boost::noncopyable {
 public:
 	inline	explicit	scaleform_render_command_queue_impl	( scaleform_game_engine& arg_0 )
 		:	engine	( arg_0 )
@@ -34,9 +34,8 @@ public:
 	// no `override`: the vendored SDK's ThreadCommandQueue lacks this virtual (see above)
 	virtual	void		GetRenderInterfaces					( Scaleform::Render::Interfaces* arg_0 );
 
-	virtual				~scaleform_render_command_queue_impl( ) { }
 
-private:
+public:
 	friend class flash_factory;
 	friend struct flash_renderer;
 

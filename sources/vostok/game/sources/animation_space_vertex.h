@@ -11,7 +11,6 @@ namespace survarium {
 
 struct animation_space_vertex {
 				animation_space_vertex	( resources::managed_resource_ptr const& animation_vertex, pcstr animation_caption );
-	inline		~animation_space_vertex	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	resources::managed_resource_ptr		animation;

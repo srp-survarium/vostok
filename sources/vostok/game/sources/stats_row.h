@@ -19,7 +19,7 @@ namespace survarium {
 class stats_graph;
 struct flash_text_manager;
 
-struct stats_row : public boost::noncopyable {
+struct stats_row : private boost::noncopyable {
 	inline			stats_row	( ) :
 		data_bytes_per_second_graph	( NULL ),
 		data_bytes_per_message_graph	( NULL ),

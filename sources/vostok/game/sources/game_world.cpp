@@ -239,7 +239,7 @@ void game_world::on_project_loaded(
 		for ( u8 i = 0; i < 16; ++i )
 			death_particles[i] = data[resource_index++].get_unmanaged_resource( );
 
-		show_text_manager( m_text_manager = new flash_text_manager( m_game.get_flash_factory( ).get_gfx_loader( ) ) );
+		show_text_manager( m_text_manager = new flash_text_manager( m_game.get_flash_factory( ).m_gfx_loader ) );
 	}
 
 	if ( !m_game_material_manager )
@@ -250,7 +250,7 @@ void game_world::on_project_loaded(
 
 	m_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[resource_index++].get_unmanaged_resource( ) );
 
-	if ( m_game.network_client( ).has_bandwidth( ) && m_game.network_client( ).lobby_client( ).status( ) == lobby::surf_lobby_menu )
+	if ( m_game.get_network_client( )->has_bandwidth( ) && m_game.get_network_client( )->lobby_client( ).status( ) == lobby::surf_lobby_menu )
 	{
 		unload( );
 
@@ -262,7 +262,7 @@ void game_world::on_project_loaded(
 
 	show_ui( true );
 
-	for ( u8 i = 0; i < m_game.network_client( ).match_options( ).victory_items_count; ++i )
+	for ( u8 i = 0; i < m_game.get_network_client( )->match_options( ).victory_items_count; ++i )
 	{
 		victory_item_ptr victory_item = static_cast_resource_ptr< victory_item_ptr >( data[resource_index++].get_unmanaged_resource( ) );
 		m_victory_items.push_back( victory_item );
@@ -282,8 +282,8 @@ void game_world::on_project_loaded(
 	if ( is_active( ) )
 		m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 1000, 0 );
 
-	if ( m_game.network_client( ).has_bandwidth( ) )
-		game_ui.initialize( m_game.network_client( ).match_client( ).get_match_options( ) );
+	if ( m_game.get_network_client( )->has_bandwidth( ) )
+		game_ui.initialize( m_game.get_network_client( )->match_client( ).get_match_options( ) );
 
 	variant< 32 > user_data;
 	user_data.set( m_game_project->m_config );
@@ -297,7 +297,7 @@ void game_world::on_project_loaded(
 
 	game_ui.initialize_minimap( );
 
-	if ( m_game.network_client( ).has_bandwidth( ) )
+	if ( m_game.get_network_client( )->has_bandwidth( ) )
 		game_ui.show_capture_progress( true );
 
 	if ( !callback.empty( ) )

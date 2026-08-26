@@ -13,7 +13,9 @@ struct inventory_cooker_data;
 struct player_creation_params;
 struct player_parameters_cooker_data;
 
-class player_cook : public resources::translate_query_cook , public boost::noncopyable {
+class player_cook : public resources::translate_query_cook , private boost::noncopyable {
+	typedef resources::translate_query_cook super;
+
 public:
 					player_cook				( );
 
@@ -32,7 +34,6 @@ private:
 					);
 
 public:
-	virtual			~player_cook			( ) { /* no source */ }
 
 }; // class player_cook
 

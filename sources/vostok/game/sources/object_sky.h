@@ -19,6 +19,8 @@ namespace resources {
 namespace survarium {
 
 class object_sky : public game_object_ {
+	typedef game_object_ super;
+
 public:
 			explicit	object_sky		( base_game_scene& w );
 	virtual				~object_sky		( );
@@ -39,7 +41,7 @@ protected:
 							boost::function< void( game_object_& ) >&	cb
 						);
 
-private:
+protected:
 	/* 0x0000 */	/* game_object_ */
 	/* 0x0110 */	resources::unmanaged_resource_ptr		m_sky_material;
 }; // class object_sky

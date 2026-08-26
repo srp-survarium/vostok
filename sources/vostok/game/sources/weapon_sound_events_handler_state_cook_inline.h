@@ -9,7 +9,7 @@ namespace survarium {
 
 template < typename T >
 inline weapon_sound_events_handler_state_cook< T >::weapon_sound_events_handler_state_cook( ) :
-	resources::unmanaged_cook( weapon_sound_events_handler_state_cook_class< T >( ), reuse_false, use_current_thread_id, use_current_thread_id )
+	super( weapon_sound_events_handler_state_cook_class< T >( ), reuse_false, use_current_thread_id, use_current_thread_id )
 {
 	resources::register_cook( this );
 }
@@ -48,7 +48,7 @@ void weapon_sound_events_handler_state_cook< T >::create_resource(
 		return;
 	}
 
-	config_params config_parameters = { false, 1 };
+	config_params config_parameters;
 	u32 const max_requests_count = traits_type::animations_count +
 		( cfg.value_exists( "sounds" ) && cfg[ "sounds" ].value_exists( "first_view" ) ?
 			cfg[ "sounds" ][ "first_view" ].size( ) * 2 : 0 );

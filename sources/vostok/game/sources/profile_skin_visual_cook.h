@@ -18,15 +18,15 @@ namespace survarium {
 class game;
 class player_profile;
 
-class profile_skin_visual_cook : public resources::translate_query_cook , public boost::noncopyable {
+class profile_skin_visual_cook : public resources::translate_query_cook , private boost::noncopyable {
+	typedef	resources::translate_query_cook	super;
+
 public:
 			explicit	profile_skin_visual_cook	( game& g );
 
-	virtual	void		translate_query				( resources::query_result_for_cook& parent ) override;
+		virtual	void		translate_query				( resources::query_result_for_cook& parent ) override;
 
 	virtual	void		delete_resource				( resources::resource_base* __formal ) override;
-
-	virtual				~profile_skin_visual_cook	( ) { /* no source */ }
 
 private:
 			void		on_configs_loaded			(

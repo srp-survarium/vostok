@@ -26,7 +26,7 @@ class options_item_base;
 class options_tab;
 
 // the canonical game_options_1.h variant is byte-identical - no union needed
-class game_options : public input::handler , public flash_external_handler , public boost::noncopyable {
+class game_options : public input::handler , public flash_external_handler , private boost::noncopyable {
 public:
 			explicit				game_options				( game& g );
 	virtual							~game_options				( );
@@ -103,7 +103,6 @@ private:
 			void					reset_bindings				( bool is_default );
 			void					reset_bindings_to_defaults	( );
 
-public:
 	inline	bool					is_waiting_for_bind_key		( ) { /* no source */ return false; }
 
 private:

@@ -12,7 +12,7 @@ namespace survarium {
 class game;
 
 // the canonical global_input_handler_1.h variant is byte-identical - no union needed
-class global_input_handler : public input::handler , public boost::noncopyable {
+class global_input_handler : public input::handler , private boost::noncopyable {
 public:
 			explicit	global_input_handler	( game& game );
 	virtual				~global_input_handler	( );
@@ -47,6 +47,7 @@ public:
 private:
 	/* 0x0000 */	/* input::handler */
 	/* 0x0004 */	/* boost::noncopyable */
+protected:
 	/* 0x0004 */	game&		m_game;
 }; // class global_input_handler
 

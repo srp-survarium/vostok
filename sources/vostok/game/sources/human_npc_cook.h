@@ -18,7 +18,7 @@ namespace survarium {
 class game_world;
 class human_npc;
 
-class human_npc_cook : public resources::translate_query_cook , public boost::noncopyable {
+class human_npc_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
 			explicit	human_npc_cook			( game_world& world );
 
@@ -35,7 +35,6 @@ private:
 			void		on_subresources_loaded	( resources::queries_result& data, human_npc* const human );
 
 public:
-	virtual				~human_npc_cook			( ) { /* no source */ }
 
 	/* 0x0000 */	/* resources::translate_query_cook */
 	/* 0x0020 */	/* boost::noncopyable */

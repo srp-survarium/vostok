@@ -14,7 +14,13 @@ class login_menu;
 struct flash_movie;
 struct flash_value;
 
-class login_menu_external_handler : public flash_external_handler , public boost::noncopyable {
+class login_menu_external_handler : public flash_external_handler , private boost::noncopyable {
+private:
+	/* 0x0000 */	/* flash_external_handler */
+	/* 0x0008 */	/* boost::noncopyable */
+	/* 0x0008 */	game&			m_game;
+	/* 0x000c */	login_menu&		m_login_menu;
+
 public:
 	inline			login_menu_external_handler	( game& arg_0, login_menu& arg_1 )
 		: m_game( arg_0 ), m_login_menu( arg_1 ) { /* no source */ }
@@ -26,13 +32,6 @@ public:
 						u32						argCount
 					) override;
 
-	virtual			~login_menu_external_handler( ) { /* no source */ }
-
-private:
-	/* 0x0000 */	/* flash_external_handler */
-	/* 0x0008 */	/* boost::noncopyable */
-	/* 0x0008 */	game&			m_game;
-	/* 0x000c */	login_menu&		m_login_menu;
 }; // class login_menu_external_handler
 
 STATIC_SIZE_ASSERT(login_menu_external_handler, 0x10);

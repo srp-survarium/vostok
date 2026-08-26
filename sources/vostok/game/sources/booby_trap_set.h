@@ -53,6 +53,8 @@ private:
 	inline	booby_trap_set*							return_this					( ) { /* no source */ return this; }
 
 private:
+	typedef booby_trap_set_core super;
+
 	/* 0x0000 */	/* booby_trap_set_core */
 	/* 0x0148 */	player_death_subscriber					m_player_death_subscriber;
 	/* 0x0170 */	scheduler::identifier					m_scheduler_identifier;

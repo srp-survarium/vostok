@@ -68,7 +68,7 @@ private:
 	{
 	}
 
-	virtual										~empty_hands				( ) { /* no source */ }
+public:
 
 private:
 	/* 0x0000 */	/* interactive_object */

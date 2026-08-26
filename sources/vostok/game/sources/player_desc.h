@@ -15,7 +15,6 @@ struct player_desc {
 		is_connected	( false )
 	{
 	}
-	inline		~player_desc( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	resources::unmanaged_resource_ptr		player;

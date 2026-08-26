@@ -22,6 +22,8 @@ class bullet_manager;
 class game;
 
 class login_menu : public base_game_scene , public input::handler {
+	typedef base_game_scene super;
+
 public:
 			explicit			login_menu			( game& g );
 	virtual						~login_menu			( );

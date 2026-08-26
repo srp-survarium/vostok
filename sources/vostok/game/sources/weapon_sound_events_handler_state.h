@@ -70,8 +70,15 @@ class weapon_sound_events_handler_state : public T {
 	virtual	void	initialize	( ) override;
 	virtual	void	finalize	( ) override;
 
+	typedef T super;
+	enum {
+		weapon_animations_count = super::weapon_animations_count,
+		user_animations_count = super::user_animations_count,
+		total_animations_count = super::total_animations_count
+	};
+	static resources::class_id_enum const resource_class = super::resource_class;
+
 public:
-	virtual			~weapon_sound_events_handler_state	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */			/* T */

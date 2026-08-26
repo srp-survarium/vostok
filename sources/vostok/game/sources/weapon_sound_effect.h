@@ -13,30 +13,9 @@ namespace survarium {
 
 class weapon;
 
-class weapon_sound_effect : public boost::noncopyable {
-public:
-	struct sounds : public boost::noncopyable {
-		inline			sounds			(
-							sound::sound_emitter_ptr* const		arg_0,
-							const u8							arg_1,
-							sound::sound_instance_proxy_ptr* const	arg_2,
-							const u8							arg_3
-						)
-			// buildability init (const member): the caller-provided buffers back
-			// both vectors - a matcher confirms the real live counts.
-			:	sounds_emitters		( arg_0, arg_1, arg_1 ),
-				sounds_instances	( arg_2, arg_3 )
-		{ /* no source */ }
-
-		inline	void	clear_instances	( ) { sounds_instances.clear( ); }
-
-		inline			~sounds			( ) { /* no source */ }
-
-	public:
-		/* 0x0000 */	/* boost::noncopyable */
-		/* 0x0000 */	const buffer_vector< sound::sound_emitter_ptr >		sounds_emitters;
-		/* 0x0008 */	buffer_vector< sound::sound_instance_proxy_ptr >	sounds_instances;
-	}; // struct sounds
+class weapon_sound_effect : private boost::noncopyable {
+	typedef sound::sound_emitter_ptr sound_emitter_type;
+	typedef sound::sound_instance_proxy_ptr sound_instance_type;
 
 public:
 					weapon_sound_effect	(
@@ -58,7 +37,28 @@ public:
 
 			animation::callback_return_type_enum	on_sound_event		( animation::animation_callback_params& params );
 
-	inline			~weapon_sound_effect( ) { /* no source */ }
+	typedef buffer_vector< sound_instance_type > sounds_instances_type;
+	typedef buffer_vector< sound_emitter_type > sounds_emitters_type;
+
+public:
+	struct sounds : private boost::noncopyable {
+		inline			sounds			(
+							sound_emitter_type* const			arg_0,
+							const u8							arg_1,
+							sound_instance_type* const			arg_2,
+							const u8							arg_3
+						)
+			:	sounds_emitters		( arg_0, arg_1, arg_1 ),
+				sounds_instances	( arg_2, arg_3 )
+		{ /* no source */ }
+
+		inline	void	clear_instances	( ) { sounds_instances.clear( ); }
+
+public:
+		/* 0x0000 */	/* boost::noncopyable */
+		/* 0x0000 */	const buffer_vector< sound_emitter_type >	sounds_emitters;
+		/* 0x0008 */	buffer_vector< sound_instance_type >		sounds_instances;
+	}; // struct sounds
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

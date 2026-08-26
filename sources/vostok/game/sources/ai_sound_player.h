@@ -24,25 +24,8 @@ namespace sound {
 
 namespace survarium {
 
-class ai_sound_player : public ai::sound_player , public boost::noncopyable {
+class ai_sound_player : public ai::sound_player , private boost::noncopyable {
 public:
-	// canonical dump prints the nested type standalone
-	// (ai_sound_player__sounds_collection_type.h)
-	struct sounds_collection_type {
-					sounds_collection_type	(
-						ai_sound_player*				parent,
-						ai::sound_collection_types		collection_type,
-						sound::sound_emitter_ptr		emitter_ptr,
-						u32								collection_priority
-					);
-		inline		~sounds_collection_type	( ) { /* no source */ }
-
-	public:
-		/* 0x0000 */	ai::sound_collection_types		type;
-		/* 0x0004 */	resources::child_resource_ptr< sound::sound_emitter, resources::unmanaged_intrusive_base >	emitter;
-		/* 0x000c */	u32								priority;
-	}; // struct sounds_collection_type
-
 											ai_sound_player				(
 												resources::unmanaged_resource_ptr&		scene,
 												u32										sounds_count,
@@ -76,7 +59,23 @@ public:
 			void							on_active_sound_serialized	( memory::writer* sound_thread_writer, memory::writer* current_thread_writer );
 			void							on_active_sound_deserialized( memory::reader* reader, void* buf );
 
-			sounds_collection_type const*	find						( ai::sound_collection_types sound_type ) const;
+public:
+	struct sounds_collection_type {
+					sounds_collection_type	(
+						ai_sound_player*				parent,
+						ai::sound_collection_types		collection_type,
+						sound::sound_emitter_ptr		emitter_ptr,
+						u32								collection_priority
+					);
+
+	public:
+		/* 0x0000 */	ai::sound_collection_types		type;
+		/* 0x0004 */	resources::child_resource_ptr< sound::sound_emitter, resources::unmanaged_intrusive_base >	emitter;
+		/* 0x000c */	u32								priority;
+	}; // struct sounds_collection_type
+
+private:
+			sounds_collection_type const*		find						( ai::sound_collection_types sound_type ) const;
 
 			sound::command_result_enum		on_finish_playing			( );
 
@@ -86,7 +85,6 @@ public:
 	inline	void							serialize					( ) { /* no source */ }
 	inline	void							deserialize					( ) { /* no source */ }
 
-private:
 	/* 0x0000 */	/* ai::sound_player */
 	/* 0x0190 */	/* boost::noncopyable */
 	/* 0x0190 */	sound::sound_instance_proxy_ptr			m_active_sound;

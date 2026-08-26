@@ -20,7 +20,7 @@ class options_tab;
 struct flash_function_handler_params;
 struct flash_value;
 
-class options_item_base : public flash_function_handler , public boost::noncopyable {
+class options_item_base : public flash_function_handler , private boost::noncopyable {
 public:
 										options_item_base	(
 											options_tab&				parent_tab,
@@ -42,7 +42,6 @@ public:
 
 	inline	option_item_type_enum		option_type			( ) { /* no source */ return m_type; }
 
-	inline								~options_item_base	( ) { /* no source */ }
 
 protected:
 	/* 0x0000 */	/* flash_function_handler */

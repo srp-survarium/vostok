@@ -10,6 +10,8 @@
 namespace survarium {
 
 class object_ambient_volume : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_ambient_volume	( base_game_scene& w );
 	virtual				~object_ambient_volume	( );

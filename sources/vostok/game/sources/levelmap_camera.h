@@ -17,6 +17,8 @@ class camera_director;
 class game_world;
 
 class levelmap_camera : public game_camera , public input::handler {
+typedef game_camera super;
+
 public:
 	// game_world IS-A base_game_scene (batch 11) but is only forward-declared
 	// here - the game_camera base init is a buildability placeholder until a
@@ -60,12 +62,11 @@ public:
 	virtual	void		on_activate				( camera_director* arg_0 ) override { /* no source */ }
 	virtual	void		on_focus				( bool arg_0 ) override { /* no source */ }
 
-	virtual				~levelmap_camera		( ) { /* no source */ }
-
-private:
 	/* 0x0000 */	/* game_camera */
 	/* 0x0054 */	/* input::handler */
 	/* 0x0058 */	math::aabb			levelmap_bbox;
+
+private:
 	/* 0x0070 */	game_world&			m_game_world;
 	/* 0x0074 */	camera_director&	m_camera_director;
 }; // class levelmap_camera

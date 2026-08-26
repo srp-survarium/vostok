@@ -18,6 +18,8 @@ namespace survarium {
 // out-of-line bodies live in the object_solid_visual.cpp compiland (the
 // legacy multi-class visuals TU; only this type survived into the shipped PDB)
 class object_particle_visual : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_particle_visual	( base_game_scene& w );
 
@@ -34,7 +36,6 @@ protected:
 			void		on_visual_ready			( resources::queries_result& data, boost::function< void( game_object_& ) >& cb );
 
 public:
-	virtual				~object_particle_visual	( ) { /* no source */ }
 
 protected:
 	/* 0x0000 */	/* game_object_static */

@@ -44,6 +44,8 @@ typedef resources::resource_ptr<
 // void* lobby_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x92eb0]: <0x92ea0>|0x000|      :'63'	{
 
 class lobby_menu : public base_game_scene , public input::handler {
+	typedef base_game_scene super;
+
 	// on_project_loaded aborts the load through m_match_making_ui / m_is_in_match_making
 	// (codegen-neutral friendship; PDB does not record it)
 	friend class game_world;
@@ -133,10 +135,8 @@ private:
 			void						player_parameters_ready				( resources::queries_result& data, player_parameters_cooker_data* cook_data );
 
 			lobby_client&				lobby_client						( );
-public:
 	// buildability return; the real body reaches the client through m_game
 	inline	network::login_client&		login_client						( ) { /* no source */ return *( network::login_client* )NULL; }
-private:
 			messaging_client&			messaging_client					( );
 
 			void						query_lobby_info					( );

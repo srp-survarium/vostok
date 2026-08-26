@@ -6,8 +6,8 @@
 #include "player.h"
 #include "player_creation_params.h"	// params.game_scene field
 #include "base_game_scene.h"			// game_scene supplies game / scheduler
-#include "game.h"						// m_game.network_client()
-#include "base_network_client.h"		// network_client().is_player_current
+#include "game.h"
+#include "base_network_client.h"
 #include "flash_text_manager.h"			// text_manager().destroy_text( m_text ) in remove
 #include <vostok/game_core/game_net_defines.h>		// match_options::player_profiles[] in remove
 #include <vostok/game_core/player_profile.h>
@@ -200,7 +200,7 @@ void player::insert( const bool is_alive )
 
 	if ( !m_is_demo_player )
 		inventory( ).setup_from_profile(
-			m_game.network_client( ).match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
+			m_game.get_network_client( )->match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
 	else
 		inventory( ).setup_demo_profile( );
 
@@ -276,12 +276,12 @@ void player::remove( )
 
 	if ( !m_is_demo_player )
 		inventory( ).unload_to_profile(
-			m_game.network_client( ).match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
+			m_game.get_network_client( )->match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
 
 	inventory( ).remove( );
 
-	if ( m_game.network_client( ).is_player_current( id ) )
-		m_game.network_client( ).detach_from_player( );
+	if ( m_game.get_network_client( )->is_player_current( id ) )
+		m_game.get_network_client( )->detach_from_player( );
 }
 
 float4x4 player::get_transform_for_animation_player( pcvoid const animated_object, float4x4 const& character_transform ) const
@@ -418,7 +418,7 @@ void player::render( const u32 __formal, const u32 current_time_in_ms )
 	compute_bones( current_time_in_ms );
 	m_game_scene.get_physics_world( )->move( m_damage_collision->get_rigid_body( ), m_current.transform );
 
-	if ( m_game.network_client( ).is_player_current( id ) &&
+	if ( m_game.get_network_client( )->is_player_current( id ) &&
 		( s_first_person_animations_only || m_local_input_controller->input_mode( ) == first_person_mode ) )
 	{
 		render_crosshair_info( );
@@ -522,7 +522,7 @@ void player::detect_usable_objects( const u32 current_time_in_ms )
 			if ( usable_object_user_data( )->current_object )
 				usable_object_user_data( )->current_object->use_finalize( usable_object_user_data( ) );
 
-			if ( m_game.network_client( ).is_player_current( id ) )
+			if ( m_game.get_network_client( )->is_player_current( id ) )
 				if ( m_game_ui )
 				{
 					pcstr const info = object->use_info( usable_object_user_data( ) );
@@ -539,11 +539,6 @@ void player::use_ladder( ladder* __formal )
 	NOT_IMPLEMENTED( __formal );
 }
 
-// claude@NOTE: STRUCTURE MATCH (3 stmts). The line-869 guard `m_game.network_client().
-// is_player_current(id)` inlines in the target (reads m_current_player.c_ptr() then
-// compares its id at +0x34 with this->id) but our base emits the standalone
-// is_player_current call; damage_model()->apply_affect carries the virtual-dispatch
-// inline residual. Both are inline-vs-call caps, not source-steerable here.
 void player::apply_damage_model_affect(
 	pcstr							part_name,
 	const hit_affects_type_enum		affect,
@@ -552,7 +547,7 @@ void player::apply_damage_model_affect(
 {
 	damage_model( )->apply_affect( part_name, affect, event_type );
 
-	if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
+	if ( m_game_ui && m_game.get_network_client( )->is_player_current( id ) )
 		m_game_ui->on_damage_affect_applying( part_name, affect, event_type );
 }
 
@@ -575,7 +570,7 @@ void player::hit(
 	hit_info info(
 		initiator->id, id, m_damage_collision->body_part_name( bone_index ),
 		damage_type, amount, armor_piercing, bullet );
-	m_game.network_client( ).on_player_hit_received( info );
+	m_game.get_network_client( )->on_player_hit_received( info );
 }
 
 void player::hit(
@@ -590,7 +585,7 @@ void player::hit(
 	hit_info info(
 		initiator->id, id, bone_data.body_part_name.c_str( ),
 		damage_type, amount, armor_piercing, bullet );
-	m_game.network_client( ).on_player_hit_received( info );
+	m_game.get_network_client( )->on_player_hit_received( info );
 }
 
 // claude@NOTE: PARKED. 12 stmts (target 0x5e3920): damage_model()->hit_body_part(info...);
@@ -884,7 +879,7 @@ void player::take_inventory_item( inventory_item_ptr const& item )
 		{
 			inventory( ).set_item( accept_slots[ i ], item );
 
-			if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
+			if ( m_game_ui && m_game.get_network_client( )->is_player_current( id ) )
 				m_game_ui->fill_quick_slots( );
 
 			return;
@@ -1085,7 +1080,7 @@ void player::select_animations( const u32 current_time_in_ms )
 
 
 
-	const bool is_current = m_game.network_client( ).is_player_current( id );
+	const bool is_current = m_game.get_network_client( )->is_player_current( id );
 	const input_mode_type_enum input_mode = s_first_person_animations_only ? first_person_mode : ( is_current ? m_local_input_controller->input_mode( ) : third_person_mode );
 
 	mutable_buffer buffer = make_stack_buffer( ALLOCA( 0x4000 ), 0x4000 );
@@ -1111,7 +1106,7 @@ static console_commands::cc_float cc_death_camera_distance	( "death_camera_dista
 // it into the prologue; the final select_animations differs by LTCG tail-calling.
 void player::kill( const u32 current_time_in_ms )
 {
-	const bool is_local_player = m_game.network_client( ).is_player_current( id );
+	const bool is_local_player = m_game.get_network_client( )->is_player_current( id );
 
 	remove_alive( );
 	on_player_death( );

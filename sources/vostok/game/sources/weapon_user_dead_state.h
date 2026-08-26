@@ -13,6 +13,8 @@
 namespace survarium {
 
 class weapon_user_dead_state : public player_logic_base_state {
+	typedef	player_logic_base_state	super;
+
 public:
 	// buildability init: owner = the weapon's animations selector; the state id is a
 	// placeholder (weapon_user_state_enum has no dead value) - a matcher confirms both.
@@ -29,7 +31,6 @@ private:
 							const bool								is_third_view
 						) const override;
 
-public:
 	virtual	void		initialize				( ) override { /* no source */ }
 
 	virtual	void		execute					( ) override { /* no source */ }
@@ -38,12 +39,11 @@ public:
 
 	virtual	bool		is_ready_for_transition	( ) const override;
 
-	virtual				~weapon_user_dead_state	( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	/* player_logic_base_state */
 	/* 0x0028 */	weapon&				m_weapon;
 	/* 0x002c */	mutable math::random32	m_random;	// selected_animations (const) advances the seed
+
 }; // class weapon_user_dead_state
 
 STATIC_SIZE_ASSERT(weapon_user_dead_state, 0x30);

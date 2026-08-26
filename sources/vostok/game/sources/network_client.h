@@ -204,9 +204,6 @@ private:
 
 			void						send_sync_request					( );
 
-	// the primary header dump prints an inline no-arg process_sync_response();
-	// the _2/_3 variants and the mangled symbol (AAEXAAVpacket_reader) agree on
-	// this shape - symbol wins
 			void						process_sync_response				( network_core::packet_reader& packet );
 
 			void						send_player_inputs					( );
@@ -219,6 +216,8 @@ private:
 
 			void						setup_camera_for_warmup				( );
 
+	typedef fixed_vector< client_player_update, 32 > player_inputs_type;
+
 private:
 	/* 0x0000 */	/* base_network_client */
 	/* 0x0020 */	network::login_client				m_login_client;
@@ -227,7 +226,7 @@ private:
 	/* 0x2e28 */	class messaging_client				m_messaging_client;
 	/* 0x2fa0 */	network::http_client				m_http_client;
 	/* 0x3010 */	network_core::udp_match_stats		m_previous_stats;
-	/* 0x3090 */	fixed_vector< client_player_update, 32 >	m_player_inputs;
+	/* 0x3090 */	player_inputs_type					m_player_inputs;
 	/* 0x3c18 */	boost::array< player_desc, 20 >		m_net_players;
 	/* 0x3cb8 */	player_ptr							m_local_player;
 	/* 0x3cbc */	stats_row							m_sent;

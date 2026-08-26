@@ -31,7 +31,6 @@ public:
 	inline	float		fov_factor			( ) const { return m_fov_factor; }
 	inline	float		near_plane_factor	( ) const { return m_near_plane_factor; }
 
-	virtual				~rifle_scope		( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */

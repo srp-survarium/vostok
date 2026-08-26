@@ -21,7 +21,12 @@ class messaging_client;
 struct flash_movie;
 struct flash_value;
 
-class lobby_menu_external_handler : public flash_external_handler , public boost::noncopyable {
+class lobby_menu_external_handler : public flash_external_handler , private boost::noncopyable {
+private:
+	/* 0x0000 */	/* flash_external_handler */
+	/* 0x0008 */	/* boost::noncopyable */
+	/* 0x0008 */	game&		m_game;
+
 public:
 	inline	explicit					lobby_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { /* no source */ }
 	// buildability returns; the real bodies reach the clients through m_game
@@ -36,12 +41,6 @@ public:
 											u32						argCount
 										) override;
 
-	virtual								~lobby_menu_external_handler( ) { /* no source */ }
-
-private:
-	/* 0x0000 */	/* flash_external_handler */
-	/* 0x0008 */	/* boost::noncopyable */
-	/* 0x0008 */	game&		m_game;
 }; // class lobby_menu_external_handler
 
 STATIC_SIZE_ASSERT(lobby_menu_external_handler, 0xC);

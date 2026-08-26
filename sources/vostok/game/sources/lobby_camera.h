@@ -54,18 +54,20 @@ public:
 
 	virtual	void			tick				( ) override;
 
+public:
+	/* 0x0058 */	float3		m_target_point;
+
+private:
 			void			process_collision	(
 								float3 const&		target_point,
 								float3 const&		direction,
 								float&				distance_to_focus_point
 							);
 
-	virtual					~lobby_camera		( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	/* input::handler */
 	/* 0x0004 */	/* game_camera */
-	/* 0x0058 */	float3		m_target_point;
+private:
 	/* 0x0064 */	bool		m_capture_move;
 	/* 0x0068 */	float		m_yaw;
 	/* 0x006c */	float		m_pitch;

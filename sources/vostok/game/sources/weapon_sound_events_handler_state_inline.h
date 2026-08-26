@@ -23,7 +23,7 @@ inline weapon_sound_events_handler_state< T >::weapon_sound_events_handler_state
 	const u8		sounds_count,
 	bool			stop_sounds_on_state_finalize,
 	u8				simultaneous_sounds_queue_size
-)	:	T( weapon, animation_time_scale, animations, animations_count ),
+)	:	super( weapon, animation_time_scale, animations, animations_count ),
 		m_sound_effect(
 			weapon,
 			( sound::sound_emitter_ptr* )sounds_buffer,
@@ -52,7 +52,7 @@ inline weapon_sound_events_handler_state< T >::weapon_sound_events_handler_state
 	bool			stop_sounds_on_state_finalize,
 	u8				simultaneous_sounds_queue_size,
 	bool&			shown
-)	:	T( weapon, animation_time_scale, animations, animations_count, shown ),
+)	:	super( weapon, animation_time_scale, animations, animations_count, shown ),
 		m_sound_effect(
 			weapon,
 			( sound::sound_emitter_ptr* )sounds_buffer,
@@ -73,7 +73,7 @@ inline weapon_sound_events_handler_state< T >::weapon_sound_events_handler_state
 template < typename T >
 void weapon_sound_events_handler_state< T >::initialize( )
 {
-	T::initialize( );
+	super::initialize( );
 	m_sound_effect.initialize( );
 	this->m_weapon.set_animation_callback( "sound_events", &m_sound_effect, boost::bind( &weapon_sound_effect::on_sound_event, &m_sound_effect, _1 ) );
 }
@@ -84,7 +84,7 @@ void weapon_sound_events_handler_state< T >::finalize( )
 	this->m_weapon.remove_animation_callback( "sound_events", &m_sound_effect );
 
 	m_sound_effect.finalize( );
-	T::finalize( );
+	super::finalize( );
 }
 
 } // namespace survarium

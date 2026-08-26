@@ -26,7 +26,7 @@ booby_trap::~booby_trap( )
 
 void booby_trap::defuse_completed( )
 {
-	if ( m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+	if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		return;
 
 	booby_trap_core::defuse_completed( );
@@ -36,7 +36,7 @@ void booby_trap::switch_to_state( booby_trap_state new_state )
 {
 	booby_trap_state const old_state = m_trap_state;
 
-	if ( !m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+	if ( !m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		booby_trap_core::switch_to_state( new_state );
 	else
 		m_trap_state = new_state;
@@ -64,7 +64,7 @@ void booby_trap::on_new_state( booby_trap_state old_state )
 
 	if ( old_state == booby_trap_state_armed )
 	{
-		if ( m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+		if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		{
 			usable_object::remove( );
 			collision_sensor::remove( );
@@ -73,7 +73,7 @@ void booby_trap::on_new_state( booby_trap_state old_state )
 		}
 	}
 
-	if ( !m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+	if ( !m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 	{
 		if ( m_trap_state == booby_trap_state_fired )
 			play_fired_effects( );
@@ -93,7 +93,7 @@ void booby_trap::on_trap_disarmed_message( )
 
 void booby_trap::register_tick( scheduler& scheduler )
 {
-	if ( m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+	if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		return;
 
 	booby_trap_core::register_tick( scheduler );
@@ -101,7 +101,7 @@ void booby_trap::register_tick( scheduler& scheduler )
 
 void booby_trap::unregister_tick( scheduler& scheduler )
 {
-	if ( m_game_world.get_game( ).network_client( ).has_bandwidth( ) )
+	if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		return;
 
 	booby_trap_core::unregister_tick( scheduler );

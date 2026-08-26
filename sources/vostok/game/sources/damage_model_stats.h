@@ -27,24 +27,20 @@ template < int ItemSize, int ItemsCount >
 struct statistics_item {
 	typedef fixed_string< ItemSize > content_type;
 
-	inline	statistics_item	( ) { }
-	inline	~statistics_item	( ) { }
 
 public:
 	/* 0x0000 */	fixed_string< 32 >						caption;
 	/* 0x002c */	fixed_vector< content_type, ItemsCount >	content;
 }; // struct statistics_item
 
-struct damage_info_type : public boost::noncopyable {
-	inline	damage_info_type	( ) { }
-	inline	~damage_info_type	( ) { }
+struct damage_info_type : private boost::noncopyable {
 
 public:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	fixed_vector< statistics_item< 46, 16 >, 20 > damage_info;
 }; // struct damage_info_type
 
-class damage_model_stats : public boost::noncopyable {
+class damage_model_stats : private boost::noncopyable {
 public:
 			explicit		damage_model_stats	( ui::world& ui_world );
 							~damage_model_stats	( );
@@ -55,6 +51,7 @@ public:
 
 	inline	void			set_stats			( const damage_model_ptr arg_0, u32 arg_1 ) { /* no source */ }
 
+private:
 	inline	ui::text*		create_new_group	( const u32 arg_0, pcstr arg_1, ui::window const* arg_2 ) { /* no source */ return NULL; }
 
 private:

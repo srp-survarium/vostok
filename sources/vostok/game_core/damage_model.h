@@ -30,6 +30,34 @@ namespace network_core {
 
 namespace survarium {
 
+struct check_health_predicate : private boost::noncopyable {
+	inline bool operator()( body_part_parameters* const body_part ) const
+	{
+		return !body_part->is_healthy( );
+	}
+};
+
+STATIC_SIZE_ASSERT(check_health_predicate, 0x1);
+
+struct dump_player_body_part_state_predicate : private boost::noncopyable {
+	inline dump_player_body_part_state_predicate( damage_info_type& stats, const u32 current_time ) :
+		stats		( stats ),
+		current_time( current_time )
+	{
+	}
+
+	inline void operator()( body_part_parameters* const body_part ) const
+	{
+		body_part->dump_state( stats, current_time );
+	}
+
+public:
+	/* 0x0000 */ damage_info_type&	stats;
+	/* 0x0004 */ u32					current_time;
+};
+
+STATIC_SIZE_ASSERT(dump_player_body_part_state_predicate, 0x8);
+
 struct affect_subscriber: private boost::noncopyable {
 public:
 	typedef boost::function<void (

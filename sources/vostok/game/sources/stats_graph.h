@@ -12,6 +12,7 @@
 namespace vostok {
 namespace render {
 namespace ui {
+	struct command;
 	class renderer;
 } // namespace ui
 } // namespace render
@@ -19,17 +20,7 @@ namespace ui {
 
 namespace survarium {
 
-class stats_graph : public boost::noncopyable {
-public:
-	struct stats_value {
-
-	public:
-		/* 0x0000 */	stats_value*	next;
-		/* 0x0004 */	stats_value*	previous;
-		/* 0x0008 */	float			time;
-		/* 0x000c */	float			value;
-	}; // struct stats_value
-
+class stats_graph : private boost::noncopyable {
 public:
 						stats_graph			(
 							float		time_interval,
@@ -64,6 +55,19 @@ public:
 private:
 			void		adjust_time_interval( );
 
+public:
+	struct stats_value {
+	public:
+		/* 0x0000 */	stats_value*	next;
+		/* 0x0004 */	stats_value*	previous;
+		/* 0x0008 */	float			time;
+		/* 0x000c */	float			value;
+	}; // struct stats_value
+
+	typedef render::ui::command command_type;
+	enum { command_count = 5 };
+
+private:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	stats_value*		m_newest_value;
 	/* 0x0004 */	stats_value*		m_values_pool;

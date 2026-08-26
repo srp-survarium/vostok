@@ -36,7 +36,6 @@ namespace survarium {
 // TU-local (canonical headers/hit_object.h; owner mapping in
 // temp/triage_log.md) - the on_hit_event parameter type
 struct hit_object {
-	inline		hit_object	( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	ai::game_object*	m_source;
@@ -456,7 +455,7 @@ void human_npc::set_attributes( human_npc::npc_game_attributes& attributes )
 
 void human_npc::get_available_weapons( vectora< ai::weapon* >& list_to_be_filled ) const
 {
-	for ( object_weapon* weapon = m_game_attributes.weapons.front(); weapon; weapon = npc_game_attributes::object_weapon_list::get_next_of_object( weapon ) )
+	for ( object_weapon* weapon = m_game_attributes.weapons.front(); weapon; weapon = weapons_type::get_next_of_object( weapon ) )
 		list_to_be_filled.push_back		( weapon );
 }
 

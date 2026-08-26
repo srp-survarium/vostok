@@ -9,9 +9,9 @@
 
 namespace survarium {
 
-class animation_space_heuristics : public boost::noncopyable {
+class animation_space_heuristics : private boost::noncopyable {
 public:
-	__declspec( noinline )						animation_space_heuristics	(
+											animation_space_heuristics	(
 													animation_space_graph_ptr const&	graph,
 													animation_space_vertex_id const&	target_vertex_id,
 													const float							max_speed
@@ -35,11 +35,8 @@ public:
 		return current_vertex.g( ) + m_graph->edge( iterator ).animation_length;
 	}
 
-	inline	animation_space_vertex_id const&	best_vertex_id				( ) const { /* no source */ return m_best_vertex_id; }
-
-	inline										~animation_space_heuristics	( ) { /* no source */ }
-
 	static	inline	bool						metric_euclidian			( ) { return true; }
+	inline	animation_space_vertex_id const&	best_vertex_id				( ) const { /* no source */ return m_best_vertex_id; }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

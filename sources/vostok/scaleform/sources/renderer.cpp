@@ -22,7 +22,8 @@ void flash_renderer::present( flash_movie** movies, u32 movies_count, flash_text
 		if ( movie->m_output_width != m_output_width || movie->m_output_height != m_output_height )
 			movie->SetViewport( m_output_width, m_output_height );
 
-		Scaleform::Render::TreeRootDisplayHandle& handle = *movie->m_handle;
+		Scaleform::Render::TreeRootDisplayHandle& handle =
+			const_cast< Scaleform::Render::TreeRootDisplayHandle& >( *movie->m_handle );
 		m_R2dRenderer->BeginFrame( );
 		if ( handle.NextCapture( m_R2dRenderer->GetContextNotify( ) ) )
 			m_R2dRenderer->Display( handle );

@@ -11,12 +11,11 @@ namespace survarium {
 
 struct flash_function_handler;
 
-struct flash_function_handler_impl : public Scaleform::GFx::FunctionHandler , public boost::noncopyable {
+struct flash_function_handler_impl : public Scaleform::GFx::FunctionHandler , private boost::noncopyable {
 			explicit	flash_function_handler_impl	( flash_function_handler& arg_0 );
 
 	virtual	void		Call						( Scaleform::GFx::FunctionHandler::Params const& arg_0 ) override;
 
-	virtual				~flash_function_handler_impl( ) { }
 
 public:
 	/* 0x0000 */	/* Scaleform::GFx::FunctionHandler */

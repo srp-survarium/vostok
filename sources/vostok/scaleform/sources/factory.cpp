@@ -143,7 +143,7 @@ flash_movie* flash_factory::build_movie( void* raw_data, u32 raw_data_size, pcst
 	movie->m_movie->SetUserData( movie );
 	movie->m_movie->SetMouseCursorCount( 1 );
 	movie->m_movie->SetControllerCount( 1 );
-	movie->m_handle	= const_cast<Scaleform::GFx::MovieDisplayHandle*>( &movie->m_movie->GetDisplayHandle( ) );
+	movie->m_handle	= &movie->m_movie->GetDisplayHandle( );
 
 	return movie;
 }

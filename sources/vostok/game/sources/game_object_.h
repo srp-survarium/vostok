@@ -20,7 +20,7 @@ class base_game_scene;
 
 // pulled ahead of batch 7 (a base of batch 6's human_npc); out-of-line bodies
 // in the object.cpp compiland
-class game_object_ : public resources::unmanaged_resource , public boost::noncopyable {
+class game_object_ : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 			explicit			game_object_	( base_game_scene& s );
 
@@ -39,6 +39,7 @@ public:
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* boost::noncopyable */
+protected:
 	/* 0x0108 */	base_game_scene&	m_game_scene;
 }; // class game_object_
 

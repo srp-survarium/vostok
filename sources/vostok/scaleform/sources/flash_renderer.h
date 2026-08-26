@@ -46,7 +46,7 @@ struct flash_renderer {
 	inline	void	on_create_device( ) { }
 	inline	void	on_lost_device	( ) { }
 
-public:
+private:
 	/* 0x0000 */	u32									m_output_width;
 	/* 0x0004 */	u32									m_output_height;
 	/* 0x0008 */	Scaleform::Render::D3D1x::HAL*		m_HALRenderer;

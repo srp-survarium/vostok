@@ -12,6 +12,8 @@ namespace survarium {
 
 class animation_space_search_restrictor : public ai::search_restrictor::generic< animation_space_vertex_id, u32, float > {
 public:
+	typedef ai::search_restrictor::generic< animation_space_vertex_id, u32, float > super;
+
 	inline			animation_space_search_restrictor	(
 						animation_space_graph_ptr const&	arg_0,
 						animation_space_vertex_id const&	arg_1,
@@ -23,7 +25,7 @@ public:
 		// the base refs/m_graph force the init-list; the arg mapping is the
 		// generic<> ctor's own (start, target, max_range, max_iterations,
 		// max_visited) - a matcher confirms at the inlining call site
-		ai::search_restrictor::generic< animation_space_vertex_id, u32, float >( arg_1, arg_2, arg_3, arg_4, arg_5 ),
+		super( arg_1, arg_2, arg_3, arg_4, arg_5 ),
 		m_graph( arg_0 )
 	{ /* no source */ }
 
@@ -39,7 +41,6 @@ public:
 
 	inline	u32		get_start_vertices_count			( ) const { return 1; }
 
-	inline			~animation_space_search_restrictor	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* ai::search_restrictor::generic< animation_space_vertex_id, u32, float > */

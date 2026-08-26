@@ -11,7 +11,7 @@ namespace survarium {
 
 struct flash_external_handler;
 
-struct flash_external_handler_impl : public Scaleform::GFx::ExternalInterface , public boost::noncopyable {
+struct flash_external_handler_impl : public Scaleform::GFx::ExternalInterface , private boost::noncopyable {
 	inline	explicit	flash_external_handler_impl	( flash_external_handler& arg_0 )
 		:	owner	( arg_0 )
 	{ }
@@ -23,7 +23,6 @@ struct flash_external_handler_impl : public Scaleform::GFx::ExternalInterface , 
 							u32								arg_3
 						) override;
 
-	virtual				~flash_external_handler_impl( ) { }
 
 public:
 	/* 0x0000 */	/* Scaleform::GFx::ExternalInterface */

@@ -23,6 +23,8 @@ class game;
 // void* main_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x91bf0]: <0x427c0>|0x000|      :'43'	{
 
 class main_menu : public base_game_scene , public input::handler {
+	typedef base_game_scene super;
+
 public:
 			explicit			main_menu			( game& g );
 	virtual						~main_menu			( );

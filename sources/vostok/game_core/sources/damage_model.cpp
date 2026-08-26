@@ -240,7 +240,6 @@ public:
 		params->reset( );
 	}
 
-	explicit			reset_predicate	( ) {}
 }; // struct reset_predicate
 
 void damage_model::reset( )

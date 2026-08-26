@@ -20,6 +20,8 @@ class game_world;
 class zone_group;
 
 class damage_zone : public resources::unmanaged_resource , public damage_zone_core {
+	typedef damage_zone_core super;
+
 public:
 			explicit	damage_zone		( game_world& game_world );
 	virtual				~damage_zone	( );
@@ -35,13 +37,15 @@ public:
 							u32												// PDB: __formal, genuinely unused (two collide - left unnamed)
 						);
 
+	typedef vector< resources::unmanaged_resource_ptr > particles_container;
+
 			void		play_particles	( vector< resources::unmanaged_resource_ptr > const& particles ) const;
-			void		stop_particles	( vector< resources::unmanaged_resource_ptr > const& particles ) const;
+			void		stop_particles	( particles_container const& particles ) const;
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* damage_zone_core */
-	/* 0x0218 */	vector< resources::unmanaged_resource_ptr >	m_particles;
+	/* 0x0218 */	particles_container	m_particles;
 	/* 0x0224 */	game_world&		m_game_world;
 }; // class damage_zone
 

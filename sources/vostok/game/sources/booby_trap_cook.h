@@ -13,10 +13,10 @@ namespace survarium {
 class game_world;
 
 class booby_trap_cook : public booby_trap_core_cook {
+	typedef	booby_trap_core_cook	super;
+
 public:
 			explicit			booby_trap_cook				( game_world& gw );
-
-	virtual						~booby_trap_cook			( ) { /* no source */ }
 
 private:
 	virtual	booby_trap_core*	new_derived_resource		( ) override

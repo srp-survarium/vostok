@@ -7,6 +7,7 @@
 #include "base_game_scene.h"
 #include "game.h"
 #include "game_camera.h"
+#include "levelmap_camera.h"
 #include <vostok/console_command.h>
 
 namespace survarium {

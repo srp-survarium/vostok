@@ -26,7 +26,7 @@ namespace survarium {
 class chat_handler;
 class game;
 
-class messaging_client : public boost::noncopyable {
+class messaging_client : private boost::noncopyable {
 public:
 			explicit								messaging_client				( game& g );
 													~messaging_client				( );

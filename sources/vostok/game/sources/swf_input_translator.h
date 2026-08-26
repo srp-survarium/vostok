@@ -85,9 +85,8 @@ protected:
 			void				register_char_bind		( input::enum_keyboard key, s32 scan, bool translate );
 
 public:
-	inline						~swf_input_translator	( ) { /* no source */ }
 
-private:
+protected:
 	/* 0x0000 */	map< input::enum_keyboard, dik_to_swf_bind >	char_map;
 }; // class swf_input_translator
 

@@ -350,7 +350,7 @@ void network_client::on_http_error( boost::system::error_code __formal )
 {
 	LOG_ERROR( "http client error!" );
 }
-#line 353
+#line 405
 void network_client::on_match_disconnected( network_core::disconnect_event_types_enum disconnect_event_type )
 {
 	m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );

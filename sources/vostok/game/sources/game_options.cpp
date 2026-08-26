@@ -78,7 +78,7 @@ void game_options::callback(
 		else if ( strings::equal( button, "settings" ) )
 			show_options( true );
 		else if ( strings::equal( button, "leave_match" ) )
-			m_game.network_client( ).close_current_match( true );
+			m_game.get_network_client( )->close_current_match( true );
 	}
 	else if ( strings::equal( methodName, "accept_changes" ) )
 	{

@@ -10,7 +10,7 @@ namespace survarium {
 class game_world;
 class player;
 
-class step_manager : public boost::noncopyable {
+class step_manager : private boost::noncopyable {
 public:
 					step_manager	( );
 
@@ -19,9 +19,9 @@ public:
 						float3 const&		position,
 						float3 const&		direction,
 						game_world&			world
-					) const;
+						) const;
 
-	inline			~step_manager	( ) { /* no source */ }
+	enum { max_decal_count = 32 };
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

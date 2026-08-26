@@ -10,8 +10,10 @@
 namespace survarium {
 
 class options_item_bool : public options_item_base {
+	typedef	options_item_base	super;
+
 public:
-					options_item_bool	( options_tab& parent_tab, pcstr console_command, u8 option_item_id );
+						options_item_bool	( options_tab& parent_tab, pcstr console_command, u8 option_item_id );
 
 	virtual	void	initialize			( ) override;
 
@@ -24,12 +26,11 @@ public:
 
 	virtual	void	call				( flash_function_handler_params& params ) override;
 
-	inline			~options_item_bool	( ) { /* no source */ }
-
-private:
+protected:
 	/* 0x0000 */	/* options_item_base */
 	/* 0x0018 */	bool	m_current_value;
 	/* 0x0019 */	bool	m_source_value;
+
 }; // class options_item_bool
 
 STATIC_SIZE_ASSERT(options_item_bool, 0x1C);

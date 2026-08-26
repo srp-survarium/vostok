@@ -16,7 +16,7 @@ namespace sound {
 
 namespace survarium {
 
-class sound_player_cook : public resources::translate_query_cook , public boost::noncopyable {
+class sound_player_cook : public resources::translate_query_cook , private boost::noncopyable {
 public:
 					sound_player_cook	( sound::world* world, resources::class_id_enum class_id );
 
@@ -29,7 +29,6 @@ private:
 			void	on_config_loaded	( resources::queries_result& data );
 
 public:
-	virtual			~sound_player_cook	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */

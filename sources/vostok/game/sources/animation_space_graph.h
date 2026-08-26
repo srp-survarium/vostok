@@ -22,7 +22,7 @@ namespace animation {
 
 namespace survarium {
 
-class animation_space_graph : public resources::unmanaged_resource , public boost::noncopyable {
+class animation_space_graph : public resources::unmanaged_resource , private boost::noncopyable {
 public:
 												animation_space_graph	(
 													ai::navigation::world&		navigation_world,
@@ -78,7 +78,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > animation_space_graph_ptr;
 
-__declspec( noinline ) inline bool operator!=( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
+inline bool operator!=( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
 {
 	return	!(
 				left.rotation.x == right.rotation.x &&

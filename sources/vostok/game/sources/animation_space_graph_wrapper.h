@@ -9,16 +9,14 @@
 
 namespace survarium {
 
-struct animation_space_graph_wrapper : public boost::noncopyable {
-	typedef u32 const_edge_iterator;
-
-	// PDB prints the nested impl tags standalone (Outer__Inner.h); both are the
-	// empty mix-in bases the search-service vertex/cell types inherit from
+struct animation_space_graph_wrapper : private boost::noncopyable {
 	struct vertex_impl {
 	}; // struct vertex_impl
 
 	struct look_up_cell_impl {
 	}; // struct look_up_cell_impl
+
+	typedef u32 const_edge_iterator;
 
 	inline									animation_space_graph_wrapper	( animation_space_graph_ptr const& arg_0, animation_space_vertex_id const& arg_1 ) :
 		m_graph( arg_0 ),
@@ -37,9 +35,8 @@ struct animation_space_graph_wrapper : public boost::noncopyable {
 			animation_space_vertex_id		vertex_id						( animation_space_vertex_id const& vertex_id, const u32 iterator ) const;
 	inline	u32								edge_id							( animation_space_vertex_id const& arg_0, const u32 iterator ) const { return iterator; }
 
-	inline									~animation_space_graph_wrapper	( ) { /* no source */ }
 
-public:
+private:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	animation_space_graph_ptr const&	m_graph;
 	/* 0x0004 */	animation_space_vertex_id const&	m_start_vertex_id;

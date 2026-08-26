@@ -89,7 +89,7 @@ typedef resources::resource_ptr<
 // void* game_world::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x8f7c0]: <0x8f7b0>|0x000|      :'27'	{
 
 // the canonical game_world_1.h variant is byte-identical - no union needed
-class game_world : public base_game_scene , public ai::engine , public ai::navigation::engine , public bullet_manager_engine , public resources::unmanaged_resource , public input::handler {
+class game_world : public base_game_scene , private ai::engine , private ai::navigation::engine , private bullet_manager_engine , public resources::unmanaged_resource , public input::handler {
 	// the network client's packet handlers forward HUD updates straight into the
 	// private game_ui (m_game.get_game_world().game_ui.set_*()); the original reaches
 	// it directly. Codegen-neutral - friendship is not recorded in the PDB.
@@ -102,26 +102,7 @@ class game_world : public base_game_scene , public ai::engine , public ai::navig
 	// (the original reaches it directly). Codegen-neutral - friendship is not in the PDB.
 	friend class player;
 public:
-	// canonical dump prints the nested type standalone (game_world__bullet_tracer.h)
-	struct bullet_tracer {
-		inline		bullet_tracer	( class bullet* arg_0, render::tracer_model_instance_ptr arg_1 ) :
-			bullet( arg_0 ),
-			tracer( arg_1 ) { /* no source */ }
-		inline		~bullet_tracer	( ) { /* no source */ }
-
-	public:
-		/* 0x0000 */	class bullet*							bullet;
-		/* 0x0004 */	render::tracer_model_instance_ptr		tracer;
-	}; // struct bullet_tracer
-
-	// member typedef (engine convention) - the member-pointer access check
-	// happens in game_world's context (human_npc befriends game_world)
-	typedef vostok::intrusive_list< human_npc,
-		human_npc_ptr,
-		&human_npc::next_npc,
-		vostok::threading::single_threading_policy,
-		vostok::size_policy,
-		vostok::no_debug_policy > human_npc_list;
+	typedef base_game_scene super;
 
 				explicit							game_world						( game& game );
 	virtual											~game_world						( );
@@ -225,7 +206,6 @@ public:
 
 	virtual	u32									get_node_by_name				( pcstr node_name ) const override;
 	virtual	void								get_available_weapons			( ai::npc* owner, vectora< ai::weapon* >& list_to_be_filled ) const override;
-	virtual	u32									get_current_time_in_ms			( ) const override;
 
 			void								load							(
 													pcstr						project_resource_name,
@@ -256,6 +236,7 @@ public:
 	inline	free_fly_camera*					get_free_fly_camera				( ) const { /* no source */ return m_free_fly_camera; }
 			void								set_local_player_camera			( player_input_handler* camera );
 
+	virtual	u32									get_current_time_in_ms			( ) const override;
 	inline	const simple_game_project_ptr		get_project						( ) const { /* no source */ return m_game_project; }
 
 	virtual	bullet_manager&						get_bullet_manager				( ) const override
@@ -329,14 +310,14 @@ private:
 	{
 	}
 
+	static	void								kill_npc						( human_npc_ptr& condemned );
+
 			void								add_enemy_position_for_team		( pcstr team_name );
 			void								clear_enemies_positions_for_team( pcstr team_name );
 
 	inline	void								draw_respawn_debug				( ) { /* no source */ }
 
 			void								clear_player_spawn_info			( );
-
-	static	void								kill_npc						( human_npc_ptr& condemned );
 
 public:
 	/* 0x0000 */	/* base_game_scene */
@@ -347,8 +328,16 @@ public:
 	/* 0x01d0 */	/* input::handler */
 	/* 0x01d4 */	game_world_ui							game_ui;
 private:
-	/* 0x0214 */	vector< float3 >						m_enemies_for_team_1;
-	/* 0x0220 */	vector< float3 >						m_enemies_for_team_2;
+	typedef vostok::intrusive_list< human_npc,
+		human_npc_ptr,
+		&human_npc::next_npc,
+		vostok::threading::single_threading_policy,
+		vostok::size_policy,
+		vostok::no_debug_policy > npcs_type;
+	typedef vector< float3 > enemies_type;
+
+	/* 0x0214 */	enemies_type							m_enemies_for_team_1;
+	/* 0x0220 */	enemies_type							m_enemies_for_team_2;
 	/* 0x022c */	simple_game_project_ptr					m_game_project;
 	/* 0x0230 */	render::culling::portal_sector_structure_ptr	m_portal_sector_structure;
 	/* 0x0234 */	free_fly_camera*						m_free_fly_camera;
@@ -358,10 +347,22 @@ private:
 	/* 0x0244 */	game_material_manager_ptr				m_game_material_manager;
 	/* 0x0248 */	ai::world*								m_ai_world;
 	/* 0x024c */	ai::navigation::world*					m_ai_navigation_world;
-	/* 0x0250 */	vector< bullet_tracer >					m_bullet_tracers;
-	/* 0x025c */	resources::unmanaged_resource_ptr		death_particles[16];
+	struct bullet_tracer {
+		inline		bullet_tracer	( class bullet* arg_0, render::tracer_model_instance_ptr arg_1 ) :
+			bullet( arg_0 ),
+			tracer( arg_1 ) { /* no source */ }
+
+	public:
+		/* 0x0000 */	class bullet*							bullet;
+		/* 0x0004 */	render::tracer_model_instance_ptr		tracer;
+	}; // struct bullet_tracer
+	typedef vector< bullet_tracer > bullet_tracers_type;
+
+	/* 0x0250 */	bullet_tracers_type						m_bullet_tracers;
+	enum { death_particles_count = 16 };
+	/* 0x025c */	resources::unmanaged_resource_ptr		death_particles[ death_particles_count ];
 	/* 0x029c */	u8										m_death_particles_it;
-	/* 0x02a0 */	human_npc_list							m_npcs;
+	/* 0x02a0 */	npcs_type								m_npcs;
 	/* 0x02b0 */	npc_stats*								m_active_npc_stats;
 	/* 0x02b4 */	damage_model_stats*						m_damage_model_stats;
 	/* 0x02b8 */	human_npc_ptr							m_selected_npc;

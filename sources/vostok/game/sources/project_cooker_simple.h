@@ -14,14 +14,14 @@ class game_object_;
 class simple_game_project;
 
 class project_cooker_simple : public resources::translate_query_cook , public boost::noncopyable {
+	typedef	resources::translate_query_cook	super;
+
 public:
 			explicit	project_cooker_simple			( bool editor_present );
 
-	virtual	void		translate_query					( resources::query_result_for_cook& parent ) override;
+		virtual	void		translate_query					( resources::query_result_for_cook& parent ) override;
 
 	virtual	void		delete_resource					( resources::resource_base* resource ) override;
-
-	virtual				~project_cooker_simple			( ) { /* no source */ }
 
 private:
 			void		on_game_project_loaded			( resources::queries_result& data, resources::query_result_for_cook* parent );

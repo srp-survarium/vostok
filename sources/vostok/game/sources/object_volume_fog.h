@@ -10,6 +10,8 @@
 namespace survarium {
 
 class object_volume_fog : public game_object_static {
+	typedef game_object_static super;
+
 public:
 			explicit	object_volume_fog	( base_game_scene& w );
 	virtual				~object_volume_fog	( );
@@ -23,7 +25,7 @@ public:
 	virtual	void		insert				( ) override;
 	virtual	void		remove				( ) override;
 
-private:
+public:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	u32			m_volume_fog_id;
 	/* 0x0154 */	float3		m_color;

@@ -32,7 +32,7 @@ struct flash_text_manager;
 
 // pulled ahead by batch 5 (a base of its menu scenes); out-of-line bodies in
 // the base_game_scene.cpp compiland (batch 9)
-class base_game_scene : public game_scene , public engine , public physics::engine , public boost::noncopyable {
+class base_game_scene : public game_scene , public engine , private physics::engine , private boost::noncopyable {
 public:
 			explicit								base_game_scene		( game& g );
 	// PDB spells the params vostok::render::base_scene_ptr / base_scene_view_ptr -

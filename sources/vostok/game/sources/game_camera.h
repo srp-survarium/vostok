@@ -15,7 +15,7 @@ extern float default_vertical_fov;
 
 // pulled ahead by batch 6 (a base of its player_input_handler); out-of-line
 // bodies in the game_camera.cpp compiland (batch 9)
-class game_camera : public boost::noncopyable {
+class game_camera : private boost::noncopyable {
 public:
 			explicit			game_camera				( base_game_scene& w );
 

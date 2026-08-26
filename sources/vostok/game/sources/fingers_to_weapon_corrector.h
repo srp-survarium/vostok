@@ -18,7 +18,7 @@ namespace animation {
 
 namespace survarium {
 
-class fingers_to_weapon_corrector : public core::noncopyable {
+class fingers_to_weapon_corrector : private core::noncopyable {
 public:
 	enum hands_enum {
 		left			= 0x0,
@@ -26,19 +26,7 @@ public:
 		hands_count		= 0x2,
 	};
 
-	struct hand {
-		inline		hand( ) :
-			start_transition_time_in_ms	( 0 ),
-			is_active					( true )
-		{
-		}
-
-	public:
-		/* 0x0000 */	float4x4	phalanges_matrices[15];
-		/* 0x03c0 */	u32			phalanges_bones_indices[15];
-		/* 0x03fc */	u32			start_transition_time_in_ms;
-		/* 0x0400 */	bool		is_active;
-	}; // struct hand
+	enum { phalanges_count = 15 };
 
 public:
 						fingers_to_weapon_corrector	( );
@@ -63,10 +51,22 @@ private:
 			void		initialize_bones_indices	( animation::skeleton const& character_skeleton );
 			void		initialize_locators			( render::render_model_instance const& weapon_model, const bool first_person_view );
 
+	struct hand {
+		inline		hand( ) :
+			start_transition_time_in_ms	( 0 ),
+			is_active					( true )
+		{
+		}
+
+	public:
+		/* 0x0000 */	float4x4	phalanges_matrices[ phalanges_count ];
+		/* 0x03c0 */	u32			phalanges_bones_indices[ phalanges_count ];
+		/* 0x03fc */	u32			start_transition_time_in_ms;
+		/* 0x0400 */	bool		is_active;
+	}; // struct hand
+
 public:
 	inline	void		set_first_person_view		( const bool arg_0 ) { /* no source */ }
-
-	inline				~fingers_to_weapon_corrector( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* core::noncopyable */

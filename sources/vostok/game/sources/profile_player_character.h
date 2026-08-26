@@ -24,7 +24,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > player_ptr;
 
-class profile_player_character : public boost::noncopyable {
+class profile_player_character : private boost::noncopyable {
 public:
 			explicit	profile_player_character	( lobby_menu& lobby_menu );
 	inline				~profile_player_character	( ) { /* no source */ }

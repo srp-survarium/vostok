@@ -10,6 +10,8 @@
 namespace survarium {
 
 class game_object_static : public game_object_ {
+	typedef game_object_ super;
+
 public:
 			explicit	game_object_static	( base_game_scene& s );
 

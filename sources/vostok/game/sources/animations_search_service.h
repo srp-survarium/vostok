@@ -25,6 +25,16 @@ class animation_space_search_restrictor;
 // path_constructor_type=ai::path_constructor::edge::impl<vertex_type, vector<u32>>)
 class animations_search_service {
 public:
+	typedef float distance_type;
+	typedef animation_space_vertex_id vertex_id_type;
+	typedef u32 edge_id_type;
+	typedef ai::vertex_allocator::fixed_count vertex_allocator_type;
+	typedef ai::vertex_manager::fixed_count_hash vertex_manager_type;
+	typedef ai::priority_queue::binary_heap priority_queue_type;
+	typedef animation_space_graph_wrapper graph_wrapper_type;
+	typedef ai::path_constructor::edge path_constructor_helper_type;
+	typedef ai::a_star algorithm_type;
+
 	struct vertex_type :
 		public ai::a_star::vertex_helper< float >::vertex_impl,
 		public animation_space_graph_wrapper::vertex_impl,
@@ -33,7 +43,6 @@ public:
 		public ai::vertex_manager::fixed_count_hash::vertex_helper< animation_space_vertex_id >::vertex_impl,
 		public ai::vertex_allocator::fixed_count::vertex_impl
 	{
-		inline		vertex_type	( ) { /* no source */ }
 	}; // struct vertex_type
 
 	struct look_up_cell_type :
@@ -51,7 +60,6 @@ public:
 		inline		vertex_allocator_impl_type	( memory::base_allocator& arg_0, const u32 arg_1 ) :
 			super( &arg_0, arg_1 )
 		{ /* no source */ }
-		inline		~vertex_allocator_impl_type	( ) { /* no source */ }
 	}; // struct vertex_allocator_impl_type
 
 	struct vertex_manager_impl_type : public ai::vertex_manager::fixed_count_hash::impl< vertex_allocator_impl_type, look_up_cell_type > {
@@ -63,7 +71,6 @@ public:
 					) :
 			super( arg_0, arg_1, arg_2 )
 		{ /* no source */ }
-		inline		~vertex_manager_impl_type	( ) { /* no source */ }
 	}; // struct vertex_manager_impl_type
 
 	struct priority_queue_impl_type : public ai::priority_queue::binary_heap::impl< vertex_manager_impl_type > {
@@ -71,8 +78,13 @@ public:
 		inline		priority_queue_impl_type	( vertex_manager_impl_type& arg_0, const u32 arg_1 ) :
 			super( arg_0, arg_1 )
 		{ /* no source */ }
-		inline		~priority_queue_impl_type	( ) { /* no source */ }
 	}; // struct priority_queue_impl_type
+
+	typedef vector< u32 > path_type;
+	typedef animation_space_heuristics path_heuristics_type;
+	typedef ai::path_constructor::edge::impl< vertex_type, path_type > path_constructor_type;
+	typedef animation_space_search_restrictor search_restrictor_type;
+	enum { max_vertex_count = 1024, hash_size = 4096 };
 
 public:
 	inline			animations_search_service	( ) :
@@ -83,14 +95,13 @@ public:
 
 			bool	search						(
 						animation_space_graph_ptr const&	graph,
-						vector< u32 >*						path,
+							path_type*							path,
 						const animation_space_vertex_id		arg_2 /* animation_space_vertex_id start_vertex_id */,
 						const animation_space_vertex_id		arg_3 /* animation_space_vertex_id target_vertex_id */
 					);
 
-	inline			~animations_search_service	( ) { /* no source */ }
 
-private:
+public:
 	/* 0x0000 */	animations_search_service::vertex_allocator_impl_type	m_vertex_allocator;
 	/* 0x0010 */	animations_search_service::vertex_manager_impl_type	m_vertex_manager;
 	/* 0x002c */	animations_search_service::priority_queue_impl_type	m_priority_queue;

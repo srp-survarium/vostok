@@ -73,6 +73,43 @@ public:
 	/* 0x0008 */	bool								m_was_hit;
 }; // struct hit_receiver_info
 
+struct erase_null_ptrs : private boost::noncopyable {
+	inline bool operator()( hit_receiver_info const& info ) const
+	{
+		return info.m_receiver == NULL;
+	}
+};
+
+STATIC_SIZE_ASSERT(erase_null_ptrs, 0x1);
+
+struct erase_old_receivers : public boost::noncopyable {
+	inline explicit erase_old_receivers( damage_zone_core_ptr const& damage_zone ) :
+		m_damage_zone( damage_zone )
+	{
+	}
+
+	inline bool operator()( hit_receiver_info const& info ) const;
+
+private:
+	/* 0x0000 */ damage_zone_core_ptr const&	m_damage_zone;
+};
+
+STATIC_SIZE_ASSERT(erase_old_receivers, 0x4);
+
+struct remove_left_receivers_predicate {
+	inline explicit remove_left_receivers_predicate( buffer_vector< hit_receiver_info > const& receivers ) :
+		m_receivers( &receivers )
+	{
+	}
+
+	inline bool operator()( hit_receiver_info const& info ) const;
+
+private:
+	/* 0x0000 */ buffer_vector< hit_receiver_info > const*	m_receivers;
+};
+
+STATIC_SIZE_ASSERT(remove_left_receivers_predicate, 0x4);
+
 
 } // namespace survarium
 

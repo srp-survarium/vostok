@@ -13,6 +13,8 @@ class game_world;
 class victory_item;
 
 class victory_item_cook : public victory_item_core_cook {
+	typedef victory_item_cook super;
+
 public:
 			explicit				victory_item_cook		( game_world& game_world );
 
@@ -21,7 +23,6 @@ public:
 	virtual	void					on_config_loaded		( resources::queries_result& data ) override;
 	virtual	void					on_subresources_loaded	( resources::queries_result& data, victory_item* object_to_cook );
 
-	virtual							~victory_item_cook		( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* victory_item_core_cook */

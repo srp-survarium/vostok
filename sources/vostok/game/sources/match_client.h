@@ -27,7 +27,11 @@ namespace survarium {
 
 class network_client;
 
-class match_client : public boost::noncopyable {
+class match_client : private boost::noncopyable {
+	typedef boost::function< void( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, lobby_server_message_types_enum ) > connect_callback_type;
+	typedef boost::function< void( u8, network_core::packet_reader& ) > on_packet_received_callback_type;
+	typedef boost::function< void( network_core::disconnect_event_types_enum ) > on_disconnect_callback_type;
+
 	// network_client::on_connected_to_match drives the private send-queue flag
 	// directly (codegen-neutral friendship; PDB does not record it)
 	friend class network_client;
@@ -40,7 +44,7 @@ public:
 													u16			port,
 													u32			session_id,
 													u32			current_time_in_ms,
-													boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) > const&	callback
+													connect_callback_type const&	callback
 												);
 
 			void								disconnect							( );
@@ -56,9 +60,9 @@ public:
 	inline	network_core::udp_match_packet*		new_packet							( match_client_message_types_enum arg_0 ) { return m_client.new_packet( ( u8 )arg_0 ); }
 	inline	void								delete_packet						( network_core::udp_match_packet*& arg_0 ) { /* no source */ }
 
-	inline	void								set_on_packet_received				( boost::function< void( u8, network_core::packet_reader& ) > const& arg_0 ) { m_client.set_on_packet_received( arg_0 ); }
+	inline	void								set_on_packet_received				( on_packet_received_callback_type const& arg_0 ) { m_client.set_on_packet_received( arg_0 ); }
 	inline	void								set_on_disconnect					(
-													boost::function< void( enum network_core::disconnect_event_types_enum ) > const&	arg_0
+													on_disconnect_callback_type const&	arg_0
 												) { m_client.set_on_disconnect( arg_0 ); }
 
 	inline	bool								is_connected						( ) const { return m_client.is_connected( ); }
@@ -70,17 +74,19 @@ public:
 
 	inline	match_options&						get_match_options					( ) { /* no source */ return m_match_options; }
 
+private:
 	inline	void								on_connected						(
 													const connection_error_types_enum		arg_0,
 													const handshaking_error_types_enum		arg_1,
 													const socket_error_types_enum			arg_2,
 													const lobby_server_message_types_enum	arg_3
-												) { /* no source */ }
+													) { /* no source */ }
 
-private:
-	/* 0x0000 */	/* boost::noncopyable */
+	typedef network_packets_orderer< match_client_message_types_enum, match_server_message_types_enum > packets_orderer_type;
+
+		/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	network::match_client		m_client;
-	/* 0x00f8 */	network_packets_orderer< enum vostok::match_client_message_types_enum, enum vostok::match_server_message_types_enum >	m_packets_orderer;
+	/* 0x00f8 */	packets_orderer_type		m_packets_orderer;
 	/* 0x00fc */	match_options				m_match_options;
 	/* 0x2398 */	u32							m_last_send_queed_packets_time_in_ms;
 	/* 0x239c */	bool						m_are_there_any_packets_to_send;

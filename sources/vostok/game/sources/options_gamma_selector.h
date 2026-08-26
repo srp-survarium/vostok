@@ -10,6 +10,8 @@
 namespace survarium {
 
 class options_gamma_selector : public options_item_float {
+	typedef options_item_float super;
+
 public:
 	inline	explicit	options_gamma_selector	( options_tab& arg_0 )
 		: options_item_float( arg_0, "r_gamma_correction_factor", 6, 0.01f ) { /* no source */ }
@@ -18,7 +20,6 @@ public:
 
 	virtual	void		revert					( ) override;
 
-	inline				~options_gamma_selector	( ) { /* no source */ }
 }; // class options_gamma_selector
 
 STATIC_SIZE_ASSERT(options_gamma_selector, 0x24);

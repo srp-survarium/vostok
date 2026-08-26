@@ -91,7 +91,7 @@ void messaging_client::on_connected( )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC3 );
-	packet.append		( m_game.network_client( ).login_client( ).session_id( ) );
+	packet.append		( m_game.get_network_client( )->login_client( ).session_id( ) );
 	packet.append		( ( u8 )5 );
 	m_network_client.send	( packet );
 }

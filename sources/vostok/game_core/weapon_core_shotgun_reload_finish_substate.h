@@ -39,6 +39,8 @@ private:
 private:
 	/* 0x0000 */	/* weapon_core_shotgun_reload_base_substate */
 	/* 0x0168 */	bool*		m_owner_ready_for_transition;
+
+	template < typename T > friend class weapon_sound_events_handler_state;
 }; // class weapon_core_shotgun_reload_finish_substate
 
 STATIC_SIZE_ASSERT(weapon_core_shotgun_reload_finish_substate, 0x170);

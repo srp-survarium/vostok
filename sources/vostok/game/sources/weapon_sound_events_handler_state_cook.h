@@ -85,16 +85,23 @@ DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_aimed_fire_s
 
 // T is a weapon_sound_events_handler_state< state > instantiation
 template < typename T >
-class weapon_sound_events_handler_state_cook : public resources::unmanaged_cook , public boost::noncopyable {
+class weapon_sound_events_handler_state_cook : public resources::unmanaged_cook , private boost::noncopyable {
 public:
-	struct config_params {
-	public:
-		/* 0x0000 */	bool	stop_sounds_on_state_finalize;
-		/* 0x0001 */	u8		simultaneous_sounds_queue_size;
-	}; // struct config_params
+	typedef T type_to_create;
 
 public:
 	inline						weapon_sound_events_handler_state_cook	( );
+
+	struct config_params {
+public:
+		inline	config_params( ) :
+			stop_sounds_on_state_finalize( false ),
+			simultaneous_sounds_queue_size( 1 )
+		{ }
+
+		/* 0x0000 */	bool	stop_sounds_on_state_finalize;
+		/* 0x0001 */	u8		simultaneous_sounds_queue_size;
+	}; // struct config_params
 
 private:
 	// the four cook virtuals + the helpers mangle private (EAE in the target);
@@ -121,8 +128,8 @@ private:
 									config_params const&	config_parameters
 								);
 
-public:
-	virtual						~weapon_sound_events_handler_state_cook	( ) { /* no source */ }
+	typedef resources::unmanaged_cook super;
+
 }; // class weapon_sound_events_handler_state_cook
 
 } // namespace survarium

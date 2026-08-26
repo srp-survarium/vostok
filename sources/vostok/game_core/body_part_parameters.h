@@ -28,6 +28,23 @@ namespace network_core {
 
 namespace survarium {
 
+struct remove_vertex_from_hit_parameters_predicate : private boost::noncopyable {
+	inline explicit remove_vertex_from_hit_parameters_predicate( body_part_parameters* vertex ) :
+		vertex( vertex )
+	{
+	}
+
+	inline void operator()( hit_type_parameters* const hit_parameters ) const
+	{
+		hit_parameters->remove_vertex( vertex );
+	}
+
+public:
+	/* 0x0000 */ body_part_parameters*	vertex;
+};
+
+STATIC_SIZE_ASSERT(remove_vertex_from_hit_parameters_predicate, 0x4);
+
 typedef vostok::intrusive_list<
 	hit_type_parameters,
 	hit_type_parameters*,

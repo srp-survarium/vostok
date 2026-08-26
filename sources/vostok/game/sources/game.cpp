@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "game.h"
+#include "game_map_description.h"
 
 #include <vostok/console_command.h>	// cc_float (max_angular_velocity_command)
 #include <vostok/console_command_processor.h>	// console_commands::save (cfg_save_*)
@@ -67,6 +68,9 @@ using vostok::console_commands::command_type_engine_internal;
 // line numbers): draw_snd_stats(58), draw_stats(70), show_profiler(74), cfg_save pair
 // (126/127), particle commands (138/141).
 
+vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
+static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
+
 static bool s_draw_snd_stats_value;
 static cc_bool s_draw_snd_stats( "draw_sound_stats", s_draw_snd_stats_value, true, command_type_user_specific );
 
@@ -75,6 +79,72 @@ static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_typ
 
 static bool s_show_profiler;
 static cc_bool s_show_profiler_command( "show_profiler", s_show_profiler, false, command_type_user_specific );
+
+namespace survarium {
+
+float g_max_angular_velocity[ 2 ];
+
+// TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
+// in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
+class max_angular_velocity_command : public console_commands::cc_float {
+	typedef console_commands::cc_float super;
+
+public:
+					max_angular_velocity_command	(
+						pcstr			name,
+						const float		min,
+						const float		max,
+						bool			serializable,
+						const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
+						const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
+					);
+
+	inline	void	set_engine						( engine_user::engine& arg_0 ) { m_engine = &arg_0; }
+
+private:
+	virtual	void	execute							( pcstr arg_0 ) override;
+
+public:
+
+private:
+	/* 0x0000 */	/* console_commands::cc_float */
+	/* 0x0050 */	engine_user::engine*	m_engine;
+	/* 0x0054 */	float					m_value;
+}; // class max_angular_velocity_command
+
+STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
+
+ max_angular_velocity_command::max_angular_velocity_command(
+	pcstr			name,
+	const float		min,
+	const float		max,
+	bool			serializable,
+	const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
+	const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
+) :
+	super( name, m_value, min, max, serializable, arg_4, arg_5 ),
+	m_engine( NULL ),
+	m_value( 720.f )
+{
+}
+
+void max_angular_velocity_command::execute( pcstr args )
+{
+	super::execute( args );
+	g_max_angular_velocity[ 1 ] = math::deg2rad( m_value );
+
+	float2 const window_size = m_engine->get_render_window_size( );
+	float const aspect_ratio = window_size.x / window_size.y;
+	g_max_angular_velocity[ 0 ] = aspect_ratio * g_max_angular_velocity[ 1 ];
+}
+
+} // namespace survarium
+static survarium::max_angular_velocity_command s_max_angular_velocity_command(
+	"max_angular_velocity",
+	360.f,
+	3600.f,
+	true, command_type_engine_internal, vostok::console_commands::execution_filter_general
+);
 
 void cfg_save_user( )
 {
@@ -98,73 +168,6 @@ static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true,
 static bool s_show_detailed_statistics_value;
 static cc_bool show_detailed_statistics( "r_show_detailed_statistics", s_show_detailed_statistics_value, true, command_type_user_specific );
 
-vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
-static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
-
-namespace survarium {
-
-float g_max_angular_velocity[ 2 ];
-
-// TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
-// in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
-class max_angular_velocity_command : public console_commands::cc_float {
-public:
-					max_angular_velocity_command	(
-						pcstr			name,
-						const float		min,
-						const float		max,
-						bool			serializable,
-						const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
-						const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
-					);
-
-	inline	void	set_engine						( engine_user::engine& arg_0 ) { m_engine = &arg_0; }
-
-private:
-	virtual	void	execute							( pcstr arg_0 ) override;
-
-public:
-	virtual			~max_angular_velocity_command	( ) { /* no source */ }
-
-private:
-	/* 0x0000 */	/* console_commands::cc_float */
-	/* 0x0050 */	engine_user::engine*	m_engine;
-	/* 0x0054 */	float					m_value;
-}; // class max_angular_velocity_command
-
-STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
-
- max_angular_velocity_command::max_angular_velocity_command(
-	pcstr			name,
-	const float		min,
-	const float		max,
-	bool			serializable,
-	const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
-	const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
-) :
-	console_commands::cc_float( name, m_value, min, max, serializable, arg_4, arg_5 ),
-	m_engine( NULL ),
-	m_value( 720.f )
-{
-}
-
-void max_angular_velocity_command::execute( pcstr args )
-{
-	console_commands::cc_float::execute( args );
-	g_max_angular_velocity[ 1 ] = math::deg2rad( m_value );
-
-	float2 const window_size = m_engine->get_render_window_size( );
-	float const aspect_ratio = window_size.x / window_size.y;
-	g_max_angular_velocity[ 0 ] = aspect_ratio * g_max_angular_velocity[ 1 ];
-}
-
-} // namespace survarium
-static survarium::max_angular_velocity_command s_max_angular_velocity_command(
-	"max_angular_velocity",
-	360.f,
-	3600.f,
-	true, command_type_engine_internal, vostok::console_commands::execution_filter_general
-);
 namespace survarium {
 // claude@NOTE: exact statement/local structure; residual is LTCG register and call convention scheduling.
  game::game(

@@ -18,6 +18,9 @@ namespace resources {
 namespace survarium {
 
 class object_sound : public game_object_static {
+	typedef sound::sound_emitter_ptr sound_emitter_ptr;
+	typedef game_object_static super;
+
 public:
 			explicit	object_sound			( base_game_scene& w );
 	virtual				~object_sound			( );
@@ -37,11 +40,11 @@ protected:
 							boost::function< void( game_object_& ) >&	callback
 						);
 
-private:
+protected:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	pcstr								m_sound_name;
 	/* 0x0154 */	s32									m_sound_emitter_type;
-	/* 0x0158 */	sound::sound_emitter_ptr			m_sound_emitter;
+	/* 0x0158 */	sound_emitter_ptr					m_sound_emitter;
 	/* 0x015c */	sound::sound_instance_proxy_ptr		m_sound_instance;
 }; // class object_sound
 

@@ -230,7 +230,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			0,
-			m_weapon.death_animations( )[ death_animation_index ],
+			( ( resources::managed_resource_ptr const* )( &m_weapon + 1 ) )[ death_animation_index ],
 			0,
 			0
 		)

@@ -10,6 +10,8 @@
 namespace survarium {
 
 class options_resolution_selector : public options_item_int {
+	typedef options_item_int super;
+
 public:
 			explicit	options_resolution_selector	( options_tab& parent_tab );
 	inline				~options_resolution_selector( ) { /* no source */ }
