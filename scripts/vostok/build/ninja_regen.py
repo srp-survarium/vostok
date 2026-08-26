@@ -35,6 +35,44 @@ from vostok.core.paths import SLN as SLN_PATH
 # worktrees). They only depend on flags and file sets, never on #includes.
 COMPDB_FILES = ("compile_commands.json", "clangd-vfs.yaml")
 
+# Retail section contributions preserve this LTCG output order.  The solution
+# dependency walk does not: vcproj2ninja expands nested projects before later
+# executable dependencies, changing COMDAT retention and PDB ownership.
+# Apply the correction only when the complete shipping suite is present, so
+# library and focused-module response files remain untouched.
+RETAIL_LINK_LIBRARY_ORDER = (
+    "vostok_engine_pc_dx11-static-gold.lib",
+    "vostok_engine-static-gold.lib",
+    "vostok_render_facade-static-gold.lib",
+    "vostok_collision-static-gold.lib",
+    "vostok_fs-static-gold.lib",
+    "vostok_vfs-static-gold.lib",
+    "vostok_opcode-static-gold.lib",
+    "vostok_physics-static-gold.lib",
+    "vostok_bullet-static-gold.lib",
+    "vostok_core-static-gold.lib",
+    "vostok_network-static-gold.lib",
+    "vostok_animation-static-gold.lib",
+    "vostok_logging-static-gold.lib",
+    "vostok_debug-static-gold.lib",
+    "vostok_render_engine_pc_dx11-static-gold.lib",
+    "vostok_game-static-gold.lib",
+    "vostok_scaleform-static-gold.lib",
+    "vostok_game_core-static-gold.lib",
+    "vostok_ui-static-gold.lib",
+    "vostok_network_core-static-gold.lib",
+    "vostok_ai_navigation-static-gold.lib",
+    "vostok_libfoundation-static.lib",
+    "vostok_particle-static-gold.lib",
+    "vostok_ai-static-gold.lib",
+    "vostok_input-static-gold.lib",
+    "vostok_render_core_pc_dx11-static-gold.lib",
+    "vostok_sound-static-gold.lib",
+    "vostok_vorbisfile-static-gold.lib",
+    "vostok_vorbis-static-gold.lib",
+    "vostok_ogg-static-gold.lib",
+)
+
 
 def log(msg: str) -> None:
     print(f"[regen-ninja] {msg}", flush=True)
@@ -43,6 +81,55 @@ def log(msg: str) -> None:
 def wine_path(p: Path) -> str:
     """/a/b -> Z:\\a\\b (the drive-rooted form vcproj2ninja --wine emits)."""
     return "Z:" + str(p).replace("/", "\\")
+
+
+def _normalize_link_rsp_paths(
+    text: str,
+    solution_dir: Path = SLN_PATH.parent,
+    repo_dir: Path = VOSTOK_DIR,
+) -> str:
+    """Collapse vcproj output paths that cross above the solution directory.
+
+    Wine's cmd does not resolve the mixed ``sources\\../`` spelling reliably:
+    link can create an import library through it and then fail to reopen the
+    adjacent .exp file.  Restrict this correction to link response files so
+    compile command lines and their PDB identity remain untouched.
+    """
+    source = "Z:" + str(solution_dir)
+    root = "Z:" + str(repo_dir) + "/"
+    return text.replace(source + r"\../", root).replace(source + r"\/../", root)
+
+
+def _normalize_link_rsp_library_order(text: str) -> str:
+    """Reproduce the retail LTCG library order in the final executable link."""
+    wanted = {name.casefold() for name in RETAIL_LINK_LIBRARY_ORDER}
+    lines = text.splitlines(keepends=True)
+
+    for index, line in enumerate(lines):
+        words = line.split()
+        names = [word.rsplit("/", 1)[-1].casefold() for word in words]
+        if not wanted.issubset(names):
+            continue
+
+        positions = [i for i, name in enumerate(names) if name in wanted]
+        if len(positions) != len(RETAIL_LINK_LIBRARY_ORDER):
+            raise ValueError("shipping link response contains duplicate libraries")
+
+        by_name = {
+            name: word for name, word in zip(names, words, strict=True)
+            if name in wanted
+        }
+        remaining = [
+            word for name, word in zip(names, words, strict=True)
+            if name not in wanted
+        ]
+        first = positions[0]
+        ordered = [by_name[name.casefold()] for name in RETAIL_LINK_LIBRARY_ORDER]
+        ending = "\n" if line.endswith("\n") else ""
+        lines[index] = " ".join(remaining[:first] + ordered + remaining[first:]) + ending
+        break
+
+    return "".join(lines)
 
 
 def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
@@ -89,6 +176,9 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
         for fp in fresh:
             rel = fp.relative_to(tmp_dir)
             text = fp.read_text().replace(raw_t, raw_b).replace(esc_t, esc_b)
+            if fp.name.endswith("_link.rsp"):
+                text = _normalize_link_rsp_paths(text)
+                text = _normalize_link_rsp_library_order(text)
             dst = BUILD_DIR / rel
             if dst.is_file() and dst.read_text() == text:
                 continue
