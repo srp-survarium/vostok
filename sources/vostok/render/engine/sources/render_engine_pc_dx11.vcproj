@@ -1073,6 +1073,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\renderer_probes_and_ao.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\renderer.h"
 			>
 		</File>

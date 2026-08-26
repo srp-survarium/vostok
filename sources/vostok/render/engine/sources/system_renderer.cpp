@@ -64,6 +64,33 @@ const D3D_INPUT_ELEMENT_DESC F_L_sl[] =
 	{"TEXCOORD",	2, DXGI_FORMAT_R32_UINT,		0, 32,	D3D_INPUT_PER_VERTEX_DATA, 0},
 };
 
+untyped_buffer* system_renderer::create_quad_ib( )
+{
+
+	const u32 quad_count	= 4 * 1024;
+	const u32 idx_count		= quad_count * 2 * 3;
+
+	u16	indices[idx_count];
+
+	int		vertex_id	= 0;
+	int		idx			= 0;
+	for ( int i = 0; i < quad_count; ++i )
+	{
+		indices[idx++] = u16( vertex_id + 0 );
+		indices[idx++] = u16( vertex_id + 1 );
+		indices[idx++] = u16( vertex_id + 2 );
+
+		indices[idx++] = u16( vertex_id + 3 );
+		indices[idx++] = u16( vertex_id + 2 );
+		indices[idx++] = u16( vertex_id + 1 );
+
+		vertex_id += 4;
+	}
+
+	return resource_manager::ref( ).create_buffer( idx_count * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
+
+}
+
 system_renderer::system_renderer( renderer_context* renderer_context ) :
 	m_renderer_context			( renderer_context ),
 	m_vertex_stream				( 1024 * 1024 ),
@@ -149,33 +176,6 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 		m_vertex_stream_quad.buffer( ),
 		*m_screen_vertex_ib
 	);
-}
-
-untyped_buffer* system_renderer::create_quad_ib( )
-{
-
-	const u32 quad_count	= 4 * 1024;
-	const u32 idx_count		= quad_count * 2 * 3;
-
-	u16	indices[idx_count];
-
-	int		vertex_id	= 0;
-	int		idx			= 0;
-	for ( int i = 0; i < quad_count; ++i )
-	{
-		indices[idx++] = u16( vertex_id + 0 );
-		indices[idx++] = u16( vertex_id + 1 );
-		indices[idx++] = u16( vertex_id + 2 );
-
-		indices[idx++] = u16( vertex_id + 3 );
-		indices[idx++] = u16( vertex_id + 2 );
-		indices[idx++] = u16( vertex_id + 1 );
-
-		vertex_id += 4;
-	}
-
-	return resource_manager::ref( ).create_buffer( idx_count * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
-
 }
 
 bool system_renderer::is_effects_ready( ) const
