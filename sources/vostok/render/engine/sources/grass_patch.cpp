@@ -55,22 +55,22 @@ private:
 	float3 m_view_pos;
 };
 
-static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 const lod_index );
-
-static bool has_surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
+static bool has_surface_by_lod( grass_render_model_ptr mod, u32 const lod_index )
 {
-	return surface_by_lod( model, lod_index ) != 0;
+	switch ( lod_index ) {
+	case 0: return mod->m_l0 != 0;
+	case 1: return mod->m_l1 != 0;
+	case 2: return mod->m_l2 != 0;
+	default: return false;
+	}
 }
 
-static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
+static grass_render_surface* surface_by_lod( grass_render_model_ptr mod, u32 const lod_index )
 {
-	if ( !model )
-		return 0;
-
 	switch ( lod_index ) {
-	case 0: return model->m_l0;
-	case 1: return model->m_l1;
-	case 2: return model->m_l2;
+	case 0: return mod->m_l0;
+	case 1: return mod->m_l1 ? mod->m_l1 : mod->m_l0;
+	case 2: return mod->m_l2 ? mod->m_l2 : mod->m_l1 ? mod->m_l1 : mod->m_l0;
 	default: return 0;
 	}
 }
@@ -337,13 +337,13 @@ static math::color transform_packed_normal(
 	basis.set(
 		transform_matrix.transform_direction(
 			float3(
-				packed_normal.get_Rf( ) * 2.f - 1.f,
-				packed_normal.get_Gf( ) * 2.f - 1.f,
-				packed_normal.get_Bf( ) * 2.f - 1.f
-			)
+				packed_normal.get_Bf( ),
+				packed_normal.get_Gf( ),
+				packed_normal.get_Rf( )
+			) * 2.f - 1.f
 		)
 	);
-	return math::color( basis.x, basis.y, basis.z, 127 );
+	return math::color( basis.z, basis.y, basis.x, 127 );
 }
 
 void grass_patch::merge_instances( )
