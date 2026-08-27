@@ -14,7 +14,7 @@
 
 #include <vostok/console_command.h>
 #include <vostok/math_color.h>
-#include <vostok/render/culling/possible_sectors_holder.h>
+#include "possible_sectors_holder.h"
 #include <vostok/render/engine/vertex_colored.h>
 
 #include "render_model_instance_impl.h"

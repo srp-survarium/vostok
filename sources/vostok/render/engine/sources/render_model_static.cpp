@@ -7,7 +7,7 @@
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/resource_manager.h>
-#include <vostok/render/culling/possible_sectors_holder.h>
+#include "possible_sectors_holder.h"
 #include <vostok/render/engine/model_format.h>
 #include "render_model_static.h"
 #include "streaming.h"
