@@ -1620,6 +1620,3 @@ void engine::world::set_gamma_correction_factor( const float value )
 
 } // namespace render
 } // namespace vostok
-
-// Temporary retention anchor; remove when reconstructed reachability keeps it emitted.
-#pragma comment( linker, "/include:??0speedtree_tree_base@render@vostok@@QAE@XZ" )
