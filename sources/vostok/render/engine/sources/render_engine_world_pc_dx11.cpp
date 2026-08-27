@@ -180,7 +180,7 @@ static void unregister_cooks( )
 } // namespace render
 } // namespace vostok
 
-void initialize_options( )
+static void initialize_options( )
 {
 }
 
@@ -524,11 +524,34 @@ static void on_fs_iterator_materials_ready(
 
 	VOSTOK_CONSTRUCT_REFERENCE		( s_options, options )( );
 
+	initialize_options				( );
+
 	initialize_speedtree			( );
 
 	register_cooks					( );
 
 	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_preinitialize, singletons_on_preinitialize )( in_config, is_editor );
+}
+
+void engine::world::set_renderer_configuration(
+	fs_new::virtual_path_string const& config_name,
+	bool async_effects
+)
+{
+	fs_new::virtual_path_string path;
+	path.assignf( "resources/render/%s.cfg", config_name.c_str() );
+
+	resources::query_resource(
+		path.c_str(),
+		resources::binary_config_class,
+		boost::bind(
+			&engine::world::on_renderer_configuration_config_loaded,
+			this,
+			async_effects,
+			_1
+		),
+		g_allocator
+	);
 }
 
 void engine::world::on_renderer_configuration_config_loaded( bool async_effects, resources::queries_result& data )

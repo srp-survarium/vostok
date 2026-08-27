@@ -77,7 +77,7 @@ class world : private boost::noncopyable {
 public:
 	/* 0x0000 */	render::renderer*	m_renderer;
 
-	inline	void				set_renderer_configuration			( fs_new::virtual_path_string const& arg_0, bool arg_1 ) { /* no source */ }
+			void				set_renderer_configuration			( fs_new::virtual_path_string const& config_name, bool async_effects );
 
 			void				apply_render_options_changes		( );
 
