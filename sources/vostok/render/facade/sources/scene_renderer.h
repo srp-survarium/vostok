@@ -106,12 +106,12 @@ public:
 	void add_model( base_scene_ptr const& scene, render_model_instance_ptr const& model, float4x4 const& transform );
 	void update_model( base_scene_ptr const& scene, render_model_instance_ptr const& model, float4x4 const& model_to_world );
 	void remove_model( base_scene_ptr const& scene, render_model_instance_ptr const& model );
-	inline void update_model_vertex_buffer(
+	void update_model_vertex_buffer(
 		render_model_instance_ptr const& object,
 		vectora< buffer_fragment > const& fragments
 	);
 	void update_skeleton( render_model_instance_ptr const& model, float4x4 const* matrices, u32 count );
-	void set_model_ghost_mode( render_model_instance_ptr const&, bool ) { /* no source */ }
+	void set_model_ghost_mode( render_model_instance_ptr const& v, bool b );
 	inline void set_speedtree_instance_material(
 		speedtree_instance_ptr const&,
 		fs_new::virtual_path_string const&,
@@ -154,7 +154,7 @@ public:
 		const resources::unmanaged_resource_ptr instance,
 		float4x4 const& transform
 	);
-	void stop_particle_system( base_scene_ptr const&, resources::unmanaged_resource_ptr const& ) { /* no source */ }
+	void stop_particle_system( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& in_instance );
 	void remove_particle_system_instance( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& instance );
 	void update_particle_system_instance(
 		base_scene_ptr const& scene,
@@ -164,15 +164,15 @@ public:
 		bool paused = false
 	);
 	bool is_playing( resources::unmanaged_resource_ptr const& instance );
-	void set_particles_render_mode( base_scene_view_ptr const&, particle::enum_particle_render_mode ) { /* no source */ }
-	void set_slomo( base_scene_ptr const&, float ) { /* no source */ }
+	void set_particles_render_mode( base_scene_view_ptr const& scene_view, particle::enum_particle_render_mode render_mode );
+	void set_slomo( base_scene_ptr const& scene, float time_multiplier );
 	void set_gamma_correction_factor( const float value );
 
 	void add_light( base_scene_ptr const& scene, u32 id, light_props* props );
 	void update_light( base_scene_ptr const& scene, u32 id, light_props* props );
 	void remove_light( base_scene_ptr const& scene, u32 id );
 
-	void add_decal( base_scene_ptr const&, u32, decal_properties const& ) { /* no source */ }
+	void add_decal( base_scene_ptr const& scene, u32 id, decal_properties const& properties );
 	void update_decal( base_scene_ptr const& scene, u32 id, decal_properties const& properties );
 	void remove_decal( base_scene_ptr const& scene, u32 id );
 
@@ -203,14 +203,14 @@ public:
 	inline void set_editor_mode( base_scene_ptr const& scene, bool is_editor_mode );
 
 	void set_post_process( base_scene_view_ptr const& scene_view, resources::unmanaged_resource_ptr const& resource );
-	void enable_post_process( base_scene_view_ptr const&, bool ) { /* no source */ }
-	void set_view_mode( base_scene_view_ptr const&, scene_view_mode ) { /* no source */ }
-	void toggle_render_stage( enum_render_stage_type, bool ) { /* no source */ }
+	void enable_post_process( base_scene_view_ptr const& scene_view, bool enable );
+	void set_view_mode( base_scene_view_ptr const& scene_view, scene_view_mode view_mode );
+	void toggle_render_stage( enum_render_stage_type stage_type, bool toggle );
 
 	particle::world& particle_world( base_scene_ptr const& scene );
 	void set_sky_material( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& material );
 	void set_portal_system( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& portal_system );
-	void test_action_portal_system( base_scene_ptr const& ) { /* no source */ }
+	void test_action_portal_system( base_scene_ptr const& scene );
 
 	inline void clear_grass( base_scene_ptr const& scene );
 	inline void populate_grass( base_scene_ptr const& scene );

@@ -10,8 +10,10 @@
 #include <vostok/render/facade/sky_ambient_occlusion_properties.h>
 #include <vostok/render/facade/volume_fog_parameters.h>
 #include <vostok/render/facade/one_way_render_channel.h>
+#include <vostok/render/facade/sources/editor_allocator.h>
 #include <vostok/render/facade/sources/functor_command.h>
 #include <vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h>
+#include <vostok/render/facade/sources/update_model_vertex_buffer_command.h>
 #include <vostok/render/facade/sources/update_skeleton_command.h>
 #include <vostok/particle/world.h>
 #include <vostok/math_color.h>
@@ -150,6 +152,24 @@ void scene_renderer::play_particle_system(
 	);
 }
 
+void scene_renderer::stop_particle_system(
+	base_scene_ptr const& scene,
+	resources::unmanaged_resource_ptr const& in_instance
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::stop_particle_system,
+				&m_render_engine_world,
+				scene,
+				in_instance
+			)
+		)
+	);
+}
+
 void scene_renderer::remove_particle_system_instance(
 	base_scene_ptr const&		scene,
 	resources::unmanaged_resource_ptr const&	in_instance
@@ -171,9 +191,41 @@ void scene_renderer::update_particle_system_instance(
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< math::float4x4 > ) ( boost::bind( &engine::world::update_particle_system_instance, &m_render_engine_world, instance, scene, _1, visible, paused), transform ) );
 }
 
+void scene_renderer::update_model_vertex_buffer(
+	render_model_instance_ptr const& object,
+	vectora< buffer_fragment > const& fragments
+)
+{
+	m_channel.owner_push_back(
+		VOSTOK_NEW_IMPL( m_allocator, update_model_vertex_buffer_command )(
+			m_render_engine_world,
+			object,
+			fragments,
+			*vostok::render::editor::g_allocator
+		)
+	);
+}
+
 bool scene_renderer::is_playing( resources::unmanaged_resource_ptr const& instance )
 {
 	return particle::is_playing( instance );
+}
+
+void scene_renderer::add_decal( base_scene_ptr const& scene, u32 id, decal_properties const& properties )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< decal_properties > ) (
+			boost::bind(
+				&vostok::render::engine::world::add_decal,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			properties
+		)
+	);
 }
 
 void scene_renderer::update_decal( base_scene_ptr const& scene, u32 id, decal_properties const& properties )
@@ -448,6 +500,20 @@ void scene_renderer::set_portal_system( base_scene_ptr const& scene, resources::
 	);
 }
 
+void scene_renderer::test_action_portal_system( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::test_action_portal_system,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
 void scene_renderer::add_light( base_scene_ptr const& scene, u32 id, light_props* props )
 {
 	R_ASSERT	( scene );
@@ -495,6 +561,21 @@ void scene_renderer::remove_light( base_scene_ptr const& scene, u32 id )
 	);
 }
 
+void scene_renderer::set_slomo( base_scene_ptr const& scene, float time_multiplier )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_slomo,
+				&m_render_engine_world,
+				scene,
+				time_multiplier
+			)
+		)
+	);
+}
+
 void scene_renderer::set_post_process(
 	base_scene_view_ptr const&		scene_view,
 	resources::unmanaged_resource_ptr const&	post_process_resource
@@ -525,6 +606,82 @@ void scene_renderer::set_sky_material( base_scene_ptr const& scene, resources::u
 void scene_renderer::set_model_visible( render_model_instance_ptr const& v, u32 surface_id, u32 flags )
 {
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::set_model_visible_by_id, &m_render_engine_world, v, surface_id, flags) ));
+}
+
+void scene_renderer::set_view_mode( base_scene_view_ptr const& scene_view, scene_view_mode view_mode )
+{
+	R_ASSERT	( scene_view );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_view_mode,
+				&m_render_engine_world,
+				scene_view,
+				view_mode
+			)
+		)
+	);
+}
+
+void scene_renderer::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::toggle_render_stage,
+				&m_render_engine_world,
+				stage_type,
+				toggle
+			)
+		)
+	);
+}
+
+void scene_renderer::set_particles_render_mode(
+	base_scene_view_ptr const& scene_view,
+	particle::enum_particle_render_mode render_mode
+)
+{
+	R_ASSERT	( scene_view );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_particles_render_mode,
+				&m_render_engine_world,
+				scene_view,
+				render_mode
+			)
+		)
+	);
+}
+
+void scene_renderer::enable_post_process( base_scene_view_ptr const& scene_view, bool enable )
+{
+	R_ASSERT	( scene_view );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::enable_post_process,
+				&m_render_engine_world,
+				scene_view,
+				enable
+			)
+		)
+	);
+}
+
+void scene_renderer::set_model_ghost_mode( render_model_instance_ptr const& v, bool b )
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_model_ghost_mode,
+				&m_render_engine_world,
+				v,
+				b
+			)
+		)
+	);
 }
 
 void scene_renderer::build_lpv_geometry( base_scene_ptr const& scene )
