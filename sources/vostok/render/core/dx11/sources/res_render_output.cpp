@@ -23,13 +23,17 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 {
 	ZeroMemory( &m_swap_chain_desc, sizeof( m_swap_chain_desc ) );
 
-	m_window = window; m_windowed = windowed;
+	m_window = window;
+	m_windowed = windowed;
 
 	m_swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	m_swap_chain_desc.BufferCount = 1;
 	m_swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
-	if ( m_window ) select_resolution( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, m_windowed, m_window ); else GetLastError();
+	if ( m_window )
+		select_resolution( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, m_windowed, m_window );
+	else
+		GetLastError();
 
 	if ( m_windowed )
 	{
@@ -156,7 +160,8 @@ bool set_client_rect( HWND h_wnd, s32 pos_x, s32 pos_y, s32 size_x, s32 size_y )
 
 
 	AdjustWindowRect( &rect, GetWindowLong( h_wnd, GWL_STYLE ), FALSE );
-	RECT rect2; GetWindowRect( h_wnd, &rect2 );
+	RECT rect2;
+	GetWindowRect( h_wnd, &rect2 );
 
 	SetWindowLong( h_wnd, GWL_STYLE, GetWindowLong( h_wnd, GWL_STYLE ) | WS_CAPTION | WS_SYSMENU | WS_VISIBLE );
 	SetWindowPos( h_wnd, NULL, pos_x, pos_y, size_x, size_y, SWP_SHOWWINDOW );
@@ -200,7 +205,10 @@ void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_
 	math::uint2 new_size = math::uint2( size_x, size_y );
 
 	if ( !new_size.x || !new_size.y )
-		if ( m_window ) select_resolution( new_size.x, new_size.y, windowed, m_window ); else GetLastError();
+		if ( m_window )
+			select_resolution( new_size.x, new_size.y, windowed, m_window );
+		else
+			GetLastError();
 
 	if ( !force_resize && buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y && m_windowed == windowed )
 		return;
@@ -213,8 +221,8 @@ void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_
 	buffer_desc.Width = new_size.x;
 	buffer_desc.Height = new_size.y;
 
-	log_ref_count( "refCount:pBaseZB", m_base_zb );
-	log_ref_count( "refCount:pBaseRT", m_base_rt );
+	log_ref_count( "ref_count : m_base_zb", m_base_zb );
+	log_ref_count( "ref_count : m_base_rt", m_base_rt );
 
 	safe_release( m_base_rt );
 	m_texture_zb->set_hw_texture( NULL );

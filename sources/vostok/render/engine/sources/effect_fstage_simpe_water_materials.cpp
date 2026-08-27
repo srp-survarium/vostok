@@ -45,7 +45,7 @@ void effect_fstage_simpe_water_materials::compile(
 			if (pass_index == 0)
 			{
 				compiler.set_texture("t_local_reflections_result", "$user$local_reflection_result", 0, false, u32(-1));
-				compiler.set_texture("t_local_reflections_result_param", "$user$local_reflection_result_params", 0, false, u32(-1));
+				compiler.set_texture("t_local_reflections_result_params", "$user$local_reflection_result_params", 0, false, u32(-1));
 				compiler.set_texture("t_water_waves", "engine/water_waves", 0, false, u32(-1));
 				compiler.set_depth(true, false);
 				compiler.set_alpha_blend(true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA);

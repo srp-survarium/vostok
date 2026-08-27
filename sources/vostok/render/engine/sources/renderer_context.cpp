@@ -95,13 +95,13 @@ renderer_context::renderer_context( ) :
 	cascades[0].bias		= 0.0001f;
 
 	cascades[1].size		= 30.0f;
-	cascades[1].bias		= 0.00015f;
+	cascades[1].bias		= 0.0005f;
 
-	cascades[2].size		= 90.0f;
-	cascades[2].bias		= 0.0002f;
+	cascades[2].size		= 75.0f;
+	cascades[2].bias		= 0.001f;
 
-	cascades[3].size		= 270.0f;
-	cascades[3].bias		= 0.00035f;
+	cascades[3].size		= 240.0f;
+	cascades[3].bias		= 0.003f;
 
 	for ( u32 cascade_index = 0; cascade_index < sun_cascade::num_max_sun_shadow_cascades; cascade_index++ )
 		m_sun_cascades.push_back( cascades[cascade_index] );

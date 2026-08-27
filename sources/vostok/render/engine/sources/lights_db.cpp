@@ -204,12 +204,8 @@ static void fill_light( light& light, light_props* props )
 
 	switch ( props->type ) {
 		case light_type_parallel : {
-			light.set_position			(math::float3(0.0f,500.0f,0.0f));
 			light.sun_shadow_map_size	= props->sun_shadow_map_size;
 			light.num_sun_cascades		= props->num_sun_cascades;
-
-			//if (props->m_use_auto_lacation)
-			//	light.direction				= get_sun_direction(*props);
 
 			break;
 		}

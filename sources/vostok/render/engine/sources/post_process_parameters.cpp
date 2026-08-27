@@ -103,7 +103,7 @@ post_process_parameters::post_process_parameters( )
 	filmic_tonemap_liner_white		= 11.2f;
 	vignette_power					= 1.0f;
 	use_image_space_reflections		= true;
-	skylight_color					= vostok::math::float3( 0.5f, 0.02f, 1.0f );
+	skylight_color					= vostok::math::float3( 0.5f, 0.7f, 1.0f );
 	skylight_lower					= 0.0f;
 	skylight_upper					= 50.0f;
 	skylight_power					= 1.0f;

@@ -117,23 +117,19 @@ private:
 		custom_config_ptr const& config,
 		u32 crc
 	);
-	void create_new_effect(
+	inline void create_new_effect(
 		res_effect_ptr*,
 		effect_descriptor*,
 		custom_config_ptr const&,
 		u32,
 		creation_callback_type
-	)
-	{
-	}
-	void create_new_effect(
+	);
+	inline void create_new_effect(
 		effect_loader*,
 		effect_descriptor*,
 		custom_config_ptr const&,
 		u32
-	)
-	{
-	}
+	);
 
 public:
 	void delete_effect( res_effect const* effect )

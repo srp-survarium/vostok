@@ -48,7 +48,7 @@ bool environment_probe::is_occluded( ) const
 
 static u32 calc_mip_map_count( u32 width )
 {
-	return u32(log(double(width)) / log(2.0)) + 1;
+	return u32(log(float(width)) / log(2.0)) + 1;
 }
 
 void environment_probe::set_properties(
@@ -64,14 +64,14 @@ void environment_probe::set_properties(
 		m_texture = 0;
 		m_texture_depth = 0;
 
-		m_texture = resource_manager::ref().create_texture(m_properties.texture_name.c_str(), 0, 0, false, true, true, u32(-1));
+		m_texture = resource_manager::ref().create_texture(m_properties.texture_name.get_buffer(), 0, 0, false, true, true, u32(-1));
 
 		if (in_properties.with_shadows)
 		{
 			fixed_string<260> depth_texture_name;
-			depth_texture_name.assignf("%s_depth", m_properties.texture_name.c_str());
+			depth_texture_name.assignf("%s_depth", m_properties.texture_name.get_buffer());
 
-			m_texture_depth = resource_manager::ref().create_texture(depth_texture_name.c_str(), 0, 0, false, true, true, u32(-1));
+			m_texture_depth = resource_manager::ref().create_texture(depth_texture_name.get_buffer(), 0, 0, false, true, true, u32(-1));
 		}
 	}
 
@@ -95,11 +95,11 @@ void environment_probe::set_properties(
 		new_transform = m_properties.transform;
 		m_collision_tree->insert(m_collision_object, new_transform);
 
-		probe_scale3 = new_transform.get_scale();
+		probe_scale3 = m_properties.transform.get_scale();
 
 		float const max_scale = math::max(probe_scale3.x,
 			math::max(probe_scale3.y, probe_scale3.z));
-		m_properties.location = new_transform.c.xyz();
+		m_properties.location = m_properties.transform.c.xyz();
 		m_properties.radius = max_scale * 0.75f;
 	}
 

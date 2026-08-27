@@ -11,7 +11,8 @@ inline device_state* state_cache< device_state, state_desc >::get_state( state_d
 
 	device_state* result = find( desc, crc );
 
-	if ( result ) return result;
+	if ( result )
+		return result;
 
 	state_record rec;
 	rec.crc = crc;

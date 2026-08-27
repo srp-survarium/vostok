@@ -23,15 +23,10 @@ hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 	m_rasterize_height				( rasterize_height ),
 	m_num_mips						(
 		u32(
-			::log( double( math::max( rasterize_width, rasterize_height ) ) ) /
+			::log( float( math::max( rasterize_width, rasterize_height ) ) ) /
 			::log( 2.0 )
 		) + 1
 	),
-	m_source_mip_level_parameter		( 0 ),
-	m_draw_color_parameter			( 0 ),
-	m_render_target_size_parameter	( 0 ),
-	m_rasterize_size_parameter		( 0 ),
-	m_prev_texture_size_parameter	( 0 ),
 	m_current_num_bounds			( 0 ),
 	m_culling_buffer_width			( 0 ),
 	m_culling_buffer_height			( 0 )
@@ -66,7 +61,7 @@ hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 	);
 
 	m_t_depth_mips_lockable = resource_manager::ref( ).create_texture2d(
-		"$user$hiz_occlusion_depth_mips_l",
+		"$user$hiz_occlusion_depth_mips_lockable",
 		rasterize_width,
 		rasterize_height,
 		0,
@@ -99,7 +94,7 @@ hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 	}
 
 	m_ds_occlusion_depth = resource_manager::ref( ).create_render_target(
-		"$user$hiz_occlusion_depth_mips_d", rasterize_width, rasterize_height,
+		"$user$hiz_occlusion_depth_mips_ds", rasterize_width, rasterize_height,
 		DXGI_FORMAT_R24G8_TYPELESS, enum_rt_usage_depth_stencil,
 		res_texture_ptr( ),
 		0, D3D11_USAGE_DEFAULT,
@@ -171,7 +166,8 @@ void hw_hiz_occlusion_manager::render_occluders( renderer_context* in_context )
 
 	backend::ref( ).get_viewport( prev_view_port );
 
-	D3D11_VIEWPORT view_port; view_port.Width = float( m_rasterize_width );
+	D3D11_VIEWPORT view_port;
+	view_port.Width = float( m_rasterize_width );
 	view_port.Height = float( m_rasterize_height );
 	view_port.TopLeftX = 0.f;
 	view_port.TopLeftY = 0.f;
@@ -209,7 +205,10 @@ void hw_hiz_occlusion_manager::render_debug(
 		float4x4 const world_matrix =
 			math::create_scale( float3( in_bounds->w, in_bounds->w, in_bounds->w ) ) *
 			math::create_translation( in_bounds->xyz( ) );
-		in_context->set_w( world_matrix ); m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_render_debug_geometry_invisible_pass, 0 ); backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( scale, scale, scale, 0.f ) ); m_sphere_occluder_geometry.render( );
+		in_context->set_w( world_matrix );
+		m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_render_debug_geometry_invisible_pass, 0 );
+		backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( scale, scale, scale, 0.f ) );
+		m_sphere_occluder_geometry.render( );
 	}
 }
 
@@ -221,7 +220,8 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 		D3D11_VIEWPORT prev_view_port;
 
 		backend::ref( ).get_viewport( prev_view_port );
-		D3D11_VIEWPORT view_port; view_port.Width = float( m_rt_depth_mips[mip_level_index]->width( ) );
+		D3D11_VIEWPORT view_port;
+		view_port.Width = float( m_rt_depth_mips[mip_level_index]->width( ) );
 		view_port.Height = float( m_rt_depth_mips[mip_level_index]->height( ) );
 		view_port.TopLeftX = 0.f;
 		view_port.TopLeftY = 0.f;
@@ -280,7 +280,8 @@ void hw_hiz_occlusion_manager::render_model_bounds(
 
 	backend::ref( ).get_viewport( prev_view_port );
 
-	D3D11_VIEWPORT view_port; view_port.Width = float( m_culling_buffer_width );
+	D3D11_VIEWPORT view_port;
+	view_port.Width = float( m_culling_buffer_width );
 	view_port.Height = float( m_culling_buffer_height );
 	view_port.TopLeftX = 0.f;
 	view_port.TopLeftY = 0.f;

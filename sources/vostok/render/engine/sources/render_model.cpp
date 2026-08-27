@@ -34,7 +34,8 @@ render_model::~render_model( )
 {
 	for( u8 i = 0; i < m_childs_count; ++i )
 	{
-		DELETE				( m_childs[i] );
+		render_surface* child = m_childs[i];
+		DELETE				( child );
 	}
 
 	if(m_locators)
@@ -136,7 +137,7 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 
 	float3 sphere_origin = (m_aabbox.max + m_aabbox.min) * .5f;
 	float const sphere_radius =
-		(sphere_origin - m_aabbox.min).length();
+		((m_aabbox.max - m_aabbox.min) * .5f).length();
 
 	m_bounding_sphere = math::sphere( sphere_origin, sphere_radius );
 	mesh_type_enum type = (mesh_type_enum)(u16)properties["type"];

@@ -154,7 +154,7 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 	data.SysMemPitch = data_size / ( size * size );
 
 	return resource_manager::ref( ).create_texture3d(
-		"$user$color_grading_base_3d_lut",
+		"$user$test3d",
 		size,
 		size,
 		size,

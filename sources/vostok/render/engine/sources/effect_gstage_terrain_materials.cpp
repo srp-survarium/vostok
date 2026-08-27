@@ -110,7 +110,7 @@ void effect_gstage_terrain_materials::compile(
 	// fill rsm backend
 	{
 		shader_configuration local_configuration;
-		compile_begin("vertex_base_lpv", "fill_reflective_shadow_map_backend", compiler, &local_configuration, custom_config);
+		compile_begin("vertex_base_lpv", "fill_reflective_shadow_map_backed", compiler, &local_configuration, custom_config);
 		compile_end(compiler);
 	}
 

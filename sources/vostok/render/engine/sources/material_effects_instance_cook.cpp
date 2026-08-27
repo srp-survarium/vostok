@@ -295,7 +295,8 @@ void material_effects_instance_cook::translate_query(
 )
 {
 	ASSERT_CMP									(parent.user_data(), !=, NULL);
-	material_effects_instance_cook_data*		cook_data = NULL; parent.user_data()->try_get(cook_data);
+	material_effects_instance_cook_data*		cook_data = NULL;
+	parent.user_data()->try_get(cook_data);
 
 	ASSERT_CMP									(cook_data, !=, NULL);
 
@@ -478,7 +479,8 @@ void material_effects_instance_cook::gather_request_user_data(
 void material_effects_instance_cook::delete_resource(
 	resources::resource_base* resource
 ) {
-	material_effects_instance* instance_to_delete = static_cast<material_effects_instance*>(resource); DELETE(instance_to_delete);
+	material_effects_instance* instance_to_delete = static_cast<material_effects_instance*>(resource);
+	DELETE(instance_to_delete);
 }
 
 } // namespace render

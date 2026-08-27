@@ -107,18 +107,14 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 	m_renderer_context->m_g_quad_2uv		= resource_manager::ref( ).create_geometry( vertex_formats::F_TL2uv, array_size( vertex_formats::F_TL2uv ), sizeof( vertex_formats::TL2uv ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
 	m_renderer_context->m_g_quad_eye_ray	= resource_manager::ref( ).create_geometry( vertex_formats::F_Tquad, array_size( vertex_formats::F_Tquad ), sizeof( vertex_formats::Tquad ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
 
-#ifndef MASTER_GOLD
 	m_colored_geom		= resource_manager::ref( ).create_geometry( vertex_formats::F_L, array_size( vertex_formats::F_L ), sizeof( vertex_formats::L ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
-#endif // #ifndef MASTER_GOLD
 
 	m_colored_geom_sl	= resource_manager::ref( ).create_geometry( F_L_sl, array_size( F_L_sl ), sizeof( vertex_colored_sl ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
 
 	m_selection_color = math::float4( 0.0f, 0.0f, 0.5f, 1.0f );
 	m_selection_rate = 1.0f;
 	m_current_selection_color = math::float4( 0.0f, 0.0f, 0.0f, 0.0f );
-#ifndef MASTER_GOLD
 	m_ghost_model_color = math::float4( 0.2f, 0.2f, 0.2f, 0.2f );
-#endif // #ifndef MASTER_GOLD
 	effect_manager::ref( ).create_effect< effect_system_colored >( &m_sh_vcolor );
 
 	effect_manager::ref( ).create_effect< effect_system_line >( &m_sh_sl );
@@ -438,8 +434,12 @@ void system_renderer::draw_3D_point(
 		vertices.push_back	( vertex_colored( quad_position[i], color ) );
 
 	// Setup indices.
-	indices.push_back(2); indices.push_back(1); indices.push_back(0);
-	indices.push_back(3); indices.push_back(2); indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(1);
+	indices.push_back(0);
+	indices.push_back(3);
+	indices.push_back(2);
+	indices.push_back(0);
 	draw_triangles(
 		&*vertices.begin( ),
 		&*vertices.end( ),
@@ -492,17 +492,21 @@ void system_renderer::fill_surface(
 	else
 		device::ref( ).d3d_context( )->RSSetViewports( 1, &view_port );
 
-	float const pos_x0					= pos_x * 2.f - 1.f;
-	float const pos_x1					= (pos_x + size_x) * 2.f - 1.f;
-	float const pos_y1					= -((pos_y + size_y) * 2.f - 1.f);
-	float const pos_y0					= -(pos_y * 2.f - 1.f);
+	float pos_x0						= pos_x * 2.f - 1.f;
+	float pos_x1						= (pos_x + size_x) * 2.f - 1.f;
+	float pos_y1						= -((pos_y + size_y) * 2.f - 1.f);
+	float pos_y0						= -(pos_y * 2.f - 1.f);
 
 	u32 offset;
 	screen_vertex* pv					= m_vertex_stream_quad.lock<screen_vertex>( 4, offset );
-	pv->set( float4( pos_x0, pos_y1, 0.f, 1.f ), float2( 0.f, 1.f ) ); ++pv;
-	pv->set( float4( pos_x0, pos_y0, 0.f, 1.f ), float2( 0.f, 0.f ) ); ++pv;
-	pv->set( float4( pos_x1, pos_y1, 0.f, 1.f ), float2( 1.f, 1.f ) ); ++pv;
-	pv->set( float4( pos_x1, pos_y0, 0.f, 1.f ), float2( 1.f, 0.f ) ); ++pv;
+	pv->set( float4( pos_x0, pos_y1, 0.f, 1.f ), float2( 0.f, 1.f ) );
+	++pv;
+	pv->set( float4( pos_x0, pos_y0, 0.f, 1.f ), float2( 0.f, 0.f ) );
+	++pv;
+	pv->set( float4( pos_x1, pos_y1, 0.f, 1.f ), float2( 1.f, 1.f ) );
+	++pv;
+	pv->set( float4( pos_x1, pos_y0, 0.f, 1.f ), float2( 1.f, 0.f ) );
+	++pv;
 	m_vertex_stream_quad.unlock( );
 
 	m_screen_vertex_geometry->apply( );

@@ -282,10 +282,6 @@ void light::on_properties_changed( )
 
 void light::xform_calc( )
 {
-//	if	(renderer::ref().frame_id() == m_xform_frame)	return;
-//
-//	m_xform_frame = renderer::ref().frame_id();
-
 	// build final rotation / translation
 	float3						L_dir,L_up,L_right;
 

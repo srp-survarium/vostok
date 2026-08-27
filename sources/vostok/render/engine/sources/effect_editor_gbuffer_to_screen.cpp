@@ -23,7 +23,7 @@ void effect_editor_gbuffer_to_screen::compile(
 			compiler.set_texture("t_normal", r2_rt_n, 0, false, u32(-1));
 			compiler.set_texture("t_diffuse", r2_rt_albedo, 0, false, u32(-1));
 			compiler.set_texture("t_emissive",	r2_rt_emissive, 0, false, u32(-1));
-			compiler.set_texture("t_ssao_accumulator",	r2_rt_ssao_accumulator, 0, false, u32(-1));
+			compiler.set_texture("t_ssao_accumulator",	"$user$ssao_accumulator_full_x", 0, false, u32(-1));
 			compiler.set_texture("t_accumulator_dif", r2_rt_accum_diffuse, 0, false, u32(-1));
 			compiler.set_texture("t_accumulator_spec", r2_rt_accum_specular, 0, false, u32(-1));
 			compiler.set_texture("t_frame_color0", r2_rt_generic0, 0, false, u32(-1));

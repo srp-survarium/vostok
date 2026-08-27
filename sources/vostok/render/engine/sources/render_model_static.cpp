@@ -86,7 +86,7 @@ static bool read_diffuse_colors(
 	backend::ref().flush();
 
 	u32 row_pitch;
-	math::color const* data = static_cast<math::color const*>(
+	pbyte data = static_cast<pbyte>(
 		lockable_texture->map2D(D3D11_MAP_READ, 0, row_pitch)
 	);
 
@@ -97,9 +97,9 @@ static bool read_diffuse_colors(
 	{
 
 		for (u32 column = 0; column < Size; ++column)
-			results[column][row] = data[column];
+			results[column][row] = reinterpret_cast<math::color const*>(data)[column];
 
-		data += row_pitch / sizeof(math::color);
+		data += row_pitch;
 	}
 
 	lockable_texture->unmap2D(0);
@@ -685,8 +685,8 @@ u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 cons
 			float3 vertices[8];
 			owner_aabb.vertices(vertices);
 
-			float3 pt_min(0.f, 0.f, 0.f);
 			float3 pt_max(-1.f, -1.f, -1.f);
+			float3 pt_min(1.f, 1.f, 1.f);
 
 			for (u32 i = 0; i < 8; ++i)
 			{
@@ -748,7 +748,8 @@ void static_render_model_instance::get_surfaces(
 
 		for (u8 i = 0; i < m_instances_count; ++i) {
 			render_surface_instance* inst = m_surface_instances + i;
-			if (!visible_only || inst->m_flags & surface_flags) list.push_back(inst);
+			if (!visible_only || inst->m_flags & surface_flags)
+				list.push_back(inst);
 		}
 
 		return;

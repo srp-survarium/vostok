@@ -110,7 +110,7 @@ void stage_ambient_occlusion::execute( )
 	if ( options::ref( ).current.m_ssao_use_temporal_filtering )
 	{
 		backend::ref( ).set_render_targets( &*m_context->get_rt( rt_ssao_temporal_mask ), 0, 0, 0 );
-		backend::ref( ).clear_render_targets( vostok::math::color( float3( 0.0f, 0.0f, 0.0f ) ) );
+		backend::ref( ).clear_render_targets( vostok::math::color( 0.0f, 0.0f, 0.0f, 0.0f ) );
 	}
 
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_ssao_accumulator ), 0, 0, 0 );

@@ -46,8 +46,7 @@ struct binary_shader_source : public resources::unmanaged_resource {
 		: m_shader_byte_code( 0 ),
 		  m_compiled_shader_byte_code( 0 ),
 		  m_shader_byte_code_size( 0 ),
-		  error_code( 0 ),
-		  shader_type( enum_shader_type_vertex )
+		  error_code( 0 )
 	{
 	}
 

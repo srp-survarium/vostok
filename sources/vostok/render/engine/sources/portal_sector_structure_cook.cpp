@@ -26,17 +26,20 @@ void portal_sector_structure_cook::translate_query( resources::query_result_for_
 	)
 	{
 		configs::binary_config_value portal_system_cfg = game_progect_cfg_ptr->get_root()["portal_system"];
+		u32 const sectors_count = portal_system_cfg["sectors"].size();
+		u32 const portals_count = portal_system_cfg["portals"].size();
 		portal_sector_structure* structure = NEW( portal_sector_structure )(
 			g_allocator,
-			portal_system_cfg["sectors"].size(),
-			portal_system_cfg["portals"].size()
+			sectors_count,
+			portals_count
 		);
 		structure->load( &portal_system_cfg );
 		parent.set_unmanaged_resource( structure, resources::nocache_memory, sizeof( portal_sector_structure ) );
 		parent.finish_query( result_success );
+		return;
 	}
-	else
-		parent.finish_query( result_error );
+
+	parent.finish_query( result_error );
 }
 
 void portal_sector_structure_cook::delete_resource( resources::resource_base* resource )

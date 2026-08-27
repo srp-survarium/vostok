@@ -138,9 +138,7 @@ void stage_rain::execute( )
 	float mult = 1.0f;
 	if ( s_rain_debug2 ) {
 		u32 i = m_context->get_scene_view( )->post_process_parameters( ).environment_rain_start_cone_index;
-		for ( ; i < num_cones;
-			  // 1 target line is likely retail-compiled-out source.
-			  ++i )
+		for ( ; i < num_cones; ++i )
 		{
 			float const cone_scale = float( i ) * ( i == 1 ? 1.0f : 2.0f ) * mult;
 			float4x4 cone_transform =

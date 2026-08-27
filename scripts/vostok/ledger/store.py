@@ -217,7 +217,12 @@ def status_for(row, flagged=False, paired=True):
     return "inprogress"
 
 
-def project(observations, path=STATE_PATH, banked_previous=None):
+def project(
+    observations,
+    path=STATE_PATH,
+    banked_previous=None,
+    authoritative_roster=None,
+):
     """Fold this build's observations into the committed ledger. THE build path.
 
     `vostok.derive` owns the roster columns (unit / module / size / flags), `cur`,
@@ -233,6 +238,12 @@ def project(observations, path=STATE_PATH, banked_previous=None):
       note    what was attempted, or why the row is parked
       tries   matcher dispatches; a build never bumps it
       status  done > parked > blocked > inprogress
+
+    `authoritative_roster`, when supplied, is the complete current retail
+    roster.  Rows absent from it are obsolete identities left by an older PDB
+    parse or name canonicalization and must not survive as phantom blockers.
+    A target function missing only from the base still has an observation and
+    remains blocked normally.
 
     An observation is a dict: mangled, unit, module, size, frameless, cls, cur,
     max, hash - `max`/`hash` absent (None/"") when the function has no
@@ -272,10 +283,20 @@ def project(observations, path=STATE_PATH, banked_previous=None):
             "_flagged": working_flag(mangled),
         }
 
-    # rows banked in the ledger but absent from this build keep everything they
-    # had; their proven work outlives the build that stopped emitting them.
+    authoritative_roster = (
+        None if authoritative_roster is None else set(authoritative_roster)
+    )
+
+    # Without an authoritative target roster, preserve unseen rows for callers
+    # that project only a partial observation set.  The full build supplies the
+    # roster and retires identities the retail PDB no longer contains.
     for mangled, old in {**proof, **previous}.items():
         if mangled not in rows:
+            if (
+                authoritative_roster is not None
+                and mangled not in authoritative_roster
+            ):
+                continue
             proven = proof.get(mangled, old)
             rows[mangled] = dict(
                 proven,

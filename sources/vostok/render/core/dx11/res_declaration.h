@@ -70,7 +70,7 @@ inline s32 compare( res_declaration const& left, res_declaration const& right )
 	if ( left.dcl_code.size( ) > right.dcl_code.size( ) )
 		return 1;
 
-	u32 const count = math::min( left.dcl_code.size( ), right.dcl_code.size( ) );
+	u32 const count = std::min( left.dcl_code.size( ), right.dcl_code.size( ) );
 	return std::memcmp(
 		&left.dcl_code[0],
 		&right.dcl_code[0],

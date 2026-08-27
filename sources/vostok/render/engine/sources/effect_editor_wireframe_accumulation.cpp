@@ -43,6 +43,7 @@ void effect_editor_wireframe_accumulation::compile(
 		compiler.set_depth(true, true);
 		compiler.set_fill_mode(D3D_FILL_WIREFRAME);
 		compiler.set_constant("wireframe_color", wireframe_colors[vertex_input_type]);
+		compiler.set_cull_mode(D3D_CULL_BACK);
 	compile_end(compiler);
 
 	compile_begin("vertex_base", "editor_wireframe_accumulation", compiler, &configuration, config);

@@ -280,7 +280,13 @@ void stage_light_propagation_volumes::render_to_rms(
 
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
-	D3D11_VIEWPORT tmp_viewport; tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f; tmp_viewport.Width = float( m_rsm_source_size ); tmp_viewport.Height = float( m_rsm_source_size ); tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_rsm_source_size );
+	tmp_viewport.Height = float( m_rsm_source_size );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
 	m_context->push_set_v( view_matrix );
 	m_context->push_set_p( projection_matrix );
@@ -387,7 +393,9 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
 
-	D3D11_VIEWPORT tmp_viewport; tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
 	tmp_viewport.Width = float( m_rsm_source_size );
 	tmp_viewport.Height = float( m_rsm_source_size );
 	tmp_viewport.MinDepth = 0.0f;
@@ -416,7 +424,9 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 
 		for ( ; it != end; ++it )
 		{
-			lpv_render_surface surface; surface.surface = *it; surface.model = surface.surface->m_parent;
+			lpv_render_surface surface;
+			surface.surface = *it;
+			surface.model = surface.surface->m_parent;
 			m_caster_models[cascade_index].push_back( surface );
 		}
 
@@ -471,9 +481,12 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 		render_surface_instance& instance = *it_d->surface;
 		material_effects& me = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
-		if ( instance.m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type ) continue;
-		if ( !me.m_effects[light_propagation_volumes_render_stage] ) continue;
-		if ( !geometry.lpv_pass_geom && !geometry.geom ) continue;
+		if ( instance.m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type )
+			continue;
+		if ( !me.m_effects[light_propagation_volumes_render_stage] )
+			continue;
+		if ( !geometry.lpv_pass_geom && !geometry.geom )
+			continue;
 		if ( geometry.lpv_pass_geom )
 			me.m_effects[light_propagation_volumes_render_stage]->apply( 2, 0 );
 		else
@@ -496,9 +509,15 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 
 		switch ( cascade_index )
 		{
-		case 0: statistics::ref( ).lpv_stat_group.num_dips_in_cascade_0.value++; break;
-		case 1: statistics::ref( ).lpv_stat_group.num_dips_in_cascade_1.value++; break;
-		case 2: statistics::ref( ).lpv_stat_group.num_dips_in_cascade_2.value++; break;
+		case 0:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_0.value++;
+			break;
+		case 1:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_1.value++;
+			break;
+		case 2:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_2.value++;
+			break;
 		}
 		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0 );
 
@@ -675,10 +694,14 @@ void stage_light_propagation_volumes::render_quad( )
 	u32	offset;
 
 	screen_vertex* pv = (screen_vertex*)backend::ref().vertex.lock(4, sizeof(screen_vertex), offset);
-	pv->set(float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f)); pv++;
-	pv->set(float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f)); pv++;
-	pv->set(float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f)); pv++;
-	pv->set(float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f)); pv++;
+	pv->set(float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f));
+	pv++;
+	pv->set(float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f));
+	pv++;
+	pv->set(float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f));
+	pv++;
+	pv->set(float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f));
+	pv++;
 	backend::ref().vertex.unlock			();
 
 	m_screen_vertex_geometry->apply			();
@@ -696,9 +719,12 @@ void stage_light_propagation_volumes::downsample_rsm( float3 const& light_direct
 	backend::ref( ).get_viewport( orig_viewport );
 
 	D3D11_VIEWPORT tmp_viewport;
-	tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
-	tmp_viewport.Width = float( m_rsm_downsampled_size ); tmp_viewport.Height = float( m_rsm_downsampled_size );
-	tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_rsm_downsampled_size );
+	tmp_viewport.Height = float( m_rsm_downsampled_size );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
 	backend::ref( ).set_ps_texture( "t_lpv_rsm_albedo_source", &*m_radiance_volume[cascade_index].m_t_rms_albedo_source );
 
@@ -816,8 +842,10 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 		D3D11_VIEWPORT orig_viewport;
 		backend::ref( ).get_viewport( orig_viewport );
 		D3D11_VIEWPORT tmp_viewport;
-		tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
-		tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
+		tmp_viewport.TopLeftX = 0.0f;
+		tmp_viewport.TopLeftY = 0.0f;
+		tmp_viewport.MinDepth = 0.0f;
+		tmp_viewport.MaxDepth = 1.0f;
 
 		for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 		{
@@ -1043,8 +1071,10 @@ void stage_light_propagation_volumes::execute_impl( )
 		D3D11_VIEWPORT orig_viewport;
 		backend::ref( ).get_viewport( orig_viewport );
 		D3D11_VIEWPORT tmp_viewport;
-		tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
-		tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
+		tmp_viewport.TopLeftX = 0.0f;
+		tmp_viewport.TopLeftY = 0.0f;
+		tmp_viewport.MinDepth = 0.0f;
+		tmp_viewport.MaxDepth = 1.0f;
 
 		for ( u32 pass_index = 0; pass_index < 1; ++pass_index )
 		{
@@ -1133,15 +1163,20 @@ void stage_light_propagation_volumes::execute( )
 	{
 		u32 const num_render_stages = options::ref( ).current.m_num_propagate_iterations + 3;
 
-		u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages; u32 propagation_step_index = 0;
+		u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages;
+		u32 propagation_step_index = 0;
 
 		if ( render_stage_index > 2 )
 			propagation_step_index = render_stage_index - 3;
 		for ( u32 cascade_index = 0; cascade_index < m_num_cascades; ++cascade_index )
-		{ execute_smoothed_impl( cascade_index, render_stage_index, propagation_step_index, render_stage_index, num_render_stages ); }
+		{
+			execute_smoothed_impl( cascade_index, render_stage_index, propagation_step_index, render_stage_index, num_render_stages );
+		}
 	}
 	else
-	{ execute_impl( ); }
+	{
+		execute_impl( );
+	}
 }
 
 void stage_light_propagation_volumes::draw_debug( )
