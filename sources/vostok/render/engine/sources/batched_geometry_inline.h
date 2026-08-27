@@ -12,14 +12,14 @@ namespace render {
 
 template < typename Vertex >
 inline batched_geometry< Vertex >::batched_geometry(
-	D3D11_INPUT_ELEMENT_DESC const* declaration,
-	u32 const declaration_size,
+	D3D11_INPUT_ELEMENT_DESC const* layout,
+	u32 const num_elements,
 	u32 const in_batched_geometry_max_vertices_count
 ) :
 	m_batched_geometry_max_vertices_count	( in_batched_geometry_max_vertices_count ),
 	m_bbox									( math::create_zero_aabb( ) )
 {
-	m_layout = resource_manager::ref( ).create_declaration( declaration, declaration_size );
+	m_layout = resource_manager::ref( ).create_declaration( layout, num_elements );
 	m_indices.reserve( m_batched_geometry_max_vertices_count );
 	m_vertices.reserve( m_batched_geometry_max_vertices_count );
 }
@@ -69,8 +69,8 @@ inline u32 batched_geometry< Vertex >::get_num_visible_batches( u32 const index 
 template < typename Vertex >
 inline void batched_geometry< Vertex >::for_each_batch_render(
 	renderer_context*												context,
-	render_batch_callback_type const&	pre_render,
-	render_batch_callback_type const&	post_render
+	render_batch_callback_type const&	pre_render_predicate,
+	render_batch_callback_type const&	post_render_predicate
 )
 {
 	if ( m_geometry_batches.size( ) == 0 )
@@ -84,21 +84,21 @@ inline void batched_geometry< Vertex >::for_each_batch_render(
 			continue;
 
 		it->geometry->apply( );
-		pre_render( *it );
+		pre_render_predicate( *it );
 		backend::ref( ).render_indexed(
 			D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
 			it->num_indices,
 			0,
 			0
 		);
-		post_render( *it );
+		post_render_predicate( *it );
 	}
 }
 
 template < typename Vertex >
 void batched_geometry< Vertex >::finalize_batch( )
 {
-	if ( m_vertices.empty( ) || m_indices.empty( ) )
+	if ( !m_vertices.size( ) || !m_indices.size( ) )
 		return;
 
 	untyped_buffer_ptr vb = resource_manager::ref( ).create_buffer(
@@ -161,11 +161,11 @@ void batched_geometry< Vertex >::add_data(
 	material_effects_instance_ptr const& in_materail_effects_instance
 )
 {
-	if ( !num_vertices || !num_indices )
+	if ( !vertices || !indices )
 		return;
 
 	if (
-		m_vertices.size( ) + num_vertices >= m_batched_geometry_max_vertices_count
+		m_indices.size( ) + num_indices >= m_batched_geometry_max_vertices_count
 		|| m_materail_effects_instance != in_materail_effects_instance
 	)
 	{
