@@ -2,19 +2,8 @@
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-// claude@NOTE: every function here drives the Scaleform flash UI through
-// flash_value (Set*/SetMember/SetElement/ctor/dtor) and flash_movie
-// (Invoke/CreateArray/CreateObject/Advance/Restart). With the scaleform glue now
-// compiled /Ox (Master Gold, /GL), those tiny methods INLINE into the call sites
-// here under LTCG - the old flash /Od wall is LIFTED (several methods reached 100%,
-// most ~doubled). The remaining caps are NOT flash: the // STATE[STUB] bodies still
-// need config/cooker/cross-module surfaces (items_dictionary::dict_config
-// binary_config navigation, the player-parameters cooked resource, network::
-// login_client port/server members, the chat_handler add_message path, the
-// lobby_labels/login_labels string tables) that have no header / are not recoverable
-// from the binary; the structure-recovered bodies that stay <100% are capped by
-// allocator-inline (new/delete routing through global operator new vs the engine
-// mspace) and minor LTCG instruction scheduling, not the flash glue.
+// The reconstructed UI paths retain a few target/base Scaleform wrapper
+// inline-boundary differences under LTCG.
 
 #include "pch.h"
 #include "lobby_menu.h"
@@ -31,12 +20,14 @@
 #include <vostok/vectora.h>
 #include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/inventory_item_instance.h>
+#include <vostok/game_core/player_parameters_modifyer.h>
 #include <vostok/network/login_client.h>
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/strings_functions.h>
 #include "ui_label.h"
 #include "price_item.h"
 #include "player_leveling_info.h"
+#include "player_parameters_cooker_data.h"
 #include "profile_player_character.h"
 #include "game_project.h"
 #include "game_object_.h"
@@ -145,12 +136,8 @@ void relocate_item_func::call( flash_function_handler_params& params )
 	lobby.move_item( descriptions );
 }
 
-// claude@NOTE: flash external-interface dispatch over methodName. The args reads
-// (args[N].GetUInt()/GetBool()/GetString()) inline to the GFx Value union field at +8 under
-// LTCG (scaleform Master Gold /GL); residual is that GFx-Value-internal inlining + the
-// flash_value ctor/dtor scheduling (the start_friend_message flash_value[2] + unlock_perks
-// vectora builds) and the LTCG slot reuse of use_premium/faction_id in buy_ok_clicked.
-// The method-name string literals are matched from the target rdata.
+// Target and base retain different Scaleform temporary and argument statement
+// partitions under LTCG; keep the target's named-local and dispatch order.
 void lobby_menu_external_handler::callback(
 	flash_movie*			pmovieView,
 	pcstr					methodName,
@@ -261,7 +248,8 @@ void lobby_menu_external_handler::callback(
 	}
 	else if ( strings::equal( methodName, "add_friend" ) )
 	{
-		m_game.get_network_client( )->messaging_client( ).add_to_friend_list( args[ 0 ].GetUInt( ) );
+		const u32 account_id = args[ 0 ].GetUInt( );
+		m_game.get_network_client( )->messaging_client( ).add_to_friend_list( account_id );
 	}
 	else if ( strings::equal( methodName, "remove_friend" ) )
 	{
@@ -269,7 +257,8 @@ void lobby_menu_external_handler::callback(
 	}
 	else if ( strings::equal( methodName, "add_ignore" ) )
 	{
-		m_game.get_network_client( )->messaging_client( ).add_to_ignore_list( args[ 0 ].GetUInt( ) );
+		const u32 account_id = args[ 0 ].GetUInt( );
+		m_game.get_network_client( )->messaging_client( ).add_to_ignore_list( account_id );
 	}
 	else if ( strings::equal( methodName, "remove_ignored" ) )
 	{
@@ -649,190 +638,144 @@ void lobby_menu::fill_inventory_labels( )
 	m_lobby_menu_ui->movie->Invoke		( "root.set_localization_data", NULL, &labels, 1 );
 }
 
-// claude@NOTE: PARKED - navigates items_dictionary()'s private dict_config binary_config
-// (items_dictionary::dict_config has no accessor; game_core class, can't edit here) and
-// iterates its dictionary_item map (the dictionary_item type/ctor/dtor/copy live with the
-// dict, not yet headered here). Also scaleform flash /Od inline wall. Recover once
-// items_dictionary exposes dict_config + dictionary_item.
-// STATE[STUB]
 void lobby_menu::fill_items_dictionary( )
 {
-	// LOCALS
-	// map< u32, dictionary_item, std::less< u32 > > const& itm_dict
-	// std::priv::_Rb_tree_iterator< std::pair< u32 const , dictionary_item >, std::priv::_ConstMapTraitsT< std::pair< u32 const , dictionary_item > > > itm_it
-	// fixed_string< 32 >[6] 			sellers_names
-	// flash_value 						traders_array_item_property
-	// flash_value 						items_descr_array
-	// flash_value 						inventory_item_property
-	// flash_value 						traders_array
-	// u32 								in_array_index
-	// u32 								icon
-	// flash_value 						inventory_item_propertyies_array
-	// flash_value 						item_property_member
-	// u8 								current_item_category_id
-	// wchar_t[512] 					item_name
-	// u32 								current_item_dict_id
-	// wchar_t[512] 					item_desc
-	// float 							item_weight
-	// bool 							current_item_is_stack
-	// configs::binary_config_value const* it_end
-	// flash_value 						inventory_item_descr
-	// dictionary_item 					current_item
-	// u32 								j
-	// wchar_t[512] 					prop_name
-	// flash_value 						item_property
-	// u32 								prop_icon
-	// flash_value 						traders_array_item
-	// wchar_t[512] 					faction_name
-	// ******
+	map< u32, dictionary_item > const& itm_dict = get_game( ).items_dictionary( ).get_dictionary( );
+	map< u32, dictionary_item >::const_iterator itm_it = itm_dict.begin( );
 
-	// FUNCTION BODY[0x745500]: 144
-	// <0x74550f>|0x00f|+0x006:'699'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x745515>|0x015|+0x015:'705'
-	// <0>
-	// <1>
-	// <2>
-	// <0x74552a>|0x02a|+0x056:'709'
-	// <0>
-	// <0x745580>|0x080|+0x013:'711'
-	// <0x745593>|0x093|+0x007:'712'
-	// <0>
-	// <0x74559a>|0x09a|+0x014:'714'
-	// <0x7455ae>|0x0ae|+0x00b:'715'
-	// <0>
-	// <0x7455b9>|0x0b9|+0x01f:'717'
-	// <0x7455d8>|0x0d8|+0x0f9:'718'
-	// <0x7456d1>|0x1d1|+0x00e:'719'
-	// <0>
-	// <1>
-	// <0x7456df>|0x1df|+0x01a:'722'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7456f9>|0x1f9|+0x047:'728'
-	// <0>
-	// <0x745740>|0x240|+0x040:'730'
-	// <0>
-	// <1>
-	// <0x745780>|0x280|+0x026:'733'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7457a6>|0x2a6|+0x02b:'737'
-	// <0x7457d1>|0x2d1|+0x038:'738'
-	// <0>
-	// <0x745809>|0x309|+0x010:'740'
-	// <0x745819>|0x319|+0x02c:'741'
-	// <0>
-	// <0x745845>|0x345|+0x00c:'743'
-	// <0x745851>|0x351|+0x02a:'744'
-	// <0>
-	// <0x74587b>|0x37b|+0x02b:'746'
-	// <0x7458a6>|0x3a6|+0x03a:'747'
-	// <0>
-	// <0x7458e0>|0x3e0|+0x028:'749'
-	// <0x745908>|0x408|+0x038:'750'
-	// <0>
-	// <1>
-	// <0x745940>|0x440|+0x01f:'753'
-	// <0x74595f>|0x45f|+0x03e:'754'
-	// <0x74599d>|0x49d|+0x03a:'755'
-	// <0x7459d7>|0x4d7|+0x029:'756'
-	// <0>
-	// <1>
-	// <0x745a00>|0x500|+0x00b:'759'
-	// <0>
-	// <0x745a0b>|0x50b|+0x02e:'761'
-	// <0x745a39>|0x539|+0x045:'762'
-	// <0>
-	// <0x745a7e>|0x57e|+0x029:'764'
-	// <0x745aa7>|0x5a7|+0x034:'765'
-	// <0>
-	// <1>
-	// <2>
-	// <0x745adb>|0x5db|+0x02d:'769'
-	// <0>
-	// <0x745b08>|0x608|+0x01a:'771'
-	// <0x745b22>|0x622|+0x02b:'772'
-	// <0>
-	// <0x745b4d>|0x64d|+0x008:'774'
-	// <0>
-	// <0x745b55>|0x655|+0x2a8:'776'
-	// <0x745dfd>|0x8fd|-0x29a:'776'
-	// <0>
-	// <1>
-	// <0x745b63>|0x663|+0x027:'779'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x745b8a>|0x68a|+0x028:'785'
-	// <0>
-	// <0x745bb2>|0x6b2|+0x00e:'787'
-	// <0x745bc0>|0x6c0|+0x02e:'788'
-	// <0>
-	// <0x745bee>|0x6ee|+0x079:'790'
-	// <0x745c67>|0x767|+0x02c:'791'
-	// <0>
-	// <0x745c93>|0x793|+0x083:'793'
-	// <0x745d16>|0x816|+0x02e:'794'
-	// <0>
-	// <0x745d44>|0x844|+0x02c:'796'
-	// <0x745d70>|0x870|+0x038:'797'
-	// <0>
-	// <0x745da8>|0x8a8|+0x020:'799'
-	// <0x745dc8>|0x8c8|+0x037:'800'
-	// <0>
-	// <0x745dff>|0x8ff|+0x031:'802'
-	// <0>
-	// <0x745e30>|0x930|+0x023:'804'
-	// <0>
-	// <0x745e53>|0x953|+0x0dc:'806'
-	// <0x745f2f>|0xa2f|+0x029:'807'
-	// <0>
-	// <1>
-	// <2>
-	// <0x745f58>|0xa58|+0x02a:'811'
-	// <0>
-	// <0x745f82>|0xa82|+0x028:'813'
-	// <0x745faa>|0xaaa|+0x04b:'814'
-	// <0x745ff5>|0xaf5|+0x050:'815'
-	// <0x746045>|0xb45|+0x050:'816'
-	// <0x746095>|0xb95|+0x050:'817'
-	// <0x7460e5>|0xbe5|+0x050:'818'
-	// <0x746135>|0xc35|+0x050:'819'
-	// <0>
-	// <0x746185>|0xc85|+0x015:'821'
-	// <0>
-	// <0x74619a>|0xc9a|+0x006:'823'
-	// <0>
-	// <1>
-	// <0x7461a0>|0xca0|+0x029:'826'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7461c9>|0xcc9|+0x01e:'832'
-	// <0>
-	// <0x7461e7>|0xce7|+0x098:'834'
-	// <0x74627f>|0xd7f|+0x031:'835'
-	// <0>
-	// <0x7462b0>|0xdb0|+0x034:'837'
-	// <0x7462e4>|0xde4|+0x046:'838'
-	// <0>
-	// <0x74632a>|0xe2a|+0x01c:'840'
-	// <0x746346>|0xe46|+0x030:'841'
-	// <0x746376>|0xe76|+0x029:'842'
-	// ******
+	flash_value items_descr_array;
+	flash_value inventory_item_property;
+	flash_value traders_array;
+	m_lobby_menu_ui->movie->CreateArray( &items_descr_array );
+
+	u32 in_array_index = 0;
+	u32 j;
+	for ( ; itm_it != itm_dict.end( ); ++itm_it )
+	{
+		dictionary_item current_item = itm_it->second;
+		u32 current_item_dict_id = current_item.item_id;
+		u8 current_item_category_id = current_item.item_category;
+		bool current_item_is_stack = current_item.is_stack;
+
+		if ( !current_item.item_cfg->get_root( ).value_exists( "ui_desc" ) )
+		{
+			LOG_WARNING( "There is no ui_desc info for [%s]", current_item.item_cfg_name );
+			continue;
+		}
+
+		u32 icon = current_item.item_cfg->get_root( )["ui_desc"]["icon"];
+
+		wchar_t item_name[512];
+		get_game( ).text_translator( ).translate_text(
+			current_item.item_cfg->get_root( )["ui_desc"]["text_descriptions"]["name"],
+			item_name
+		);
+
+		wchar_t item_desc[512];
+		get_game( ).text_translator( ).translate_text(
+			current_item.item_cfg->get_root( )["ui_desc"]["text_descriptions"]["description"],
+			item_desc
+		);
+
+		flash_value inventory_item_descr;
+		m_lobby_menu_ui->movie->CreateObject( &inventory_item_descr );
+
+		inventory_item_property.SetUInt( current_item_dict_id );
+		inventory_item_descr.SetMember( "dictId", inventory_item_property );
+
+		inventory_item_property.SetStringW( item_name );
+		inventory_item_descr.SetMember( "name", inventory_item_property );
+
+		inventory_item_property.SetStringW( item_desc );
+		inventory_item_descr.SetMember( "descr", inventory_item_property );
+
+		inventory_item_property.SetUInt( current_item_category_id );
+		inventory_item_descr.SetMember( "category", inventory_item_property );
+
+		inventory_item_property.SetUInt( icon );
+		inventory_item_descr.SetMember( "icon", inventory_item_property );
+
+		float item_weight;
+		if ( current_item.is_ammo( ) )
+		{
+			inventory_item_property.SetUInt( current_item.item_cfg->get_root( )["parameters"]["clip_size"] );
+			inventory_item_descr.SetMember( "clip_size", inventory_item_property );
+			item_weight = current_item.item_cfg->get_root( )["parameters"]["clip_weight"];
+		}
+		else
+			item_weight = current_item.item_cfg->get_root( )["parameters"]["weight"];
+
+		inventory_item_property.SetNumber( item_weight );
+		inventory_item_descr.SetMember( "weight", inventory_item_property );
+
+		inventory_item_property.SetBoolean( current_item_is_stack );
+		inventory_item_descr.SetMember( "is_stack", inventory_item_property );
+
+		flash_value inventory_item_propertyies_array;
+		m_lobby_menu_ui->movie->CreateArray( &inventory_item_propertyies_array );
+
+		configs::binary_config_value const* it = current_item.item_cfg->get_root( )["ui_desc"]["props_list"].begin( );
+		configs::binary_config_value const* it_end = current_item.item_cfg->get_root( )["ui_desc"]["props_list"].end( );
+		flash_value item_property_member;
+		for ( j = 0; it != it_end; ++it, ++j )
+		{
+			flash_value item_property;
+			m_lobby_menu_ui->movie->CreateObject( &item_property );
+
+			wchar_t prop_name[512];
+			get_game( ).text_translator( ).translate_text( (*it)["prop_name"], prop_name );
+
+			u32 prop_icon = it->value_exists( "prop_icon" ) ? (*it)["prop_icon"] : 0;
+
+			item_property_member.SetUInt( (*it)["prop_value"] );
+			item_property.SetMember( "prop_value", item_property_member );
+
+			item_property_member.SetStringW( prop_name );
+			item_property.SetMember( "prop_name", item_property_member );
+
+			item_property_member.SetUInt( prop_icon );
+			item_property.SetMember( "prop_icon", item_property_member );
+
+			inventory_item_propertyies_array.SetElement( j, item_property );
+		}
+
+		inventory_item_descr.SetMember( "item_properties", inventory_item_propertyies_array );
+		items_descr_array.SetElement( in_array_index, inventory_item_descr );
+		++in_array_index;
+	}
+
+	m_lobby_menu_ui->movie->Invoke( "root._itemDescriptor.setItemsDictionary", NULL, &items_descr_array, 1 );
+
+	m_lobby_menu_ui->movie->CreateArray( &traders_array );
+
+	fixed_string< 32 > sellers_names[6];
+	sellers_names[0] = "st_scavengers_faction";
+	sellers_names[1] = "st_black_market_faction";
+	sellers_names[2] = "st_renaissance_faction";
+	sellers_names[3] = "st_border_faction";
+	sellers_names[4] = "st_scientists_faction";
+	sellers_names[5] = "st_mercenaries_faction";
+
+	flash_value traders_array_item_property;
+	j = 0;
+	for ( ; j < 6; ++j )
+	{
+		flash_value traders_array_item;
+		m_lobby_menu_ui->movie->CreateObject( &traders_array_item );
+
+		wchar_t faction_name[512];
+		get_game( ).text_translator( ).translate_text( sellers_names[j].c_str( ), faction_name );
+
+		traders_array_item_property.SetStringW( faction_name );
+		traders_array_item.SetMember( "name", traders_array_item_property );
+
+		traders_array_item_property.SetUInt( j + 1 );
+		traders_array_item.SetMember( "faction_id", traders_array_item_property );
+
+		traders_array.SetElement( j, traders_array_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke( "root.shop_list.fillSellers", NULL, &traders_array, 1 );
 }
 
 void lobby_menu::fill_inventory_contents( )
@@ -949,128 +892,93 @@ void lobby_menu::fill_profiles( )
 	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.setupProfiles", NULL, &profiles_array, 1 );
 }
 
-// claude@NOTE: PARKED - builds a player_parameters_query_path + queues a cooked-resource
-// query (resources::query_resources with a player_parameters_cooker_data* user_data via
-// profile_player_character::query_profile_contents) and walks player_profile slot items;
-// the cooked player-parameters resource type + the profile/slot-item layout have no header
-// here. Also scaleform flash /Od inline wall. Recover in the player-parameters cooker phase.
-// STATE[STUB]
 void lobby_menu::on_profile_changed( u8 profile_id )
 {
-	// LOCALS
-	// flash_value 						profile_descriptor
-	// variant< 32 > 					user_data
-	// flash_value 						profile_items_array
-	// player_profile const& 			profile
-	// fixed_string< 260 > 				player_parameters_query_path
-	// flash_value 						profile_descriptor_property
-	// flash_value 						slot_item_property
-	// u8 								in_array_index
-	// flash_value 						v
-	// u32 								condition_or_stack
-	// flash_value 						slot_item
-	// ******
+	m_selected_profile = profile_id;
 
-	// CALL SITE INFO
-	// <0x746a1c> -> lobby_client& < unknown >()
-	// ******
+	class lobby_client& client = lobby_client( );
+	player_profile const& profile = client.profile( profile_id );
+	m_character->profile_changed( &profile );
 
-	// FUNCTION BODY[0x7469f0]: 79
-	// <0x746a01>|0x011|+0x003:'982'
-	// <0>
-	// <0x746a04>|0x014|+0x01a:'984'
-	// <0>
-	// <1>
-	// <0x746a1e>|0x02e|+0x020:'987'
-	// <0>
-	// <1>
-	// <0x746a3e>|0x04e|+0x02c:'990'
-	// <0>
-	// <1>
-	// <2>
-	// <0x746a6a>|0x07a|+0x037:'994'
-	// <0>
-	// <0x746aa1>|0x0b1|+0x1ce:'996'
-	// <0>
-	// <0x746c6f>|0x27f|-0x1af:'998'
-	// <0>
-	// <0x746ac0>|0x0d0|+0x003:'1000'
-	// <0x746ac3>|0x0d3|+0x008:'1001'
-	// <0>
-	// <0x746acb>|0x0db|+0x002:'1003'
-	// <0>
-	// <0x746acd>|0x0dd|+0x016:'1005'
-	// <0>
-	// <1>
-	// <0x746ae3>|0x0f3|+0x02a:'1008'
-	// <0>
-	// <1>
-	// <2>
-	// <0x746b0d>|0x11d|+0x025:'1012'
-	// <0x746b32>|0x142|+0x03b:'1013'
-	// <0>
-	// <0x746b6d>|0x17d|+0x029:'1015'
-	// <0x746b96>|0x1a6|+0x034:'1016'
-	// <0>
-	// <0x746bca>|0x1da|+0x028:'1018'
-	// <0x746bf2>|0x202|+0x034:'1019'
-	// <0>
-	// <0x746c26>|0x236|+0x021:'1021'
-	// <0>
-	// <1>
-	// <0x746c47>|0x257|+0x04f:'1024'
-	// <0>
-	// <1>
-	// <0x746c96>|0x2a6|+0x024:'1027'
-	// <0>
-	// <0x746cba>|0x2ca|+0x031:'1029'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x746ceb>|0x2fb|+0x004:'1034'
-	// <0x746cef>|0x2ff|+0x042:'1035'
-	// <0>
-	// <1>
-	// <2>
-	// <0x746d31>|0x341|+0x055:'1039'
-	// <0>
-	// <0x746d86>|0x396|+0x025:'1041'
-	// <0x746dab>|0x3bb|+0x040:'1042'
-	// <0>
-	// <0x746deb>|0x3fb|+0x021:'1044'
-	// <0>
-	// <1>
-	// <0x746e0c>|0x41c|+0x00d:'1047'
-	// <0x746e19>|0x429|+0x00e:'1048'
-	// <0x746e27>|0x437|+0x009:'1049'
-	// <0>
-	// <0x746e30>|0x440|+0x00e:'1051'
-	// <0x746e3e>|0x44e|+0x00c:'1052'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x746e4a>|0x45a|+0x10e:'1060'
-	// ******
+	flash_value profile_items_array;
+	m_lobby_menu_ui->movie->CreateArray( &profile_items_array );
+
+	fixed_string< 260 > player_parameters_query_path;
+	flash_value slot_item_property;
+	u8 in_array_index = 0;
+	for ( u32 i = 0; i != max_slots_count; ++i )
+	{
+		if ( profile.slots[i].item.id == 0 )
+			continue;
+
+		u32 condition_or_stack = profile.slots[i].item.condition_or_stack;
+		player_parameters_query_path.appendf( "%d_", profile.slots[i].item.id );
+
+		flash_value slot_item;
+		m_lobby_menu_ui->movie->CreateObject( &slot_item );
+
+		slot_item_property.SetInt( profile.slots[i].item.id );
+		slot_item.SetMember( "itemId", slot_item_property );
+
+		slot_item_property.SetInt( i );
+		slot_item.SetMember( "slotId", slot_item_property );
+
+		slot_item_property.SetInt( condition_or_stack );
+		slot_item.SetMember( "condition_or_stack", slot_item_property );
+
+		profile_items_array.SetElement( in_array_index, slot_item );
+		++in_array_index;
+	}
+
+	flash_value profile_descriptor;
+	m_lobby_menu_ui->movie->CreateObject( &profile_descriptor );
+	profile_descriptor.SetMember( "items", profile_items_array );
+
+	flash_value profile_descriptor_property;
+	profile_descriptor_property.SetString( profile.profile_name );
+	profile_descriptor.SetMember( "name", profile_descriptor_property );
+
+	flash_value v;
+	v.SetUInt( profile.profile_id );
+	profile_descriptor.SetMember( "profileId", v );
+
+	profile_descriptor_property.SetUInt( 1 );
+	profile_descriptor.SetMember( "icon", profile_descriptor_property );
+
+	m_lobby_menu_ui->movie->Invoke( "root.player_profile.fillProfileItems", NULL, &profile_descriptor, 1 );
+
+	player_parameters_cooker_data* cook_data = NEW( player_parameters_cooker_data );
+	cook_data->dictionary = &get_game( ).items_dictionary( );
+	cook_data->profile = &profile;
+
+	variant< 32 > user_data;
+	user_data.set( cook_data );
+
+	resources::query_resource(
+		player_parameters_query_path.c_str( ),
+		resources::player_parameters_class,
+		boost::bind( &lobby_menu::player_parameters_ready, this, _1, cook_data ),
+		g_allocator,
+		&user_data
+	);
 }
 
-// claude@NOTE: PARKED on the cooked player-parameters resource type. Recovered body:
-// if (cook_data) DELETE(cook_data); take data[0].get_unmanaged_resource() as a
-// resource carrying total-items-weight (off 0x124), used/free slot counts (off
-// 0x154/0x155); store weight into m_player_total_items_weight; Invoke
-// "root.player_profile.updateSlots" (2 uint args = slot counts) and
-// "root.player_profile.updateWeight" (2 number args = weight, m_player_max_carried_
-// weight). The resource type has no header yet (not profile_player_character, which
-// is 8 bytes) - recover its name + accessors in the player-parameters cooker phase,
-// then this fills in. Also byte-capped by the scaleform flash stubs.
 void lobby_menu::player_parameters_ready( resources::queries_result& data, player_parameters_cooker_data* cook_data )
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( data );
-	VOSTOK_UNREFERENCED_PARAMETER	( cook_data );
+	DELETE( cook_data );
+
+	player_parameters_modifyer_ptr player_parameters =
+		static_cast_resource_ptr< player_parameters_modifyer_ptr >( data[0].get_unmanaged_resource( ) );
+	m_player_total_items_weight = player_parameters->total_items_weight;
+
+	flash_value args[2];
+	args[0].SetUInt( player_parameters->additional_artefact_slots );
+	args[1].SetUInt( player_parameters->additional_devices_slots );
+	m_lobby_menu_ui->movie->Invoke( "root.player_profile.updateSlots", NULL, args, 2 );
+
+	args[0].SetNumber( player_parameters->total_items_weight );
+	args[1].SetNumber( m_player_max_carried_weight );
+	m_lobby_menu_ui->movie->Invoke( "root.player_profile.updateWeight", NULL, args, 2 );
 }
 
 void lobby_menu::on_profile_arrived( u8 profile_id )
@@ -1398,12 +1306,7 @@ void lobby_menu::fill_skills_tree( )
 	// ******
 }
 
-// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); residual is
-// LTCG scheduling of the inlined flash_value ctor/dtor. The "trees" member
-// (per-skill perk grouping, total_points_in_tree) + "perks" array are reconstructed
-// approximately; the skills array, the leveling-info members (points_available,
-// points_unlocked, experience_current/next_level/delta) and the fill_char_info Invoke
-// are faithful.
+// The target keeps the Scaleform value construction and destruction inline here.
 void lobby_menu::fill_character_data( )
 {
 	flash_value char_info_value;
@@ -1413,28 +1316,28 @@ void lobby_menu::fill_character_data( )
 	m_lobby_menu_ui->movie->CreateArray( &player_skills_value );
 
 	flash_value player_skills_value_prop;
+	u8 total_points_in_tree = 0;
+	flash_value skill_value_prop;
 
 	for ( u8 i = 0; i < lobby_client( ).player_skills_count( ); ++i )
 	{
+		player_skill const& current_skill = lobby_client( ).player_skill( i );
+
 		flash_value skill_value;
 		m_lobby_menu_ui->movie->CreateObject( &skill_value );
 
-		flash_value skill_value_prop;
-		skill_value_prop.SetUInt		( lobby_client( ).player_skill( i ).skill_id );
+		skill_value_prop.SetUInt		( current_skill.skill_id );
 		skill_value.SetMember			( "id", skill_value_prop );
 
-		skill_value_prop.SetUInt		( lobby_client( ).player_skill( i ).skill_points );
+		skill_value_prop.SetUInt		( current_skill.skill_points );
 		skill_value.SetMember			( "points", skill_value_prop );
 
-		u8 total_points_in_tree = 0;
-		skill_value_prop.SetUInt		( total_points_in_tree );
-		skill_value.SetMember			( "trees", skill_value_prop );
-
 		player_skills_value.SetElement	( i, skill_value );
+		total_points_in_tree				+= current_skill.skill_points;
 	}
-	char_info_value.SetMember			( "skills", player_skills_value );
+	char_info_value.SetMember			( "trees", player_skills_value );
 
-	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_skill_points );
+	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_skill_points - total_points_in_tree );
 	char_info_value.SetMember			( "points_available", player_skills_value_prop );
 
 	player_skills_value_prop.SetUInt	( lobby_client( ).get_player_leveling( ).total_skill_points );
@@ -1451,16 +1354,15 @@ void lobby_menu::fill_character_data( )
 	player_skills_value_prop.SetUInt	( m_match_stats.last_match_exp_delta );
 	char_info_value.SetMember			( "experience_delta", player_skills_value_prop );
 
-	flash_value player_perks_value;
-	m_lobby_menu_ui->movie->CreateArray( &player_perks_value );
+	m_lobby_menu_ui->movie->CreateArray( &player_skills_value_prop );
 
 	for ( u8 i = 0; i < lobby_client( ).player_perks_count( ); ++i )
 	{
 		flash_value perk_value;
 		perk_value.SetUInt				( lobby_client( ).player_perk( i ) );
-		player_perks_value.SetElement	( i, perk_value );
+		player_skills_value_prop.SetElement( i, perk_value );
 	}
-	char_info_value.SetMember			( "perks", player_perks_value );
+	char_info_value.SetMember			( "perks", player_skills_value_prop );
 
 	m_lobby_menu_ui->movie->Invoke		( "root.fill_char_info", NULL, &char_info_value, 1 );
 }
@@ -1478,18 +1380,18 @@ void lobby_menu::fill_friend_list( )
 
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
+	flash_value value;
 
 	for ( u32 i = 0;
 			i < players_list.size( ); ++i )
 	{
+		wchar_t player_name_w[512];
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
-		flash_value value;
 		value.SetUInt					( players_list[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
-		wchar_t player_name_w[512];
 		mbstowcs_s						( NULL, player_name_w, 512, players_list[ i ].account_name.c_str( ), _TRUNCATE );
 		value.SetStringW				( player_name_w );
 		list_item.SetMember				( "name", value );
@@ -1597,33 +1499,34 @@ static wchar_t const player_team_pref[]		= L"team";
 
 void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 {
+	game_team_id team;
 	wchar_t const* player_joined_message	= wcsstr( w_text, player_joined_pref );
 	wchar_t const* player_left_message		= wcsstr( w_text, player_left_pref );
 	wchar_t const* queue_state_message		= wcsstr( w_text, player_queue_pref );
 
+	wchar_t w_player_team[8];
+	wchar_t w_player_in_queue[16];
 	wchar_t w_player_name[32];
-	flash_value player_name_val;
 
 	if ( player_joined_message )
 	{
 		wchar_t const* const player_name_end = wcsstr( player_joined_message, L" ]" );
-		wcsncpy_s			( w_player_name, player_joined_message + 6, ( player_name_end - player_joined_message ) / 2 - 6 );
+		wcsncpy_s			( w_player_name, player_joined_message + 6, player_name_end - player_joined_message - 6 );
 
 		wchar_t const* player_team = wcsstr( w_text, player_team_pref );
 		wchar_t const* const player_team_end = wcsstr( player_team, L"]" );
-		wchar_t w_player_team[8];
-		wcsncpy_s			( w_player_team, player_team + 4, ( player_team_end - player_team ) / 2 - 4 );
+		wcsncpy_s			( w_player_team, player_team + 4, player_team_end - player_team - 4 );
 
-		game_team_id team = ( game_team_id )_wtoi( w_player_team );
+		team = ( game_team_id )_wtoi( w_player_team );
 
 		flash_value add_player_args[2];
 		m_match_making_ui->movie->CreateObject( &add_player_args[1] );
 
-		player_name_val.SetStringW	( w_player_name );
-		add_player_args[1].SetMember( "name", player_name_val );
-
 		flash_value player_member_value;
-		player_member_value.SetUInt	( team );
+		player_member_value.SetStringW	( w_player_name );
+		add_player_args[1].SetMember( "name", player_member_value );
+
+		player_member_value.SetUInt	( 0 );
 		add_player_args[1].SetMember( "icon", player_member_value );
 
 		add_player_args[0].SetUInt	( team );
@@ -1633,17 +1536,17 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 	if ( player_left_message )
 	{
 		wchar_t const* const player_left_end = wcsstr( player_left_message, L" ]" );
-		wcsncpy_s			( w_player_name, player_left_message + 6, ( player_left_end - player_left_message ) / 2 - 6 );
+		wcsncpy_s			( w_player_name, player_left_message + 6, player_left_end - player_left_message - 6 );
 
+		flash_value player_name_val;
 		player_name_val.SetStringW	( w_player_name );
 		m_match_making_ui->movie->Invoke( "root.remove_player", NULL, &player_name_val, 1 );
 	}
 
 	if ( queue_state_message )
 	{
-		wchar_t w_player_in_queue[16];
 		wchar_t const* const queue_state_end = wcsstr( queue_state_message, L"]" );
-		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( queue_state_end - queue_state_message ) / 2 - 4 );
+		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, queue_state_end - queue_state_message - 4 );
 
 		flash_value players_in_queue_val;
 		players_in_queue_val.SetStringW	( w_player_in_queue );

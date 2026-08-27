@@ -11,6 +11,8 @@
 #include <vostok/animation/mixing_addition_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/game_core/player_initial_info.h>
+#include <vostok/game_core/player_profile.h>
 #include <vostok/resources.h>
 #include <vostok/resources_queries_result.h>	// queries_result [] / size / is_successful
 #include <vostok/resources_query_result.h>		// query_result_for_user accessors
@@ -18,6 +20,11 @@
 #include <vostok/render/facade/scene_renderer.h>	// *_ready: add_model / remove_model
 #include <vostok/sound/sound_scene_creation_params.h>
 #include <boost/bind.hpp>
+
+#undef NEW
+#undef DELETE
+#define NEW( type ) VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
+#define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 
 namespace survarium {
 
@@ -110,30 +117,42 @@ void profile_player_character::clear_resources( )
 	m_player = NULL;
 }
 
-// Faithful one-line forward. The empty query_profile_contents reconstruction is stripped by
-// LTCG, leaving this body as a return. Reopen with the query_profile_contents caller cone.
 void profile_player_character::profile_changed( player_profile const* profile )
 {
 	query_profile_contents( profile );
 }
 
-// STATE[STUB]
-// PARKED: body deep-copies the player_profile (doug_lea malloc 0x1B8 +
-// player_profile ctor + memcpy) into a player_initial_info, then resources::query_resources
-// with an on_player_ready boost::bind callback (the bind_t/mf2/list3 vtable assign_to is
-// the heavy part). Walled by the boost::bind callback-object construction sequence.
-// NEXT: model the query_resources<player_initial_info> + bind on_player_ready idiom.
-// Named locals: player_initial_info info; variant<32> ud.
 void profile_player_character::query_profile_contents( player_profile const* profile )
 {
+	player_profile* profile_to_cook = NEW( player_profile );
+	memory::copy( profile_to_cook, sizeof( player_profile ), profile, sizeof( player_profile ) );
+
+	player_initial_info info;
+	info.id = 0;
+	info.is_demo_player = true;
+	info.game_scene = &m_lobby_menu;
+	info.profile = profile_to_cook;
+
+	variant< 32 > ud;
+	ud.set( info );
+
+	resources::query_resource(
+		"gameplay/players/default.player",
+		resources::player_class,
+		boost::bind( &profile_player_character::on_player_ready, this, _1, profile_to_cook ),
+		g_allocator,
+		&ud
+	);
 }
 
-// STATE[STUB]
-// claude@NOTE: PARKED. Callback fired by query_profile_contents' query_resources; cooks the
-// player from the queries_result + profile_to_cook. Depends on the player_cook / player ctor
-// path and queries_result accessors. NEXT: pair with query_profile_contents (shared bind type).
 void profile_player_character::on_player_ready( resources::queries_result& data, player_profile* profile_to_cook )
 {
+	DELETE( profile_to_cook );
+
+	clear_resources( );
+	m_player = static_cast_resource_ptr< player_ptr >( data[0].get_unmanaged_resource( ) );
+	m_player->set_character_transform( float3( 0.f, -0.2f, 0.f ), math::pi, 0.f );
+	m_player->insert( true );
 }
 
 void profile_character::update( const u32 current_time_in_ms )

@@ -44,10 +44,10 @@ template < typename allocator_type >
 inline pstr duplicate				( allocator_type& allocator, pcstr const string );
 
 template <typename predicate_type, typename string_type>
-inline bool	iterate_items			( string_type string, u32 length, predicate_type const& predicate, char const separator = ',');
+inline bool	iterate_items			( string_type const string, u32 length, predicate_type const& predicate, char const separator = ',');
 
 template <typename predicate_type, typename string_type>
-inline bool	iterate_items			( string_type string, predicate_type const& predicate, char const separator = ',' );
+inline bool	iterate_items			( string_type const string, predicate_type const& predicate, char const separator = ',' );
 
 inline pcstr get_token				( pcstr string, pstr result, u32 result_size, char const separator )
 {

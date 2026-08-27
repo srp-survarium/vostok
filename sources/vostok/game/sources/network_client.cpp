@@ -44,6 +44,7 @@ static vostok::console_commands::cc_bool s_show_network_statistics_comand(
 	m_match_client( g.get_network_world( ) ),
 	m_messaging_client( g ),
 	m_http_client( g.get_network_world( ) ),
+	m_is_spectator( is_spectator ),
 	m_is_player_ticked( false ),
 	m_is_time_synchronized_first_time( false )
 {
@@ -52,7 +53,7 @@ static vostok::console_commands::cc_bool s_show_network_statistics_comand(
 	m_lobby_client.set_on_connected			( boost::bind( &network_client::on_connected_to_lobby, this ) );
 	m_lobby_client.set_on_disconnected		( boost::bind( &network_client::on_disconnected_from_lobby, this ) );
 	m_http_client.set_on_error				( boost::bind( &network_client::on_http_error, this, _1 ) );
-	if ( m_is_spectator = is_spectator )
+	if ( m_is_spectator )
 	{
 		static console_commands::cc_delegate s_attach_to_player(
 			"attach_to_player",
