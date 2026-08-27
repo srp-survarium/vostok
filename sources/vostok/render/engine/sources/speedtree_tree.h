@@ -4,7 +4,6 @@
 #include <speedtree/core/core.h>
 #include <vostok/render/facade/model.h>
 #include <vostok/render/facade/vertex_input_type.h>
-#include "lod_render_info.h"
 #include "material.h"
 #include "material_effects_instance.h"
 #include "render_geometry.h"
@@ -15,6 +14,36 @@ namespace render {
 class renderer_context;
 class speedtree_tree;
 class speedtree_tree_component_billboard;
+
+struct lod_entry {
+	lod_entry( ) : start_index( 0 ), num_indices( 0 ) { }
+
+	u32 start_index;
+	u32 num_indices;
+}; // struct lod_entry
+
+struct lod_render_info {
+	lod_render_info( ) : lods( 0 ), num_lods( 0 ) { }
+
+	lod_entry*	lods;
+	u32			num_lods;
+
+	inline bool has_geometry( u32 lod_index ) const
+	{
+		lod_entry& l = lods[lod_index];
+		return l.num_indices != 0;
+	}
+
+	inline lod_entry const* is_active( u32 lod_index ) const
+	{
+		lod_entry* l = &lods[lod_index];
+
+		if (l->num_indices == 0)
+			return 0;
+
+		return l;
+	}
+}; // struct lod_render_info
 
 class speedtree_tree_component {
 public:

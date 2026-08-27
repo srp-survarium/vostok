@@ -316,8 +316,8 @@ static float4x4 fix_view_matrix( float4x4 const& in_view_matrix )
 	const float epsilon			= 0.1f;
 	float4x4 view_matrix		= in_view_matrix;
 	float3 fixed_view_dir		= float3(view_matrix.i.z, view_matrix.j.z, view_matrix.k.z);
-	bool const looking_up		= math::is_similar(fixed_view_dir.x, 0.0f, epsilon) && math::is_similar(fixed_view_dir.y,  1.0f, epsilon) && math::is_similar(fixed_view_dir.z, 0.0f, epsilon);
-	bool const looking_down		= math::is_similar(fixed_view_dir.x, 0.0f, epsilon) && math::is_similar(fixed_view_dir.y, -1.0f, epsilon) && math::is_similar(fixed_view_dir.z, 0.0f, epsilon);
+	bool const looking_up		= math::is_similar(fixed_view_dir, float3(0.0f,  1.0f, 0.0f), epsilon);
+	bool const looking_down		= math::is_similar(fixed_view_dir, float3(0.0f, -1.0f, 0.0f), epsilon);
 	if (looking_up || looking_down)
 	{
 		view_matrix.i.z			+= epsilon * 10.0f;
@@ -380,7 +380,6 @@ void speedtree_forest::add_instance( speedtree_instance_ptr st_instance_ptr, flo
 
 void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 {
-	// Preserve target line metadata.
 	speedtree_instance_impl*	instance_impl			= static_cast_checked<speedtree_instance_impl*>(st_instance_ptr.c_ptr());
 	speedtree_tree*				tree					= static_cast_checked<speedtree_tree*>(instance_impl->m_speedtree_tree_ptr.c_ptr());
 	SpeedTree::CTree*			base_tree				= static_cast_checked<SpeedTree::CTree*>(tree);
