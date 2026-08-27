@@ -753,10 +753,8 @@ void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enu
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// claude@NOTE: 50/50 stmts. % walled by inline-vs-call: the 6 subscribe_animation_player sites
-// (boost::bind + function ctors), intrusive_ptr operator*/set/dec, and the folded LOG are inlined
-// here vs out-of-line target-side. Statement structure + named locals (ammo1/ammo2/ammo1_slot/
-// ammo2_slot) match.
+// Retail inlines the trailing callback registrations while retaining their
+// standalone helpers; preserve the shared helper ownership here.
 void weapon_core::activate( base_player& user, engine& engine )
 {
 	m_dispersion_calculator.set_character_dispersion_params( &user.get_dispersion_params( ) );

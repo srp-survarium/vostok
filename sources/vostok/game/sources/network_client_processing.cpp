@@ -251,7 +251,8 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 
 		if ( slot == 0xFF )
 		{
-			float4x4 transform = create_scale( float3( 1.f, 1.f, 1.f ) ) * create_rotation( float3( 0.f, 0.f, 0.f ) ) * create_translation( position );
+			float4x4 transform;
+			transform = create_scale( float3( 1.f, 1.f, 1.f ) ) * create_rotation( float3( 0.f, 0.f, 0.f ) ) * create_translation( position );
 			m_game.get_game_world( ).put_victory_item( item_id, transform );
 		}
 		else
@@ -277,7 +278,7 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 
 			victory_item_ptr item = m_game.get_game_world( ).get_victory_items( )[ victory_item_id ];
 			if ( item->is_inserted( ) )
-				item->unload( );
+				item->take( );
 
 			container->put_item( item.c_ptr( ) );
 		}
@@ -330,7 +331,7 @@ void network_client::setup_camera_for_warmup( )
 	float3 direction = position - target;
 	const float length = direction.length( );
 
-	physics::closest_ray_result ray_result = m_game.get_game_world( ).get_physics_world( )->ray_test( position, -direction / length, length, 16, 8 );
+	physics::closest_ray_result ray_result = m_game.get_game_world( ).get_physics_world( )->ray_test( position, -( direction / length ), length, 16, 8 );
 	if ( ray_result.object )
 		position = ray_result.hit_point_world + direction * 0.01f;
 
