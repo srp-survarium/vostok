@@ -1,5 +1,5 @@
-#ifndef VOSTOK_RENDER_CULLING_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
-#define VOSTOK_RENDER_CULLING_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
+#ifndef VOSTOK_RENDER_ENGINE_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
 
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/detail_noncopyable.h>
@@ -14,15 +14,15 @@ public:
 		m_buffer		( 0 ),
 		m_buffer_end	( 0 )
 	{
+		u32 index = 0;
 		u32 const count = config.size( );
 		m_buffer = ALLOC( u16, count );
 		m_buffer_end = m_buffer + count;
-		u16* destination = m_buffer;
 		configs::binary_config_value const* it = config.begin( );
 		configs::binary_config_value const* it_e = config.end( );
-		for ( ; it != it_e; ++it, ++destination )
+		for ( ; it != it_e; ++it, ++index )
 		{
-			*destination = (u16)*it;
+			m_buffer[index] = (u16)*it;
 		}
 	}
 
@@ -57,4 +57,4 @@ STATIC_SIZE_ASSERT( possible_sectors_holder, 0x8 );
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef VOSTOK_RENDER_CULLING_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
+#endif // #ifndef VOSTOK_RENDER_ENGINE_POSSIBLE_SECTORS_HOLDER_H_INCLUDED

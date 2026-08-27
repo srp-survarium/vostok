@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <vostok/console_command.h>
 #include <vostok/render/core/options.h>
-#include <vostok/render/culling/possible_sectors_holder.h>
+#include "possible_sectors_holder.h"
 #include <vostok/render/engine/model_format.h>
 #include "material.h"
 #include "material_manager.h"
