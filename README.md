@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,024 / 13,017 functions exact (77.01%) &middot; 10,668 / 13,017 functions exact-max (81.95%) &middot; 91.73% fuzzy &middot; 93.79% fuzzy-max.**
+**Overall: 10,024 / 13,017 functions exact (77.01%) &middot; 10,668 / 13,017 functions exact-max (81.95%) &middot; 91.73% fuzzy &middot; 93.80% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 

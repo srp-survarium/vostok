@@ -479,7 +479,7 @@ void portal_sector_system::process_portal_in_screen_space(
 )
 {
 	portal const& p = m_structure->get_portals( )[portal_id];
-	if ( ( p.get_plane( ).classify( view_pos ) > 0 ? p.get_sectors( )[1] : p.get_sectors( )[0] ) == sector_id )
+	if ( p.get_sectors( )[p.get_plane( ).classify( view_pos ) > 0.f] == sector_id )
 
 		return;
 
@@ -587,7 +587,7 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 		aab_rect portal_rect;
 		if ( !it->is_visible( ) )
 		{
-			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
+			portal_rect.min.set( 0.f, 0.f ), portal_rect.max.set( 0.f, 0.f );
 			rects.push_back( portal_rect );
 			distances.push_back( math::float_max );
 			continue;
@@ -611,12 +611,12 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 		if ( cs_f4[0].z < min_z && cs_f4[1].z < min_z && cs_f4[2].z < min_z && cs_f4[3].z < min_z )
 		{
 			m_structure->set_portal_visible( portal_id, false );
-			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
+			portal_rect.min.set( 0.f, 0.f ), portal_rect.max.set( 0.f, 0.f );
 			rects.push_back( portal_rect );
 			distances.push_back( math::float_max );
 			continue;
 		}
-		portal_rect.min = portal_rect.max = float2( hs_f3[0].x, hs_f3[0].y );
+		portal_rect.min.set( hs_f3[0].x, hs_f3[0].y ), portal_rect.max.set( hs_f3[0].x, hs_f3[0].y );
 		portal_rect.modify( hs_f3[1] );
 		portal_rect.modify( hs_f3[2] );
 		portal_rect.modify( hs_f3[3] );
