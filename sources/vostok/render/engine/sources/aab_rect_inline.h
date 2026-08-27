@@ -35,19 +35,19 @@ inline bool aab_rect::contains( aab_rect const& another ) const
 
 inline aab_rect::aab_rect( )
 {
-	min = float2( -1.f, -1.f );
-	max = float2( 1.f, 1.f );
+	min.set( -1.f, -1.f );
+	max.set( 1.f, 1.f );
 }
 
 inline aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right )
 {
 	aab_rect result;
 
-	result.min = result.max = float2( 0.f, 0.f );
-	result.min.x = left.min.x > right.min.x ? left.min.x : right.min.x;
-	result.min.y = left.min.y > right.min.y ? left.min.y : right.min.y;
-	result.max.x = left.max.x < right.max.x ? left.max.x : right.max.x;
-	result.max.y = left.max.y < right.max.y ? left.max.y : right.max.y;
+	result.min.set( 0.f, 0.f ), result.max.set( 0.f, 0.f );
+	result.min.x = std::max( left.min.x, right.min.x );
+	result.min.y = std::max( left.min.y, right.min.y );
+	result.max.x = std::min( left.max.x, right.max.x );
+	result.max.y = std::min( left.max.y, right.max.y );
 
 	return result;
 }
