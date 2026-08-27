@@ -8,9 +8,8 @@ namespace render {
 update_model_vertex_buffer_command::~update_model_vertex_buffer_command( )
 {
 	fragments_type::iterator		it	= m_fragments.begin();
-	fragments_type::const_iterator	end	= m_fragments.end();
 
-	for( ; it != end; ++it)
+	for( ; it != m_fragments.end(); ++it)
 	{
 		VOSTOK_DELETE_ARRAY_IMPL( m_allocator, it->buffer);
 	}
