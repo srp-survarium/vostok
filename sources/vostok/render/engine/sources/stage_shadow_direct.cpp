@@ -88,12 +88,23 @@ stage_shadow_direct::stage_shadow_direct(
 	m_c_start_corner = backend::ref().register_constant_host("start_corner", rc_float);
 	m_wind_info_parameters = backend::ref().register_constant_host( "wind_info_parameters", rc_float );
 	m_shadow_cascade_index = backend::ref().register_constant_host( "shadow_cascade_index", rc_int );
-	m_enabled = options::ref().current.m_enabled_sun_shadows_stage; m_cascade_shadow_map_size = options::ref( ).current.m_cascaded_shadow_map_size; for ( u32 i = 0; i < 4; ++i ) { m_previous_adjastment[i] = float3( 0.0f, 0.0f, 0.0f ); }
+	m_enabled = options::ref().current.m_enabled_sun_shadows_stage;
+	m_cascade_shadow_map_size = options::ref( ).current.m_cascaded_shadow_map_size;
+	for ( u32 i = 0; i < 4; ++i )
+	{
+		m_previous_adjastment[i] = float3( 0.0f, 0.0f, 0.0f );
+	}
 	m_rt_shadow_map = resource_manager::ref( ).create_render_target( "$user$cascaded_shadow_map", m_cascade_shadow_map_size * 2, m_cascade_shadow_map_size * 2, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
 	m_t_shadow_map = resource_manager::ref( ).create_texture( "$user$cascaded_shadow_map", 0, 0, false, true, true, u32(-1) );
 	for ( u32 i = 0; i < 4; ++i )
-	{ m_view_to_shadow[i] = float4x4( ).identity( ); m_previous_view_matrix[i] = float4x4( ).identity( ); m_previous_projection_matrix[i] = float4x4( ).identity( ); m_previous_real_view_matrix[i] = float4x4( ).identity( ); m_previous_position[i] = float3( 0.0f, 0.0f, 0.0f );
-	  m_prev_view_to_shadow[i] = float4x4( ).identity( ); }
+	{
+		m_view_to_shadow[i] = float4x4( ).identity( );
+		m_previous_view_matrix[i] = float4x4( ).identity( );
+		m_previous_projection_matrix[i] = float4x4( ).identity( );
+		m_previous_real_view_matrix[i] = float4x4( ).identity( );
+		m_previous_position[i] = float3( 0.0f, 0.0f, 0.0f );
+		m_prev_view_to_shadow[i] = float4x4( ).identity( );
+	}
 	m_previous_direction = float3( 0.0f, 0.0f, 1.0f );
 }
 
@@ -143,7 +154,8 @@ void stage_shadow_direct::execute( )
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
 
 	u32 first_cascade = u32(sun_cascade::num_max_sun_shadow_cascades) - options::ref( ).current.m_num_shadow_cascades;
-	for ( u32 cascade_id = first_cascade, cascade_index = 0; cascade_id < sun_cascade::num_max_sun_shadow_cascades; ++cascade_id, ++cascade_index ) execute_cascade( cascade_id, cascade_index, m_cascade_shadow_map_size );
+	for ( u32 cascade_id = first_cascade, cascade_index = 0; cascade_id < sun_cascade::num_max_sun_shadow_cascades; ++cascade_id, ++cascade_index )
+		execute_cascade( cascade_id, cascade_index, m_cascade_shadow_map_size );
 
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );
@@ -249,7 +261,8 @@ void stage_shadow_direct::prepare_models(
 
 	m_renderer->sort_models( opaque_models, shadow_render_stage, 0 );
 
-	m_caster_model = opaque_models; VOSTOK_UNREFERENCED_PARAMETER( shadow_map_size );
+	m_caster_model = opaque_models;
+	VOSTOK_UNREFERENCED_PARAMETER( shadow_map_size );
 }
 
 void stage_shadow_direct::render_models(
@@ -272,7 +285,13 @@ void stage_shadow_direct::render_models(
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
 	struct int4 {
-		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w ) { x = in_x; y = in_y; z = in_z; w = in_w; }
+		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w )
+		{
+			x = in_x;
+			y = in_y;
+			z = in_z;
+			w = in_w;
+		}
 
 		s32 x;
 		s32 y;
@@ -296,7 +315,10 @@ void stage_shadow_direct::render_models(
 	tmp_viewport.MaxDepth = 1.f;
 
 	backend::ref( ).set_viewport( tmp_viewport );
-	render_surface_instance** begin_d = m_caster_model.begin( ); render_surface_instance** it_d = begin_d; render_surface_instance* const* end_d = m_caster_model.end( ); u32 render_index = 0;
+	render_surface_instance** begin_d = m_caster_model.begin( );
+	render_surface_instance** it_d = begin_d;
+	render_surface_instance* const* end_d = m_caster_model.end( );
+	u32 render_index = 0;
 	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
 	{
 		render_surface_instance& instance = **it_d;
@@ -315,10 +337,18 @@ void stage_shadow_direct::render_models(
 			m_effect_shadow_direct->apply( 0, 0 );
 
 		switch ( cascade_index ) {
-			case 0: ++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_1.value; break;
-			case 1: ++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_2.value; break;
-			case 2: ++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_3.value; break;
-			case 3: ++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_4.value; break;
+			case 0:
+				++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_1.value;
+				break;
+			case 1:
+				++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_2.value;
+				break;
+			case 2:
+				++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_3.value;
+				break;
+			case 3:
+				++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips_cascade_4.value;
+				break;
 		}
 
 		++statistics::ref( ).cascaded_sun_shadow_stat_group.num_dips.value;
@@ -363,7 +393,11 @@ void stage_shadow_direct::render_dynamic_models(
 }
 void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u32 shadow_map_size )
 {
-	static float cascade_offsets[4] = { -5.f, -10.f, -20.f, -40.f }; static float cascade_align_mults[4] = { 1.f, 1.f, 1.f, 1.f }; static float cascade_pos_mults[4] = { 1.f, 3.f, 6.f, 12.f }; static u32 refresh_rate[4] = { 1, 1, 1, 1 }; static bool do_it = true;
+	static float cascade_offsets[4] = { -5.f, -10.f, -20.f, -40.f };
+	static float cascade_align_mults[4] = { 1.f, 1.f, 1.f, 1.f };
+	static float cascade_pos_mults[4] = { 1.f, 3.f, 6.f, 12.f };
+	static u32 refresh_rate[4] = { 1, 1, 1, 1 };
+	static bool do_it = true;
 	options::ref( ).current.m_update_shadows_every_frame = do_it;
 	u32 const pass_index = m_context->scene_view( )->get_render_frame_index( ) % refresh_rate[cascade_index];
 	bool const first_pass = pass_index == 0;
@@ -420,20 +454,23 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	shadow_cascade_volume cascade_volume;
 	if ( cascade_index == 0 )
-	{ for ( u32 i = 0; i < 4; ++i )
+	{
+		for ( u32 i = 0; i < 4; ++i )
 		{
 			float3 eye_ray = m_context->get_eye_rays( )[i];
 			eye_ray.normalize( );
 			eye_ray = m_context->get_v_inverted( ).transform_direction( eye_ray );
 			cascade_volume.view_frustum_rays.push_back( ray( view_pos + m_context->get_near( ) * eye_ray, eye_ray ) );
-	} }
+		}
+	}
 	else
 		cascade_volume.view_frustum_rays = m_context->m_sun_cascades[cascade_id].rays;
 
 	cascade_volume.view_ray.origin = view_pos;
 	cascade_volume.view_ray.direction = view_dir;
 
-	cascade_volume.light_ray.origin = sun->position; cascade_volume.light_ray.direction = sun->direction;
+	cascade_volume.light_ray.origin = sun->position;
+	cascade_volume.light_ray.direction = sun->direction;
 	float4x4 light_full_transform = light_view_transform * light_projection_transform;
 
 	float4x4 light_full_transform_invert = math::invert4x3( light_full_transform );
@@ -443,7 +480,8 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		float4 xf = light_full_transform_invert.transform( float4( corners[p], 1.f ) );
 		cascade_volume.light_cuboid_points[p] = xf.xyz( );
 	}
-	for ( u32 plane = 0; plane < 4; ++plane ) for ( u32 point = 0; point < 4; ++point )
+	for ( u32 plane = 0; plane < 4; ++plane )
+		for ( u32 point = 0; point < 4; ++point )
 
 		cascade_volume.light_cuboid_polys[plane].points[point] = facetable[plane][point];
 
@@ -526,10 +564,14 @@ float3 stage_shadow_direct::compute_aligment( float3 const& lightXZshift, float4
 	origin_pixel.x = origin_pixel.x / align_granularity - floorf( origin_pixel.x / align_granularity );
 	origin_pixel.y = origin_pixel.y / align_granularity - floorf( origin_pixel.y / align_granularity );
 	origin_pixel.x *= align_granularity;
-	origin_pixel.y *= align_granularity; origin_pixel.z = 0; gran = origin_pixel.xyz();
+	origin_pixel.y *= align_granularity;
+	origin_pixel.z = 0;
+	gran = origin_pixel.xyz();
 	origin_pixel.xyz() = viewport_invert.transform_direction( origin_pixel.xyz() );
 	origin_pixel.xyz() = light_space_transform_invert.transform_direction( origin_pixel.xyz() );
-	float3 diff = origin_pixel.xyz(); static float sign_test = 1.f; diff *= sign_test;
+	float3 diff = origin_pixel.xyz();
+	static float sign_test = 1.f;
+	diff *= sign_test;
 	return diff;
 }
 

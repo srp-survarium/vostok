@@ -51,7 +51,7 @@ void stage_decals_accumulate::debug_render( )
 	for ( vector<decal_instance*>::iterator it = visible_decals.begin( ); it != visible_decals.end( ); ++it )
 	{
 
-		system_renderer::ref( ).draw_aabb( ( *it )->get_aabb( ), math::color( 255.0f, 0.0f, 0.0f, 255.0f ) );
+		system_renderer::ref( ).draw_aabb( ( *it )->get_aabb( ), math::color( 1.0f, 0.0f, 0.0f, 1.0f ) );
 	}
 }
 

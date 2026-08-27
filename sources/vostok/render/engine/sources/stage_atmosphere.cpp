@@ -78,8 +78,10 @@ stage_atmosphere::stage_atmosphere(
 	renderer_context*	context,
 	stage_type			type
 ) :
-	stage( in_renderer, context ),
-	m_clouds_geometry( 16, 16 ), m_type( type ) {
+	stage			( in_renderer, context ),
+	m_clouds_geometry	( 16, 16 ),
+	m_type			( type )
+{
 	effect_manager::ref( ).create_effect<effect_atmospheric_scattering>( &m_atmospheric_scattering_effect );
 
 	m_to_sun_direction_parameter = backend::ref( ).register_constant_host( "to_sun_direction_parameter", rc_float );

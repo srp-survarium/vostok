@@ -504,9 +504,9 @@ void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bo
 		{
 		}
 
-		bool operator()( streamable_texture_info const& info ) const
+		bool operator()( streamable_texture_info const& other ) const
 		{
-			return info.texture == m_texture;
+			return other.texture == m_texture;
 		}
 
 		res_texture* m_texture;

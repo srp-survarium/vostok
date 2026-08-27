@@ -42,18 +42,7 @@ void setup_seed_clk( );
 typedef vector<grass_patch*>	grass_patches_type;
 typedef vector<grass_instance*>	grass_instances_type;
 
-grass_world::grass_world( ) :
-	m_patches_tree						( 0 ),
-	m_ambient_color						( 0 ),
-	m_c_environment_skylight_upper_color	( 0 ),
-	m_c_environment_skylight_lower_color	( 0 ),
-	m_c_environment_skylight_parameters	( 0 ),
-	m_c_sun_direction					( 0 ),
-	m_c_sun_color						( 0 ),
-	m_patch_parameters					( 0 ),
-	m_trample_parameters					( 0 ),
-	m_shadow_cascade_index_parameter		( 0 ),
-	m_wind_info_parameters					( 0 )
+grass_world::grass_world( )
 {
 	m_patches_tree									=	&*collision::new_space_partitioning_tree(g_allocator, 1.f, 1024);
 	m_ambient_color									=	backend::ref( ).register_constant_host( "ambient_color", rc_float );
@@ -366,7 +355,8 @@ void grass_world::process_culling( renderer_context* context, float const first_
 
 	statistics::ref().grass_stat_group.num_total_patches.value	=	m_patches.size();
 
-	collision::objects_type objects					(	g_allocator ); objects.reserve( m_patches.size() );
+	collision::objects_type objects					(	g_allocator );
+	objects.reserve( m_patches.size() );
 
 	math::frustum view_frustum						(context->get_vp());
 

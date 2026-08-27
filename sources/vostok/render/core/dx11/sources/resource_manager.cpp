@@ -426,7 +426,7 @@ void resource_manager::release( res_xs_hw<ps_data> const* ps )
 
 pcstr resource_manager::get_converted_shader_path( ) const
 {
-	return "resources.converted/shaders/sm_4_0";
+	return "resources/shaders/sm_4_0";
 }
 
 pcstr get_textures_path2( )
@@ -551,7 +551,7 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 	data.SysMemPitch		= data_size / (size * size);
 
 	return					resource_manager::ref().create_texture3d(
-		"$user$test3d",
+		"$user$color_grading_base_3d_lut",
 		size,
 		size,
 		size,

@@ -96,6 +96,81 @@ class CleanFinalPdbTests(unittest.TestCase):
             ["render_engine_pc_dx11"],
         )
 
+    def test_interrupted_module_build_reaps_detached_wine_processes(self):
+        proc = mock.Mock(pid=123)
+        proc.wait.side_effect = KeyboardInterrupt
+        with (mock.patch.object(build_ninja, "_assert_no_existing_build"),
+              mock.patch.object(build_ninja, "_prefix_process_ids", return_value={41, 42}),
+              mock.patch.object(build_ninja.subprocess, "Popen", return_value=proc),
+              mock.patch.object(build_ninja, "_stop_interrupted_build") as stop):
+            with self.assertRaises(KeyboardInterrupt):
+                build_ninja._run_plain(Path("ninja.exe"), ["render"])
+
+        stop.assert_called_once_with(proc, {41, 42})
+
+    def test_interrupted_full_build_reaps_detached_wine_processes(self):
+        proc = mock.Mock(pid=123)
+        proc.poll.return_value = None
+        with (mock.patch.object(build_ninja, "_assert_no_existing_build"),
+              mock.patch.object(build_ninja, "_prefix_process_ids", return_value={41, 42}),
+              mock.patch.object(build_ninja.subprocess, "Popen", return_value=proc),
+              mock.patch.object(build_ninja, "_wine_tree_jiffies", return_value=0),
+              mock.patch.object(build_ninja.time, "sleep", side_effect=KeyboardInterrupt),
+              mock.patch.object(build_ninja, "_stop_interrupted_build") as stop):
+            with self.assertRaises(KeyboardInterrupt):
+                build_ninja._run_with_watchdog(Path("ninja.exe"), ["game"])
+
+        stop.assert_called_once_with(proc, {41, 42})
+
+    def test_existing_build_in_same_prefix_refuses_overlap(self):
+        with (mock.patch.object(build_ninja, "_prefix_process_ids", return_value={42, 41}),
+              mock.patch.object(build_ninja.subprocess, "Popen") as popen):
+            with self.assertRaises(SystemExit):
+                build_ninja._run_plain(Path("ninja.exe"), ["render"])
+
+        popen.assert_not_called()
+
+    def test_interrupted_cleanup_preserves_preexisting_prefix_processes(self):
+        proc = mock.Mock(pid=123)
+        with (mock.patch.object(build_ninja.os, "getpgid", return_value=456),
+              mock.patch.object(build_ninja.os, "killpg") as killpg,
+              mock.patch.object(build_ninja, "_kill_prefix_processes") as kill_prefix):
+            build_ninja._stop_interrupted_build(proc, {41, 42})
+
+        killpg.assert_called_once_with(456, build_ninja.signal.SIGKILL)
+        kill_prefix.assert_called_once_with(
+            build_ninja._INTERRUPT_BUILD_COMMS,
+            exclude_pids=frozenset({41, 42}),
+        )
+        proc.wait.assert_called_once_with(timeout=30)
+
+    def test_supervisor_termination_unwinds_through_cleanup(self):
+        with self.assertRaises(SystemExit) as raised:
+            build_ninja._raise_on_termination(build_ninja.signal.SIGTERM, None)
+
+        self.assertEqual(raised.exception.code, 128 + build_ninja.signal.SIGTERM)
+
+    def test_termination_cleanup_scope_restores_signal_handlers(self):
+        old_term = object()
+        old_hup = object()
+        with mock.patch.object(
+            build_ninja.signal,
+            "signal",
+            side_effect=[old_term, old_hup, None, None],
+        ) as install:
+            with build_ninja._termination_cleanup_scope():
+                pass
+
+        self.assertEqual(
+            install.call_args_list,
+            [
+                mock.call(build_ninja.signal.SIGTERM, build_ninja._raise_on_termination),
+                mock.call(build_ninja.signal.SIGHUP, build_ninja._raise_on_termination),
+                mock.call(build_ninja.signal.SIGTERM, old_term),
+                mock.call(build_ninja.signal.SIGHUP, old_hup),
+            ],
+        )
+
     def test_scheduled_link_removes_existing_pdb_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -1860,7 +1935,13 @@ class LedgerProjectionTests(unittest.TestCase):
         row.update(overrides)
         return row
 
-    def project(self, observations, previous=None, banked_previous=None):
+    def project(
+        self,
+        observations,
+        previous=None,
+        banked_previous=None,
+        authoritative_roster=None,
+    ):
         """Write `previous`, project `observations` onto it, read the result."""
         with tempfile.TemporaryDirectory() as d:
             ledger = str(Path(d) / "state.tsv")
@@ -1869,7 +1950,12 @@ class LedgerProjectionTests(unittest.TestCase):
             proof = None
             if banked_previous is not None:
                 proof = {r["mangled"]: r for r in banked_previous}
-            store.project(observations, ledger, banked_previous=proof)
+            store.project(
+                observations,
+                ledger,
+                banked_previous=proof,
+                authoritative_roster=authoritative_roster,
+            )
             return store.load(ledger)
 
     def test_a_changed_body_resets_max_but_never_tries_or_hist(self):
@@ -1938,6 +2024,22 @@ class LedgerProjectionTests(unittest.TestCase):
         self.assertEqual(set(rows), {self.MANGLED})
         self.assertEqual(rows[self.MANGLED]["note"], "banked")
         self.assertEqual(rows[self.MANGLED]["max"], 100.0)
+
+    def test_authoritative_roster_retires_an_obsolete_identity(self):
+        rows = self.project(
+            [],
+            [self.banked(max=100.0, hist=100.0, note="stale spelling")],
+            authoritative_roster=set(),
+        )
+        self.assertEqual(rows, {})
+
+    def test_authoritative_roster_keeps_a_current_unobserved_identity(self):
+        rows = self.project(
+            [],
+            [self.banked(max=100.0, hist=100.0, note="current target")],
+            authoritative_roster={self.MANGLED},
+        )
+        self.assertEqual(set(rows), {self.MANGLED})
 
     def test_a_hand_park_survives_the_next_build(self):
         """The regression that used to need a write-through to the cache: `ledger

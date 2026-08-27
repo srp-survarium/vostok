@@ -71,7 +71,7 @@ pcstr rt_index_to_name( enum_render_target_index index )
 	case rt_frame_luminance_previous:			return "$user$frame_luminance_previous";
 	case rt_frame_luminance_current:				return "$user$frame_luminance";
 	case rt_frame_luminance_histogram:			return "$user$frame_luminance_histogram";
-	case rt_apply_indirect_lighting_ds:			return "$user$apply_indirect_lighting_ds";
+	case rt_apply_indirect_lighting_ds:			return "$user$apply_indirect_lighting_ds_%d";
 	case rt_frame_luminance0:					return "$user$frame_luminance0";
 	case rt_frame_luminance1:					return "$user$frame_luminance1";
 	case rt_frame_luminance2:					return "$user$frame_luminance2";

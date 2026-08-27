@@ -270,7 +270,7 @@ void stage_ambient_lighting::execute( )
 
 			u32 const clip_by_normal = probe->m_properties.clip_by_normal;
 			u32 const with_shadows = probe->m_properties.with_shadows;
-			u32 const geometry = math::min( probe->m_properties.geometry, 1u );
+			u32 const geometry = math::clamp_r( probe->m_properties.geometry, 0u, 1u );
 
 			for ( tech_index = 0; tech_index < 2; ++tech_index )
 			{

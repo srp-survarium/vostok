@@ -273,11 +273,16 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("filmic_tonemap_liner_white"))
 		out_post_process_parameters.filmic_tonemap_liner_white	= float(config["filmic_tonemap_liner_white"]["value"]);
 
-	if (config.value_exists("skylight_color")) out_post_process_parameters.skylight_color = float4(config["skylight_color"]["value"]).xyz();
-	if (config.value_exists("skylight_lower")) out_post_process_parameters.skylight_lower = float(config["skylight_lower"]["value"]);
-	if (config.value_exists("skylight_upper")) out_post_process_parameters.skylight_upper = float(config["skylight_upper"]["value"]);
-	if (config.value_exists("skylight_power")) out_post_process_parameters.skylight_power = float(config["skylight_power"]["value"]);
-	if (config.value_exists("skylight_multiplier")) out_post_process_parameters.skylight_multiplier = float(config["skylight_multiplier"]["value"]);
+	if (config.value_exists("skylight_color"))
+		out_post_process_parameters.skylight_color = float4(config["skylight_color"]["value"]).xyz();
+	if (config.value_exists("skylight_lower"))
+		out_post_process_parameters.skylight_lower = float(config["skylight_lower"]["value"]);
+	if (config.value_exists("skylight_upper"))
+		out_post_process_parameters.skylight_upper = float(config["skylight_upper"]["value"]);
+	if (config.value_exists("skylight_power"))
+		out_post_process_parameters.skylight_power = float(config["skylight_power"]["value"]);
+	if (config.value_exists("skylight_multiplier"))
+		out_post_process_parameters.skylight_multiplier = float(config["skylight_multiplier"]["value"]);
 
 	if (config.value_exists("frame_shadows"))
 		out_post_process_parameters.frame_shadows				= float3(config["frame_shadows"]["value"]);

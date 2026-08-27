@@ -146,7 +146,7 @@ void device::create_d3d( )
 
 void device::destroy_d3d( )
 {
-	log_ref_count	( "m_Adapter", m_adapter);
+	log_ref_count	( "m_adapter", m_adapter);
 	safe_release	( m_adapter);
 }
 

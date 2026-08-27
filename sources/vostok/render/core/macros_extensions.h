@@ -9,12 +9,7 @@
 
 pcstr make_d3d11_error_string( HRESULT error_code );
 
-// claude@MATCH: the expression is evaluated TWICE - once by the FAILED test and once
-// to build the message - so a CHECK_RESULT'ed call emits its `call` twice; the target
-// does that at every site (create_xs_hw_impl calls D3DCreateBlob twice,
-// create_texture3d calls CreateTexture3D twice), and the on_error argument in the
-// VOSTOK_MAKE_STRING slot is the formatted d3d error, not the stringized expression
-// (9 pushes / `add esp, 24h`, i.e. the non-variadic on_error overload).
+// The expression is evaluated once by FAILED and again when formatting the error.
 #define CHECK_RESULT( expression, ... )\
 	if ( vostok::identity( true ) ) {\
 		static bool ignore_always = false;\
@@ -29,7 +24,8 @@ pcstr make_d3d11_error_string( HRESULT error_code );
 				make_d3d11_error_string( expression ),\
 				__FILE__,\
 				__FUNCTION__,\
-				__LINE__\
+				__LINE__,\
+				##__VA_ARGS__\
 			);\
 			if ( ::vostok::debug::is_debugger_present( ) || do_debug_break )\
 				DEBUG_BREAK( );\

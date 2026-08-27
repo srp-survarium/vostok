@@ -375,7 +375,6 @@ void render_model_cook::on_fs_iterator_ready_submeshes(
 	DELETE_ARRAY		( requests );
 }
 
-// // model editor created config
 void render_model_cook::on_model_settings_loaded(
 	resources::queries_result& data,
 	cook_intermediate_data* cook_data
@@ -458,8 +457,6 @@ void render_model_cook::on_model_settings_loaded(
 	DELETE_ARRAY		( mat_requests );
 }
 
-// verts+indices
-// Preserve target line metadata.
 void render_model_cook::on_subresources_loaded(
 	resources::queries_result& data,
 	cook_intermediate_data* cook_data
@@ -601,7 +598,6 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 		DELETE						(cook_data);
 		return;
 	}
-	// Three retail-only source lines precede the request construction.
 	using namespace resources;
 	u32 const num_requests								= cook_data->m_num_render_models;
 	fs_new::virtual_path_string* pathes					= (fs_new::virtual_path_string*)	MALLOC(sizeof(fs_new::virtual_path_string) * num_requests, "");

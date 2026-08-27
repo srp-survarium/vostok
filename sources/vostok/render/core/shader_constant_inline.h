@@ -22,15 +22,11 @@ inline s32 compare( shader_constant const& left, shader_constant const& right )
 	if ( result )
 		return result;
 
-	if ( left.source( ).pointer( ) < right.source( ).pointer( ) )
-		return -1;
-	if ( left.source( ).pointer( ) > right.source( ).pointer( ) )
-		return 1;
-	if ( left.source( ).size( ) < right.source( ).size( ) )
-		return -1;
-	if ( left.source( ).size( ) > right.source( ).size( ) )
-		return 1;
-	return left.slot( ).value( ) < right.slot( ).value( ) ? -1
+	return left.source( ).pointer( ) < right.source( ).pointer( ) ? -1
+		: left.source( ).pointer( ) > right.source( ).pointer( ) ? 1
+		: left.source( ).size( ) < right.source( ).size( ) ? -1
+		: left.source( ).size( ) > right.source( ).size( ) ? 1
+		: left.slot( ).value( ) < right.slot( ).value( ) ? -1
 		: left.slot( ).value( ) > right.slot( ).value( ) ? 1 : 0;
 }
 

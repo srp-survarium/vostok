@@ -58,7 +58,7 @@ void effect_ssao_filter4x4::compile(
 	compiler.set_alpha_blend( false );
 	compiler.set_texture( "t_position", r2_rt_p, 0, false, u32( -1 ) );
 	compiler.set_texture( "t_ssao_accumulator", r2_rt_ssao_accumulator, 0, false, u32( -1 ) );
-	compiler.set_texture( "t_ssao_prev_result", "$user$ssao_prev_accumulator_full", 0, false, u32( -1 ) );
+	compiler.set_texture( "t_ssao_prev_result", "$user$ssao_prev_accumulator_full_x", 0, false, u32( -1 ) );
 	compiler.set_texture( "t_ssao_prev_z", "$user$ssao_prev_accumulator_z", 0, false, u32( -1 ) );
 	compiler.set_texture( "t_ssao_temporal_mask", "$user$ssao_temporal_mask", 0, false, u32( -1 ) );
 	compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_NOT_EQUAL );

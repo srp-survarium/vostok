@@ -32,7 +32,7 @@ void sky_ambient_occlusion::set_properties(
 	if (in_properties.texture_invalidated)
 	{
 		m_texture = 0;
-		m_texture = resource_manager::ref().create_texture(m_properties.texture_name.c_str(), 0, 0, false, true, true, u32(-1));
+		m_texture = resource_manager::ref().create_texture(m_properties.texture_name.get_buffer(), 0, 0, false, true, true, u32(-1));
 	}
 
 	float4x4 new_transform = math::create_translation(in_properties.location);

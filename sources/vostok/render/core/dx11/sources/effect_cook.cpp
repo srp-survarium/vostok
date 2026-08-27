@@ -93,9 +93,6 @@ void effect_cook::create_resource(
 		return;
 	}
 	
-	//ASSERT_CMP								(compile_data->descriptor, !=, 0);
-	//ASSERT_CMP								(compile_data->config.c_ptr(), !=, 0);
-	
 	if (!compile_data->descriptor)
 	{
 		LOG_ERROR("No effect descriptor!");

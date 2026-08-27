@@ -26,7 +26,7 @@ void depth_accumulate_material_effect::compile(
 	if (config.value_exists("wind_motion"))
 		configuration.wind_motion = s32(config["wind_motion"]);
 
-	compile_begin("vertex_base", "depth_accumulate", compiler, &configuration, config);
+	compile_begin("vertex_base_shadow", "depth_accumulate", compiler, &configuration, config);
 
 		if (configuration.use_alpha_test)
 			compiler.set_texture("t_base", pcstr(config["texture_diffuse"]), 0, true, debug_last_mips);

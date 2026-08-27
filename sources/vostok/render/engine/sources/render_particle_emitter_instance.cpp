@@ -346,10 +346,14 @@ void render_particle_emitter_instance::render_sprites( )
 		if (m_screen_alignment==particle::particle_screen_alignment_square)
 			size.y = size.x;
 
-		pv->set(P->position, final_color, float2(0.f, 0.f), size, P->rotation, P->gravity, P->old_position);	pv++;
-		pv->set(P->position, final_color, float2(0.f, 1.f), size, P->rotation, P->gravity, P->old_position);	pv++;
-		pv->set(P->position, final_color, float2(1.f, 1.f), size, P->rotation, P->gravity, P->old_position);	pv++;
-		pv->set(P->position, final_color, float2(1.f, 0.f), size, P->rotation, P->gravity, P->old_position);	pv++;
+		pv->set(P->render_position, final_color, float2(0.f, 0.f), size, P->rotation, P->gravity, P->render_old_position);
+		pv++;
+		pv->set(P->render_position, final_color, float2(0.f, 1.f), size, P->rotation, P->gravity, P->render_old_position);
+		pv++;
+		pv->set(P->render_position, final_color, float2(1.f, 1.f), size, P->rotation, P->gravity, P->render_old_position);
+		pv++;
+		pv->set(P->render_position, final_color, float2(1.f, 0.f), size, P->rotation, P->gravity, P->render_old_position);
+		pv++;
 
 		p++;
 		P = m_particle_list.get_next_of_object(P);
@@ -388,9 +392,9 @@ void render_particle_emitter_instance::render_subuv_sprites( )
 	vostok::particle::base_particle* P = m_particle_list.front();
 	while (P)
 	{
-		float subimage_index = P->subimage_index;//lifetime * m_billboard_parameters->sub_image_horizontal * m_billboard_parameters->sub_image_vertical * m_billboard_parameters->sub_image_change_speed;
+		float subimage_index = P->subimage_index;
 
-		float next_subimage_index = P->next_subimage_index;//subimage_index;
+		float next_subimage_index = P->next_subimage_index;
 
 		float posU = 0.0f;
 		float posV = 0.0f;
@@ -444,10 +448,14 @@ void render_particle_emitter_instance::render_subuv_sprites( )
 		if (m_screen_alignment==particle::particle_screen_alignment_square)
 			size.y = size.x;
 
-		pv->set(P->position, final_color, float2(sizeU*(posU+0), sizeV*(posV+0)), size, P->rotation, P->gravity, P->old_position, float2(0,0), float4(u_offset, sizeU*(next_posU+0), sizeV*(next_posV+0), 0)); pv++;
-		pv->set(P->position, final_color, float2(sizeU*(posU+0), sizeV*(posV+1)), size, P->rotation, P->gravity, P->old_position, float2(0,1), float4(u_offset, sizeU*(next_posU+0), sizeV*(next_posV+1), 0)); pv++;
-		pv->set(P->position, final_color, float2(sizeU*(posU+1), sizeV*(posV+1)), size, P->rotation, P->gravity, P->old_position, float2(1,1), float4(u_offset, sizeU*(next_posU+1), sizeV*(next_posV+1), 0)); pv++;
-		pv->set(P->position, final_color, float2(sizeU*(posU+1), sizeV*(posV+0)), size, P->rotation, P->gravity, P->old_position, float2(1,0), float4(u_offset, sizeU*(next_posU+1), sizeV*(next_posV+0), 0)); pv++;
+		pv->set(P->render_position, final_color, float2(sizeU*(posU+0), sizeV*(posV+0)), size, P->rotation, P->gravity, P->render_old_position, float2(0,0), float4(u_offset, sizeU*(next_posU+0), sizeV*(next_posV+0), 0));
+		pv++;
+		pv->set(P->render_position, final_color, float2(sizeU*(posU+0), sizeV*(posV+1)), size, P->rotation, P->gravity, P->render_old_position, float2(0,1), float4(u_offset, sizeU*(next_posU+0), sizeV*(next_posV+1), 0));
+		pv++;
+		pv->set(P->render_position, final_color, float2(sizeU*(posU+1), sizeV*(posV+1)), size, P->rotation, P->gravity, P->render_old_position, float2(1,1), float4(u_offset, sizeU*(next_posU+1), sizeV*(next_posV+1), 0));
+		pv++;
+		pv->set(P->render_position, final_color, float2(sizeU*(posU+1), sizeV*(posV+0)), size, P->rotation, P->gravity, P->render_old_position, float2(1,0), float4(u_offset, sizeU*(next_posU+1), sizeV*(next_posV+0), 0));
+		pv++;
 
 		p++;
 		P = m_particle_list.get_next_of_object(P);
@@ -607,14 +615,18 @@ void render_particle_emitter_instance::render_trails(
 				right_a					= rot_matrix.transform_position(right_a);
 			}
 
-			pv->set(P->position + right_a * P->size.y, final_color, float2(0,current_v_pos)); pv++;
-			pv->set(P->position - right_a * P->size.y, final_color, float2(1,current_v_pos)); pv++;
+			pv->set(P->position + right_a * P->size.y, final_color, float2(0,current_v_pos));
+			pv++;
+			pv->set(P->position - right_a * P->size.y, final_color, float2(1,current_v_pos));
+			pv++;
 
 			if (num_particles==2 || p == num_particles - 2)
 			{
 				current_uv_start += scaleUV;
-				pv->set(nextP->position + right_a * P->size.y, final_color, float2(0,current_uv_start * float(texture_tiles))); pv++;
-				pv->set(nextP->position - right_a * P->size.y, final_color, float2(1,current_uv_start * float(texture_tiles))); pv++;
+				pv->set(nextP->position + right_a * P->size.y, final_color, float2(0,current_uv_start * float(texture_tiles)));
+				pv++;
+				pv->set(nextP->position - right_a * P->size.y, final_color, float2(1,current_uv_start * float(texture_tiles)));
+				pv++;
 			}
 
 			current_uv_start += scaleUV;

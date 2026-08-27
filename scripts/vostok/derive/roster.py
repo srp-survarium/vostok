@@ -183,7 +183,11 @@ def regen():
 
     measured = list(observations(roster, maxima_rows))
     measured.extend(report_only_observations(roster, maxima_rows, previous))
-    written = match_state.project(measured, banked_previous=proof)
+    written = match_state.project(
+        measured,
+        banked_previous=proof,
+        authoritative_roster={row["mangled"] for row in measured},
+    )
     log(
         f"ledger {Path(match_state.STATE_PATH).name}: {written} rows "
         f"({len(roster.target)} target / {len(roster.base)} base / "

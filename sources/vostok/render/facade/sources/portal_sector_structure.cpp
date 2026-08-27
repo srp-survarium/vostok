@@ -177,8 +177,12 @@ void portal_sector_structure::initialize_portals_geometry( )
 	{
 		u32 const vertex_index = vertices.size();
 		vertices.insert( vertices.end(), it->get_points(), it->get_points() + 4 );
-		indices.push_back( vertex_index ); indices.push_back( vertex_index + 1 ); indices.push_back( vertex_index + 2 );
-		indices.push_back( vertex_index ); indices.push_back( vertex_index + 2 ); indices.push_back( vertex_index + 3 );
+		indices.push_back( vertex_index );
+		indices.push_back( vertex_index + 1 );
+		indices.push_back( vertex_index + 2 );
+		indices.push_back( vertex_index );
+		indices.push_back( vertex_index + 2 );
+		indices.push_back( vertex_index + 3 );
 	}
 	m_portals_geometry = &*collision::new_triangle_mesh_geometry(
 		m_allocator,

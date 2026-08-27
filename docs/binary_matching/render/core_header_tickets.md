@@ -23,6 +23,10 @@ diagnoses.
 - `buffer_string::operator=(value_type const*)`: the retail self-assignment
   guard is target-proven by the inlined pointer comparison and skip edge in the
   `render_cc_*::fill_macro` family.  The source now carries that guard.
+- `custom_config_value::operator float()`: target PDB line numbers point back to
+  the preserved GSC source and target assembly emits its unsigned-64 conversion.
+  Keep `(float)u64(data)`, not the reconstructed 32-bit `size_t` cast; the latter
+  generated the spurious `__real@4f800000` path.
 
 Raw CodeView line-table entry counts are not a ticket source.  Use
 `structure-diff`, named locals, declaration/layout evidence, and emitted

@@ -17,35 +17,39 @@ inline custom_config_value::operator T( ) const
 template <>
 inline custom_config_value::operator float( ) const
 {
-	bool const is_integer_type =
+	bool is_integer_type =
 		type == static_type::get_type_id<u8>( ) || type == static_type::get_type_id<s8>( )
 		|| type == static_type::get_type_id<u16>( ) || type == static_type::get_type_id<s16>( )
 		|| type == static_type::get_type_id<u32>( ) || type == static_type::get_type_id<s32>( )
 		|| type == static_type::get_type_id<u64>( ) || type == static_type::get_type_id<s64>( );
 
 	if ( is_integer_type )
-		return static_cast<float>( reinterpret_cast<size_t>( data ) );
+		return (float)u64( data );
 
 	ASSERT_CMP( static_type::get_type_id<float>( ), ==, type );
-	if ( identity( sizeof( float ) <= sizeof( u32 ) ) )
-		return *reinterpret_cast<float const*>( &data );
-	return *reinterpret_cast<float const*>( data );
+	if ( identity( sizeof( float ) <= sizeof( u32 ) ) || type == static_type::get_type_id<pcstr>( ) )
+		return *(float*)&data;
+	else
+		return *(float*)data;
 }
 
 template <>
 inline custom_config_value::operator double( ) const
 {
-	bool const is_integer_type =
+	bool is_integer_type =
 		type == static_type::get_type_id<u8>( ) || type == static_type::get_type_id<s8>( )
 		|| type == static_type::get_type_id<u16>( ) || type == static_type::get_type_id<s16>( )
 		|| type == static_type::get_type_id<u32>( ) || type == static_type::get_type_id<s32>( )
 		|| type == static_type::get_type_id<u64>( ) || type == static_type::get_type_id<s64>( );
 
 	if ( is_integer_type )
-		return static_cast<double>( reinterpret_cast<size_t>( data ) );
+		return (double)u64( data );
 
 	ASSERT_CMP( static_type::get_type_id<double>( ), ==, type );
-	return *reinterpret_cast<double const*>( data );
+	if ( identity( sizeof( double ) <= sizeof( u32 ) ) || type == static_type::get_type_id<pcstr>( ) )
+		return *(double*)&data;
+	else
+		return *(double*)data;
 }
 
 } // namespace render

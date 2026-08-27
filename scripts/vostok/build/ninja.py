@@ -54,6 +54,7 @@ import signal
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 from vostok.core.paths import BASE_EXE
@@ -88,6 +89,23 @@ _WINE_SESSION = {
 # substrings identifying a build (compiler/linker/ninja) process under wine.
 _BUILD_COMMS = ("wine", "cl", "link", "ninja", "lib", "cmd", "mspdb", "c1", "c2")
 
+# Build processes that Wine may detach from the launcher process group.  Keep
+# this narrower than _BUILD_COMMS: it is used for interruption cleanup, where
+# killing an unrelated persistent Wine service would be destructive.
+_INTERRUPT_BUILD_COMMS = (
+    "wine", "wine-preloader", "wine64-preloade", "ninja.exe", "cmd", "cmd.exe",
+    "cl", "cl.exe", "link", "link.exe", "lib", "lib.exe",
+    "mspdbsrv.exe", "c1.dll", "c2.dll", "conhost.exe",
+)
+
+# Processes that prove another build is actively using this worktree's prefix.
+# Do not include Wine services or mspdbsrv.exe: they legitimately persist after
+# a completed build and do not by themselves make a new invocation unsafe.
+_ACTIVE_BUILD_COMMS = (
+    "ninja", "ninja.exe", "cmd", "cmd.exe", "cl", "cl.exe",
+    "link", "link.exe", "lib", "lib.exe",
+)
+
 
 def die(msg: str, *hints: str) -> None:
     print(f"[ninja] ERROR: {msg}", file=sys.stderr)
@@ -108,18 +126,20 @@ def _in_our_prefix(entry: Path) -> bool:
         return False
 
 
-def _wine_tree_jiffies() -> int:
+def _wine_tree_jiffies(exclude_pids: frozenset[int] = frozenset()) -> int:
     """Sum utime+stime (jiffies) over the live Wine build/compiler/linker tree.
 
-    Excludes the persistent wineserver session so its idle background processes
-    don't mask a stall, and is scoped to our WINEPREFIX so a sibling worktree's
-    parallel build can't mask THIS build's zombie either (without the scoping,
-    a stuck link here would wait out the busy sibling all the way to the hard
-    timeout). Over-inclusion is harmless: we only read the DELTA.
+    Excludes the persistent wineserver session and any pre-existing build PIDs,
+    so an orphan left by an older interrupted invocation cannot keep a healthy
+    build's watchdog busy forever. It is also scoped to our WINEPREFIX so a
+    sibling worktree's parallel build cannot mask this build's zombie. Remaining
+    over-inclusion is harmless: we only read the delta.
     """
     total = 0
     for entry in Path("/proc").iterdir():
         if not entry.name.isdigit():
+            continue
+        if int(entry.name) in exclude_pids:
             continue
         try:
             comm = (entry / "comm").read_text().strip()
@@ -156,7 +176,28 @@ def _outputs_refreshed(since: float) -> bool:
     return True
 
 
-def _kill_prefix_processes(comms: tuple[str, ...]) -> None:
+def _prefix_process_ids(comms: tuple[str, ...]) -> set[int]:
+    """Return matching process IDs in this worktree's Wine prefix."""
+    if not os.environ.get("WINEPREFIX"):
+        return set()
+    targets = {c.lower() for c in comms}
+    result: set[int] = set()
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            if (entry / "comm").read_text().strip().lower() not in targets:
+                continue
+            if _in_our_prefix(entry):
+                result.add(int(entry.name))
+        except (OSError, ValueError):
+            continue
+    return result
+
+
+def _kill_prefix_processes(
+    comms: tuple[str, ...], *, exclude_pids: frozenset[int] = frozenset(),
+) -> None:
     """SIGKILL wine processes by comm name, scoped to THIS worktree's WINEPREFIX.
 
     Sibling worktrees build in parallel inside their own prefixes; a global
@@ -167,23 +208,83 @@ def _kill_prefix_processes(comms: tuple[str, ...]) -> None:
     """
     if not os.environ.get("WINEPREFIX"):
         return  # cannot scope the kill safely
-    targets = {c.lower() for c in comms}
-    for entry in Path("/proc").iterdir():
-        if not entry.name.isdigit():
-            continue
+    for pid in _prefix_process_ids(comms) - exclude_pids:
         try:
-            if (entry / "comm").read_text().strip().lower() not in targets:
-                continue
-            if not _in_our_prefix(entry):
-                continue
-            os.kill(int(entry.name), signal.SIGKILL)
-        except (OSError, ValueError):
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
             continue
 
 
-def _reap_wine_children() -> None:
-    """Kill leftover wine compiler/linker processes (NOT the wineserver session)."""
-    _kill_prefix_processes(("cl", "cl.exe", "link", "link.exe", "conhost.exe"))
+def _stop_interrupted_build(proc: subprocess.Popen, existing_pids: set[int]) -> None:
+    """Stop one interrupted Ninja run, including Wine-detached descendants.
+
+    Wine reparents cl/link processes to the user manager and gives them their
+    own process groups, so killing Ninja's group alone is insufficient.  The
+    pre-spawn PID snapshot keeps cleanup scoped to processes created by this
+    invocation and leaves older or unrelated jobs in the same prefix alone.
+    """
+    try:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        pass
+    _kill_prefix_processes(
+        _INTERRUPT_BUILD_COMMS,
+        exclude_pids=frozenset(existing_pids),
+    )
+    try:
+        proc.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        pass
+
+
+def _raise_on_termination(signum: int, _frame) -> None:
+    """Turn supervisor termination into an unwind that reaps Wine children."""
+    raise SystemExit(128 + signum)
+
+
+@contextmanager
+def _termination_cleanup_scope():
+    """Make SIGTERM/SIGHUP pass through the build's BaseException cleanup."""
+    previous = {
+        signum: signal.signal(signum, _raise_on_termination)
+        for signum in (signal.SIGTERM, signal.SIGHUP)
+    }
+    try:
+        yield
+    finally:
+        for signum, handler in previous.items():
+            signal.signal(signum, handler)
+
+
+def _assert_no_existing_build() -> None:
+    """Refuse to overlap a build already using this worktree's Wine prefix."""
+    pids = sorted(_prefix_process_ids(_ACTIVE_BUILD_COMMS))
+    if pids:
+        shown = ", ".join(map(str, pids[:12]))
+        if len(pids) > 12:
+            shown += f", ... ({len(pids) - 12} more)"
+        die(
+            "another build is already active in this worktree's Wine prefix",
+            "active PIDs: " + shown,
+            "wait for it to finish or clean up that exact stale invocation first",
+        )
+
+
+def _run_plain(ninja_exe: Path, args: list[str]) -> int:
+    """Run a module-only Ninja build with interruption-safe Wine cleanup."""
+    _assert_no_existing_build()
+    existing_pids = _prefix_process_ids(_INTERRUPT_BUILD_COMMS)
+    with _termination_cleanup_scope():
+        proc = subprocess.Popen(
+            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+            cwd=str(BUILD_DIR),
+            start_new_session=True,
+        )
+        try:
+            return proc.wait()
+        except BaseException:
+            _stop_interrupted_build(proc, existing_pids)
+            raise
 
 
 def _prepare_clean_final_pdb(ninja_exe: Path, args: list[str]) -> None:
@@ -260,68 +361,69 @@ def _explicit_targets(args: list[str]) -> list[str]:
 
 def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
     """Run the full-game ninja build, reaping the post-link Wine zombie wait."""
+    _assert_no_existing_build()
     start = time.time()
+    existing_pids = _prefix_process_ids(_INTERRUPT_BUILD_COMMS)
     # inherit stdout/stderr (no pipe) so the matcher still sees the -v output and
     # so leaked wine children can't hold a pipe fd open (that itself hangs EOF).
-    proc = subprocess.Popen(
-        ["wine", str(ninja_exe), "-v", "-k", "0", *args],
-        cwd=str(BUILD_DIR),
-        start_new_session=True,
-    )
+    with _termination_cleanup_scope():
+        proc = subprocess.Popen(
+            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+            cwd=str(BUILD_DIR),
+            start_new_session=True,
+        )
 
-    idle_seconds = 0.0
-    prev_jiffies = _wine_tree_jiffies()
-    prev_t = time.time()
-    reaped = False
+        idle_seconds = 0.0
+        old_pids = frozenset(existing_pids)
+        prev_jiffies = _wine_tree_jiffies(old_pids)
+        prev_t = time.time()
+        reaped = False
 
-    while True:
-        rc = proc.poll()
-        if rc is not None:
-            return rc  # normal exit (the overwhelmingly common path)
+        try:
+            while True:
+                rc = proc.poll()
+                if rc is not None:
+                    return rc  # normal exit (the overwhelmingly common path)
 
-        time.sleep(POLL_SECONDS)
-        now = time.time()
-        jiffies = _wine_tree_jiffies()
-        elapsed = now - prev_t
-        cores = (jiffies - prev_jiffies) / (elapsed * CLK_TCK) if elapsed > 0 else 0.0
-        prev_jiffies, prev_t = jiffies, now
+                time.sleep(POLL_SECONDS)
+                now = time.time()
+                jiffies = _wine_tree_jiffies(old_pids)
+                elapsed = now - prev_t
+                cores = ((jiffies - prev_jiffies) / (elapsed * CLK_TCK)
+                         if elapsed > 0 else 0.0)
+                prev_jiffies, prev_t = jiffies, now
 
-        if cores < IDLE_CPU_CORES and _outputs_refreshed(start):
-            idle_seconds += elapsed
-        else:
-            idle_seconds = 0.0
+                if cores < IDLE_CPU_CORES and _outputs_refreshed(start):
+                    idle_seconds += elapsed
+                else:
+                    idle_seconds = 0.0
 
-        if idle_seconds >= IDLE_LIMIT_SECONDS:
-            print(
-                f"[ninja] watchdog: EXE+PDB written and the wine tree has been idle "
-                f"~{int(idle_seconds)}s while ninja has not returned - the link "
-                f"finished but a child is stuck; reaping and proceeding.",
-                flush=True,
-            )
-            reaped = True
-            break
+                if idle_seconds >= IDLE_LIMIT_SECONDS:
+                    print(
+                        f"[ninja] watchdog: EXE+PDB written and the wine tree has been idle "
+                        f"~{int(idle_seconds)}s while ninja has not returned - the link "
+                        f"finished but a child is stuck; reaping and proceeding.",
+                        flush=True,
+                    )
+                    reaped = True
+                    break
 
-        if now - start > HARD_TIMEOUT_SECONDS:
-            print(
-                f"[ninja] watchdog: hard timeout ({HARD_TIMEOUT_SECONDS}s) with no "
-                f"idle-completion signal; killing the build.",
-                flush=True,
-            )
-            break
+                if now - start > HARD_TIMEOUT_SECONDS:
+                    print(
+                        f"[ninja] watchdog: hard timeout ({HARD_TIMEOUT_SECONDS}s) with no "
+                        f"idle-completion signal; killing the build.",
+                        flush=True,
+                    )
+                    break
+        except BaseException:
+            _stop_interrupted_build(proc, existing_pids)
+            raise
 
-    # We broke out because the build is stuck. Kill our process group, then reap
-    # the reparented wine children. Return success only if we saw the clean
-    # outputs-ready + idle signal; a hard-timeout is a genuine failure.
-    try:
-        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-    except (ProcessLookupError, PermissionError):
-        pass
-    _reap_wine_children()
-    try:
-        proc.wait(timeout=30)
-    except subprocess.TimeoutExpired:
-        pass
-    return 0 if reaped else 1
+        # We broke out because the build is stuck. Reap only processes created by
+        # this invocation. Return success only if we saw the clean outputs-ready +
+        # idle signal; a hard-timeout is a genuine failure.
+        _stop_interrupted_build(proc, existing_pids)
+        return 0 if reaped else 1
 
 
 def main() -> None:
@@ -375,10 +477,7 @@ def main() -> None:
         _prepare_clean_final_pdb(ninja_exe, args)
         rc = _run_with_watchdog(ninja_exe, args)
     else:
-        rc = subprocess.run(
-            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
-            cwd=str(BUILD_DIR),
-        ).returncode
+        rc = _run_plain(ninja_exe, args)
 
     # cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which then
     # idles for ~10 minutes before exiting on its own. It inherits the build's

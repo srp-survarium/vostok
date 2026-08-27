@@ -1,8 +1,71 @@
 #ifndef VOSTOK_RENDER_CORE_DX11_EFFECT_MANAGER_INLINE_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_EFFECT_MANAGER_INLINE_H_INCLUDED
 
+#include <vostok/render/core/effect_loader.h>
+#include <vostok/resources.h>
+
 namespace vostok {
 namespace render {
+
+inline void effect_manager::create_new_effect(
+	res_effect_ptr* out_effect,
+	effect_descriptor* descriptor,
+	custom_config_ptr const& config,
+	u32 crc,
+	creation_callback_type callback
+)
+{
+	resources::user_data_variant user_data_variant;
+
+	effect_compile_data* cook_data = NEW( effect_compile_data )(
+		descriptor,
+		config,
+		crc
+	);
+	user_data_variant.set( cook_data );
+
+	resources::query_create_resource(
+		"",
+		vostok::const_buffer( "", 1 ),
+		resources::render_effect_class,
+		boost::bind(
+			&effect_manager::on_async_effect_created_callback,
+			this,
+			_1,
+			out_effect,
+			descriptor,
+			callback
+		),
+		g_allocator,
+		&user_data_variant
+	);
+}
+
+inline void effect_manager::create_new_effect(
+	effect_loader* loader,
+	effect_descriptor* descriptor,
+	custom_config_ptr const& config,
+	u32 crc
+)
+{
+	resources::user_data_variant user_data_variant;
+
+	effect_compile_data* cook_data = NEW( effect_compile_data )(
+		descriptor,
+		config,
+		crc
+	);
+	user_data_variant.set( cook_data );
+
+	resources::query_create_resource(
+		"",
+		vostok::const_buffer( "", 1 ),
+		resources::render_effect_class,
+		boost::bind( &effect_loader::on_effect_ready, loader, _1 ),
+		g_allocator,
+		&user_data_variant
+	);
+}
 
 template < typename effect_descriptor_type >
 inline res_effect_ptr effect_manager::create_effect( )
