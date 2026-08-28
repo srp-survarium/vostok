@@ -16,6 +16,7 @@ void effect_gbuffer_nomaterial_materials::compile(
 	{
 		shader_configuration configuration;
 		configuration.lod_index = lod_index;
+		configuration.use_diffuse_texture = true;
 
 		compile_begin("vertex_base", "gbuffer_nomaterial_pass", compiler, &configuration, config);
 
@@ -31,7 +32,7 @@ void effect_gbuffer_nomaterial_materials::compile(
 
 		compiler.set_depth(true, true);
 
-		compiler.set_texture("t_default_texture", "no_texture", 0, true, u32(-1));
+		compiler.set_texture("t_default_texture", "no_texture", 0, false, u32(-1));
 		compile_end(compiler);
 	}
 
