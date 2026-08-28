@@ -58,7 +58,7 @@ public:
 
 	static inline bool metric_euclidian( )
 	{
-		return false;
+		return true;
 	}
 
 private:
