@@ -83,7 +83,7 @@ public:
 											);
 			void							add_to_recent_list		( wchar_t const* name );
 
-	inline	bool							in_match				( ) const { /* no source */ return false; }
+	inline	bool							in_match				( ) const { /* no source */ return m_game_ui_mode; }
 
 			void							initialize				( resources::unmanaged_resource_ptr const& ui );
 

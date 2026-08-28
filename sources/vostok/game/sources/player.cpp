@@ -588,50 +588,37 @@ void player::hit(
 	m_game.get_network_client( )->on_player_hit_received( info );
 }
 
-// claude@NOTE: PARKED. 12 stmts (target 0x5e3920): damage_model()->hit_body_part(info...);
-// if it lands, two sound-emitter-gated crosshair feedbacks - the FIRST fires a Scaleform
-// GFx Movie::Invoke("root.crosshair_enemy_hit") when m_game's sound emitter bone matches,
-// the SECOND (if m_game_ui) builds a player_ptr (initiator from id or self) and calls
-// game_world_ui::on_hit_from_pos(float3) with intrusive_ptr churn; then a notify loop
-// (action 4 = shoot/hit) over the subscribers. Walls: Scaleform GFx Movie::Invoke
-// + the sound emitter bone accessor (m_game+0x3B8) are cross-module (scaleform/sound), and
-// the player_ptr intrusive_ptr management is the same accessor-inline wall. Next step:
-// reconstruct once GFx Movie::Invoke wrapper + the sound emitter accessor are named.
-// STATE[STUB]
 void player::apply_hit_directly( hit_info const& info, const u32 current_time_in_ms )
 {
-	// LOCALS
-	// player_ptr 						initiator_ptr
-	// ******
+	if ( !damage_model( )->hit_body_part(
+		info.hit_initiator,
+		info.body_part_name.c_str( ),
+		info.damage_type.c_str( ),
+		info.amount,
+		info.armor_piercing,
+		current_time_in_ms,
+		info.bullet
+	) )
+		return;
 
-	// CALL SITE INFO
-	// <0x5e3944> -> damage_model_ptr const& < unknown >() const
-	// <0x5e3a3d> -> player_ptr < unknown >( const u8 ) const
-	// <0x5e3a7c> -> float4x4 const& < unknown >() const
-	// <0x5e3ad0> -> void < unknown >( hit_receiver const*, player_actions_subscriber::action, float )
-	// ******
+	if ( m_game.get_network_client( )->is_player_current( info.hit_initiator ) )
+		m_game.get_game_world( ).game_ui.on_enemy_hitted( );
 
-	// FUNCTION BODY[0x5e3920]: 19
-	// <0x5e3928>|0x008|+0x04f:'930'
-	// <0>
-	// <1>
-	// <0x5e3977>|0x057|+0x024:'933'
-	// <0x5e399b>|0x07b|+0x01f:'934'
-	// <0>
-	// <0x5e39ba>|0x09a|+0x03d:'936'
-	// <0x5e39f7>|0x0d7|+0x014:'937'
-	// <0>
-	// <0x5e3a0b>|0x0eb|+0x064:'939'
-	// <0x5e3a6f>|0x14f|+0x032:'940'
-	// <0x5e3aa1>|0x181|+0x009:'941'
-	// <0>
-	// <1>
-	// <0x5e3aaa>|0x18a|+0x006:'944'
-	// <0x5e3ab0>|0x190|+0x006:'945'
-	// <0>
-	// <0x5e3ab6>|0x196|+0x00a:'947'
-	// <0x5e3ac0>|0x1a0|+0x019:'948'
-	// ******
+	if ( m_game_ui && m_game.get_network_client( )->is_player_current( id ) )
+	{
+		if ( info.being_hit == id && info.hit_initiator != u8( -1 ) )
+		{
+			player_ptr initiator_ptr = info.hit_initiator == id
+				? player_ptr( this )
+				: m_game.get_network_client( )->get_player( info.hit_initiator );
+			m_game_ui->on_hit_from_pos( initiator_ptr->get_transform( ).c.xyz( ) );
+		}
+	}
+
+	player_actions_subscribers::iterator i = m_player_actions_subscribers.begin( );
+	player_actions_subscribers::iterator e = m_player_actions_subscribers.end( );
+	for ( ; i != e; ++i )
+		( *i )->on_player_action( this, player_actions_subscriber::hit, info.amount );
 }
 
 void player::reset_fov_factor( )

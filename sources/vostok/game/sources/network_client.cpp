@@ -434,22 +434,22 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 
 		m_max_local_sequence_difference_caption = text_manager->create_text( "max seq-diff :" );
 		m_max_local_sequence_difference_caption.set_visible( true );
-		m_max_local_sequence_difference_caption.set_color( 0xFF, 0xFF, 0, 0xFF );
+		m_max_local_sequence_difference_caption.set_color( 0, 0xFF, 0xFF, 0xFF );
 		m_max_local_sequence_difference_caption.set_position( 150.f, 320.f );
 
 		m_max_local_sequence_difference_value = text_manager->create_text( "" );
 		m_max_local_sequence_difference_value.set_visible( true );
-		m_max_local_sequence_difference_value.set_color( 0xFF, 0xFF, 0, 0xFF );
+		m_max_local_sequence_difference_value.set_color( 0, 0xFF, 0xFF, 0xFF );
 		m_max_local_sequence_difference_value.set_position( 325.f, 320.f );
 
 		m_unacknowledged_packets_caption = text_manager->create_text( "unacknowledged :" );
 		m_unacknowledged_packets_caption.set_visible( true );
-		m_unacknowledged_packets_caption.set_color( 0, 0xFF, 0xFF, 0xFF );
+		m_unacknowledged_packets_caption.set_color( 0xFF, 0xFF, 0, 0xFF );
 		m_unacknowledged_packets_caption.set_position( 150.f, 340.f );
 
 		m_unacknowledged_packets_value = text_manager->create_text( "" );
 		m_unacknowledged_packets_value.set_visible( true );
-		m_unacknowledged_packets_value.set_color( 0, 0xFF, 0xFF, 0xFF );
+		m_unacknowledged_packets_value.set_color( 0xFF, 0xFF, 0, 0xFF );
 		m_unacknowledged_packets_value.set_position( 325.f, 340.f );
 	}
 

@@ -383,112 +383,68 @@ void game_world_ui::show_parametrized_message(
 	get_ui( )->movie->Invoke( "root.set_parameterized_message", NULL, message_val, 4 );
 }
 
-// claude@NOTE: PARKED - the who_team/victim_team computation reads concrete
-// network_client privates ([client+8] current player + an inline sound_emitter
-// c_ptr() carrier check + player+0x34 id field) not reachable through the abstract
-// base_network_client; who_name/victim_name come from player::get_profile_name()
-// passed in an LTCG register. Structure recoverable, but the team/name args need the
-// concrete client type + exact player field offsets. Next: map the concrete client's
-// victory-item-carrier member + player+0x34 id, then reconstruct the 8 SetMember pairs
-// (action_id/who_name/who_team/victim_name/victim_team/object_icon/extra_icon/mastery_icon).
-// STATE[STUB]
 void game_world_ui::on_victory_item_put_take( u8 player_id, bool is_taken, bool is_base )
 {
-	// LOCALS
-	// flash_value 						out_event
-	// flash_value 						out_event_property
-	// player_ptr 						player
-	// u8 								i
-	// ******
+	update_minimap_objects( );
 
-	// CALL SITE INFO
-	// <0x5d46d2> -> player_ptr < unknown >( const u8 ) const
-	// <0x5d46ed> -> bool < unknown >( const u8 ) const
-	// <0x5d4708> -> match_options& < unknown >()
-	// <0x5d4723> -> game_team_id < unknown >() const
-	// <0x5d47e6> -> bool < unknown >( const u8 ) const
-	// <0x5d48c5> -> game_team_id < unknown >() const
-	// <0x5d4988> -> game_team_id < unknown >() const
-	// ******
+	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
+	player_ptr player = client->get_player( player_id );
 
-	// FUNCTION BODY[0x5d46a0]: 71
-	// <0x5d46a0>|0x000|+0x006:'483'	{
-	// <0x5d46a6>|0x006|+0x00b:'484'
-	// <0>
-	// <0x5d46b1>|0x011|+0x00f:'486'
-	// <0>
-	// <0x5d46c0>|0x020|+0x014:'488'
-	// <0>
-	// <0x5d46d4>|0x034|+0x002:'490'
-	// <0>
-	// <0x5d46d6>|0x036|+0x00a:'492'
-	// <0>
-	// <0x5d46e0>|0x040|+0x020:'494'
-	// <0x5d4700>|0x060|+0x01a:'495'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d471a>|0x07a|+0x00f:'500'
-	// <0x5d4729>|0x089|+0x00e:'501'
-	// <0x5d4737>|0x097|+0x00b:'502'
-	// <0x5d4742>|0x0a2|+0x042:'503'
-	// <0x5d4784>|0x0e4|+0x018:'503'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5d479c>|0x0fc|+0x02d:'509'
-	// <0>
-	// <0x5d47c9>|0x129|+0x008:'511'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d47d1>|0x131|+0x006:'515'
-	// <0>
-	// <1>
-	// <0x5d47d7>|0x137|+0x015:'518'
-	// <0x5d47ec>|0x14c|+0x00b:'519'
-	// <0>
-	// <1>
-	// <0x5d47f7>|0x157|+0x002:'522'
-	// <0>
-	// <0x5d47f9>|0x159|+0x00b:'524'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5d4804>|0x164|+0x028:'530'
-	// <0x5d482c>|0x18c|+0x03b:'531'
-	// <0>
-	// <0x5d4867>|0x1c7|+0x009:'533'
-	// <0x5d4870>|0x1d0|+0x02c:'534'
-	// <0>
-	// <0x5d489c>|0x1fc|+0x055:'536'
-	// <0x5d48f1>|0x251|+0x03b:'537'
-	// <0>
-	// <0x5d492c>|0x28c|+0x009:'539'
-	// <0x5d4935>|0x295|+0x02a:'540'
-	// <0>
-	// <0x5d495f>|0x2bf|+0x052:'542'
-	// <0x5d49b1>|0x311|+0x036:'543'
-	// <0>
-	// <0x5d49e7>|0x347|+0x025:'545'
-	// <0x5d4a0c>|0x36c|+0x036:'546'
-	// <0>
-	// <0x5d4a42>|0x3a2|+0x025:'548'
-	// <0x5d4a67>|0x3c7|+0x036:'549'
-	// <0>
-	// <0x5d4a9d>|0x3fd|+0x025:'551'
-	// <0x5d4ac2>|0x422|+0x036:'552'
-	// <0>
-	// <0x5d4af8>|0x458|-0x383:'554'
-	// <0x5d4775>|0x0d5|+0x018:'555'
-	// <0x5d478d>|0x0ed|+0x38d:'555'
-	// <0x5d4b1a>|0x47a|      :'555'	}
-	// ******
+	game_team_id local_player_team = team_1;
+	u8 i = 0;
+	for ( ; i < 20; ++i )
+	{
+		if ( client->is_player_local( i ) )
+		{
+			local_player_team = client->match_options( ).player_profiles[i].team;
+			break;
+		}
+	}
+
+	if ( player->team( ) != local_player_team )
+	{
+		if ( is_taken && is_base )
+			show_parametrized_message( "st_on_enemy_theft_item", 0, 0, 0 );
+		return;
+	}
+
+	flash_value out_event;
+	get_ui( )->movie->CreateObject( &out_event );
+	flash_value out_event_property;
+
+	u8 action_id;
+	if ( is_taken )
+	{
+		action_id = 3;
+		if ( client->is_player_local( player_id ) )
+			show_parametrized_message( "st_bring_item_to_base", 0, 0, 0 );
+	}
+	else
+		action_id = is_base ? 5 : 4;
+
+	out_event_property.SetUInt( action_id );
+	out_event.SetMember( "action_id", out_event_property );
+
+	out_event_property.SetStringW( player->get_profile_name( ) );
+	out_event.SetMember( "who_name", out_event_property );
+
+	out_event_property.SetUInt( client->is_player_current( player_id ) ? 2 : player->team( ) );
+	out_event.SetMember( "who_team", out_event_property );
+
+	out_event_property.SetStringW( player->get_profile_name( ) );
+	out_event.SetMember( "victim_name", out_event_property );
+
+	out_event_property.SetUInt( client->is_player_current( player_id ) ? 2 : player->team( ) );
+	out_event.SetMember( "victim_team", out_event_property );
+
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "object_icon", out_event_property );
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "extra_icon", out_event_property );
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "mastery_icon", out_event_property );
+
+	get_ui( )->movie->Invoke( "root.add_log_message", NULL, &out_event, 1 );
 }
 
 void game_world_ui::on_player_killed(

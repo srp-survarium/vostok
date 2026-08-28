@@ -81,52 +81,45 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 	}
 }
 
-// the localized substrings are the Russian + English channel-name tags
+// the localized prefixes are the Russian + English channel-name tags
 // (\x043e\x0431\x0449\x0438\x0439 = general, etc.); spelled as code points so the
 // emitted UTF-16 is codepage-independent
 #line 82
 messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_t const* w_receiver_name, const bool in_match )
 {
-	if ( wcsstr( w_receiver_name, L"\x043e\x0431\x0449\x0438\x0439" ) || wcsstr( w_receiver_name, L"general" ) )	return messaging::player_general_channel;
+	if ( w_receiver_name == wcsstr( w_receiver_name, L"\x043e\x0431\x0449\x0438\x0439" ) || w_receiver_name == wcsstr( w_receiver_name, L"general" ) )	return messaging::player_general_channel;
 
-	if ( wcsstr( w_receiver_name, L"\x043e\x0442\x0440\x044f\x0434" ) || wcsstr( w_receiver_name, L"squad" ) )
+	if ( w_receiver_name == wcsstr( w_receiver_name, L"\x043e\x0442\x0440\x044f\x0434" ) || w_receiver_name == wcsstr( w_receiver_name, L"squad" ) )
 		return messaging::player_squad_channel;
 
-	if ( wcsstr( w_receiver_name, L"\x043a\x043b\x0430\x043d" ) || wcsstr( w_receiver_name, L"clan" ) )
+	if ( w_receiver_name == wcsstr( w_receiver_name, L"\x043a\x043b\x0430\x043d" ) || w_receiver_name == wcsstr( w_receiver_name, L"clan" ) )
 		return messaging::player_clan_channel;
 
 	if ( in_match ) {
-		if ( wcsstr( w_receiver_name, L"\x0441\x0432\x043e\x0438\x043c" ) || wcsstr( w_receiver_name, L"team" ) )
+		if ( w_receiver_name == wcsstr( w_receiver_name, L"\x0441\x0432\x043e\x0438\x043c" ) || w_receiver_name == wcsstr( w_receiver_name, L"team" ) )
 			return m_game_team_id ? messaging::player_team2_channel : messaging::player_team1_channel;
 
-		if ( wcsstr( w_receiver_name, L"\x0432\x0441\x0435\x043c" ) || wcsstr( w_receiver_name, L"all" ) )
+		else if ( w_receiver_name == wcsstr( w_receiver_name, L"\x0432\x0441\x0435\x043c" ) || w_receiver_name == wcsstr( w_receiver_name, L"all" ) )
 			return messaging::player_match_channel;
 	}
 
 	return messaging::player_private_channel;
 }
 
-// claude@NOTE: structure-complete modulo three
-// byte-capped residuals: (1) the packet<>::append/tcp_packet ctor/dtor + send chain is
-// whole-program-inlined in gold but /Od here (the network template inline wall); the
-// trailing inlined packet dtor offsets the append-row pairing. (2) the wcstombs_s error
-// guard `(ret != 0 && ret != STRUNCATE)` emits TWO calls in /Od (no PDB local for the
-// errno, so it is spelled inline) where gold CSEs to one. (3) input_text reassignment to
-// the message-body pointer is scheduled early (line 132) by the optimizer; /Od keeps it
-// after the wcsncpy that needs the original prefix, so it pairs one row off. None are
-// structural divergences.
 void messaging_client::on_message_typed( wchar_t const* input_text, messaging::message_channel_enum message_chanel )
 {
 	wchar_t			w_receiver_name[32];
 	bool			has_direct_receiver;
+	wchar_t const*	receiver_end;
 
-	if ( ( has_direct_receiver = ( input_text[0] == L'/' ) )
-			&& wcsstr( input_text, L" " ) )
+	has_direct_receiver = input_text[0] == L'/';
+	receiver_end = wcsstr( input_text, L" " );
+	if ( has_direct_receiver && receiver_end )
 	{
-		wcsncpy_s		( w_receiver_name, input_text + 1, ( wcsstr( input_text, L" " ) - input_text ) / 2 - 1 );
+		wcsncpy_s		( w_receiver_name, input_text + 1, receiver_end - input_text - 1 );
 
 		message_chanel	= parse_receiver_channel( w_receiver_name, m_chat_handler.in_match( ) );
-		input_text		= wcsstr( input_text, L" " ) + 1;
+		input_text		= receiver_end + 1;
 	}
 
 	if ( message_chanel != messaging::player_private_channel )
@@ -135,30 +128,49 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 	if ( m_connection_state == messaging::client_connected )
 	{
 		wchar_t w_sender_name[32];
-		mbstowcs_s		( NULL, w_sender_name, m_local_name, _TRUNCATE );
+		size_t converted_chars_count = 0;
+		mbstowcs_s		( &converted_chars_count, w_sender_name, m_local_name, _TRUNCATE );
 
 		m_chat_handler.add_message		( message_chanel, input_text, w_sender_name );
 		if ( message_chanel == messaging::player_private_channel )
 			m_chat_handler.add_to_recent_list	( w_receiver_name );
 
 		char message_body[256];
-		errno_t const body_error = wcstombs_s( NULL, message_body, input_text, _TRUNCATE );
+		converted_chars_count = 0;
+		errno_t const body_error = wcstombs_s( &converted_chars_count, message_body, input_text, _TRUNCATE );
 		if ( body_error && body_error != STRUNCATE )
 			strcpy_s	( message_body, "##text conversion error##" );
 
 		char receiver_name[32];
-		errno_t const name_error = wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE );
+		converted_chars_count = 0;
+		errno_t const name_error = wcstombs_s( &converted_chars_count, receiver_name, w_receiver_name, _TRUNCATE );
 		if ( name_error && name_error != STRUNCATE )
 			strcpy_s	( message_body, "##name conversion error##" );
 
-		u32 channel_id = u32( -1 );
+		u32 channel_id = 0;
 		switch ( message_chanel )
 		{
+			case messaging::player_general_channel:
+			case messaging::player_system_channel:
+			case messaging::player_private_channel:
+				break;
+
+			case messaging::player_clan_channel:
+				return;
+
 			case messaging::player_match_channel:
-			case messaging::player_team1_channel:
-			case messaging::player_team2_channel:
 				channel_id = m_match_channel_id_;
 				if ( channel_id == u32( -1 ) )
+					return;
+				break;
+
+			case messaging::player_team1_channel:
+			case messaging::player_team2_channel:
+				return;
+
+			case messaging::player_squad_channel:
+				channel_id = u32( -1 );
+				if ( m_match_channel_id_ == u32( -1 ) )
 					return;
 				break;
 		}
@@ -270,21 +282,18 @@ void messaging_client::find_players_by_name( pcstr player_name )
 
 bool messaging_client::accept_message_from( const u32 sender_account_id, messaging::client_type_enum sender_type )
 {
-	if ( sender_type == messaging::account_client_type )
-		return std::find( m_ignore_list.begin( ), m_ignore_list.end( ), sender_account_id ) == m_ignore_list.end( );
+	bool const is_in_ignore_list =
+		sender_type == messaging::account_client_type &&
+		std::find( m_ignore_list.begin( ), m_ignore_list.end( ), sender_account_id ) != m_ignore_list.end( );
 
-	return true;
+	return !is_in_ignore_list;
 }
 
-// claude@NOTE: structure-near-match (14/17). Two residuals: (1) the target INLINES
-// accept_message_from here (the stlp __find expands in-line) where our base keeps the
-// call - an inline-vs-call wall, not a source shape to change; (2) the target records a
-// 4th local `body[256]` (a message_body staging/reference the gold build materialises
-// from the inlined r_string path) that the /Od base does not. Both trace to the
-// whole-program inlining of accept_message_from / packet_reader::r_string.
 void messaging_client::process_incoming_text_message( network_core::packet_reader& reader )
 {
+	char						body[256];
 	messaging::send_message_params	params;
+	params.message_body		= &body;
 	params.sender_type			= messaging::client_type_enum( reader.r< u8 >( ) );
 	params.sender_account_id	= reader.r< u32 >( );
 
@@ -293,13 +302,15 @@ void messaging_client::process_incoming_text_message( network_core::packet_reade
 
 	reader.r_string			( params.sender_name );
 	params.message_channel	= messaging::message_channel_enum( reader.r< u8 >( ) );
-	reader.r_string			( params.message_body );
+	reader.r_string			( body );
 
 	wchar_t w_sender_name[32];
-	mbstowcs_s				( NULL, w_sender_name, params.sender_name, _TRUNCATE );
+	size_t converted_chars_count = 0;
+	mbstowcs_s				( &converted_chars_count, w_sender_name, params.sender_name, _TRUNCATE );
 
 	wchar_t w_text[1024];
-	mbstowcs_s				( NULL, w_text, params.message_body, _TRUNCATE );
+	converted_chars_count = 0;
+	mbstowcs_s				( &converted_chars_count, w_text, *params.message_body, _TRUNCATE );
 
 	if ( params.message_channel == messaging::player_team2_channel )
 		m_game.lobby_menu( ).on_match_message_arrived( w_text );

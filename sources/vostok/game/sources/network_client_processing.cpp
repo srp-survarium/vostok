@@ -737,12 +737,12 @@ void network_client::on_world_sync_request( )
 	for ( u8 id = 0; id < 20; ++id )
 	{
 		player_ptr player = get_player( id );
-		if ( player && player->has_been_inserted( ) )
-		{
-			player->remove( );
-			if ( player->inventory( ).get_victory_item( ) )
-				player->inventory( ).set_victory_item( NULL );
-		}
+		if ( !player || !player->has_been_inserted( ) )
+			continue;
+
+		player->remove( );
+		if ( player->inventory( ).get_victory_item( ) )
+			player->inventory( ).set_victory_item( NULL );
 	}
 
 	for ( vector< victory_items_container* >::iterator i = m_game.get_game_world( ).get_project( )->m_victory_items_containers.begin( );
@@ -752,7 +752,7 @@ void network_client::on_world_sync_request( )
 	for ( vectora< victory_item_ptr >::iterator it = m_game.get_game_world( ).get_victory_items( ).begin( );
 		it != m_game.get_game_world( ).get_victory_items( ).end( ); ++it )
 		if ( ( *it )->is_inserted( ) )
-			( *it )->unload( );
+			( *it )->take( );
 
 	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x4A ) );
 }

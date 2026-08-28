@@ -135,8 +135,7 @@ private:
 			void						player_parameters_ready				( resources::queries_result& data, player_parameters_cooker_data* cook_data );
 
 			lobby_client&				lobby_client						( );
-	// buildability return; the real body reaches the client through m_game
-	inline	network::login_client&		login_client						( ) { /* no source */ return *( network::login_client* )NULL; }
+	inline	network::login_client&		login_client						( );
 			messaging_client&			messaging_client					( );
 
 			void						query_lobby_info					( );
