@@ -16,7 +16,7 @@ void effect_speedtree_selection::compile(
 
 	shader_configuration configuration;
 
-	configuration.vertex_input_type	= u32(static_mesh_vertex_input_type);
+	configuration.vertex_input_type	= u32(null_vertex_input_type);
 
 	compiler.begin_technique(/*branch*/);
 		compiler.begin_pass("vertex_base", NULL, "speedtree_selection", configuration, NULL);

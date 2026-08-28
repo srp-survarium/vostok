@@ -15,7 +15,7 @@ void effect_forward_system::compile(
 		compiler.begin_pass("test", NULL, "test", shader_configuration(), NULL);
 	 		compiler.set_depth(true, true);
 	 		compiler.set_alpha_blend( false);
-		compiler.set_texture("t_base", pcstr(config["texture0"]), 0, true, u32(-1));
+		compiler.set_texture("t_base", pcstr(config["texture0"]), 0, false, u32(-1));
 		compiler.end_pass();
 	 compiler.end_technique();
 }
