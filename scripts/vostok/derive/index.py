@@ -60,11 +60,17 @@ def index_by_mangled(records, preferred_files=None, preferred_signatures=None):
         # The schema intentionally stores one canonical symbol per RVA. Keep
         # same-RVA aliases collapsed, but never collapse distinct overload
         # bodies merely because the PDB gave them the same placeholder name.
+        # Prefer the target signature before collapsing: an ICF RVA can carry
+        # the same mangled spelling on both the intended record and an unrelated
+        # display alias, and collapsing first permanently discards the intended
+        # PDB identity.
+        primary = preferred_signatures.get(mangled)
+        if primary is not None:
+            selected.sort(key=lambda rec: rec["name"] != primary)
         selected_by_rva = {}
         for rec in selected:
             selected_by_rva.setdefault(rec["rva"], rec)
         ordered = sorted(selected_by_rva.values(), key=lambda rec: rec["rva"])
-        primary = preferred_signatures.get(mangled)
         if primary is not None:
             ordered.sort(key=lambda rec: rec["name"] != primary)
         for index, rec in enumerate(ordered):

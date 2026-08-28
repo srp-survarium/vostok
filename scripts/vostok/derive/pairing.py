@@ -499,16 +499,16 @@ class _Pairer:
         The linker may print a different representative name for the same ICF
         group on each side. An overlapping alias label at both referenced RVAs
         is strict PDB evidence that only the representative spelling changed.
+        A printed operand can name several RVAs; ambiguity is harmless only
+        when every possible target/base resolution has overlapping PDB aliases.
         """
         target_rvas = self.target_symbol_rvas_by_operand.get(target_operand, set())
         base_rvas = self.base_symbol_rvas_by_operand.get(base_operand, set())
-        if len(target_rvas) != 1 or len(base_rvas) != 1:
-            return False
-        target_rva = next(iter(target_rvas))
-        base_rva = next(iter(base_rvas))
-        return bool(
-            self.target_symbol_operands_by_rva[target_rva]
-            & self.base_symbol_operands_by_rva[base_rva]
+        return _all_symbol_alias_candidates_equivalent(
+            target_rvas,
+            base_rvas,
+            self.target_symbol_operands_by_rva,
+            self.base_symbol_operands_by_rva,
         )
 
     def _primary_folded_score(self, mangled, target_rec, base_rec):
@@ -598,3 +598,29 @@ def _symbol_operand_aliases(records):
         rvas_by_operand.setdefault(operand, set()).add(rec["rva"])
         operands_by_rva.setdefault(rec["rva"], set()).add(operand)
     return rvas_by_operand, operands_by_rva
+
+
+def _all_symbol_alias_candidates_equivalent(
+    target_rvas,
+    base_rvas,
+    target_operands_by_rva,
+    base_operands_by_rva,
+):
+    """Prove an ambiguous printed operand cannot resolve to a different body.
+
+    Rich instruction text keeps a PDB display name rather than the physical
+    call target. The same display name can occur at several ICF RVAs. Accept
+    that ambiguity only when every cross-side candidate pair shares at least
+    one full PDB alias; then the unknown physical choice cannot change the
+    identity conclusion.
+    """
+    return bool(
+        target_rvas
+        and base_rvas
+        and all(
+            target_operands_by_rva[target_rva]
+            & base_operands_by_rva[base_rva]
+            for target_rva in target_rvas
+            for base_rva in base_rvas
+        )
+    )
