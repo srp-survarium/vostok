@@ -244,9 +244,9 @@ private:
 			void							adjust_animation_events_times		( n_ary_tree const& other );
 
 	static	bool							dispatch_callbacks					(
-												callback_generator_info const*		callback_generators_head,
-												subscribed_channel*&				channels_head,
-												u32									current_time_in_ms,
+											callback_generator_info const*		callback_generators_head,
+											subscribed_channel*&				channels_head,
+											u32								current_time_in_ms,
 												bool&								callbacks_are_actual
 											);
 

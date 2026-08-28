@@ -11,8 +11,6 @@
 using vostok::animation::skeleton_animation_cook;
 using vostok::animation::bi_spline_skeleton_animation_baked_ptr;
 
-static skeleton_animation_cook s_skeleton_animation_cook;
-
 skeleton_animation_cook::skeleton_animation_cook		( ) :
 	super(
 		resources::animation_class,
@@ -65,8 +63,10 @@ void skeleton_animation_cook::translate_query		( vostok::resources::query_result
 	);
 }
 
-void skeleton_animation_cook::delete_resource		( vostok::resources::resource_base* dying_resource )
+void skeleton_animation_cook::delete_resource		( vostok::resources::resource_base* resource_to_delete )
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( dying_resource );
+	VOSTOK_UNREFERENCED_PARAMETER	( resource_to_delete );
 	NODEFAULT					( );
 }
+
+static skeleton_animation_cook s_skeleton_animation_cook;

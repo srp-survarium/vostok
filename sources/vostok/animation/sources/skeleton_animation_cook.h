@@ -29,7 +29,7 @@ private:
 
 private:
 	virtual	void	translate_query					( resources::query_result_for_cook& parent );
-	virtual void	delete_resource					( resources::resource_base* resource );
+	virtual void	delete_resource					( resources::resource_base* resource_to_delete );
 
 public:
 	virtual			~skeleton_animation_cook		( ) { }

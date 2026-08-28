@@ -412,7 +412,10 @@ void n_ary_tree_converter::simplify_weights		( )
 	}
 }
 
-class binary_tree_weight_driving_animation_getter : public vostok::animation::mixing::binary_tree_visitor {
+class binary_tree_weight_driving_animation_getter :
+	public vostok::animation::mixing::binary_tree_visitor,
+	public boost::noncopyable
+{
 public:
 	explicit binary_tree_weight_driving_animation_getter( weight_driving_animations& animations ) :
 		m_animations( animations )
@@ -459,6 +462,9 @@ private:
 		node.left().accept( *this );
 		node.right().accept( *this );
 	}
+
+public:
+	virtual ~binary_tree_weight_driving_animation_getter( ) { }
 
 private:
 	weight_driving_animations& m_animations;

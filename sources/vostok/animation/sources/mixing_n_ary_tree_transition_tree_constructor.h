@@ -136,8 +136,9 @@ private:
 
 			void							merge_trees							( n_ary_tree const& from, n_ary_tree const& to );
 
-public:
 	inline	void							advance_buffer						( const u32 size ) { m_buffer += size; }
+
+public:
 	inline									~n_ary_tree_transition_tree_constructor( ) { }
 
 private:

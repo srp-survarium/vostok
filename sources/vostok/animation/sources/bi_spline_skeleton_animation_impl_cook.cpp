@@ -9,8 +9,6 @@
 namespace vostok {
 namespace animation {
 
-static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
-
 typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::unmanaged_intrusive_base >
 	bi_spline_skeleton_animation_baked_ptr;
 
@@ -72,6 +70,8 @@ void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resourc
 {
 	resource_to_delete->~resource_base( );
 }
+
+static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
 
 } // namespace animation
 } // namespace vostok

@@ -31,12 +31,12 @@ VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
 using namespace vostok;
 using namespace vostok::animation;
 
-struct transform_getter : boost::noncopyable
+struct transform_getter : public boost::noncopyable
 {
 public:
 	transform_getter(
-		animation_player&						animation_player,
-		boost::function< float4x4 ( pcvoid ) >&	functor
+		animation_player const&						animation_player,
+		boost::function< float4x4 ( pcvoid ) > const&	functor
 	) :
 		animation_player	( animation_player ),
 		functor			( functor )
@@ -44,10 +44,10 @@ public:
 	}
 
 	float4x4 get_transform( pcvoid const animated_object ) const;
+	inline ~transform_getter( ) { }
 
-private:
-  animation_player&							animation_player;
-  boost::function< float4x4 ( pcvoid )>&	functor;
+	animation_player const&							animation_player;
+	boost::function< float4x4 ( pcvoid ) > const&	functor;
 };
 
 float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
@@ -60,23 +60,26 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 }
 class n_ary_tree_time_inverter :
 	public mixing::n_ary_tree_visitor,
-	private boost::noncopyable
+	public boost::noncopyable
 {
 public:
-	explicit		n_ary_tree_time_inverter	( u32 current_time_in_ms ) :
+	explicit		n_ary_tree_time_inverter	( const u32 current_time_in_ms ) :
 		m_current_time_in_ms				( current_time_in_ms )
 	{
 	}
 
 private:
 	virtual	void	visit		( mixing::n_ary_tree_animation_node& node );
-	virtual	void	visit		( mixing::n_ary_tree_weight_transition_node& node );
-	virtual	void	visit		( mixing::n_ary_tree_time_scale_transition_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_weight_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_time_scale_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_addition_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_subtraction_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_multiplication_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_weight_transition_node& node );
+	virtual	void	visit		( mixing::n_ary_tree_time_scale_transition_node& node );
+
+public:
+	virtual			~n_ary_tree_time_inverter( ) { }
 
 private:
 	template < typename T >
@@ -88,7 +91,7 @@ private:
 			(*i)->accept( *this );
 	}
 
-	u32 m_current_time_in_ms;
+	const u32 m_current_time_in_ms;
 };
 
 void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_animation_node& node )
@@ -127,14 +130,14 @@ void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_multiplication_node& no
 
 void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_weight_transition_node& node )
 {
-	node.set_start_time_in_ms	( m_current_time_in_ms - node.start_time_in_ms( ) );
+	node.m_start_time_in_ms		= m_current_time_in_ms - node.start_time_in_ms( );
 	node.from( ).accept			( *this );
 	node.to( ).accept			( *this );
 }
 
 void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_time_scale_transition_node& node )
 {
-	node.set_start_time_in_ms	( m_current_time_in_ms - node.start_time_in_ms( ) );
+	node.m_start_time_in_ms		= m_current_time_in_ms - node.start_time_in_ms( );
 	node.from( ).accept			( *this );
 	node.to( ).accept			( *this );
 }
@@ -222,7 +225,7 @@ bool animation_player::set_target(
 
 	transform_getter transform_getter_instance(
 		*this,
-		const_cast< boost::function< float4x4( pcvoid ) >& >( get_transform_functor )
+		get_transform_functor
 	);
 	mixing::n_ary_tree transition_tree	=
 		mixing::n_ary_tree_transition_tree_constructor(
@@ -484,13 +487,6 @@ void animation_player::destroy_subscriptions( subscribed_channel const* const ch
 	}
 }
 
-// retail calls the two-store buffer ctor out-of-line at the deserialize site
-// (ICF-folds with the ctor group); TU-local per-site forwarder
-static __declspec( noinline ) mutable_buffer make_stack_buffer( pvoid data, u32 size )
-{
-	return mutable_buffer( data, size );
-}
-
 void animation_player::compact_callbacks( )
 {
 	m_callbacks_are_actual					= true;
@@ -546,7 +542,7 @@ void animation_player::compact_callbacks( )
 
 	m_first_subscribed_channel				= 0;
 	m_callbacks_buffer.~mutable_buffer		( );
-	new (&m_callbacks_buffer) mutable_buffer( make_stack_buffer( m_callbacks_buffer_raw, callbacks_buffer_size ) );
+	new (&m_callbacks_buffer) mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
 
 	u32 channels_count						= 0;
 	for ( i = first_cloned_channel ; i ; i = i->next )
@@ -555,10 +551,10 @@ void animation_player::compact_callbacks( )
 		++channels_count;
 		m_callbacks_buffer					+= sizeof( subscribed_channel );
 
-		if ( m_first_subscribed_channel )
-			previous_channel->next			= new_channel;
-		else
+		if ( !m_first_subscribed_channel )
 			m_first_subscribed_channel		= new_channel;
+		else
+			previous_channel->next			= new_channel;
 
 		memory::detail::call_constructor		( new_channel );
 
@@ -701,7 +697,7 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 
 	tree.m_tree_actual_time_in_ms				= time_in_ms;
 
-	mutable_buffer mixing_buffer = make_stack_buffer( get_next_buffer( stack_buffer_size ), stack_buffer_size );
+	mutable_buffer mixing_buffer( get_next_buffer( stack_buffer_size ), stack_buffer_size );
 
 	m_mixing_tree = mixing::n_ary_tree_transition_tree_constructor(
 		mixing_buffer,

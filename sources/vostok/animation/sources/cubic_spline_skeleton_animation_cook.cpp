@@ -11,15 +11,7 @@
 
 using vostok::animation::cubic_spline_skeleton_animation_cook;
 
-namespace vostok {
-namespace animation {
-
-static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
-
-} // namespace animation
-} // namespace vostok
-
-u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer in_raw_file_data, bool const file_exist )
+u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer in_raw_file_data, bool file_exist )
 {
 	R_ASSERT_U							( file_exist );
 	return
@@ -54,9 +46,17 @@ void cubic_spline_skeleton_animation_cook::create_resource					(
 	in_out_query.finish_query			( result_success );
 }
 
-void cubic_spline_skeleton_animation_cook::destroy_resource					( vostok::resources::managed_resource* const dying_resource )
+void cubic_spline_skeleton_animation_cook::destroy_resource					( vostok::resources::managed_resource* dying_resource )
 {
 	resources::pinned_ptr_mutable<cubic_spline_skeleton_animation> pinned_animation = pin_for_write< cubic_spline_skeleton_animation >( dying_resource );
 	cubic_spline_skeleton_animation const* instance		= &*pinned_animation;
 	cubic_spline_skeleton_animation::delete_animation	( instance );
 }
+
+namespace vostok {
+namespace animation {
+
+static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
+
+} // namespace animation
+} // namespace vostok
