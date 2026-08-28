@@ -26,6 +26,7 @@ pcstr rt_index_to_name( enum_render_target_index index )
 	case rt_local_reflection_result_params:		return "$user$local_reflection_result_params";
 	case rt_sun_translucensy_help_data:			return "$user$sun_translucensy_help_data";
 	case rt_position:							return "$user$position";
+	case rt_rain_result:							return "$user$rain_result";
 	case rt_normal:								return "$user$normal";
 	case rt_normal_copy:							return "$user$normal_copy";
 	case rt_albedo:								return "$user$albedo";
@@ -33,9 +34,9 @@ pcstr rt_index_to_name( enum_render_target_index index )
 	case rt_distortion:							return "$user$distortion";
 	case rt_distortion_mask:						return "$user$distortion_mask";
 	case rt_object_motion_vectors:				return "$user$object_motion_vectors";
+	case rt_ssao_temporal_mask:					return "$user$ssao_temporal_mask";
 	case rt_ssao_accumulator:					return "$user$ssao_accumulator";
 	case rt_ssao_accumulator_full_x:				return "$user$ssao_accumulator_full_x";
-	case rt_ssao_temporal_mask:					return "$user$ssao_temporal_mask";
 	case rt_ssao_prev_accumulator_full_x:		return "$user$ssao_prev_accumulator_full_x";
 	case rt_ssao_accumulator_z:					return "$user$ssao_accumulator_z";
 	case rt_ssao_prev_accumulator_z:				return "$user$ssao_prev_accumulator_z";
@@ -65,9 +66,8 @@ pcstr rt_index_to_name( enum_render_target_index index )
 	case rt_previous_present:					return "$user$previous_present";
 	case rt_generic_0:							return "$user$generic0";
 	case rt_generic_1:							return "$user$generic1";
-	case rt_particle_result:					return "$user$particle_result";
 	case rt_particle_lighting:					return "$user$particle_lighting";
-	case rt_rain_result:							return "$user$rain_result";
+	case rt_particle_result:					return "$user$particle_result";
 	case rt_frame_luminance_previous:			return "$user$frame_luminance_previous";
 	case rt_frame_luminance_current:				return "$user$frame_luminance";
 	case rt_frame_luminance_histogram:			return "$user$frame_luminance_histogram";
