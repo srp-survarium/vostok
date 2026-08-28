@@ -933,6 +933,16 @@ class MaximaFoldTests(unittest.TestCase):
             (banked_hash, 87.5),
         )
 
+    def test_objdiff_exact_float_slop_banks_literal_100(self):
+        body = "one body\n"
+        body_hash, maximum = self.fold({}, 99.9982, body)
+
+        self.assertEqual(maximum, 100.0)
+        self.assertEqual(
+            self.fold({self.MANGLED: (body_hash, 99.9974)}, 62.5, body),
+            (body_hash, 100.0),
+        )
+
     def test_a_changed_body_restarts_at_what_this_build_measured(self):
         stale_hash = self.fold({}, 100.0, "old body\n")[0]
         new_hash, maximum = self.fold(
@@ -2074,6 +2084,15 @@ class LedgerProjectionTests(unittest.TestCase):
         row = rows[self.MANGLED]
         self.assertEqual((row["max"], row["hist"]), (87.5, 87.5))
         self.assertEqual(row["status"], "inprogress")
+
+    def test_exact_max_is_persisted_as_literal_100(self):
+        rows = self.project(
+            [self.observation(cur=99.9982, max=99.9982, hash="h")]
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["cur"], 99.9982)
+        self.assertEqual((row["max"], row["hist"]), (100.0, 100.0))
+        self.assertEqual(row["status"], "done")
 
 
 class LedgerUnitEncodingTests(unittest.TestCase):

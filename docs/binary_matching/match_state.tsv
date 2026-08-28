@@ -5550,7 +5550,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0function_pointers@base_lexeme@planning@ai@vostok@@QAE@W4operation_type_enum@1234@@Z	vostok/ai/sources/base_lexeme.cpp	ai	done	MATCH	100	100	100	1	290		72b3a5102500	auto: at 100% ceiling, demoted from queue
 ??0functor_command@render@vostok@@QAE@ABV?$function@$$A6AXXZ@boost@@ABV?$function@$$A6AXAAVbase_command@render@vostok@@@Z@4@@Z	vostok/render/facade/sources/functor_command.cpp	render	done	MATCH	100	100	100	1	64	f	56f96ff77d76	auto: at 100% ceiling, demoted from queue
 ??0functor_edit_action@ui@vostok@@QAE@ABV?$FastDelegate0@X@fastdelegate@@PAVui_text_edit@12@W4enum_keyboard@input@2@W4enum_keyboard_action@72@ABUshift_state@12@@Z	vostok/ui/sources/ui_text_edit_action.cpp	ui	done	MATCH	100	100	100	1	64	f	5f36b2ea2906	auto: at 100% ceiling, demoted from queue
-??0game@survarium@@QAE@AAUengine@engine_user@vostok@@AAVworld@render@4@AAU5sound@4@AAU5network@4@@Z	vostok/game/sources/game.cpp	game	done	MATCH	99.998	99.998	99.998	2	1902		9f47db196896	G11: restored startup allocators, target ctor access/line geometry and uninitialized-member shape, natural profile/physics ownership, and retained IncludeAll until A05
+??0game@survarium@@QAE@AAUengine@engine_user@vostok@@AAVworld@render@4@AAU5sound@4@AAU5network@4@@Z	vostok/game/sources/game.cpp	game	done	MATCH	99.998	100	100	2	1902		9f47db196896	G11: restored startup allocators, target ctor access/line geometry and uninitialized-member shape, natural profile/physics ownership, and retained IncludeAll until A05
 ??0game_camera@survarium@@QAE@AAVbase_game_scene@1@@Z	vostok/game/sources/game_camera.cpp	game	done	MATCH	100	100	100	0	49	f	0b56d40c0630	
 ??0game_console@engine@vostok@@QAE@AAUworld@ui@2@AAU3input@2@AAVbase_allocator@memory@2@@Z	vostok/engine/sources/game_console.cpp	engine	done	MATCH	100	100	100	1	56	f	100ff89e8790	auto: at 100% ceiling, demoted from queue
 ??0game_material@survarium@@QAE@XZ	vostok/game_core/sources/game_material.cpp	game_core	done	MATCH	100	100	100	0	127		0b56d40c0630	[DONE 97.78%] fixed_string m_name ctor inline-vs-call frame-slot (LTCG), shape matches
@@ -9175,7 +9175,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?AcceptAnimMovesWith3D@MovieImpl@GFx@Scaleform@@UBE_NXZ	src/gfx/gfx_playerimpl.h	gfx	inprogress	MATCH	99.6667	99.6667	99.6667	0	10	f		
 ?AcceptMatch@SKI_UserData@Render@Scaleform@@UAE_NPAX0@Z	src/render/render_primitivebundle.cpp	gfx	done	MATCH	100	100	100	0	49	f		
 ?Acos@MathCtorFunction@AS2@GFx@Scaleform@@CAXABVFnCall@234@@Z	src/gfx/as2/as2_math.h	gfx	done	MATCH	100	100	100	0	106	f		
-?AcquireCandidateList@IMEManager@AS2@GFx@Scaleform@@UAE_NXZ	src/gfx/as2/ime/as2_imemanager.cpp	gfx	done	MATCH	99.9966	99.9966	99.9966	0	879	f		
+?AcquireCandidateList@IMEManager@AS2@GFx@Scaleform@@UAE_NXZ	src/gfx/as2/ime/as2_imemanager.cpp	gfx	done	MATCH	99.9966	100	100	0	879	f		
 ?AcquireCandidateList@IMEManager@AS3@GFx@Scaleform@@UAE_NXZ	src/gfx/as3/ime/as3_imemanager.cpp	gfx	done	MATCH	100	100	100	0	1135	f		
 ?AcquireFont@?$CompactedFont@V?$ArrayPagedLH_POD@E$0M@$0BAA@$0BAF@@Scaleform@@@GFx@Scaleform@@QAEII@Z	src/gfx/gfx_fontcompactor.h	gfx	done	MATCH	100	100	100	0	560	f		
 ?AcquireFont@?$CompactedFont@V?$ArrayUnsafeLH_POD@E$0BAF@@Scaleform@@@GFx@Scaleform@@QAEII@Z	src/gfx/gfx_fontcompactor.h	gfx	done	MATCH	100	100	100	0	423	f		
@@ -9306,7 +9306,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?AddListener@AsBroadcasterProto@AS2@GFx@Scaleform@@SAXABVFnCall@234@@Z	src/gfx/as2/as2_asbroadcaster.cpp	gfx	done	MATCH	100	100	100	0	136	f		
 ?AddLoadQueueEntry@MovieImpl@GFx@Scaleform@@QAEXPAVLoadQueueEntry@23@@Z	src/gfx/gfx_playerimpl.cpp	gfx	done	MATCH	100	100	100	0	47	f		
 ?AddLoadQueueEntry@MovieRoot@AS2@GFx@Scaleform@@QAEXPAVInteractiveObject@34@PBDW4LoadMethod@LoadQueueEntry@34@PAVMovieClipLoader@234@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9917	99.9917	99.9917	0	320	f		
-?AddLoadQueueEntry@MovieRoot@AS2@GFx@Scaleform@@QAEXPBD0PAVEnvironment@234@W4LoadMethod@LoadQueueEntry@34@PAVMovieClipLoader@234@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9951	99.9951	99.9951	0	584	f		
+?AddLoadQueueEntry@MovieRoot@AS2@GFx@Scaleform@@QAEXPBD0PAVEnvironment@234@W4LoadMethod@LoadQueueEntry@34@PAVMovieClipLoader@234@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9951	100	100	0	584	f		
 ?AddLoadQueueEntryMT@MovieImpl@GFx@Scaleform@@QAEXPAVLoadQueueEntryMT@23@@Z	src/gfx/gfx_playerimpl.cpp	gfx	inprogress	MATCH	99.9091	99.9091	99.9091	0	66	f		
 ?AddLoadQueueEntryMT@MovieRoot@AS2@GFx@Scaleform@@QAEXPAVLoadQueueEntry@34@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9849	99.9849	99.9849	0	552	f		
 ?AddLoadQueueEntryMT@MovieRoot@AS3@GFx@Scaleform@@QAEXPAVLoadQueueEntry@234@@Z	src/gfx/as3/as3_movieroot.cpp	gfx	inprogress	MATCH	99.9888	99.9888	99.9888	0	206	f		
@@ -9632,7 +9632,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?At@SparseArray@Impl@AS3@GFx@Scaleform@@QBEABVValue@345@I@Z	src/gfx/as3/obj/as3_obj_array.cpp	gfx	done	MATCH	100	100	100	0	85	f		
 ?Atan2@MathCtorFunction@AS2@GFx@Scaleform@@CAXABVFnCall@234@@Z	src/gfx/as2/as2_math.h	gfx	done	MATCH	100	100	100	0	172	f		
 ?Atan@MathCtorFunction@AS2@GFx@Scaleform@@CAXABVFnCall@234@@Z	src/gfx/as2/as2_math.h	gfx	done	MATCH	100	100	100	0	106	f		
-?AttachMovie@AS2ValueObjectInterface@GFx@Scaleform@@EAE_NPAXPAVValue@23@PBD2JPBVMemberValueSet@23@@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	99.9971	99.9971	99.9971	0	1032			
+?AttachMovie@AS2ValueObjectInterface@GFx@Scaleform@@EAE_NPAXPAVValue@23@PBD2JPBVMemberValueSet@23@@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	99.9971	100	100	0	1032			
 ?AttachMovie@AS3ValueObjectInterface@GFx@Scaleform@@EAE_NPAXPAVValue@23@PBD2JPBVMemberValueSet@23@@Z	src/gfx/as3/as3_gfxvalueimpl.cpp	gfx	done	MATCH	100	100	100	0	865	f		
 ?AttachResource@SoundObject@AS3@GFx@Scaleform@@QAEXPAVSoundResource@34@@Z	src/gfx/as3/audio/as3_soundobject.cpp	gfx	done	MATCH	100	100	100	0	182	f		
 ?AttachShape@ShapeMeshProvider@Render@Scaleform@@QAEXPAVShapeDataInterface@23@0@Z	src/render/render_shapemeshprovider.cpp	gfx	done	MATCH	100	100	100	0	126	f		
@@ -10431,8 +10431,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?CreateMovieDefRootNode@MovieRoot@AS3@GFx@Scaleform@@UAEPAVMovieDefRootNode@234@PAVMemoryHeap@4@PAVMovieDefImpl@34@_N@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	70	f		
 ?CreateMovieFileKey@MovieDataDef@GFx@Scaleform@@SA?AVResourceKey@23@PBD_JPAVFileOpener@23@PAVImageCreator@23@@Z	src/gfx/gfx_moviedef.cpp	gfx	done	MATCH	100	100	100	0	94	f		
 ?CreateMovieKey@MovieDefImpl@GFx@Scaleform@@SA?AVResourceKey@23@PAVMovieDataDef@23@PAVMovieDefBindStates@23@@Z	src/gfx/gfx_moviedef.cpp	gfx	done	MATCH	100	100	100	0	117	f		
-?CreateMovie_LoadState@LoaderImpl@GFx@Scaleform@@SAPAVMovieDefImpl@23@PAVLoadStates@23@ABULocationInfo@URLBuilder@23@IPAULoadStackItem@123@I@Z	src/gfx/gfx_loaderimpl.cpp	gfx	done	MATCH	99.9986	99.9986	99.9986	0	2175	f		
-?CreateMovie_LoadState@LoaderImpl@GFx@Scaleform@@SAPAVMovieDefImpl@23@PAVLoadStates@23@ABV?$ArrayPOD@E$01UArrayDefaultPolicy@Scaleform@@@3@IPAULoadStackItem@123@I@Z	src/gfx/gfx_loaderimpl.cpp	gfx	done	MATCH	99.9981	99.9981	99.9981	0	1603	f		
+?CreateMovie_LoadState@LoaderImpl@GFx@Scaleform@@SAPAVMovieDefImpl@23@PAVLoadStates@23@ABULocationInfo@URLBuilder@23@IPAULoadStackItem@123@I@Z	src/gfx/gfx_loaderimpl.cpp	gfx	done	MATCH	99.9986	100	100	0	2175	f		
+?CreateMovie_LoadState@LoaderImpl@GFx@Scaleform@@SAPAVMovieDefImpl@23@PAVLoadStates@23@ABV?$ArrayPOD@E$01UArrayDefaultPolicy@Scaleform@@@3@IPAULoadStackItem@123@I@Z	src/gfx/gfx_loaderimpl.cpp	gfx	done	MATCH	99.9981	100	100	0	1603	f		
 ?CreateNew@ActionBufferData@AS2@GFx@Scaleform@@SAPAV1234@XZ	src/gfx/as2/as2_action.cpp	gfx	done	MATCH	100	100	100	0	60	f		
 ?CreateNewComplexFill@DrawingContext@GFx@Scaleform@@QAEPAUComplexFill@Render@3@XZ	src/gfx/gfx_drawingcontext.cpp	gfx	inprogress	SIZE	95.6309	95.6309	95.6309	0	234	f		
 ?CreateNewHighlighter@Highlighter@Text@Render@Scaleform@@QAEPAUHighlightDesc@234@PAU5234@@Z	src/render/text/text_highlight.cpp	gfx	done	MATCH	100	100	100	0	155	f		
@@ -10472,7 +10472,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?CreateNewObject@XmlNodeCtorFunction@AS2@GFx@Scaleform@@UBEPAVObject@234@PAVEnvironment@234@@Z	src/gfx/as2/xml/as2_xmlnode.cpp	gfx	done	MATCH	100	100	100	0	104	f		
 ?CreateNotifier@GlyphQueue@Render@Scaleform@@QAEPAUTextNotifier@23@PAUGlyphNode@23@PAVTextMeshProvider@23@@Z	src/render/render_glyphqueue.cpp	gfx	done	MATCH	100	100	100	0	74	f		
 ?CreateObject@Movie@GFx@Scaleform@@QAEXPAVValue@23@PBDPBV423@I@Z	src/gfx/gfx_playerimpl.cpp	gfx	done	MATCH	100	100	100	0	13	f		
-?CreateObject@MovieRoot@AS2@GFx@Scaleform@@UAEXPAVValue@34@PBDPBV534@I@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	99.9971	99.9971	99.9971	0	1093	f		
+?CreateObject@MovieRoot@AS2@GFx@Scaleform@@UAEXPAVValue@34@PBDPBV534@I@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	99.9971	100	100	0	1093	f		
 ?CreateObject@MovieRoot@AS3@GFx@Scaleform@@UAEXPAVValue@34@PBDPBV534@I@Z	src/gfx/as3/as3_gfxvalueimpl.cpp	gfx	inprogress	MATCH	99	99	99	0	712	f		
 ?CreateObject@flash_movie@survarium@@QAEXPAUflash_value@2@@Z	vostok/scaleform/sources/value.cpp	scaleform	done	MATCH	100	100	100	1	16	f	dcab6b781385	canonical-definition-order-and-parameters-audited-remaining-value-islands-recorded
 ?CreateObjectValue@AS2ValueObjectInterface@GFx@Scaleform@@EAE_NPAVValue@23@PAX_N@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	100	100	100	0	32	f		
@@ -10678,7 +10678,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?DepthLess@DisplayList@GFx@Scaleform@@CAHABVDisplayEntry@123@H@Z	src/gfx/gfx_displaylist.h	gfx	done	MATCH	100	100	100	0	19	f		
 ?DepthLess@TimelineSnapshot@GFx@Scaleform@@CAHHPBUSnapshotElement@123@@Z	src/gfx/gfx_spritedef.h	gfx	done	MATCH	100	100	100	0	17	f		
 ?DescribeMetaData@XMLSupportImpl@AS3@GFx@Scaleform@@ABEXAAVVM@234@AAVXMLElement@fl@Instances@234@ABVVMAbcFile@234@ABVTraitInfo@Abc@234@@Z	src/gfx/as3/as3_xmlsupport.cpp	gfx	inprogress	MATCH	99.9944	99.9944	99.9944	0	1189	f		
-?DescribeTraits@XMLSupportImpl@AS3@GFx@Scaleform@@ABEXAAVVM@234@AAVXMLElement@fl@Instances@234@ABVTraits@234@@Z	src/gfx/as3/as3_xmlsupport.cpp	gfx	done	MATCH	99.9966	99.9966	99.9966	0	8590			
+?DescribeTraits@XMLSupportImpl@AS3@GFx@Scaleform@@ABEXAAVVM@234@AAVXMLElement@fl@Instances@234@ABVTraits@234@@Z	src/gfx/as3/as3_xmlsupport.cpp	gfx	done	MATCH	99.9966	100	100	0	8590			
 ?DescribeType@XMLSupportImpl@AS3@GFx@Scaleform@@UBEXAAVVM@234@AAV?$SPtr@VXML@fl@Instances@AS3@GFx@Scaleform@@@234@ABVValue@234@@Z	src/gfx/as3/as3_xmlsupport.cpp	gfx	done	MATCH	100	100	100	0	1279	f		
 ?Destroy@?$ContextData_ImplMixin@VNodeData@TreeContainer@Render@Scaleform@@V1TreeNode@34@@ContextImpl@Render@Scaleform@@UAEXXZ	src/render/render_context.h	gfx	done	MATCH	100	100	100	0	15	f		
 ?Destroy@?$DefaultSocketFactory@VGFxSocketImpl@AMP@GFx@Scaleform@@@AMP@GFx@Scaleform@@UAEXPAVSocketInterface@234@@Z	src/gfx/amp/amp_socket.h	gfx	done	MATCH	100	100	100	0	25	f		
@@ -10810,7 +10810,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?DoesImplement@GASPrototypeBase@AS2@GFx@Scaleform@@IBE_NPAVEnvironment@234@PBVObject@234@@Z	src/gfx/as2/as2_object.cpp	gfx	done	MATCH	100	100	100	0	155	f		
 ?DoesImplement@Object@AS2@GFx@Scaleform@@UBE_NPAVEnvironment@234@PBV1234@@Z	src/gfx/as2/as2_object.h	gfx	done	MATCH	100	100	100	0	12	f		
 ?Draw@ComplexPrimitiveBundle@Render@Scaleform@@QAEXPAVHAL@23@@Z	src/render/render_primitivebundle.cpp	gfx	done	MATCH	100	100	100	0	111	f		
-?Draw@DrawableImage@Render@Scaleform@@QAEXPAVImage@23@ABV?$Matrix2x4@M@23@ABVCxform@23@W4BlendMode@23@PBV?$Rect@J@23@_N@Z	src/render/render_drawableimage.cpp	gfx	done	SIZE	99.996	99.996	99.996	0	756	f		
+?Draw@DrawableImage@Render@Scaleform@@QAEXPAVImage@23@ABV?$Matrix2x4@M@23@ABVCxform@23@W4BlendMode@23@PBV?$Rect@J@23@_N@Z	src/render/render_drawableimage.cpp	gfx	done	SIZE	99.996	100	100	0	756	f		
 ?Draw@DrawableImage@Render@Scaleform@@QAEXPAVTreeNode@23@ABV?$Matrix2x4@M@23@ABVCxform@23@W4BlendMode@23@PBV?$Rect@J@23@@Z	src/render/render_drawableimage.cpp	gfx	inprogress	QUANTITY	95.8039	95.8039	95.8039	0	453	f		
 ?Draw@HAL@Render@Scaleform@@UAEXABVRenderQueueItem@23@@Z	src/render/render_hal.cpp	gfx	done	MATCH	100	100	100	0	111	f		
 ?Draw@Renderer2DImpl@Render@Scaleform@@QAEXPAVTreeRoot@23@@Z	src/render/renderer2dimpl.cpp	gfx	done	MATCH	100	100	100	0	679			
@@ -10849,7 +10849,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Editor_OnKey@DocumentListener@DocView@Text@Render@Scaleform@@UAEIAAVEditorKitBase@345@I@Z	src/render/text/text_docview.h	gfx	done	MATCH	100	100	100	0	7	f		
 ?EmitCall@Tracer@AS3@GFx@Scaleform@@AAE_NW4OpCode@Code@Abc@234@AAVState@TR@234@ABUReadArgsMnObject@9234@K@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	100	100	100	0	795	f		
 ?EmitCode@Tracer@AS3@GFx@Scaleform@@QAEXXZ	src/gfx/as3/as3_tracer.cpp	gfx	inprogress	MATCH	99.9889	93.9705	99.9889	0	778	f		
-?EmitFindProperty@Tracer@AS3@GFx@Scaleform@@AAE_NAAVState@TR@234@H_NW4OpCode@Code@Abc@234@@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9978	99.9978	99.9978	0	1480	f		
+?EmitFindProperty@Tracer@AS3@GFx@Scaleform@@AAE_NAAVState@TR@234@H_NW4OpCode@Code@Abc@234@@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9978	100	100	0	1480	f		
 ?EmitGetAbsObject@Tracer@AS3@GFx@Scaleform@@AAE_NAAVState@TR@234@ABVValue@234@_N@Z	src/gfx/as3/as3_tracer.cpp	gfx	inprogress	MATCH	99.9865	99.9865	99.9865	0	208	f		
 ?EmitGetAbsSlot@Tracer@AS3@GFx@Scaleform@@AAEXAAVState@TR@234@I@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	100	100	100	0	22	f		
 ?EmitGetClassTraits@Tracer@AS3@GFx@Scaleform@@AAE_NAAVState@TR@234@VMultiname@234@_N2@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	100	100	100	0	389	f		
@@ -11006,7 +11006,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ExecuteCFunction@AvmCharacter@AS2@GFx@Scaleform@@UAE_NQ6AXABVFnCall@234@@ZABV?$Array@VValue@AS2@GFx@Scaleform@@$01UArrayDefaultPolicy@4@@4@@Z	src/gfx/as2/as2_avmcharacter.cpp	gfx	inprogress	MATCH	99.989	99.989	99.989	0	269	f		
 ?ExecuteCapturePhase@EventDispatcher@fl_events@Instances@AS3@GFx@Scaleform@@IAE_NPAVEvent@23456@AAV?$ArrayStaticBuff@V?$SPtr@VDisplayObject@fl_display@Instances@AS3@GFx@Scaleform@@@AS3@GFx@Scaleform@@$0CA@$01@6@@Z	src/gfx/as3/obj/events/as3_obj_events_eventdispatcher.cpp	gfx	done	MATCH	100	100	100	0	106	f		
 ?ExecuteCloseEvent@Socket@fl_net@Instances@AS3@GFx@Scaleform@@QAEXXZ	src/gfx/as3/obj/net/as3_obj_net_socket.cpp	gfx	done	MATCH	100	100	100	0	169	f		
-?ExecuteCode@VM@AS3@GFx@Scaleform@@AAEHI@Z	src/gfx/as3/as3_codeexecute.cpp	gfx	done	MATCH	99.9997	99.9997	99.9997	0	13516			
+?ExecuteCode@VM@AS3@GFx@Scaleform@@AAEHI@Z	src/gfx/as3/as3_codeexecute.cpp	gfx	done	MATCH	99.9997	100	100	0	13516			
 ?ExecuteCommandsAndWait@DICommandQueue@Render@Scaleform@@QAEXXZ	src/render/render_drawableimage_queue.h	gfx	done	MATCH	100	100	100	0	53	f		
 ?ExecuteCommandsRT@DICommandSet@Render@Scaleform@@QAEXAAUDICommandContext@23@@Z	src/render/render_drawableimage_queue.cpp	gfx	inprogress	SIZE	99.3974	99.3974	99.3974	0	1662			
 ?ExecuteCompleteEvent@Loader@fl_display@Instances@AS3@GFx@Scaleform@@QAEXXZ	src/gfx/as3/obj/display/as3_obj_display_loader.cpp	gfx	done	MATCH	100	100	100	0	13	f		
@@ -11214,7 +11214,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?FindFixedSlot@AS3@GFx@Scaleform@@YAPBVSlotInfo@123@AAVVM@123@ABVTraits@123@ABVMultiname@123@AAIPAVObject@123@@Z	src/gfx/as3/as3_object.cpp	gfx	done	MATCH	100	100	100	0	507	f		
 ?FindFixedSlot@AS3@GFx@Scaleform@@YAPBVSlotInfo@123@ABVTraits@123@ABVASString@23@ABVNamespace@fl@Instances@123@AAIPAVObject@123@@Z	src/gfx/as3/as3_object.cpp	gfx	done	MATCH	100	100	100	0	246	f		
 ?FindFixedTraits@AS3@GFx@Scaleform@@YAPBVTraits@ClassTraits@123@AAVVM@123@ABV4123@ABVMultiname@123@AAVVMAppDomain@123@@Z	src/gfx/as3/as3_object.cpp	gfx	done	MATCH	100	100	100	0	524	f		
-?FindFocus@SelectionCtorFunction@AS2@GFx@Scaleform@@CAXABVFnCall@234@@Z	src/gfx/as2/as2_selection.cpp	gfx	done	MATCH	99.9963	99.9963	99.9963	0	1708			
+?FindFocus@SelectionCtorFunction@AS2@GFx@Scaleform@@CAXABVFnCall@234@@Z	src/gfx/as2/as2_selection.cpp	gfx	done	MATCH	99.9963	100	100	0	1708			
 ?FindFont@DocView@Text@Render@Scaleform@@IAEPAVFontHandle@234@PAUFindFontInfo@1234@_N@Z	src/render/text/text_docview.cpp	gfx	done	MATCH	100	100	100	0	775	f		
 ?FindFontManager@MovieImpl@GFx@Scaleform@@QAEPAVFontManager@23@PAVMovieDefImpl@23@@Z	src/gfx/gfx_playerimpl.cpp	gfx	done	MATCH	100	100	100	0	60	f		
 ?FindFreeSize@BitSet1@HeapPT@Scaleform@@SAIPBKI@Z	src/kernel/heappt/heappt_bitset1.h	gfx	blocked				0	0	91	f		
@@ -11278,7 +11278,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?FindTextA@TextSnapshotProto@AS2@GFx@Scaleform@@SAXABVFnCall@234@@Z	src/gfx/as2/as2_textsnapshot.cpp	gfx	done	MATCH	100	100	100	0	300	f		
 ?FindUsedSize@BitSet1@HeapPT@Scaleform@@SAIPBKII@Z	src/kernel/heappt/heappt_bitset1.h	gfx	blocked				0	0	103	f		
 ?FindVMAbcFileWeak@VM@AS3@GFx@Scaleform@@QBE?AV?$SPtr@VVMAbcFile@AS3@GFx@Scaleform@@@234@PBDAAVVMAppDomain@234@@Z	src/gfx/as3/as3_vm.cpp	gfx	inprogress	MATCH	99.9855	99.9855	99.9855	0	175	f		
-?FindVariable@Environment@AS2@GFx@Scaleform@@QBE_NABUGetVarParams@1234@_NPAVASString@34@@Z	src/gfx/as2/as2_action.cpp	gfx	done	MATCH	99.9981	99.9981	99.9981	0	1590	f		
+?FindVariable@Environment@AS2@GFx@Scaleform@@QBE_NABUGetVarParams@1234@_NPAVASString@34@@Z	src/gfx/as2/as2_action.cpp	gfx	done	MATCH	99.9981	100	100	0	1590	f		
 ?Finish@ShaderInterface@D3D1x@Render@Scaleform@@QAEXI@Z	vostok/scaleform/sources/d3d1x_shader.cpp	scaleform	done	MATCH	100	100	100	1	432	f	238117721d79	"d3d1x wrapper IS compiled in this build: vostok/scaleform/sources/d3d1x_*.cpp carries ExcludedFromBuild only in the 9 non-gold configs - Master Gold|Win32 builds it (binaries/ninja/scaleform.ninja lists all six d3d1x objs) and both sides delink real per-function structures. The earlier ""ExcludedFromBuild (all configs) / D3D1x symbols supplied by render_engine_pc_dx11 objs / dummy-paired via the delinker C:\w prefix"" claim is disproven (2026-08-16): render_engine_pc_dx11.vcproj has no D3D1x_*.cpp entry and the only such .obj on disk is a stale 2026-06-21 artifact in neither the ninja graph nor the lib."
 ?FinishAllThreads@Thread@Scaleform@@SAXXZ	src/kernel/sf_threadswinapi.cpp	gfx	done	MATCH	100	100	100	0	5	f		
 ?FinishAllThreads@ThreadList@Scaleform@@SAXXZ	src/kernel/sf_threadswinapi.cpp	gfx	done	MATCH	100	100	100	0	80	f		
@@ -12995,7 +12995,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GenerateGestureEvents@ASMovieRootBase@GFx@Scaleform@@UAEXPAVInteractiveObject@23@IABV?$Point@M@Render@3@11MI@Z	src/gfx/gfx_asmovierootbase.h	gfx	done	MATCH	100	100	100	0	3	f		
 ?GenerateMesh@MeshCache@Render@Scaleform@@QAE?AUMeshResult@123@PAVMesh@23@PBUVertexFormat@23@11_N@Z	src/render/render_meshcache.cpp	gfx	done	MATCH	100	100	100	0	111	f		
 ?GenerateMipLevel@Render@Scaleform@@YGXAAUImagePlane@12@0W4ImageFormat@12@I@Z	src/render/render_textureutil.cpp	gfx	done	MATCH	100	100	100	0	2125	f		
-?GenerateMouseEvents@MovieRoot@AS2@GFx@Scaleform@@UAEXI@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9957	99.9957	99.9957	0	1490	f		
+?GenerateMouseEvents@MovieRoot@AS2@GFx@Scaleform@@UAEXI@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9957	100	100	0	1490	f		
 ?GenerateMouseEvents@MovieRoot@AS3@GFx@Scaleform@@UAEXI@Z	src/gfx/as3/as3_movieroot.cpp	gfx	inprogress	MATCH	99.9979	96.4627	99.9979	0	3293	f		
 ?GenerateStroke@Stroker@Render@Scaleform@@QAEXPAVTessBase@23@@Z	src/render/render_stroker.cpp	gfx	done	MATCH	100	100	100	0	997	f		
 ?Get@?$AbcMultinameHash@V?$SPtr@VNamespace@fl@Instances@AS3@GFx@Scaleform@@@AS3@GFx@Scaleform@@$0BFE@@AS3@GFx@Scaleform@@QAEPAV?$SPtr@VNamespace@fl@Instances@AS3@GFx@Scaleform@@@234@ABVMultiname@Abc@234@@Z	src/gfx/as3/as3_vm.h	gfx	done	MATCH	100	100	100	0	84	f		
@@ -13742,7 +13742,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GetMember@AvmButton@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_avmbutton.cpp	gfx	inprogress	MATCH	99.9898	99.9898	99.9898	0	222	f		
 ?GetMember@AvmSprite@AS2@GFx@Scaleform@@AAE_NPAVEnvironment@234@PAVASStringContext@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_avmsprite.cpp	gfx	inprogress	MATCH	99.9892	99.9892	99.9892	0	1381			
 ?GetMember@AvmSprite@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_avmsprite.h	gfx	done	MATCH	100	100	100	0	28	f		
-?GetMember@AvmTextField@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_avmtextfield.cpp	gfx	done	MATCH	99.9981	99.9981	99.9981	0	5076			
+?GetMember@AvmTextField@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_avmtextfield.cpp	gfx	done	MATCH	99.9981	100	100	0	5076			
 ?GetMember@BevelFilterObject@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_bevelfilter.cpp	gfx	done	MATCH	100	100	100	0	933	f		
 ?GetMember@BitmapData@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_bitmapdata.cpp	gfx	done	MATCH	100	100	100	0	311	f		
 ?GetMember@BlurFilterObject@AS2@GFx@Scaleform@@UAE_NPAVEnvironment@234@ABVASString@34@PAVValue@234@@Z	src/gfx/as2/as2_blurfilter.cpp	gfx	done	MATCH	100	100	100	0	349	f		
@@ -13914,7 +13914,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GetObjectsUnderPoint@AvmSprite@AS3@GFx@Scaleform@@UBE_NPAV?$ArrayDH@V?$Ptr@VDisplayObjectBase@GFx@Scaleform@@@Scaleform@@$01UArrayDefaultPolicy@2@@4@ABV?$Point@M@Render@4@@Z	src/gfx/as3/as3_avmsprite.cpp	gfx	done	MATCH	100	100	100	0	115	f		
 ?GetOpCode@VMAbcFile@AS3@GFx@Scaleform@@QAEABV?$ArrayLH_POD@I$0BFC@UArrayDefaultPolicy@Scaleform@@@4@VMbiInd@Abc@234@ABVCallFrame@234@@Z	src/gfx/as3/as3_vm.cpp	gfx	done	MATCH	100	100	100	0	114	f		
 ?GetOrientationMatrix@HAL@Render@Scaleform@@UBE?AV?$Matrix2x4@M@23@XZ	scaleform/src/render/render_hal.h	scaleform	done	MATCH	100	100	100	0	66	f	45081e8cf5fb	
-?GetOrigValueConsumer@Tracer@AS3@GFx@Scaleform@@ABE?AW4OpCode@Code@Abc@234@I@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9976	99.9976	99.9976	0	764	f		
+?GetOrigValueConsumer@Tracer@AS3@GFx@Scaleform@@ABE?AW4OpCode@Code@Abc@234@I@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9976	100	100	0	764	f		
 ?GetOriginalName@DisplayObject@GFx@Scaleform@@QBE?AVASString@23@XZ	src/gfx/gfx_displayobject.cpp	gfx	done	MATCH	100	100	100	0	55	f		
 ?GetOverStateObject@AvmButton@AS3@GFx@Scaleform@@QBEPAVDisplayObject@34@XZ	src/gfx/as3/as3_avmbutton.cpp	gfx	done	MATCH	100	100	100	0	22	f		
 ?GetOwner@SoundObject@AS3@GFx@Scaleform@@UAEPAXXZ	src/gfx/as3/audio/as3_soundobject.cpp	gfx	done	MATCH	100	100	100	0	14	f		
@@ -14303,7 +14303,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GetTicks@Timer@Scaleform@@SG_KXZ	src/kernel/sf_timer.cpp	gfx	done	MATCH	100	100	100	0	115	f		
 ?GetTicksMs@Timer@Scaleform@@SGKXZ	src/kernel/sf_timer.cpp	gfx	done	MATCH	100	100	100	0	25	f		
 ?GetTopLocalFrame@Environment@AS2@GFx@Scaleform@@QBEPAVLocalFrame@234@H@Z	src/gfx/as2/as2_action.cpp	gfx	done	MATCH	100	100	100	0	30	f		
-?GetTopMostEntity@MouseCtorFunction@AS2@GFx@Scaleform@@KAXABVFnCall@234@@Z	src/gfx/as2/as2_mouse.cpp	gfx	done	MATCH	99.9955	99.9955	99.9955	0	671			
+?GetTopMostEntity@MouseCtorFunction@AS2@GFx@Scaleform@@KAXABVFnCall@234@@Z	src/gfx/as2/as2_mouse.cpp	gfx	done	MATCH	99.9955	100	100	0	671			
 ?GetTopMostEntity@MovieImpl@GFx@Scaleform@@QAEPAVInteractiveObject@23@ABV?$Point@M@Render@3@I_NPBV423@@Z	src/gfx/gfx_playerimpl.cpp	gfx	inprogress	MATCH	99.9892	99.9892	99.9892	0	613			
 ?GetTopMostMouseEntity@AvmBitmap@AS3@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@34@ABV?$Point@M@Render@4@PAUTopMostDescr@634@@Z	src/gfx/as3/as3_avmbitmap.cpp	gfx	done	MATCH	100	100	100	0	232			
 ?GetTopMostMouseEntity@Button@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@23@ABV?$Point@M@Render@3@PAUTopMostDescr@523@@Z	src/gfx/gfx_button.cpp	gfx	done	MATCH	100	100	100	0	233			
@@ -14313,7 +14313,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GetTopMostMouseEntity@ShapeObject@AS3@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@34@ABV?$Point@M@Render@4@PAUTopMostDescr@634@@Z	src/gfx/as3/as3_avmdisplayobj.cpp	gfx	done	MATCH	100	100	100	0	132	f		
 ?GetTopMostMouseEntity@Sprite@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@23@ABV?$Point@M@Render@3@PAUTopMostDescr@523@@Z	src/gfx/gfx_sprite.cpp	gfx	inprogress	SIZE	86.7556	86.7556	86.7556	0	347	f		
 ?GetTopMostMouseEntity@StaticTextCharacter@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@23@ABV?$Point@M@Render@3@PAUTopMostDescr@523@@Z	src/gfx/gfx_statictext.h	gfx	done	MATCH	100	100	100	0	41	f		
-?GetTopMostMouseEntity@TextField@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@23@ABV?$Point@M@Render@3@PAUTopMostDescr@523@@Z	src/gfx/gfx_textfield.cpp	gfx	done	MATCH	99.9959	99.9959	99.9959	0	744			
+?GetTopMostMouseEntity@TextField@GFx@Scaleform@@UAE?AW4TopMostResult@DisplayObjectBase@23@ABV?$Point@M@Render@3@PAUTopMostDescr@523@@Z	src/gfx/gfx_textfield.cpp	gfx	done	MATCH	99.9959	100	100	0	744			
 ?GetTopMostMouseEntityDef@DisplayObjectBase@GFx@Scaleform@@QAEPAVInteractiveObject@23@PAVCharacterDef@23@ABV?$Point@M@Render@3@_NPBV423@@Z	src/gfx/gfx_displayobject.cpp	gfx	inprogress	MATCH	99.9806	99.9806	99.9806	0	261	f		
 ?GetTopParent@AvmCharacter@AS2@GFx@Scaleform@@UBEPAVInteractiveObject@34@_N@Z	src/gfx/as2/as2_avmcharacter.cpp	gfx	done	MATCH	100	100	100	0	32	f		
 ?GetTopParent@AvmInteractiveObj@AS3@GFx@Scaleform@@UBEPAVInteractiveObject@34@_N@Z	src/gfx/as3/as3_avminteractiveobj.cpp	gfx	done	MATCH	100	100	100	0	32	f		
@@ -14419,7 +14419,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?GetVariable@MovieRoot@AS2@GFx@Scaleform@@UBE_NPAVValue@34@PBD@Z	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9928	99.9928	99.9928	0	401	f		
 ?GetVariable@MovieRoot@AS3@GFx@Scaleform@@UBE_NPAVValue@34@PBD@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	220	f		
 ?GetVariable@flash_movie@survarium@@QAEXPAUflash_value@2@PBD@Z	vostok/scaleform/sources/value.cpp	scaleform	done	MATCH	100	100	100	3	17	f	45df328edc82	Two target/base statements match. Residual 17/15-byte call site is target custom calling convention/path-literal specialization versus local SDK call boundary; no missing wrapper operation.
-?GetVariableArray@MovieRoot@AS2@GFx@Scaleform@@UAE_NW4SetArrayType@Movie@34@PBDIPAXI@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9979	99.9979	99.9979	0	1428	f		
+?GetVariableArray@MovieRoot@AS2@GFx@Scaleform@@UAE_NW4SetArrayType@Movie@34@PBDIPAXI@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	99.9979	100	100	0	1428	f		
 ?GetVariableArray@MovieRoot@AS3@GFx@Scaleform@@UAE_NW4SetArrayType@Movie@34@PBDIPAXI@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	1140	f		
 ?GetVariableArraySize@MovieRoot@AS2@GFx@Scaleform@@UAEIPBD@Z	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9908	99.9908	99.9908	0	327	f		
 ?GetVariableArraySize@MovieRoot@AS3@GFx@Scaleform@@UAEIPBD@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	241	f		
@@ -14615,7 +14615,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Histogram@DrawableImage@Render@Scaleform@@QAEXPAV?$Rect@J@23@QAY0BAA@I@Z	src/render/render_drawableimage.cpp	gfx	done	MATCH	100	100	100	0	187	f		
 ?HitTest@DrawableImage@Render@Scaleform@@QAE_NABV?$Point@J@23@AAV?$Rect@J@23@I@Z	src/render/render_drawableimage.cpp	gfx	done	MATCH	100	100	100	0	101	f		
 ?HitTest@DrawableImage@Render@Scaleform@@QAE_NPAVImageBase@23@ABV?$Point@J@23@1II@Z	src/render/render_drawableimage.cpp	gfx	done	MATCH	100	100	100	0	111	f		
-?HitTest@MovieImpl@GFx@Scaleform@@UAE_NMMW4HitTestType@Movie@23@I@Z	src/gfx/gfx_playerimpl.cpp	gfx	done	MATCH	99.9955	99.9955	99.9955	0	652			
+?HitTest@MovieImpl@GFx@Scaleform@@UAE_NMMW4HitTestType@Movie@23@I@Z	src/gfx/gfx_playerimpl.cpp	gfx	done	MATCH	99.9955	100	100	0	652			
 ?HitTestGeneralStroke@Render@Scaleform@@YA_NABVVertexPath@12@MM@Z	src/render/render_hittest.cpp	gfx	done	MATCH	100	100	100	0	1342	f		
 ?HitTestRoundStroke@Render@Scaleform@@YA_NABVVertexPath@12@MMM@Z	src/render/render_hittest.cpp	gfx	done	MATCH	100	100	100	0	606	f		
 ?HitTestShape@MeshKeySet@Render@Scaleform@@UBE_NABV?$Matrix2x4@M@23@MMMPAUStrokeGenerator@23@PBUToleranceParams@23@@Z	src/render/render_meshkey.h	gfx	done	MATCH	100	100	100	0	58	f		
@@ -15190,14 +15190,14 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?LoadBuiltinImage@LoaderImpl@GFx@Scaleform@@SAPAVImageSource@Render@3@PAVFile@3@W4FileFormatType@FileTypeConstants@23@W4ResourceUse@Resource@23@PAVLoadStates@23@PAVLog@3@PAVMemoryHeap@3@@Z	src/gfx/gfx_loaderimpl.cpp	gfx	done	MATCH	100	100	100	0	257	f		
 ?LoadClip@MovieClipLoaderProto@AS2@GFx@Scaleform@@SAXABVFnCall@234@@Z	src/gfx/as2/as2_moviecliploader.cpp	gfx	done	MATCH	100	100	100	0	602	f		
 ?LoadExportedImage@ImageCreator@GFx@Scaleform@@UAEPAVImage@Render@3@ABUImageCreateExportInfo@23@ABVString@3@@Z	src/gfx/gfx_imagecreator.cpp	gfx	done	MATCH	100	100	100	0	316	f		
-?LoadFile@SoundObject@AS3@GFx@Scaleform@@QAEXABVString@4@_N@Z	src/gfx/as3/audio/as3_soundobject.cpp	gfx	done	MATCH	99.9955	99.9955	99.9955	0	622	f		
+?LoadFile@SoundObject@AS3@GFx@Scaleform@@QAEXABVString@4@_N@Z	src/gfx/as3/audio/as3_soundobject.cpp	gfx	done	MATCH	99.9955	100	100	0	622	f		
 ?LoadFile@VM@AS3@GFx@Scaleform@@QAE?AV?$SPtr@VVMAbcFile@AS3@GFx@Scaleform@@@234@ABV?$Ptr@VFile@Abc@AS3@GFx@Scaleform@@@4@AAVVMAppDomain@234@_N@Z	src/gfx/as3/as3_vm.cpp	gfx	inprogress	QUANTITY	74.0667	74.0667	74.0667	0	152	f		
 ?LoadFilterDesc@TextFilter@Text@Render@Scaleform@@QAEXPBVFilter@34@@Z	src/render/text/text_filterdesc.cpp	gfx	done	MATCH	100	100	100	0	169	f		
 ?LoadFinished@GFxAS2LoadQueueEntryMT_LoadCSS@AS2@GFx@Scaleform@@UAE_NXZ	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9804	99.9804	99.9804	0	109	f		
 ?LoadFinished@GFxAS2LoadQueueEntryMT_LoadMovie@AS2@GFx@Scaleform@@UAE_NXZ	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9833	99.9833	99.9833	0	2153	f		
 ?LoadFinished@GFxAS2LoadQueueEntryMT_LoadXML@AS2@GFx@Scaleform@@UAE_NXZ	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9841	99.9841	99.9841	0	134	f		
 ?LoadFinished@LoadQueueEntryMT_LoadBinary@GFx@Scaleform@@UAE_NXZ	src/gfx/gfx_playertasks.cpp	gfx	done	MATCH	100	100	100	0	165	f		
-?LoadFinished@LoadQueueEntryMT_LoadMovie@AS3@GFx@Scaleform@@UAE_NXZ	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	99.9978	99.9978	99.9978	0	1289	f		
+?LoadFinished@LoadQueueEntryMT_LoadMovie@AS3@GFx@Scaleform@@UAE_NXZ	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	99.9978	100	100	0	1289	f		
 ?LoadFinished@LoadQueueEntryMT_LoadVars@GFx@Scaleform@@UAE_NXZ	src/gfx/gfx_playertasks.cpp	gfx	done	MATCH	100	100	100	0	250	f		
 ?LoadFontNames@FontLib@GFx@Scaleform@@QAEXAAV?$StringHash@VString@Scaleform@@U?$AllocatorGH@VString@Scaleform@@$01@2@@3@@Z	src/gfx/gfx_fontlib.cpp	gfx	done	MATCH	100	100	100	0	208			
 ?LoadFontNames@FontProvider@GFx@Scaleform@@UAEXAAV?$StringHash@VString@Scaleform@@U?$AllocatorGH@VString@Scaleform@@$01@2@@3@@Z	src/gfx/gfx_fontproviderwin32.cpp	gfx	done	MATCH	100	100	100	0	10	f		
@@ -15838,7 +15838,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?OnEvent@AvmDisplayObj@AS3@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as3/as3_avmdisplayobj.cpp	gfx	done	MATCH	100	100	100	0	611	f		
 ?OnEvent@AvmDisplayObjContainer@AS3@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as3/as3_avmbutton.h	gfx	done	MATCH	100	100	100	0	5	f		
 ?OnEvent@AvmInteractiveObj@AS3@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as3/as3_avminteractiveobj.cpp	gfx	done	MATCH	100	100	100	0	373	f		
-?OnEvent@AvmSprite@AS2@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as2/as2_avmsprite.cpp	gfx	done	MATCH	99.9951	99.9951	99.9951	0	630	f		
+?OnEvent@AvmSprite@AS2@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as2/as2_avmsprite.cpp	gfx	done	MATCH	99.9951	100	100	0	630	f		
 ?OnEvent@AvmSprite@AS3@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as3/as3_avmsprite.cpp	gfx	done	MATCH	100	100	100	0	401	f		
 ?OnEvent@AvmTextField@AS3@GFx@Scaleform@@UAE_NABVEventId@34@@Z	src/gfx/as3/as3_avmtextfield.h	gfx	done	MATCH	100	100	100	0	5	f		
 ?OnEvent@DisplayObject@GFx@Scaleform@@UAE_NABVEventId@23@@Z	src/gfx/gfx_displayobject.cpp	gfx	done	MATCH	100	100	100	0	26	f		
@@ -15868,7 +15868,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?OnEvictSlots@TextMeshProvider@Render@Scaleform@@QAEXXZ	src/render/render_textmeshprovider.cpp	gfx	done	MATCH	100	100	100	0	5	f		
 ?OnExceedLimit@HeapLimit@MemoryContextImpl@AS2@GFx@Scaleform@@UAE_NPAVMemoryHeap@5@I@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	100	100	100	0	303	f		
 ?OnExceedLimit@HeapLimit@MemoryContextImpl@AS3@GFx@Scaleform@@UAE_NPAVMemoryHeap@5@I@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	261	f		
-?OnException@VM@AS3@GFx@Scaleform@@AAEHIAAVCallFrame@234@@Z	src/gfx/as3/as3_vm.cpp	gfx	done	MATCH	99.9952	99.9952	99.9952	0	614	f		
+?OnException@VM@AS3@GFx@Scaleform@@AAEHIAAVCallFrame@234@@Z	src/gfx/as3/as3_vm.cpp	gfx	done	MATCH	99.9952	100	100	0	614	f		
 ?OnFocus@AvmCharacter@AS2@GFx@Scaleform@@UAEXW4FocusEventType@InteractiveObject@34@PAV634@IW4FocusMovedType@34@@Z	src/gfx/as2/as2_avmcharacter.cpp	gfx	inprogress	MATCH	99.9946	99.9946	99.9946	0	569	f		
 ?OnFocus@AvmInteractiveObj@AS3@GFx@Scaleform@@UAEXW4FocusEventType@InteractiveObject@34@PAV634@IW4FocusMovedType@34@@Z	src/gfx/as3/as3_avminteractiveobj.cpp	gfx	done	MATCH	100	100	100	0	304	f		
 ?OnFocus@AvmSprite@AS2@GFx@Scaleform@@UAEXW4FocusEventType@InteractiveObject@34@PAV634@IW4FocusMovedType@34@@Z	src/gfx/as2/as2_avmbutton.h	gfx	done	MATCH	100	100	100	0	5	f		
@@ -16125,7 +16125,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ProcessLoadMovieClip@MovieRoot@AS2@GFx@Scaleform@@QAEXPAVLoadQueueEntry@34@PAVLoadStates@34@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	inprogress	MATCH	99.9923	99.9923	99.9923	0	2371	f		
 ?ProcessLoadQueue@MovieImpl@GFx@Scaleform@@QAEXXZ	src/gfx/gfx_playerimpl.cpp	gfx	inprogress	MATCH	99.9495	99.9495	99.9495	0	237	f		
 ?ProcessLoadQueueEntry@MovieRoot@AS2@GFx@Scaleform@@UAEXPAVLoadQueueEntry@34@PAVLoadStates@34@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	100	100	100	0	46	f		
-?ProcessLoadQueueEntry@MovieRoot@AS3@GFx@Scaleform@@UAEXPAVLoadQueueEntry@34@PAVLoadStates@34@@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	99.9989	99.9989	99.9989	0	2756	f		
+?ProcessLoadQueueEntry@MovieRoot@AS3@GFx@Scaleform@@UAEXPAVLoadQueueEntry@34@PAVLoadStates@34@@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	99.9989	100	100	0	2756	f		
 ?ProcessLoadVars@MovieRoot@AS2@GFx@Scaleform@@QAEXPAVLoadQueueEntry@34@PAVLoadStates@34@@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	100	100	100	0	376	f		
 ?ProcessLoadVarsMT@MovieRoot@AS2@GFx@Scaleform@@UAEXPAVLoadQueueEntry@34@PAVLoadStates@34@ABVString@4@I_N@Z	src/gfx/as2/as2_movieroot.cpp	gfx	done	MATCH	100	100	100	0	123	f		
 ?ProcessLoadVarsMT@MovieRoot@AS3@GFx@Scaleform@@UAEXPAVLoadQueueEntry@34@PAVLoadStates@34@ABVString@4@I_N@Z	src/gfx/as3/as3_movieroot.cpp	gfx	done	MATCH	100	100	100	0	299	f		
@@ -16152,7 +16152,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?PropagateMouseEvent@DisplayObjContainer@GFx@Scaleform@@UAEXABVEventId@23@@Z	src/gfx/gfx_displayobjcontainer.cpp	gfx	inprogress	MATCH	99.9773	99.9773	99.9773	0	115	f		
 ?PropagateMouseEvent@InteractiveObject@GFx@Scaleform@@UAEXABVEventId@23@@Z	src/gfx/gfx_interactiveobject.h	gfx	done	MATCH	100	100	100	0	10	f		
 ?PropagateMouseEvent@Stage@AS3@GFx@Scaleform@@MAEXABVEventId@34@@Z	src/gfx/as3/as3_avmstage.cpp	gfx	inprogress	MATCH	99.9545	99.9545	99.9545	0	61	f		
-?PropagateMouseEvent@TextField@GFx@Scaleform@@UAEXABVEventId@23@@Z	src/gfx/gfx_textfield.cpp	gfx	done	MATCH	99.9956	99.9956	99.9956	0	1455			
+?PropagateMouseEvent@TextField@GFx@Scaleform@@UAEXABVEventId@23@@Z	src/gfx/gfx_textfield.cpp	gfx	done	MATCH	99.9956	100	100	0	1455			
 ?PropagateNoAdvanceGlobalFlag@Button@GFx@Scaleform@@UAEXXZ	src/gfx/gfx_button.cpp	gfx	done	MATCH	100	100	100	0	231	f		
 ?PropagateNoAdvanceGlobalFlag@Sprite@GFx@Scaleform@@UAEXXZ	src/gfx/gfx_sprite.cpp	gfx	done	MATCH	100	100	100	0	184	f		
 ?PropagateNoAdvanceLocalFlag@Button@GFx@Scaleform@@UAEXXZ	src/gfx/gfx_button.cpp	gfx	done	MATCH	100	100	100	0	231	f		
@@ -16265,7 +16265,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?PushCSSSelectorProperty@?$TextStyleParserHandler@_W@Text@GFx@Scaleform@@UAEXABU?$CSSToken@_W@234@ABV?$Array@U?$CSSToken@_W@Text@GFx@Scaleform@@$01UArrayDefaultPolicy@4@@4@PAX@Z	src/gfx/text/text_stylesheet.cpp	gfx	done	MATCH	100	100	100	0	621	f		
 ?PushFilters@HAL@D3D1x@Render@Scaleform@@UAEXPAVFilterPrimitive@34@@Z	vostok/scaleform/sources/d3d1x_hal.cpp	scaleform	done	MATCH	100	100	100	1	712		3a0b539b4dae	"d3d1x wrapper IS compiled in this build: vostok/scaleform/sources/d3d1x_*.cpp carries ExcludedFromBuild only in the 9 non-gold configs - Master Gold|Win32 builds it (binaries/ninja/scaleform.ninja lists all six d3d1x objs) and both sides delink real per-function structures. The earlier ""ExcludedFromBuild (all configs) / D3D1x symbols supplied by render_engine_pc_dx11 objs / dummy-paired via the delinker C:\w prefix"" claim is disproven (2026-08-16): render_engine_pc_dx11.vcproj has no D3D1x_*.cpp entry and the only such .obj on disk is a stale 2026-06-21 artifact in neither the ninja graph nor the lib."
 ?PushListToFront@MeshCacheListSet@Render@Scaleform@@QAEXW4MeshCacheListType@23@0@Z	src/render/render_meshcache.h	gfx	done	MATCH	100	100	100	0	94	f		
-?PushListenersParams@MouseCtorFunction@AS2@GFx@Scaleform@@CAHPAVEnvironment@234@IW4ASBuiltinType@234@ABVValue@234@PBVASString@34@IH_N@Z	src/gfx/as2/as2_mouse.cpp	gfx	done	MATCH	99.9967	99.9967	99.9967	0	909	f		
+?PushListenersParams@MouseCtorFunction@AS2@GFx@Scaleform@@CAHPAVEnvironment@234@IW4ASBuiltinType@234@ABVValue@234@PBVASString@34@IH_N@Z	src/gfx/as2/as2_mouse.cpp	gfx	done	MATCH	99.9967	100	100	0	909	f		
 ?PushMask_BeginSubmit@HAL@D3D1x@Render@Scaleform@@UAEXPAVMaskPrimitive@34@@Z	vostok/scaleform/sources/d3d1x_hal.cpp	scaleform	done	MATCH	100	100	100	1	1374		8ff2ddf8c7e6	"d3d1x wrapper IS compiled in this build: vostok/scaleform/sources/d3d1x_*.cpp carries ExcludedFromBuild only in the 9 non-gold configs - Master Gold|Win32 builds it (binaries/ninja/scaleform.ninja lists all six d3d1x objs) and both sides delink real per-function structures. The earlier ""ExcludedFromBuild (all configs) / D3D1x symbols supplied by render_engine_pc_dx11 objs / dummy-paired via the delinker C:\w prefix"" claim is disproven (2026-08-16): render_engine_pc_dx11.vcproj has no D3D1x_*.cpp entry and the only such .obj on disk is a stale 2026-06-21 artifact in neither the ninja graph nor the lib."
 ?PushNewOpCode@Tracer@AS3@GFx@Scaleform@@AAEXW4OpCode@Code@Abc@234@@Z	src/gfx/as3/as3_tracer.cpp	gfx	inprogress	MATCH	100	98	100	0	134	f		
 ?PushNewOpCode@Tracer@AS3@GFx@Scaleform@@AAEXW4OpCode@Code@Abc@234@I@Z	src/gfx/as3/as3_tracer.cpp	gfx	inprogress	MATCH	100	97.8571	100	0	192	f		
@@ -17575,7 +17575,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?SetScale9Grid@DisplayObjectBase@GFx@Scaleform@@UAEXABV?$Rect@M@Render@3@@Z	src/gfx/gfx_displayobject.cpp	gfx	done	MATCH	100	100	100	0	20	f		
 ?SetScale9Grid@SpriteDef@GFx@Scaleform@@QAEXABV?$Rect@M@Render@3@@Z	src/gfx/gfx_spritedef.h	gfx	done	MATCH	100	100	100	0	123	f		
 ?SetScale9Grid@TreeNode@Render@Scaleform@@QAEXABV?$Rect@M@23@@Z	src/render/render_treenode.cpp	gfx	done	MATCH	100	100	100	0	169	f		
-?SetScrollRect@DisplayObject@GFx@Scaleform@@QAEXPBV?$Rect@N@Render@3@@Z	src/gfx/gfx_displayobject.cpp	gfx	done	MATCH	99.9961	99.9961	99.9961	0	758			
+?SetScrollRect@DisplayObject@GFx@Scaleform@@QAEXPBV?$Rect@N@Render@3@@Z	src/gfx/gfx_displayobject.cpp	gfx	done	MATCH	99.9961	100	100	0	758			
 ?SetSegmentInRange@PageTable@HeapPT@Scaleform@@QAEXIIPAUHeapSegment@Heap@3@@Z	src/kernel/heappt/heappt_pagetable.cpp	gfx	done	MATCH	100	100	100	0	129	f		
 ?SetSelectColor@Highlighter@Text@Render@Scaleform@@QAEXABVColor@34@@Z	src/render/text/text_highlight.cpp	gfx	done	MATCH	100	100	100	0	48	f		
 ?SetSelectColor@StaticTextSnapshotData@GFx@Scaleform@@QAEXABVColor@Render@3@@Z	src/gfx/gfx_statictext.cpp	gfx	done	MATCH	100	100	100	0	65	f		
@@ -17796,7 +17796,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Setup@InvokeContext@AS2@GFx@Scaleform@@QAEXXZ	src/gfx/as2/as2_function.cpp	gfx	done	MATCH	100	100	100	0	3832	f		
 ?SetupJpegErr@JPEG@Render@Scaleform@@YAPAUjpeg_error_mgr@@PAUJpegErrorHandler@123@@Z	src/render/imagefiles/jpeg_imagecommon.cpp	gfx	done	MATCH	100	100	100	0	22	f		
 ?SetupPrototype@ClassClass@Classes@AS3@GFx@Scaleform@@AAEXXZ	src/gfx/as3/obj/as3_obj_classclass.cpp	gfx	done	MATCH	100	100	100	0	88	f		
-?SetupRegisters@CallFrame@AS3@GFx@Scaleform@@AAEXABVMethodInfo@Abc@234@ABVValue@234@IPBV7234@@Z	src/gfx/as3/as3_vm.cpp	gfx	done	MATCH	99.9983	99.9983	99.9983	0	1815	f		
+?SetupRegisters@CallFrame@AS3@GFx@Scaleform@@AAEXABVMethodInfo@Abc@234@ABVValue@234@IPBV7234@@Z	src/gfx/as3/as3_vm.cpp	gfx	done	MATCH	99.9983	100	100	0	1815	f		
 ?SetupSlotValues@Traits@AS3@GFx@Scaleform@@IBE?AVCheckResult@234@AAVVMAbcFile@234@ABVHasTraits@Abc@234@AAVObject@234@@Z	src/gfx/as3/as3_traits.cpp	gfx	inprogress	MATCH	99.989	99.989	99.989	0	554	f		
 ?SetupSlotValues@UserDefined@ClassTraits@AS3@GFx@Scaleform@@UBE?AVCheckResult@345@AAVObject@345@@Z	src/gfx/as3/obj/as3_obj_userdefined.cpp	gfx	done	MATCH	100	100	100	0	33	f		
 ?SetupSlotValues@UserDefined@InstanceTraits@AS3@GFx@Scaleform@@UBE?AVCheckResult@345@AAVObject@345@@Z	src/gfx/as3/obj/as3_obj_userdefined.cpp	gfx	done	MATCH	100	100	100	0	120	f		
@@ -17981,7 +17981,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?Subdivide@AABBTreeNode@Opcode@@IAE_NPAVAABBTreeBuilder@2@@Z	opcode/opc_aabbtree.cpp	opcode	done	MATCH	100	100	100	0	1276	f	12c62a4258d2	
 ?SubmitBackgroundTask@LoadStates@GFx@Scaleform@@QAE_NPAVLoaderTask@23@@Z	src/gfx/gfx_loadprocess.cpp	gfx	done	MATCH	100	100	100	0	32	f		
 ?SubstituteGetlocal@Tracer@AS3@GFx@Scaleform@@AAE_NAAIIAAVState@TR@234@H@Z	src/gfx/as3/as3_tracer.cpp	gfx	inprogress	MATCH	100	99.8788	100	0	1037	f		
-?SubstituteOpCode@Tracer@AS3@GFx@Scaleform@@AAE_NW4OpCode@Code@Abc@234@AAIAAVState@TR@234@@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9968	99.9968	99.9968	0	4472	f		
+?SubstituteOpCode@Tracer@AS3@GFx@Scaleform@@AAE_NW4OpCode@Code@Abc@234@AAIAAVState@TR@234@@Z	src/gfx/as3/as3_tracer.cpp	gfx	done	MATCH	99.9968	100	100	0	4472	f		
 ?Substring@ASString@GFx@Scaleform@@QBE?AV123@HH@Z	src/gfx/gfx_asstring.h	gfx	done	MATCH	100	100	100	0	29	f		
 ?Substring@String@Scaleform@@QBE?AV12@II@Z	src/kernel/sf_string.cpp	gfx	done	MATCH	100	100	100	0	240	f		
 ?SubstringNode@ASConstString@GFx@Scaleform@@QBEPAUASStringNode@23@HH@Z	src/gfx/gfx_asstring.cpp	gfx	done	MATCH	100	100	100	0	126	f		
@@ -18367,7 +18367,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?VisitMem@SysAllocStatic@Scaleform@@UBEXPAVMemVisitor@Heap@2@@Z	src/kernel/heappt/heappt_sysallocstatic.cpp	gfx	done	MATCH	100	100	100	0	18	f		
 ?VisitMem@SysAllocWrapper@HeapPT@Scaleform@@UBEXPAVMemVisitor@Heap@3@@Z	src/kernel/heappt/heappt_root.cpp	gfx	done	MATCH	100	100	100	0	13	f		
 ?VisitMembers@AS2ValueObjectInterface@GFx@Scaleform@@EBEXPAXPAVObjVisitor@ObjectInterface@Value@23@_N@Z	src/gfx/as2/as2_gfxvalueimpl.cpp	gfx	done	MATCH	100	100	100	0	87	f		
-?VisitMembers@AS3ValueObjectInterface@GFx@Scaleform@@EBEXPAXPAVObjVisitor@ObjectInterface@Value@23@_N@Z	src/gfx/as3/as3_gfxvalueimpl.cpp	gfx	done	MATCH	99.9976	99.9976	99.9976	0	1219	f		
+?VisitMembers@AS3ValueObjectInterface@GFx@Scaleform@@EBEXPAXPAVObjVisitor@ObjectInterface@Value@23@_N@Z	src/gfx/as3/as3_gfxvalueimpl.cpp	gfx	done	MATCH	99.9976	100	100	0	1219	f		
 ?VisitMembers@ArrayObject@AS2@GFx@Scaleform@@UBEXPAVASStringContext@234@PAUMemberVisitor@ObjectInterface@234@IPBV7234@@Z	src/gfx/as2/as2_arrayobject.cpp	gfx	done	MATCH	100	100	100	0	330	f		
 ?VisitMembers@AvmCharacter@AS2@GFx@Scaleform@@UBEXPAVASStringContext@234@PAUMemberVisitor@ObjectInterface@234@IPBV7234@@Z	src/gfx/as2/as2_avmcharacter.cpp	gfx	inprogress	MATCH	99.9744	99.9744	99.9744	0	95	f		
 ?VisitMembers@AvmSprite@AS2@GFx@Scaleform@@UBEXPAVASStringContext@234@PAUMemberVisitor@ObjectInterface@234@IPBV7234@@Z	src/gfx/as2/as2_avmsprite.cpp	gfx	done	MATCH	100	100	100	0	86	f		
@@ -21945,7 +21945,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	vostok/render/engine/sources/renderer.cpp	render	parked	SPLIT	70.5031	70.5031	70.5031	12	583	f	99d82951d676	Target/base retain the exact six-local name/type/order set, all 16 statements, the same branch skeleton, both 512-element loops, and two draw_screen_lines calls. Retail calls color_rgba twice while base inlines it; the target-only loop-close row is attribution over identical float3 math. Concrete TU-wide LTCG inline and block-layout wall.
 ?draw_front_rectangle@ui_progress_bar@ui@vostok@@ABEXAAVrenderer@2render@3@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	vostok/ui/sources/ui_progress_bar.cpp	ui	done	MATCH	100	100	100	1	496	f	b08bdc759929	auto: at 100% ceiling, demoted from queue
 ?draw_frustum@game_world@survarium@@UBEXMMMABVfloat3@math@vostok@@0Vcolor@45@@Z	vostok/game/sources/game_world_npc.cpp	game	done	MATCH	100	100	100	1	128	f	1a7c0add8123	
-?draw_frustum@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@MMMMABVfloat3@math@4@1V784@ABVcolor@84@_N@Z	vostok/render/facade/sources/debug_renderer.cpp	render	done	MATCH	99.9982	99.9982	99.9982	1	2658		39d7877b119c	Target statement structure and CFG are complete; residual is command/vector helper inlining or register allocation in optimized facade code.
+?draw_frustum@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@MMMMABVfloat3@math@4@1V784@ABVcolor@84@_N@Z	vostok/render/facade/sources/debug_renderer.cpp	render	done	MATCH	99.9982	100	100	2	2658		39d7877b119c	Fresh exact-evidence audit: target/base are identical 0xa62-byte bodies with 28 statements and STRUCTURE MATCH; objdiff exact float slop is now canonicalized to source-hash MAX 100.
 ?draw_geometry@stage_lights@render@vostok@@AAEXPAVlight@23@@Z	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH	100	100	100	1	392	f	8fa7d3e6ef33	Complete TU audited against target structure, callees and CFG; remaining non-exact bodies are final optimizer and inlining context.
 ?draw_highlighted_rect@ui_text_edit@ui@vostok@@AAEXAAVrenderer@2render@3@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	vostok/ui/sources/ui_text_edit.cpp	ui	done	MATCH	100	100	100	0	497	f	6512ff61ddea	
 ?draw_internal@?$ui_text@Udynamic_text@ui@vostok@@@ui@vostok@@IAEXAAVrenderer@2render@3@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@III@Z	vostok/ui/sources/ui_text_inline.h	ui	done	MATCH	100	100	100	1	209		6410bbb4abfd	auto: at 100% ceiling, demoted from queue
@@ -26605,7 +26605,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?objectIDGet@ExternalInterface@fl_external@Classes@AS3@GFx@Scaleform@@QAEXAAVASString@56@@Z	src/gfx/as3/obj/external/as3_obj_external_externalinterface.cpp	gfx	done	MATCH	100	100	100	0	109	f		
 ?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	bullet/bulletcollision/collisiondispatch/btcollisionworld.cpp	bullet	parked	QUANTITY	54.333	54.333	57.7183	1	5639		d1002d664ac2	Target PDB emits the stock fallback local-class methods (__l57) but target LTCG deletes that fallback from the outer body; current compiler retains its 7 statements/5 locals. Removing it or forcing the tree spelling falsifies target source and regresses the caller cone.
 ?object_count@loose_oct_tree@collision@vostok@@QBEIXZ	vostok/collision/sources/loose_oct_tree.cpp	collision	done	MATCH	100	100	100	1	4	f	62a56b4c0f17	auto: at 100% ceiling, demoted from queue
-?object_query@bullet_physics_world@physics@vostok@@UAEXQAVbt_collision_shape@23@ABVfloat4x4@math@3@1AAV?$vectora@Uclosest_ray_result@physics@vostok@@@3@GG@Z	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	99.998	99.998	99.998	0	2560		6054a5a3a766	[DONE 99.21%] Logging is still not done properly
+?object_query@bullet_physics_world@physics@vostok@@UAEXQAVbt_collision_shape@23@ABVfloat4x4@math@3@1AAV?$vectora@Uclosest_ray_result@physics@vostok@@@3@GG@Z	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	99.998	100	100	0	2560		6054a5a3a766	[DONE 99.21%] Logging is still not done properly
 ?observe_resource_destruction@query_result@resources@vostok@@AAEXPAVresource_base@23@@Z	vostok/core/sources/resources_query_result.cpp	core	done	MATCH	100	100	100	1	28	f	8ab5e36053a5	auto: at 100% ceiling, demoted from queue
 ?occluded@stage_visibility@render@vostok@@ABE_NI@Z	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	1	22	f	8b221799a7b8	reconstructed visibility caller cone from target PDB/disassembly
 ?occlusion_culling@stage_visibility@render@vostok@@AAEXXZ	vostok/render/engine/sources/stage_visibility.cpp	render	done	MATCH	100	100	100	3	152	f	84621c1e90d7	Source structure is exact (10/10 addressed statements; portals call line delta +11/+11). The sole residual is proven LTCG argument passing at the get_results_and_prepare_bounds_portals call boundary: target emits mov eax, esi; base emits push esi, making 0x98 vs 0x97 bytes. Revisit when caller/callee compiler context aligns; do not steer the calling convention.
@@ -26922,7 +26922,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?on_match_packet_received@network_client@survarium@@AAEXEAAVpacket_reader@network_core@vostok@@@Z	vostok/game/sources/network_client_handler.cpp	game	parked	SIZE	98.7375	98.7375	98.7375	3	664		101d321aa663	Shared packet_reader::r<T> inline-policy wall. Target inlines r<u32>() in this caller; base is forced to call by the repository-wide __declspec(noinline) experiment in packet_reader.h/packet_reader_inline.h. Reopen only when that global experiment is replaced/removed with faithful compiler-context/site-scoped behavior, then remeasure this caller.
 ?on_material_binary_config_loaded@material_cook@render@vostok@@AAEXPAVquery_result_for_cook@resources@3@PAVbinary_config@configs@3@@Z	vostok/render/engine/sources/material_cook.cpp	render	done	MATCH	100	100	100	1	162	f	db43ae66088d	pdb_topology proved retail on_material_binary_config_loaded and on_fs_iterator_ready private while base declared both public; restored the private access boundary and the 162-byte body became exact
 ?on_material_config_loaded@material_cook@render@vostok@@QAEXAAVqueries_result@resources@3@@Z	vostok/render/engine/sources/material_cook.cpp	render	done	MATCH	100	100	100	0	117	f	c602f9b46538	
-?on_material_effects_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	vostok/render/engine/sources/combined_model_cooker.cpp	render	done	MATCH	99.9969	99.9969	99.9969	2	1078		e7cbee502c9e	Complete combined-model caller body with identical target/base named locals, types, frame size, class shape, and indirect-call signatures. The QUANTITY row is a duplicate target line record for the final owner_is_cook test hoisted to entry; remaining CFG drift is intrusive-pointer constructor/destructor inlining under LTCG.
+?on_material_effects_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	vostok/render/engine/sources/combined_model_cooker.cpp	render	done	MATCH	99.9969	100	100	3	1078		e7cbee502c9e	Fresh exact-evidence audit: target/base are identical 0x436-byte bodies with the same 24 statements and local/type structure. The sole structure-diff pair attributes the same 0x2e-byte final set_unmanaged_resource code to different source lines; no source operation diverges.
 ?on_material_loaded@particle_emitter_instance@particle@vostok@@AAEXAAVqueries_result@resources@3@@Z	vostok/particle/sources/particle_emitter_instance.cpp	particle	done	MATCH	100	100	100	1	108		9aa41112e00e	Restored canonical MT_DELETE allocator expression; exact instruction selection, size, flow, structure, and bytes.
 ?on_material_ready@material_effects_instance_cook@render@vostok@@QAEXAAVqueries_result@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	vostok/render/engine/sources/material_effects_instance_cook.cpp	render	parked	MATCH	99.9935	99.9935	99.9935	3	456		39eb35d28d14	Target/base are both 0x1c8 with STRUCTURE MATCH at eight statements, the exact data/cook_data locals, identical 30-block CFG and branch destinations, and identical material assignment, query_effects, log/error, finish, conditional delete, and cleanup callees. The residual is only final operand/relocation selection in otherwise identical code.
 ?on_materials_loaded@particle_system_instance_cook@particle@vostok@@AAEXAAVqueries_result@resources@3@PAVparticle_system_instance_impl@23@PAUmaterial_query_data@23@PAUmaterial_effects_instance_cook_data@render@3@@Z	vostok/particle/sources/particle_system_instance_cook.cpp	particle	done	MATCH	100	100	100	1	342		57c2bd8dd06e	Reconstructed instance cook through emitter factory, layout, render preparation, reset, material binding, and real render callers from target PDB and assembly.
@@ -27294,7 +27294,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?parseCSS@StyleSheet@fl_text@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@ABVASString@56@@Z	src/gfx/as3/obj/text/as3_obj_text_stylesheet.cpp	gfx	inprogress	MATCH	99.9583	99.9583	99.9583	0	76	f		
 ?parseFloat@GlobalObjectCPP@fl@Instances@AS3@GFx@Scaleform@@QAEXAANABVASString@56@@Z	src/gfx/as3/obj/as3_obj_global.cpp	gfx	done	MATCH	100	100	100	0	187	f		
 ?parseInt@GlobalObjectCPP@fl@Instances@AS3@GFx@Scaleform@@QAEXAAVValue@456@IQBV7456@@Z	src/gfx/as3/obj/as3_obj_global.cpp	gfx	done	MATCH	100	100	100	0	275	f		
-?parse_constant_buffer@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflectionConstantBuffer@@I@Z	vostok/render/core/dx11/sources/shader_constant_table.cpp	render	done	MATCH	99.9951	99.9951	99.9951	3	652	f	ede9f1f43555	Re-audited sweep BRANCH-COUNT: the paired 652-byte bodies and all 39 statements are exact; the reported extra base block is an unreachable post-ret suffix, not source flow.
+?parse_constant_buffer@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflectionConstantBuffer@@I@Z	vostok/render/core/dx11/sources/shader_constant_table.cpp	render	done	MATCH	99.9951	100	100	4	652	f	ede9f1f43555	Fresh exact-evidence audit: target/base are identical 0x28c-byte bodies with all 39 statements and STRUCTURE MATCH; the previously reported post-ret block is unreachable analysis suffix, not source flow.
 ?parse_receiver_channel@messaging_client@survarium@@AAE?AW4message_channel_enum@messaging@@PB_W_N@Z	vostok/game/sources/messaging_client_process_messagess.cpp	game	inprogress	QUANTITY	63.2051	63.2051	63.2051	2	268	f	d9e1e1706372	integrated caller-cone reconstruction and target-structure audit
 ?parse_resources@?$res_xs_hw@Uvs_data@render@vostok@@@render@vostok@@AAEXPAUID3D11ShaderReflection@@AAV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@3@AAV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	vostok/render/core/dx11/res_xs_hw_impl.h	render	parked	SIZE	75.3587	99.8913	99.8913	2	573	f	6e1322d32fbd	Shared parse_resources template has the exact 16 PDB statements and all five retail locals: shader_desc, i, ResDesc, tex_slot, and smp. Target ICF chooses the vs_data owner while base chooses ps_data and expands string/refcount helpers differently; resource classification, slot construction, resize, and assignment are all present.
 ?parse_word@ui@vostok@@YAXPBDPBVui_font@12@AAMAAPBD@Z	vostok/ui/sources/ui_text.cpp	ui	done	MATCH	100	100	100	0	119	f	9a9ef56ed8ff	
@@ -28808,7 +28808,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?run_tests@?$suite_base@Vengine_test_suite@vostok@@@testing@vostok@@SA_NXZ	vostok/testing_inline.h	vostok	done	MATCH	100	100	100	0	128	f	f2203f5d8462	
 ?run_tests@core@vostok@@YAXXZ	vostok/core/sources/core_entry_point.cpp	core	done	MATCH	100	100	100	1	90	f	7b63902ea901	Whitespace-only source-hash reset: pre/post cleanup emitted score is identical. Historical exact/current dip is LTCG/ICF ownership, not a source mismatch.
 ?run_tests_command_line@testing@vostok@@YA_NXZ	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	1	187	f	ad68826c1010	auto: at 100% ceiling, demoted from queue
-?run_tests_impl@detail@testing@vostok@@YA_NPAVtest_base@23@PBD@Z	vostok/core/sources/testing_impl.cpp	core	done	MATCH	99.9953	99.9953	100	1	683	f	0be3788fab11	Complete-TU target PDB, assembly, and source-line geometry audit
+?run_tests_impl@detail@testing@vostok@@YA_NPAVtest_base@23@PBD@Z	vostok/core/sources/testing_impl.cpp	core	done	MATCH	99.9953	100	100	1	683	f	0be3788fab11	Complete-TU target PDB, assembly, and source-line geometry audit
 ?run_thread@select_reactor@detail@asio@boost@@AAEXXZ	boost/asio/detail/impl/select_reactor.ipp	boost	done	MATCH	100	100	100	1	220		847bb9e80aef	auto: at 100% ceiling, demoted from queue
 ?runningGet@Timer@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/utils/as3_obj_utils_timer.cpp	gfx	done	MATCH	100	100	100	0	38	f		
 ?sameDomainGet@LoaderInfo@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/display/as3_obj_display_loaderinfo.cpp	gfx	done	MATCH	100	100	100	0	26	f		
@@ -31629,7 +31629,7 @@ __vp_global_free	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	59	f	5
 __vp_noisemask	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	482		4af7bf632d6e	auto: at 100% ceiling, demoted from queue
 __vp_offset_and_mix	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	1386	f	bf567cc6228e	auto: at 100% ceiling, demoted from queue
 __vp_psy_clear	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	0	440	f	b68be25f725f	
-__vp_psy_init	vorbis/sources/lib/psy.c	vorbis	done	MATCH	99.9963	99.9963	99.9963	0	1900	f	98d39c5645f8	
+__vp_psy_init	vorbis/sources/lib/psy.c	vorbis	done	MATCH	99.9963	100	100	0	1900	f	98d39c5645f8	
 __vp_tonemask	vorbis/sources/lib/psy.c	vorbis	done	MATCH	100	100	100	1	292		6eaabb5d22cd	auto: at 100% ceiling, demoted from queue
 _add_serialno	vorbis/sources/lib/vorbisfile.c	vorbis	done	MATCH	100	100	100	1	106		b10fd8e290b4	auto: at 100% ceiling, demoted from queue
 _adler32	zlib/adler32.c	zlib	done	MATCH	100	100	100	0	622	f	6b89927618e9	
@@ -31772,7 +31772,7 @@ _realloc	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	1
 _res0_free_info	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	52	f	0e727af6e519	
 _res0_free_look	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	360	f	a62e6fe9f88b	
 _res0_inverse	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	1	84	f	05776d9c5a9a	auto: at 100% ceiling, demoted from queue
-_res0_look	vorbis/sources/lib/res0.c	vorbis	done	MATCH	99.9958	99.9958	99.9958	0	789	f	2df4e9dd1bfd	
+_res0_look	vorbis/sources/lib/res0.c	vorbis	done	MATCH	99.9958	100	100	0	789	f	2df4e9dd1bfd	
 _res0_pack	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	252	f	dba4db7a0006	
 _res0_unpack	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	0	528	f	2120f96659f5	
 _res1_class	vorbis/sources/lib/res0.c	vorbis	done	MATCH	100	100	100	1	83	f	1fd6197b3d14	auto: at 100% ceiling, demoted from queue
@@ -31822,7 +31822,7 @@ _vorbis_synthesis_pcmout	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	10
 _vorbis_synthesis_read	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	34	f	b435fbbd11f3	auto: at 100% ceiling, demoted from queue
 _vorbis_synthesis_restart	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	98	f	33f153ba6131	auto: at 100% ceiling, demoted from queue
 _vorbis_synthesis_trackonly	vorbis/sources/lib/synthesis.c	vorbis	done	MATCH	100	100	100	0	228	f	c1adc3dbcdb0	
-_vorbis_unpack_books	vorbis/sources/lib/info.c	vorbis	done	MATCH	99.9961	99.9961	99.9961	0	818	f	7733c5582518	
+_vorbis_unpack_books	vorbis/sources/lib/info.c	vorbis	done	MATCH	99.9961	100	100	0	818	f	7733c5582518	
 _vorbis_unpack_comment	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	287	f	3f847ba25747	
 _vorbis_unpack_info	vorbis/sources/lib/info.c	vorbis	done	MATCH	100	100	100	0	219	f	1da0c6176dc9	
 _vorbis_window	vorbis/sources/lib/block.c	vorbis	done	MATCH	100	100	100	1	45	f	78b50b953172	auto: at 100% ceiling, demoted from queue
@@ -34321,7 +34321,7 @@ floor1_inverse1	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	804	
 floor1_inverse2	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	417	f	9bc8e2714089	
 floor1_look	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	0	564	f	0700cbce70ee	
 floor1_pack	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	1	472	f	9ecc099be5ca	auto: at 100% ceiling, demoted from queue
-floor1_unpack	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	99.9962	99.9962	99.9962	0	891	f	cd6599f46672	
+floor1_unpack	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	99.9962	100	100	0	891	f	cd6599f46672	
 flush_pending	zlib/deflate.c	zlib	done	MATCH	100	100	100	0	78	f	45e7b056c543	
 free_region_impl	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	1	15	f	ef631e335b75	auto: at 100% ceiling, demoted from queue
 free_starter	vostok/core/sources/ptmalloc3/ptmalloc3.c	core	done	MATCH	100	100	100	1	76	f	aef247ea1f89	auto: at 100% ceiling, demoted from queue
@@ -34470,7 +34470,7 @@ send_tree	zlib/trees.c	zlib	done	MATCH	100	100	100	0	1291	f	56ea42effcb3
 set_animation_user_data	vostok/animation/sources/mixing_n_ary_tree_converter.cpp	animation	done	MATCH	100	100	100	2	7	f	9ec1fd19814b	Removed the incorrect MASTER_GOLD no-op guard; target PDB/disassembly requires the user_data copy. Authoritative rebuild reached byte-exact 7B and improved constructed_n_ary_tree with zero regressions.
 set_data_type	zlib/trees.c	zlib	done	MATCH	100	100	100	1	201	f	37b070567089	audited zlib 1.2.3 target structure and restored Release Win32 /O2 compiler context
 set_low_fragmentation_heap	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	1	86	f	2bdbffa5ebbb	auto: at 100% ceiling, demoted from queue
-setup_tone_curves	vorbis/sources/lib/psy.c	vorbis	done	MATCH	99.9985	99.9985	99.9985	0	2106		ffd500b82c33	
+setup_tone_curves	vorbis/sources/lib/psy.c	vorbis	done	MATCH	99.9985	100	100	0	2106		ffd500b82c33	
 slerp_optimized	vostok/core/sources/math_quaternion.cpp	core	parked	QUANTITY	4.5962	28.125	28.125	1	481	f	41ab8cd62bd6	Exact 16-statement structure and 7-block CFG. Restored parameter name and direct cosom < 1-epsilon comparison; remaining split is target sinf/x87 lowering and custom aggregate argument/result registers versus candidate SSE libm lowering.
 slrelease	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	21	f	a6cce705588e	auto: at 100% ceiling, demoted from queue
 sltrywait	vostok/core/sources/ptmalloc3/sysdeps/win_xbox360_ps3/win_xbox360_ps3.c	core	done	MATCH	100	100	100	1	27	f	c83334bc8446	auto: at 100% ceiling, demoted from queue
@@ -34993,7 +34993,7 @@ vostok::render::end_command_list	vostok/render/core/dx11/sources/resource_manage
 vostok::render::end_profiling	vostok/render/core/dx11/sources/backend.cpp	render	parked				0	5	4	f		Retail is exactly xorps xmm0,xmm0; ret with no PDB statements and no callers; the source returns 0.0f exactly. Standalone base absence is LTCG retention, not an unimplemented body.
 vostok::render::fill_data<vostok::render::custom_config_value>	vostok/render/core/dx11/sources/custom_config.cpp	render	parked	MATCH	96.9753	96.9753	96.9753	3	208	f	26a8200eccc9	Fill_data is exact-size with exact 17-statement structure and identical CFG/operations across traversal, scalar/string handling, copy, and buffer advance. Residual bytes are register allocation only.
 vostok::render::fill_data_crc_buffer<vostok::render::custom_config_value>	vostok/render/core/dx11/sources/custom_config.cpp	render	parked	SIZE	95.9524	95.9524	95.9524	3	151	f	a0bbf8e833b8	Fill_data_crc_buffer is exact-size with exact 12-statement structure and identical control flow across traversal, inline-data selection, copy, and buffer advance. The residual is cmp/lea and register scheduling.
-vostok::render::fill_light	vostok/render/engine/sources/lights_db.cpp	render	done	MATCH	99.9974	99.9974	99.9974	3	1644		38b94eddded2	Target has 46 statements versus base 47; structure-diff identifies light.set_position(float3(0,500,0)) as the sole BASE_ONLY statement in the parallel-light case, and target assembly has no 500.0 constant there.
+vostok::render::fill_light	vostok/render/engine/sources/lights_db.cpp	render	done	MATCH	99.9974	100	100	4	1644		38b94eddded2	Fresh post-merge audit supersedes the stale 47-row note: target/base are identical 0x66c-byte bodies with 46 statements and STRUCTURE MATCH; the obsolete parallel-light set_position statement is absent from current source and PDB.
 vostok::render::fill_source_vertices	vostok/render/engine/sources/render_model_static.cpp	render	parked	SIZE	87.5294	87.5294	87.5294	3	38	f	bab1dd752a08	Exact six statements, exact visible parameter set, same five-block CFG. Each target specialization call pushes three stack arguments while base passes two on the stack and one in the custom register convention: a concrete call-boundary wall.
 vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::colored_static_vertex>	vostok/render/engine/sources/render_model_static.cpp	render	parked	SPLIT	71.4332	71.4332	71.4332	4	942	f	8f8e28c8b630	Exact 30-statement template body and identical named call multiplicities, including reclaim x3 on both sides. The colored instantiation is target 28 versus base 30 blocks while its static sibling is 28/28; residual is instantiation-specific index-address and cleanup lowering, not a missing release.
 vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::static_vertex>	vostok/render/engine/sources/render_model_static.cpp	render	parked	SPLIT	76.0197	76.0197	76.0197	4	935	f	8f8e28c8b630	Exact 30-statement template body, same 28-block CFG, and identical named call multiplicities, including reclaim x3 on both sides. Residual is instantiation-specific index-address, register, and cleanup lowering, not a missing release.
