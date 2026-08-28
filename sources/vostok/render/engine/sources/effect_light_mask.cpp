@@ -28,7 +28,7 @@ void effect_light_mask::compile(
 		compiler.begin_pass	( "stub_notransform_2pos", NULL, "accum_sun_mask", shader_configuration(), NULL);
 			compiler.set_depth			( false, false);
 
-			compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT);
+			compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_KEEP);
 			compiler.set_cull_mode		( D3D_CULL_NONE);
 			compiler.color_write_enable	( D3D_COLOR_WRITE_ENABLE_NONE);
 			compiler.set_alpha_blend	( TRUE, D3D_BLEND_ZERO, D3D_BLEND_ONE);
