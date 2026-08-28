@@ -26,14 +26,20 @@ template class VOSTOK_CORE_API buffer_vector< bone_collision_data >;
 class VOSTOK_COLLISION_API animated_object
 {
 public:
+	inline	animated_object			(
+				configs::binary_config_value const&,
+				animation::skeleton_ptr const&,
+				u32 const,
+				memory::stack_allocator&,
+				bool const
+			);
+
 			animated_object			(
 				configs::binary_config_value const& config,
 				animation::skeleton_ptr const& model_skeleton,
 				u32 const bones_count,
 				memory::stack_allocator& allocator
 			);
-			// sushi@NOTE: It seems like they added another inline constructor with `bool` at the end.
-			// animated_object(configs::binary_config_value const&, animation::skeleton_ptr const&, u32, memory::stack_allocator&, bool)
 
 			~animated_object		( );
 
