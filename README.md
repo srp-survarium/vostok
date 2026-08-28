@@ -46,6 +46,18 @@ _All figures come from the ledger over every target function (paired plus inline
 _Updated 2026-08-28 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
+<!-- data-match:start -->
+## Data match status
+
+_Auto-generated from the independent PDB/image data lane; it does not feed the function score._
+
+**Retail extent coverage: 98.57% (70,510,874 / 71,536,291 virtual bytes) &middot; fidelity: 84.66% (2,578,605 / 3,045,726 compared bytes) &middot; definitions exact: 8,187 / 10,831 paired.**
+
+_EXACT requires relocation-normalized bytes and resolved pointer targets to agree. Gate: shadow calibration. Inspect with `python3 -m vostok data report`._
+
+_Updated 2026-08-28._
+<!-- data-match:end -->
+
 ## Requirements
 
 - Linux (x86_64) with [Nix](https://nixos.org/download) and flakes enabled

@@ -143,6 +143,12 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
+        # The data lane needs the identities and type-derived extents that the
+        # delinker already reads from the PDB.  Exporting them is opt-in and
+        # exits before normal COFF emission, so function pairing is unchanged.
+        postPatch = ''
+          patch -p1 < ${./tools/vostok_delinker_data_index.patch}
+        '';
         cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
       };
 

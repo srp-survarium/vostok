@@ -263,6 +263,16 @@ def main() -> None:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
         _write_build_head()
 
+        # Data is a separate image-level ledger: refreshing it must never alter
+        # or gate the function report while the census is being calibrated.
+        try:
+            from vostok.data import pipeline as data_pipeline
+            data_pipeline.refresh()
+            log("image-data ledger refreshed (shadow mode).")
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - independent shadow lane
+            log(f"WARNING: image-data ledger NOT refreshed ({e}); "
+                "refresh it with `python3 -m vostok data refresh`")
+
         # `vostok build` is the canonical build step, so it also re-derives the
         # committed ledger from the report.json it just produced (the inverse of
         # the old model where vostok derive refresh shelled out to `vostok build`).
