@@ -44,11 +44,6 @@ inline u32 n_ary_tree_weight_transition_node::start_time_in_ms					( ) const
 	return				m_start_time_in_ms;
 }
 
-inline void n_ary_tree_weight_transition_node::set_start_time_in_ms			( u32 const value )
-{
-	m_start_time_in_ms	= value;
-}
-
 } // namespace mixing
 } // namespace animation
 } // namespace vostok

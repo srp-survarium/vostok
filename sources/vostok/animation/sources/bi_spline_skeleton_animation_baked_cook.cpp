@@ -10,8 +10,6 @@
 namespace vostok {
 namespace animation {
 
-static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
-
  bi_spline_skeleton_animation_baked_cook::bi_spline_skeleton_animation_baked_cook( )
 	: resources::inplace_unmanaged_cook(
 		resources::bi_spline_skeleton_animation_baked_class,
@@ -86,6 +84,8 @@ bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_an
 {
 	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource_inplace );
 }
+
+static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
 
 } // namespace animation
 } // namespace vostok

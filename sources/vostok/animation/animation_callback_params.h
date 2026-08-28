@@ -12,7 +12,7 @@
 namespace vostok {
 namespace animation {
 
-struct animation_callback_params : private boost::noncopyable {
+struct animation_callback_params : public boost::noncopyable {
 	inline		animation_callback_params	(
 					pcvoid							animated_object,
 					skeleton_animation_ptr const&	animation,

@@ -52,6 +52,12 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		bool const					start_time_may_be_used
 	)
 {
+	enum {
+		intervals,
+		partitions,
+		events,
+	};
+
 	channel_ids						= 0;
 	domain_data						= u8( -1 );
 	int const time_direction			= start_time <= target_time ? 1 : -1;
@@ -120,7 +126,7 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 				channel_ids				= channel_bit;
 			}
 
-			if ( channel.type() > channel_type_partitions )
+			if ( channel.type() > partitions )
 				domain_data				= u8( -1 );
 			else
 				domain_data				= channel.domain( u32( current_knot - channel.knots() ) % knots_count ).data;
