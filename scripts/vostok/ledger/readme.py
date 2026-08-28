@@ -343,6 +343,13 @@ def regen_readme() -> str:
     different roster."""
     block = render(_delinker_rev())
     write_readme(block)
+    # Keep the separate image-data block adjacent when a measured data report
+    # exists. A missing shadow-lane report must not block the function block.
+    try:
+        from vostok.data import readme as data_readme
+        data_readme.write_readme(data_readme.render())
+    except (OSError, RuntimeError, ValueError):
+        pass
     return block
 
 

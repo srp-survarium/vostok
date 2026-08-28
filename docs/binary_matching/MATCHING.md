@@ -212,6 +212,10 @@ Everything else is DERIVED and lives outside the source
 - **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
   embedded in source.
 
+Globals, constants, pointer tables, and BSS use the independent image-data lane;
+see [`data_matching.md`](data_matching.md) and `python3 -m vostok data --help`.
+Its ledger and metrics never feed the function score.
+
 The only hand-written records are ledger PARKS (`vostok ledger park <mangled> --cause`):
 - `SKIP` - parked; the cause is the concrete next step (covers the old
   SKIPPED/BLOCKED: name the blocker in the cause).

@@ -12,6 +12,7 @@ Layout, mirrored by the constants below:
     binaries/                   ALL generated artifacts (gitignored)
       Win32/                      our build's exe + pdb
       objdiff/{base,target}/      delinked COFF, plus report.json
+      data/{base,target}/         PDB data indexes, image/relocation evidence
       structure/{base,target}/    pdb-parser's rendered headers/statements
       rich/{base,target}/         pdb_rich_context index for pdb_fetch
       base_only.tsv               why we emit what the target does not
@@ -100,6 +101,21 @@ DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
 #: it is a regenerable report here rather than a row in the committed ledger.
 BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 
+# Independent image-data matching lane.  It deliberately does not feed
+# objdiff/report.json: function matching and data matching have different
+# identities, denominators, and failure modes.
+DATA_DIR = BINARIES / "data"
+DATA_TARGET_DIR = DATA_DIR / "target"
+DATA_BASE_DIR = DATA_DIR / "base"
+DATA_TARGET_INDEX = DATA_TARGET_DIR / "index.tsv"
+DATA_BASE_INDEX = DATA_BASE_DIR / "index.tsv"
+DATA_TARGET_ACCESS = DATA_TARGET_DIR / "access.tsv"
+DATA_BASE_ACCESS = DATA_BASE_DIR / "access.tsv"
+DATA_TARGET_RELOCS = DATA_TARGET_DIR / "relocations.tsv"
+DATA_BASE_RELOCS = DATA_BASE_DIR / "relocations.tsv"
+DATA_REPORT = DATA_DIR / "report.json"
+DATA_COVERAGE = DATA_DIR / "coverage.json"
+
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
 # so both the delinker and pdb_rich_context need a second --engine-path to keep
@@ -141,6 +157,9 @@ MODULE_OWNERSHIP_OVERRIDES = DOCS_MATCHING / "module_ownership_overrides.tsv"
 SYMBOL_MAP_OVERRIDES = DOCS_MATCHING / "folded_symbol_overrides.tsv"
 ENUM_QUEUE = DOCS_MATCHING / "enum_queue.md"
 STRUCTURE_MISMATCH_QUEUE = DOCS_MATCHING / "structure_mismatch_queue.md"
+DATA_STATE = DOCS_MATCHING / "data_state.tsv"
+DATA_EXCLUSIONS = DOCS_MATCHING / "data_exclusions.tsv"
+DATA_GATE = DOCS_MATCHING / "data_gate.tsv"
 
 
 def survarium_bin() -> Path:

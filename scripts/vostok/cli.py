@@ -11,6 +11,7 @@
                                    now writes the record rather than a cache
     vostok sema <view>             read-only control-flow views over one
                                    base<->target function pair
+    vostok data <verb>             independent PDB/image data matching lane
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
     vostok tool <name>             one external tool: clangd / toolchain / libs
@@ -51,9 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     cmd, rest = argv[0], argv[1:]
     if cmd == "build":
         return _run("vostok.build.rebuild", rest, "vostok build")
-    if cmd in ("ledger", "derive", "sema"):
+    if cmd in ("ledger", "derive", "sema", "data"):
         mod = {"ledger": "vostok.ledger", "derive": "vostok.derive.cli",
-               "sema": "vostok.sema"}[cmd]
+               "sema": "vostok.sema", "data": "vostok.data.cli"}[cmd]
         sys.argv = [f"vostok {cmd}", *rest]
         return importlib.import_module(mod).main() or 0
     for name, table in (("diff", DIFF), ("tool", TOOLS)):

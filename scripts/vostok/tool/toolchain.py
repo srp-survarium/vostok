@@ -9,7 +9,7 @@ in binaries/ninja/ can build the project. Steps:
   2. Initialise the Wine prefix
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
-  5. Generate the target-side diff inputs once (binaries/{objdiff,structure}/target)
+  5. Generate the target-side diff inputs once (function, structure, rich, data)
      from the original game - these don't change between recompiles.
 
 Does not run ninja itself. Steps 1-4 short-circuit if every input still hashes to
@@ -45,8 +45,9 @@ from pathlib import Path
 
 from vostok.build import native_crt, ninja_regen
 from vostok.core import paths
-from vostok.core.paths import (OBJDIFF_DIR, PREBUILT, RICH_DIR, SETUP_STAMP,
-                               STRUCTURE_DIR, WINEPREFIX)
+from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
+                               DATA_TARGET_RELOCS, OBJDIFF_DIR, PREBUILT,
+                               RICH_DIR, SETUP_STAMP, STRUCTURE_DIR, WINEPREFIX)
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
@@ -164,7 +165,8 @@ def _nonempty_dir(p: Path) -> bool:
 def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
     binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
-    and binaries/rich/target (pdb_rich_context index for `pdb_fetch`).
+    binaries/rich/target (pdb_rich_context index for `pdb_fetch`), and the
+    independent PDB/image data inventory under binaries/data/target.
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
@@ -180,6 +182,9 @@ def ensure_target_side(force: bool = False) -> None:
         and _nonempty_dir(objdiff_target)
         and _nonempty_dir(structure_target)
         and _nonempty_dir(rich_target)
+        and DATA_TARGET_INDEX.is_file()
+        and DATA_TARGET_ACCESS.is_file()
+        and DATA_TARGET_RELOCS.is_file()
     ):
         return  # already generated
 
@@ -191,7 +196,9 @@ def ensure_target_side(force: bool = False) -> None:
             generate_structure.generate("target")
         if force or not _nonempty_dir(rich_target):
             generate_rich.generate("target")
-    except (RuntimeError, subprocess.CalledProcessError) as e:
+        from vostok.data import pipeline as data_pipeline
+        data_pipeline.init_target(force=force)
+    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e:
         die(f"could not generate target diff inputs: {e}")
     log("Target diff inputs ready.")
 
