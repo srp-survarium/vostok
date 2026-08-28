@@ -31,7 +31,8 @@ from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
                                    load_source_ownership_overrides,
                                    logical_module)
-from vostok.derive.pairing import Pair, Pairing, pair
+from vostok.derive.pairing import (_all_symbol_alias_candidates_equivalent,
+                                   Pair, Pairing, pair)
 from vostok.derive.roster import (enclosing_function_mangled,
                                   report_only_observations)
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
@@ -519,6 +520,17 @@ class IndexByMangledTests(unittest.TestCase):
             base_second,
         )
 
+    def test_uses_target_primary_signature_before_same_rva_alias_collapse(self):
+        folded_alias = self.record("unrelated folded alias()", 0x2000)
+        intended = self.record("target signature()", 0x2000)
+
+        indexed = index_by_mangled(
+            [folded_alias, intended],
+            preferred_signatures={intended["mangled"]: intended["name"]},
+        )
+
+        self.assertEqual(indexed, {intended["mangled"]: intended})
+
     def test_maps_legacy_rva_key_to_signature_key(self):
         first = self.record("fill_surface(target*, context*)", 0x1000)
         second = self.record("fill_surface(target*, context*, bool)", 0x1020)
@@ -649,6 +661,33 @@ class InstructionStreamExactTests(unittest.TestCase):
                 {}, mangled, {mangled: 59.464287}, target, candidate
             ),
             59.464287,
+        )
+
+
+class SymbolAliasCandidateTests(unittest.TestCase):
+    def test_accepts_ambiguous_operand_when_every_resolution_overlaps(self):
+        self.assertTrue(
+            _all_symbol_alias_candidates_equivalent(
+                {0x1000, 0x2000},
+                {0x3000},
+                {0x1000: {"shared"}, 0x2000: {"shared", "target alias"}},
+                {0x3000: {"shared", "base alias"}},
+            )
+        )
+
+    def test_rejects_ambiguous_operand_when_one_resolution_is_disjoint(self):
+        self.assertFalse(
+            _all_symbol_alias_candidates_equivalent(
+                {0x1000, 0x2000},
+                {0x3000},
+                {0x1000: {"shared"}, 0x2000: {"target only"}},
+                {0x3000: {"shared", "base alias"}},
+            )
+        )
+
+    def test_rejects_missing_operand_resolution(self):
+        self.assertFalse(
+            _all_symbol_alias_candidates_equivalent(set(), {0x3000}, {}, {})
         )
 
 

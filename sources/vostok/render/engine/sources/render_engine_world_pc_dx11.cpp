@@ -386,7 +386,7 @@ static void on_fs_iterator_materials_ready_children(
 		{
 			fs_new::virtual_path_string request_path;
 			request_path.assignf( "%s/%s", materials_path, mname );
-			request_path.rtrim();
+			request_path.rtrim( ".material" );
 			request_path.replace( "resources/material_instances/", "" );
 			out_material_names.push_back( fs_new::virtual_path_string( request_path.c_str() ) );
 		}

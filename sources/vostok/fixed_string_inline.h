@@ -74,9 +74,9 @@ fixed_string<Size> const&   fixed_string<Size>::operator = (value_type const* co
 
 template <int Size>
 template <class src_type>
-fixed_string<Size> const&   fixed_string<Size>::operator = (src_type const& s)
+fixed_string<Size> const&   fixed_string<Size>::operator = (src_type const& src)
 {
-	(buffer_string & ) * this		=	s;
+	(buffer_string & ) * this		=	src;
 	return								*this;
 }
 
