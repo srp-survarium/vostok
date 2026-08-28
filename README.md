@@ -34,7 +34,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `ui`            |    27 |     217 / 227 (95.6%) |     218 / 227 (96.0%) | 99.1% |     99.5% |
 | `physics`       |    14 |     132 / 198 (66.7%) |     152 / 198 (76.8%) | 87.5% |     92.4% |
 | `fs`            |    25 |     134 / 165 (81.2%) |     137 / 165 (83.0%) | 97.3% |     97.8% |
-| `engine`        |    22 |     148 / 162 (91.4%) |     153 / 162 (94.4%) | 97.8% |     98.3% |
+| `engine`        |    22 |     148 / 162 (91.4%) |     153 / 162 (94.4%) | 97.8% |     98.4% |
 | `network`       |    25 |      76 / 159 (47.8%) |      89 / 159 (56.0%) | 87.2% |     92.7% |
 | `network_core`  |    22 |      58 / 127 (45.7%) |      64 / 127 (50.4%) | 93.2% |     94.3% |
 | `debug`         |    16 |     117 / 122 (95.9%) |     118 / 122 (96.7%) | 98.6% |     98.9% |
@@ -43,7 +43,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) | 96.0% |     98.1% |
 | `ai_navigation` |     3 |       13 / 14 (92.9%) |      14 / 14 (100.0%) | 89.9% |    100.0% |
 
-_Updated 2026-08-27 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-08-28 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

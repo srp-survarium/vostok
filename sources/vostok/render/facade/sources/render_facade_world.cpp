@@ -15,7 +15,7 @@ world::world(
 	bool is_editor
 )
 	: m_logic_channel( logic_allocator ),
-	  m_editor_channel( editor_allocator ? *editor_allocator : logic_allocator ),
+	  m_editor_channel( *editor_allocator ),
 	  m_editor_renderer( 0 ),
 	  m_is_logic_enabled( 1 ),
 	  m_is_logic_frame_ended( 0 ),

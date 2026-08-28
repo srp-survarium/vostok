@@ -528,15 +528,15 @@ enum_options_changes_result options::end_render_options_changing(
 		}
 	}
 
-	if ( current.m_shadow_quality > uro_shadow_quality_low && current.m_shadow_quality < uro_shadow_quality_count )
-	{
-		current.m_use_poisson_disc_shadow_filter = true;
-		current.m_shadow_map_size = 1024;
-	}
-	else
+	if ( current.m_shadow_quality == uro_shadow_quality_low )
 	{
 		current.m_use_poisson_disc_shadow_filter = false;
-		current.m_shadow_map_size = 512;
+		current.m_cascaded_shadow_map_size = 512;
+	}
+	else if ( current.m_shadow_quality < uro_shadow_quality_count )
+	{
+		current.m_use_poisson_disc_shadow_filter = true;
+		current.m_cascaded_shadow_map_size = 1024;
 	}
 
 	if ( current.m_ambient_occlusion_quality == uro_ambient_occlusion_quality_off )
