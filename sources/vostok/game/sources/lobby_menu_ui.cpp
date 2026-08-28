@@ -44,6 +44,11 @@
 
 namespace survarium {
 
+inline network::login_client& lobby_menu::login_client( )
+{
+	return get_game( ).get_network_client( )->login_client( );
+}
+
 // TU-local (canonical headers/relocate_item_func.h; owner mapping in
 // temp/triage_log.md) - lobby_menu holds it through m_relocate_item_func
 class relocate_item_func : public flash_function_handler , private boost::noncopyable {
@@ -361,7 +366,7 @@ void lobby_menu::update_level_loading_progress( )
 	vostok::sprintf						( buff, "(%d)", resources::pending_queries_count( ) );
 
 	if ( m_last_queries_count > resources::pending_queries_count( ) )
-		m_level_loading_progress += ( 1.0f - m_level_loading_progress ) * ( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count;
+		m_level_loading_progress += ( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count * ( 1.0f - m_level_loading_progress );
 
 	m_last_queries_count = resources::pending_queries_count( );
 
@@ -373,16 +378,17 @@ void lobby_menu::update_level_loading_progress( )
 	wchar_t queries_count[512];
 	mbstowcs_s							( NULL, queries_count, 512, buff, _TRUNCATE );
 
-	wcscat_s							( w_text, level_name );
-	wcscat_s							( w_text, L"=" );
-	wcscat_s							( w_text, queries_count );
+	wcscat_s							( w_text, sizeof( w_text ), level_name );
+	wcscat_s							( w_text, sizeof( w_text ), L"=" );
+	wcscat_s							( w_text, sizeof( w_text ), queries_count );
 
 	flash_value text;
 	text.SetStringW						( w_text );
 	m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
 
-	if ( clear_value - m_level_loading_progress < math::epsilon_3 )
-		m_level_loading_progress = clear_value;
+	m_level_loading_progress = clear_value - m_level_loading_progress < math::epsilon_3
+		? clear_value
+		: m_level_loading_progress;
 
 	flash_value progress;
 	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );
@@ -425,24 +431,27 @@ void lobby_menu::update_status( )
 	if ( lobby_client( ).status( status_str ) == lobby::surf_lobby_menu )
 		b_val.SetBoolean( true );
 
+	network::login_client& login_client = this->login_client( );
+	class lobby_client& lobby_client = this->lobby_client( );
+
 	flash_value account_info;
 	m_lobby_menu_ui->movie->CreateArray	( &account_info );
-	account_info.SetElement				( 0, login_client( ).account_name( ) );
-	account_info.SetElement				( 1, login_client( ).m_server_host );
+	account_info.SetElement				( 0, login_client.account_name( ) );
+	account_info.SetElement				( 1, login_client.m_server_host );
 
 	flash_value port;
-	port.SetUInt					( login_client( ).m_server_port );
+	port.SetUInt					( login_client.m_server_port );
 	account_info.SetElement				( 2, port );
 
 	fixed_string< 128 > buff;
-	buff.assignf				( "%s:%d", lobby_client( ).connection_info( ).host, lobby_client( ).connection_info( ).port );
+	buff.assignf				( "%s:%d", lobby_client.connection_info( ).host, lobby_client.connection_info( ).port );
 	account_info.SetElement				( 3, buff.c_str( ) );
 
 	m_lobby_menu_ui->movie->Invoke		( "root.lobby_menu.set_account_info", NULL, &account_info, 1 );
-	m_lobby_menu_ui->movie->Invoke		( "root.lock_play_button", NULL, &b_val, 1 );
 
 	flash_value log_message;
 	log_message.SetString				( status_str.c_str( ) );
+	m_lobby_menu_ui->movie->Invoke		( "root.lock_play_button", NULL, &b_val, 1 );
 	m_lobby_menu_ui->movie->Invoke		( "root.set_status_info", NULL, &log_message, 1 );
 }
 
@@ -780,11 +789,11 @@ void lobby_menu::fill_items_dictionary( )
 
 void lobby_menu::fill_inventory_contents( )
 {
-	inventory_item_instance const* it	= lobby_client( ).inventory_item_instances( ).begin( );
-	inventory_item_instance const* it_e	= lobby_client( ).inventory_item_instances( ).end( );
+	vectora< inventory_item_instance >& inventory_items = lobby_client( ).inventory_item_instances( ); inventory_item_instance const* it = inventory_items.begin( ), *it_e = inventory_items.end( );
 
 	flash_value inventory_array;
 	m_lobby_menu_ui->movie->CreateArray	( &inventory_array );
+	flash_value inventory_item_property;
 
 	u32 i = 0;
 	for ( ; it != it_e; ++it )
@@ -792,17 +801,20 @@ void lobby_menu::fill_inventory_contents( )
 		flash_value inventory_item;
 		m_lobby_menu_ui->movie->CreateObject( &inventory_item );
 
-		flash_value inventory_item_property;
-		inventory_item_property.SetInt	( it->id );
+		u32 const item_id				= it->id;
+		u32 const item_dict_id			= it->dict_id;
+		u32 const condition_or_stack	= it->condition_or_stack;
+
+		inventory_item_property.SetInt	( item_id );
 		inventory_item.SetMember		( "id", inventory_item_property );
 
-		inventory_item_property.SetInt	( it->dict_id );
+		inventory_item_property.SetInt	( item_dict_id );
 		inventory_item.SetMember		( "dictId", inventory_item_property );
 
-		inventory_item_property.SetUInt	( it->condition_or_stack );
+		inventory_item_property.SetUInt	( condition_or_stack );
 		inventory_item.SetMember		( "condition", inventory_item_property );
 
-		inventory_item_property.SetUInt	( it->condition_or_stack );
+		inventory_item_property.SetUInt	( condition_or_stack );
 		inventory_item.SetMember		( "condition_or_stack", inventory_item_property );
 
 		inventory_array.SetElement		( i, inventory_item );
@@ -820,12 +832,13 @@ void lobby_menu::on_items_compatibility_arrived( )
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
 	u8 const item_compatibilities_count	= client.item_compatibilities_count( );
-	for ( u8 i = 0; i < item_compatibilities_count; ++i )
+	flash_value items_compatibility_item_property;
+	u8 i = 0;
+	for ( ; i < item_compatibilities_count; ++i )
 	{
 		flash_value items_compatibility_item;
 		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
 
-		flash_value items_compatibility_item_property;
 		items_compatibility_item_property.SetUInt	( client.get_items_compatibility( i ).first_item_dict_id );
 		items_compatibility_item.SetMember			( "first_item_dict_id", items_compatibility_item_property );
 
@@ -846,12 +859,13 @@ void lobby_menu::on_slot_restrictions_arrived( )
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
 	u8 const slot_restrictions_count	= client.slot_restrictions_count( );
-	for ( u8 i = 0; i < slot_restrictions_count; ++i )
+	flash_value slot_restriction_item_property;
+	u8 i = 0;
+	for ( ; i < slot_restrictions_count; ++i )
 	{
 		flash_value slot_restriction_item;
 		m_lobby_menu_ui->movie->CreateObject( &slot_restriction_item );
 
-		flash_value slot_restriction_item_property;
 		slot_restriction_item_property.SetUInt	( client.slot_restriction( i ).slot_dict_id );
 		slot_restriction_item.SetMember			( "slot_id", slot_restriction_item_property );
 
@@ -871,15 +885,16 @@ void lobby_menu::fill_profiles( )
 	m_lobby_menu_ui->movie->CreateArray	( &profiles_array );
 
 	u8 const profiles_count				= client.profiles_count( );
+	flash_value profile_item_property;
 	for ( u8 i = 0; i < profiles_count; ++i )
 	{
 		flash_value profile_item;
 		m_lobby_menu_ui->movie->CreateObject( &profile_item );
 
 		wchar_t profile_name_w[512];
-		mbstowcs_s						( NULL, profile_name_w, 512, client.profile( i ).profile_name, _TRUNCATE );
+		size_t converted_chars_count		= 0;
+		mbstowcs_s						( &converted_chars_count, profile_name_w, 512, client.profile( i ).profile_name, _TRUNCATE );
 
-		flash_value profile_item_property;
 		profile_item_property.SetStringW( profile_name_w );
 		profile_item.SetMember			( "name", profile_item_property );
 
@@ -991,88 +1006,53 @@ void lobby_menu::on_profile_arrived( u8 profile_id )
 	}
 }
 
-// claude@NOTE: PARKED - navigates items_dictionary()'s private dict_config
-// (["factions_dict"]["faction_%d"]["levels"]); items_dictionary::dict_config has no
-// accessor (game_core class, can't edit here). Also scaleform flash /Od inline wall.
-// Recover once items_dictionary exposes dict_config.
-// STATE[STUB]
 void lobby_menu::on_price_items_arrived( u8 trader_id )
 {
-	// LOCALS
-	// configs::binary_config_value const& faction_levels
-	// u8 								levels_count
-	// lobby_client& 					lobby_client
-	// char[32] 						faction_str
-	// u8 								current_reputation_level
-	// flash_value 						price_item_property
-	// flash_value[5] 					current_level
-	// wchar_t[512] 					faction_level_name_w
-	// flash_value 						prices_array_item
-	// ******
+	class lobby_client& lobby_client = this->lobby_client( );
 
-	// CALL SITE INFO
-	// <0x744c32> -> lobby_client& < unknown >()
-	// ******
+	char faction_str[32];
+	sprintf_s( faction_str, "faction_%d", trader_id );
+	configs::binary_config_value const& faction_levels = get_game( ).items_dictionary( ).dict_config->get_root( )["factions_dict"][faction_str]["levels"];
+	u8 levels_count = faction_levels.size( );
 
-	// FUNCTION BODY[0x744c10]: 55
-	// <0x744c17>|0x007|+0x0c9:'1093'
-	// <0x744ce0>|0x0d0|-0x0ac:'1093'
-	// <0>
-	// <1>
-	// <0x744c34>|0x024|+0x020:'1096'
-	// <0x744c54>|0x044|+0x042:'1097'
-	// <0>
-	// <0x744c96>|0x086|+0x026:'1099'
-	// <0>
-	// <1>
-	// <2>
-	// <0x744cbc>|0x0ac|+0x028:'1103'
-	// <0>
-	// <0x744ce4>|0x0d4|+0x015:'1105'
-	// <0>
-	// <0x744cf9>|0x0e9|+0x01c:'1107'
-	// <0>
-	// <0x744d15>|0x105|+0x02d:'1109'
-	// <0>
-	// <0x744d42>|0x132|+0x028:'1111'
-	// <0>
-	// <0x744d6a>|0x15a|+0x03f:'1113'
-	// <0>
-	// <1>
-	// <0x744da9>|0x199|+0x01f:'1116'
-	// <0x744dc8>|0x1b8|+0x083:'1117'
-	// <0>
-	// <0x744e4b>|0x23b|+0x019:'1119'
-	// <0>
-	// <0x744e64>|0x254|+0x058:'1121'
-	// <0x744ebc>|0x2ac|-0x025:'1121'
-	// <0>
-	// <1>
-	// <2>
-	// <0x744e97>|0x287|+0x029:'1125'
-	// <0>
-	// <0x744ec0>|0x2b0|+0x013:'1127'
-	// <0>
-	// <0x744ed3>|0x2c3|+0x00f:'1129'
-	// <0>
-	// <1>
-	// <2>
-	// <0x744ee2>|0x2d2|+0x02d:'1133'
-	// <0>
-	// <0x744f0f>|0x2ff|+0x02c:'1135'
-	// <0x744f3b>|0x32b|+0x038:'1136'
-	// <0>
-	// <0x744f73>|0x363|+0x028:'1138'
-	// <0x744f9b>|0x38b|+0x03f:'1139'
-	// <0>
-	// <0x744fda>|0x3ca|+0x02d:'1141'
-	// <0x745007>|0x3f7|+0x036:'1142'
-	// <0>
-	// <0x74503d>|0x42d|+0x015:'1144'
-	// <0x745052>|0x442|+0x03a:'1145'
-	// <0x74508c>|0x47c|+0x028:'1146'
-	// <0x7450b4>|0x4a4|+0x073:'1147'
-	// ******
+	for ( u8 current_reputation_level = 0; current_reputation_level < levels_count; ++current_reputation_level )
+	{
+		pcstr faction_level_name = faction_levels[current_reputation_level]["name"];
+
+		flash_value current_level[5];
+		current_level[0].SetUInt( trader_id );
+		m_lobby_menu_ui->movie->CreateArray( &current_level[1] );
+		current_level[2].SetUInt( current_reputation_level );
+
+		wchar_t faction_level_name_w[512];
+		get_game( ).text_translator( ).translate_text( faction_level_name, faction_level_name_w );
+		current_level[3].SetStringW( faction_level_name_w );
+		current_level[4].SetUInt( faction_levels[current_reputation_level]["value"] );
+
+		flash_value price_item_property;
+		for ( u32 i = 0; i < lobby_client.price( trader_id ).count; ++i )
+		{
+			price_item const& item = lobby_client.price( trader_id ).items[i];
+			if ( item.reputation_level != current_reputation_level )
+				continue;
+
+			flash_value prices_array_item;
+			m_lobby_menu_ui->movie->CreateObject( &prices_array_item );
+
+			price_item_property.SetUInt( item.item_dict_id );
+			prices_array_item.SetMember( "dictId", price_item_property );
+
+			price_item_property.SetUInt( 10 );
+			prices_array_item.SetMember( "count", price_item_property );
+
+			price_item_property.SetUInt( item.cost );
+			prices_array_item.SetMember( "cost", price_item_property );
+
+			current_level[1].PushBack( prices_array_item );
+		}
+
+		m_lobby_menu_ui->movie->Invoke( "root.setup_shop_data", NULL, current_level, 5 );
+	}
 }
 
 void lobby_menu::reset_account_money( )
@@ -1102,208 +1082,160 @@ void lobby_menu::on_shop_ui_ready( )
 		lobby_client( ).query_prices( trader_id );
 }
 
-// claude@NOTE: PARKED - large config-driven builder navigating items_dictionary()'s
-// private dict_config binary_config (skills tree / boosters / perks tables);
-// items_dictionary::dict_config has no accessor (game_core class, can't edit here). Also
-// scaleform flash /Od inline wall. Recover once items_dictionary exposes dict_config.
-// STATE[STUB]
 void lobby_menu::fill_skills_tree( )
 {
-	// LOCALS
-	// configs::binary_config_value const& tree
-	// configs::binary_config_value const& db_dictionaries
-	// flash_value 						skills_tree_value_prop
-	// flash_value 						skills_tree_value
-	// wchar_t[512] 					branch_descr
-	// char[32] 						skill_branch_name
-	// u32 								levels_count
-	// wchar_t[512] 					branch_name
-	// u8 								skill_id
-	// flash_value 						skills_tree_level_value_prop
-	// configs::binary_config_value const& current_skill_value
-	// char[32] 						skill_name
-	// u32 								i
-	// configs::binary_config_value const* booster_it_e
-	// flash_value 						skills_tree_level_value
-	// flash_value 						item_property_member
-	// configs::binary_config_value const& current_level_cfg
-	// char[32] 						skill_level_table_name
-	// u32 								booster_index
-	// char[32] 						prop_value_str
-	// char[32] 						booster_table_name
-	// wchar_t[512] 					prop_name
-	// float 							prop_value
-	// flash_value 						item_property
-	// flash_value 						perk_property_member
-	// configs::binary_config_value const* perk_it_e
-	// configs::binary_config_value const* perk_it
-	// u32 								perk_index
-	// wchar_t[512] 					perk_name
-	// flash_value 						perk_property
-	// char[32] 						perk_table_name
-	// wchar_t[512] 					perk_descr
-	// ******
+	configs::binary_config_value const& tree = lobby_client( ).skills_tree_config( )->get_root( );
+	configs::binary_config_value const& db_dictionaries = get_game( ).items_dictionary( ).dict_config->get_root( );
 
-	// FUNCTION BODY[0x743cd0]: 156
-	// <0x743cda>|0x00a|+0x022:'1184'
-	// <0>
-	// <0x743cfc>|0x02c|+0x01f:'1186'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x743d1b>|0x04b|+0x024:'1191'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x743d3f>|0x06f|+0x019:'1198'
-	// <0>
-	// <0x743d58>|0x088|+0x019:'1200'
-	// <0>
-	// <0x743d71>|0x0a1|+0x015:'1202'
-	// <0>
-	// <1>
-	// <0x743d86>|0x0b6|+0x031:'1205'
-	// <0>
-	// <1>
-	// <0x743db7>|0x0e7|+0x01e:'1208'
-	// <0>
-	// <1>
-	// <2>
-	// <0x743dd5>|0x105|+0x045:'1212'
-	// <0>
-	// <0x743e1a>|0x14a|+0x06e:'1214'
-	// <0x743e88>|0x1b8|+0x037:'1215'
-	// <0>
-	// <1>
-	// <0x743ebf>|0x1ef|+0x045:'1218'
-	// <0>
-	// <0x743f04>|0x234|+0x06e:'1220'
-	// <0x743f72>|0x2a2|+0x037:'1221'
-	// <0>
-	// <0x743fa9>|0x2d9|+0x050:'1223'
-	// <0x743ff9>|0x329|+0x041:'1224'
-	// <0>
-	// <0x74403a>|0x36a|+0x028:'1226'
-	// <0x744062>|0x392|+0x042:'1227'
-	// <0>
-	// <0x7440a4>|0x3d4|+0x024:'1229'
-	// <0x7440c8>|0x3f8|+0x03f:'1230'
-	// <0>
-	// <0x744107>|0x437|+0x019:'1232'
-	// <0>
-	// <1>
-	// <2>
-	// <0x744120>|0x450|+0x038:'1236'
-	// <0x744158>|0x488|+0x9b4:'1237'
-	// <0x744b0c>|0xe3c|-0x993:'1237'
-	// <0>
-	// <1>
-	// <0x744179>|0x4a9|+0x019:'1240'
-	// <0x744192>|0x4c2|+0x01b:'1241'
-	// <0>
-	// <1>
-	// <0x7441ad>|0x4dd|+0x036:'1244'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7441e3>|0x513|+0x083:'1249'
-	// <0x744266>|0x596|+0x03a:'1250'
-	// <0>
-	// <0x7442a0>|0x5d0|+0x00c:'1252'
-	// <0>
-	// <0x7442ac>|0x5dc|+0x039:'1254'
-	// <0x7442e5>|0x615|+0x04d:'1255'
-	// <0>
-	// <0x744332>|0x662|+0x01c:'1257'
-	// <0>
-	// <0x74434e>|0x67e|+0x00e:'1259'
-	// <0x74435c>|0x68c|+0x01c:'1260'
-	// <0>
-	// <0x744378>|0x6a8|+0x008:'1262'
-	// <0>
-	// <0x744380>|0x6b0|+0x2fe:'1264'
-	// <0x74467e>|0x9ae|-0x2ee:'1264'
-	// <0>
-	// <1>
-	// <0x744390>|0x6c0|+0x024:'1267'
-	// <0>
-	// <0x7443b4>|0x6e4|+0x01d:'1269'
-	// <0x7443d1>|0x701|+0x015:'1270'
-	// <0>
-	// <1>
-	// <0x7443e6>|0x716|+0x017:'1273'
-	// <0>
-	// <1>
-	// <0x7443fd>|0x72d|+0x045:'1276'
-	// <0>
-	// <1>
-	// <0x744442>|0x772|+0x022:'1279'
-	// <0>
-	// <0x744464>|0x794|+0x074:'1281'
-	// <0x7444d8>|0x808|+0x02e:'1282'
-	// <0>
-	// <0x744506>|0x836|+0x06e:'1284'
-	// <0x744574>|0x8a4|+0x02c:'1285'
-	// <0>
-	// <0x7445a0>|0x8d0|+0x050:'1287'
-	// <0x7445f0>|0x920|+0x03d:'1288'
-	// <0>
-	// <0x74462d>|0x95d|+0x020:'1290'
-	// <0x74464d>|0x97d|+0x038:'1291'
-	// <0>
-	// <0x744685>|0x9b5|+0x03a:'1293'
-	// <0x7446bf>|0x9ef|+0x014:'1294'
-	// <0x7446d3>|0xa03|+0x01c:'1295'
-	// <0>
-	// <0x7446ef>|0xa1f|+0x00e:'1297'
-	// <0x7446fd>|0xa2d|+0x023:'1298'
-	// <0>
-	// <0x744720>|0xa50|+0x008:'1300'
-	// <0>
-	// <0x744728>|0xa58|+0x01c:'1302'
-	// <0>
-	// <1>
-	// <0x744744>|0xa74|+0x024:'1305'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x744768>|0xa98|+0x00e:'1310'
-	// <0>
-	// <1>
-	// <0x744776>|0xaa6|+0x012:'1313'
-	// <0>
-	// <1>
-	// <0x744788>|0xab8|+0x048:'1316'
-	// <0>
-	// <1>
-	// <0x7447d0>|0xb00|+0x045:'1319'
-	// <0>
-	// <0x744815>|0xb45|+0x083:'1321'
-	// <0x744898>|0xbc8|+0x02e:'1322'
-	// <0>
-	// <0x7448c6>|0xbf6|+0x07e:'1324'
-	// <0x744944>|0xc74|+0x02c:'1325'
-	// <0>
-	// <0x744970>|0xca0|+0x024:'1327'
-	// <0x744994>|0xcc4|+0x03a:'1328'
-	// <0>
-	// <0x7449ce>|0xcfe|+0x020:'1330'
-	// <0x7449ee>|0xd1e|+0x03c:'1331'
-	// <0x744a2a>|0xd5a|+0x03a:'1332'
-	// <0x744a64>|0xd94|+0x021:'1333'
-	// <0x744a85>|0xdb5|+0x020:'1334'
-	// <0x744aa5>|0xdd5|+0x06c:'1335'
-	// <0x744b11>|0xe41|+0x037:'1336'
-	// <0>
-	// <0x744b48>|0xe78|+0x023:'1338'
-	// <0x744b6b>|0xe9b|+0x07b:'1339'
-	// ******
+	flash_value skills_tree_value_prop;
+	for ( u32 skill_branch = 1; skill_branch <= 5; ++skill_branch )
+	{
+		char skill_branch_name[32];
+		sprintf_s( skill_branch_name, "skill_%d", skill_branch );
+
+		configs::binary_config_value const& current_skill_value = tree[skill_branch_name];
+		u8 skill_id = current_skill_value["id"];
+
+		flash_value skills_tree_value;
+		m_lobby_menu_ui->movie->CreateObject( &skills_tree_value );
+
+		char skill_name[32];
+		sprintf_s( skill_name, "skill_%d", skill_id );
+
+		wchar_t branch_name[512];
+		get_game( ).text_translator( ).translate_text(
+			db_dictionaries["skills_dict"][skill_name]["skill_name"],
+			branch_name
+		);
+		skills_tree_value_prop.SetStringW( branch_name );
+		skills_tree_value.SetMember( "name", skills_tree_value_prop );
+
+		wchar_t branch_descr[512];
+		get_game( ).text_translator( ).translate_text(
+			db_dictionaries["skills_dict"][skill_name]["skill_description"],
+			branch_descr
+		);
+		skills_tree_value_prop.SetStringW( branch_descr );
+		skills_tree_value.SetMember( "description", skills_tree_value_prop );
+
+		skills_tree_value_prop.SetUInt( db_dictionaries["skills_dict"][skill_name]["skill_icon"] );
+		skills_tree_value.SetMember( "color", skills_tree_value_prop );
+
+		skills_tree_value_prop.SetUInt( skill_id );
+		skills_tree_value.SetMember( "id", skills_tree_value_prop );
+
+		skills_tree_value_prop.SetUInt( 0 );
+		skills_tree_value.SetMember( "opened", skills_tree_value_prop );
+
+		m_lobby_menu_ui->movie->CreateArray( &skills_tree_value_prop );
+
+		u32 levels_count = current_skill_value["levels"].size( );
+		for ( u32 i = 1; i <= levels_count; ++i )
+		{
+			char skill_level_table_name[32];
+			sprintf_s( skill_level_table_name, "skill_level_%d", i );
+
+			configs::binary_config_value const& current_level_cfg = current_skill_value["levels"][skill_level_table_name];
+
+			flash_value skills_tree_level_value;
+			m_lobby_menu_ui->movie->CreateObject( &skills_tree_level_value );
+
+			flash_value skills_tree_level_value_prop;
+			skills_tree_level_value_prop.SetStringW( branch_name );
+			skills_tree_level_value.SetMember( "name", skills_tree_level_value_prop );
+
+			skills_tree_level_value_prop.SetBoolean( current_level_cfg.value_exists( "perks" ) );
+			skills_tree_level_value.SetMember( "power", skills_tree_level_value_prop );
+
+			m_lobby_menu_ui->movie->CreateArray( &skills_tree_level_value_prop );
+
+			configs::binary_config_value const* booster_it = current_level_cfg["boosters"].begin( );
+			configs::binary_config_value const* booster_it_e = current_level_cfg["boosters"].end( );
+			flash_value item_property_member;
+			u32 booster_index = 0;
+			for ( ; booster_it != booster_it_e; ++booster_it, ++booster_index )
+			{
+				flash_value item_property;
+				m_lobby_menu_ui->movie->CreateObject( &item_property );
+
+				float prop_value = (*booster_it)["value"];
+
+				char booster_table_name[32];
+				sprintf_s( booster_table_name, "booster_%d", (u32)(*booster_it)["id"] );
+
+				wchar_t prop_name[512];
+				get_game( ).text_translator( ).translate_text(
+					db_dictionaries["boosters_dict"][booster_table_name]["booster_name"],
+					prop_name
+				);
+
+				char prop_value_str[32];
+				sprintf_s( prop_value_str, "%f", prop_value );
+
+				item_property_member.SetString( prop_value_str );
+				item_property.SetMember( "prop_value", item_property_member );
+
+				item_property_member.SetStringW( prop_name );
+				item_property.SetMember( "prop_name", item_property_member );
+
+				item_property_member.SetUInt( db_dictionaries["boosters_dict"][booster_table_name]["booster_icon"] );
+				item_property.SetMember( "prop_icon", item_property_member );
+
+				skills_tree_level_value_prop.SetElement( booster_index, item_property );
+			}
+
+			skills_tree_level_value.SetMember( "properties", skills_tree_level_value_prop );
+
+			if ( current_level_cfg.value_exists( "perks" ) )
+			{
+				m_lobby_menu_ui->movie->CreateArray( &skills_tree_level_value_prop );
+
+				configs::binary_config_value const* perk_it = current_level_cfg["perks"].begin( );
+				configs::binary_config_value const* perk_it_e = current_level_cfg["perks"].end( );
+				flash_value perk_property_member;
+				u32 perk_index = 0;
+				for ( ; perk_it != perk_it_e; ++perk_it, ++perk_index )
+				{
+					flash_value perk_property;
+					m_lobby_menu_ui->movie->CreateObject( &perk_property );
+
+					char perk_table_name[32];
+					sprintf_s( perk_table_name, "perk_%d", (u32)(*perk_it)["id"] );
+
+					wchar_t perk_name[512];
+					get_game( ).text_translator( ).translate_text(
+						db_dictionaries["perks_dict"][perk_table_name]["name"],
+						perk_name
+					);
+
+					wchar_t perk_descr[512];
+					get_game( ).text_translator( ).translate_text(
+						db_dictionaries["perks_dict"][perk_table_name]["description"],
+						perk_descr
+					);
+
+					perk_property_member.SetStringW( perk_name );
+					perk_property.SetMember( "name", perk_property_member );
+
+					perk_property_member.SetStringW( perk_descr );
+					perk_property.SetMember( "item_description", perk_property_member );
+
+					perk_property_member.SetUInt( (*perk_it)["id"] );
+					perk_property.SetMember( "id", perk_property_member );
+
+					skills_tree_level_value_prop.SetElement( perk_index, perk_property );
+				}
+
+				skills_tree_level_value.SetMember( "perks", skills_tree_level_value_prop );
+			}
+
+			skills_tree_value_prop.SetElement( i - 1, skills_tree_level_value );
+		}
+
+		skills_tree_value.SetMember( "slots", skills_tree_value_prop );
+		m_lobby_menu_ui->movie->Invoke( "root.create_perk_tree", NULL, &skills_tree_value, 1 );
+	}
+
 }
 
 // The target keeps the Scaleform value construction and destruction inline here.
@@ -1414,6 +1346,7 @@ void lobby_menu::fill_ignore_list( )
 
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
+	flash_value value;
 
 	for ( u32 i = 0;
 			i < players_list.size( ); ++i )
@@ -1421,7 +1354,6 @@ void lobby_menu::fill_ignore_list( )
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
-		flash_value value;
 		value.SetUInt					( players_list[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
@@ -1439,21 +1371,23 @@ void lobby_menu::fill_ignore_list( )
 
 void lobby_menu::fill_found_players( )
 {
+	vectora< account_list_item > const& players_list = messaging_client( ).get_found_players_list( );
+
 	flash_value array_value;
 	m_lobby_menu_ui->movie->CreateArray	( &array_value );
+	flash_value value;
 
-	const u32 count = messaging_client( ).get_found_players_list( ).size( );
+	const u32 count = players_list.size( );
 	for ( u32 i = 0;
 			i < count; ++i )
 	{
 		flash_value list_item;
 		m_lobby_menu_ui->movie->CreateObject( &list_item );
 
-		flash_value value;
-		value.SetUInt					( messaging_client( ).get_found_players_list( )[ i ].account_id );
+		value.SetUInt					( players_list[ i ].account_id );
 		list_item.SetMember				( "id", value );
 
-		value.SetString					( messaging_client( ).get_found_players_list( )[ i ].account_name.c_str( ) );
+		value.SetString					( players_list[ i ].account_name.c_str( ) );
 		list_item.SetMember				( "name", value );
 
 		array_value.SetElement			( i, list_item );
@@ -1554,11 +1488,6 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 	}
 }
 
-// claude@NOTE: chat_handler now headered, so the parse + add_message path is recovered.
-// The wcsstr prefix literals (L"player_id"/L"player_exp"/L"player_count" + the L" ="/L"="
-// terminators) are length-matched guesses (relocated rdata, do not affect bytes). Residual
-// is the scaleform flash /Od inline wall (set_games_online Invoke + flash_value ctor/dtor)
-// and LTCG scheduling.
 void lobby_menu::on_stats_message_arrived(
 	wchar_t const*						w_text,
 	wchar_t const*						w_sender_name,
@@ -1573,10 +1502,12 @@ void lobby_menu::on_stats_message_arrived(
 	if ( player_id )
 	{
 		wchar_t w_player_id[32];
-		wcsncpy_s			( w_player_id, player_id + 9, ( wcsstr( player_id, L" =" ) - player_id ) / 2 - 9 );
+		wchar_t const* const player_id_end = wcsstr( player_id, L" ]" );
+		wcsncpy_s			( w_player_id, player_id + 9, player_id_end - player_id - 9 );
 
 		char player_name[32];
-		wcstombs_s			( NULL, player_name, 32, w_player_id, _TRUNCATE );
+		size_t converted_chars_count = 0;
+		wcstombs_s			( &converted_chars_count, player_name, 32, w_player_id, _TRUNCATE );
 
 		if ( strings::equal( player_name, lobby_client( ).account_nickname_ ) )
 		{
@@ -1585,7 +1516,8 @@ void lobby_menu::on_stats_message_arrived(
 			if ( player_exp )
 			{
 				wchar_t w_player_exp[32];
-				wcsncpy_s	( w_player_exp, player_exp + 4, ( wcsstr( player_exp, L"=" ) - player_exp ) / 2 - 4 );
+				wchar_t const* const player_exp_end = wcsstr( player_exp, L"]" );
+				wcsncpy_s	( w_player_exp, player_exp + 4, player_exp_end - player_exp - 4 );
 
 				m_match_stats.last_match_exp_delta = _wtoi( w_player_exp );
 
@@ -1602,7 +1534,8 @@ void lobby_menu::on_stats_message_arrived(
 	else if ( player_count )
 	{
 		wchar_t w_player_count[8];
-		wcsncpy_s			( w_player_count, player_count + 5, ( wcsstr( player_count, L"=" ) - player_count ) / 2 - 5 );
+		wchar_t const* const player_count_end = wcsstr( player_count, L"]" );
+		wcsncpy_s			( w_player_count, player_count + 5, player_count_end - player_count - 5 );
 
 		flash_value player_count_val;
 		player_count_val.SetStringW		( w_player_count );
@@ -1633,28 +1566,28 @@ void lobby_menu::show_disconnected_message( bool b_show )
 	}
 }
 
-// claude@NOTE: config part PARKED on items_dictionary::dict_config being private with
-// no accessor (game_core, can't edit here). Recovered body: per reputation_id in
-// lobby_client().get_player_reputations_count(): faction_str = sprintf("faction_%d",
-// reputation.faction_id); faction_levels = items_dictionary().dict_config->get_root()
-// ["factions_dict"][faction_str]["levels"]; walk faction_levels, player_reputation_
-// level = highest level i where reputation_points >= levels[i]["value"]; build
-// player_progress_args[3] (faction/level/points uints) and Invoke
-// "root.setup_player_progress". Restore the config nav once items_dictionary exposes
-// dict_config (or lobby_menu is friended). Also byte-capped by the scaleform stubs.
 void lobby_menu::on_player_reputations_arrived( )
 {
 	for ( u8 reputation_id = 0; reputation_id < lobby_client( ).get_player_reputations_count( ); ++reputation_id )
 	{
-		char faction_str[32];
-		sprintf_s						( faction_str, "faction_%d", lobby_client( ).get_player_reputation( reputation_id ).faction_id );
+		player_reputation const& reputation = lobby_client( ).get_player_reputation( reputation_id );
+		u16 const reputation_points = reputation.reputation_points;
 
+		char faction_str[32];
+		sprintf_s						( faction_str, "faction_%d", reputation.faction_id );
+
+		configs::binary_config_value const& faction_levels = get_game( ).items_dictionary( ).dict_config->get_root( )["factions_dict"][faction_str]["levels"];
+		u8 const levels_count = faction_levels.size( );
 		u8 player_reputation_level = 0;
+		for ( u8 current_reputation_level = 0; current_reputation_level < levels_count; ++current_reputation_level )
+		{
+			if ( reputation_points >= (u32)faction_levels[current_reputation_level]["value"] )
+				player_reputation_level = current_reputation_level;
+		}
 
 		flash_value player_progress_args[3];
-		player_progress_args[0].SetUInt	( reputation_id );
-		player_progress_args[1].SetUInt	( player_reputation_level );
-		player_progress_args[2].SetUInt	( lobby_client( ).get_player_reputation( reputation_id ).reputation_points );
+		player_progress_args[0].SetUInt	( player_reputation_level );
+		player_progress_args[1].SetUInt	( reputation_points );
 		m_lobby_menu_ui->movie->Invoke	( "root.setup_player_progress", NULL, player_progress_args, 3 );
 	}
 }

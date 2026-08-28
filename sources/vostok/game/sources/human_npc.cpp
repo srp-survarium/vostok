@@ -100,9 +100,20 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 	m_game_world( game_world ),
 	m_renderer( game_world.get_game( ).renderer( ) ),
 	m_visibility_parameters( 0.0f ),
+	m_transform( float4x4( ).identity( ) ),
+	m_last_tick_time_in_ms( 0 ),
 	m_scene( game_world.render_scene( ) ),
 	m_sound_scene( game_world.get_sound_scene( ) ),
+	m_current_animation( NULL ),
+	m_current_movement_target( NULL ),
+	m_animations_selector( NULL ),
+	m_current_target( NULL ),
+	m_current_weapon( NULL ),
+	m_is_patrolling( false ),
 	m_affects_subscription( boost::bind( &human_npc::on_affect_event, this, _1, _2, _3 ) ),
+	m_sound_perceived( false ),
+	m_sound_produced( false ),
+	m_dbg_sound( false ),
 	m_feet_adjustment_speed( 1.f )
 {
 }

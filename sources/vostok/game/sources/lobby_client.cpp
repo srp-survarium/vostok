@@ -73,11 +73,14 @@ void lobby_client::clear_profile_info( )
 	m_profiles_count	= 0;
 	m_inventory_item_instances.clear	( );
 
-	m_account_money.generic_money	= m_account_money.premium_money	= m_account_money.total_skill_points	= 0;
+	m_account_money	= account_money( );
 
 	FREE	( m_player_skills );
+	m_player_skills_count	= 0;
 	FREE	( m_player_reputations );
+	m_player_reputations_count	= 0;
 	FREE	( m_player_perks );
+	m_player_perks_count	= 0;
 }
 
 void lobby_client::on_connected( )
@@ -204,31 +207,30 @@ void lobby_client::query_profile_contents(
 	m_packet_client.send	( packet );
 }
 
-// claude@NOTE: the read_*/send handlers below are STRUCTURE-MATCHed but byte-capped:
-// network_core::packet_reader::r<T>()/r_string()/eof() and tcp_packet::append()/send()
-// are whole-program-inlined in the target but emitted as calls in our base. Match the
-// networking implementations before chasing the remaining bytes here.
 bool lobby_client::read_status_info( network_core::packet_reader& reader )
 {
 	m_status	= (lobby::client_state_enum)reader.r< u8 >( );
 
-	if ( m_status == lobby::in_match_making_order || m_status == lobby::in_match_making || m_status == lobby::in_match )
+	switch ( m_status )
 	{
+	case lobby::in_match_making_order:
+	case lobby::in_match_making:
+	case lobby::in_match:
 		m_match_order_id	= reader.r< u32 >( );
 		m_match_id			= reader.r< u32 >( );
 		m_team_id			= (game_team_id)reader.r< u8 >( );
-	}
-	else
-	{
+		break;
+	case lobby::surf_lobby_menu:
 		m_match_order_id	= -1;
 		m_match_id			= -1;
 		m_team_id			= team_undefined;
+		break;
 	}
 
 	if ( !reader.eof( ) )
 		reader.r_string	( m_last_status_message.get_buffer( ), (u8)m_last_status_message.get_buffer_size( ) );
 	else
-		m_last_status_message	= "";
+		m_last_status_message.clear( );
 
 	return true;
 }
@@ -243,7 +245,7 @@ bool lobby_client::read_enumerate_profiles_info( network_core::packet_reader& re
 		reader.r_string	( m_profiles[ i ].profile_name );
 	}
 
-	m_player_name	= "";
+	m_player_name	= m_profiles[ 0 ].profile_name;
 	return true;
 }
 

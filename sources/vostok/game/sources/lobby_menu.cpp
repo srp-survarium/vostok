@@ -60,6 +60,7 @@ namespace survarium {
 	m_lobby_game_project = NULL;
 
 	on_ui_destroy( );
+	destroy_physics( );
 }
 
 void lobby_menu::on_activate( )

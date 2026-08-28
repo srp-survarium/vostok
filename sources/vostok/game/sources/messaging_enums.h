@@ -73,8 +73,10 @@ struct send_message_params {
 	/* 0x0028 */	char					sender_name[32];
 	/* 0x0048 */	client_type_enum		sender_type;
 	/* 0x004c */	message_channel_enum	message_channel;
-	/* 0x0050 */	char					message_body[256];
+	/* 0x0050 */	char					( *message_body )[256];
 };
+
+STATIC_SIZE_ASSERT( send_message_params, 0x54 );
 
 } // namespace messaging
 

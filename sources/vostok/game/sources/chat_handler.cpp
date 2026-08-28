@@ -187,16 +187,13 @@ void chat_handler::add_message(
 	if( m_game_ui_mode && channel == messaging::player_match_channel )
 	{
 		char sender_name[ 32 ];
-		wcstombs_s( NULL, sender_name, w_sender_name, -1 );
+		size_t converted_chars_count = 0;
+		wcstombs_s( &converted_chars_count, sender_name, w_sender_name, -1 );
 
 		network_client* net_client = static_cast< network_client* >( m_game.get_network_client( ) );
 		game_team_id sender_team = net_client->get_player_team( sender_name );
 
-		bool same_team = false;
-		if( sender_team != team_undefined )
-			same_team = net_client->get_local_player( )->team( ) == sender_team;
-
-		if( same_team )
+		if( sender_team != team_undefined && net_client->get_local_player( )->team( ) != sender_team )
 		{
 			ret_args.SetString( "Red" );
 			obj.SetMember( "color", ret_args );

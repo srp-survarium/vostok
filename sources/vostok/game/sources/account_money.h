@@ -8,7 +8,7 @@
 namespace survarium {
 
 struct account_money {
-	inline		account_money	( ) { /* no source */ }
+	inline		account_money	( ) : generic_money( 0 ), premium_money( 0 ), total_skill_points( 0 ) { /* no source */ }
 
 public:
 	/* 0x0000 */	u32		generic_money;
