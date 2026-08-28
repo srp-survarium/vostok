@@ -51,9 +51,9 @@ public:
 
 	inline vertex_id_type vertex_id( vertex_id_type const& vertex_id, const_edge_iterator const iterator ) const;
 
-	inline u32 edge_id( vertex_id_type const&, const_edge_iterator const ) const
+	inline u32 edge_id( vertex_id_type const&, const_edge_iterator const iterator ) const
 	{
-		return 0;
+		return *iterator;
 	}
 
 	inline ~graph_wrapper( )
