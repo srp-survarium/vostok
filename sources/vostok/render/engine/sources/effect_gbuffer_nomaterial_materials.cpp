@@ -48,7 +48,7 @@ void effect_gbuffer_nomaterial_materials::compile(
 		shader_configuration local_configuration;
 		compile_begin("fill_vertex_color", "fill_vertex_color", compiler, &local_configuration, config);
 			compiler.set_constant("diffuse_color_parameter", float3(1.0f, 1.0f, 1.0f));
-			compiler.set_texture("t_base", "no_texture", 0, true, u32(-1));
+			compiler.set_texture("t_base", "no_texture", 0, false, u32(-1));
 		compile_end(compiler);
 	}
 
@@ -57,7 +57,7 @@ void effect_gbuffer_nomaterial_materials::compile(
 		shader_configuration local_configuration;
 		compile_begin("vertex_base", "fill_reflective_shadow_map", compiler, &local_configuration, config);
 			compiler.set_constant("diffuse_color_parameter", float3(1.0f, 1.0f, 1.0f));
-			compiler.set_texture("t_base", "no_texture", 0, true, u32(-1));
+			compiler.set_texture("t_base", "no_texture", 0, false, u32(-1));
 		compile_end(compiler);
 	}
 
@@ -82,7 +82,7 @@ void effect_gbuffer_nomaterial_materials::compile(
 
 		if (local_configuration.use_emissive == 2)
 		{
-			compiler.set_texture("t_emission", pcstr(config["texture_emissive"]), 0, true, u32(-1));
+			compiler.set_texture("t_emission", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		}
 
 		compile_end(compiler);
