@@ -23,6 +23,11 @@ EXACT = 99.995  # objdiff reports byte-exact as >= this
 LEDGER_RESOLUTION = 1e-4  # the ledger stores percentages to 4 decimals
 
 
+def canonical_peak(score):
+    """Store exact objdiff evidence as the campaign's literal 100% gate."""
+    return 100.0 if score is not None and score >= EXACT else score
+
+
 @lru_cache(maxsize=None)
 def _source_file(source_root, relative):
     """Resolve a PDB-normalized source path against the caseful checkout."""
@@ -106,12 +111,13 @@ def fold(pairing, artifacts, banked):
             continue
         effective_hash = source_hash(extent[3])
         previous = banked.get(mangled)
-        maximum = pair.fuzzy
+        maximum = canonical_peak(pair.fuzzy)
         if previous is not None and previous[0] == effective_hash:
-            maximum = max(previous[1], pair.fuzzy)
+            previous_maximum = canonical_peak(previous[1])
+            maximum = max(previous_maximum, maximum)
             # the ledger stores 4 decimals, so a smaller "gain" than that is the
             # rounding of the peak we already banked, not a new one
-            if maximum > previous[1] + LEDGER_RESOLUTION:
+            if maximum > previous_maximum + LEDGER_RESOLUTION:
                 raised += 1
         elif previous is not None:
             reset += 1
