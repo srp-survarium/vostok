@@ -19,7 +19,7 @@ void effect_system_ui::compile(
 			.set_stencil( false, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
 			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
 			.set_cull_mode( D3D_CULL_NONE)
-			.set_texture( "t_base", pcstr(config["ui_texture0"]), 0, true, u32( -1 ))
+			.set_texture( "t_base", pcstr(config["ui_texture0"]), 0, false, u32( -1 ))
 		.end_pass	()
 	.end_technique();
 
@@ -29,7 +29,7 @@ void effect_system_ui::compile(
 			.set_stencil( false, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
 			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
 			.set_cull_mode( D3D_CULL_NONE)
-			.set_texture( "t_base", pcstr(config["ui_texture1"]), 0, true, u32( -1 ))
+			.set_texture( "t_base", pcstr(config["ui_texture1"]), 0, false, u32( -1 ))
 		.end_pass	()
 	.end_technique();
 
