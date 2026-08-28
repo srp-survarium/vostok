@@ -68,6 +68,8 @@ material_manager::~material_manager()
 static pcstr resources_materials_string						=	"resources/materials";
 static pcstr resources_material_instances_string			=	"resources/material_instances";
 static pcstr resources_materials_string_with_slash			=	"resources/materials/";
+// claude@NOTE: Retail retains the nominal 2.2f argument at the second byte-identical
+// pow call; the remaining temporary placement is its LTCG call-boundary convention.
 void material_manager::initialize_post_process_parameters(post_process_parameters* out_post_process_parameters_ptr, material_ptr mtl, bool force_recompilation)
 {
 	VOSTOK_UNREFERENCED_PARAMETER									(force_recompilation);
@@ -412,7 +414,7 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 			out_post_process_parameters.sky_clouds_texture			= resource_manager::ref().create_texture(pcstr(config["sky_clouds_texture"]["value"]), 0, 0, false, true, true, u32(-1));
 
 		if (config.value_exists("sky_clouds_color") && config.value_exists("sky_clouds_color_multiplier"))
-			out_post_process_parameters.sky_clouds_color				= math::pow(float4(config["sky_clouds_color"]["value"]), 2.2f) * float(config["sky_clouds_color_multiplier"]["value"]);
+			out_post_process_parameters.sky_clouds_color				= float(config["sky_clouds_color_multiplier"]["value"]) * math::pow(float4(config["sky_clouds_color"]["value"]), 2.2f);
 
 		if (config.value_exists("sky_clouds_fog_power") && config.value_exists("sky_clouds_fog_up_limit"))
 		{
@@ -438,7 +440,7 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 			out_post_process_parameters.sun_moon_texture			= resource_manager::ref().create_texture(pcstr(config["sun_moon_texture"]["value"]), 0, 0, false, true, true, u32(-1));
 
 		if (config.value_exists("sun_moon_color_multiplier") && config.value_exists("sun_moon_color"))
-			out_post_process_parameters.sun_moon_color				= math::pow(float4(config["sun_moon_color"]["value"]), 2.2f).xyz() * float(config["sun_moon_color_multiplier"]["value"]);
+			out_post_process_parameters.sun_moon_color				= float(config["sun_moon_color_multiplier"]["value"]) * math::pow(float4(config["sun_moon_color"]["value"]), 2.2f).xyz();
 
 		if (config.value_exists("sun_moon_billboard_scale"))
 			out_post_process_parameters.sun_moon_billboard_scale	= float(config["sun_moon_billboard_scale"]["value"]);
