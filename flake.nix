@@ -125,6 +125,7 @@
           patch -p1 < ${./tools/pdb_divergence_source_order.patch}
           patch -p1 < ${./tools/pdb_divergence_zero_line_order.patch}
           patch -p1 < ${./tools/pdb_divergence_line_group_order.patch}
+          patch -p1 < ${./tools/pdb_divergence_borrowed_line_order.patch}
           patch -p1 < ${./tools/pdb_divergence_global_presence.patch}
           cp ${./tools/pdb_topology.rs} src/bin/pdb_topology.rs
         '';
