@@ -11,51 +11,53 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+_Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,160 / 13,017 functions exact (78.05%) &middot; 10,799 / 13,017 functions exact-max (82.96%) &middot; 92.75% fuzzy &middot; 94.64% fuzzy-max.**
+**Overall: 10,008 / 13,014 functions exact (76.90%) &middot; 10,797 / 13,014 functions exact-max (82.96%) &middot; 89.65% fuzzy &middot; 94.64% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | ----: | --------: |
-| `render`        |   351 | 1,991 / 2,734 (72.8%) | 2,215 / 2,734 (81.0%) | 91.2% |     93.3% |
-| `game`          |   141 |   938 / 1,528 (61.4%) | 1,073 / 1,528 (70.2%) | 84.6% |     88.1% |
-| `core`          |   136 | 1,146 / 1,325 (86.5%) | 1,202 / 1,325 (90.7%) | 96.2% |     97.7% |
-| `vostok`        |   112 | 1,059 / 1,250 (84.7%) | 1,077 / 1,250 (86.2%) | 96.1% |     96.8% |
-| `game_core`     |   189 |   799 / 1,181 (67.7%) |   850 / 1,181 (72.0%) | 92.8% |     95.5% |
-| `animation`     |   102 |     571 / 730 (78.2%) |     594 / 730 (81.4%) | 91.1% |     91.9% |
-| `ai`            |   124 |     620 / 691 (89.7%) |     650 / 691 (94.1%) | 97.9% |     99.5% |
-| `sound`         |    69 |     474 / 510 (92.9%) |     492 / 510 (96.5%) | 99.1% |     99.8% |
-| `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) | 98.4% |     98.7% |
-| `scaleform`     |    47 |     417 / 454 (91.9%) |     423 / 454 (93.2%) | 96.7% |     96.9% |
+| `render`        |   351 | 1,943 / 2,734 (71.1%) | 2,215 / 2,734 (81.0%) | 85.7% |     93.3% |
+| `game`          |   141 |   909 / 1,528 (59.5%) | 1,073 / 1,528 (70.2%) | 82.6% |     88.1% |
+| `core`          |   136 | 1,135 / 1,325 (85.7%) | 1,202 / 1,325 (90.7%) | 94.3% |     97.7% |
+| `vostok`        |   112 | 1,046 / 1,250 (83.7%) | 1,077 / 1,250 (86.2%) | 90.0% |     96.8% |
+| `game_core`     |   189 |   783 / 1,181 (66.3%) |   850 / 1,181 (72.0%) | 90.0% |     95.5% |
+| `animation`     |   102 |     562 / 727 (77.3%) |     592 / 727 (81.4%) | 90.1% |     92.1% |
+| `ai`            |   124 |     610 / 691 (88.3%) |     650 / 691 (94.1%) | 95.8% |     99.5% |
+| `sound`         |    69 |     473 / 510 (92.7%) |     492 / 510 (96.5%) | 98.6% |     99.8% |
+| `collision`     |    52 |     460 / 503 (91.5%) |     469 / 503 (93.2%) | 98.3% |     98.7% |
+| `scaleform`     |    47 |     411 / 454 (90.5%) |     423 / 454 (93.2%) | 94.1% |     96.6% |
 | `particle`      |    25 |     384 / 400 (96.0%) |     392 / 400 (98.0%) | 99.4% |     99.8% |
-| `vfs`           |    71 |     283 / 390 (72.6%) |     285 / 390 (73.1%) | 96.1% |     96.8% |
-| `ui`            |    27 |     217 / 227 (95.6%) |     218 / 227 (96.0%) | 99.1% |     99.5% |
-| `physics`       |    14 |     131 / 198 (66.2%) |     152 / 198 (76.8%) | 87.3% |     92.4% |
-| `fs`            |    25 |     134 / 165 (81.2%) |     137 / 165 (83.0%) | 97.3% |     97.8% |
-| `engine`        |    22 |     148 / 162 (91.4%) |     153 / 162 (94.4%) | 97.8% |     98.4% |
-| `network`       |    25 |      76 / 159 (47.8%) |      89 / 159 (56.0%) | 87.2% |     92.7% |
-| `network_core`  |    22 |      58 / 127 (45.7%) |      64 / 127 (50.4%) | 93.2% |     94.3% |
+| `vfs`           |    71 |     280 / 390 (71.8%) |     285 / 390 (73.1%) | 95.2% |     96.8% |
+| `ui`            |    27 |     216 / 227 (95.2%) |     218 / 227 (96.0%) | 98.7% |     99.5% |
+| `physics`       |    14 |     130 / 198 (65.7%) |     152 / 198 (76.8%) | 85.9% |     92.4% |
+| `fs`            |    25 |     132 / 165 (80.0%) |     137 / 165 (83.0%) | 95.5% |     97.8% |
+| `engine`        |    22 |     148 / 162 (91.4%) |     153 / 162 (94.4%) | 97.2% |     98.4% |
+| `network`       |    25 |      75 / 159 (47.2%) |      89 / 159 (56.0%) | 82.5% |     92.7% |
+| `network_core`  |    22 |      58 / 127 (45.7%) |      64 / 127 (50.4%) | 91.3% |     94.3% |
 | `debug`         |    16 |     117 / 122 (95.9%) |     118 / 122 (96.7%) | 98.6% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) | 97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) | 99.9% |     99.9% |
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) | 96.0% |     98.1% |
 | `ai_navigation` |     3 |       13 / 14 (92.9%) |      14 / 14 (100.0%) | 89.9% |    100.0% |
 
-_Updated 2026-08-28 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-08-30 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
-## Data match status
+## Data reconstruction status
 
-_Auto-generated from the independent PDB/image data lane; it does not feed the function score._
+_Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Retail extent coverage: 98.57% (70,510,874 / 71,536,291 virtual bytes) &middot; fidelity: 84.66% (2,578,605 / 3,045,726 compared bytes) &middot; definitions exact: 8,187 / 10,831 paired.**
+**Function-reachable retail data: 98.13% (70,200,521 / 71,536,291 unique bytes) &middot; paired for comparison: 3.95% (2,826,809 / 71,536,291) &middot; matched projected copies: 64.86% (16,787,489 / 25,884,337).**
 
-_EXACT requires relocation-normalized bytes and resolved pointer targets to agree. Gate: shadow calibration. Inspect with `python3 -m vostok data report`._
+_The projection has 13,330 paired copies across 1,695 units and 32,711 unresolved blockers. Strict relocation comparison exposes 1,593 otherwise-exact functions (608,051 code bytes) with referent debt._
 
-_Updated 2026-08-28._
+_The linked-image audit is 3.60% exact and covers 98.57% by PDB type extent, with 84.66% paired-only fidelity (8187 / 10831 definitions). Integrity ratchet: shadow calibration._
+
+_Updated 2026-08-30._
 <!-- data-match:end -->
 
 ## Requirements
@@ -108,7 +110,7 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 `binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
 also writes an overall match summary to `binaries/objdiff/report.json`, logs
 the code / function match percentages, and refreshes the matching ledger
-(`docs/binary_matching/match_state.tsv`, via the regenerable
+(`config/match_state.tsv`, via the regenerable
 committed ledger) from that fresh report at the end of the run.
 
 Useful individual steps (all run inside `nix develop`):
@@ -207,7 +209,7 @@ A campaign prepares clean, warm sibling worktrees from the current integration
 tip and dispatches disjoint translation units in parallel. Finished work is
 integrated one commit at a time into a single advancing stack. Every commit is
 fully rebuilt and carries the corresponding `README.md` and
-`docs/binary_matching/match_state.tsv`; parallel
+`config/match_state.tsv`; parallel
 branches are never merged into a fan and the approved stack is never squashed.
 After roughly 10-15 units, the batch receives a structure audit before review and
 landing.
@@ -219,7 +221,7 @@ and [the orchestration skill](.agents/skills/vostok-orchestrate-matching/SKILL.m
 
 ## Reviewing match % (no rebuild needed)
 
-`docs/binary_matching/match_state.tsv` is **committed**, so every query below
+`config/match_state.tsv` is **committed**, so every query below
 answers on a fresh clone that has never compiled anything - no database, no
 build. For *current* numbers after edits, run `python3 -m vostok build` first
 (it re-derives the ledger at the end of the build);
@@ -268,8 +270,8 @@ python3 -m vostok ledger queue --module game_core [--limit N] [--json]
 # commit range shows exactly which functions moved and how. This is why the record is
 # a .tsv and not a database - a SQLite file re-serialises its pages on every write, so
 # it could neither be diffed nor merged.
-git diff <hash> -- docs/binary_matching/match_state.tsv          # commit vs working tree
-git diff <hash>..<hash> -- docs/binary_matching/match_state.tsv  # two commits
+git diff <hash> -- config/match_state.tsv          # commit vs working tree
+git diff <hash>..<hash> -- config/match_state.tsv  # two commits
 # Reading a row's numbers: `cur` is THIS build and is noisy (under LTCG/ICF a function
 # moves without its source moving). `max` is the peak proven for this exact source body
 # and resets only when that body changes - driving every max to 100 is the campaign.

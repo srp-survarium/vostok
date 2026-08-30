@@ -200,7 +200,7 @@ are NOT written anymore. The source carries exactly two things:
 Everything else is DERIVED and lives outside the source
 (design: `match_db_design.md`):
 - **current %s**: `report.json` / `vostok ledger readme` - the only live numbers.
-- **bulk status, queues, reports**: `docs/binary_matching/match_state.tsv`, regenerated
+- **bulk status, queues, reports**: `config/match_state.tsv`, regenerated
   from report.json + the rich indexes + the PDB declaration dump by `vostok build`
   at the end of every build (or, regen-only, by `python3 -m vostok derive
   refresh`). Per paired function it derives the structure class
@@ -212,9 +212,10 @@ Everything else is DERIVED and lives outside the source
 - **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
   embedded in source.
 
-Globals, constants, pointer tables, and BSS use the independent image-data lane;
+Globals, constants, pointer tables, and BSS use the data-reconstruction lane;
 see [`data_matching.md`](data_matching.md) and `python3 -m vostok data --help`.
-Its ledger and metrics never feed the function score.
+Its linked-image audit never feeds the function score; only definitions split
+into target COFF through the delink manifests enter objdiff's data denominator.
 
 The only hand-written records are ledger PARKS (`vostok ledger park <mangled> --cause`):
 - `SKIP` - parked; the cause is the concrete next step (covers the old

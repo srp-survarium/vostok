@@ -150,7 +150,7 @@ sub-100 entries are these — it has no real work left).
     && python3 vostok derive refresh && python3 vostok ledger readme --write-readme`.
    See memory `per-worktree-target-staleness`.
 2. **Don't bank build-artifact churn.** Everything under `binaries/` is gitignored;
-   only `README.md` + `docs/binary_matching/match_state.tsv` are tracked. Commit source
+   only `README.md` + `config/match_state.tsv` are tracked. Commit source
    per-TU; let a clean rebuild own the README/ledger refresh.
 
 ### Tools that DON'T work here (don't waste time)

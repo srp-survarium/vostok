@@ -117,7 +117,7 @@ run `vostok build` first if sources moved) - it does NOT rebuild.
 
 ## The matching ledger (`vostok ledger`)
 
-`docs/binary_matching/match_state.tsv` is the committed record of the campaign:
+`config/match_state.tsv` is the committed record of the campaign:
 one text row per target function. Query and update it with `vostok ledger` -
 it reads the file directly, so it needs no database and no build.
 

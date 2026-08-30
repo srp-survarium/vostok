@@ -6,7 +6,7 @@ how many statements it carries, and what the campaign knows about it (current
 
 Two sources, and the split is the point. The two rich indexes own the BUILD
 facts - address, size, statements, owning file, both spellings of the name. The
-committed ledger (`docs/binary_matching/match_state.tsv`) owns the CAMPAIGN's
+committed ledger (`config/match_state.tsv`) owns the CAMPAIGN's
 memory - the percentages, the structure verdict, how many matchers have tried,
 and why it is parked. Neither is `match.db`, so this answers on a tree that has
 never run a derivation.

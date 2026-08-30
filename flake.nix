@@ -48,15 +48,19 @@
       flake = false;
     };
     vostok-delinker-src = {
-      # Keep the measured delinker revision explicit: changes to relocation and
-      # symbol recovery can re-pair functions without any source change.
-      #
-      # d7e9292 is the previous pin plus ONE cherry-picked commit: --engine-path
-      # became repeatable, so the GFx SDK (compiled in, but outside sources/) is
-      # no longer discarded by both sides. It is deliberately NOT the branch tip
-      # - that also carries `emit reviewed candidate data sections`, which can
-      # move pairings on its own and would confound attribution here.
+      # The measured code-project delinker. Keep this immutable: changing its
+      # relocation materialization changes the established function ledger.
       url = "github:srp-survarium/vostok-delinker/d7e9292c5d6ddc07bd62894b2bc49334ed1c7321";
+      flake = false;
+    };
+    vostok-data-delinker-src = {
+      # Gruntz's reviewed data-topology base. It writes a separate objdiff
+      # project and therefore cannot perturb the code/MAX ledger.
+      url = "github:srp-survarium/vostok-delinker/81d34b204a0384a92cf3b4c641a8430256b2922e";
+      flake = false;
+    };
+    objdiff-src = {
+      url = "github:encounter/objdiff/v3.7.3";
       flake = false;
     };
     vostok-resources-db-src = {
@@ -78,7 +82,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src, pdb-fetch-nvim-src, bullet-2_79-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, pdb-fetch-nvim-src, bullet-2_79-src }:
     let
       system = "x86_64-linux";
 
@@ -143,13 +147,38 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
+        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
+      };
+
+      # Data topology deliberately uses its own binary and output tree. The
+      # newer relocation/data model is evidence for data matching, never a
+      # migration of the already-measured code matcher.
+      vostok-data-delinker = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-data-delinker";
+        version = "0.1.0";
+        src = vostok-data-delinker-src;
+        patches = [
+          ./tools/vostok-data-manifest-folded-comdat.patch
+          ./tools/vostok-ilt-thunk-resolution.patch
+          ./tools/vostok-comdat-leader-nonzero-offset.patch
+          ./tools/vostok-grouped-section-names.patch
+          ./tools/vostok-legacy-data-not-into-comdat.patch
+          ./tools/vostok-data-hypothesis-must-contain.patch
+          ./tools/vostok-canonical-alias-owner.patch
+          ./tools/vostok-unprovisioned-identity-refusal.patch
+        ];
         # The data lane needs the identities and type-derived extents that the
         # delinker already reads from the PDB.  Exporting them is opt-in and
         # exits before normal COFF emission, so function pairing is unchanged.
         postPatch = ''
+          patch -p1 < ${./tools/vostok_delinker_vostok_compat.patch}
           patch -p1 < ${./tools/vostok_delinker_data_index.patch}
+          patch -p1 < ${./tools/vostok-delinker-missing-data-index.patch}
         '';
-        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
+        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
+        postInstall = ''
+          mv $out/bin/vostok-delinker $out/bin/vostok-data-delinker
+        '';
       };
 
       # ---------------------------------------------------------------------------
@@ -398,8 +427,7 @@
         libx11 libxcursor libxi libxrandr libxcb
       ];
 
-      # CLI: autoPatchelf + the C++ runtime is enough - it dlopen's nothing, so no
-      # LD_LIBRARY_PATH wrapper (and hence no makeWrapper) is needed.
+      # Keep the established code ledger on its measured CLI.
       objdiff-cli = pkgs.stdenv.mkDerivation {
         pname = "objdiff-cli";
         version = objdiffVersion;
@@ -407,10 +435,28 @@
           url = objdiffUrl "objdiff-cli-linux-x86_64";
           hash = "sha256-QNhW2gHgpnbA8zr1NOVi8JjNUORey2Tzs0ZBjHsmSuY=";
         };
-        dontUnpack = true; # a bare binary; nothing to unpack
+        dontUnpack = true;
         nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ]; # libstdc++ / libgcc_s (its DT_NEEDED deps)
+        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
         installPhase = "install -Dm755 $src $out/bin/objdiff-cli";
+      };
+
+      # The parallel data project needs the Gruntz BSS and DIR32-addend fixes.
+      vostok-data-objdiff-cli = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-data-objdiff-cli";
+        version = "3.7.3";
+        src = objdiff-src;
+        patches = [
+          ./tools/objdiff-bss-inferred-extent.patch
+          ./tools/objdiff-score-reloc-addend.patch
+        ];
+        cargoHash = "sha256-Z9vyUj35nrHuUoOYM54RLCn7CzcQ6k3A6FsDYKCVqVM=";
+        cargoBuildFlags = [ "-p" "objdiff-cli" ];
+        cargoTestFlags = [ "-p" "objdiff-core" "-p" "objdiff-cli" ];
+        cargoInstallFlags = [ "-p" "objdiff-cli" ];
+        postInstall = ''
+          mv $out/bin/objdiff-cli $out/bin/vostok-data-objdiff-cli
+        '';
       };
 
       objdiff = pkgs.stdenv.mkDerivation {
@@ -474,10 +520,12 @@
           # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
           objdiff-cli
+          vostok-data-objdiff-cli
 
           # Nix-built tools and assets - all evaluated when entering the shell.
           vostok-pdb-parser
           vostok-delinker
+          vostok-data-delinker
           vostok-resources-db
           vcproj2ninja
           vostok-toolchain
@@ -623,9 +671,9 @@
 
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
+        inherit vostok-pdb-parser vostok-delinker vostok-data-delinker vostok-resources-db vcproj2ninja
           vostok-toolchain vostok-libs survarium
-          objdiff objdiff-cli dxsdk-shader-compiler;
+          objdiff objdiff-cli vostok-data-objdiff-cli dxsdk-shader-compiler;
         # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand
         # (`nix build .#survarium-resources-unpacked`), but the default devShell
         # does NOT realize it - see the `with-resources` shell below.

@@ -1,0 +1,10 @@
+# Exact retail references whose PDB owner is known but containment cannot express
+# because the encoded pointer is just before or just after that owner's extent.
+function_rva	target_rva	site_rva	owner	addend	occurrences	provenance
+-	0x806d5c	0x178011	default_dayname	0xc4	1	STLport time_facets.o compares against the exact one-past end of the PDB-sized default_dayname table
+-	0x8075ec	0x179396	_Stl_tenpow	0xfffffffc	1	CRT float formatter indexes the PDB-owned ten-power table through a base biased four bytes before its public symbol
+0x235de0	0x9a2744	0x235df1	nid_list	0xfffffffc	1	OpenSSL OBJ_nid2sn-style lookup indexes 1..25 from nid_list-1
+-	0xa8a94c	0x183c86	outmsg	0x314	1	CRT startup computes the remaining capacity from the one-past end of the PDB-sized outmsg buffer
+-	0x9bab44	0x9ba940	s_finger_print	0x20c	1	initialized pointer equals the PDB-sized s_finger_print end
+-	0x9bd3ec	0x9bc3e8	?g_command_line@command_line@vostok@@3V?$fixed_string@$0BAAA@@2@A	0x100c	1	fixed_string end pointer equals the PDB-sized g_command_line end
+-	0x9be62c	0x9bd628	?s_command_line_error@command_line@vostok@@3V?$fixed_string@$0BAAA@@2@A	0x100c	1	fixed_string end pointer equals the PDB-sized s_command_line_error end

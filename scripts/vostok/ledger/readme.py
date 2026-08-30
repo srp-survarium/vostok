@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Roll up the committed ledger into README.md's human-readable score block.
 
-Reads ``docs/binary_matching/match_state.tsv`` - the committed record - for
+Reads ``config/match_state.tsv`` - the committed record - for
 every number. ``vostok build`` re-derives that ledger from ``report.json``
 immediately before this runs, so the block and the ledger always describe the
 same build, and there is exactly one roster behind every figure. report.json is
@@ -214,7 +214,7 @@ def render(delinker_rev: str) -> str:
         START,
         "## Match status",
         "",
-        "_Auto-generated from `docs/binary_matching/match_state.tsv` (the committed "
+        "_Auto-generated from `config/match_state.tsv` (the committed "
         "matching ledger) - refreshed by `vostok build` at the end of every build; "
         "do not hand-edit. Diff this block across commits to spot regressions._",
         "",

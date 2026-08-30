@@ -2,7 +2,7 @@
 
 Replaced vostok derive's query surface. That tool answered every question with
 SQL over an interned schema - `list` alone joined symbols/units/pairs/history
-to rebuild what is now one row of docs/binary_matching/match_state.tsv. The
+to rebuild what is now one row of config/match_state.tsv. The
 ledger is 19,645 rows: loading it costs ~100 ms and answering costs under a
 millisecond, so nothing here needs a database.
 
@@ -30,7 +30,7 @@ removes it.
 
 Dropped from the old tool, deliberately:
   max     `max` is a column now; `list --headroom` covers the interesting case
-  diff    `git diff docs/binary_matching/match_state.tsv` is line-oriented and
+  diff    `git diff config/match_state.tsv` is line-oriented and
           strictly better than comparing two committed database revisions
   sql     the escape hatch existed because the schema was unreadable
 """

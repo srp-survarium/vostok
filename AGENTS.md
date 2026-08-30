@@ -73,10 +73,10 @@ structure-verification and stale-comment audit before continuing.
 - `python3 -m vostok derive refresh` only re-derives the database from the
   existing report. It does not compile changed source.
 - Never hand-edit the generated match-score block in `README.md` or derived
-  rows in `docs/binary_matching/match_state.tsv`.
+  rows in `config/match_state.tsv`.
 - Every commit must represent a measured source state. Before creating or
   amending a commit, run a successful full `vostok build` and include the
-  resulting `README.md` and `docs/binary_matching/match_state.tsv` changes in that
+  resulting `README.md` and `config/match_state.tsv` changes in that
   same commit. This applies to source, comments, documentation, tooling, and
   structure-verification changes because line movement and LTCG can alter code.
 - Inspect the small `binaries/objdiff/report-changes.json` for regressions.

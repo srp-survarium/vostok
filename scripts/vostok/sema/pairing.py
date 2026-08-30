@@ -174,7 +174,7 @@ def pairing():
 
 
 def ledger():
-    """`docs/binary_matching/match_state.tsv`, {key: row}, read once.
+    """`config/match_state.tsv`, {key: row}, read once.
 
     The campaign's committed memory - `cur`/`max`/`cls`/`status`/`note`/module
     and TU ownership. It is in git, so unlike the indexes it needs no build at

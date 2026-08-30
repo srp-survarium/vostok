@@ -60,7 +60,7 @@ run it as the top-level agent, since subagents cannot reliably spawn subagents.
 
 ## 0. Build the queue (orchestrator)
 
-The ledger (`docs/binary_matching/match_state.tsv`, design in `match_db_design.md`)
+The ledger (`config/match_state.tsv`, design in `match_db_design.md`)
 owns queue building:
 
 ```

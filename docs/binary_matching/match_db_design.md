@@ -1,7 +1,7 @@
 # The matching record - design
 
 > **The sqlite database this document was written for is gone.** The record is
-> now `docs/binary_matching/match_state.tsv`, one text row per target function,
+> now `config/match_state.tsv`, one text row per target function,
 > and there is no cache behind it. Sections describing tables, interning, `sql`
 > and blob-merge strategy are kept as HISTORY, clearly marked; the live design
 > is what follows here. See CLAUDE.md for the day-to-day commands.
@@ -36,7 +36,7 @@ vcproj <-> module is 1:1, so vcproject queries are module queries.
 
 ## Storage
 
-`docs/binary_matching/match_state.tsv` - tab-separated text, **committed to git**.
+`config/match_state.tsv` - tab-separated text, **committed to git**.
 - **Deterministic writes:** fixed column order, sorted by mangled name, LF
   endings - the same delink state always produces a byte-identical file, so a
   no-op refresh produces no git diff.

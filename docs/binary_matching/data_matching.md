@@ -1,67 +1,161 @@
-# Image data matching
+# Data reconstruction and matching
 
-Function objdiff does not establish equality for globals, constants, pointer
-tables, or loader-zero BSS. The data lane measures those independently and
-never changes `binaries/objdiff/report.json` or the function ledger.
+Function bytes alone do not prove that a function uses the right global,
+constant, table element, initializer pointer, or loader-zero storage. Vostok
+therefore has a separate data lane modelled after Gruntz. It does not alter the
+normal code ledger.
 
-## Evidence and flow
+## Ownership under LTCG
 
-The pinned Survarium-compatible delinker has an export-only
-`--write-data-index` mode. It reads data definitions directly from each PDB and
-records exact symbol-name bytes, compiland/archive ownership, RVA, linkage,
-CodeView type index, and a type-derived extent. It exits before normal COFF
-emission, so enabling the export cannot move function pairings.
+The linked image and PDB do not retain trustworthy compiler-object ownership
+for every datum. Guessing one original owner would make the comparison depend
+on an unrecoverable detail. The operational ownership rule is instead:
 
-Run the immutable retail census once, then refresh base after a successful
-build:
+> Every function comparison unit owns a private comparison copy of every datum
+> that its functions address, plus the transitive data reached through those
+> data initializers.
+
+A header constant or folded COMDAT may therefore be emitted into several
+synthetic units. This is intentional and target-faithful for comparison: MSVC
+can emit the same COMDAT in several TUs and the linker folds it, while LTCG can
+move or clone the use. The unit is the existing objdiff function unit, not an
+invented source declaration. No `DATA` macro is required.
+
+Only allocations with a complete PDB type extent and the same stable PDB
+identity on target and base enter objdiff. A target-only identity remains in
+the generated closure and blocker tables; it is not emitted on one side,
+because that would shift later section ordinals and poison unrelated rows.
+Local PDB identities receive stable synthetic external names so the same
+allocation can be cloned into several comparison objects. Public mangled names
+are preserved verbatim.
+
+## Artifacts and flow
+
+Tracked evidence and policy use the same names and locations as Gruntz:
+
+- `config/retail/data.tsv` is the admitted retail start/kind census.
+- `config/retail/data_symbols.tsv` contains only referents without an exact or
+  extent-backed retail PDB owner. PDB-owned symbols never receive duplicate
+  rows here. Its schema is `rva, name, size, type, comment`. `auto:` and
+  `derived:` rows are review candidates, not accepted labels: every row must be
+  inspected and given a review comment before the strict census can pass.
+- `config/retail/pdb_data_extents.tsv` records reviewed sizes for exact PDB
+  symbol starts whose CodeView records omit a usable extent. It closes their
+  interiors without copying PDB names into the non-PDB registry.
+- `config/retail/reloc_referents.tsv` is the Gruntz-style reviewed exception
+  table for exact symbol-plus-addend references which containment cannot infer
+  (one-past, one-before, or a field cursor outside the nominal PDB extent).
+- `config/cleanliness/data-integrity-ratchet.tsv` holds maximum permitted debt.
+- `binaries/gen/delink_data_manifest.tsv` and
+  `binaries/gen/delink_data_section_manifest.tsv` are the target projection.
+- `binaries/gen/base/` contains the necessary base-side counterparts; Vostok
+  needs these because there are no pre-LTCG base objects to compare directly.
+- `binaries/gen/data_access_map.tsv`, `data_coverage_gaps.tsv`,
+  `data_consumer_closure.tsv`, `data_function_state.tsv`, and
+  `data_manifest_blockers.tsv` are generated query evidence.
+- `binaries/gen/missing_data_candidates.tsv` is the delinker's raw set of
+  referents it could not resolve through retail PDB symbols or procedure/string
+  extents. `missing_data_xrefs.tsv` removes targets contained by complete PDB
+  data extents and assigns the remainder to reviewed non-PDB rows.
+- `binaries/gen/missing_data_report.json` records the exact set subtraction and
+  its input hashes.
+- `binaries/gen/data_strict_report.json` is the independent strict-referent
+  objdiff report.
+- `binaries/data-objdiff/` is the complete parallel comparison project. The
+  ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
+  objdiff CLI and never consumes data manifests.
+
+The authoritative build runs this sequence after linking:
+
+1. Export target and base PDB data indexes with the pinned delinker. Separately,
+   enumerate all relevant retail relocations and write only `all referents -
+   PDB-owned referents` to `data_symbols.tsv`; unresolved rows remain explicit
+   Gruntz-style fences until reviewed: `DAT_<va>` for proven library/linker
+   contributions and fail-closed `UNPROVISIONED_<va>` when any engine/game or
+   unattributed contribution references the target.
+   Self-describing MSVC90 EH/SEH records supply review candidates with exact
+   counts and extents. Each referenced private `.text` address remains its own
+   unresolved row: the containing PDB section contribution is only a sizing
+   bound and ownership clue, never a substitute for reviewing the individual
+   code entry. A permanent overlap check forbids a reviewed anonymous code
+   extent from covering any PDB procedure.
+2. Enumerate absolute `.text` data references from PE `HIGHLOW` relocation
+   sites, decode their access direction/width, and attach each to its PDB
+   function and comparison unit.
+3. Seed each unit with its directly addressed typed allocations. Walk
+   relocations inside those allocations to close data-to-data initializer
+   edges.
+4. Write identical paired target/base manifest sequences. Each allocation is
+   a separate COMDAT section, so one mismatch does not make a whole TU's data
+   indivisible.
+5. Delink target and base into `binaries/data-objdiff/` using the dedicated
+   data-topology delinker and patched data objdiff CLI. Its default report is
+   the data denominator and loose-referent baseline; it cannot feed the code
+   ledger.
+6. Generate a second data-project report with `functionRelocDiffs=all`. This compares a
+   function's relocation target identity and symbol-relative addend as well as
+   its instructions; neither data-project report feeds the normal function
+   score or hash-scoped MAX ledger.
+7. Refresh the linked-image audit and all query tables, then hash their inputs
+   into `data_image_report.json`.
+
+Use the commands directly when investigating the lane:
 
 ```sh
 python3 -m vostok data init-target
+python3 -m vostok data missing
+python3 -m vostok data missing-next
+python3 -m vostok data missing --check
+python3 -m vostok data missing-symbol PATTERN
+python3 -m vostok data missing-report
+python3 -m vostok data project
 python3 -m vostok data refresh
 python3 -m vostok data report
+python3 -m vostok data function PATTERN
+python3 -m vostok data access PATTERN
+python3 -m vostok data relocs PATTERN
+python3 -m vostok data symbol PATTERN
+python3 -m vostok data coverage
+python3 -m vostok data check
 ```
 
-`refresh` performs the following pipeline:
+`missing-next` prints the retail bytes, PDB neighbours, owners, callers, and
+xrefs for the first row that lacks a complete manual label. After editing that
+row, rerun `missing --no-export` and repeat until the queue is empty. A new
+unresolved non-PDB referent is a hard build failure. `project` updates manifests
+without delinking. `refresh` updates the complete audit against an
+already-generated normal and strict report. A normal `python3 -m vostok build`
+owns the complete ordered flow.
 
-1. Pair external definitions by PDB public identity and local definitions by
-   normalized owning module, compiland, and local PDB identity.
-2. Read `.rdata` and `.data` from the linked images. Reads beyond raw `.data`
-   use loader-zero bytes, so BSS is measured instead of silently omitted.
-3. Normalize PE `HIGHLOW` pointer cells before hashing bytes, then compare the
-   relocation topology and resolve each pointer to a PDB data/function identity
-   plus addend. Equal zeroed bytes with a different pointer target are `RELOCS`,
-   not exact.
-4. Build code-to-data access maps from `.text` relocation sites and retail/base
-   disassembly, joined to PDB function owners.
-5. Regenerate the tracked `data_state.tsv` and the ignored detailed reports
-   under `binaries/data/`.
+## What each result proves
 
-The direct linked-image comparison is authoritative. Candidate-shaped COFF
-sections remain a secondary objdiff workbench for reviewed definitions; they
-must never replace the image census or feed the function score.
+- **Consumer reachability** is the unique union of trusted retail extents
+  reached by functions or their initializer closure, divided by the complete
+  virtual size of retail `.rdata` plus `.data`.
+- **Consumer pairing** is the unique reachable subset for which the base PDB
+  has the same identity and complete extent.
+- **Projected objdiff match** counts comparison copies. Its denominator can be
+  much larger than the unique retail extent because one datum is deliberately
+  cloned into every consuming unit. Never divide this value by retail image
+  bytes.
+- **Strict referent debt** is the loss of data-project exact functions/code
+  bytes when `functionRelocDiffs=all` is applied to that project. This is the direct answer to
+  “does the function use the same named datum and addend?”
+- **Linked-image exactness** independently compares final bytes. Pointer cells
+  are normalized before hashing and then compared by resolved PDB identity and
+  addend, so equal address-shaped bytes cannot hide a wrong referent.
+- **Gross PDB coverage** is only the union of valid PDB type extents. It is a
+  census-quality measurement, not a source match.
 
-## Metrics
+The access map also records width evidence. An access that leaves its PDB
+extent becomes a manifest blocker instead of being silently truncated. Indexed
+table counts and pointer-derived accesses without an absolute relocation remain
+explicit blind spots; the strict report and linked-image relocation closure are
+the backstops, not grounds for guessing an extent.
 
-- **Gross coverage** is the address-union of valid PDB type extents divided by
-  the complete retail virtual size of `.rdata` plus `.data`.
-- **Reconstructable coverage** uses the same numerator and removes only ranges
-  explicitly reviewed in `data_exclusions.tsv` from the denominator. Unknown
-  ranges remain eligible.
-- **Fidelity** is the address-union of `EXACT` definitions divided by all
-  paired, compared target extents. `EXACT` requires both normalized bytes and
-  resolved relocation signatures to agree.
-
-Use `vostok data coverage` to show the largest uncovered retail ranges. Use
-`symbol`, `relocs`, and `access` with a substring, symbol, or RVA to move from a
-ledger row to its pointer cells and real callers.
-
-`vostok data check` validates every evidence file against hashes captured by the
-report and checks that the standalone coverage report and tracked ledger are
-exact projections of it. `--gate` reads floors from `data_gate.tsv`; it
-intentionally fails while that table is empty. Arm the gate only after the
-whole-image census is calibrated against zlib, then render.
-
-The calibration invariant is live: all PDB-typed zlib definitions must pair and
-be `EXACT`, or even shadow-mode `data check` fails. The initial census proves
-19/19, so pointer normalization and loader-zero handling have a known-clean
-library oracle before render residuals are classified as source work.
+`vostok data check` validates schemas and content hashes, requires every
+non-PDB datum to have all five reviewed fields, and requires the zlib control
+set to remain exact. `--gate` additionally reads the projection maxima in
+`config/cleanliness/data-integrity-ratchet.tsv`. The projection table stays in
+shadow mode until its target-only and unknown-extent blocker classes are
+calibrated; the non-PDB datum census is already hard-gated independently.

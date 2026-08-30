@@ -9,7 +9,7 @@ Three ways the obvious {mangled: mangled} join fails, all handled here:
     admitted only on strict evidence (identical alias clusters, or an exact
     instruction-stream identity), never on a name that merely looks similar;
   * reviewed identities for asymmetric fold groups, in
-    `docs/binary_matching/exact_fold_aliases.tsv`.
+    `config/exact_fold_aliases.tsv`.
 
 The bar is deliberately high: a wrong alias invents a match that is not there.
 """
