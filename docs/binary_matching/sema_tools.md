@@ -547,7 +547,7 @@ built in:
   derivation. The split now is: `binaries/rich/{target,base}/index.jsonl` owns
   every BUILD fact (address, size, statements, owning file, both spellings of
   the name, and - through `vostok.sema.pairing` - which base function a target
-  function IS); `docs/binary_matching/match_state.tsv` owns the CAMPAIGN's
+  function IS); `config/match_state.tsv` owns the CAMPAIGN's
   memory (`cur`/`max`, structure class, attempts, status, park note, module and
   TU ownership). `sweep` takes its scope and percentages from the ledger and its
   RVA pair from the pairing; `rva` reads both; every CFG verdict comes from

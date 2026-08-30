@@ -166,7 +166,7 @@ def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
     binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
     binaries/rich/target (pdb_rich_context index for `pdb_fetch`), and the
-    independent PDB/image data inventory under binaries/data/target.
+    independent PDB/image data inventory under binaries/gen/.
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
@@ -191,7 +191,7 @@ def ensure_target_side(force: bool = False) -> None:
     log("Generating target diff inputs (original game COFF + structure + rich index) ...")
     try:
         if force or not _nonempty_dir(objdiff_target):
-            generate_delink.generate("target")
+            generate_delink.generate("target", reports=False)
         if force or not _nonempty_dir(structure_target):
             generate_structure.generate("target")
         if force or not _nonempty_dir(rich_target):

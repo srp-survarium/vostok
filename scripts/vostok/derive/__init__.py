@@ -14,7 +14,7 @@ the reviewed override tables - this decides, for every target function:
                                         the source it describes changes)
 
 and writes the answer straight into the committed ledger
-(`docs/binary_matching/match_state.tsv`, owned by `vostok.ledger`), plus one
+(`config/match_state.tsv`, owned by `vostok.ledger`), plus one
 regenerable diagnostic - `binaries/base_only.tsv`, for the symbols only WE emit.
 Nothing is cached in between: `roster.derive()` is a pure function of the
 artifacts, so anything wanting the per-function verdict re-runs it (~7 s)

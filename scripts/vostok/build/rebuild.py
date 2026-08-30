@@ -6,7 +6,7 @@ vostok.build.rebuild - full base-side refresh after editing sources.
   2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
      normalizer consumes the completed rich index, so those two steps must be
      ordered. binaries/structure/base remains disjoint and runs in parallel.
-  3. Re-derive the committed ledger docs/binary_matching/match_state.tsv from
+  3. Re-derive the committed ledger config/match_state.tsv from
      the fresh report.json (vostok.derive.roster.regen()), and refresh README's
      score block from it. `vostok build` is the canonical build step and owns
      the regen; `vostok derive refresh` is the regen-only path for an
@@ -246,11 +246,43 @@ def main() -> None:
 
             if "base rich index" not in failures:
                 try:
-                    generate_delink.generate("base")
-                    log("base COFF: OK")
+                    from vostok.data import pipeline as data_pipeline
+                    data_pipeline.prepare_manifests()
+                    log("consumer-owned data manifests: OK")
                 except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append("base COFF")
-                    log(f"base COFF: FAILED - {e}")
+                    failures.append("data manifests")
+                    log(f"consumer-owned data manifests: FAILED - {e}")
+
+            if "base rich index" not in failures:
+                try:
+                    # The established code project stays on the measured legacy
+                    # delinker and never consumes data manifests.
+                    generate_delink.generate("base")
+                    log("base code COFF: OK")
+                except Exception as e:  # noqa: BLE001 - report every step's failure
+                    failures.append("base code COFF")
+                    log(f"base code COFF: FAILED - {e}")
+
+            if "data manifests" not in failures:
+                try:
+                    # Data ownership follows the current consumer graph, so
+                    # both synthetic sides are regenerated in their separate
+                    # objdiff project. Neither report can feed code/MAX.
+                    generate_delink.generate(
+                        "target", reports=False, data_project=True
+                    )
+                    log("target data COFF: OK")
+                except Exception as e:  # noqa: BLE001 - report every step's failure
+                    failures.append("target data COFF")
+                    log(f"target data COFF: FAILED - {e}")
+
+            if not {"data manifests", "target data COFF"} & set(failures):
+                try:
+                    generate_delink.generate("base", data_project=True)
+                    log("base data COFF and reports: OK")
+                except Exception as e:  # noqa: BLE001 - report every step's failure
+                    failures.append("base data COFF")
+                    log(f"base data COFF and reports: FAILED - {e}")
 
             try:
                 structure.result()

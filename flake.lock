@@ -33,6 +33,23 @@
         "type": "github"
       }
     },
+    "objdiff-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783665201,
+        "narHash": "sha256-2Rzoj8JXv9MOGRHWiIodaBbP8ID+8RFJFuB3hzrodh8=",
+        "owner": "encounter",
+        "repo": "objdiff",
+        "rev": "6bcac60df8bb0b4de5b1cb98b033bdedb9ac6aa4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "encounter",
+        "ref": "v3.7.3",
+        "repo": "objdiff",
+        "type": "github"
+      }
+    },
     "pdb-fetch-nvim-src": {
       "flake": false,
       "locked": {
@@ -53,9 +70,11 @@
       "inputs": {
         "bullet-2_79-src": "bullet-2_79-src",
         "nixpkgs": "nixpkgs",
+        "objdiff-src": "objdiff-src",
         "pdb-fetch-nvim-src": "pdb-fetch-nvim-src",
         "rust-overlay": "rust-overlay",
         "vcproj2ninja-src": "vcproj2ninja-src",
+        "vostok-data-delinker-src": "vostok-data-delinker-src",
         "vostok-delinker-src": "vostok-delinker-src",
         "vostok-pdb-parser-src": "vostok-pdb-parser-src",
         "vostok-resources-db-src": "vostok-resources-db-src"
@@ -94,6 +113,23 @@
       "original": {
         "owner": "srp-survarium",
         "repo": "vcproj2ninja",
+        "type": "github"
+      }
+    },
+    "vostok-data-delinker-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784201713,
+        "narHash": "sha256-wdVk/BNNhdHBO0iShPH4F56KGuMzb7dxBSweFAcMNx8=",
+        "owner": "srp-survarium",
+        "repo": "vostok-delinker",
+        "rev": "81d34b204a0384a92cf3b4c641a8430256b2922e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "vostok-delinker",
+        "rev": "81d34b204a0384a92cf3b4c641a8430256b2922e",
         "type": "github"
       }
     },

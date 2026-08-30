@@ -5,7 +5,7 @@ re-serialises pages on write, so git cannot delta it: every matching commit
 stored a fresh ~4 MB blob (1,333 of them, ~3.5 GB of history). A flat TSV deltas
 per line - ~20 KB per commit - and `git diff` names the functions that moved.
 
-  docs/binary_matching/match_state.tsv    the record; there is no other copy
+  config/match_state.tsv    the record; there is no other copy
 
 The derived roster (pairs, per-statement classification, cross-name aliases) is
 a pure function of `report.json` + the rich indexes and is rebuilt by

@@ -1,0 +1,34 @@
+rva	size	comment
+0x80ee60	0x59	CRT output.obj __lookuptable is an exact 89-byte COFF .rdata contribution; the PDB public has no usable size
+0x80f580	0x208	CRT ctype.obj _wctype spans from object offset 0x300 through the next symbol __newclmap at 0x508
+0x80f788	0x180	CRT ctype.obj __newclmap spans from object offset 0x508 through __newcumap at 0x688
+0x833390	0x1e0	OpenSSL dsa_ameth.obj _dsa_asn1_meths occupies its exact 480-byte COFF .rdata contribution
+0x8355b8	0x1c0	OpenSSL v3_ia5.obj _v3_ns_ia5_list occupies its exact 448-byte COFF .rdata contribution
+0x8448ec	0x20	Scaleform RenderBufferManager RBGenericImpl vftable runs to the next PDB vftable at 0x84490c
+0x852400	0x200	libjpeg jerror.obj _jpeg_std_message_table is the exact 128-pointer table ending at 0x852600
+0x877f90	0x44	Scaleform AS3 Vector_object vftable runs to the next PDB vftable at 0x877fd4
+0x878ee0	0x9c	PCRE __pcre_OP_lengths spans to the next PDB data symbol __pcre_utf8_table1 at 0x878f7c
+0x87f748	0x200	zlib _dist_code is the exact 512-byte table ending at PDB symbol __length_code
+0x882cf0	0x10	CRT PI_BY_2 owns the full 16-byte assembly constant through the next COFF symbol NEG_PI
+0x882d10	0x10	CRT PI owns the full 16-byte assembly constant through the next COFF symbol SIGNMASK
+0x882d50	0x20	CRT cv owns its exact COFF range through cv2
+0x882d70	0x40	CRT cv2 owns its exact COFF range through ABSVALMASK
+0x882e90	0x10	CRT Infs owns its exact paired-qword COFF range through NaN
+0x882eb0	0x30	CRT coeff owns its exact six-double COFF range through B_Tbl
+0x948fc0	0xc	Bullet btContinuousConvexCollision vftable runs to the next PDB vftable at 0x948fcc
+0x94b9c0	0x28	vostok::memory::stack_allocator vftable runs to the next PDB string at 0x94b9e8
+0x95a290	0x2c	vostok::animation::linear_interpolator vftable runs to the next PDB vftable at 0x95a2bc
+0x9635a4	0x2c	vostok::animation::instant_interpolator vftable runs to the next PDB vftable at 0x9635d0
+0x9707a4	0x40	vostok::animation::mixing::n_ary_tree_weight_node vftable runs to the next PDB vftable at 0x9707e4
+0x970ba8	0x38	vostok::animation::mixing::n_ary_tree_time_scale_transition_node vftable runs to the next PDB data symbol at 0x970be0
+0x995608	0x3c	STLport length_error ThrowInfo owns its exact linked record through PDB CatchableTypeArray at 0x995644
+0x99efc8	0x34	CRT _lpdays is the 13-element leap-year month-offset table; next PDB symbol is _days
+0x9a2c50	0x10	Scaleform SIMD Constant local is one __m128i
+0xa7fda8	0x5c	boost::asio hash_map::hash_size sizes contains 23 u32 entries; four bytes of linker padding follow
+0xa8b108	0x8	boost::system::throws is an error_code containing an int and error_category pointer
+0xa91510	0x4	SpeedTree CCoordSys::m_eCoordSysType is an enum cell
+0xa91520	0xc	SpeedTree CDefaultCoordinateSystem::m_vUp is Vec3
+0xa91550	0xc	SpeedTree CDefaultCoordinateSystem::m_vOut is Vec3
+0xa9156c	0xc	SpeedTree CDefaultCoordinateSystem::m_vRight is Vec3
+0xa9168c	0x14	SpeedTree g_sEmptyDrawCallInfo is SDrawCallInfo
+0x4c17274	0xc	Scaleform SysAllocMalloc singleton Container is SysAllocContainer

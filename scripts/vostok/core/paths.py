@@ -9,18 +9,21 @@ that lives here can only be wrong once.
 Layout, mirrored by the constants below:
 
     sources/                    the engine source we compile
+    config/                     committed machine-readable ledgers and policy
+      retail/                     retail image censuses
+      cleanliness/                audit ratchets
     binaries/                   ALL generated artifacts (gitignored)
       Win32/                      our build's exe + pdb
       objdiff/{base,target}/      delinked COFF, plus report.json
-      data/{base,target}/         PDB data indexes, image/relocation evidence
+      data-objdiff/{base,target}/ consumer-owned data comparison project
+      gen/                        generated manifests and data audits
       structure/{base,target}/    pdb-parser's rendered headers/statements
       rich/{base,target}/         pdb_rich_context index for pdb_fetch
       base_only.tsv               why we emit what the target does not
-    docs/binary_matching/       committed matching state (the ledger, queues,
-                                reviewed override tables)
+    docs/binary_matching/       matching workflow and evidence prose
 
-Everything under `binaries/` is regenerable; everything under `docs/` is
-committed truth. When in doubt, that is the line the constant tells you.
+Everything under `binaries/` is regenerable. Machine-readable committed state
+lives under `config/`; explanatory text lives under `docs/`.
 """
 
 from __future__ import annotations
@@ -52,6 +55,7 @@ REPO = _find_repo()
 
 SCRIPTS = REPO / "scripts"
 SOURCES = REPO / "sources"
+CONFIG = REPO / "config"
 # Recovered HLSL shader sources (the tree the shipped blobs' dependency tables
 # name as `resources.sources/shaders/...`). 176 of the 261 shipped shader
 # names are present; vostok.shaders coverage reports the live figure.
@@ -64,6 +68,7 @@ COMPILE_COMMANDS = REPO / "compile_commands.json"
 
 # --- generated artifacts (binaries/, gitignored) ---------------------------
 BINARIES = REPO / "binaries"
+GEN_DIR = BINARIES / "gen"
 PREBUILT = REPO / "binaries.prebuilt"
 NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
@@ -79,8 +84,10 @@ BASE_PDB = WIN32_DIR / "survarium-dx11-win32-gold.pdb"
 BASE_EXE = WIN32_DIR / "survarium-dx11-win32-gold.exe"
 
 OBJDIFF_DIR = BINARIES / "objdiff"
+DATA_OBJDIFF_DIR = BINARIES / "data-objdiff"
 OBJDIFF_CONFIG = OBJDIFF_DIR / "objdiff.json"
 REPORT = OBJDIFF_DIR / "report.json"
+DATA_OBJDIFF_REPORT = DATA_OBJDIFF_DIR / "report.json"
 REPORT_CHANGES = OBJDIFF_DIR / "report-changes.json"
 REPORT_HEAD = OBJDIFF_DIR / "report.head"
 CROSS_UNIT_REPORT = OBJDIFF_DIR / "report-cross-unit.json"
@@ -101,20 +108,35 @@ DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
 #: it is a regenerable report here rather than a row in the committed ledger.
 BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 
-# Independent image-data matching lane.  It deliberately does not feed
-# objdiff/report.json: function matching and data matching have different
-# identities, denominators, and failure modes.
-DATA_DIR = BINARIES / "data"
-DATA_TARGET_DIR = DATA_DIR / "target"
-DATA_BASE_DIR = DATA_DIR / "base"
-DATA_TARGET_INDEX = DATA_TARGET_DIR / "index.tsv"
-DATA_BASE_INDEX = DATA_BASE_DIR / "index.tsv"
-DATA_TARGET_ACCESS = DATA_TARGET_DIR / "access.tsv"
-DATA_BASE_ACCESS = DATA_BASE_DIR / "access.tsv"
-DATA_TARGET_RELOCS = DATA_TARGET_DIR / "relocations.tsv"
-DATA_BASE_RELOCS = DATA_BASE_DIR / "relocations.tsv"
-DATA_REPORT = DATA_DIR / "report.json"
-DATA_COVERAGE = DATA_DIR / "coverage.json"
+# Data-topology names mirror Gruntz: tracked retail facts and ratchets live in
+# config/{retail,cleanliness}; every generated audit or delinker input lives in
+# binaries/gen. The image audit remains separate from objdiff until the two
+# delink manifests below actually enroll target COFF data.
+DATA_TARGET_INDEX = GEN_DIR / "target_data_index.tsv"
+DATA_BASE_INDEX = GEN_DIR / "base_data_index.tsv"
+DATA_TARGET_ACCESS = GEN_DIR / "data_access_map.tsv"
+DATA_BASE_ACCESS = GEN_DIR / "base_data_access_map.tsv"
+DATA_TARGET_RELOCS = GEN_DIR / "target_data_relocations.tsv"
+DATA_BASE_RELOCS = GEN_DIR / "base_data_relocations.tsv"
+DATA_MISSING_CANDIDATES = GEN_DIR / "missing_data_candidates.tsv"
+DATA_MISSING_XREFS = GEN_DIR / "missing_data_xrefs.tsv"
+DATA_MISSING_REPORT = GEN_DIR / "missing_data_report.json"
+DATA_REPORT = GEN_DIR / "data_image_report.json"
+DATA_COVERAGE = GEN_DIR / "data_coverage.json"
+DATA_STATE = GEN_DIR / "data_image_state.tsv"
+DATA_COVERAGE_GAPS = GEN_DIR / "data_coverage_gaps.tsv"
+DATA_BASE_GEN = GEN_DIR / "base"
+# Keep the target manifest names and locations identical to Gruntz. Vostok
+# additionally needs a base projection because LTCG left us no compiler objs.
+DELINK_DATA_MANIFEST = GEN_DIR / "delink_data_manifest.tsv"
+DELINK_DATA_SECTION_MANIFEST = GEN_DIR / "delink_data_section_manifest.tsv"
+BASE_DELINK_DATA_MANIFEST = DATA_BASE_GEN / "delink_data_manifest.tsv"
+BASE_DELINK_DATA_SECTION_MANIFEST = DATA_BASE_GEN / "delink_data_section_manifest.tsv"
+DATA_CONSUMER_CLOSURE = GEN_DIR / "data_consumer_closure.tsv"
+DATA_FUNCTION_STATE = GEN_DIR / "data_function_state.tsv"
+DATA_MANIFEST_BLOCKERS = GEN_DIR / "data_manifest_blockers.tsv"
+DATA_STRICT_REPORT = GEN_DIR / "data_strict_report.json"
+DATA_SYMBOL_MAP = DATA_OBJDIFF_DIR / "target-symbol-map.tsv"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
@@ -148,18 +170,22 @@ GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 REBUILD_LOG = BINARIES / "rebuild.log"
 MATCH_DB_LOG = BINARIES / "match_db.log"
 
-# --- committed matching state (docs/, in git) ------------------------------
+# --- committed machine-readable state (config/, in git) --------------------
 DOCS_MATCHING = REPO / "docs" / "binary_matching"
-MATCH_STATE = DOCS_MATCHING / "match_state.tsv"
-EXACT_FOLD_ALIASES = DOCS_MATCHING / "exact_fold_aliases.tsv"
-MEASURED_FOLD_ALIASES = DOCS_MATCHING / "measured_fold_aliases.tsv"
-MODULE_OWNERSHIP_OVERRIDES = DOCS_MATCHING / "module_ownership_overrides.tsv"
-SYMBOL_MAP_OVERRIDES = DOCS_MATCHING / "folded_symbol_overrides.tsv"
+RETAIL_CONFIG = CONFIG / "retail"
+CLEANLINESS_CONFIG = CONFIG / "cleanliness"
+MATCH_STATE = CONFIG / "match_state.tsv"
+EXACT_FOLD_ALIASES = CONFIG / "exact_fold_aliases.tsv"
+MEASURED_FOLD_ALIASES = CONFIG / "measured_fold_aliases.tsv"
+MODULE_OWNERSHIP_OVERRIDES = CONFIG / "module_ownership_overrides.tsv"
+SYMBOL_MAP_OVERRIDES = CONFIG / "folded_symbol_overrides.tsv"
 ENUM_QUEUE = DOCS_MATCHING / "enum_queue.md"
 STRUCTURE_MISMATCH_QUEUE = DOCS_MATCHING / "structure_mismatch_queue.md"
-DATA_STATE = DOCS_MATCHING / "data_state.tsv"
-DATA_EXCLUSIONS = DOCS_MATCHING / "data_exclusions.tsv"
-DATA_GATE = DOCS_MATCHING / "data_gate.tsv"
+RETAIL_DATA = RETAIL_CONFIG / "data.tsv"
+RETAIL_DATA_SYMBOLS = RETAIL_CONFIG / "data_symbols.tsv"
+RETAIL_PDB_DATA_EXTENTS = RETAIL_CONFIG / "pdb_data_extents.tsv"
+RETAIL_RELOC_REFERENTS = RETAIL_CONFIG / "reloc_referents.tsv"
+DATA_INTEGRITY_RATCHET = CLEANLINESS_CONFIG / "data-integrity-ratchet.tsv"
 
 
 def survarium_bin() -> Path:

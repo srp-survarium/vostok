@@ -93,7 +93,9 @@ def log(msg: str) -> None:
     print(f"[delink] {msg}", flush=True)
 
 
-def _delinker_bin() -> str:
+def _delinker_bin(*, data_project: bool = False) -> str:
+    if data_project:
+        return os.environ.get("VOSTOK_DATA_DELINKER", "vostok-data-delinker")
     return os.environ.get("VOSTOK_DELINKER", "vostok-delinker")
 
 
@@ -473,13 +475,62 @@ def _report_changes(previous: Path, current: Path) -> None:
     log(f"Changes: {changes} (previous report kept at {previous})")
 
 
-def generate(side: str) -> None:
-    """Delink <side> into binaries/objdiff/<side> and refresh objdiff.json.
+def _generate_strict_report(project_dir: Path) -> None:
+    """Generate the independent function-referent report.
+
+    This report deliberately never feeds the code ledger: relocation identity
+    and addends answer whether a function uses the same data, while the normal
+    report remains the hash-scoped machine-code scoreboard.
+    """
+    objdiff_cli = os.environ.get(
+        "VOSTOK_DATA_OBJDIFF_CLI", "vostok-data-objdiff-cli"
+    )
+    if shutil.which(objdiff_cli) is None:
+        return
+    if not (_nonempty_dir(project_dir / "base") and _nonempty_dir(project_dir / "target")):
+        return
+    paths.DATA_STRICT_REPORT.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run([
+        objdiff_cli, "report", "generate", "-p", str(project_dir),
+        "-o", str(paths.DATA_STRICT_REPORT),
+        "-c", "functionRelocDiffs=all",
+    ], check=True)
+    log(f"Strict data-referent report: {paths.DATA_STRICT_REPORT}")
+
+
+def _generate_data_report() -> None:
+    objdiff_cli = os.environ.get(
+        "VOSTOK_DATA_OBJDIFF_CLI", "vostok-data-objdiff-cli"
+    )
+    project = paths.DATA_OBJDIFF_DIR
+    if shutil.which(objdiff_cli) is None:
+        raise RuntimeError("objdiff-cli is required for the data project")
+    if not (_nonempty_dir(project / "base") and _nonempty_dir(project / "target")):
+        return
+    subprocess.run([
+        objdiff_cli, "report", "generate", "-p", str(project),
+        "-o", str(paths.DATA_OBJDIFF_REPORT),
+    ], check=True)
+    measures = json.loads(
+        paths.DATA_OBJDIFF_REPORT.read_text(encoding="utf-8")
+    )["measures"]
+    log(
+        "Data project: {:.2f}% data ({:,}/{:,} projected bytes)".format(
+            measures.get("matched_data_percent", 0.0),
+            int(measures.get("matched_data", 0)),
+            int(measures.get("total_data", 0)),
+        )
+    )
+    _generate_strict_report(project)
+
+
+def generate(side: str, *, reports: bool = True, data_project: bool = False) -> None:
+    """Delink one side into the normal code or parallel data project.
 
     Raises RuntimeError if inputs are missing and CalledProcessError if the
     delinker / config generator fail - callers handle/report these.
     """
-    delinker = _delinker_bin()
+    delinker = _delinker_bin(data_project=data_project)
 
     if side == "base":
         exe = WIN32_DIR / "survarium-dx11-win32-gold.exe"
@@ -500,7 +551,14 @@ def generate(side: str) -> None:
         engine += ["--engine-path", _wine_path(SCALEFORM_SDK) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
-        symbol_map = ["--read-symbol-map", str(_effective_symbol_map())]
+        symbol_map = [
+            "--read-symbol-map",
+            str(paths.DATA_SYMBOL_MAP if data_project else _effective_symbol_map()),
+        ]
+        data_manifest = paths.BASE_DELINK_DATA_MANIFEST if data_project else None
+        data_sections = (
+            paths.BASE_DELINK_DATA_SECTION_MANIFEST if data_project else None
+        )
         hint = "build first (python3 -m vostok build)"
     elif side == "target":
         survarium = survarium_bin()
@@ -510,7 +568,12 @@ def generate(side: str) -> None:
                   "--engine-path", GFX_TARGET_PREFIX + "\\"]
         # Record target's choice for each folded symbol group so the base delink
         # can reproduce it.
-        symbol_map = ["--write-symbol-map", str(SYMBOL_MAP)]
+        symbol_map = [
+            "--write-symbol-map",
+            str(paths.DATA_SYMBOL_MAP if data_project else SYMBOL_MAP),
+        ]
+        data_manifest = paths.DELINK_DATA_MANIFEST if data_project else None
+        data_sections = paths.DELINK_DATA_SECTION_MANIFEST if data_project else None
         hint = "set SURVARIUM_BIN or run inside `nix develop` (provides survarium-game)"
     else:  # pragma: no cover - argparse restricts choices
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
@@ -524,7 +587,7 @@ def generate(side: str) -> None:
     if shutil.which(delinker) is None:
         raise RuntimeError(
             f"{delinker!r} not found on PATH - run inside `nix develop` "
-            "(provides vostok-delinker), or set VOSTOK_DELINKER"
+            "(provides both delinkers), or set the corresponding delinker env var"
         )
 
     # Drop the map flags if this delinker predates them (keeps an older PATH
@@ -533,7 +596,31 @@ def generate(side: str) -> None:
         log(f"delinker has no {symbol_map[0]}; skipping folded-symbol reconciliation")
         symbol_map = []
 
-    out = OBJDIFF_DIR / side
+    data_args = []
+    if data_manifest is not None and data_sections is not None:
+        if not data_manifest.is_file() or not data_sections.is_file():
+            raise RuntimeError(
+                f"consumer data projection is incomplete: {data_manifest} / {data_sections}"
+            )
+        for flag in ("--data-manifest", "--data-section-manifest"):
+            if not _delinker_supports(delinker, flag):
+                raise RuntimeError(
+                    f"installed vostok-delinker lacks required {flag}; re-enter "
+                    "the updated Nix development shell"
+                )
+        data_args = [
+            "--data-manifest", str(data_manifest),
+            "--data-section-manifest", str(data_sections),
+            # Consumer manifests intentionally cover only trusted complete
+            # extents. Keep the PDB fallback for imports, literals, RTTI and
+            # other still-unprovisioned terminals; the blockers table makes
+            # that remaining debt visible instead of silently calling it data
+            # closure.
+            "--recover-data-relocs-from-pdb",
+        ]
+
+    project_dir = paths.DATA_OBJDIFF_DIR if data_project else OBJDIFF_DIR
+    out = project_dir / side
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -547,6 +634,7 @@ def generate(side: str) -> None:
             "--output-path", str(out),
             *engine,
             *symbol_map,
+            *data_args,
         ],
         check=True,
     )
@@ -567,7 +655,7 @@ def generate(side: str) -> None:
             f"Normalized {symbols} project-specific static-init symbols "
             f"in {objects} target objects ({len(aliases)} unique rich-PDB aliases)"
         )
-    elif (OBJDIFF_DIR / "target").is_dir():
+    elif (project_dir / "target").is_dir():
         # The target tree is persistent, but normalization rules can improve.
         # Reapply the idempotent transform before every comparison so a script
         # update does not require regenerating the retail delink by hand.
@@ -580,7 +668,7 @@ def generate(side: str) -> None:
             )
         aliases = _rich_pdb_aliases()
         objects, symbols = normalize_objdiff_symbols.normalize_tree(
-            OBJDIFF_DIR / "target", nm=nm, objcopy=objcopy, aliases=aliases
+            project_dir / "target", nm=nm, objcopy=objcopy, aliases=aliases
         )
         log(
             f"Updated {symbols} project-specific static-init symbols "
@@ -590,11 +678,16 @@ def generate(side: str) -> None:
 
     log("Refreshing objdiff config ...")
     subprocess.run(
-        [sys.executable, "-m", "vostok.build.generate_objdiff_config"],
+        [sys.executable, "-m", "vostok.build.generate_objdiff_config",
+         "--objdiff-dir", str(project_dir)],
         check=True, env=paths.child_env(),
     )
     log(f"Done: {out}")
-    _generate_report()
+    if reports:
+        if data_project:
+            _generate_data_report()
+        else:
+            _generate_report()
 
 
 def main() -> None:
@@ -602,8 +695,21 @@ def main() -> None:
         description="Delink base/target EXE into COFF objs via vostok-delinker."
     )
     ap.add_argument("side", choices=["base", "target"])
+    ap.add_argument(
+        "--no-reports", action="store_true",
+        help="delink and refresh objdiff.json without generating reports",
+    )
+    ap.add_argument(
+        "--data-project", action="store_true",
+        help="use the separate data-topology delinker and objdiff project",
+    )
     try:
-        generate(ap.parse_args().side)
+        args = ap.parse_args()
+        generate(
+            args.side,
+            reports=not args.no_reports,
+            data_project=args.data_project,
+        )
     except (RuntimeError, subprocess.CalledProcessError) as e:
         print(f"[delink] ERROR: {e}", file=sys.stderr)
         sys.exit(1)

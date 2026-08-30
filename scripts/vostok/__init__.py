@@ -4,7 +4,7 @@ One direction of data flow:
 
     sources/ --build--> binaries/Win32/*.{exe,pdb}
                     --delink--> binaries/objdiff/{base,target} + report.json
-                            --derive--> docs/binary_matching/match_state.tsv
+                            --derive--> config/match_state.tsv
                                     --render--> README.md score block
 
 Nothing is cached in between. The derivation writes the committed record

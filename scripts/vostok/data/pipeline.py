@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -23,6 +24,11 @@ LEDGER_COLUMNS = (
     "identity", "module", "section", "target_rva", "base_rva",
     "target_size", "base_size", "status", "target_hash", "base_hash",
     "relocation_hash", "note",
+)
+GAP_COLUMNS = (
+    "rva", "length", "section", "verdict", "addressed", "touched", "sites",
+    "payload_nonzero", "relocs", "prev_object", "prev_name", "next_object",
+    "next_name", "first_bytes",
 )
 EXACT = "EXACT"
 PAIRED_STATUSES = frozenset({EXACT, "BYTES", "RELOCS", "RELOC_TOPOLOGY", "SIZE"})
@@ -76,7 +82,7 @@ def export_index(side: str) -> Path:
     for source in (exe, pdb):
         if not source.is_file():
             raise RuntimeError(f"{source} is missing")
-    delinker = os.environ.get("VOSTOK_DELINKER", "vostok-delinker")
+    delinker = os.environ.get("VOSTOK_DATA_DELINKER", "vostok-data-delinker")
     if shutil.which(delinker) is None:
         raise RuntimeError("vostok-delinker is not on PATH; enter `nix develop`")
     help_result = subprocess.run(
@@ -344,6 +350,44 @@ def _write_ledger(rows: list[dict]) -> None:
     write_if_changed(paths.DATA_STATE, "\n".join(lines) + "\n")
 
 
+def _retail_kind(symbols: list[DataSymbol]) -> str:
+    names = [symbol.display_name for symbol in symbols]
+    checks = (
+        ("vtable", lambda name: name.startswith("??_7")),
+        ("rtti", lambda name: name.startswith("??_R")),
+        ("string", lambda name: name.startswith("??_C@")),
+        ("fppool", lambda name: name.startswith(("__real@", "$T"))),
+        ("guard", lambda name: name.startswith("??_B")),
+        ("ehtable", lambda name: any(token in name for token in (
+            "__ehfuncinfo", "__unwindtable", "__tryblocktable", "__ip2state",
+        ))),
+    )
+    return next((kind for kind, test in checks if any(test(name) for name in names)),
+                "datum")
+
+
+def _write_retail_census(symbols: list[DataSymbol], *, force: bool = False) -> None:
+    """Seed Gruntz's structural retail census from the authoritative PDB.
+
+    Once committed, this is an admitted start/kind table rather than a build
+    output. A normal refresh therefore validates it but never rewrites it.
+    """
+    if paths.RETAIL_DATA.is_file() and not force:
+        return
+    by_rva: dict[int, list[DataSymbol]] = defaultdict(list)
+    for symbol in symbols:
+        by_rva[symbol.rva].append(symbol)
+    lines = [
+        "# MANUALLY MANAGED - admitted retail data starts from the shipped PDB.",
+        "# Extents and owner/name evidence are derived separately; builds do not rewrite this.",
+        "rva\tkind",
+    ]
+    for rva, aliases in sorted(by_rva.items()):
+        lines.append(f"{rva:#x}\t{_retail_kind(aliases)}")
+    paths.RETAIL_DATA.parent.mkdir(parents=True, exist_ok=True)
+    write_if_changed(paths.RETAIL_DATA, "\n".join(lines) + "\n")
+
+
 def _interval_union(intervals: list[tuple[int, int]]) -> int:
     total = 0
     cursor = -1
@@ -359,36 +403,8 @@ def _interval_union(intervals: list[tuple[int, int]]) -> int:
     return total
 
 
-def _intersection_union(left: list[tuple[int, int]],
-                        right: list[tuple[int, int]]) -> int:
-    intersections = []
-    for left_start, left_end in left:
-        for right_start, right_end in right:
-            start, end = max(left_start, right_start), min(left_end, right_end)
-            if start < end:
-                intersections.append((start, end))
-    return _interval_union(intersections)
-
-
-def _exclusions(image: PEImage) -> list[tuple[int, int]]:
-    if not paths.DATA_EXCLUSIONS.is_file():
-        return []
-    rows = []
-    with paths.DATA_EXCLUSIONS.open(newline="", encoding="utf-8") as source:
-        reader = csv.DictReader(
-            (line for line in source if not line.lstrip().startswith("#")),
-            delimiter="\t",
-        )
-        for raw in reader:
-            start, end = int(raw["start_rva"], 0), int(raw["end_rva"], 0)
-            section = image.section(raw["section"])
-            if not section.contains(start, end - start):
-                raise ValueError(f"data exclusion {start:#x}..{end:#x} leaves {section.name}")
-            rows.append((start, end))
-    return rows
-
-
-def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage) -> dict:
+def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage,
+             consumer: dict | None = None) -> dict:
     sections = [image.section(".rdata"), image.section(".data")]
     gross = sum(section.virtual_size for section in sections)
     claimed = [(symbol.rva, symbol.rva + symbol.size)
@@ -405,26 +421,17 @@ def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage) -> dic
             compared.append(interval)
         if row["status"] == EXACT:
             exact.append(interval)
-    excluded = _exclusions(image)
-    excluded_bytes = _interval_union(excluded)
     claimed_bytes = _interval_union(claimed)
-    reconstructable_claimed = claimed_bytes - _intersection_union(claimed, excluded)
     compared_bytes = _interval_union(compared)
     exact_bytes = _interval_union(exact)
-    eligible = gross - excluded_bytes
-    return {
+    metrics = {
         "gross_bytes": gross,
         "claimed_bytes": claimed_bytes,
         "gross_coverage_percent": 100.0 * claimed_bytes / gross if gross else 0.0,
-        "excluded_bytes": excluded_bytes,
-        "reconstructable_bytes": eligible,
-        "reconstructable_claimed_bytes": reconstructable_claimed,
-        "reconstructable_coverage_percent": (
-            100.0 * reconstructable_claimed / eligible if eligible else 0.0
-        ),
         "compared_bytes": compared_bytes,
         "exact_bytes": exact_bytes,
         "fidelity_percent": 100.0 * exact_bytes / compared_bytes if compared_bytes else 0.0,
+        "image_exact_percent": 100.0 * exact_bytes / gross if gross else 0.0,
         "sections": {
             section.name: {
                 "rva": section.rva,
@@ -434,6 +441,32 @@ def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage) -> dic
             for section in sections
         },
     }
+    if consumer:
+        reachable = int(consumer.get("unique_allocation_bytes", 0))
+        paired = int(consumer.get("paired_unique_bytes", 0))
+        metrics.update({
+            "consumer_reachable_bytes": reachable,
+            "consumer_reachable_percent": 100.0 * reachable / gross if gross else 0.0,
+            "consumer_paired_bytes": paired,
+            "consumer_paired_percent": 100.0 * paired / gross if gross else 0.0,
+        })
+    if paths.DATA_OBJDIFF_REPORT.is_file():
+        objdiff = json.loads(
+            paths.DATA_OBJDIFF_REPORT.read_text(encoding="utf-8")
+        )["measures"]
+        projected = int(objdiff.get("total_data", 0))
+        matched = int(objdiff.get("matched_data", 0))
+        metrics.update({
+            # The same retail allocation is intentionally emitted into every
+            # consumer unit, so this is a copy-counting denominator. It must
+            # never be divided by the unique retail image size.
+            "objdiff_projected_bytes": projected,
+            "objdiff_matched_bytes": matched,
+            "objdiff_match_percent": (
+                100.0 * matched / projected if projected else 0.0
+            ),
+        })
+    return metrics
 
 
 def _write_relocations(side: str, symbols: list[DataSymbol], image: PEImage) -> None:
@@ -478,12 +511,28 @@ def _access_kind(instruction: str, absolute_value: int | None = None) -> tuple[s
     if selected is not None and selected > 0:
         return "read", width
     if "[" in first:
-        if mnemonic in {"cmp", "test", "push", "fld", "movzx", "movsx"}:
+        if mnemonic in {"call", "jmp", "cmp", "test", "push", "fld", "movzx", "movsx"}:
             return "read", width
         if mnemonic in {"inc", "dec", "add", "sub", "and", "or", "xor", "xchg"}:
             return "readwrite", width
         return "write", width
     return "read", width
+
+
+def _access_form(instruction: str) -> tuple[str, int]:
+    lower = instruction.lower()
+    pieces = lower.split(None, 1)
+    mnemonic = pieces[0] if pieces else ""
+    scales = [int(value) for value in re.findall(r"\*\s*([1248])\b", lower)]
+    if mnemonic in {"call", "jmp"} and "[" in lower:
+        return "indcall", max(scales, default=0)
+    if mnemonic == "lea":
+        return "lea", max(scales, default=0)
+    if "[" not in lower:
+        return "imm", 0
+    if scales:
+        return "indexed", max(scales)
+    return "direct", 0
 
 
 class _FunctionIndex:
@@ -518,24 +567,60 @@ def _write_access(side: str, symbols: list[DataSymbol], image: PEImage) -> None:
     if objdump is None:
         raise RuntimeError("llvm-objdump is required for the data access map")
     exe, _ = image_paths(side)
-    result = subprocess.run(
-        [objdump, "-d", "--no-show-raw-insn", "--x86-asm-syntax=intel", str(exe)],
-        capture_output=True, text=True, check=True,
-    )
-    instructions = []
-    for line in result.stdout.splitlines():
-        match = _DISASM.match(line)
-        if match:
-            instructions.append((int(match.group(1), 16) - image.image_base, match.group(2)))
-    starts = [rva for rva, _ in instructions]
     functions = _load_rich(side)
     function_index = _FunctionIndex(functions)
     resolver = AddressResolver(symbols, functions)
-    lines = [
-        "site_rva\tinstruction_rva\taccess\twidth\ttarget_rva\ttarget_identity\t"
-        "caller_mangled\tcaller_name\tcaller_file\tinstruction"
-    ]
     text = image.section(".text")
+
+    def disassemble(path: Path) -> tuple[list[tuple[int, str]], list[int]]:
+        result = subprocess.run(
+            [objdump, "-d", "--no-show-raw-insn", "--x86-asm-syntax=intel",
+             str(path)],
+            capture_output=True, text=True, check=True,
+        )
+        decoded = []
+        for line in result.stdout.splitlines():
+            match = _DISASM.match(line)
+            if match:
+                decoded.append((
+                    int(match.group(1), 16) - image.image_base, match.group(2)
+                ))
+        return decoded, [rva for rva, _ in decoded]
+
+    linear, linear_starts = disassemble(exe)
+    anchored_bytes = bytearray(image.data)
+    anchored_bytes[text.raw_offset:text.raw_offset + text.raw_size] = b"\x90" * text.raw_size
+    for record in functions:
+        rva, size = record.get("rva"), record.get("size")
+        if not isinstance(rva, int) or not isinstance(size, int) or size <= 0:
+            continue
+        start = max(rva, text.rva)
+        end = min(rva + size, text.rva + text.raw_size)
+        if start >= end:
+            continue
+        raw_start = text.raw_offset + start - text.rva
+        raw_end = text.raw_offset + end - text.rva
+        anchored_bytes[raw_start:raw_end] = image.data[raw_start:raw_end]
+    with tempfile.NamedTemporaryFile(suffix=".exe") as anchored_file:
+        anchored_file.write(anchored_bytes)
+        anchored_file.flush()
+        anchored, anchored_starts = disassemble(Path(anchored_file.name))
+
+    def at_site(decoded: list[tuple[int, str]], starts: list[int], site: int):
+        index = bisect.bisect_right(starts, site) - 1
+        if index < 0:
+            return None
+        instruction_rva, instruction = decoded[index]
+        next_rva = decoded[index + 1][0] if index + 1 < len(decoded) else text.end
+        if instruction_rva <= site < next_rva:
+            return instruction_rva, instruction
+        return None
+
+    lines = [
+        "site_rva\tinstruction_rva\taccess\twidth\tend_rva\tform\tscale\t"
+        "target_rva\ttarget_identity\tcaller_mangled\tcaller_name\tcaller_file\t"
+        "instruction"
+    ]
     for site in image.base_relocations():
         if not text.contains(site, 4):
             continue
@@ -544,24 +629,150 @@ def _write_access(side: str, symbols: list[DataSymbol], image: PEImage) -> None:
         target_section = image.section_at(destination)
         if target_section is None or target_section.name not in (".data", ".rdata"):
             continue
-        index = bisect.bisect_right(starts, site) - 1
-        if index < 0:
-            continue
-        instruction_rva, instruction = instructions[index]
-        next_rva = instructions[index + 1][0] if index + 1 < len(instructions) else text.end
-        if not instruction_rva <= site < next_rva:
-            continue
-        access, width = _access_kind(instruction, value)
-        callers = function_index.containing(instruction_rva) or [{}]
-        for caller in callers:
+        callers = function_index.containing(site)
+        decoded = at_site(
+            anchored if callers else linear,
+            anchored_starts if callers else linear_starts,
+            site,
+        )
+        if decoded is None:
+            instruction_rva, instruction = site, "-"
+            access, width, form, scale = "undecoded", "-", "undecoded", 0
+        else:
+            instruction_rva, instruction = decoded
+            access, width = _access_kind(instruction, value)
+            form, scale = _access_form(instruction)
+        width_bytes = {
+            "byte": 1, "word": 2, "dword": 4, "qword": 8, "xmmword": 16,
+        }.get(width, 0)
+        for caller in callers or [{}]:
             fields = (
                 f"{site:#x}", f"{instruction_rva:#x}", access, width,
+                f"{destination + width_bytes:#x}", form, str(scale),
                 f"{destination:#x}", resolver.resolve(destination, image),
                 caller.get("mangled", "-"), caller.get("name", "-"),
                 caller.get("file", "-"), instruction.replace("\t", " "),
             )
             lines.append("\t".join(str(field).replace("\t", " ") for field in fields))
     write_if_changed(access_path(side), "\n".join(lines) + "\n")
+
+
+def _manifest_runs(image: PEImage) -> list[tuple[int, int]]:
+    """Unique retail extents actually enrolled by the target manifest."""
+    intervals = set()
+    if paths.DELINK_DATA_MANIFEST.is_file():
+        with paths.DELINK_DATA_MANIFEST.open(newline="", encoding="utf-8") as source:
+            for row in csv.DictReader(source, delimiter="\t"):
+                start = int(row["rva"], 0)
+                end = start + int(row["size"], 0)
+                section = image.section_at(start)
+                if section is not None and section.contains(start, end - start):
+                    intervals.add((start, end))
+    runs: list[list[int]] = []
+    for start, end in sorted(intervals):
+        if runs and start <= runs[-1][1]:
+            runs[-1][1] = max(runs[-1][1], end)
+        else:
+            runs.append([start, end])
+    return [(start, end) for start, end in runs]
+
+
+def _write_coverage_gaps(symbols: list[DataSymbol], image: PEImage) -> None:
+    """Write Gruntz's unenrolled-range table for the retail image."""
+    by_start: dict[int, list[DataSymbol]] = defaultdict(list)
+    by_end: dict[int, list[DataSymbol]] = defaultdict(list)
+    for symbol in symbols:
+        if _trusted(symbol, image) and symbol.size is not None:
+            by_start[symbol.rva].append(symbol)
+            by_end[symbol.rva + symbol.size].append(symbol)
+
+    widths = {"byte": 1, "word": 2, "dword": 4, "qword": 8, "xmmword": 16}
+    touches: list[tuple[int, int]] = []
+    if paths.DATA_TARGET_ACCESS.is_file():
+        with paths.DATA_TARGET_ACCESS.open(newline="", encoding="utf-8") as source:
+            for row in csv.DictReader(source, delimiter="\t"):
+                width = widths.get(row["width"], 0)
+                if width and row["access"] in {"read", "write", "readwrite"}:
+                    start = int(row["target_rva"], 0)
+                    touches.append((start, start + width))
+    touches.sort()
+    touch_starts = [start for start, _ in touches]
+
+    relocation_sites = image.base_relocations()
+    destinations = sorted(
+        (value - image.image_base if value >= image.image_base else value)
+        for value in (image.u32_rva(site) for site in relocation_sites)
+    )
+
+    lines = [
+        "# GENERATED by vostok.data - retail bytes no PDB-typed datum covers.",
+        "\t".join(GAP_COLUMNS),
+    ]
+    for section_name in (".rdata", ".data"):
+        section = image.section(section_name)
+        runs = [
+            (max(start, section.rva), min(end, section.end))
+            for start, end in _manifest_runs(image)
+            if start < section.end and end > section.rva
+        ]
+        cursor = section.rva
+        gaps = []
+        for start, end in runs:
+            if start > cursor:
+                gaps.append((cursor, start))
+            cursor = max(cursor, end)
+        if cursor < section.end:
+            gaps.append((cursor, section.end))
+
+        for start, end in gaps:
+            payload = image.read_rva(start, end - start)
+            nonzero = sum(byte != 0 for byte in payload)
+            rel_begin = bisect.bisect_left(relocation_sites, start)
+            rel_end = bisect.bisect_left(relocation_sites, end)
+            reloc_count = rel_end - rel_begin
+            addressed = bisect.bisect_left(destinations, end) - bisect.bisect_left(
+                destinations, start
+            )
+            touched_intervals = []
+            touch_index = bisect.bisect_left(touch_starts, start)
+            while touch_index and touches[touch_index - 1][1] > start:
+                touch_index -= 1
+            while touch_index < len(touches) and touches[touch_index][0] < end:
+                left, right = touches[touch_index]
+                if right > start:
+                    touched_intervals.append((max(start, left), min(end, right)))
+                touch_index += 1
+            touched = _interval_union(touched_intervals)
+            sites = len(touched_intervals)
+            verdict = (
+                "POINTER" if reloc_count and nonzero else
+                "NONZERO" if nonzero else
+                "PAD" if end - start < 8 else
+                "ZERO-GAP"
+            )
+            previous = min(by_end.get(start, ()), key=lambda item: item.identity,
+                           default=None)
+            following = min(by_start.get(end, ()), key=lambda item: item.identity,
+                            default=None)
+            fields = {
+                "rva": f"{start:#x}",
+                "length": str(end - start),
+                "section": section_name,
+                "verdict": verdict,
+                "addressed": str(addressed),
+                "touched": str(touched),
+                "sites": str(sites),
+                "payload_nonzero": str(nonzero),
+                "relocs": str(reloc_count),
+                "prev_object": previous.owner_module if previous else "-",
+                "prev_name": previous.display_name if previous else "-",
+                "next_object": following.owner_module if following else "-",
+                "next_name": following.display_name if following else "-",
+                "first_bytes": payload[:16].hex(),
+            }
+            lines.append("\t".join(fields[column].replace("\t", "\\t")
+                                   for column in GAP_COLUMNS))
+    write_if_changed(paths.DATA_COVERAGE_GAPS, "\n".join(lines) + "\n")
 
 
 def init_target(*, force: bool = False) -> None:
@@ -583,19 +794,54 @@ def init_target(*, force: bool = False) -> None:
         # change can never leave apparently valid target evidence stale.
         _write_relocations("target", symbols, image)
         _write_access("target", symbols, image)
+        _write_retail_census(symbols)
         log("retail inventory reused; derived evidence refreshed")
-        return
-    export_index("target")
-    symbols = load(paths.DATA_TARGET_INDEX)
-    image = PEImage(image_paths("target")[0])
-    _write_relocations("target", symbols, image)
-    _write_access("target", symbols, image)
-    log(f"retail inventory ready: {len(symbols):,} PDB data records")
+    else:
+        export_index("target")
+        symbols = load(paths.DATA_TARGET_INDEX)
+        image = PEImage(image_paths("target")[0])
+        _write_relocations("target", symbols, image)
+        _write_access("target", symbols, image)
+        _write_retail_census(symbols, force=force)
+        log(f"retail inventory ready: {len(symbols):,} PDB data records")
+
+
+    from vostok.data import missing
+    missing_report = missing.refresh()
+    log(
+        "non-PDB data: {unique_missing_targets:,} referenced targets; "
+        "{unresolved_targets:,} still need review".format(**missing_report)
+    )
+    if missing_report["unresolved_targets"]:
+        raise RuntimeError(
+            "non-PDB data census is incomplete: "
+            f"{missing_report['unresolved_targets']:,} target(s) need manual review; "
+            "run `python3 -m vostok data missing-next`"
+        )
+
+
+def prepare_manifests() -> dict:
+    """Refresh both access graphs and project consumer-owned delink manifests."""
+    init_target()
+    export_index("base")
+    base_symbols = load(paths.DATA_BASE_INDEX)
+    base_image = PEImage(image_paths("base")[0])
+    _write_relocations("base", base_symbols, base_image)
+    _write_access("base", base_symbols, base_image)
+    from vostok.data import manifest
+    summary = manifest.generate()
+    _write_coverage_gaps(load(paths.DATA_TARGET_INDEX), PEImage(image_paths("target")[0]))
+    log(
+        "consumer projection: {consumer_units:,} units, "
+        "{allocation_copies:,} allocation copies, {blockers:,} blockers".format(
+            **summary
+        )
+    )
+    return summary
 
 
 def refresh() -> dict:
-    init_target()
-    export_index("base")
+    consumer_summary = prepare_manifests()
     target_symbols = load(paths.DATA_TARGET_INDEX)
     base_symbols = load(paths.DATA_BASE_INDEX)
     target_image = PEImage(image_paths("target")[0])
@@ -605,9 +851,32 @@ def refresh() -> dict:
     module_counts = defaultdict(Counter)
     for row in rows:
         module_counts[row["module"]][row["status"]] += 1
-    metrics = coverage(rows, target_symbols, target_image)
-    _write_relocations("base", base_symbols, base_image)
-    _write_access("base", base_symbols, base_image)
+    metrics = coverage(rows, target_symbols, target_image, consumer_summary)
+
+    strict = {}
+    if paths.DATA_STRICT_REPORT.is_file() and paths.DATA_OBJDIFF_REPORT.is_file():
+        normal_measures = json.loads(
+            paths.DATA_OBJDIFF_REPORT.read_text(encoding="utf-8")
+        )["measures"]
+        strict_measures = json.loads(
+            paths.DATA_STRICT_REPORT.read_text(encoding="utf-8")
+        )["measures"]
+        strict = {
+            "normal_matched_functions": int(normal_measures["matched_functions"]),
+            "strict_matched_functions": int(strict_measures["matched_functions"]),
+            "referent_debt_functions": max(
+                0,
+                int(normal_measures["matched_functions"])
+                - int(strict_measures["matched_functions"]),
+            ),
+            "normal_matched_code": int(normal_measures["matched_code"]),
+            "strict_matched_code": int(strict_measures["matched_code"]),
+            "referent_debt_code_bytes": max(
+                0,
+                int(normal_measures["matched_code"])
+                - int(strict_measures["matched_code"]),
+            ),
+        }
 
     def inputs(side: str) -> dict[str, str]:
         exe, pdb = image_paths(side)
@@ -620,15 +889,40 @@ def refresh() -> dict:
         }
 
     report = {
-        "schema": 1,
+        "schema": 2,
         "inputs": {side: inputs(side) for side in ("target", "base")},
         "counts": dict(sorted(counts.items())),
         "modules": {module: dict(sorted(values.items()))
                     for module, values in sorted(module_counts.items())},
         "coverage": metrics,
+        "consumer_projection": consumer_summary,
+        "strict_referents": strict,
         "rows": rows,
     }
-    paths.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    report["inputs"]["target"].update({
+        "retail_data_sha256": _file_hash(paths.RETAIL_DATA),
+        "coverage_gaps_sha256": _file_hash(paths.DATA_COVERAGE_GAPS),
+        "consumer_closure_sha256": _file_hash(paths.DATA_CONSUMER_CLOSURE),
+        "function_state_sha256": _file_hash(paths.DATA_FUNCTION_STATE),
+        "manifest_blockers_sha256": _file_hash(paths.DATA_MANIFEST_BLOCKERS),
+        "target_manifest_sha256": _file_hash(paths.DELINK_DATA_MANIFEST),
+        "target_section_manifest_sha256": _file_hash(
+            paths.DELINK_DATA_SECTION_MANIFEST
+        ),
+        "base_manifest_sha256": _file_hash(paths.BASE_DELINK_DATA_MANIFEST),
+        "base_section_manifest_sha256": _file_hash(
+            paths.BASE_DELINK_DATA_SECTION_MANIFEST
+        ),
+    })
+    if paths.DATA_STRICT_REPORT.is_file():
+        report["inputs"]["target"]["strict_report_sha256"] = _file_hash(
+            paths.DATA_STRICT_REPORT
+        )
+    if paths.DATA_OBJDIFF_REPORT.is_file():
+        report["inputs"]["target"]["data_objdiff_report_sha256"] = _file_hash(
+            paths.DATA_OBJDIFF_REPORT
+        )
+    paths.GEN_DIR.mkdir(parents=True, exist_ok=True)
     paths.DATA_REPORT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     paths.DATA_COVERAGE.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     _write_ledger(rows)

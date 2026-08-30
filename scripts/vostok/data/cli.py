@@ -2,16 +2,23 @@
 
 Commands:
   init-target     export the immutable retail PDB/image inventory and access map
-  refresh         export base, compare both images, and regenerate data_state.tsv
+  missing         update data_symbols.tsv with referenced allocations absent from PDB
+  missing-next    inspect the first datum which still needs manual review
+  missing-report  summarize the non-PDB recovery queue
+  missing-symbol PATTERN inspect a non-PDB symbol or xref
+  project         regenerate consumer-owned target/base delink manifests
+  refresh         refresh image audits and generated binaries/gen tables
   report          summarize exactness and divergence classes
   symbol PATTERN  inspect matching ledger rows
   access PATTERN  find retail/base code references to a data symbol or address
   relocs PATTERN  inspect pointer cells and their resolved targets
-  coverage        show gross/reconstructable coverage, fidelity, and largest gaps
-  check [--gate]  validate the data artifacts; optionally enforce calibrated floors
+  function PATTERN inspect per-function data-reference equality
+  coverage        show retail coverage, objdiff enrollment, and generated gaps
+  check [--gate]  validate artifacts; optionally enforce the integrity ratchet
 
-This lane is independent of objdiff/report.json and match_state.tsv.  Its EXACT
-means relocation-normalized bytes and resolved pointer targets both agree.
+The image audit is not the objdiff data score. Its EXACT means
+relocation-normalized linked bytes and resolved pointer targets both agree;
+objdiff becomes authoritative only for data enrolled by the delink manifests.
 """
 
 from __future__ import annotations
@@ -25,7 +32,7 @@ from collections import Counter
 from pathlib import Path
 
 from vostok.core import paths
-from vostok.data import pipeline
+from vostok.data import missing, pipeline
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
 
@@ -38,15 +45,43 @@ def _print_report(module: str | None = None) -> None:
     report = pipeline.load_report()
     coverage = report["coverage"]
     print(
-        "Data: coverage {} ({:,}/{:,} bytes), fidelity {} ({:,}/{:,} compared bytes)".format(
-            _percent(coverage["gross_coverage_percent"]),
-            coverage["claimed_bytes"], coverage["gross_bytes"],
+        "Data: reachable retail data {} ({:,}/{:,} unique bytes), paired {} "
+        "({:,}/{:,}); objdiff matched {} ({:,}/{:,} projected bytes)".format(
+            _percent(coverage["consumer_reachable_percent"]),
+            coverage["consumer_reachable_bytes"], coverage["gross_bytes"],
+            _percent(coverage["consumer_paired_percent"]),
+            coverage["consumer_paired_bytes"], coverage["gross_bytes"],
+            _percent(coverage["objdiff_match_percent"]),
+            coverage["objdiff_matched_bytes"], coverage["objdiff_projected_bytes"],
+        )
+    )
+    print(
+        "  image audit: typed coverage {} ({:,}/{:,}), whole-image exact {} "
+        "({:,}/{:,}); paired-only fidelity {}".format(
+            _percent(coverage["gross_coverage_percent"]), coverage["claimed_bytes"],
+            coverage["gross_bytes"], _percent(coverage["image_exact_percent"]),
+            coverage["exact_bytes"], coverage["gross_bytes"],
             _percent(coverage["fidelity_percent"]),
-            coverage["exact_bytes"], coverage["compared_bytes"],
         )
     )
     counts = report["modules"].get(module, {}) if module else report["counts"]
     print("  " + "  ".join(f"{name}={count:,}" for name, count in counts.items()))
+    if not module:
+        consumer = report.get("consumer_projection", {})
+        strict = report.get("strict_referents", {})
+        if consumer:
+            print(
+                "  consumer projection: {consumer_units:,} units, "
+                "{paired_copies:,}/{allocation_copies:,} allocation copies paired, "
+                "{blockers:,} blockers".format(**consumer)
+            )
+        if strict:
+            print(
+                "  strict referents: {referent_debt_functions:,} exact functions / "
+                "{referent_debt_code_bytes:,} code bytes exposed as relocation debt".format(
+                    **strict
+                )
+            )
     if not module:
         for name, values in report["modules"].items():
             exact = values.get("EXACT", 0)
@@ -128,15 +163,15 @@ def _coverage() -> None:
         print(f"  {section:<7} {start:#010x}..{end:#010x}  {size:>10,} bytes")
 
 
-def _gate_values() -> dict[str, float]:
-    if not paths.DATA_GATE.is_file():
+def _ratchet_values() -> dict[str, float]:
+    if not paths.DATA_INTEGRITY_RATCHET.is_file():
         return {}
-    with paths.DATA_GATE.open(newline="", encoding="utf-8") as source:
+    with paths.DATA_INTEGRITY_RATCHET.open(newline="", encoding="utf-8") as source:
         reader = csv.DictReader(
             (line for line in source if not line.lstrip().startswith("#")),
             delimiter="\t",
         )
-        return {row["metric"]: float(row["minimum"]) for row in reader}
+        return {row["metric"]: float(row["maximum"]) for row in reader}
 
 
 def _check(gate: bool) -> int:
@@ -145,14 +180,26 @@ def _check(gate: bool) -> int:
         paths.DATA_TARGET_ACCESS, paths.DATA_BASE_ACCESS,
         paths.DATA_TARGET_RELOCS, paths.DATA_BASE_RELOCS,
         paths.DATA_REPORT, paths.DATA_COVERAGE, paths.DATA_STATE,
+        paths.DATA_COVERAGE_GAPS, paths.RETAIL_DATA,
+        paths.DATA_INTEGRITY_RATCHET,
+        paths.DELINK_DATA_MANIFEST, paths.DELINK_DATA_SECTION_MANIFEST,
+        paths.BASE_DELINK_DATA_MANIFEST, paths.BASE_DELINK_DATA_SECTION_MANIFEST,
+        paths.DATA_CONSUMER_CLOSURE, paths.DATA_FUNCTION_STATE,
+        paths.DATA_MANIFEST_BLOCKERS, paths.DATA_STRICT_REPORT,
+        paths.DATA_OBJDIFF_REPORT, paths.DATA_MISSING_CANDIDATES,
+        paths.DATA_MISSING_XREFS, paths.DATA_MISSING_REPORT,
+        paths.RETAIL_DATA_SYMBOLS, paths.RETAIL_PDB_DATA_EXTENTS,
+        paths.RETAIL_RELOC_REFERENTS,
     )
-    missing = [path for path in required if not path.is_file()]
-    if missing:
-        print("missing data artifacts: " + ", ".join(str(path) for path in missing),
+    missing_paths = [path for path in required if not path.is_file()]
+    if missing_paths:
+        print("missing data artifacts: " + ", ".join(str(path) for path in missing_paths),
               file=sys.stderr)
         return 1
+    if missing.check():
+        return 1
     report = pipeline.load_report()
-    if report.get("schema") != 1:
+    if report.get("schema") != 2:
         print("unsupported data report schema", file=sys.stderr)
         return 1
     if sum(report["counts"].values()) != len(report["rows"]):
@@ -162,14 +209,34 @@ def _check(gate: bool) -> int:
         ledger_rows = list(csv.DictReader(source, delimiter="\t"))
     ledger_counts = Counter(row["status"] for row in ledger_rows)
     if dict(sorted(ledger_counts.items())) != report["counts"]:
-        print("tracked data ledger does not match data report", file=sys.stderr)
+        print("generated data image state does not match its report", file=sys.stderr)
         return 1
     report_rows = [
         {column: str(row[column]) for column in pipeline.LEDGER_COLUMNS}
         for row in report["rows"]
     ]
     if ledger_rows != report_rows:
-        print("tracked data ledger rows do not match data report", file=sys.stderr)
+        print("generated data image rows do not match their report", file=sys.stderr)
+        return 1
+    with paths.RETAIL_DATA.open(newline="", encoding="utf-8") as source:
+        census_reader = csv.DictReader(
+            (line for line in source if not line.lstrip().startswith("#")),
+            delimiter="\t",
+        )
+        if census_reader.fieldnames != ["rva", "kind"]:
+            print("retail data census has an unexpected schema", file=sys.stderr)
+            return 1
+        census = list(census_reader)
+    allowed_kinds = {
+        "datum", "string", "fppool", "vtable", "rtti", "ehtable", "guard",
+        "common", "copy", "pad",
+    }
+    census_rvas = [int(row["rva"], 0) for row in census]
+    if census_rvas != sorted(set(census_rvas)):
+        print("retail data census RVAs are not unique and sorted", file=sys.stderr)
+        return 1
+    if any(row["kind"] not in allowed_kinds for row in census):
+        print("retail data census contains an unsupported kind", file=sys.stderr)
         return 1
     coverage = json.loads(paths.DATA_COVERAGE.read_text(encoding="utf-8"))
     if coverage != report["coverage"]:
@@ -184,6 +251,38 @@ def _check(gate: bool) -> int:
             "access_sha256": pipeline._file_hash(pipeline.access_path(side)),
             "relocations_sha256": pipeline._file_hash(pipeline.reloc_path(side)),
         }
+        if side == "target":
+            actual.update({
+                "retail_data_sha256": pipeline._file_hash(paths.RETAIL_DATA),
+                "coverage_gaps_sha256": pipeline._file_hash(paths.DATA_COVERAGE_GAPS),
+                "consumer_closure_sha256": pipeline._file_hash(
+                    paths.DATA_CONSUMER_CLOSURE
+                ),
+                "function_state_sha256": pipeline._file_hash(
+                    paths.DATA_FUNCTION_STATE
+                ),
+                "manifest_blockers_sha256": pipeline._file_hash(
+                    paths.DATA_MANIFEST_BLOCKERS
+                ),
+                "target_manifest_sha256": pipeline._file_hash(
+                    paths.DELINK_DATA_MANIFEST
+                ),
+                "target_section_manifest_sha256": pipeline._file_hash(
+                    paths.DELINK_DATA_SECTION_MANIFEST
+                ),
+                "base_manifest_sha256": pipeline._file_hash(
+                    paths.BASE_DELINK_DATA_MANIFEST
+                ),
+                "base_section_manifest_sha256": pipeline._file_hash(
+                    paths.BASE_DELINK_DATA_SECTION_MANIFEST
+                ),
+                "strict_report_sha256": pipeline._file_hash(
+                    paths.DATA_STRICT_REPORT
+                ),
+                "data_objdiff_report_sha256": pipeline._file_hash(
+                    paths.DATA_OBJDIFF_REPORT
+                ),
+            })
         if report.get("inputs", {}).get(side) != actual:
             print(f"data report is stale for {side} image/PDB", file=sys.stderr)
             return 1
@@ -192,18 +291,22 @@ def _check(gate: bool) -> int:
         print("zlib calibration is not fully exact", file=sys.stderr)
         return 1
     if not gate:
-        print("data artifacts valid (shadow mode; calibrated floors not enforced)")
+        print("data artifacts valid (shadow mode; integrity ratchet not enforced)")
         return 0
-    floors = _gate_values()
-    if not floors:
-        print(f"no calibrated floors in {paths.DATA_GATE}", file=sys.stderr)
+    maxima = _ratchet_values()
+    if not maxima:
+        print(f"no calibrated maxima in {paths.DATA_INTEGRITY_RATCHET}", file=sys.stderr)
         return 1
-    values = report["coverage"]
+    values = {
+        **report["coverage"],
+        **report.get("consumer_projection", {}),
+        **report.get("strict_referents", {}),
+    }
     failed = []
-    for metric, minimum in floors.items():
+    for metric, maximum in maxima.items():
         actual = float(values.get(metric, report["counts"].get(metric, 0)))
-        if actual < minimum:
-            failed.append(f"{metric}={actual} < {minimum}")
+        if actual > maximum:
+            failed.append(f"{metric}={actual} > {maximum}")
     if failed:
         print("data gate failed: " + "; ".join(failed), file=sys.stderr)
         return 1
@@ -216,10 +319,16 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init-target")
     init.add_argument("--force", action="store_true")
+    missing_command = sub.add_parser("missing")
+    missing_command.add_argument("--no-export", action="store_true")
+    missing_command.add_argument("--check", action="store_true")
+    sub.add_parser("missing-next")
+    sub.add_parser("missing-report")
     sub.add_parser("refresh")
+    sub.add_parser("project")
     report = sub.add_parser("report")
     report.add_argument("--module")
-    for name in ("symbol", "access", "relocs"):
+    for name in ("symbol", "access", "relocs", "function", "missing-symbol"):
         command = sub.add_parser(name)
         command.add_argument("pattern")
     sub.add_parser("coverage")
@@ -230,8 +339,21 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "init-target":
             pipeline.init_target(force=args.force)
+        elif args.command == "missing":
+            if args.check:
+                return missing.check()
+            missing_report = missing.refresh(export=not args.no_export)
+            missing.print_report(missing_report)
+        elif args.command == "missing-next":
+            return missing.inspect_next()
+        elif args.command == "missing-report":
+            missing.print_report()
+        elif args.command == "missing-symbol":
+            return missing.inspect(args.pattern)
         elif args.command == "refresh":
             pipeline.refresh()
+        elif args.command == "project":
+            pipeline.prepare_manifests()
         elif args.command == "report":
             _print_report(args.module)
         elif args.command == "symbol":
@@ -244,6 +366,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if sum(_search_tsv(path, args.pattern) for path in (
                 paths.DATA_TARGET_RELOCS, paths.DATA_BASE_RELOCS
             )) else 1
+        elif args.command == "function":
+            return 0 if _search_tsv(paths.DATA_FUNCTION_STATE, args.pattern) else 1
         elif args.command == "coverage":
             _coverage()
         elif args.command == "check":

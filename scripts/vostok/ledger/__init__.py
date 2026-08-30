@@ -1,6 +1,6 @@
 """vostok.ledger - the committed record of the matching campaign.
 
-`docs/binary_matching/match_state.tsv` is one text row per target function and
+`config/match_state.tsv` is one text row per target function and
 is the campaign's memory: what has been proven, what was attempted, what is
 parked and why. It is TEXT because it is committed - a conflict is an ordinary
 text conflict and `git diff` names exactly which functions moved. (The old

@@ -11,7 +11,7 @@ Five steps, one per module, and the order between them is the whole design:
                 on top of the peaks the committed ledger banked
     baseonly    and explain everything WE emit that the target does not
 
-The result goes straight into `docs/binary_matching/match_state.tsv` through
+The result goes straight into `config/match_state.tsv` through
 `ledger.store.project`. There is no database in between: everything above is a
 pure function of the artifacts, and everything a build must not destroy - hist,
 notes, dispatch counts, banked peaks - already lives in the committed ledger.
