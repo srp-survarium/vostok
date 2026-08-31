@@ -17,8 +17,8 @@ static bool s_use_one_material_value = false;
 static console_commands::cc_bool s_use_one_material(
 	"use_one_material",
 	s_use_one_material_value,
-	true,
-	console_commands::command_type_user_specific
+	false,
+	console_commands::command_type_engine_internal
 
 );
 

@@ -48,7 +48,7 @@ static bool													s_tried_to_initialize_console	=	false;
 
 logging::filter_tree*		g_log_filter_tree	= NULL;
 logging::log_callback_type	g_log_callback		= NULL;
-log_flags_enum				g_log_flags			= log_to_console;
+log_flags_enum				g_log_flags			= log_to_stdout;
 logging::log_format			g_log_format;
 logging::log_file*				g_log_file			= NULL;
 logging::log_file_usage_enum	g_log_file_usage;

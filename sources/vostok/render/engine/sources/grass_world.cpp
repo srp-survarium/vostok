@@ -20,13 +20,13 @@ namespace vostok {
 namespace render {
 
 static bool s_draw_grass_debug_value				=	false;
-static vostok::console_commands::cc_bool s_draw_grass_debug("draw_grass_debug", s_draw_grass_debug_value, false, vostok::console_commands::command_type_engine_internal);
+static vostok::console_commands::cc_bool s_draw_grass_debug("r_draw_grass_debug", s_draw_grass_debug_value, false, vostok::console_commands::command_type_engine_internal);
 
 static bool s_use_grass_patches_sorting_value	=	true;
-static vostok::console_commands::cc_bool s_use_grass_patches_sorting("use_grass_patches_sorting", s_use_grass_patches_sorting_value, false, vostok::console_commands::command_type_engine_internal);
+static vostok::console_commands::cc_bool s_use_grass_patches_sorting("r_use_grass_patches_sorting", s_use_grass_patches_sorting_value, false, vostok::console_commands::command_type_engine_internal);
 
 static bool s_use_grass_instances_sorting_value	=	false;
-static vostok::console_commands::cc_bool s_use_grass_instances_sorting("use_grass_instances_sorting", s_use_grass_instances_sorting_value, false, vostok::console_commands::command_type_engine_internal);
+static vostok::console_commands::cc_bool s_use_grass_instances_sorting("r_use_grass_instances_sorting", s_use_grass_instances_sorting_value, false, vostok::console_commands::command_type_engine_internal);
 
 static math::random32 point_random_x;
 static math::random32 point_random_z;

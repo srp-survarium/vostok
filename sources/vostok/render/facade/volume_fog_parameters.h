@@ -28,7 +28,7 @@ STATIC_SIZE_ASSERT( volume_fog_parameters, 0x74 );
 
 namespace
 {
-	static float clear_value	= -1.0f;
+	static float clear_value	= 1.0f;
 } // namespace
 
 inline volume_fog_parameters::volume_fog_parameters( )

@@ -40,8 +40,8 @@ environment_temp::environment_temp( ) :
 	keys[0].cloud_base = 3200.0f;
 	keys[0].wind_speed = 2.0f;
 	keys[0].layer_height = 6.0f;
-	keys[0].ambient = -1.0f;
-	keys[0].direct_light = -1.0f;
+	keys[0].ambient = 1.0f;
+	keys[0].direct_light = 1.0f;
 	keys[0].cloud_generate_cloudiness = 0.7f;
 	keys[0].cloud_generate_octaves = 2.0f;
 	keys[0].diffusivity = 0.0f;
@@ -49,17 +49,17 @@ environment_temp::environment_temp( ) :
 	keys[1].cloud_base = 3200.0f;
 	keys[1].wind_speed = 2.0f;
 	keys[1].layer_height = 6.0f;
-	keys[1].ambient = -1.0f;
-	keys[1].direct_light = -1.0f;
+	keys[1].ambient = 1.0f;
+	keys[1].direct_light = 1.0f;
 	keys[1].cloud_generate_cloudiness = 0.8f;
 	keys[1].cloud_generate_octaves = 2.0f;
 	keys[1].diffusivity = 0.0f;
 
 	keys[2].cloud_base = 2000.0f;
-	keys[2].wind_speed = -1.0f;
+	keys[2].wind_speed = 1.0f;
 	keys[2].layer_height = 6.0f;
-	keys[2].ambient = -1.0f;
-	keys[2].direct_light = -1.0f;
+	keys[2].ambient = 1.0f;
+	keys[2].direct_light = 1.0f;
 	keys[2].cloud_generate_cloudiness = 0.5f;
 	keys[2].cloud_generate_octaves = 2.0f;
 	keys[2].diffusivity = 0.0f;
@@ -113,7 +113,7 @@ stage_clouds::stage_clouds(
 	m_clouds_size_z				( options::ref( ).current.m_clouds_grid_width ),
 	m_clouds_scale_multiplier	( 3000.0f ),
 	m_wind_offset				( 0.0f, 0.0f, 0.0f ),
-	m_wind_direction			( -1.0f, 0.0f, -1.0f ),
+	m_wind_direction			( 1.0f, 0.0f, 1.0f ),
 	m_fixed_time				( 0.0f ),
 	m_need_generate				( false ),
 	m_tasks_type				( tasks::create_new_task_type( "generate_clouds_task", 0 ) ),

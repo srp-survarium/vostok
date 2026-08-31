@@ -30,22 +30,22 @@
 #include "statistics.h"
 
 static bool s_no_trees_value = false;
-static vostok::console_commands::cc_bool s_no_trees( "no_trees", s_no_trees_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_trees( "no_trees", s_no_trees_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_bushes_value = false;
-static vostok::console_commands::cc_bool s_no_bushes( "no_bushes", s_no_bushes_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_bushes( "no_bushes", s_no_bushes_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_terrain_value = false;
-static vostok::console_commands::cc_bool s_no_terrain( "no_terrain", s_no_terrain_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_terrain( "no_terrain", s_no_terrain_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_house_value = false;
-static vostok::console_commands::cc_bool s_no_house( "no_house", s_no_house_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_house( "no_house", s_no_house_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_background_value = false;
-static vostok::console_commands::cc_bool s_no_background( "no_background", s_no_background_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_background( "no_background", s_no_background_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_flora_value = false;
-static vostok::console_commands::cc_bool s_no_flora( "no_flora", s_no_flora_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_flora( "no_flora", s_no_flora_value, false, vostok::console_commands::command_type_user_specific );
 static bool s_no_other_value = false;
-static vostok::console_commands::cc_bool s_no_other( "no_other", s_no_other_value, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_no_other( "no_other", s_no_other_value, false, vostok::console_commands::command_type_user_specific );
 
 static u32 s_visible_surfaces_limit_value = 0;
-static vostok::console_commands::cc_u32 s_visible_surfaces_limut( "visible_surfaces_limut", s_visible_surfaces_limit_value, 0, 100000, false, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_u32 s_visible_surfaces_limut( "visible_surfaces_limut", s_visible_surfaces_limit_value, 0, 100000, false, vostok::console_commands::command_type_user_specific );
 
 namespace vostok {
 namespace render {

@@ -48,7 +48,7 @@ static bool s_one_cascade_value = false;
 static console_commands::cc_bool s_one_cascade( "one_cascade_value", s_one_cascade_value, false, console_commands::command_type_user_specific );
 
 static u32 s_shadows_in_cascade_value = 5;
-static console_commands::cc_u32 s_shadows_in_cascade( "shadows_in_cascade", s_shadows_in_cascade_value, 0, 5, false, console_commands::command_type_user_specific );
+static console_commands::cc_u32 s_shadows_in_cascade( "shadows_in_cascade", s_shadows_in_cascade_value, 0, 5, true, console_commands::command_type_user_specific );
 
 namespace {
 
@@ -177,7 +177,7 @@ bool remove_model_if_in_frustum_predicate::operator()(
 {
 
 	math::aabb bbox = in_model->m_parent->get_aabb( );
-	bbox *= float3( 1.f, 3.f, 1.f );
+	bbox *= float3( 2.f, 3.f, 2.f );
 	bbox.modify( *in_model->m_transform );
 
 	if ( m_frustum->test_inexact( bbox ) == math::intersection_inside ) {

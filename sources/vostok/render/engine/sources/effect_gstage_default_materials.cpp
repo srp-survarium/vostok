@@ -125,7 +125,7 @@ void effect_gstage_default_materials::compile(
 			D3D_STENCIL_OP_KEEP
 		);
 
-		compiler.set_depth(true, first_lod);
+		compiler.set_depth(true, s_z_only_0);
 		if (custom_config.value_exists("constant_tile_u") && custom_config.value_exists("constant_tile_v"))
 			compiler.set_constant("constant_tile_uv", float2(float(custom_config["constant_tile_u"]), float(custom_config["constant_tile_v"])));
 		else

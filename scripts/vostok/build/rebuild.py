@@ -320,6 +320,21 @@ def main() -> None:
             log(f"WARNING: matching ledger NOT re-derived ({e}); "
                 "re-derive it with `python3 -m vostok derive refresh`")
 
+        # Render's direct relocation audit consumes the final function ledger,
+        # so refresh it after roster.regen rather than with the earlier image
+        # ledger. This keeps its input hash current at the end of every build.
+        try:
+            from vostok.data import render_relocs
+            render_report = render_relocs.refresh()
+            log(
+                "render data relocation audit refreshed: "
+                f"{render_report['target_relocation_sites']:,} retail / "
+                f"{render_report['base_relocation_sites']:,} base sites."
+            )
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - independent data lane
+            log(f"WARNING: render data relocation audit NOT refreshed ({e}); "
+                "refresh it with `python3 -m vostok data render-relocs`")
+
         # ...and the README score block, the other report.json-derived artifact, so a
         # build keeps both current in one shot. Separately guarded: a score-write
         # failure warns but never fails the build (the report.json is already good).

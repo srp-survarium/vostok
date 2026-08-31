@@ -22,7 +22,7 @@
 #include "statistics.h"
 #include "system_renderer.h"
 
-static bool s_use_screeen_space_portals_intersection_value = false;
+static bool s_use_screeen_space_portals_intersection_value = true;
 static vostok::console_commands::cc_bool s_use_screeen_space_portals_intersection_cc(
 	"r_use_ss_portals_intersection",
 	s_use_screeen_space_portals_intersection_value,
@@ -30,7 +30,7 @@ static vostok::console_commands::cc_bool s_use_screeen_space_portals_intersectio
 	vostok::console_commands::command_type_engine_internal
 );
 
-static bool s_portals_occlusion_culling_value = false;
+static bool s_portals_occlusion_culling_value = true;
 static vostok::console_commands::cc_bool s_portals_occlusion_culling_cc(
 	"r_portals_occlusion_culling",
 	s_portals_occlusion_culling_value,
@@ -38,7 +38,7 @@ static vostok::console_commands::cc_bool s_portals_occlusion_culling_cc(
 	vostok::console_commands::command_type_engine_internal
 );
 
-static bool s_draw_portals_value = false;
+static bool s_draw_portals_value = true;
 static vostok::console_commands::cc_bool s_draw_portals_cc(
 	"r_draw_portals",
 	s_draw_portals_value,
@@ -46,7 +46,7 @@ static vostok::console_commands::cc_bool s_draw_portals_cc(
 	vostok::console_commands::command_type_engine_internal
 );
 
-static bool s_draw_draw_frustum_images_value = false;
+static bool s_draw_draw_frustum_images_value = true;
 static vostok::console_commands::cc_bool s_draw_draw_frustum_images_cc(
 	"r_draw_frustum_images",
 	s_draw_draw_frustum_images_value,

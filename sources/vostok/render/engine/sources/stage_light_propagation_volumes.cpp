@@ -57,17 +57,17 @@ struct screen_vertex {
 	}
 };
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
-static bool s_lpv_dips_skipping0_value = false, s_lpv_dips_skipping1_value = false;
+static bool s_lpv_dips_skipping0_value = true, s_lpv_dips_skipping1_value = true;
 static console_commands::cc_bool s_lpv_dips_skipping0_cc( "r_lpv_dips_skipping0", s_lpv_dips_skipping0_value, false, console_commands::command_type_user_specific );
 static console_commands::cc_bool s_lpv_dips_skipping1_cc( "r_lpv_dips_skipping1", s_lpv_dips_skipping1_value, false, console_commands::command_type_user_specific );
 
-static bool s_draw_to_rsm_value = false;
+static bool s_draw_to_rsm_value = true;
 static console_commands::cc_bool s_draw_to_rsm_cc( "r_draw_to_rsm", s_draw_to_rsm_value, false, console_commands::command_type_user_specific );
 
-static bool s_use_batched_lpv_geometry = false;
+static bool s_use_batched_lpv_geometry = true;
 static console_commands::cc_bool s_use_batched_lpv_geometry_cc( "r_use_batched_lpv_geometry", s_use_batched_lpv_geometry, false, console_commands::command_type_user_specific );
 
-static u32 s_start_cascade_to_use_batching = 0;
+static u32 s_start_cascade_to_use_batching = 1;
 static console_commands::cc_u32 s_start_cascade_to_use_batching_cc( "r_start_cascade_to_use_batching", s_start_cascade_to_use_batching, 0, 3, true, console_commands::command_type_user_specific );
 
 struct remove_lpv_inappropriate_models {
@@ -86,7 +86,7 @@ struct remove_lpv_inappropriate_models {
 static bool s_lpv0_value = false;
 static console_commands::cc_bool s_lpv0( "lpv0", s_lpv0_value, false, console_commands::command_type_user_specific );
 
-static bool s_use_smooothed_lpv_value = false;
+static bool s_use_smooothed_lpv_value = true;
 static console_commands::cc_bool s_use_smooothed_lpv_cc( "r_use_smooothed_lpv", s_use_smooothed_lpv_value, false, console_commands::command_type_user_specific );
 
 stage_light_propagation_volumes::stage_light_propagation_volumes(

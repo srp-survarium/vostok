@@ -13,11 +13,11 @@ static console_commands::cc_string s_r_resolution_cc(
 	s_r_resolution_value.c_str( ),
 	s_r_resolution_value.get_buffer_size( ),
 	true,
-	console_commands::command_type_engine_internal
+	console_commands::command_type_user_specific
 );
 
-static float s_uro_fov_value = 0.f;
-static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_engine_internal );
+static float s_uro_fov_value = 65.f;
+static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_user_specific );
 
 render_cc::render_cc(
 	pcstr define_name,

@@ -36,7 +36,7 @@ sphere_geometry::sphere_geometry( u32 const num_sides, u32 const num_rings ) :
 		side_vertices[i].position.x = math::sin( angle );
 		side_vertices[i].position.y = math::cos( angle );
 		side_vertices[i].position.z = 0.0f;
-		side_vertices[i].position.w = -1.0f;
+		side_vertices[i].position.w = 1.0f;
 		side_vertices[i].uv.x = 0.0f;
 		side_vertices[i].uv.y = float(i) / float(num_rings);
 	}
