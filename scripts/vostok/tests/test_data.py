@@ -1,6 +1,7 @@
 import struct
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from vostok.data.inventory import DataSymbol
@@ -32,6 +33,25 @@ from vostok.data.pipeline import (
     _access_form,
     _access_kind,
     _interval_union,
+)
+from vostok.data.render_relocs import (
+    Access,
+    Datum,
+    DatumIndex,
+    Site,
+    _accept_unique,
+    _classify_extentless_comparison,
+    _datum_token,
+    _extentless_end,
+    _first_diff,
+    _function_fingerprint_pairs,
+    _pattern,
+    _problem_tags,
+    _record_function_identities,
+    _relocation_target_differences,
+    _relocation_targets_match,
+    _select_candidate_vote,
+    _select_extentless_candidate,
 )
 
 
@@ -313,6 +333,333 @@ class DataPipelineTests(unittest.TestCase):
             {record["mangled"] for record in _FunctionIndex(records).containing(0x104)},
             {"a", "b"},
         )
+
+
+class RenderRelocationTests(unittest.TestCase):
+    @staticmethod
+    def _access(site, function_rva, identity, function="duplicate"):
+        return Access(
+            site=site,
+            instruction=site - 1,
+            target=0x2000,
+            access="address",
+            width="-",
+            form="imm",
+            scale=0,
+            identity=identity,
+            instruction_text=f"push {site:#x}",
+            function=function,
+            unit="unit.cpp",
+            function_rva=function_rva,
+            function_size=0x20,
+            partner_rva=None,
+        )
+
+    def test_interior_xref_uses_extentless_start_only_as_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            first = Datum(
+                0x2000, None, ".rdata", "rdata", "E:first", "first",
+                "public", "pdb",
+            )
+            second = Datum(
+                0x2010, 4, ".rdata", "rdata", "E:second", "second",
+                "u32", "pdb",
+            )
+            index = DatumIndex([first, second], PEImage(path))
+            self.assertIsNone(index.owner(0x2004))
+            self.assertEqual(index.evidence_owner(0x2004), first)
+            self.assertEqual(index.evidence_owner(0x2010), second)
+            self.assertFalse(index.evidence_owner(0x2004).complete)
+            self.assertEqual(index.by_identity["E:first"], [first])
+
+    def test_vftable_extent_excludes_the_next_tables_rtti_locator(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            table = Datum(
+                0x3000, None, ".data", "data", "E:??_7table@@6B@", "table",
+                "public", "pdb",
+            )
+            following = Datum(
+                0x3008, None, ".data", "data", "E:??_7next@@6B@", "next",
+                "public", "pdb",
+            )
+            index = DatumIndex([table, following], PEImage(path))
+            self.assertEqual(_extentless_end(table, index), 0x3004)
+
+    def test_narrow_literal_extent_ends_at_terminator(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            data[0x300:0x310] = b"literal\0padding!"
+            path.write_bytes(data)
+            literal = Datum(
+                0x2000, None, ".rdata", "rdata", "E:??_C@_0H@test?$AA@",
+                "??_C@_0H@test?$AA@", "public", "pdb",
+            )
+            following = Datum(
+                0x2010, None, ".rdata", "rdata", "E:next", "next",
+                "public", "pdb",
+            )
+            index = DatumIndex([literal, following], PEImage(path))
+            self.assertEqual(_extentless_end(literal, index), 0x2008)
+
+    def test_encoded_float_and_guard_have_semantic_extents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            following = Datum(
+                0x2020, None, ".rdata", "rdata", "E:next", "next",
+                "public", "pdb",
+            )
+            image = PEImage(path)
+            scalar = Datum(
+                0x2000, None, ".rdata", "rdata", "E:__real@3f800000",
+                "float", "public", "pdb",
+            )
+            guard = Datum(
+                0x2010, None, ".rdata", "rdata", "E:??_B?guard", "guard",
+                "public", "pdb",
+            )
+            index = DatumIndex([scalar, guard, following], image)
+            self.assertEqual(_extentless_end(scalar, index), 0x2004)
+            self.assertEqual(_extentless_end(guard, index), 0x2014)
+
+    def test_same_shape_vftable_target_drift_is_owned_by_code_matching(self):
+        table = Datum(
+            0x3000, None, ".rdata", "rdata", "E:??_7type@@6B@", "table",
+            "public", "pdb",
+        )
+        self.assertEqual(
+            _classify_extentless_comparison(table, "EXACT", {
+                "status": "RELOC_TARGETS",
+                "normalized": "EXACT",
+                "layout": "EXACT",
+            }),
+            "VTABLE_CODE_TARGETS",
+        )
+
+    def test_candidate_vote_uses_unique_exact_identity_majority(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            wanted = Datum(
+                0x2000, None, ".rdata", "rdata", "E:wanted", "wanted",
+                "public", "pdb",
+            )
+            other = Datum(
+                0x2010, None, ".rdata", "rdata", "E:other", "other",
+                "public", "pdb",
+            )
+            wanted_alias = Datum(
+                0x2020, None, ".rdata", "rdata", "E:wanted", "wanted",
+                "public", "pdb",
+            )
+            index = DatumIndex([wanted, other, wanted_alias], PEImage(path))
+            self.assertEqual(
+                _select_candidate_vote(
+                    Counter({0x2000: 4, 0x2010: 1}), index, "E:wanted"
+                ),
+                0x2000,
+            )
+            self.assertEqual(_select_candidate_vote(
+                Counter({0x2000: 1, 0x2010: 1}), index, "E:wanted"
+            ), 0x2000)
+            self.assertIsNone(_select_candidate_vote(
+                Counter({0x2000: 1, 0x2020: 1}), index, "E:wanted"
+            ))
+
+    def test_unique_extentless_identity_overrides_shifted_xref_vote(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            wanted = Datum(
+                0x2000, None, ".rdata", "rdata", "E:wanted", "wanted",
+                "public", "pdb",
+            )
+            shifted = Datum(
+                0x2010, None, ".rdata", "rdata", "E:shifted", "shifted",
+                "public", "pdb",
+            )
+            index = DatumIndex([wanted, shifted], PEImage(path))
+            self.assertEqual(
+                _select_extentless_candidate(
+                    Counter({0x2010: 4}), index, "E:wanted"
+                ),
+                (0x2000, True),
+            )
+
+    def test_complete_local_datum_token_uses_whole_normalized_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            left = Datum(
+                0x2000, 4, ".rdata", "rdata", "L:left", "left", "float", "pdb",
+            )
+            right = Datum(
+                0x2010, 4, ".rdata", "rdata", "L:right", "right", "float", "pdb",
+            )
+            external = Datum(
+                0x2020, 4, ".rdata", "rdata", "E:global", "global", "float", "pdb",
+            )
+            index = DatumIndex([left, right, external], image)
+            self.assertEqual(
+                _datum_token(index, 0x2000, "L:left"),
+                _datum_token(index, 0x2010, "L:right"),
+            )
+            self.assertNotEqual(
+                _datum_token(index, 0x2000, "L:left"),
+                _datum_token(index, 0x2020, "E:global"),
+            )
+
+    def test_compiler_constant_tokens_ignore_storage_and_encoded_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            for offset in (0x300, 0x310, 0x400):
+                struct.pack_into("<f", data, offset, 1.0)
+            path.write_bytes(data)
+            encoded = Datum(
+                0x2000, None, ".rdata", "rdata", "E:__real@3f800000",
+                "__real@3f800000", "public", "pdb",
+            )
+            local_rdata = Datum(
+                0x2010, 4, ".rdata", "rdata", "L:rdata", "rdata",
+                "float", "pdb",
+            )
+            local_data = Datum(
+                0x3000, 4, ".data", "data", "L:data", "data",
+                "float", "pdb",
+            )
+            index = DatumIndex([encoded, local_rdata, local_data], PEImage(path))
+            tokens = {
+                _datum_token(index, 0x2000, encoded.identity),
+                _datum_token(index, 0x2010, local_rdata.identity),
+                _datum_token(index, 0x3000, local_data.identity),
+            }
+            self.assertEqual(len(tokens), 1)
+
+    def test_shared_local_identity_wins_over_content_canonicalization(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target_datum = Datum(
+                0x2000, None, ".rdata", "rdata", "L:shared", "shared",
+                "public", "pdb",
+            )
+            base_datum = Datum(
+                0x2010, 4, ".rdata", "rdata", "L:shared", "shared",
+                "float", "pdb",
+            )
+            target = DatumIndex([target_datum], image)
+            base = DatumIndex([base_datum], image)
+            self.assertEqual(
+                _datum_token(target, 0x2000, target_datum.identity, base),
+                _datum_token(base, 0x2010, base_datum.identity, target),
+            )
+
+    def test_unique_site_pairing_requires_a_bijection(self):
+        self.assertEqual(
+            _accept_unique({1: {10}, 2: {20}}, set(), set()),
+            {1: 10, 2: 20},
+        )
+        self.assertEqual(_accept_unique({1: {10}, 2: {10}}, set(), set()), {})
+        self.assertEqual(_accept_unique({1: {10, 20}}, set(), set()), {})
+        self.assertEqual(_accept_unique({1: {10}}, {1}, set()), {})
+        self.assertEqual(_accept_unique({1: {10}}, set(), {10}), {})
+
+    def test_duplicate_functions_pair_by_unique_complete_relocation_fingerprint(self):
+        target = {
+            0x1104: Site(0x1104, (self._access(0x1104, 0x1100, "E:first"),)),
+            0x1204: Site(0x1204, (self._access(0x1204, 0x1200, "E:second"),)),
+        }
+        base = {
+            0x2104: Site(0x2104, (self._access(0x2104, 0x2100, "E:second"),)),
+            0x2204: Site(0x2204, (self._access(0x2204, 0x2200, "E:first"),)),
+        }
+        self.assertEqual(
+            _function_fingerprint_pairs(target, base),
+            ({0x1100: 0x2200, 0x1200: 0x2100}, {0x2200: 0x1100, 0x2100: 0x1200}),
+        )
+
+    def test_ambiguous_duplicate_fingerprint_is_not_paired(self):
+        target = {
+            0x1104: Site(0x1104, (self._access(0x1104, 0x1100, "E:same"),)),
+            0x1204: Site(0x1204, (self._access(0x1204, 0x1200, "E:same"),)),
+        }
+        base = {
+            0x2104: Site(0x2104, (self._access(0x2104, 0x2100, "E:same"),)),
+        }
+        self.assertEqual(_function_fingerprint_pairs(target, base), ({}, {}))
+
+    def test_function_pointer_targets_match_on_any_shared_symbol(self):
+        self.assertTrue(_relocation_targets_match(
+            (0,), (frozenset({"P:a", "M:folded"}),),
+            (0,), (frozenset({"P:a", "M:other"}),),
+        ))
+        self.assertFalse(_relocation_targets_match(
+            (0,), (frozenset({"P:a"}),),
+            (0,), (frozenset({"P:b"}),),
+        ))
+        self.assertFalse(_relocation_targets_match(
+            (0,), (frozenset({"P:a"}),),
+            (4,), (frozenset({"P:a"}),),
+        ))
+        self.assertEqual(
+            _relocation_target_differences(
+                (0, 4), (frozenset({"P:a"}), frozenset({"P:b", "M:alias"})),
+                (0, 4), (frozenset({"P:a"}), frozenset({"P:c", "M:alias"})),
+            ),
+            [],
+        )
+        self.assertEqual(
+            _relocation_target_differences(
+                (0,), (frozenset({"P:a"}),),
+                (4,), (frozenset({"P:a"}),),
+            ),
+            [
+                (0, frozenset({"P:a"}), frozenset()),
+                (4, frozenset(), frozenset({"P:a"})),
+            ],
+        )
+
+    def test_function_identity_keeps_mangled_and_demangled_aliases(self):
+        self.assertEqual(
+            _record_function_identities({
+                "mangled": "??_Grepresentative@@UAEPAXI@Z",
+                "name": "alias::~alias(unsigned int)",
+            }),
+            frozenset({
+                "M:??_Grepresentative@@UAEPAXI@Z",
+                "D:alias::~alias(unsigned int)",
+            }),
+        )
+
+    def test_extentless_pattern_hints_preserve_observed_shape(self):
+        self.assertEqual(_pattern(bytes(12)), "zero[12]")
+        self.assertEqual(_pattern(b"ABABABAB"), "repeat[2]x4")
+        self.assertEqual(_pattern(b"hello\0world\0"), "ascii:hello")
+
+    def test_first_byte_difference_is_reported(self):
+        self.assertEqual(_first_diff(b"abc", b"axc"), "0x1:62!=78")
+        self.assertEqual(_first_diff(b"abc", b"abc"), "-")
+        self.assertEqual(_first_diff(b"abc", b"abcd"), "0x3:length")
+
+    def test_base_only_site_is_not_misclassified_as_unowned_retail(self):
+        row = {
+            "pair_status": "BASE_ONLY",
+            "access_status": "-",
+            "identity_status": "-",
+            "extent_status": "UNOWNED",
+            "datum_status": "NO_TARGET_OWNER",
+        }
+        self.assertEqual(_problem_tags(row), ["BASE_ONLY"])
 
 
 class ConsumerManifestTests(unittest.TestCase):

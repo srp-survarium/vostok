@@ -139,7 +139,7 @@ static vostok::console_commands::cc_bool s_disabled_shader_constansts_set_cc(
 	"disabled_shader_constansts_set",
 	s_disabled_shader_constansts_set,
 	false,
-	vostok::console_commands::command_type_engine_internal
+	vostok::console_commands::command_type_user_specific
 );
 
 static bool s_wireframe_value = false;

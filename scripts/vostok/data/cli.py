@@ -8,6 +8,7 @@ Commands:
   missing-symbol PATTERN inspect a non-PDB symbol or xref
   project         regenerate consumer-owned target/base delink manifests
   refresh         refresh image audits and generated binaries/gen tables
+  render-relocs [PATTERN] direct render relocation/data audit or inspection
   report          summarize exactness and divergence classes
   symbol PATTERN  inspect matching ledger rows
   access PATTERN  find retail/base code references to a data symbol or address
@@ -32,7 +33,7 @@ from collections import Counter
 from pathlib import Path
 
 from vostok.core import paths
-from vostok.data import missing, pipeline
+from vostok.data import missing, pipeline, render_relocs
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
 
@@ -190,6 +191,9 @@ def _check(gate: bool) -> int:
         paths.DATA_MISSING_XREFS, paths.DATA_MISSING_REPORT,
         paths.RETAIL_DATA_SYMBOLS, paths.RETAIL_PDB_DATA_EXTENTS,
         paths.RETAIL_RELOC_REFERENTS,
+        paths.DATA_RENDER_RELOC_AUDIT, paths.DATA_RENDER_EXTENTLESS,
+        paths.DATA_RENDER_FUNCTION_DATA, paths.DATA_RENDER_RELOC_REPORT,
+        paths.DATA_RENDER_PROBLEMS,
     )
     missing_paths = [path for path in required if not path.is_file()]
     if missing_paths:
@@ -197,6 +201,8 @@ def _check(gate: bool) -> int:
               file=sys.stderr)
         return 1
     if missing.check():
+        return 1
+    if render_relocs.check():
         return 1
     report = pipeline.load_report()
     if report.get("schema") != 2:
@@ -326,6 +332,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("missing-report")
     sub.add_parser("refresh")
     sub.add_parser("project")
+    render = sub.add_parser("render-relocs")
+    render.add_argument("pattern", nargs="?")
+    render.add_argument("--check", action="store_true")
     report = sub.add_parser("report")
     report.add_argument("--module")
     for name in ("symbol", "access", "relocs", "function", "missing-symbol"):
@@ -352,8 +361,15 @@ def main(argv: list[str] | None = None) -> int:
             return missing.inspect(args.pattern)
         elif args.command == "refresh":
             pipeline.refresh()
+            render_relocs.print_report(render_relocs.refresh())
         elif args.command == "project":
             pipeline.prepare_manifests()
+        elif args.command == "render-relocs":
+            if args.check:
+                return render_relocs.check()
+            if args.pattern:
+                return render_relocs.inspect(args.pattern)
+            render_relocs.print_report(render_relocs.refresh())
         elif args.command == "report":
             _print_report(args.module)
         elif args.command == "symbol":

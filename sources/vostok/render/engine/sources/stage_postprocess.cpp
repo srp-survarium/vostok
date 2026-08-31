@@ -92,9 +92,9 @@ static console_commands::cc_bool s_debug_pp_10_cc(
 	"r_debug_pp_10", s_debug_pp_10, false, console_commands::command_type_user_specific
 );
 
-static bool s_pp_map2d_value = false;
+static bool s_pp_map2d_value = true;
 static console_commands::cc_bool s_pp_map2d(
-	"pp_map2d", s_pp_map2d_value, false, console_commands::command_type_user_specific
+	"pp_map2d", s_pp_map2d_value, false, console_commands::command_type_engine_internal
 );
 
 struct screen_vertex {

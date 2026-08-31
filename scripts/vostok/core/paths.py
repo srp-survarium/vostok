@@ -56,6 +56,7 @@ REPO = _find_repo()
 SCRIPTS = REPO / "scripts"
 SOURCES = REPO / "sources"
 CONFIG = REPO / "config"
+DOCS = REPO / "docs"
 # Recovered HLSL shader sources (the tree the shipped blobs' dependency tables
 # name as `resources.sources/shaders/...`). 176 of the 261 shipped shader
 # names are present; vostok.shaders coverage reports the live figure.
@@ -137,6 +138,10 @@ DATA_FUNCTION_STATE = GEN_DIR / "data_function_state.tsv"
 DATA_MANIFEST_BLOCKERS = GEN_DIR / "data_manifest_blockers.tsv"
 DATA_STRICT_REPORT = GEN_DIR / "data_strict_report.json"
 DATA_SYMBOL_MAP = DATA_OBJDIFF_DIR / "target-symbol-map.tsv"
+DATA_RENDER_RELOC_AUDIT = GEN_DIR / "render_reloc_audit.tsv"
+DATA_RENDER_EXTENTLESS = GEN_DIR / "render_extentless_data.tsv"
+DATA_RENDER_FUNCTION_DATA = GEN_DIR / "render_function_data.tsv"
+DATA_RENDER_RELOC_REPORT = GEN_DIR / "render_reloc_report.json"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
@@ -172,6 +177,7 @@ MATCH_DB_LOG = BINARIES / "match_db.log"
 
 # --- committed machine-readable state (config/, in git) --------------------
 DOCS_MATCHING = REPO / "docs" / "binary_matching"
+DOCS_NEXT_MATCHING = DOCS / "next_binary_matching"
 RETAIL_CONFIG = CONFIG / "retail"
 CLEANLINESS_CONFIG = CONFIG / "cleanliness"
 MATCH_STATE = CONFIG / "match_state.tsv"
@@ -186,6 +192,7 @@ RETAIL_DATA_SYMBOLS = RETAIL_CONFIG / "data_symbols.tsv"
 RETAIL_PDB_DATA_EXTENTS = RETAIL_CONFIG / "pdb_data_extents.tsv"
 RETAIL_RELOC_REFERENTS = RETAIL_CONFIG / "reloc_referents.tsv"
 DATA_INTEGRITY_RATCHET = CLEANLINESS_CONFIG / "data-integrity-ratchet.tsv"
+DATA_RENDER_PROBLEMS = DOCS_NEXT_MATCHING / "render_data_problems.md"
 
 
 def survarium_bin() -> Path:

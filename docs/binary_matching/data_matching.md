@@ -61,6 +61,25 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   its input hashes.
 - `binaries/gen/data_strict_report.json` is the independent strict-referent
   objdiff report.
+- `binaries/gen/render_reloc_audit.tsv` contains one row for every physical
+  render-function relocation into `.rdata`, `.data`, or loader-zero BSS on
+  either image. It pairs exact function-relative sites first and then unique
+  decoded access-sequence sites; unmatched sites remain explicit.
+- `binaries/gen/render_extentless_data.tsv` deduplicates retail PDB starts with
+  no trustworthy complete size. Each row records xref/access evidence,
+  observed and neighbouring boundaries, candidate-address votes, normalized
+  hashes, and retail/candidate byte-pattern previews.
+- `binaries/gen/render_function_data.tsv` compares the deduplicated whole-datum
+  set reached by every paired function. Compiler-owned constants pair by their
+  complete normalized bytes even when LTCG changes their PDB pool owner or
+  moves them between `.data` and `.rdata`; named allocations without such a
+  byte identity retain their PDB identity and symbol-relative addend. Missing
+  uses and allocations missing from either linked image are separate columns.
+- `binaries/gen/render_reloc_report.json` hashes those inputs and tables. The
+  human-readable problem list is tracked in
+  `docs/next_binary_matching/render_data_problems.md`. The machine TSVs remain
+  exhaustive; settled extentless comparisons are omitted from the Markdown so
+  it contains differences and unresolved evidence rather than matched debt.
 - `binaries/data-objdiff/` is the complete parallel comparison project. The
   ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
   objdiff CLI and never consumes data manifests.
@@ -110,6 +129,9 @@ python3 -m vostok data missing-symbol PATTERN
 python3 -m vostok data missing-report
 python3 -m vostok data project
 python3 -m vostok data refresh
+python3 -m vostok data render-relocs
+python3 -m vostok data render-relocs --check
+python3 -m vostok data render-relocs PATTERN
 python3 -m vostok data report
 python3 -m vostok data function PATTERN
 python3 -m vostok data access PATTERN
@@ -125,7 +147,11 @@ row, rerun `missing --no-export` and repeat until the queue is empty. A new
 unresolved non-PDB referent is a hard build failure. `project` updates manifests
 without delinking. `refresh` updates the complete audit against an
 already-generated normal and strict report. A normal `python3 -m vostok build`
-owns the complete ordered flow.
+owns the complete ordered flow. `render-relocs` is the direct render check: it
+does not require a datum to be enrolled in objdiff and therefore exposes every
+physical relocation, including candidate-only sites and extentless retail PDB
+data. With no pattern it regenerates the audit and Markdown report; a pattern
+inspects generated rows without rebuilding.
 
 ## What each result proves
 
@@ -153,9 +179,26 @@ table counts and pointer-derived accesses without an absolute relocation remain
 explicit blind spots; the strict report and linked-image relocation closure are
 the backstops, not grounds for guessing an extent.
 
+The direct render audit closes the absolute-relocation side of that blind spot.
+For a complete retail extent it compares normalized bytes, relocation-cell
+layout, and resolved relocation targets over the complete allocation. For an
+extentless start it uses every observed xref and reports a bounded evidence
+window ending at the next known start, plus the start of the next relocation
+cell inside data. These windows are diagnostic rather than silently promoted
+to reviewed extents. Its function table is a source-review sieve, not a second
+code score: `USE_DIFF` says the linked bodies reach different datum sets, while
+`*_DEFINITION_MISSING` says a referenced allocation has no stable
+identity/content counterpart anywhere on the other image. A row is not a
+source edit until target assembly or PDB evidence identifies the responsible
+literal, member, linkage, table entry, or named datum.
+
 `vostok data check` validates schemas and content hashes, requires every
 non-PDB datum to have all five reviewed fields, and requires the zlib control
 set to remain exact. `--gate` additionally reads the projection maxima in
 `config/cleanliness/data-integrity-ratchet.tsv`. The projection table stays in
 shadow mode until its target-only and unknown-extent blocker classes are
 calibrated; the non-PDB datum census is already hard-gated independently.
+
+The deferred PDB-extent review and shifting-candidate identity-transfer work is
+specified in
+[`data_extent_handoff.md`](../next_binary_matching/data_extent_handoff.md).

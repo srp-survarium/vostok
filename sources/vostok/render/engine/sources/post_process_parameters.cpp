@@ -124,7 +124,7 @@ post_process_parameters::post_process_parameters( )
 	environment_rain_random_rotaion_speed = 0.2f;
 	environment_rain_random_rotaion_radius = 0.75f;
 	environment_rain_random_base_offset = 0.5f;
-	environment_rain_radius_scale	= 0.001f;
+	environment_rain_radius_scale	= 1.1f;
 	environment_rain_start_cone_index = 5;
 	lens_flares_multiplier			= 1.0f;
 	atmosphere_inscatter_distance	= 1000.0f;

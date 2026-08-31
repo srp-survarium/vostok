@@ -50,7 +50,7 @@
 #include "system_renderer.h"
 
 static float s_shadow_z_near_value = 0.025f;
-static vostok::console_commands::cc_float s_shadow_z_near("shadow_z_near", s_shadow_z_near_value, 0.01f, 1.0f, true, vostok::console_commands::command_type_engine_internal);
+static vostok::console_commands::cc_float s_shadow_z_near("shadow_z_near", s_shadow_z_near_value, 0.01f, 1.0f, false, vostok::console_commands::command_type_engine_internal);
 
 static bool s_one_light_dip_value = true;
 static vostok::console_commands::cc_bool s_one_light_dip("one_light_dip", s_one_light_dip_value, false, vostok::console_commands::command_type_engine_internal);

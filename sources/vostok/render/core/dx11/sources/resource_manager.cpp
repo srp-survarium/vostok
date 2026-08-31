@@ -92,15 +92,15 @@ command_line::key s_texture_streaming(
 	"using texture streaming"
 );
 
-static u32 s_debug_start_num_mips_to_change = 0;
-static console_commands::cc_u32 s_debug_start_num_mips_to_change_cc( "r_debug_start_num_mips_to_change", s_debug_start_num_mips_to_change, 0, 14, true, console_commands::command_type_engine_internal );
+static u32 s_debug_start_num_mips_to_change = 5;
+static console_commands::cc_u32 s_debug_start_num_mips_to_change_cc( "r_debug_start_num_mips_to_change", s_debug_start_num_mips_to_change, 0, 14, true, console_commands::command_type_user_specific );
 
 static u32 s_debug_minus_mip = 0;
-static console_commands::cc_u32 s_debug_minus_mip_cc( "r_debug_minus_mip", s_debug_minus_mip, 0, 14, true, console_commands::command_type_engine_internal );
+static console_commands::cc_u32 s_debug_minus_mip_cc( "r_debug_minus_mip", s_debug_minus_mip, 0, 14, true, console_commands::command_type_user_specific );
 
 static bool s_reload_all_textures = false;
-static console_commands::cc_bool s_reload_all_textures_cc( "r_reload_all_textures", s_reload_all_textures, false, console_commands::command_type_engine_internal );
-static console_commands::cc_bool s_debug_clip_texture_quality_cc( "r_debug_clip_texture_quality", s_debug_clip_texture_quality, false, console_commands::command_type_engine_internal );
+static console_commands::cc_bool s_reload_all_textures_cc( "r_reload_all_textures", s_reload_all_textures, false, console_commands::command_type_user_specific );
+static console_commands::cc_bool s_debug_clip_texture_quality_cc( "r_debug_clip_texture_quality", s_debug_clip_texture_quality, true, console_commands::command_type_user_specific );
 
 struct resource_manager_call_destructor_predicate {
 	template <typename T>
