@@ -251,7 +251,7 @@ the `.vcproj` file list verbatim.
 
 The final response file already follows `RETAIL_LINK_LIBRARY_ORDER` in
 `scripts/vostok/build/ninja_regen.py`. That order was derived independently
-from retail section contributions. Commit `aa7724d34` introduced it and moved
+from retail section contributions. Commit `86e53d1a0` introduced it and moved
 the then-current build from 9,097 to 10,004 exact functions and from 88.38% to
 91.72% fuzzy. The current DBI interleaving also does not follow the response
 file's library sequence on either side. Changing that established order merely

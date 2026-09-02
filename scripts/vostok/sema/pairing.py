@@ -20,7 +20,7 @@ two pairings that disagree are worse than one that is slow:
                                                                  ------
                                                                  18,791
 
-which is every pair `match.db` records, at the same two RVAs, with nothing
+which is every pair the ledger records, at the same two RVAs, with nothing
 extra. Measured against the cache on 2026-08-16: agree 18,791, disagree 0,
 missing 0, extra 0.
 
@@ -175,7 +175,7 @@ def ledger():
 
     The campaign's committed memory - `cur`/`max`/`cls`/`status`/`note`/module
     and TU ownership. It is in git, so unlike the indexes it needs no build at
-    all, and unlike `match.db` it cannot be stale in a way git will not show.
+    all, and unlike a database copy it cannot be stale in a way git will not show.
     """
     global _LEDGER
     if _LEDGER is None:

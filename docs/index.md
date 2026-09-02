@@ -16,29 +16,25 @@
 * [target-vs-base.md](target-vs-base.md) — synthesis of every target-vs-base comparison the PDB/EXE tooling makes (PE/Rich header, flags, link order, RTTI): what's the same, what's different, and which differences are actionable.
 
 ### Per-module matching notes
-Each matched module has its own folder under `binary_matching/` (module notes in `README.md`).
+Each matched module has its own folder under `binary_matching/` (module notes in `README.md` where one exists).
+* [game](binary_matching/game/README.md)
 * [game_core](binary_matching/game_core/README.md)
-* [network_core](binary_matching/network_core/README.md)
 * [network](binary_matching/network/README.md)
+* [network_core](binary_matching/network_core/README.md)
 * [logging](binary_matching/logging/README.md)
-
-Matchable (`/Od` in the target) but not started — no folder yet: `sound`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
-
+* [scaleform](binary_matching/scaleform/README.md)
 * [physics](binary_matching/physics/README.md) (Bullet notes in [binary_matching/bullet/](binary_matching/bullet/README.md))
+* [render](binary_matching/render/) — no README yet; the campaign log is [matching_campaign.md](binary_matching/render/matching_campaign.md)
+* [sound](binary_matching/sound/) — no README yet
+
+Matchable (`/Od` in the target) but with no folder yet: `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
 
 ### Data matching
 * [binary_matching/data_matching.md](binary_matching/data_matching.md) — the data lane; per-module dossiers are regenerated into `data_matching/` by every build (not committed), the handoff is [data_matching/data_extent_handoff.md](data_matching/data_extent_handoff.md).
 
-### Matching dept (general)
-* `static` functions are not delinked by the ghidra script.
-* Delinker extensions fails for `vostok/core` functions.
-* `pdb-parser` script is missing `static` keyword for static functions.
-* `pdb-parser` script is missing typedefs for `pstr`, `pvoid`.
-
 ### Matching status tags
-* `DONE` - the function is matched. No further attention is required.
-* `PARTIAL` - the function is matched, but there are some unanswered questions.
-* `SKIPPED` - the function is not matched. I tried and failed. Will return to it later.
-* `BLOCKED` - the function is not matched, since it requires some other function to be present/matched first.
-* `INPROGRESS` - the function is being matched.
-* `STUB` - the function is in the state of the being matching.
+Per-function status lives in the ledger (`config/match_state.tsv`):
+* `done` - `max` reached 100: the function is matched.
+* `inprogress` - not matched yet, still open work.
+* `blocked` - something is missing (including target-only functions).
+* `parked` - worked and could not be raised further; the row's `note` says why.

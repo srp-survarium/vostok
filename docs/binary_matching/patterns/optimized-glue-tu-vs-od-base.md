@@ -33,7 +33,7 @@ Evidence: vostok/scaleform/sources/value.cpp (the survarium::flash_value / flash
 flash_function_handler / flash_external_handler glue over GFx::Value/Movie). `gfx(flash_value
 const*)` target 0x5bab70 = 1 byte / 0 stmts; GetUInt/GetInt/GetBool = `mov eax,[eax+8]; ret`;
 every setter b_stmts = t_stmts+1 (the inlined gfx() call); Call pairs 7/7 statements
-SIZE-only. Earlier wall note: match/scaleform-flash-text branch commit 499284df.
+SIZE-only. Earlier wall note: the match/scaleform-flash-text branch.
 
 Sibling evidence: vostok/scaleform/sources/movie.cpp flash_text/flash_text_manager glue over
 GFx::DrawText/DrawTextManager. get_width/get_height = `text_impl->GetRect().Width()/Height()`

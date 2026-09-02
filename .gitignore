@@ -110,8 +110,8 @@ ipch/
 /.cache/
 binaries.old*/
 
-## Regenerable worklists (vostok ledger mismatch-queue --write-queue, pdb_divergence) - not committed
-docs/binary_matching/structure_mismatch_queue.md
-docs/binary_matching/match_queue.md
 ## Data-lane dossiers (vostok data module-relocs / vostok build) - regenerated every build
 docs/data_matching/*_data_problems.md
+
+# scratch trees for carcass rebuilds (temp/<module>_legacy etc.) - never tracked
+/temp/

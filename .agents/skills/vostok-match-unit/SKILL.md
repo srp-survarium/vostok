@@ -7,7 +7,8 @@ description: Binary-match one complete Vostok translation unit, or a small relat
 
 1. Read `AGENTS.md`, `docs/binary_matching/MATCHING.md`,
    `docs/binary_matching/agentic_loop.md`, and the relevant module notes.
-   Skim `patterns/INDEX.md`; open only patterns matching the observed symptom.
+   Skim `docs/binary_matching/patterns/INDEX.md`; open only patterns matching the
+   observed symptom.
 2. Confirm the worktree and branch, the complete owned TU, explicit open
    functions, and disjoint file scope. Do not touch another worker's files.
 3. Inspect target evidence first:
@@ -27,8 +28,8 @@ description: Binary-match one complete Vostok translation unit, or a small relat
 8. Compare `structure-diff` before assembly `diff`. Fix source shape before
    chasing bytes. Repeat until structure matches or a concrete blocker remains.
 9. Run the final full rebuild after the last edit. Include the generated
-   `README.md` and `docs/binary_matching/match_state.tsv` with the source in one commit.
-   Never commit a source state whose database came from a different build.
+   `README.md` and `config/match_state.tsv` with the source in one commit.
+   Never commit a source state whose ledger came from a different build.
 10. Report per-function results, regressions, blockers with next actions,
     verification, and the commit hash. Do not push or merge unless authorized.
 

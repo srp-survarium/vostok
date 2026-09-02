@@ -7,8 +7,8 @@
 #include <boost/function.hpp>
 
 // clear the engine's Windows macros before boost/asio re-includes the WinSDK headers,
-// so this header survives being force-included outside the module pch (e.g. game_core's
-// temp_include_all anchor), where _WIN32_WINNT/APIENTRY/etc. would otherwise collide.
+// so this header survives being force-included outside the module pch, where
+// _WIN32_WINNT/APIENTRY/etc. would otherwise collide.
 #	undef BOOL
 #	undef APIENTRY
 #	undef HMODULE

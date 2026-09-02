@@ -8,21 +8,23 @@ rebuilt clean from `feature/agentic-matching-loop-2`).
 
 This is the *clean redo* of the older patch-in-place approach (PR #267's
 `enabling_a_library.md`, never merged - its content is subsumed here). Before
-replacing the old per-type files, move them to `temp/<module>_legacy/`; that
-recoverable tree is the topology/body-salvage queue (delete it once the harvest
-closes - git history keeps it, nothing under `temp/` stays tracked). Regenerate every interface from
-the canonical dump using a separate emptying structure queue as the proof of type
-completeness. Drain the two queues together, one real header and its related methods
-at a time. Legacy headers recover file placement, grouping, includes, and candidate
-bodies, but never override the canonical layout.
+replacing the old per-type files, move them to `temp/<module>_legacy/` (untracked
+scratch); that recoverable tree is the topology/body-salvage queue (delete it once
+the harvest closes - git history keeps it, nothing under `temp/` stays tracked).
+Regenerate every interface from the canonical dump using a separate emptying
+structure queue as the proof of type completeness. Drain the two queues together,
+one real header and its related methods at a time. Legacy headers recover file
+placement, grouping, includes, and candidate bodies, but never override the
+canonical layout.
 
 ## The method in one paragraph
 Branch off the integration base. Move EVERY replaceable per-type header and `.cpp`
-carcass in the module to `temp/<module>_legacy/`; keep only the handful of files that
-are not PDB types (below). Copy the canonical `headers/` and `sources/` trees for the
-module into `temp/<module>_structure_queue/`; that second temp tree is the target-type
-work-list. Despite their names, generated `headers/` is a synthetic
-namespace-keyed, one-type-record-per-file pool, while generated `sources/` contains
+carcass in the module to `temp/<module>_legacy/` (untracked scratch); keep only the
+handful of files that are not PDB types (below). Copy the canonical `headers/` and
+`sources/` trees for the module into `temp/<module>_structure_queue/` (untracked
+scratch); that second temp tree is the target-type work-list. Despite their names,
+generated `headers/` is a synthetic namespace-keyed, one-type-record-per-file pool,
+while generated `sources/` contains
 every path-preserved file with at least one function - including `.cpp`, `.h`, and
 inline/include files. The latter gives strong paths for function-bearing headers,
 but the structure generator still does not recover the complete original header
@@ -116,8 +118,8 @@ symbols, source ownership, or measured binary evidence.
 `vostok::<module>` libraries the two coincide; for the `game` module the pool is
 `headers/survarium/` - one flat dir shared by game, game_core and the pc exe
 (728 files). The queue then starts with the WHOLE pool and gets triaged file by
-file; record every removal + reason in a `temp/triage_log.md` so the queue stays
-the single source of truth:
+file; record every removal + reason in a `temp/triage_log.md` (untracked scratch) so
+the queue stays the single source of truth:
 
 1. **Already rebuilt elsewhere**: basename (plus nested `outer__inner.h` and
    `_N`-variant forms) matches a header in the sibling module's tree

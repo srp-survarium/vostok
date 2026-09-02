@@ -450,7 +450,7 @@ ever creep back to a constant ~10-min overhead, compare `.ninja_log` edge spans 
 rebuild.log wall-clock and look for a new pipe-holder via `/proc/<pid>/environ` WINEPREFIX matches.
 
 ## The exe LINK rsp goes stale in worktrees: regen_ninja never compares it (OpenSSL LNK2001 trap)
-A fresh worktree branched after a `.vcproj` LINKER change (e.g. PR-stack commit be4e9a5e adding
+A fresh worktree branched after a `.vcproj` LINKER change (e.g. the PR-stack commit adding
 `libeay32/ssleay32` + the openssl LIBPATH to the exe's VCLinkerTool) can fail its first rebuild with
 38 unresolved `_SSL_*`/`_BIO_*` externals even though `vostok.build.ninja_regen` reports "ninja graph already
 matches the .vcprojs". Cause: regen compares only each module's *compile-source union*

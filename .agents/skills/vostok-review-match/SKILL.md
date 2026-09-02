@@ -6,7 +6,7 @@ description: Review one Vostok matching commit, PR, batch, or linear stack for t
 # Review matching work
 
 1. Establish the exact base and head. Verify the intended range is linear and
-   each commit carries a README/database snapshot generated for that source.
+   each commit carries a README/ledger snapshot generated for that source.
 2. Read `AGENTS.md` and the relevant matching rules. Inspect the complete diff,
    commit sequence, generated score changes, open `sushi@TODO` ledger entries,
    and regression reports.

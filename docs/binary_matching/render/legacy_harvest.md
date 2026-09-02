@@ -12,14 +12,14 @@ generated stub bodies remain while 1,011 legacy files sit unported. Protocol
 follows `docs/binary_matching/game/legacy_harvest.md`, adapted for render's
 optimized (/O2 + LTCG) target.
 
-## Baseline (audited 2026-07-31, HEAD 6931a537b)
+## Baseline (audited 2026-07-31)
 
-Recovery bar = the pre-restructure score at the branch point `34639bbef`:
+Recovery bar = the pre-restructure score at the branch point:
 
 | checkpoint | render exact | render fuzzy | overall exact |
 |---|---|---|---|
-| pre-restructure (`34639bbef`) | 366 / 2,647 (13.8%) | 31.0% | 43.63% |
-| carcass baseline (`6931a537b`) | 8 / 2,647 (0.3%) | 0.1% | 38.13% |
+| pre-restructure | 366 / 2,647 (13.8%) | 31.0% | 43.63% |
+| carcass baseline | 8 / 2,647 (0.3%) | 0.1% | 38.13% |
 
 The harvest must first recover the 13.8% / 31.0% bar, then exceed it.
 
@@ -90,7 +90,7 @@ its owner exists measures noise. Order:
 
 | wave | scope (stub counts at baseline) | status |
 |---|---|---|
-| 1 | facade: entry_point+world (me), channel+stage_types, scene_renderer (46), debug_renderer+commands (37), game/ui renderers+commands (~25) | DONE 55090cde2: ~97 fns, facade stubs 145->33, module green |
+| 1 | facade: entry_point+world (me), channel+stage_types, scene_renderer (46), debug_renderer+commands (37), game/ui renderers+commands (~25) | DONE: ~97 fns, facade stubs 145->33, module green |
 | 2 | engine roots: render_engine_world_pc_dx11 (115, +legacy render_engine_world_dx11.cpp merge), renderer (27), scene (65), renderer_context (17), system_renderer (18) | PORTED: world 66/115, scene 35/65, renderer_context 17/17, renderer 8/27, system_renderer 17/18; integration fixes: res_geometry+render_target placeholder->core redirects, struct-font/ui-world fwd-decls (mangling), technique enums x4, frac consolidated into help_math.h (target-attributed), SpeedTree SDK static libs linked per legacy pragmas (stand-in globals -> externs), forwarding ctor for singletons_on_preinitialize, decal friend-class device, draw_debug_terrain link stub |
 | 3 | core/dx11 owners: resource_manager (80), options (26), custom_config (29), effect_manager (18+inline 114), backend+handlers (31), device (13), effect_compiler (15+9) | PART 1 DONE (last two workers; solo from here per sushi): resource_manager 68/82 (+create_geometry<size> wrapper, call_resource_destructor); res_* batch ~65 bodies + 5 generation-gap fns added (res_render_output) + carcass VA-swap fixed (render_target create overloads) + 5 header inline fills; integration: res_state friend, res_xs compare stub, operator< x3, compare_member_predicate exact-match fix, assert_on_fail qualifier. REMAINING for solo: options/custom_config/effect_manager/backend/device/effect_compiler |
 | 4 | stages: visibility/gbuffer/lights/shadow/postprocess/LPV/distortion/rain... (~200) | |

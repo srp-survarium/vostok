@@ -77,9 +77,9 @@ Only the **static CRT libs** and **`crtassem.h`** are taken from the SP1 VC
 patch. The other CRT headers (`crtdefs.h`, ...), MFC, and ATL therefore stay at
 the RTM state the admin install produced. This has not affected matching (engine
 objects link `/MT`, which suppresses the `crtassem` manifest, and objdiff does
-not score the CRT - see [compiler-sp1-rtm.md](compiler-sp1-rtm.md)); if an
-inlined CRT header or MFC/ATL ever needs to match, it would be overlaid the same
-way as the CRT libs.
+not score the CRT; the compiler itself must still be SP1, because the retail PDB
+records the SP1 compiler backend build). If an inlined CRT header or MFC/ATL ever
+needs to match, it would be overlaid the same way as the CRT libs.
 
 ## Two non-obvious requirements (both handled by the script)
 
@@ -124,8 +124,8 @@ SP1, but Wine's `msiexec` does **not** lay down the patched, **unversioned**
 static CRT. The result is a toolchain whose compiler is SP1 yet whose
 `VC/lib/libcmt.lib`, `libcpmt.lib` (and the `*d`/`msvcrt*` variants) and CRT
 headers stay at **RTM `9.0.21022`**. This shipped silently for a while because
-the only check was on `cl.exe`. Consequences (see
-[compiler-sp1-rtm.md](compiler-sp1-rtm.md)):
+the only check was on `cl.exe`. The toolchain has to be SP1 throughout because
+the retail PDB records the SP1 compiler backend build. Consequences:
 
 * the linked static-CRT objects are RTM and never byte-match the game's SP1 CRT;
 * `VC/include/crtassem.h` (`_CRT_ASSEMBLY_VERSION "9.0.21022.8"`) is inlined into

@@ -1,6 +1,6 @@
 ---
 name: vostok-orchestrate-matching
-description: Drive binary matching for a whole Vostok module by dispatching disjoint translation-unit workers, serializing their results into one linear stack, rebuilding every commit, preserving per-commit match databases, and periodically auditing structure. Use only when the user asks for module-scale or multi-unit matching and authorizes agent delegation.
+description: Drive binary matching for a whole Vostok module by dispatching disjoint translation-unit workers, serializing their results into one linear stack, rebuilding every commit, preserving the per-commit ledger, and periodically auditing structure. Use only when the user asks for module-scale or multi-unit matching and authorizes agent delegation.
 ---
 
 # Orchestrate a matching stack
@@ -24,20 +24,18 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
    once (`vostok ledger tried <mangled>...` for the TU's functions), apply parks,
    then fold the generated README and ledger into that
    same source commit. A diff with no attempt increment for worked code is a
-   bookkeeping defect. No commit may borrow a later database snapshot.
+   bookkeeping defect. No commit may borrow a later ledger snapshot.
 7. Push/open a PR only after its commit is measured. Base each PR on the unit
    immediately below it.
 8. After roughly 10-15 integrated units, run one
    `$vostok-verify-structure` audit over the batch and land its rebuilt fix as a
    new stack commit.
 9. Continue until work is compiled-done or parked with a queryable cause and
-   next action. Use `source_maxima`, not ordinary `history.best_fuzzy_pct`, for
-   MAX progress (`vostok ledger list --module <m>` reads `max` per row). Never carry MAX
-   across an effective-source hash change. Island evidence must be measured by
-   the normal report/index refresh before `record-max` annotates it; never type
-   a score into the ledger. Audit attempts and flags before handoff.
+   next action. For MAX progress use the `max` column (`vostok ledger list
+   --module <m>`). Never carry MAX across an effective-source hash change; never
+   type a score into the ledger. Audit attempts and parks before handoff.
 10. Request or perform `$vostok-review-match` before landing. When authorized
     and ready, fast-forward the complete linear stack into the integration
-    branch. Never squash; preserve every per-commit database snapshot.
+    branch. Never squash; preserve every per-commit ledger snapshot.
 
 Do not let workers push, merge, change PR bases, or edit shared worktrees.

@@ -1,8 +1,8 @@
 # Handoff — Bullet functional (body) matching
 
 **For:** the next agent picking up Bullet matching after the structural commit.
-**Predecessor commit:** `50976b71` ("bullet: structural delta vs target — add
-RayResultCallback::getShapeId"). Read [README.md](README.md)
+**Predecessor commit:** "bullet: structural delta vs target — add
+RayResultCallback::getShapeId". Read [README.md](README.md)
 first — it is the structural map this builds on.
 
 ## STATUS (2026-06-14) — the genuine vostok source changes are recovered
@@ -182,6 +182,6 @@ sub-100 entries are these — it has no real work left).
 
 ## Done already (don't redo)
 - `RayResultCallback::getShapeId` virtual — added, 100% byte / STRUCTURE MATCH
-  (commit `50976b71`). Its field `m_shape_id` already existed.
+  in that predecessor commit. Its field `m_shape_id` already existed.
 - No new fields, no new bullet-library classes (verified — see
   README.md).

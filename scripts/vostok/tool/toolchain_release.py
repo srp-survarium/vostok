@@ -91,7 +91,7 @@ def wineserver_settle(timeout: int = 120) -> None:
 # The shipped game linked the SP1 (9.0.30729) CRT, so an RTM CRT will never
 # byte-match; worse, RTM crtassem.h stamps every one of our SP1-compiled objects
 # with a 9.0.21022 manifest dependency. So we overlay the SP1 CRT straight out
-# of the SP1 MSP payload and then verify it. See docs/build/compiler-sp1-rtm.md.
+# of the SP1 MSP payload and then verify it with verify_crt_sp1() below.
 # ---------------------------------------------------------------------------
 
 SP1_BUILD = 30729
@@ -255,8 +255,8 @@ def verify_crt_sp1(stage_vc: Path, *, fatal: bool) -> None:
     if not lib_ok and fatal:
         raise SystemExit(
             "Toolchain static CRT is RTM, not SP1 - the SP1 overlay did not take. "
-            "libcmt.lib must be 9.0.30729 to match the game; see "
-            "docs/build/compiler-sp1-rtm.md. Aborting rather than ship a "
+            "libcmt.lib must be 9.0.30729 to match the game (the retail PDB "
+            "records the SP1 compiler backend). Aborting rather than ship a "
             "toolchain that links the wrong CRT."
         )
 

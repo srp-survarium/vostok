@@ -7,7 +7,7 @@
 // but sequence_number.h is itself pulled in by udp_match_packet.h, so we cannot
 // include those headers here (it would be circular). The bodies are templates,
 // instantiated only where both udp_match_packet and packet_reader are already
-// complete (the udp_match_connection / temp_include_all translation units), so the
+// complete (the udp_match_connection translation unit), so the
 // forward declarations in sequence_number.h suffice for parsing.
 
 namespace vostok {

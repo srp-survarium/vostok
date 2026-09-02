@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.ledger.queue - project the derivation's per-function structure
-classification into docs/binary_matching/structure_mismatch_queue.md, a
+classification into binaries/gen/structure_mismatch_queue.md, a
 PERSISTENT work queue of every structurally-mismatched paired function across the
 NON-RENDER engine modules (render is matched last; excluded).
 
@@ -457,7 +457,7 @@ def main():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("--write-queue", action="store_true",
-                    help="reconcile docs/binary_matching/structure_mismatch_queue.md")
+                    help="reconcile binaries/gen/structure_mismatch_queue.md")
     ap.add_argument("--queue-file", type=Path, default=QUEUE_FILE)
     args = ap.parse_args()
 

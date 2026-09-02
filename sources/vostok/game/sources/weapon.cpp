@@ -428,7 +428,7 @@ void weapon::on_after_fire( )
 	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
 }
 
-// claude@NOTE: structure correct - both sides emit 9 statements (the match.db SPLIT flag is a
+// claude@NOTE: structure correct - both sides emit 9 statements (the ledger's SPLIT class is a
 // line-number-shift artifact, not a count mismatch; --view structure-diff pairs every statement
 // with only SIZE deltas). Residual is codegen: the target aligns the stack (`and esp,0FFFFFFF8h`
 // + a reserved slot) and uses ebx as `this`, our build uses ebp with no alignment, plus minor

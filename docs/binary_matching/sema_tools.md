@@ -182,7 +182,7 @@ binary is stripped. Vostok's retail PDB already records the declarations and
 ownership those commands try to infer. Treat the PDB-derived structure and real
 vcall assembly as authoritative instead of importing stripped-binary guesses.
 Keeping these commands as companions also avoids a second implementation of the
-PDB and match-database logic.
+PDB and ledger logic.
 
 `<fn>` is a mangled name, a demangled substring, or a hex RVA/VA on either side.
 Ambiguous substrings are listed, never guessed at.

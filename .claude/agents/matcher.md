@@ -14,7 +14,7 @@ be bundled, each still whole). Per-TU matching is deliberate (sushi): small
 helpers matched in their real TU sit in the same inlining/LTCG environment as
 their callers and pair the way the target did - cherry-picking small functions
 across TUs causes churn. It also amortizes the fixed setup cost (shared docs,
-the class decl, member offsets, the `temp_include_all` anchor, your context)
+the class decl, member offsets, your context)
 across code that genuinely shares it. Also pull in any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
 scores as its own function; see MATCHING.md's reconstructed-helper rule).
@@ -35,7 +35,7 @@ disjoint). PARK only on a `render` symbol or a genuinely unrecoverable data-sect
 This pays off big - one bodied callee routinely un-DCEs several callers from ~0% to ~100%. If a batch member turns out hard, a bit of spinning on it
 is fine, but don't get stuck - finish the rest and park it: a terse `claude@NOTE:`
 above the function (why stuck, what you tried - FACTS only, NEVER a match % in
-a comment: numbers go stale, they live in report.json/the match DB) and the
+a comment: numbers go stale, they live in report.json/the ledger) and the
 cause + concrete next step in your RESULT LINE - the orchestrator records it as
 a ledger PARK (you never edit the ledger yourself; the orchestrator is
 its single writer).
@@ -87,7 +87,7 @@ its single writer).
     cannot guess.
   - **Locals:** declare AND use every `// LOCALS` entry (under `/Od` each gets a slot - a dropped local is a dropped statement).
   - **Switch braces / default:** read the carcass - a `+0x002` step (2-byte `jmp short` = a `}`) marks a braced `case`; a jump table with no `cmp max; ja default` means full contiguous cases + `default: NODEFAULT();`. Match it.
-- **Reachability:** reference the function from `temp_include_all.cpp` (unless an already-anchored function calls it).
+- **Reachability:** the `temp_include_all.cpp` / `anchor_*.cpp` anchors are retired - reachability comes from the real call graph. A function the base link strips shows as a `blocked` ledger row; make it reachable by matching its callers, never by adding an artificial reference.
 - **Build + score:** `python3 -m vostok build` with **NO module arg** (a bare
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
@@ -213,9 +213,9 @@ its single writer).
   clean 100% needs no
   inline rationale; any reusable asm->source trick goes to `patterns/` (new file + INDEX.md line).
 - **Lean source - rationale in the commit message, NOT a `.md` trail.** Status is
-  DERIVED (`report.json` + the match DB; only `// STATE[STUB]` stays in source, on
+  DERIVED (`report.json` + the ledger; only `// STATE[STUB]` stays in source, on
   still-unmatched bodies); a parked function's cause goes in your result line (the
-  orchestrator records the match-DB flag). Tag deliberate shaping with
+  orchestrator records the ledger park). Tag deliberate shaping with
   `claude@MATCH:`/`@NOTE:`/`@TODO:` (keep prior `sushi@...` notes). Do NOT write a
   per-function `.md` (we don't keep them). Put the run narrative - what you tried, the
   source variants + their %s - in the PR/commit message, and promote any reusable
@@ -232,12 +232,13 @@ its single writer).
 ## Finish - commit your match, return your result line
 Your worktree is already on the unit's branch, indexes warm. Just commit your work:
 ```
-git add <the .cpp(s)> <temp_include_all.cpp edits>
+git add <the .cpp(s)>
 git commit -m "<module>: match <unit> (per-fn NN%)"   # name grouped/inlined members too
 ```
 **ONE commit** (squash WIP first: `git reset --soft <branch-point>` then one commit). Do
-NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack
-(and `docs/binary_matching/match_state.tsv` - never commit it). Return ONE line, nothing else:
+NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack.
+Every commit carries the refreshed `config/match_state.tsv` + README score block from a full
+`vostok build`. Return ONE line, nothing else:
 ```
 <module>::<unit> -> NN% per fn   (parked: none | <fn>: <cause/next step>; regressions: none | <unit/fn>)
 ```

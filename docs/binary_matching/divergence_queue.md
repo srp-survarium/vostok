@@ -18,7 +18,7 @@ question:
 | source definition order and constants | `pdb_divergence` | semantic when both files/functions pair |
 | function locals/statements/lexical blocks | `pdb_fetch --view structure-diff` | direct procedure evidence |
 | DBI/TPI/global/module-symbol sequence | `pdb_topology --order` | physical/linker-derived diagnostic |
-| out-of-line function presence | `pdb_divergence --list-presence-fns` and the match DB | scheduling/reachability evidence |
+| out-of-line function presence | `pdb_divergence --list-presence-fns` and the ledger | scheduling/reachability evidence |
 | emitted member use | target/base disassembly at a real consumer | direct for that access path |
 
 `pdb_divergence` remains useful as a broad normalized compatibility view. Its

@@ -159,8 +159,8 @@ flag, while a header/other-unit change that only shifts bytes does not.
 
 Known edge (accepted): a function pairs, then its `temp_include_all` anchor is
 deleted - it vanishes with the source extent unchanged and is wrongly called
-out of scope. The anchor removal is visible in the PR diff, and `flag
---requeue` overrides manually.
+out of scope. The anchor removal is visible in the PR diff, and `vostok ledger
+open` overrides manually.
 
 ## Source-hash-scoped MAX
 
@@ -209,11 +209,17 @@ only the source-scoped maximum, state identity, origin, and evidence reference
 belong in the database. README `exact-max` and `fuzzy-max` use this table and
 take current measurements as a floor, so MAX can never display below current.
 
-`vostok ledger list [--module <m>]` shows each row's `max`. An island
-runner must first refresh from the real candidate artifacts, restore the source,
-and then use `record-max <mangled> --evidence <path> --expected-hash <hash>`.
-`record-max` accepts no score: it can annotate only the hash, score, exact bit,
-and state identity already measured by the normal report/index pipeline.
+`vostok ledger list [--module <m>]` shows each row's `max`.
+
+**HISTORY:** the verbs in the two paragraphs below belonged to the sqlite
+build-out; today `max` is folded by `vostok derive refresh` from the function's
+source-body hash - see `scripts/vostok/derive/maxima.py`.
+
+An island runner must first refresh from the real candidate artifacts, restore
+the source, and then use `record-max <mangled> --evidence <path>
+--expected-hash <hash>`. `record-max` accepts no score: it can annotate only the
+hash, score, exact bit, and state identity already measured by the normal
+report/index pipeline.
 
 When the island artifacts are deliberately kept outside the canonical build
 tree, use `import-island --report <report.json> --base-index <index.jsonl>
@@ -277,6 +283,10 @@ dump exists, `refresh` skips `declared_functions` ingestion with a warning and
 the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
 
 ## Implementation deltas (as built; authoritative where they differ from above)
+
+> HISTORY: this section describes the SQLite build as it was; the ledger is the
+> text file `config/match_state.tsv` and `vostok derive refresh` is the only
+> writer. Kept for the record of what the columns meant.
 
 - **Declarations are transient.** The dump (vostok-pdb-parser PR #25,
   `pdb_declarations`; 222k rows / 85MB at `binaries/rich/target/

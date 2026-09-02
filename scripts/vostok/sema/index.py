@@ -236,7 +236,7 @@ def resolve(sel):
     want = _matcher(sel)
     tgt = _fold_aliases("target", _scan_index("target", want), sel)
     base = _fold_aliases("base", _scan_index("base", want), sel)
-    # A partner found through the match.db pairing is authoritative and is NOT
+    # A partner found through the ledger's pairing is authoritative and is NOT
     # re-checked by name below. The two indexes really do spell some symbols
     # differently: where the PDB carries no mangled name, pdb_parser falls back
     # to the demangled one, so `copy_destroyer<binary_config_value,

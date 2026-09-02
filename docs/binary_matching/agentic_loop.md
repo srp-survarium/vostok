@@ -21,8 +21,8 @@ the one reason to pull in an outside function.
 
 **PRs are stacked.** Each match branches off the previous match's branch (the
 stack tip) and its PR targets that branch, not xray/feature. So every worker
-inherits all prior matched source, anchors, and notes; `temp_include_all.cpp`
-edits never conflict; and the human reviews the stack one PR at a time, in order.
+inherits all prior matched source and notes, and the human reviews the stack one
+PR at a time, in order.
 
 **Above all, reproduce the target exactly - never "fix" bugs or odd logic** (see
 MATCHING.md, rule #1). The target binary is ground truth; matching its bytes,
@@ -34,7 +34,7 @@ Run the loop as two tiers so context stays clean:
 
 - **Orchestrator** (long-lived): owns the queue (section 0). For each TU it
   dispatches one worker, collects its one-line result
-  (`unit -> per-fn %s -> PR`), and records flags. It never holds the
+  (`unit -> per-fn %s -> PR`), and records parks. It never holds the
   disassembly or diff text, so its context stays small across the whole module.
 - **Worker** (one per TU): runs the per-function loop (sections 1-9) for each
   open function in its TU, in its own fresh context, then returns just that
@@ -75,12 +75,12 @@ MATCH), out-of-scope ones (paired once, vanished/regressed without a source
 touch - external inlining), and parks. `vostok ledger list --status blocked` finds the unpaired
 sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
 view. Work the batches until `report` shows every function done or parked
-(a `SKIP` flag with a written cause).
+(a park with a written cause).
 
-The orchestrator is the match DB's SINGLE WRITER: `vostok build` regenerates the
-DB at the end of every build (or `refresh` re-derives it regen-only), it records
-`flag`s (from worker result lines), and commits the DB at run milestones -
-workers never edit it.
+The orchestrator is the ledger's SINGLE WRITER: `vostok build` regenerates the
+ledger at the end of every build (or `vostok derive refresh` re-derives it
+regen-only), it records parks (from worker result lines), and commits the ledger
+at run milestones - workers never edit it.
 
 ## 1. Per-function loop (one worker, per function of its TU)
 
@@ -89,8 +89,8 @@ function the worker does the rest:
 
 1. **Get the target assembly** for it (section 2).
 2. **Write a first approximation** of the body in its `.cpp`, following
-   `MATCHING.md`. Reference it from `temp_include_all.cpp` so the linker keeps it
-   (section 3). Pull in any missing types (section 4).
+   `MATCHING.md`. Check that the link keeps it (section 3). Pull in any missing
+   types (section 4).
 3. **`python3 -m vostok build`** - builds under Wine, then logs
    `Match: code X% / functions Y%`, refreshes the diff inputs, and regenerates
    the ledger from the fresh `report.json`. Read the new per-function number from
@@ -105,7 +105,7 @@ function the worker does the rest:
 6. **Record the outcome** (sections 5-7): on a real match drop the function's
    `// STATE[STUB]` flag and delete the carcass; if parked, leave the
    `claude@NOTE:` and name the cause in your result line (the orchestrator
-   records it as a match-DB flag). Put the stuck-reason and tried variants in
+   records it as a ledger park). Put the stuck-reason and tried variants in
    the commit message, NOTE any inlining, and flag any regression you caused.
 7. **Commit and open the PR** (section 8). Move to the next function.
 
@@ -192,23 +192,10 @@ only compare functions that survive into the linked EXE; the linker drops any
 function not reachable from `main`, so an unreferenced match never appears on the
 base side and cannot be diffed.
 
-Matched code is kept alive through
-`sources/vostok/game/sources/temp_include_all.cpp` (game's, since the game
-carcass rebuild; previously under game_core): an `IncludeAll` instance
-is created in `game/sources/game_entry_point.cpp::create_world` (reachable
-from `main` via game_module_proxy), and its
-constructor calls one `use_<thing>( )` per matched class; each `use_*`
-instantiates the class and calls its methods, referencing the functions so the
-linker retains them. The same file also anchors the `network_core` and `logging`
-functions being matched (e.g. `use_network_core_http_client`, `use_log`).
-
-So when you finish a function, **reference it from `temp_include_all.cpp`**: add a
-call in the relevant `use_*( )` block (or add a new `use_*` and call it from
-`IncludeAll::IncludeAll( )`). Use `NULL` / dummy arguments - the call never runs,
-it only has to exist so the symbol is kept.
-
-Exception: a function already called by another anchored (reachable) function is
-kept alive transitively - do not add it again.
+The `temp_include_all.cpp` / `anchor_*.cpp` reachability anchors are retired:
+reachability now comes from the real call graph. A function the base link strips
+shows up as a `blocked` ledger row - make it reachable by matching its callers,
+never by adding an artificial reference.
 
 ## 4. Missing types
 
@@ -227,7 +214,7 @@ target but not in your base (or vice versa) you will see it as a missing/extra
 Identify the block, leave a `claude@NOTE:` (or `claude@MATCH:` if you reshaped
 the source to compensate), and do **not** burn the loop fighting inlining you
 cannot steer - name the cause in your result line (it becomes the function's
-match-DB `NOTE` flag).
+ledger note, `vostok ledger tried --note`).
 
 ## 6. When stuck - what to write
 
@@ -236,9 +223,9 @@ same two-layer convention other decomp projects use - a non-matching note at the
 function + an external tracker):
 - a terse **`claude@NOTE:` above the function** - why it is stuck, what you tried,
   a couple of lines max. Facts about the attempt, never a % or a diff dump.
-- a **match-DB `SKIP` flag** whose cause is the same conclusion plus the concrete
-  next step (named in your result line; the orchestrator records it - the live %
-  stays in `report.json`).
+- a **ledger park** (`vostok ledger park <mangled> --cause`) whose cause is the
+  same conclusion plus the concrete next step (named in your result line; the
+  orchestrator records it - the live % stays in `report.json`).
 
 Full detail - every variant and its score, the diverging statements - goes in the
 COMMIT/PR MESSAGE (section 7), not inline.
@@ -249,8 +236,8 @@ We do NOT keep per-function `.md` logs. Module-wide notes (gotchas, shared types
 asm quirks for the whole module) still live in
 `docs/binary_matching/<module>/README.md`; everything per-function splits into:
 
-- **the match DB** - derived status (%s, structure class, pairing history) plus
-  the hand-written `SKIP`/`NOTE` flag causes;
+- **the ledger** (`config/match_state.tsv`) - derived status (%s, structure
+  class, pairing history) plus the hand-written park causes and attempt notes;
 - **the COMMIT/PR MESSAGE** - the narrative a reviewer needs to replay the run:
   the key commands, each source variant you tried with its resulting % /
   structure-diff outcome, the final residual and why. Shape:
@@ -285,7 +272,7 @@ next function.
 ---
 
 **Stop condition for the whole run:** every function in the module is `DONE` or
-parked (a `SKIP` flag) with its cause recorded in the match DB (narrative
+parked (`vostok ledger park`) with its cause recorded in the ledger (narrative
 in the commit messages).
 
 Missing tooling you wish you had goes in

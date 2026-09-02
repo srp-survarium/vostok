@@ -44,8 +44,8 @@ For a shared namespace or a legacy-body harvest, also read:
 
 ## Create both queues
 
-1. Move the complete old module to `temp/<module>_legacy/` (deleted again once the
-   harvest closes; git history keeps it). This is the legacy
+1. Move the complete old module to `temp/<module>_legacy/` (untracked scratch;
+   deleted again once the harvest closes; git history keeps it). This is the legacy
    implementation queue, including original PCH, bootstrap, linkage, and project
    files.
 2. For a retail render rebuild, leave only the three live `.vcproj` manifests
@@ -60,7 +60,8 @@ For a shared namespace or a legacy-body harvest, also read:
    ```
 
 4. Copy the module's generated `headers/` and `sources/` material from
-   `binaries/structure/target/` into `temp/<module>_structure_queue/`.
+   `binaries/structure/target/` into `temp/<module>_structure_queue/` (untracked
+   scratch).
 5. For shared namespace pools, seed the whole pool and maintain a triage log.
    Remove an entry only after proving another module owns it or the real tree
    reproduces it.
@@ -94,25 +95,10 @@ as a COMDAT in the bootstrap TU. That result cannot establish the helper's targe
 ownership or matching state. Treat early helper output as structural evidence
 only and measure it again through the reconstructed owner.
 
-Use the existing per-module anchor system while the real ownership graph is
-incomplete. Do not recreate the deprecated monolithic
-`temp_include_all.{h,cpp}`/"temp includes" convention:
-
-- put a module's temporary `use_<thing>()` functions in one or more
-  `sources/anchor_<module>*.cpp` files compiled by that module's project;
-- expose one `vostok::anchor_<module>()` dispatcher for the module;
-- declare that dispatcher in `game_core/sources/anchor.h`;
-- call it once from `survarium::IncludeAll::IncludeAll()` in
-  `game_core/sources/anchor.cpp`;
-- keep the single `IncludeAll` instance at the real executable-rooted startup
-  path in `game/sources/game_entry_point.cpp`.
-
-Self-guard anchor bodies and source arguments through volatile placeholders so
-LTCG keeps the references without executing scaffolding or specializing target
-bodies from constants. Never duplicate another module's `use_*` ownership.
-Anchors are disposable reachability scaffolding, not target ownership evidence.
-Drain each temporary reference into the real top-down call path when that owner
-is reconstructed, then retire the empty anchor file and dispatcher call.
+Reachability anchors (`temp_include_all.{h,cpp}`, `anchor_*.cpp`) are retired:
+reachability comes from the real call graph. A function the base link strips
+shows up as a `blocked` ledger row - make it reachable by reconstructing its
+callers, never by adding artificial scaffolding.
 
 Before writing a subsystem, inspect analogous code elsewhere in the engine.
 Reuse established conventions for header layering, ownership, allocators,
@@ -210,4 +196,4 @@ ported body matched until the normal target/base loop proves it.
   recorded blocker.
 - No addressless carcass or obsolete generated-date/state narration remains.
 - The new interface matches target layout and symbol structure.
-- The final commit contains a successful full rebuild's README and database.
+- The final commit contains a successful full rebuild's README and ledger.

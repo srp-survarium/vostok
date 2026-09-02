@@ -4,8 +4,8 @@
 > file with `git show 885e1d4a4:temp/network_legacy/<file>`.
 
 Doc-only audit (2026-06-10) of every network_core piece with a legacy ancestor
-(see "Legacy ancestry" in [README.md](README.md)). "Ours" = the stack tip
-`origin/match/network_core-packet-leaves` (4b759e67, contains #283+#285+#288);
+(see "Legacy ancestry" in [README.md](README.md)). "Ours" = the tip of the
+network_core packet-leaves stack, since landed (#283+#285+#288);
 "legacy" = `temp/network_legacy/`. Byte evidence from the target PDB index
 (`pdb_fetch`) and `strings` on the original exe is marked **[proven]** /
 **[disproven]**; everything else is a text-shape prior.

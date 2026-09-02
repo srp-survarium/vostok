@@ -94,8 +94,8 @@ lvalue prefers the non-template. The target confirms both -
 
 ## Payoff
 
-One overload, measured repo-wide (`vostok derive diff`), 36 improvements against
-11 regressions, eight functions moved to byte-exact:
+One overload, measured repo-wide (`git diff <rev> -- config/match_state.tsv`),
+36 improvements against 11 regressions, eight functions moved to byte-exact:
 `core_debug_engine::create_folder_r` 58.4 -> 100,
 `engine_world::get_user_data_directory` 48.8 -> 100,
 `native_path_string::convert` 78.7 -> 100 (plus `native_path_string::operator=`

@@ -76,9 +76,9 @@ order - none of these are "LTCG noise". Each has a concrete source cause:
 - a `fld1` / const reached via the `default` may belong to an **explicit `case`**.
 
 Keep digging until the ONLY remaining difference is argument passing; only then is
-the function done (the match DB notes the residual: a `NOTE` flag with cause, e.g.
+the function done (the ledger notes the residual: a `tried --note` cause, e.g.
 `LTCG arg passing`). If you cannot finish, park it: a terse `claude@NOTE:` above the
-function plus a `SKIP` flag whose cause is the concrete next step (flags are recorded
+function plus a park whose cause is the concrete next step (parks are recorded
 via `vostok ledger park` - by the orchestrator for dispatched matchers) - do
 **not** bank it as matched and call the residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
@@ -98,7 +98,7 @@ ONE real source location (its real header, never the consuming `.cpp` - see the
 `_N.h` note under "The carcass"), (2) match B against its own target shape - fetch its
 statement structure and rich asm like any unit (`pdb_fetch --function <B> --view
 structure` / `--view target`), and (3) track B's OWN `fuzzy_match_percent` - it shows
-up in `report.json` / the match DB like any function. A call that resolves but whose callee body is unverified
+up in `report.json` / the ledger like any function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
 
 **A cross-TU helper is DECLARED in a header with the module's `VOSTOK_<MODULE>_API`
@@ -189,7 +189,7 @@ jump-table dispatch:
   top `case`(s) and a `default: NODEFAULT();`. A value the target reaches *through* the
   table (e.g. a final `fld1`) is an explicit terminal `case`, not the `default`.
 
-## Match status (the match DB; the only in-source marker is `STATE[STUB]`)
+## Match status (the ledger; the only in-source marker is `STATE[STUB]`)
 In-source `%`/status markers go stale the moment a rebuild moves the score, so they
 are NOT written anymore. The source carries exactly two things:
 - `// STATE[STUB]` on a body that is not matched yet (still the carcass / a
@@ -217,14 +217,16 @@ see [`data_matching.md`](data_matching.md) and `python3 -m vostok data --help`.
 Its linked-image audit never feeds the function score; only definitions split
 into target COFF through the delink manifests enter objdiff's data denominator.
 
-The only hand-written records are ledger PARKS (`vostok ledger park <mangled> --cause`):
-- `SKIP` - parked; the cause is the concrete next step (covers the old
-  SKIPPED/BLOCKED: name the blocker in the cause).
-- `NOTE` - informational cause that queues ignore (a DONE-with-residual
-  explanation, inline-site evidence for a target-inlined body, ...).
-- `--requeue` - forget history+flags so queues offer the function again.
-The DB is committed; the ORCHESTRATOR is its single writer (regenerate via
-vostok build / regen-only refresh + flag + commit at run milestones) - dispatched
+The only hand-written records are ledger parks and attempt notes:
+- `vostok ledger park <mangled> --cause "..."` - stop working the function; the
+  cause is the concrete next step (name the blocker in it). `--cause` is the
+  verb's only flag.
+- `vostok ledger open <mangled>` - undo a park, so queues offer it again.
+- `vostok ledger tried <mangled> --note "..."` - record an attempt without
+  parking (a DONE-with-residual explanation, inline-site evidence for a
+  target-inlined body, ...).
+The ledger is committed; the ORCHESTRATOR is its single writer (regenerate via
+vostok build / regen-only refresh + park + commit at run milestones) - dispatched
 matchers/verifiers never edit it, they report parking/causes in their result
 lines instead.
 
@@ -272,7 +274,7 @@ matcher) - never drop them. Prefix your own with `claude@...`.
 **@-comments carry FACTS, never SCORES.** A match % (or fuzzy number, or
 report figure) in a comment goes stale the moment a rebuild moves it - that
 is the same disease the old `STATE[NN%]` markers died of; the numbers live in
-`report.json`/the match DB. Describe the WALL, not the percentage:
+`report.json`/the ledger. Describe the WALL, not the percentage:
 - BAD:  `claude@NOTE: 94% wall - target keeps vectora_allocator ctor out-of-line`
 - GOOD: `claude@NOTE: inline-vs-call wall - target keeps the
   vectora_allocator<void*>(base_allocator*) ctor out-of-line at the
@@ -283,7 +285,7 @@ are facts about the binary. Anything that re-measures on rebuild is not.
 
 "Why it didn't match / why I stopped" = a terse `claude@NOTE:` above the function
 (why stuck, what was tried - the non-matching note the next matcher reads first)
-plus the same conclusion as a match-DB `SKIP`/`NOTE` flag cause; long rationale
+plus the same conclusion as the ledger park cause or `tried --note`; long rationale
 goes in the commit message, never a comment block.
 
 
@@ -339,7 +341,7 @@ the STUB's `// FUNCTION BODY` carcass for the shape clues below, then deletes it
 done - it does not preserve or annotate it. The structure-verifier then checks the
 shape with the two-sided condensed structure-diff (next), run **on demand** - the
 diff and its verdict are NEVER embedded in source; the verdict goes in the commit
-message (the match DB re-derives the structure class on every DB regen). A clean 100%
+message (the ledger re-derives the structure class on every regen). A clean 100%
 match carries nothing.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
@@ -352,8 +354,8 @@ line gaps are suppressed, tallied as `blank-gaps` in the summary). That way the 
 where our build diverges from the target, not just the target shape. It is rerun on
 demand whenever needed - never pasted into the source. **The verdict (`STRUCTURE
 <MATCH|MISMATCH (size|quantity|both|order)> - <terse cause>`) goes in the commit
-message** (and, when the residual is permanent, a match-DB `NOTE`/`SKIP` flag
-cause). (The structure-verifier produces and owns these.)
+message** (and, when the residual is permanent, a ledger park cause or
+`tried --note`). (The structure-verifier produces and owns these.)
 
 **Each addressed statement IS a real source statement - that is the whole point of the
 structure.** The compiler emits one line-table entry (a debugger BREAKPOINT) per source

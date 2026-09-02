@@ -7,8 +7,8 @@ on disjoint file scopes; the orchestrator integrates each finished batch onto a
 single linear stack, rebuilds, and commits a measured ledger snapshot per
 batch.
 
-Branch: `campaign/render-matching`, stacked on `xray-2.0-prog-v0.100b` at
-`37eb3fbf6` (the closeout of the three-lane cherry-pick integration).
+Branch: `campaign/render-matching`, stacked on `xray-2.0-prog-v0.100b` at the
+closeout of the three-lane cherry-pick integration.
 
 ## Lane split (never overlapping)
 
@@ -54,7 +54,7 @@ regression.
 | B7 | **first sema-driven batch** - 6 condition/predicate shape fixes | 507 (19.2%) | 33.2% | - |
 | A9 | the two big debug renderers + static-linkage sweep | 549 (20.7%) | 34.9% | 45.96% |
 
-Health at A2 (`vostok derive diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
+Health at A2 (`git diff <campaign base> -- config/match_state.tsv`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
 carry a HELD `max` (LTO wobble - correctly left alone per the standing rule);
 the other three are small max resets from faithful structure re-work
