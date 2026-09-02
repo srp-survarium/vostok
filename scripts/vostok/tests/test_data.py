@@ -39,12 +39,14 @@ from vostok.data.pipeline import (
 )
 from vostok.data.render_relocs import (
     Access,
+    CallConeIndex,
     Datum,
     DatumIndex,
     Site,
     _accept_unique,
     _classify_extentless_comparison,
     _datum_token,
+    _direct_call_graph,
     _extentless_end,
     _first_diff,
     _function_data_rows,
@@ -107,6 +109,14 @@ class FunctionDataResolutionTests(unittest.TestCase):
             "OPEN",
         )
 
+    def test_exact_call_cone_settles_inline_boundary(self):
+        self.assertEqual(
+            _function_data_resolution(
+                "USE_DIFF", {}, cone_status="EXACT"
+            ),
+            "CALL_CONE_EXACT",
+        )
+
 
 class DataGateTests(unittest.TestCase):
     class _EmptyIndex:
@@ -141,6 +151,68 @@ class DataGateTests(unittest.TestCase):
         self.assertEqual(rows[0]["target_datum_count"], "0")
         self.assertEqual(rows[0]["base_datum_count"], "1")
         self.assertEqual(rows[0]["status"], "TARGET_DEFINITION_MISSING")
+        self.assertEqual(rows[0]["resolution"], "OPEN")
+
+    def test_call_cone_proves_datum_moved_from_callee_into_caller(self):
+        audit = [{
+            "pair_status": "BASE_ONLY",
+            "unit": "unit.cpp",
+            "function": "?function@@YAXXZ",
+            "target_function_rva": "0x1000",
+            "base_function_rva": "0x2000",
+            "target_target_rva": "-",
+            "base_target_rva": "0x3000",
+            "target_identity": "-",
+            "base_identity": "E:candidate_only",
+            "datum_status": "NO_TARGET_OWNER",
+        }]
+        target_cones = CallConeIndex(
+            {0x1000: frozenset({0x1100})},
+            {0x1100: frozenset({"E:candidate_only"})},
+        )
+        base_cones = CallConeIndex(
+            {}, {0x2000: frozenset({"E:candidate_only"})}
+        )
+        rows = _function_data_rows(
+            audit,
+            self._EmptyIndex(),
+            self._EmptyIndex(),
+            {},
+            target_cones,
+            base_cones,
+        )
+        self.assertEqual(rows[0]["status"], "TARGET_DEFINITION_MISSING")
+        self.assertEqual(rows[0]["cone_status"], "EXACT")
+        self.assertEqual(rows[0]["resolution"], "CALL_CONE_EXACT")
+        self.assertEqual(
+            rows[0]["cone_referent_paths"],
+            "E:candidate_only@T:0x1000>0x1100,B:0x2000",
+        )
+
+    def test_call_cone_does_not_acquit_a_wrong_datum(self):
+        audit = [{
+            "pair_status": "BASE_ONLY",
+            "unit": "unit.cpp",
+            "function": "?function@@YAXXZ",
+            "target_function_rva": "0x1000",
+            "base_function_rva": "0x2000",
+            "target_target_rva": "-",
+            "base_target_rva": "0x3000",
+            "target_identity": "-",
+            "base_identity": "E:candidate_only",
+            "datum_status": "NO_TARGET_OWNER",
+        }]
+        rows = _function_data_rows(
+            audit,
+            self._EmptyIndex(),
+            self._EmptyIndex(),
+            {},
+            CallConeIndex({}, {}),
+            CallConeIndex(
+                {}, {0x2000: frozenset({"E:candidate_only"})}
+            ),
+        )
+        self.assertEqual(rows[0]["cone_status"], "DIFF")
         self.assertEqual(rows[0]["resolution"], "OPEN")
 
     def test_aggregate_counts_only_open_resolution_as_debt(self):
@@ -202,6 +274,28 @@ class PEImageTests(unittest.TestCase):
             self.assertEqual(image.image_base, 0x10000)
             self.assertEqual(image.read_rva(0x301C, 8), bytes(range(0x1C, 0x20)) + bytes(4))
             self.assertEqual(image.base_relocations(), (0x3004,))
+
+    def test_direct_call_graph_uses_encoded_destination_not_display_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            data[0x200:0x205] = b"\xE8" + struct.pack("<i", 0x1010 - 0x1005)
+            path.write_bytes(data)
+            records = [
+                {
+                    "rva": 0x1000,
+                    "size": 8,
+                    "instructions": [{
+                        "off": 0, "len": 5, "text": "call ambiguous"
+                    }],
+                },
+                {"rva": 0x1010, "size": 1, "instructions": []},
+            ]
+            self.assertEqual(
+                _direct_call_graph(records, PEImage(path)),
+                {0x1000: frozenset({0x1010})},
+            )
 
 
 class DataIdentityTests(unittest.TestCase):

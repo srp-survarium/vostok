@@ -571,47 +571,41 @@ void bullet_physics_world::ray_query(
 	}
 }
 
-static const u8 s_convert_from_bullet_type[] = {
-    0x00, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
-    0x01, 0x04, 0x02, 0x04, 0x04, 0x03, 0xCC, 0xCC,
-    0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC
-};
-
 static collision::primitive_type from_bullet_shape_type( s32 type )
 {
-	switch ( s_convert_from_bullet_type[ type ] )
+	switch ( type )
 	{
-		case 0:	return collision::primitive_box;
-		case 1:	return collision::primitive_sphere;
-		case 3:	return collision::primitive_cylinder;
-		case 2:	return collision::primitive_capsule;
+		case BOX_SHAPE_PROXYTYPE:		return collision::primitive_box;
+		case SPHERE_SHAPE_PROXYTYPE:		return collision::primitive_sphere;
+		case CYLINDER_SHAPE_PROXYTYPE:	return collision::primitive_cylinder;
+		case CAPSULE_SHAPE_PROXYTYPE:	return collision::primitive_capsule;
 		default: NODEFAULT( );
 	}
 }
 
 static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape )
 {
-	switch ( s_convert_from_bullet_type[ bullet_shape->getShapeType( ) ] )
+	switch ( bullet_shape->getShapeType( ) )
 	{
-		case 0:
+		case BOX_SHAPE_PROXYTYPE:
 		{
 			btBoxShape const* bt_shape = static_cast< btBoxShape const* >( bullet_shape );
 			float3 half_extents = from_bullet( bt_shape->getHalfExtentsWithoutMargin( ) );
 			return half_extents;
 		}
-		case 1:
+		case SPHERE_SHAPE_PROXYTYPE:
 		{
 			btSphereShape const* bt_shape = static_cast< btSphereShape const* >( bullet_shape );
 			float3 radius( bt_shape->getRadius( ), bt_shape->getRadius( ), 0.0f );
 			return radius;
 		}
-		case 3:
+		case CYLINDER_SHAPE_PROXYTYPE:
 		{
 			btCylinderShape const* bt_shape = static_cast< btCylinderShape const* >( bullet_shape );
 			float3 half_extents = from_bullet( bt_shape->getHalfExtentsWithoutMargin( ) );
 			return half_extents;
 		}
-		case 2:
+		case CAPSULE_SHAPE_PROXYTYPE:
 		{
 			btCapsuleShape const* bt_shape = static_cast< btCapsuleShape const* >( bullet_shape );
 			float3 dimensions( bt_shape->getHalfHeight( ), bt_shape->getRadius( ), 0.0f );

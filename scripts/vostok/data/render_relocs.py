@@ -23,7 +23,7 @@ import json
 import math
 import re
 import struct
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -68,6 +68,10 @@ EXTENTLESS_COLUMNS = (
 FUNCTION_DATA_COLUMNS = (
     "unit", "function", "target_function_rvas", "base_function_rvas",
     "target_datum_count", "base_datum_count", "status", "resolution",
+    "target_cone_function_count", "base_cone_function_count",
+    "target_cone_datum_count", "base_cone_datum_count", "cone_status",
+    "cone_referent_paths", "cone_missing_target_datums",
+    "cone_extra_base_datums",
     "source_hash", "ledger_status",
     "missing_target_datums", "extra_base_datums",
     "missing_base_definitions", "missing_target_definitions",
@@ -346,12 +350,19 @@ def _owner_records(rows: list[dict]) -> dict[tuple[str, str], list[dict]]:
     return result
 
 
-def _load_sites(side: str, pairs: sema_pairing.Pairing,
-                ledger: dict[str, dict], module: str) -> dict[int, Site]:
-    records = _module_records(side, pairs, ledger, module)
+def _load_site_inventory(
+    side: str,
+    pairs: sema_pairing.Pairing,
+    ledger: dict[str, dict],
+) -> tuple[dict[str, dict[int, Site]], dict[int, tuple[Access, ...]]]:
+    """Load the access map once and retain both module and call-cone owners."""
+    records = pairs.target_records if side == "target" else pairs.base_records
     owners = _owner_records(records)
     path = paths.DATA_TARGET_ACCESS if side == "target" else paths.DATA_BASE_ACCESS
-    grouped: dict[int, set[Access]] = defaultdict(set)
+    grouped: dict[str, dict[int, set[Access]]] = defaultdict(
+        lambda: defaultdict(set)
+    )
+    by_function: dict[int, set[Access]] = defaultdict(set)
     for raw in _read_tsv(path):
         instruction = int(raw["instruction_rva"], 0)
         candidates = owners.get((raw["caller_mangled"], raw["caller_file"]), ())
@@ -363,10 +374,8 @@ def _load_sites(side: str, pairs: sema_pairing.Pairing,
         ]
         for owner in containing:
             ledger_row = sema_pairing.ledger_row(owner, ledger)
-            if not ledger_row or ledger_row.get("module") != module:
-                continue
             site = int(raw["site_rva"], 0)
-            grouped[site].add(Access(
+            access = Access(
                 site=site,
                 instruction=instruction,
                 target=int(raw["target_rva"], 0),
@@ -377,17 +386,39 @@ def _load_sites(side: str, pairs: sema_pairing.Pairing,
                 identity=raw["target_identity"],
                 instruction_text=raw["instruction"],
                 function=owner.get("mangled") or raw["caller_mangled"],
-                unit=ledger_row.get("unit") or owner.get("file") or raw["caller_file"],
+                unit=(ledger_row or {}).get("unit") or owner.get("file") or raw["caller_file"],
                 function_rva=owner["rva"],
                 function_size=owner["size"],
                 partner_rva=pairs.partner_rva(side, owner["rva"]),
-            ))
-    return {
-        site: Site(site, tuple(sorted(accesses, key=lambda row: (
-            row.function_rva, row.function, row.unit, row.instruction,
-        ))))
-        for site, accesses in grouped.items()
-    }
+            )
+            by_function[owner["rva"]].add(access)
+            module = str((ledger_row or {}).get("module") or "").strip()
+            if module:
+                grouped[module][site].add(access)
+
+    def make_sites(rows: dict[int, set[Access]]) -> dict[int, Site]:
+        return {
+            site: Site(site, tuple(sorted(accesses, key=lambda row: (
+                row.function_rva, row.function, row.unit, row.instruction,
+            ))))
+            for site, accesses in rows.items()
+        }
+
+    return (
+        {module: make_sites(rows) for module, rows in grouped.items()},
+        {
+            rva: tuple(sorted(accesses, key=lambda row: (
+                row.site, row.instruction, row.function, row.unit,
+            )))
+            for rva, accesses in by_function.items()
+        },
+    )
+
+
+def _load_sites(side: str, pairs: sema_pairing.Pairing,
+                ledger: dict[str, dict], module: str) -> dict[int, Site]:
+    modules, _ = _load_site_inventory(side, pairs, ledger)
+    return modules.get(module, {})
 
 
 def _expected_sites(side: str, image: PEImage, pairs: sema_pairing.Pairing,
@@ -1305,11 +1336,111 @@ def _token_is_available(
     return False
 
 
+def _direct_call_graph(records: list[dict], image: PEImage) -> dict[int, frozenset[int]]:
+    """Decode exact internal call and tail-jump destinations from image bytes."""
+    starts = {
+        row["rva"] for row in records
+        if isinstance(row.get("rva"), int)
+    }
+    graph: dict[int, set[int]] = defaultdict(set)
+    for record in records:
+        start = record.get("rva")
+        size = record.get("size")
+        if not isinstance(start, int) or not isinstance(size, int) or size <= 0:
+            continue
+        for instruction in record.get("instructions", ()):
+            offset = instruction.get("off")
+            length = instruction.get("len")
+            if not isinstance(offset, int) or not isinstance(length, int):
+                continue
+            if length not in {2, 5}:
+                continue
+            site = start + offset
+            raw = image.read_rva(site, length)
+            destination = None
+            if length == 5 and raw[0] in {0xE8, 0xE9}:
+                destination = site + 5 + struct.unpack_from("<i", raw, 1)[0]
+            elif length == 2 and raw[0] == 0xEB:
+                destination = site + 2 + struct.unpack_from("<b", raw, 1)[0]
+            if destination not in starts:
+                continue
+            if start <= destination < start + size:
+                continue
+            graph[start].add(destination)
+    return {rva: frozenset(callees) for rva, callees in graph.items()}
+
+
+@dataclasses.dataclass(frozen=True)
+class ConeEvidence:
+    functions: frozenset[int]
+    tokens: frozenset[str]
+    token_paths: dict[str, tuple[int, ...]]
+
+
+class CallConeIndex:
+    """Datum sets reachable through exact direct-call and tail-jump edges."""
+
+    def __init__(
+        self,
+        graph: dict[int, frozenset[int]],
+        tokens_by_function: dict[int, frozenset[str]],
+    ):
+        self.graph = graph
+        self.tokens_by_function = tokens_by_function
+
+    def evidence(self, roots: set[int]) -> ConeEvidence:
+        paths = {root: (root,) for root in sorted(roots)}
+        queue = deque(sorted(roots))
+        while queue:
+            current = queue.popleft()
+            for callee in sorted(self.graph.get(current, ())):
+                candidate = (*paths[current], callee)
+                previous = paths.get(callee)
+                if previous is not None and (len(previous), previous) <= (
+                    len(candidate), candidate
+                ):
+                    continue
+                paths[callee] = candidate
+                queue.append(callee)
+
+        token_paths: dict[str, tuple[int, ...]] = {}
+        for function, path in sorted(
+            paths.items(), key=lambda item: (len(item[1]), item[1])
+        ):
+            for token in sorted(self.tokens_by_function.get(function, ())):
+                token_paths.setdefault(token, path)
+        return ConeEvidence(
+            functions=frozenset(paths),
+            tokens=frozenset(token_paths),
+            token_paths=token_paths,
+        )
+
+
+def _function_token_index(
+    accesses: dict[int, tuple[Access, ...]],
+    index: DatumIndex,
+    peer: DatumIndex,
+) -> dict[int, frozenset[str]]:
+    return {
+        function_rva: frozenset(
+            _datum_token(index, access.target, access.identity, peer)
+            for access in rows
+        )
+        for function_rva, rows in accesses.items()
+    }
+
+
+def _format_cone_path(path: tuple[int, ...]) -> str:
+    return ">".join(f"{rva:#x}" for rva in path)
+
+
 def _function_data_rows(
     audit: list[dict[str, str]],
     target_index: DatumIndex,
     base_index: DatumIndex,
     ledger: dict[str, dict],
+    target_cones: CallConeIndex | None = None,
+    base_cones: CallConeIndex | None = None,
 ) -> list[dict[str, str]]:
     groups: dict[tuple[str, str], dict] = defaultdict(lambda: {
         "paired": False,
@@ -1401,8 +1532,53 @@ def _function_data_rows(
         else:
             status = "USE_DIFF"
 
+        cone_status = "NOT_CHECKED"
+        target_cone_function_count = base_cone_function_count = "-"
+        target_cone_datum_count = base_cone_datum_count = "-"
+        cone_referent_paths = "-"
+        cone_missing = cone_extra = "-"
+        if status == "EXACT":
+            cone_status = "DIRECT_EXACT"
+        elif target_cones is not None and base_cones is not None:
+            target_evidence = target_cones.evidence({
+                int(rva, 0) for rva in group["target_rvas"]
+            })
+            base_evidence = base_cones.evidence({
+                int(rva, 0) for rva in group["base_rvas"]
+            })
+            target_cone_function_count = str(len(target_evidence.functions))
+            base_cone_function_count = str(len(base_evidence.functions))
+            target_cone_datum_count = str(len(target_evidence.tokens))
+            base_cone_datum_count = str(len(base_evidence.tokens))
+            cone_missing_tokens = sorted(
+                target_evidence.tokens - base_evidence.tokens
+            )
+            cone_extra_tokens = sorted(
+                base_evidence.tokens - target_evidence.tokens
+            )
+            cone_status = (
+                "EXACT"
+                if not cone_missing_tokens and not cone_extra_tokens
+                else "DIFF"
+            )
+            cone_missing = ";".join(cone_missing_tokens) or "-"
+            cone_extra = ";".join(cone_extra_tokens) or "-"
+            moved = []
+            for token in sorted(set(missing) | set(extra)):
+                target_path = target_evidence.token_paths.get(token)
+                base_path = base_evidence.token_paths.get(token)
+                if target_path is None or base_path is None:
+                    continue
+                moved.append(
+                    f"{token}@T:{_format_cone_path(target_path)},"
+                    f"B:{_format_cone_path(base_path)}"
+                )
+            cone_referent_paths = ";".join(moved) or "-"
+
         ledger_row = ledger.get(function, {})
-        resolution = _function_data_resolution(status, ledger_row)
+        resolution = _function_data_resolution(
+            status, ledger_row, cone_status=cone_status
+        )
 
         result.append({
             "unit": unit,
@@ -1417,6 +1593,14 @@ def _function_data_rows(
             "base_datum_count": str(len(base_tokens)),
             "status": status,
             "resolution": resolution,
+            "target_cone_function_count": target_cone_function_count,
+            "base_cone_function_count": base_cone_function_count,
+            "target_cone_datum_count": target_cone_datum_count,
+            "base_cone_datum_count": base_cone_datum_count,
+            "cone_status": cone_status,
+            "cone_referent_paths": cone_referent_paths,
+            "cone_missing_target_datums": cone_missing,
+            "cone_extra_base_datums": cone_extra,
             "source_hash": ledger_row.get("hash") or "-",
             "ledger_status": ledger_row.get("status") or "-",
             "missing_target_datums": describe("target", missing),
@@ -1432,16 +1616,18 @@ def _function_data_rows(
 
 
 def _function_data_resolution(
-    raw_status: str, ledger_row: dict[str, object],
+    raw_status: str,
+    ledger_row: dict[str, object],
+    *,
+    cone_status: str = "NOT_CHECKED",
 ) -> str:
     """Separate raw relocation equality from hash-scoped byte proof.
 
-    Direct datum ownership moves across function boundaries under LTCG.  A raw
-    USE_DIFF therefore remains valuable evidence.  Only a byte-exact result for
-    this exact source hash may close it automatically: ordinary parked ledger
-    notes describe code-matching work and are not data-audit evidence.  This is
-    deliberately conservative so an old generic wall cannot hide a newly
-    exposed wrong value.
+    Direct datum ownership moves across function and overlapping PDB-owner
+    boundaries under LTCG. A raw USE_DIFF therefore remains valuable evidence.
+    It closes only through byte proof for this source hash or an independently
+    decoded call cone with the same complete datum set. Ordinary parked ledger
+    notes describe code-matching work and are not data-audit evidence.
     """
     if raw_status == "EXACT":
         return "EXACT"
@@ -1451,6 +1637,8 @@ def _function_data_resolution(
     maximum = ledger_row.get("max")
     if isinstance(maximum, (int, float)) and maximum >= 100:
         return "HASH_MAX_EXACT"
+    if cone_status == "EXACT":
+        return "CALL_CONE_EXACT"
     return "OPEN"
 
 
@@ -1558,6 +1746,8 @@ def _write_markdown(audit: list[dict[str, str]],
         f"{sum(count for status, count in report['function_data_status'].items() if status != 'EXACT'):,}",
         f"- Open function datum-use rows: "
         f"{report['function_data_resolution'].get('OPEN', 0):,}",
+        f"- Direct differences proved equal over decoded call cones: "
+        f"{report['function_data_resolution'].get('CALL_CONE_EXACT', 0):,}",
         "",
         "Pairing modes: " + ", ".join(
             f"`{name}`={count:,}" for name, count in report["pair_kind"].items()
@@ -1606,6 +1796,10 @@ def _write_markdown(audit: list[dict[str, str]],
         "window proved elsewhere by aligned relocation evidence.",
         "`CURRENT_EXACT` means the current body is byte-exact; `HASH_MAX_EXACT`",
         "means this source-body hash previously emitted the retail body byte-for-byte.",
+        "`CALL_CONE_EXACT` means exact E8 call and E9/EB tail-jump decoding",
+        "reaches the same deduplicated datum set on both sides. The TSV keeps",
+        "both cone sizes and the shortest retail/base paths for every direct",
+        "referent that moved across an inline or overlapping-owner boundary.",
         "Ordinary parked code-matching notes do",
         "not close datum-use rows; every other raw difference remains `OPEN`",
         "until byte proof or dedicated data-audit evidence settles it.",
@@ -1623,9 +1817,9 @@ def _write_markdown(audit: list[dict[str, str]],
             "by their whole normalized bytes, so folded constants do not depend",
             "on which TU supplied their symbol.",
             "",
-            "| Class | Resolution | Unit | Function | Retail/base datums | Missing retail "
+            "| Class | Resolution | Cone | Unit | Function | Retail/base datums | Missing retail "
             "uses | Extra candidate uses | Missing definitions |",
-            "|---|---|---|---|---:|---|---|---|",
+            "|---|---|---|---|---|---:|---|---|---|",
         ))
         for row in different_functions:
             missing_definitions = "; ".join(
@@ -1635,9 +1829,10 @@ def _write_markdown(audit: list[dict[str, str]],
                 ) if value != "-"
             ) or "-"
             lines.append(
-                "| `{}` | `{}` | `{}` | `{}` | `{}/{}` | `{}` | `{}` | `{}` |".format(
+                "| `{}` | `{}` | `{}` | `{}` | `{}` | `{}/{}` | `{}` | `{}` | `{}` |".format(
                     row["status"],
                     row["resolution"],
+                    row["cone_status"],
                     _markdown_cell(row["unit"]),
                     _markdown_cell(row["function"]),
                     row["target_datum_count"], row["base_datum_count"],
@@ -1890,14 +2085,67 @@ def _inputs() -> dict[str, str]:
     }
 
 
-def refresh(module: str = "render") -> dict:
-    artifacts = _artifacts(module)
+@dataclasses.dataclass(frozen=True)
+class AuditContext:
+    pairs: sema_pairing.Pairing
+    ledger: dict[str, dict]
+    target_image: PEImage
+    base_image: PEImage
+    target_index: DatumIndex
+    base_index: DatumIndex
+    target_sites: dict[str, dict[int, Site]]
+    base_sites: dict[str, dict[int, Site]]
+    target_cones: CallConeIndex
+    base_cones: CallConeIndex
+
+
+def build_audit_context() -> AuditContext:
+    """Build image-wide evidence once for an all-module gate refresh."""
     pairs = sema_pairing.Pairing()
     ledger = store.load()
     target_image = PEImage(pipeline.image_paths("target")[0])
     base_image = PEImage(pipeline.image_paths("base")[0])
-    target_sites = _load_sites("target", pairs, ledger, module)
-    base_sites = _load_sites("base", pairs, ledger, module)
+    target_index = _datum_index("target", target_image, pairs)
+    base_index = _datum_index("base", base_image, pairs)
+    target_sites, target_accesses = _load_site_inventory(
+        "target", pairs, ledger
+    )
+    base_sites, base_accesses = _load_site_inventory("base", pairs, ledger)
+    target_tokens = _function_token_index(
+        target_accesses, target_index, base_index
+    )
+    base_tokens = _function_token_index(base_accesses, base_index, target_index)
+    return AuditContext(
+        pairs=pairs,
+        ledger=ledger,
+        target_image=target_image,
+        base_image=base_image,
+        target_index=target_index,
+        base_index=base_index,
+        target_sites=target_sites,
+        base_sites=base_sites,
+        target_cones=CallConeIndex(
+            _direct_call_graph(pairs.target_records, target_image),
+            target_tokens,
+        ),
+        base_cones=CallConeIndex(
+            _direct_call_graph(pairs.base_records, base_image),
+            base_tokens,
+        ),
+    )
+
+
+def refresh(module: str = "render", context: AuditContext | None = None) -> dict:
+    artifacts = _artifacts(module)
+    context = context or build_audit_context()
+    pairs = context.pairs
+    ledger = context.ledger
+    target_image = context.target_image
+    base_image = context.base_image
+    target_index = context.target_index
+    base_index = context.base_index
+    target_sites = context.target_sites.get(module, {})
+    base_sites = context.base_sites.get(module, {})
     expected_target = _expected_sites(
         "target", target_image, pairs, ledger, module
     )
@@ -1912,8 +2160,6 @@ def refresh(module: str = "render") -> dict:
         )
 
     site_pairs, used_base = _pair_sites(target_sites, base_sites)
-    target_index = _datum_index("target", target_image, pairs)
-    base_index = _datum_index("base", base_image, pairs)
     audit = []
     comparison_cache: dict[tuple[int, int, int], dict[str, str]] = {}
     for target_rva, target_site in sorted(target_sites.items()):
@@ -1940,13 +2186,20 @@ def refresh(module: str = "render") -> dict:
     extentless = _extentless_rows(
         audit, target_index, base_index, target_image, base_image
     )
-    function_data = _function_data_rows(audit, target_index, base_index, ledger)
+    function_data = _function_data_rows(
+        audit,
+        target_index,
+        base_index,
+        ledger,
+        context.target_cones,
+        context.base_cones,
+    )
     _write_tsv(artifacts.audit, AUDIT_COLUMNS, audit)
     _write_tsv(artifacts.extentless, EXTENTLESS_COLUMNS, extentless)
     _write_tsv(artifacts.function_data, FUNCTION_DATA_COLUMNS, function_data)
 
     report = {
-        "schema": 3,
+        "schema": 4,
         "module": module,
         "inputs": _inputs(),
         "target_relocation_sites": len(target_sites),
@@ -2034,7 +2287,7 @@ def check(module: str = "render") -> int:
               ", ".join(map(str, missing_paths)))
         return 1
     report = _load_report(module)
-    if report.get("schema") != 3 or report.get("module") != module:
+    if report.get("schema") != 4 or report.get("module") != module:
         print(f"unsupported {module} relocation report schema")
         return 1
     if report.get("inputs") != _inputs():

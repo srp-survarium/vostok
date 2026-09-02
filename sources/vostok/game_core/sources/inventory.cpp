@@ -126,7 +126,7 @@ void inventory::setup_demo_profile( )
 
 	for ( u32 i = 0 ; i < ITEM_COUNT ; ++i )
 	{
-		profile_slot_enum current = ammunition_slots[i];
+		profile_slot_enum current = item_slots[i];
 		inventory_item_ptr& iitem = item_in_slot( current );
 		if ( iitem )
 			iitem->set_amount( 100 );
@@ -165,7 +165,7 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 
 	for ( u32 i = 0 ; i < ITEM_COUNT ; ++i )
 	{
-		profile_slot_enum current = ammunition_slots[i];
+		profile_slot_enum current = item_slots[i];
 		slot = &profile.slots[current];
 
 		if ( slot->item.id )

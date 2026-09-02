@@ -91,7 +91,7 @@ vostok::animation::mixing::animation_interval animation_lexeme_parameters::creat
 	cubic_spline_skeleton_animation_pinned pinned_animation( animation );
 	float const animation_length	= pinned_animation->length_in_frames()/default_fps;
 
-	u32 const channel_id			= pinned_animation->event_channels().get_channel_id( animation_intervals_channel_id );
+	u32 const channel_id			= pinned_animation->event_channels().get_channel_id( "anim_intervals" );
 	bool const channel_id_exists	= channel_id != u32(-1);
 
 	event_channel const* const channel	= channel_id_exists ? &pinned_animation->event_channels().channel( channel_id ) : 0;

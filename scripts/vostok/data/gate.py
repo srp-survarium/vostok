@@ -81,10 +81,11 @@ def _open_rows(module: str) -> list[dict[str, str]]:
 
 def refresh() -> dict:
     """Refresh every ledger module and write the aggregate denominator."""
+    context = render_relocs.build_audit_context()
     module_rows = {}
     open_rows = []
     for module in modules():
-        report = render_relocs.refresh(module)
+        report = render_relocs.refresh(module, context)
         module_rows[module] = _module_row(module, report)
         open_rows.extend(_open_rows(module))
         print(
@@ -94,7 +95,7 @@ def refresh() -> dict:
         )
     render_relocs._write_tsv(paths.DATA_FUNCTION_OPEN, OPEN_COLUMNS, open_rows)
     report = {
-        "schema": 2,
+        "schema": 3,
         "inputs": _inputs(),
         "summary": _summary(module_rows),
         "modules": module_rows,
@@ -131,7 +132,7 @@ def check(*, require_zero: bool = False) -> int:
         )
         return 1
     report = load_report()
-    if report.get("schema") != 2:
+    if report.get("schema") != 3:
         print("unsupported aggregate datum-use report schema")
         return 1
     if report.get("inputs") != _inputs():
