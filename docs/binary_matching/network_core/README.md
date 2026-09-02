@@ -20,7 +20,7 @@ rewrite. When matching the units below, read the legacy file FIRST - the bodies
 often port nearly verbatim (proven: the network module's ported `send_order.h`
 dtor/execute came out byte-identical):
 
-| network_core unit (fuzzy) | legacy ancestor (`git show :temp/network_legacy/sources/<file>`; the tree is deleted) |
+| network_core unit (fuzzy) | legacy ancestor (`git show 885e1d4a4:temp/network_legacy/sources/<file>`; the tree is deleted) |
 |---|---|
 | `tcp_packet_socket_inline.h` (8%) | `packet_socket.h` + `packet_socket_inline.h` - same template, same methods (`send`, `start_receiving`, `on_packet_size_received<T>`, `on_packet_has_been_sent`, `delete_packet`) |
 | `handler_allocator.h` (0%) | `handler_allocator.h` - both are the boost-asio allocation example, near-verbatim |

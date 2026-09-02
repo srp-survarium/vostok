@@ -13,7 +13,7 @@
 #include <vostok/render/facade/scene_renderer.h>
 
 // the compiland keeps its legacy name: the 2011/12 TU defined the whole
-// object_*_visual family (git show :temp/game_legacy/object_solid_visual.h), but
+// object_*_visual family (git show 885e1d4a4:temp/game_legacy/object_solid_visual.h), but
 // only object_particle_visual survived into the shipped PDB (source lines
 // 455-491 of a much larger file)
 

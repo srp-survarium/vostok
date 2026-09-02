@@ -12,14 +12,14 @@
 - Carcass rebuilt from canonical structure (see
   [../library_carcass_rebuild.md](../library_carcass_rebuild.md)); the 2011/12
   code it replaced was parked in `temp/game_legacy/`, since deleted from the
-  tree - `git show :temp/game_legacy/<file>` for body reference.
+  tree - `git show 885e1d4a4:temp/game_legacy/<file>` for body reference.
 
 ## The shared-namespace header triage
 
 `binaries/structure/target/headers/survarium/` is one flat pool for the whole
 `survarium::` namespace - game, game_core and the pc exe together (728 files).
 The rebuild queue (`temp/structure_queue/`) was seeded with ALL of them, then
-triaged; the triage log (`git show :temp/triage_log.md`) records every
+triaged; the triage log (`git show 885e1d4a4:temp/triage_log.md`) records every
 removal with its reason:
 
 - pass 1 (238): basename / nested `outer__inner` / `_N`-variant matches against
@@ -45,7 +45,7 @@ complete.
 
 - **The module is an evolution of the parked legacy code** - many type/file
   names survived into the shipped build, so the legacy bodies
-  (`git show :temp/game_legacy/<file>`) are strong priors, not verified
+  (`git show 885e1d4a4:temp/game_legacy/<file>`) are strong priors, not verified
   matches. The simulation core was split out into
   `game_core` (matched separately); the legacy network client wiring
   (`game_net_client.*`) was replaced by `vostok::network`'s

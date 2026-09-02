@@ -85,7 +85,7 @@ float g_max_angular_velocity[ 2 ] = {
 };
 
 // TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
-// in git show :temp/triage_log.md) - the type of the s_max_angular_velocity_command static
+// in git show 885e1d4a4:temp/triage_log.md) - the type of the s_max_angular_velocity_command static
 class max_angular_velocity_command : public console_commands::cc_float {
 	typedef console_commands::cc_float super;
 

@@ -32,7 +32,7 @@ static vostok::console_commands::cc_bool s_npc_debug_draw_command( "npc_debug_dr
 namespace survarium {
 
 // TU-local (canonical headers/hit_object.h; owner mapping in
-// git show :temp/triage_log.md) - the on_hit_event parameter type
+// git show 885e1d4a4:temp/triage_log.md) - the on_hit_event parameter type
 struct hit_object {
 
 public:
