@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "game_generate_shaders.h"
 #include <vostok/render/world.h>
 #include <vostok/render/facade/game_renderer.h>

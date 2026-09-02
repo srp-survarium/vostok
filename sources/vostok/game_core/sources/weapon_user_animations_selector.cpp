@@ -19,6 +19,7 @@
 // None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/player_logic_base_state.h>		// current_state().serialize/deserialize virtuals
 #include <vostok/network_core/udp_match_packet.h>

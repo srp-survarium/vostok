@@ -12,8 +12,6 @@
 
 namespace survarium {
 
-static float s_aim_transition_time = 0.3f;
-
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
 	pcstr										identifier,
@@ -71,7 +69,7 @@ weapon_lexeme_pair weapon_core_aimed_state::get_weapon_lexeme_pair( mutable_buff
 		u32( -1 ),
 		1.0f,
 		animation::mixing::play_cyclically,
-		animation::linear_interpolator( s_aim_transition_time )
+		animation::linear_interpolator( 0.3f )
 	);
 }
 

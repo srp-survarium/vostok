@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "human_npc.h"
 #include "game_world.h"				// base game_object_ + ref members source off game_world
 #include "game.h"					// ctor: game_world.get_game().get_sound_world()/renderer()

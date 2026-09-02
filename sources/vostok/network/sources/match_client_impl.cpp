@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "match_client_impl.h"
 #include <vostok/network/message_types.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "victory_items_container.h"
 #include <vostok/game_core/usable_object_user_data.h>
 #include <vostok/game_core/collision_user.h>

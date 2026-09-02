@@ -5,7 +5,6 @@
 
 #include <vostok/collision/game_object.h>
 #include <vostok/loose_ptr_base.h>
-#include <vostok/game_core/damage_zone_core.h>
 
 namespace vostok {
 namespace collision {
@@ -19,8 +18,11 @@ namespace physics {
 namespace survarium {
 
 class bullet;
+class damage_zone_core;
 struct hit_initiator;
 class player_actions_subscriber;
+
+typedef resources::resource_ptr< damage_zone_core, resources::unmanaged_intrusive_base > damage_zone_core_ptr;
 
 struct hit_receiver : public collision::game_object , public loose_ptr_base {
 public:
