@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "lobby_menu.h"
 #include "game_project.h" // complete simple_game_project for the resource_ptr dtor
@@ -74,10 +74,6 @@ void lobby_menu::on_activate( )
 
 // claude@NOTE: target GFx uses slot +0xC0 with value 2; the available wrapper emits
 // slot +0x34 with value 0. Target LTCG also passes hide_movie arguments in EAX/EDX.
-
-
-
-
 
 void lobby_menu::on_deactivate( )
 {
@@ -187,6 +183,7 @@ void lobby_menu::switch_to_level_loading( )
 }
 
 // claude@NOTE: source and LOG geometry match; residual is LTCG register arguments/inlining.
+#line 189
 void lobby_menu::on_client_status_received( lobby::query_info_types type )
 {
 	switch ( type )
@@ -216,10 +213,6 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 		case lobby::in_match_making_order:
 		case lobby::in_match:
 			break;
-
-
-
-
 
 		case lobby::in_match_making:
 			show_match_making( true );
@@ -299,6 +292,7 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 	}
 }
 // claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
+#line 302
 void lobby_menu::on_friendship_status_recivied(
 	const messaging::friendship_actions_enum	type
 )
@@ -326,6 +320,7 @@ void lobby_menu::on_friendship_status_recivied(
 	}
 }
 // claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
+#line 328
 void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enum op_type )
 {
 	switch ( op_type )
@@ -339,11 +334,6 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 		lobby_client( ).query_profile_contents(
 			lobby_client( ).profile( m_selected_profile ).profile_id );
 		break;
-
-
-
-
-
 
 	case skills_tree_action:
 		lobby_client( ).query_client_status( lobby::q_player_skills );	// 8
@@ -403,20 +393,15 @@ void lobby_menu::request_status_from_server( u32 delay_ms )
 	if ( m_in_destroying )
 		return;
 
-
-
-
 	u32 const current_time	= get_game( ).game_time_ms( );
 
 	scheduler( ).register_for_update(
 		&m_update_status_handler, boost::bind( &lobby_menu::request_status_from_server_impl, this, _1, _2 ),
 		true, delay_ms, 1, current_time );
 
-
-
-
 }
 
+#line 419
 void lobby_menu::request_status_from_server_impl( const u32 frame_delta_ms, const u32 current_time_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );

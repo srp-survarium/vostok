@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "debug_draw_lines_command.h"
 #include <vostok/render/engine/world.h>
-
 namespace vostok {
 namespace render {
 namespace debug {

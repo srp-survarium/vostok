@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "temporal_projection_matrix_modifier.h"
 #include "renderer_context.h"
 #include "scene_view.h"
-
 namespace vostok {
 namespace render {
 

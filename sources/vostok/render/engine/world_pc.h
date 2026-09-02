@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED
-
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/render/facade/environment_probe_generate_parameters.h>
 #include <vostok/render/facade/sky_ambient_occlusion_map_generate_parameters.h>

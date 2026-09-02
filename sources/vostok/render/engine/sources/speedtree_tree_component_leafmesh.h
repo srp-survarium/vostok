@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_COMPONENT_LEAFMESH_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_COMPONENT_LEAFMESH_H_INCLUDED
-
 #include "speedtree_tree.h"
 
 namespace vostok {

@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_light_propagation_volumes.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include "shared_names.h"
-
 namespace vostok {
 namespace render {
 

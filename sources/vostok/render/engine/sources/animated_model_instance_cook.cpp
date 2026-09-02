@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "animated_model_instance_cook.h"
-
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/render/facade/model.h>
 

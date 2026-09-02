@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.diff.enums_compare - compare enum definitions between the BASE and TARGET
 pdb-parser structure dumps.

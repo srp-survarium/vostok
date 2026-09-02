@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include <vostok/game_core/ik_processor.h>
 #include <vostok/game_core/ik_utils.h>		// get_bone_matrix_in_object_space decl (VOSTOK_GAME_CORE_API)

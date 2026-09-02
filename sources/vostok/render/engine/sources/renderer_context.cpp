@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "renderer_context.h"
-
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/res_texture.h>

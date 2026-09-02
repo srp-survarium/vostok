@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_SOURCE_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SHADER_CONSTANT_SOURCE_H_INCLUDED
-
 #include <new>
 
 namespace vostok {

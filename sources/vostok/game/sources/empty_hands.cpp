@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "empty_hands.h"
 #include <vostok/game_core/base_player.h>
@@ -22,10 +22,6 @@ namespace survarium {
 
 static float s_aim_transition_time = 0.3f;
 
-
-
-
-
  empty_hands::empty_hands( resources::managed_resource_ptr* animations, const u32 animations_count ) :
 	m_user( 0 ),
 	m_animations( animations ),
@@ -39,9 +35,6 @@ void empty_hands::activate( base_player& user, engine& engine )
 	m_user		= &user;
 	m_transform	= user.get_transform( );
 }
-
-
-
 
 animation::mixing::expression empty_hands::selected_animations( mutable_buffer& buffer, const bool is_third_view ) const
 {

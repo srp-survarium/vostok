@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.blocks - THE verdict view: same shape or not?
 
 `blocks --diff` aligns the two CFGs by CONTENT (equal whole blocks anchor the

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Native msvcr90 for the build prefix.
 
 MSVC composes template-instance UDT display names by undecorating the mangled

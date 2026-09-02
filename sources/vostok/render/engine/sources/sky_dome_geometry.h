@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SKY_DOME_GEOMETRY_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SKY_DOME_GEOMETRY_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/math_float2.h>
 #include <vostok/math_float4.h>

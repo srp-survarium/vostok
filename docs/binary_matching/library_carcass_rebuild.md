@@ -9,7 +9,8 @@ rebuilt clean from `feature/agentic-matching-loop-2`).
 This is the *clean redo* of the older patch-in-place approach (PR #267's
 `enabling_a_library.md`, never merged - its content is subsumed here). Before
 replacing the old per-type files, move them to `temp/<module>_legacy/`; that
-recoverable tree is the topology/body-salvage queue. Regenerate every interface from
+recoverable tree is the topology/body-salvage queue (delete it once the harvest
+closes - git history keeps it, nothing under `temp/` stays tracked). Regenerate every interface from
 the canonical dump using a separate emptying structure queue as the proof of type
 completeness. Drain the two queues together, one real header and its related methods
 at a time. Legacy headers recover file placement, grouping, includes, and candidate

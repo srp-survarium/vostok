@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_gbuffer.h"
-
 #include "effect_fill_reflective_shadow_map.h"
 #include "geometry_type.h"
 #include "grass_world.h"

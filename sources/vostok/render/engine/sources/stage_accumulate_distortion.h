@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_ACCUMULATE_DISTORTION_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_ACCUMULATE_DISTORTION_H_INCLUDED
-
 #include "stage.h"
 
 namespace vostok {

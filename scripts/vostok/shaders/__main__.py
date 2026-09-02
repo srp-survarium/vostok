@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """`python3 -m vostok.shaders <verb>` - shipped-shader coverage and roundtrip.
 
     coverage                 shipped names vs recovered sources, with counts

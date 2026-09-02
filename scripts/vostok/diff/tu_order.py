@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """tu_order - per-TU function definition-order diff (TARGET vs BASE).
 
 Emits the ordered list of a translation unit's function signatures - one

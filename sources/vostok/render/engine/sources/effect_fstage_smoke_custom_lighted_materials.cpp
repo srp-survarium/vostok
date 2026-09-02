@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_fstage_smoke_custom_lighted_materials.h"
 #include "blend_mode.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/custom_config_value.h>
-
 namespace vostok {
 namespace render {
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_STATISTICS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STATISTICS_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/fixed_string.h>
 #include <vostok/render/core/quasi_singleton.h>

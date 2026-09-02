@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_MODEL_COOKER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_MODEL_COOKER_H_INCLUDED
-
 #include <vostok/animation/skeleton.h>
 #include <vostok/render/facade/model.h>
 #include <vostok/resources_cook_classes.h>

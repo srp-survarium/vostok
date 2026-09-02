@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """One-shot clangd queries over the generated compile_commands.json - source
 navigation for humans and agents without an editor: where is this defined,
 who references it, what is its type.

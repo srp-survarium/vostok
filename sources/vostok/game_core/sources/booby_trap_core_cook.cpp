@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include <vostok/game_core/booby_trap_core_cook.h>
 
@@ -26,8 +26,6 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 	ASSERT( UNKNOWN_EXPRESSION );
 	pcstr model = (pcstr)config->get_root( )["data"]["model_armed"];
 
-
-
 	fixed_string< 260 > aabb_path;
 	aabb_path.assignf( "resources/models/%s.model/render/export_properties", model );
 	resources::request requests[1] = {
@@ -44,6 +42,7 @@ void booby_trap_core_cook::translate_query( resources::query_result_for_cook& pa
 	);
 }
 
+#line 50
 void booby_trap_core_cook::on_subresources_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );

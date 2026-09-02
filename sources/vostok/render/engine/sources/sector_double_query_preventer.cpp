@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "sector_double_query_preventer.h"
-
 #include <vostok/math_randoms_generator.h>
 #include <vostok/render/engine/vertex_colored.h>
 

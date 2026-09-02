@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_MATERIAL_EFFECTS_INSTANCE_COOK_DATA_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_MATERIAL_EFFECTS_INSTANCE_COOK_DATA_H_INCLUDED
-
 #include <vostok/render/facade/cull_mode.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include <vostok/resources_unmanaged_resource.h>

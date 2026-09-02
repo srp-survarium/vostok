@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "game_generate_shaders.h"
 #include <vostok/render/world.h>
@@ -152,8 +152,6 @@ void generate_shaders_world::tick( u32 current_frame_id )
 
 	debug::debug_message_box( "shaders generated" );
 	debug::terminate( "" );
-
-
 
 	++tick_id;
 

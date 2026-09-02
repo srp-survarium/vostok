@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 // claude@VERIFY (structure, 2026-06-13): every body in this TU is a confirmed
 // STRUCTURE MATCH (statement quantity + order). The low fuzzy% on several is a
 // header-level, cross-unit byte wall, NOT a per-TU structure defect:

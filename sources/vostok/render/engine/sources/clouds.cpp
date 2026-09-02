@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "clouds.h"
 #include <vostok/console_command.h>
-
 static float s_clouds_time_value = 0.0f;
 static vostok::console_commands::cc_float s_clouds_time( "clouds_time", s_clouds_time_value, 0.0f, 1.0f, false, vostok::console_commands::command_type_engine_internal );
 

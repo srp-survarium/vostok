@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "model_cooker.h"
 #include <vostok/render/facade/model.h>
 #include <vostok/render/static_model_instance_user_data.h>
 #include "render_model_skeleton.h"
-
 namespace vostok {
 namespace render {
 static_model_instance_cook::static_model_instance_cook( ) : resources::translate_query_cook( resources::static_model_instance_class, reuse_false, use_current_thread_id )

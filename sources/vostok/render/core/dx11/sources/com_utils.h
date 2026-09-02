@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_SOURCES_COM_UTILS_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SOURCES_COM_UTILS_H_INCLUDED
-
 template < typename com_type >
 inline void safe_release( com_type*& object )
 {

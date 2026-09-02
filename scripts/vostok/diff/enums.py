@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.diff.enums - diff the TARGET enum set (the original game, ground truth) against
 our BASE enum set, and maintain docs/binary_matching/enum_queue.md as a PERSISTENT

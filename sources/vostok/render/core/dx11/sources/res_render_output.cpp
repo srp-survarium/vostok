@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/res_render_output.h>
 #include <vostok/render/core/res_texture.h>
@@ -5,7 +6,6 @@
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/options.h>
-
 static pcstr const depth_render_target_texture_name = "$user$depth";
 
 namespace vostok {

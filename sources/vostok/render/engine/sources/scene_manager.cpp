@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/common_types.h>
 #include "render_output_window.h"
 #include "scene.h"
 #include "scene_manager.h"
 #include "scene_view.h"
-
 namespace vostok {
 namespace render {
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """create-wine-prefix.py - the local Survarium PLAY environment.
 
 Deliberately flat, not part of the `vostok` package: this provisions a machine

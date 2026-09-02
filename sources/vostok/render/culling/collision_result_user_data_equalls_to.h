@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CULLING_COLLISION_RESULT_USER_DATA_EQUALLS_TO_H_INCLUDED
 #define VOSTOK_RENDER_CULLING_COLLISION_RESULT_USER_DATA_EQUALLS_TO_H_INCLUDED
-
 #include <vostok/collision/object.h>
 
 namespace vostok {

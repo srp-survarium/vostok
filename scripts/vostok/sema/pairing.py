@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.pairing - which base function IS this target function.
 
 sema used to ask `binaries/match.db` for the pairing. That was a category

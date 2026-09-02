@@ -1,5 +1,10 @@
 # render legacy-body harvest — campaign log
 
+> Closed record (2026-07-31). `temp/render_legacy/`, `temp/render_harvest/` and the
+> triage logs were deleted from the tree. Bodies: `git show 8bb5b3dfc:temp/render_legacy/<path>`
+> (the last revision holding them); logs: `git show 3320ded27:temp/render_legacy/triage_log.md`
+> and `git show 3320ded27:temp/render_structure_queue_triage.md`.
+
 Bring the original render libraries' bodies (parked in `temp/render_legacy/`)
 into the enabled carcass, top-down. This is the missed legacy-harvesting phase
 of the render carcass rebuild: the structure queue is drained, but 1,826
@@ -40,7 +45,7 @@ Carcass state at baseline:
 | BASENAME | 599 | same-stem counterpart in the new tree — port bodies, then delete |
 | SYMBOL | 62 | defined type found under another new-tree file — port there |
 | DEAD | 195 | defines classes with ZERO target-symbol evidence (old `blender_*` shader system, `du_*` debug prims, hw_wrapper era) — retire with triage note |
-| DX9 | 46 | DX9 backend; target exe is DX11-only, match.db has 0 dx9 units — retire wholesale |
+| DX9 | 46 | DX9 backend; target exe is DX11-only, the ledger has 0 dx9 units — retire wholesale |
 | UNMAPPED | 108 | data-only headers, defines/macros, free-function TUs — refine per file |
 
 The `target_evidence=` column (defined classes appearing anywhere in the
@@ -73,7 +78,7 @@ its owner exists measures noise. Order:
    file when empty. What remains in the tree IS the queue.
 4. Batch = one subsystem; module compiles after every batch
    (`python3 -m vostok build render_*` per module, full `vostok build`
-   before commit). Every commit carries the regenerated `match.db` + README
+   before commit). Every commit carries the regenerated ledger + README
    block: track render exact / exact-max / fuzzy / fuzzy-max per checkpoint.
 5. Legacy files that were ALREADY copied wholesale into the new tree:
    verify content, then delete from temp (record nothing — the port is the

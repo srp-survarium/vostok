@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/dx11/res_declaration.h>
 #include <vostok/render/core/dx11/res_geometry.h>
@@ -7,7 +8,6 @@
 #include <vostok/render/facade/material_effects_instance_cook_data.h>
 #include "material_effects_instance.h"
 #include "render_model_user.h"
-
 namespace vostok {
 namespace render {
 

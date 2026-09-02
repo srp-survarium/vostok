@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "convex_volume.h"
 #include "stage_sun.h"
-
 #include <vostok/console_command.h>
 #include <vostok/math_half.h>
 #include <vostok/math_randoms_generator.h>

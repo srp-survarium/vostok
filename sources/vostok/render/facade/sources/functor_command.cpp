@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "functor_command.h"
-
 namespace vostok {
 namespace render {
 

@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "animated_model_instance_cook.h"
 #include "animated_model_instance.h"
@@ -147,24 +147,6 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void animated_model_instance_cook::on_hit_params_loaded( resources::queries_result& data, animated_model_instance* new_model )
 {

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """structure_order_report - per-module TARGET-vs-BASE class-structure diff.
 
 The engine matches "structure first": a class's on-disk layout (member order,

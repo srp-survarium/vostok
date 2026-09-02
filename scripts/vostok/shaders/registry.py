@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """The engine's shader-define registry, in permutation-string order.
 
 The blob path's permutation component is built by

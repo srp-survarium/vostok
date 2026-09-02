@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.pairing - which base function IS this target function.
 
 The obvious {mangled: mangled} join answers most of it and gets the rest wrong,

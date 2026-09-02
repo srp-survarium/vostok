@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include <vostok/game_core/inventory.h>
 
@@ -132,8 +132,6 @@ bool inventory::action(
 	return false;
 }
 
-
-
 void inventory::setup_demo_profile( )
 {
 	for ( u32 i = 0 ; i < WEAPON_COUNT ; ++i )
@@ -216,6 +214,7 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 	}
 }
 
+#line 178
 void inventory::unload_to_profile( player_profile& profile, items_dictionary const& dict )
 {
 	profile_slot* slot;

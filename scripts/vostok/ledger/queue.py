@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.ledger.queue - project the derivation's per-function structure
 classification into docs/binary_matching/structure_mismatch_queue.md, a
 PERSISTENT work queue of every structurally-mismatched paired function across the
@@ -308,7 +309,7 @@ logging, network_core, network, particle, physics, scaleform, sound, survarium,
 ui, vfs, vostok`.
 
 Source of truth: the derivation itself (`scripts/vostok/derive/`,
-match_db_design.md), re-run live over report.json and the rich indexes, which
+ledger_design.md), re-run live over report.json and the rich indexes, which
 classifies each paired function's `struct_class` from the two statement tables.
 This queue PROJECTS that classification - the authoritative per-function verdict
 stays `pdb_fetch --view structure-diff`.

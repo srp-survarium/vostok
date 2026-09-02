@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok derive - re-derive the matching ledger from the built artifacts.
 
 One verb, because there is one thing to do. The derivation reads

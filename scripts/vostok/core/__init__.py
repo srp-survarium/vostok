@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.core - semantically blind primitives.
 
 Rules of the layer:

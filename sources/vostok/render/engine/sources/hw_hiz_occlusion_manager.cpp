@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "hw_hiz_occlusion_manager.h"
-
 #include <vostok/fixed_string.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/device.h>

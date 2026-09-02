@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_rain.h"
-
 #include <vostok/console_command.h>
 #include <vostok/math_randoms_generator.h>
 #include <vostok/render/core/backend.h>

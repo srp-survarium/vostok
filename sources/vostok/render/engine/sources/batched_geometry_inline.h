@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_INLINE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_INLINE_H_INCLUDED
-
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/engine/model_format.h>

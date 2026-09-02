@@ -13,8 +13,9 @@
   `network::finalize()`; game login UI supplies the live login-client path.
 - Carcass rebuilt from canonical structure (see
   [../library_carcass_rebuild.md](../library_carcass_rebuild.md)); the 2012-era
-  client/server/packet web it replaced is parked verbatim in
-  `temp/network_legacy/` for body reference.
+  client/server/packet web it replaced was parked in `temp/network_legacy/`,
+  since deleted from the tree - `git show 3320ded27:temp/network_legacy/<file>` for
+  body reference.
 
 ## Module-wide notes
 

@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "player.h"
 #include "player_creation_params.h"	// params.game_scene field
@@ -1065,15 +1065,11 @@ void player::select_animations( const u32 current_time_in_ms )
 {
 	tick_active_object( );
 
-
-
 	const bool is_current = m_game.get_network_client( )->is_player_current( id );
 	const input_mode_type_enum input_mode = s_first_person_animations_only ? first_person_mode : ( is_current ? m_local_input_controller->input_mode( ) : third_person_mode );
 
 	mutable_buffer buffer = make_stack_buffer( ALLOCA( 0x4000 ), 0x4000 );
 	animation::mixing::expression expression = m_current_active_object->selected_animations( buffer, input_mode == third_person_mode );
-
-
 
 	m_target.animation_player.set_target_and_tick( expression, current_time_in_ms, boost::bind( &player::get_transform_for_animation_player, this, _1, boost::cref( m_target.transform ) ) );
 

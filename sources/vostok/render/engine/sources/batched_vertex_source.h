@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_BATCHED_VERTEX_SOURCE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_BATCHED_VERTEX_SOURCE_H_INCLUDED
-
 #include <vostok/math_color.h>
 
 namespace vostok {

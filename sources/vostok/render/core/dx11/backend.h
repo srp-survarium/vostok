@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_BACKEND_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_BACKEND_H_INCLUDED
-
 #include <vostok/math_color.h>
 #include <vostok/render/core/backend_handlers.h>
 #include <vostok/render/core/device.h>

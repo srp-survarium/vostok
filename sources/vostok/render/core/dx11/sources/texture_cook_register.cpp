@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/texture_cook_wrapper.h>
 #include <vostok/render/core/texture_cook.h>
 #include <vostok/render/core/texture_options_cooker.h>
-
 namespace vostok {
 namespace render {
 

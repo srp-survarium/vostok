@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/sources/game_renderer.h>
 #include <vostok/render/world.h>
@@ -6,7 +7,6 @@
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/render/facade/ui_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
-
 namespace vostok {
 namespace render {
 namespace game {

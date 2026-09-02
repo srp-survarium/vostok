@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/dx11/res_declaration.h>
 #include <vostok/render/core/dx11/res_geometry.h>
@@ -5,7 +6,6 @@
 #include "speedtree_convert_type.h"
 #include "speedtree_forest.h"
 #include "speedtree_tree_component_billboard.h"
-
 namespace vostok {
 namespace render {
 

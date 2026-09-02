@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "material_cook.h"
 #include "material.h"
-
 namespace vostok {
 namespace render {
 material_cook::material_cook( ) : resources::translate_query_cook( resources::material_class, reuse_true, use_current_thread_id ) { }

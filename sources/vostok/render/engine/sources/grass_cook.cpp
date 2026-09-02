@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "grass_cook.h"
 #include "grass_world.h"
-
 namespace vostok {
 namespace render {
 

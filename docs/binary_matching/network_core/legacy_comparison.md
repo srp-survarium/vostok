@@ -1,5 +1,8 @@
 # network_core vs temp/network_legacy - comparison audit
 
+> Closed record. `temp/network_legacy/` was deleted from the tree; retrieve any
+> file with `git show 3320ded27:temp/network_legacy/<file>`.
+
 Doc-only audit (2026-06-10) of every network_core piece with a legacy ancestor
 (see "Legacy ancestry" in [README.md](README.md)). "Ours" = the stack tip
 `origin/match/network_core-packet-leaves` (4b759e67, contains #283+#285+#288);

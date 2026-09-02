@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "empty_hands_cook.h"
 #include "empty_hands.h"
@@ -32,9 +32,6 @@ void empty_hands_cook::translate_query( resources::query_result_for_cook& parent
 // claude@NOTE: Source and PDB structure are complete. Target preserves the Boost _1
 // load and has_empty_target call; base folds _1 to zero and selects an ICF-equivalent
 // helper. The request count, VLA, and per-element construction match the target.
-
-
-
 
 void empty_hands_cook::on_empty_hands_config_loaded( resources::queries_result& data )
 {

@@ -1,3 +1,4 @@
+:: SPDX-License-Identifier: GPL-3.0-or-later
 @echo off
 
 if not defined ROOT_DIR       set "ROOT_DIR=%~dp0..\..\.."

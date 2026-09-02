@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Header/type-layout diff: the class-layout analog of an objdiff function diff.
 
 Compares the TARGET class/struct layouts (the PDB-generated stub headers under

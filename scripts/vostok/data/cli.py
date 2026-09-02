@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok data - image-level matching for globals, constants, BSS, and pointers.
 
 Commands:

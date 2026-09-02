@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_fstage_soft_materials.h"
 #include "blend_mode.h"
 #include "shared_names.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/custom_config_value.h>
-
 namespace vostok {
 namespace render {
 

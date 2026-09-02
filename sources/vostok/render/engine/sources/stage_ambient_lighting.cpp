@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_ambient_lighting.h"
-
 #include <vostok/geometry_utils.h>
 #include <vostok/geometry_primitives.h>
 #include <vostok/console_command.h>

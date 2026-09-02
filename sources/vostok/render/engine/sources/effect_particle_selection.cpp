@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_particle_selection.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include <vostok/render/core/custom_config_value.h>
-
 namespace vostok {
 namespace render {
 

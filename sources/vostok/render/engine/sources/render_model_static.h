@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_STATIC_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_STATIC_H_INCLUDED
-
 #include <vostok/configs_binary_config_value.h>
 #include "render_model.h"
 #include "render_model_instance_impl.h"

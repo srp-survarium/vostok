@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_MOVED_OBJECT_PREDICATE_HELPER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_MOVED_OBJECT_PREDICATE_HELPER_H_INCLUDED
-
 namespace vostok {
 
 namespace collision {

@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "scene_view_cook.h"
 #include "scene_manager.h"
 #include "scene_view.h"
-
 namespace vostok {
 namespace render {
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_volume_fog.h"
-
 #include <vostok/console_command.h>
 #include <vostok/math_aabb.h>
 #include <vostok/math_functions.h>

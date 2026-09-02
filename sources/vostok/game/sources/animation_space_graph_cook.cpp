@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "animation_space_graph_cook.h"
 #include "animation_space_graph.h"
@@ -52,10 +52,6 @@ void animation_space_graph_cook::delete_resource( resources::resource_base* reso
 	VOSTOK_FREE_IMPL( g_allocator, graph );
 }
 
-
-
-
-
 u32 get_animation_vertices_count( configs::binary_config_value const& groups_config )
 {
 	u32 vertices_count = 0;
@@ -66,9 +62,6 @@ u32 get_animation_vertices_count( configs::binary_config_value const& groups_con
 
 	return vertices_count;
 }
-
-
-
 
 std::pair< u32, u32 > get_animation_mixes_count( configs::binary_config_value const& groups_config )
 {
@@ -172,11 +165,6 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 		);
 	}
 }
-
-
-
-
-
 
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {

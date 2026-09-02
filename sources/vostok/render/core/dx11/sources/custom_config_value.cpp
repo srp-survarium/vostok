@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/custom_config_value.h>
 #include <boost/crc.hpp>
 #include <vostok/render/core/destroy_data_helper.h>
-
 namespace vostok {
 namespace render {
 

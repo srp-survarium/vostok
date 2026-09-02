@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.baseonly - why does OUR build emit a function the target does not.
 
 Every base symbol with no target partner gets one verdict. The taxonomy is

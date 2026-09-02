@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "object_particle_visual.h"
 #include "base_game_scene.h"
@@ -15,7 +15,7 @@
 #include <vostok/render/facade/scene_renderer.h>
 
 // the compiland keeps its legacy name: the 2011/12 TU defined the whole
-// object_*_visual family (see temp/game_legacy/object_solid_visual.h), but
+// object_*_visual family (git show 3320ded27:temp/game_legacy/object_solid_visual.h), but
 // only object_particle_visual survived into the shipped PDB (source lines
 // 455-491 of a much larger file)
 

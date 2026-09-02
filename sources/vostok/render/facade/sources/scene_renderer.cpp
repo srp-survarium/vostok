@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/scene_renderer.h>
@@ -17,7 +18,6 @@
 #include <vostok/render/facade/sources/update_skeleton_command.h>
 #include <vostok/particle/world.h>
 #include <vostok/math_color.h>
-
 namespace vostok {
 namespace render {
 

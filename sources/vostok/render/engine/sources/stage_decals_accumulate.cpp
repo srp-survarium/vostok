@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_decals_accumulate.h"
-
 #include <algorithm>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/effect_manager.h>

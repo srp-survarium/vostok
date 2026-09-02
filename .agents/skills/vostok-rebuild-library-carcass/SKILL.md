@@ -44,7 +44,8 @@ For a shared namespace or a legacy-body harvest, also read:
 
 ## Create both queues
 
-1. Move the complete old module to `temp/<module>_legacy/`. This is the legacy
+1. Move the complete old module to `temp/<module>_legacy/` (deleted again once the
+   harvest closes; git history keeps it). This is the legacy
    implementation queue, including original PCH, bootstrap, linkage, and project
    files.
 2. For a retail render rebuild, leave only the three live `.vcproj` manifests

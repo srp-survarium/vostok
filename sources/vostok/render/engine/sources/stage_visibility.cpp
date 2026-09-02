@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_visibility.h"
-
 #include <algorithm>
 #include <vostok/collision/common_types.h>
 #include <vostok/collision/space_partitioning_tree.h>

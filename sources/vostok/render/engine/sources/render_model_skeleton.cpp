@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/animation/anim_track_common.h>
 #include <vostok/render/core/backend.h>
 #include "render_model_skeleton.h"
-
 namespace vostok {
 namespace render {
 

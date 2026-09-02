@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SKELETON_MESH_GPU_SKINNING_1WEIGHT_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SKELETON_MESH_GPU_SKINNING_1WEIGHT_H_INCLUDED
-
 #include <vostok/render/core/untyped_buffer.h>
 #include "render_model_skeleton.h"
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_SOURCES_TEXTURE_STORAGE_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SOURCES_TEXTURE_STORAGE_H_INCLUDED
-
 #include <functional>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/render_include.h>

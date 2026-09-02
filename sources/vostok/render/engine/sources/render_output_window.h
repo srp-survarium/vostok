@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_OUTPUT_WINDOW_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_OUTPUT_WINDOW_H_INCLUDED
-
 #include <vostok/render/core/res_render_output.h>
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/render/facade/common_types.h>

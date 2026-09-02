@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.tests - the tooling's own unit tests.
 
     python3 -m unittest discover -s scripts/vostok/tests

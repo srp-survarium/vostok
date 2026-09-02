@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_ENVIRONMENT_PROBE_PROPERTIES_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_ENVIRONMENT_PROBE_PROPERTIES_H_INCLUDED
-
 #include <vostok/fixed_string.h>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>

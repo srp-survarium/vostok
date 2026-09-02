@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "tracer_model_instance_cook.h"
 #include "tracer_model_instance.h"
-
 namespace vostok {
 namespace render {
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_PRE_RAIN_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_PRE_RAIN_H_INCLUDED
-
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/render/core/res_effect.h>

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_H_INCLUDED
-
 #include <vostok/intrusive_list.h>
 #include <vostok/intrusive_spsc_queue.h>
 #include <vostok/one_way_threads_channel.h>

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_OPTIONS_H_INCLUDED
 #define VOSTOK_RENDER_CORE_OPTIONS_H_INCLUDED
-
 #include <vostok/console_command.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/quasi_singleton.h>

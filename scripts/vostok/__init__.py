@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok - the tooling that drives the Vostok Engine binary-matching campaign.
 
 One direction of data flow:

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_RENDER_STAGE_TYPES_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_RENDER_STAGE_TYPES_H_INCLUDED
-
 #include <vostok/render/facade/render_stage_types.h>
 
 #endif // #ifndef VOSTOK_RENDER_FACADE_SOURCES_RENDER_STAGE_TYPES_H_INCLUDED

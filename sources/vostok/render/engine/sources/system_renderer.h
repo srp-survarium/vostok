@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SYSTEM_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SYSTEM_RENDERER_H_INCLUDED
-
 #include <vostok/render/core/index_buffer.h>
 #include <vostok/render/core/quasi_singleton.h>
 #include <vostok/render/core/res_pass.h>

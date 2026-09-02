@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "scene_cook.h"
 #include "scene_manager.h"
@@ -5,7 +6,6 @@
 #include <vostok/render/facade/common_types.h>
 #include <vostok/particle/world.h>
 #include "material.h"
-
 namespace vostok {
 namespace render {
 

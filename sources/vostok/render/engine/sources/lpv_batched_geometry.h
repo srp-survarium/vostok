@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_LPV_BATCHED_GEOMETRY_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_LPV_BATCHED_GEOMETRY_H_INCLUDED
-
 #include "batched_geometry.h"
 
 namespace vostok {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
@@ -5,7 +6,6 @@
 #include <vostok/render/core/shader_macros.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/command_line_extensions.h>
-
 static vostok::command_line::key s_no_cache_shaders_key(
 	"no_cache_shaders",
 	"",

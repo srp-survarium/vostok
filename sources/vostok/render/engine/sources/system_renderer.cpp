@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "system_renderer.h"
-
 #include <vostok/particle/world.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/effect_manager.h>

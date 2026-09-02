@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include <vostok/game_core/bullet_manager.h>
 
@@ -398,11 +398,10 @@ void bullet_manager::bullets_memory_allocated( resources::queries_result& querie
 		m_mt_stack_allocator.swap			( new_mt_allocator );
 	}
 
-
-
 	m_bullets_memory_ptr				= new_bullets_memory_ptr;
 }
 
+#line 406
 void bullet_manager::emit_bullet(
 	float3 const&					position,
 	float3 const&					velocity,

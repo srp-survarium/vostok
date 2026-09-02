@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "human_npc_cook.h"
 #include "human_npc.h"
@@ -127,14 +127,6 @@ void human_npc_cook::on_npc_options_received(
 		{ "resources/animations/single/slot_1/walk/on_site_idle",	resources::animation_class },
 		{ space_graph_path,										resources::animation_space_graph_class } };
 
-
-
-
-
-
-
-
-
 	resources::query_resources							(
 		requests,
 		boost::bind( &human_npc_cook::on_subresources_loaded, this, _1, human ),
@@ -143,8 +135,6 @@ void human_npc_cook::on_npc_options_received(
 		&parent
 	);
 }
-
-
 
 void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
 {

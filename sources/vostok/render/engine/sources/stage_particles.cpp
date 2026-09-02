@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_particles.h"
 #include "effect_resolve_particles.h"
-
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/dx11/effect_compiler.h>

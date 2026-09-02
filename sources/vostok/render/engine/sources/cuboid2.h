@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_CUBOID2_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_CUBOID2_H_INCLUDED
-
 #include <vostok/math_aabb.h>
 #include <vostok/math_aabb_plane.h>
 #include <vostok/math_plane.h>

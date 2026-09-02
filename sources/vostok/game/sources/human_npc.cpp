@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "human_npc.h"
 #include "game_world.h"				// base game_object_ + ref members source off game_world
@@ -34,7 +34,7 @@ static vostok::console_commands::cc_bool s_npc_debug_draw_command( "npc_debug_dr
 namespace survarium {
 
 // TU-local (canonical headers/hit_object.h; owner mapping in
-// temp/triage_log.md) - the on_hit_event parameter type
+// git show 3320ded27:temp/triage_log.md) - the on_hit_event parameter type
 struct hit_object {
 
 public:
@@ -169,8 +169,6 @@ void human_npc::enable( )
 	m_sound_world.get_logic_world_user( ).register_receiver	( m_sound_scene, *this );
 	set_position						( get_position() );
 
-
-
 	m_physics_world.add					( m_model_instance->m_damage_collision->get_rigid_body(), 0x40, 0xffff );
 	m_renderer.scene( ).add_model		( m_scene, m_model_instance->m_render_model->m_model, m_transform );
 	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
@@ -271,21 +269,11 @@ void human_npc::draw_damage_model( render::game::renderer& render, render::scene
 			m_model_instance->m_damage_collision->body_part_name( i ) );
 	}
 
-
-
-
 }
 
 void human_npc::draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
 	draw_damage_model				( render, scene );
-
-
-
-
-
-
-
 
 	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
 
@@ -351,12 +339,7 @@ void human_npc::render_model( )
 
 	m_renderer.scene( ).update_model	( m_scene, m_model_instance->m_render_model->m_model, m_transform );
 
-
-
-
 	m_renderer.scene( ).update_skeleton	( m_model_instance->m_render_model->m_model, bone_matrices, bone_matrices_count );
-
-
 
 	m_model_instance->m_damage_collision->update	( bone_matrices, bone_matrices + bone_matrices_count );
 }
@@ -371,6 +354,7 @@ bool human_npc::is_safe( ) const
 	return m_ai_world.is_npc_safe( m_brain_unit );
 }
 
+#line 372
 bool human_npc::is_target_in_melee_range( ai::npc const* const target ) const
 {
 	ASSERT						( target );
@@ -383,6 +367,7 @@ bool human_npc::is_at_node( ai::game_object const* const node ) const
 	return true;
 }
 
+#line 386
 void human_npc::prepare_to_attack( ai::npc const* const target, ai::weapon const* const gun )
 {
 #line 388
@@ -391,24 +376,28 @@ void human_npc::prepare_to_attack( ai::npc const* const target, ai::weapon const
 	m_current_weapon			= gun;
 }
 
+#line 393
 void human_npc::attack( ai::npc const* const target, ai::weapon const* const gun )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
 	LOG_INFO					( "%s: attacking %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
 }
 
+#line 399
 void human_npc::attack_melee( ai::npc const* const target, ai::weapon const* const gun )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
 	LOG_INFO					( "%s: melee attacking %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
 }
 
+#line 405
 void human_npc::attack_from_cover( ai::npc const* const target, ai::weapon const* const gun )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
 	LOG_INFO					( "%s: attacking from cover %s with %s", get_name(), m_current_target->cast_game_object()->get_name(), m_current_weapon->cast_game_object()->get_name() );
 }
 
+#line 411
 void human_npc::stop_attack( ai::npc const* const target, ai::weapon const* const gun )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( target, gun );
@@ -417,18 +406,21 @@ void human_npc::stop_attack( ai::npc const* const target, ai::weapon const* cons
 	m_current_weapon			= 0;
 }
 
+#line 419
 void human_npc::survey_area( )
 {
 	LOG_INFO					( "%s: patrolling", get_name() );
 	m_is_patrolling				= true;
 }
 
+#line 425
 void human_npc::stop_patrolling( )
 {
 	LOG_INFO					( "%s: quit patrolling", get_name() );
 	m_is_patrolling				= false;
 }
 
+#line 431
 void human_npc::reload( ai::weapon const* const gun )
 {
 	LOG_INFO					( "%s: reloading %s", get_name(), gun->cast_game_object()->get_name() );
@@ -488,6 +480,7 @@ bool human_npc::debug_draw_allowed( ) const
 	return s_npc_debug_draw;
 }
 
+#line 499
 void human_npc::move_to_position( ai::movement_target const* const target )
 {
 	m_current_movement_target			= target;
@@ -503,6 +496,7 @@ void human_npc::move_to_position( ai::movement_target const* const target )
 }
 
 // LOG_INFO bakes the target source line into the generated code.
+#line 514
 void human_npc::on_animation_end( )
 {
 	if ( m_current_animation )
@@ -556,6 +550,7 @@ void human_npc::hit(
 }
 
 // LOG_INFO bakes the target source line into the generated code.
+#line 568
 void human_npc::on_movement_end( )
 {
 	if ( m_current_movement_target )
@@ -573,6 +568,7 @@ void human_npc::on_movement_end( )
 }
 
 // Retail passes the path object by value; set_target retains an animation-LTCG register-argument wall.
+#line 572
 void human_npc::play_animation( ai::animation_item const* const target )
 {
 	m_current_animation					= target;
@@ -617,6 +613,7 @@ void human_npc::select_new_goal( )
 	m_ai_world.select_new_goal	( m_brain_unit );
 }
 
+#line 617
 void human_npc::on_affect_event(
 	pcstr							body_part_name,
 	const hit_affects_type_enum		affect_type,

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_RES_XS_HW_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_RES_XS_HW_H_INCLUDED
-
 #include <d3dcompiler.h>
 #include <vostok/shared_string.h>
 #include <vostok/render/core/resource_intrusive_base.h>

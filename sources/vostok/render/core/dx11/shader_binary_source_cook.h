@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_SHADER_BINARY_SOURCE_COOK_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SHADER_BINARY_SOURCE_COOK_H_INCLUDED
-
 #include <vostok/fs/virtual_path_string.h>
 #include <vostok/resources_cook_classes.h>
 

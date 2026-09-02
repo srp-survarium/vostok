@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "scene_view.h"
-
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_movie_resource.h>
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Regenerate the ninja build graph into binaries/ninja, writing only files
 whose content actually changed.
 

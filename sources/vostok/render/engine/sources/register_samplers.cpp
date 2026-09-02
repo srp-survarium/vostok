@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "register_samplers.h"
-
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>

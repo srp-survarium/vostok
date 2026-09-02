@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "player_cook.h"
 #include "profile_skin_visual_cook.h"
@@ -26,12 +26,6 @@
 #include "slot_def.h"
 
 namespace survarium {
-
-
-
-
-
-
 
  player_cook::player_cook( ) :
 	translate_query_cook( resources::player_class, reuse_false, use_current_thread_id )
@@ -64,9 +58,6 @@ void player_cook::delete_resource( resources::resource_base* resource )
 void player_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query( );
-
-
-
 
 	configs::binary_config_ptr					config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 	configs::binary_config_value const&			root		= config->get_root( )["player"];
@@ -356,6 +347,7 @@ void profile_skin_visual_cook::on_visual_loaded(
 		data[0].get_unmanaged_resource( ),
 		resources::nocache_memory,
 		sizeof( render::skeleton_model_instance )
+#line 363
 	);
 	parent->finish_query( result_success );
 	DELETE( cook_data );

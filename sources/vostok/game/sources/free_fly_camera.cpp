@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "free_fly_camera.h"
 #include "base_game_scene.h"
@@ -53,7 +54,6 @@ bool free_fly_camera::on_keyboard_action(
 	}
 	else if ( action == input::kb_key_hold && actions_mask_type == hold_action )
 		m_keyb_events.push_back	( key );
-
 	return false;
 }
 

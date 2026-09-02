@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created		: 29.07.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "sound_scene.h"
 #include "sound_instance_proxy_order.h"
@@ -79,9 +79,7 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 	proxy.get_world_user( ).add_order	( order );
 }
 
-
-
-
+#line 85
 void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params const& params )
 {
 	LOG_DEBUG							( "sound_scene::emit_sound_propagators_impl" );
@@ -129,6 +127,7 @@ void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params c
 	}
 }
 
+#line 132
 new_sound_propagator* sound_scene::create_sound_propagator (
 	sound_propagator_emitter const& owner,
 	sound_instance_proxy_internal& proxy,
@@ -164,6 +163,7 @@ new_sound_propagator* sound_scene::create_sound_propagator (
 	return new_propagator;
 }
 
+#line 167
 void sound_scene::delete_sound_propagator	( sound_instance_proxy_internal& proxy, new_sound_propagator* propagator )
 {
 	LOG_DEBUG							( "sound_scene::delete_sound_propagator" );

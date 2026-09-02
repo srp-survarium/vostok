@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "batched_geometry.h"
 #include "batched_vertex_source.h"
@@ -11,7 +12,6 @@
 #include <vostok/render/engine/model_format.h>
 #include "render_model_static.h"
 #include "streaming.h"
-
 #pragma warning( push )
 #pragma warning( disable : 4995 )
 #include <d3dx9mesh.h>

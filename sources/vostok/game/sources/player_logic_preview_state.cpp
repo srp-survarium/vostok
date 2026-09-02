@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "player_logic_preview_state.h"
 
@@ -27,13 +27,6 @@ static float s_aim_transition_time = 0.3f;
 
 // The target inlines the weight-group and bones-mask setters at this call site;
 // their shared declarations currently force the base calls out of line.
-
-
-
-
-
-
-
 
 std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > player_logic_preview_state::selected_animations(
 	mutable_buffer&							buffer,

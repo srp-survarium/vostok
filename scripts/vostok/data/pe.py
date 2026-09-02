@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Small PE32 reader for data matching.
 
 The data lane needs virtual section extents, loader-zero bytes, and HIGHLOW

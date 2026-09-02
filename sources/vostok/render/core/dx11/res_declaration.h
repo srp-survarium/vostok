@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_RES_DECLARATION_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_RES_DECLARATION_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <algorithm>
 #include <cstring>

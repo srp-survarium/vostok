@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Generate and compare retail/base image data without touching function scores."""
 
 from __future__ import annotations

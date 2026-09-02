@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_XS_DATA_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_XS_DATA_H_INCLUDED
-
 #include <vostok/fixed_vector.h>
 #include <vostok/render/core/shader_data_base.h>
 #include <vostok/render/core/shader_defines.h>

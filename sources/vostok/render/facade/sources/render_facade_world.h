@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_RENDER_FACADE_WORLD_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_RENDER_FACADE_WORLD_H_INCLUDED
-
 #include <vostok/render/api.h>
 #include <vostok/render/facade/one_way_render_channel.h>
 

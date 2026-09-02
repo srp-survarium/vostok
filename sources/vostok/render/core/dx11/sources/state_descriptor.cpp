@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
-
 #include <vostok/render/core/dx11/state_descriptor.h>
 #include <vostok/render/core/state_utils.h>
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_LIGHT_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_LIGHT_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/math_aabb.h>
 #include <vostok/math_color.h>

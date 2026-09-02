@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef RENDER_ENUM_VERTEX_INPUT_TYPE_H_INCLUDED
 #define RENDER_ENUM_VERTEX_INPUT_TYPE_H_INCLUDED
-
 namespace vostok {
 namespace render {
 

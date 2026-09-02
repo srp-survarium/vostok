@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.gfx - build the shipped Scaleform GFx static-lib suite from the
 PRISTINE 4.2.22 SDK source, with the EXACT cl flags the shipped PDB records.

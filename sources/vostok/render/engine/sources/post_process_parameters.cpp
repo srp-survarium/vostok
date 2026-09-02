@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "post_process_parameters.h"
-
 #include <vostok/render/core/resource_manager.h>
 
 namespace survarium {

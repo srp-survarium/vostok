@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
-
 #include <boost/bind.hpp>
 #include <vostok/render/facade/model.h>
 #include <vostok/render/engine/world.h>
