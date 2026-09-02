@@ -8,7 +8,7 @@
 
 namespace survarium {
 
-static bool s_recoil_use_pseudo_random_value = true;
+static bool s_recoil_use_pseudo_random_value = false;
 static console_commands::cc_bool s_recoil_use_pseudo_random_cc( "recoil_use_pseudo_random", s_recoil_use_pseudo_random_value, false, console_commands::command_type_engine_internal );
 
 float pseudo_random::random_f( const float range )

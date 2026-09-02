@@ -15,7 +15,7 @@ namespace survarium {
 float4x4 get_bone_matrix_in_object_space( animation::skeleton_bone const& bone, animation::skeleton const& skeleton, float4x4 const* matrices );
 
 static bool		s_ik_legs_debug_draw_value		= false;
-static float	s_ik_foot_capsule_radius_value	= 0.0f;
+static float	s_ik_foot_capsule_radius_value	= 0.065f;
 static bool		s_ik_legs_rot_axis_value		= false;
 static bool		s_ik_adjust_hip_position_value	= false;
 
@@ -270,7 +270,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float&								delta_len
 ) const
 {
-	static float const		dist_to_test					= 0.082f;
+	static float				dist_to_test					= 0.5f;
 
 	float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
 	float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - m_skeleton->get_root_bones_count( )] * hip_world_matrix;

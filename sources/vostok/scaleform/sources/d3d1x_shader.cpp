@@ -301,7 +301,7 @@ ShaderManager::ShaderManager( ProfileViews* prof ) :
 bool ShaderManager::HasInstancingSupport() const
 {
     // Only FeatureLevel 10.0+ has instancing (but it always has it).
-    return ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL10X;
+    return ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL1x;
 }
 
 void ShaderManager::MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
@@ -350,7 +350,7 @@ bool ShaderManager::Initialize(HAL* phal)
     // if the device is a 10, or 10.1 device. If it is only 10, we must have FL 10, otherwise,
     // we may have a lower feature level and require lower level shaders.
     Ptr<ID3D1x(Device1)> d3d10Device1;
-    ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
+    ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL1x;
     if ( SUCCEEDED(pDevice->QueryInterface(IID_ID3D10Device1, (void**)&d3d10Device1.GetRawRef())) && d3d10Device1)
     {
         D3D10_FEATURE_LEVEL1 featureLevel = pDevice->GetFeatureLevel();
@@ -385,7 +385,7 @@ bool ShaderManager::Initialize(HAL* phal)
     #error SF_D3D_VERSION must be 10 or 11.
 #endif
 
-    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL10X && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
+    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL1x && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
     {
         SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_10_0+ was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_9_3.");
         ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL93;

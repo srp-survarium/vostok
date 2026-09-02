@@ -644,7 +644,11 @@ def _window(image: PEImage, start: int, size: int,
         value = image.u32_rva(site)
         destination = value - image.image_base if value >= image.image_base else value
         offsets.append(offset)
-        if start <= destination < start + size:
+        # A complete allocation owns its one-past address for comparison too.
+        # fixed_string stores both begin and end pointers in its static image;
+        # resolving the end pointer through the following section symbol makes
+        # identical self-relative initializers look different after relinking.
+        if start <= destination <= start + size:
             targets.append(frozenset((f"SELF+{destination - start:#x}",)))
         else:
             targets.append(datum_index.resolve_all(destination))
@@ -1430,6 +1434,9 @@ def _function_data_resolution(
     """
     if raw_status == "EXACT":
         return "EXACT"
+    current = ledger_row.get("cur")
+    if isinstance(current, (int, float)) and current >= 100:
+        return "CURRENT_EXACT"
     maximum = ledger_row.get("max")
     if isinstance(maximum, (int, float)) and maximum >= 100:
         return "HASH_MAX_EXACT"
@@ -1586,8 +1593,9 @@ def _write_markdown(audit: list[dict[str, str]],
         "A `*_DEFINITION_MISSING` result is stronger: at least one allocation",
         "has neither a stable identity/content counterpart nor an exact complete",
         "window proved elsewhere by aligned relocation evidence.",
-        "`HASH_MAX_EXACT` means this exact source-body hash previously emitted",
-        "the retail body byte-for-byte. Ordinary parked code-matching notes do",
+        "`CURRENT_EXACT` means the current body is byte-exact; `HASH_MAX_EXACT`",
+        "means this source-body hash previously emitted the retail body byte-for-byte.",
+        "Ordinary parked code-matching notes do",
         "not close datum-use rows; every other raw difference remains `OPEN`",
         "until byte proof or dedicated data-audit evidence settles it.",
         "",

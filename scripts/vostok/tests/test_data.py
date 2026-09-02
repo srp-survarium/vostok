@@ -56,6 +56,7 @@ from vostok.data.render_relocs import (
     _relocation_targets_match,
     _select_candidate_vote,
     _select_extentless_candidate,
+    _window,
 )
 
 
@@ -68,6 +69,13 @@ class FunctionDataResolutionTests(unittest.TestCase):
         self.assertEqual(
             _function_data_resolution("BASE_DEFINITION_MISSING", row),
             "HASH_MAX_EXACT",
+        )
+
+    def test_current_exact_settles_before_max_is_banked(self):
+        row = {"cur": 100.0, "max": 99.0, "hash": "abc"}
+        self.assertEqual(
+            _function_data_resolution("USE_DIFF", row),
+            "CURRENT_EXACT",
         )
 
     def test_parked_code_note_does_not_acquit_data_drift(self):
@@ -439,6 +447,19 @@ class RenderRelocationTests(unittest.TestCase):
             self.assertEqual(index.evidence_owner(0x2010), second)
             self.assertFalse(index.evidence_owner(0x2004).complete)
             self.assertEqual(index.by_identity["E:first"], [first])
+
+    def test_complete_window_normalizes_one_past_self_pointer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<I", data, 0x404, 0x10000 + 0x3020)
+            path.write_bytes(data)
+            image = PEImage(path)
+            index = DatumIndex([], image)
+            _, _, offsets, targets = _window(image, 0x3000, 0x20, index)
+            self.assertEqual(offsets, (4,))
+            self.assertEqual(targets, (frozenset({"SELF+0x20"}),))
 
     def test_vftable_extent_excludes_the_next_tables_rtti_locator(self):
         with tempfile.TemporaryDirectory() as directory:

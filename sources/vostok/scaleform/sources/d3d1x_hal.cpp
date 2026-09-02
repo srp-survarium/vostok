@@ -1841,7 +1841,7 @@ void HAL::drawIndexedInstanced( unsigned indexCount, unsigned meshCount, UPInt i
 bool HAL::shouldRenderFilters(const FilterPrimitive* prim) const
 {
     // FeatureLevel 10.0+ can always render all filters.
-    if (SManager.GetShaderVersion() >= ShaderDesc::ShaderVersion_D3D1xFL10X)
+    if (SManager.GetShaderVersion() >= ShaderDesc::ShaderVersion_D3D1xFL1x)
         return true;
 
     // If the profile doesn't support dynamic loops, check to see if there are any ColorMatrix

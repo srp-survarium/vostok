@@ -17,7 +17,7 @@
 
 namespace survarium {
 
-float g_bullet_tracer_exposition = 0.5f;
+static float g_bullet_tracer_exposition = 0.5f;
 static console_commands::cc_float bullet_tracer_exposition( "bullet_tracer_exposition", g_bullet_tracer_exposition, 0.01f, 5.0f, true, console_commands::command_type_engine_internal );
 
 bullet::bullet(

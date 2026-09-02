@@ -482,7 +482,7 @@ namespace Classes
 {
     ///////////////////////////////////////////////////////////////////////////
     // Forward declaration.
-    const ClassInfo* ClassRegistrationTable[] =
+    const ClassInfo* ClassRegistrationTable[214] =
     {
 //##markup##"obj_global_cpp$inheritance_table"       
 //##begin##"obj_global_cpp$inheritance_table"

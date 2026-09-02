@@ -406,7 +406,7 @@ struct ClassInfo
 namespace Classes
 {
 #ifdef GFX_AS3_SUPPORT
-    extern const ClassInfo* ClassRegistrationTable[];
+    extern const ClassInfo* ClassRegistrationTable[214];
 #endif
 }
 

@@ -214,8 +214,9 @@ set to remain exact. It also requires a fresh direct relocation report for
 every module in the function ledger. `--gate` additionally reads the projection
 maxima in `config/cleanliness/data-integrity-ratchet.tsv` and requires the
 aggregate function datum-use count with `resolution=OPEN` to be exactly zero.
-Raw relocation-set differences proved byte-exact for the current source-body
-hash remain visible as `HASH_MAX_EXACT` but do not count as open debt.
+Raw relocation-set differences proved byte-exact by the current build or by
+the hash-scoped MAX for the current source body remain visible as
+`CURRENT_EXACT` or `HASH_MAX_EXACT`, but do not count as open debt.
 
 The deferred PDB-extent review and shifting-candidate identity-transfer work is
 specified in

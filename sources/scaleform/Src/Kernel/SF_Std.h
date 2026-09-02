@@ -379,8 +379,8 @@ inline int SF_CDECL UnicodeCharIs(const UInt16* table, wchar_t charCode)
 }
 
 extern const UInt16 UnicodeAlnumBits[];
-extern const UInt16 UnicodeAlphaBits[];
-extern const UInt16 UnicodeDigitBits[];
+extern const UInt16 UnicodeAlphaBits[848];
+extern const UInt16 UnicodeDigitBits[480];
 extern const UInt16 UnicodeSpaceBits[];
 extern const UInt16 UnicodeXDigitBits[];
 
