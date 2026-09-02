@@ -13,7 +13,7 @@ The candidate used the reconstructed C++ state at commit
 worktree and Wine prefix with a successful full `python3 -m vostok build -j6`.
 No reconstructed C++ was changed for this audit. The comparison used
 `vostok-pdb-parser` commit
-`c8124fd9a16eec429518c904d65dd128a499a23c`, which is pinned by this branch.
+`50a8f49664178f56d2f665c923c9c5748ef9d747`, which is pinned by this branch.
 
 | PDB | bytes | SHA-256 |
 |---|---:|---|
@@ -62,10 +62,10 @@ columns.
 |---|---:|---:|---:|---:|
 | all normalized enums | 825 | 3 | 51 | 68 |
 | campaign-filtered enums | 598 | 2 | 49 | 57 |
-| all paired source files | 1,183 | 16 | 3 | 2 |
-| campaign-filtered source files | 701 | 12 | 2 | 0 |
+| all paired source files | 1,183 | 12 | 3 | 2 |
+| campaign-filtered source files | 701 | 9 | 2 | 0 |
 
-The filtered source result consists of eight definition-order differences and
+The filtered source result consists of five definition-order differences and
 four constant differences:
 
 | kind | engine-relative source |
@@ -77,11 +77,17 @@ four constant differences:
 | order | `vostok/engine/sources/engine_world.cpp` |
 | order | `vostok/game/sources/game_world.cpp` |
 | constant | `vostok/game/sources/lobby_menu_ui.cpp` |
-| order | `vostok/game/sources/login_menu.cpp` |
-| order | `vostok/game/sources/player_tick.cpp` |
 | order | `vostok/game/sources/weapon.cpp` |
-| order | `vostok/particle/sources/particle_emitter_instance.cpp` |
 | order | `vostok/ui/sources/ui_text_edit.cpp` |
+
+The earlier line-only comparison also listed `login_menu.cpp`, `player_tick.cpp`,
+and `particle_emitter_instance.cpp`. Their attributed line orders invert, but
+their independent compiland procedure-symbol orders do not. `login_menu.cpp`
+demonstrates the failure directly: its physical source already places
+`clear_resources()` before `set_status()`, while a retained `#line 95` makes the
+later function appear to start on an earlier reported line. Source definition
+order now requires both evidence channels to invert, so these three rows are no
+longer presented as source edits.
 
 The out-of-line presence diagnostic reports 339 candidate-only and 294
 retail-only functions without filters, and 272 candidate-only and 219
@@ -270,7 +276,7 @@ UDT total, one-sided, and multiplicity gap also means that only a small unique
 subset can make an order claim. It is evidence to investigate PCH/type-emission
 and missing/extra declarations, not evidence to reorder headers wholesale.
 
-By contrast, `pdb_divergence` reports eight high-confidence source-definition
+By contrast, `pdb_divergence` reports five high-confidence source-definition
 order rows. The updated report prints both PDB sequences with attributed source
 lines. Those rows can be fixed directly, one translation unit and measured
 commit at a time; physical DBI/TPI/global rows cannot.
@@ -292,7 +298,7 @@ class/source views.
 
 Retail and candidate are close enough to pair most named entities, but they are
 not structurally equal. The campaign-filtered normalized view has 57 type names,
-2 enum rows, and 12 source files with at least one reported difference, plus
+2 enum rows, and 9 source files with at least one reported difference, plus
 large one-sided function-presence sets. The raw class stream additionally
 exposes hundreds of multiplicity/variant-set differences. Linker-derived record
 order is stable and measurably different, but much of it consists of retained
