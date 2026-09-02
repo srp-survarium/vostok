@@ -6,9 +6,6 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/ammo_type_enum.h>
 
-#include <vostok/game_core/engine.h>
-#include <vostok/game_core/base_player.h>
-
 namespace survarium {
 
 struct inventory_item_instance;

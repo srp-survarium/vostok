@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "empty_hands.h"
 #include <vostok/game_core/base_player.h>
 
@@ -17,8 +18,6 @@ math::float4x4 calculated_head_matrix( math::float4x4 const& head_matrix, math::
 } } // namespace vostok::animation
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
  empty_hands::empty_hands( resources::managed_resource_ptr* animations, const u32 animations_count ) :
 	m_user( 0 ),
@@ -38,7 +37,7 @@ animation::mixing::expression empty_hands::selected_animations( mutable_buffer& 
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( is_third_view );
 
-	animation::linear_interpolator l_interpolator( s_aim_transition_time );
+	animation::linear_interpolator l_interpolator( 0.3f );
 	animation::mixing::animation_lexeme lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,

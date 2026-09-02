@@ -16,6 +16,4 @@
 
 using namespace vostok;
 
-#include <vostok/game_core/game_net_defines.h>
-
 #endif // #ifndef PCH_H_INCLUDED
