@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_core_hide_state_base.h>
 #include <vostok/game_core/weapon_core.h>		// m_weapon.instant_toggle_start/end
 

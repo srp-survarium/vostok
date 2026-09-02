@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/pistol_weapon_core_hide_state.h>
 
 #include <vostok/game_core/weapon_core.h>
@@ -13,8 +14,6 @@
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
@@ -101,7 +100,7 @@ weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutabl
 		7,
 		m_time_scale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( s_aim_transition_time )
+		animation::linear_interpolator( 0.3f )
 	);
 }
 
@@ -126,7 +125,7 @@ animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expr
 
 	pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
 
-	animation::linear_interpolator interpolator( s_aim_transition_time );
+	animation::linear_interpolator interpolator( 0.3f );
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "jump_logic_state_landing.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/weapon_animation_parameters.h>
@@ -12,8 +13,6 @@
 #include <vostok/fixed_vector.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner )
 	: jump_logic_base_state( owner ), m_landing_type( jump_animations_part_land_run )
@@ -83,7 +82,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 			.weight_synchronization_group_id	( 0 )
 			.weight_interpolator				( animation::instant_interpolator( ) )
 			.time_synchronization_group_id		( 0 )
-			.time_scale_interpolator			( animation::linear_interpolator( s_aim_transition_time ) )
+			.time_scale_interpolator			( animation::linear_interpolator( 0.3f ) )
 			.animated_object					( m_user )
 			.bones_mask							( bones_mask )
 		);

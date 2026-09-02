@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "ai_sound_player.h"
 #include <vostok/sound/sound_emitter.h>
 #include <vostok/sound/sound_instance_proxy.h>

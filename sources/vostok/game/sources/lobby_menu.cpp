@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "lobby_menu.h"
 #include "game_project.h" // complete simple_game_project for the resource_ptr dtor
 

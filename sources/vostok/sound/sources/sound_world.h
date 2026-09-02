@@ -15,7 +15,6 @@
 #include "sound_scene.h"
 #include "panning_lut.h"
 #include "sound_voice.h"
-#include "sound_instance_proxy_internal.h"
 #include "console_commands.h"
 
 struct IXAudio2Voice;
