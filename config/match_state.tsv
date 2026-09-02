@@ -8689,7 +8689,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Grender_surface@render@vostok@@UAEPAXI@Z	vostok/math_aabb_inline.h	vostok	done	MATCH	100	100	100	0	30	f	8f323fb37c1f	
 ??_Gresponse@network@vostok@@UAEPAXI@Z	vostok/network_core/http_client.h	network_core	done	MATCH	100	100	100	0	45		01747ae68416	
 ??_Gruntime_error@stlp_std@@UAEPAXI@Z	stlport/stl/_string_base.h	stlport	done	MATCH	100	100	100	0	30	f	c01bc374d301	
-??_Gscene@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/batched_geometry.h	render	done	MATCH	100	100	100	0	30	f	b77a67c392b0	
+??_Gscene@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/batched_geometry.h	render	done	MATCH	100	100	100	0	30	f	71574bf33351	
 ??_Gscene_view@render@vostok@@UAEPAXI@Z	stlport/stl/_algobase.h	stlport	done	MATCH	100	100	100	0	30	f	c09c2b7f1bc3	
 ??_Gselect_reactor@detail@asio@boost@@UAEPAXI@Z	boost/asio/detail/impl/service_registry.hpp	boost	done	MATCH	100	100	100	0	46		72398d143e08	
 ??_Gsend_order@network@vostok@@UAEPAXI@Z	vostok/network/sources/send_order.h	network	done	MATCH	100	100	100	0	46		583b1b940ac9	
