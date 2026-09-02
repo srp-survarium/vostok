@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_core.h>
 
 #include <vostok/animation/sources/mixing_base_lexeme.h>
@@ -11,6 +12,7 @@
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/base_player.h>
+#include <vostok/game_core/engine.h>
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/weapon_animation_parameters.h>

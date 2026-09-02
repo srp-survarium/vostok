@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "simple_animation_controller.h"
 // mixing::expression returned by value -> needs the complete type at the definition
 #include <vostok/animation/mixing_expression.h>

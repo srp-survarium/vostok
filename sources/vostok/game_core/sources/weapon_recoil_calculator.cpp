@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_recoil_calculator.h>
 
+#include <vostok/game_core/base_player.h>
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/console_command.h>
 

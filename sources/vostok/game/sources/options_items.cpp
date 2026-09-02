@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "options_gamma_selector.h"
 #include "options_graphics_quality_selector.h"
 #include "options_item_base.h"

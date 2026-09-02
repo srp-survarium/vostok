@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "single_position_animation_controller.h"
 // Complete types are required by the by-value expression and resource_ptr teardown.
 #include <vostok/animation/mixing_expression.h>
@@ -25,8 +26,6 @@
 #include <vostok/math_float4x4.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 // The initializer list is the complete retail constructor body.
 
@@ -111,7 +110,7 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 			float const previous_to_current_length = ( m_navigation_path[i] - m_navigation_path[i - 1] ).length( );
 			if (
 				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) / previous_to_current_length ) < previous_to_current_length &&
-				( movement_position - m_navigation_path[i] ).length( ) > s_aim_transition_time
+				( movement_position - m_navigation_path[i] ).length( ) > 0.3f
 			)
 				break;
 
