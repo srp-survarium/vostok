@@ -62,12 +62,12 @@ u32	s_max_tracers_count		= 64;
 bool	s_draw_respawn_debug	= false;
 bool	s_draw_game_match_stats	= false;
 
-static console_commands::cc_u32		bullet_tracers_max_count_cc(
-	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
 static console_commands::cc_bool	draw_respawn_debug_cc(
 	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_user_specific );
 static console_commands::cc_bool	draw_match_stats_cc(
 	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_user_specific );
+static console_commands::cc_u32		bullet_tracers_max_count_cc(
+	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
 
 namespace survarium {
 

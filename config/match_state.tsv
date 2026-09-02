@@ -32119,15 +32119,15 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 'boost::asio::detail::service_base<boost::asio::ip::resolver_service<boost::asio::ip::udp> >::id''	boost/asio/placeholders.hpp	boost	done	MATCH	100	100	100	0	15		0ab6077bb444	
 `dynamic atexit destructor for 'boost::asio::detail::service_base<boost::asio::stream_socket_service<boost::asio::ip::tcp> >::id''	boost/asio/placeholders.hpp	boost	done	MATCH	100	100	100	0	15		e7addf46204c	
 `dynamic atexit destructor for 'boost::asio::ssl::detail::openssl_init<1>::instance_''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	43		0ab6077bb444	
-`dynamic atexit destructor for 'bullet_tracers_max_count_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	60	f	398cd9c68696	
+`dynamic atexit destructor for 'bullet_tracers_max_count_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	60	f	398cd9c68696	aligned file-scope initialization and teardown order with retail PDB
 `dynamic atexit destructor for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	1	60	f	28519269e7be	
 `dynamic atexit destructor for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done			100	100	1	60	f	28519269e7be	
 `dynamic atexit destructor for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done			100	100	1	60	f	28519269e7be	
 `dynamic atexit destructor for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	a3da0f48e8ba	
 `dynamic atexit destructor for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	13	f	a3da0f48e8ba	
 `dynamic atexit destructor for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH		100	100	1	60	f	c936a5005c75	
-`dynamic atexit destructor for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	60	f	398cd9c68696	
-`dynamic atexit destructor for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	60	f	398cd9c68696	
+`dynamic atexit destructor for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	60	f	398cd9c68696	aligned file-scope initialization and teardown order with retail PDB
+`dynamic atexit destructor for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	60	f	398cd9c68696	aligned file-scope initialization and teardown order with retail PDB
 `dynamic atexit destructor for 'gProfileClock''	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH	100	100	100	0	13	f	e100c6132c0d	
 `dynamic atexit destructor for 'gRandomGenerator''	opcode/ice/icerandom.cpp	opcode	done	MATCH	100	100	100	0	1	f	25a7ff2b9b8b	
 `dynamic atexit destructor for 'g_threads''	vostok/engine/sources/apc.cpp	engine	done	MATCH		100	100	0	29	f	57bda59b68dd	
@@ -33792,15 +33792,15 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 'boost::asio::detail::service_base<boost::asio::ip::resolver_service<boost::asio::ip::udp> >::id''	boost/bind/storage.hpp	boost	done	MATCH	100	100	100	0	28		dcf180d56114	
 `dynamic initializer for 'boost::asio::detail::service_base<boost::asio::stream_socket_service<boost::asio::ip::tcp> >::id''	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	28		dcf180d56114	
 `dynamic initializer for 'boost::asio::ssl::detail::openssl_init<1>::instance_''	stlport/stl/_alloc.h	stlport	done	MATCH	100	100	100	0	74		7cb17c5e77bd	
-`dynamic initializer for 'bullet_tracers_max_count_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	87	f	1c3d3521d462	
+`dynamic initializer for 'bullet_tracers_max_count_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	87	f	1c3d3521d462	aligned file-scope initialization and teardown order with retail PDB
 `dynamic initializer for 'cc_player_name_decrease_koef''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	1	94	f	61bc0a32916b	
 `dynamic initializer for 'cc_player_name_max_font_size''	vostok/game/sources/player_tick.cpp	game	done			100	100	1	99	f	c802248eeb9c	
 `dynamic initializer for 'cc_player_name_min_font_size''	vostok/game/sources/player_tick.cpp	game	done			100	100	1	99	f	bb03e028e2b9	
 `dynamic initializer for 'cfg_save_system_cc''	vostok/game/sources/game.cpp	game	parked	MATCH		95.421	95.421	2	201		dfa05f2dc63a	Target/base have zero PDB statements, identical 0xc9 size, and the same 7-block CFG. Remaining instructions are equivalent cc_delegate construction with different inline store scheduling and Boost function/atexit ICF representative names; no source field, argument, or branch is absent.
 `dynamic initializer for 'cfg_save_user_cc''	vostok/game/sources/game.cpp	game	parked	MATCH		95.421	95.421	2	201		a8049acda4f6	Target/base have zero PDB statements, identical 0xc9 size, and the same 7-block CFG. Remaining instructions are equivalent cc_delegate construction with different inline store scheduling and Boost function/atexit ICF representative names; no source field, argument, or branch is absent.
 `dynamic initializer for 'dispersion_magic_coef_cc''	vostok/game/sources/weapon.cpp	game	done	MATCH		100	100	1	94	f	088370b6f0d4	
-`dynamic initializer for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	79	f	44b875449df0	
-`dynamic initializer for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	1	79	f	5d49da30ebc5	
+`dynamic initializer for 'draw_match_stats_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	79	f	44b875449df0	aligned file-scope initialization and teardown order with retail PDB
+`dynamic initializer for 'draw_respawn_debug_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH		100	100	2	79	f	5d49da30ebc5	aligned file-scope initialization and teardown order with retail PDB
 `dynamic initializer for 'gProfileClock''	bullet/linearmath/btquickprof.cpp	bullet	done	MATCH		100	100	0	17	f	60347e2f7b06	
 `dynamic initializer for 'gRandomGenerator''	opcode/ice/icerandom.cpp	opcode	done	MATCH		100	100	0	12	f	de668d9e9e78	
 `dynamic initializer for 'g_debug_render_device''	vostok/render/core/dx11/sources/device.cpp	render	done	MATCH	100	100	100	0	19	f	6772cd424658	
@@ -33957,19 +33957,19 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_simple_project_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	a3da0f48e8ba	
 `survarium::game::register_cooks'::`2'::`dynamic atexit destructor for 's_victory_item_cook''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	1	11	f	a3da0f48e8ba	
 `survarium::game::update_stats'::`7'::`dynamic atexit destructor for 'fps_graph''	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	2	60	f	a3da0f48e8ba	game local-static cleanup alias: target and base bodies are instruction-for-instruction identical at 60 bytes; target scoped synthetic names versus base raw dynamic-atexit names prevent pairing.
-`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'add_enemy_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	fb691640d3ca	
-`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_enemies_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	fb691640d3ca	
-`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_player_spawn_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_space_graph_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_booby_trap_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_booby_trap_set_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_damage_zone_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_empty_hands_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_human_npc_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_player_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_rifle_scope_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_sound_player_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
-`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_weapon_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	fb691640d3ca	
+`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'add_enemy_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	e5ee55125b86	
+`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_enemies_position_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	e5ee55125b86	
+`survarium::game_world::game_world'::`2'::`dynamic atexit destructor for 'clear_player_spawn_cc''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	13	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_animation_space_graph_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_booby_trap_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_booby_trap_set_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_damage_zone_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_empty_hands_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_human_npc_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_player_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_rifle_scope_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_sound_player_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
+`survarium::game_world::register_cooks'::`2'::`dynamic atexit destructor for 's_weapon_cook''	vostok/game/sources/game_world.cpp	game	done	MATCH	100	100	100	1	11	f	e5ee55125b86	
 `survarium::inventory_cook::inventory_cook'::`2'::`dynamic atexit destructor for 's_damage_model_cook''	boost/bind/placeholders.hpp	game_core	done	MATCH	100	100	100	1	15		e7addf46204c	Target/base canonical local-static thunks have exact 15/25/25-byte, zero-statement bodies; strict PDB aliases prove folded calls and the unstable local-static guard ordinal.
 `survarium::inventory_cook::inventory_cook'::`2'::`dynamic atexit destructor for 's_items_cook''	boost/bind/placeholders.hpp	game_core	done	MATCH	100	100	100	1	25		e7addf46204c	Target/base canonical local-static thunks have exact 15/25/25-byte, zero-statement bodies; strict PDB aliases prove folded calls and the unstable local-static guard ordinal.
 `survarium::inventory_cook::inventory_cook'::`2'::`dynamic atexit destructor for 's_weapon_ammunition_cook''	boost/bind/placeholders.hpp	game_core	done	MATCH	100	100	100	1	25		e7addf46204c	Target/base canonical local-static thunks have exact 15/25/25-byte, zero-statement bodies; strict PDB aliases prove folded calls and the unstable local-static guard ordinal.
