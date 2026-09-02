@@ -41,7 +41,7 @@ what is different, and which differences are actionable for matching.**
 | `.text` vsize | `0x7e2c8b` | `0x5a4ef9` | **base has less code — partial build** |
 | `.rdata` vsize | `0x1b5e03` | `0x0f4527` | fewer rdata/vtables/strings |
 | `.rsrc` | present (`0x893d4`) | **absent** | base ships no resource section |
-| CodeView | `C:\survarium\…\survarium.pdb` | `Z:\home\sheep\…` (Wine path) | build-environment artifact |
+| CodeView | `C:\survarium\…\survarium.pdb` | `Z:\home\you\…` (Wine path) | build-environment artifact |
 
 ### Rich header (`@comp.id`) — the toolchain fingerprint
 

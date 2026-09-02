@@ -61,7 +61,7 @@ import sys
 from pathlib import Path
 
 from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
-from vostok.core.paths import GFX_BUILD_TREE, PREBUILT, SCALEFORM_SDK, WIN32_DIR
+from vostok.core.paths import GFX_BUILD_TREE, GFX_TREE_PREFIX, PREBUILT, SCALEFORM_SDK, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 
@@ -135,6 +135,13 @@ OVERLAY_SKIP = {
 
 def wine_path(p: Path) -> str:
     return "Z:" + str(p).replace("/", "\\")
+
+
+def tree_path(rel) -> str:
+    """A GFX_BUILD_TREE path as the compiler must see it: through the neutral
+    C:\\survarium\\gfx-sdk alias, so objects record GFX_TREE_PREFIX, not the
+    checkout's Z: path (vostok.tool.toolchain creates the alias)."""
+    return GFX_TREE_PREFIX + "\\" + str(rel).replace("/", "\\")
 
 
 def _overlay_files():
@@ -233,7 +240,7 @@ def build_one(name):
     SHIP.mkdir(parents=True, exist_ok=True)
     out_lib = SHIP / f"{name}.lib"
 
-    inc_args = " ".join(f'-I"{wine_path(GFX_BUILD_TREE / d)}"' for d in includes)
+    inc_args = " ".join(f'-I"{tree_path(d)}"' for d in includes)
     def_args = " ".join(f"-D{d}" for d in defines)
     fd_arg = f'-Fd"{wine_path(obj_dir)}\\vc90.pdb"'
     base = f"{flags} {inc_args} {def_args} {fd_arg}"
@@ -258,7 +265,7 @@ def build_one(name):
             skipped += 1
             continue
         fo = f'-Fo"{wine_path(obj)}"'
-        rsp.write_text(f'{base} {fo}\n"{wine_path(src)}"\n')
+        rsp.write_text(f'{base} {fo}\n"{tree_path(rel)}"\n')
         r = wine_cl(f"cl {rsp_arg}", cwd=obj_dir, obj_path=obj)
         if obj.is_file() and obj.stat().st_size > 0:
             built += 1

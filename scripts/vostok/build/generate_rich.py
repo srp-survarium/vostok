@@ -37,6 +37,7 @@ from vostok.core.paths import (
     BASE_PDB,
     GFX_BUILD_TREE,
     GFX_RELEASE_PREFIX,
+    GFX_TREE_PREFIX,
     GFX_TARGET_PREFIX,
     RETAIL_SOURCE_PREFIX,
     RICH_DIR,
@@ -80,6 +81,7 @@ def generate(side: str) -> None:
                   _wine_path(ENGINE_DIR.parent) + "\\",
                   _wine_path(GFX_BUILD_TREE) + "\\",
                   GFX_RELEASE_PREFIX + "\\",
+                  GFX_TREE_PREFIX + "\\",
                   _wine_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]

@@ -202,6 +202,13 @@ GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 # different tree.
 GFX_RELEASE_PREFIX = r"z:\home\sheep\projects\survarium\vostok-gfx\binaries\gfx-sdk"
 
+# From now on the suite is compiled through a fixed Wine-side alias of
+# GFX_BUILD_TREE (C:\survarium\gfx-sdk, a symlink the toolchain creates beside
+# C:\survarium\sources), so every object records this machine-independent
+# prefix instead of the checkout's Z: path. A release cut from it makes
+# GFX_RELEASE_PREFIX equal to this and the personal path above goes away.
+GFX_TREE_PREFIX = r"c:\survarium\gfx-sdk"
+
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
