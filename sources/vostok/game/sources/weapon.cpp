@@ -27,22 +27,22 @@
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 // TU-local console-command statics (file scope, no namespace prefix in the PDB).
+// s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion.
+static float s_dispersion_gui_scale_coef_value = 120.0f;
+static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_gui_scale_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_engine_internal );
 // finger_corrector_enable gates weapon::process_finger_correction.
 static bool s_enable_finger_corrector_value = true;
 static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, true, vostok::console_commands::command_type_user_specific );
 
 static bool s_draw_fire_point = false;
 static vostok::console_commands::cc_bool s_draw_fire_point_cc( "weapon_draw_fire_point", s_draw_fire_point, true, vostok::console_commands::command_type_user_specific );
-// hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
-// s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion.
+// hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation.
 static bool s_hide_crosshair_on_aim_value = true;
-static float s_dispersion_gui_scale_coef_value = 120.0f;
 
 // aim FOV/near-plane transition duration, passed to player::set_target_fov_factor in
 // instant_aim_start/end (the [s_aim_transition_time] float-pool memload). sushi@TODO:
 // seed unrecoverable from asm (data section); 0.3f matches the documented aim transition.
 static float s_aim_transition_time = 0.3f;
-static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_gui_scale_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
