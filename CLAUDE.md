@@ -1,4 +1,4 @@
-# vostok - working agreements (read AGENTS.md too)
+# vostok - working agreements (AGENTS.md is this file)
 
 This repo binary-matches the Vostok Engine (Survarium v0.100b): C++ that,
 compiled with the original MSVC 8.0 / VS2008 toolchain, produces byte-identical
@@ -81,6 +81,26 @@ rather than bending the source to the bytes. The ledger's `cls` column
 (`QUANTITY`, `SPLIT`, `SIZE`, `MATCH`) is only an approximation of this verdict;
 `QUANTITY` and `SPLIT` rows are where to look first. Definitions and the deeper
 PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/pdb_topology.md`.
+
+## Matching rules
+
+- Reproduce the shipped target exactly: bugs, dead code, odd control flow,
+  declaration and access order, const qualification. Read the target's structure
+  and assembly before writing a body; never fabricate a function, type, override
+  or symbol to gain percentage, and never change another unit to steer a caller's
+  inlining. Match one translation unit at a time.
+- Evidence beats taste: `pdb_fetch --view target|base|structure-diff` for
+  disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
+  for control flow (its exit code 1 is an answer, read the printed verdict),
+  `binaries/structure/target/headers` for class layout and vtable order.
+- Attribute a residual to LTCG only when it is proven to be argument passing at a
+  call boundary; otherwise it is source shape, or a concrete wall to record.
+- Every commit is a measured state: run the full `vostok build` and commit the
+  refreshed README block and ledger with the change. Record worked functions with
+  `vostok ledger tried`. Stacks stay linear; land by fast-forward, never squash.
+- Source carries no derived status: no percentages or diff dumps in comments.
+  Live markers are `STATE[STUB|INLINED|UNMATCHABLE]` and `sushi@TODO`; drop them
+  and any carcass narration when their condition is resolved.
 
 ## The tooling (`scripts/vostok/`)
 

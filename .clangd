@@ -1,5 +1,6 @@
-# clangd over the generated compile_commands.json (vostok.build.ninja_regen
-# emits it on every rebuild). Navigation only: clang is a READER of this
+# clangd over the generated compile_commands.json + clangd-vfs.yaml at the repo
+# root (gitignored; `vostok tool toolchain` writes them on shell entry, the graph
+# regen renews them when the TU set changes, `ninja_regen --compdb` forces). Navigation only: clang is a READER of this
 # MSVC8-dialect code; the Wine build is the sole verdict on correctness.
 CompileFlags:
   CompilationDatabase: .
