@@ -1,110 +1,82 @@
-# Structure-divergence queue — goal: drive `pdb_divergence` to zero
+# Retail/candidate PDB comparison
 
-Authoritative structure verification compares our **base** gold PDB against the
-**target** `survarium.pdb` straight off both type streams — self-comparison is 0
-divergences (no false positives), unlike `vostok diff layout` which both over- and
-under-reported. This is the worklist; re-running the tool is the scoreboard.
+The current measured snapshot is
+[`pdb_comparison_audit.md`](pdb_comparison_audit.md). It records the Git commit,
+PDB hashes, exact commands, filters, summary counts, and unresolved evidence.
+Do not copy an old count from this file into a review.
 
-Tool: `pdb_divergence` (vostok-pdb-parser, branch `structure-builder-all-enums+scaleform`,
-flake-pinned). Run from the parser clone:
+## Evidence owners
 
-    nix develop --command cargo run --release --quiet --bin pdb_divergence -- \
-      --base-pdb   <repo>/binaries/Win32/survarium-dx11-win32-gold.pdb \
-      --base-engine-path   'z:\home\...\<worktree>\sources\'   # lowercased Wine path, trailing \
-      --target-pdb $SURVARIUM_BIN/survarium.pdb \
-      --target-engine-path 'c:\survarium\sources' \
-      --skip bullet --skip opcode --skip stlport --skip vorbis --skip ogg --skip zlib \
-      --skip render --skip sound --skip scaleform --skip flash
+No single flattened report is the PDB truth. Use the channel that owns the
+question:
 
-Categories — headers: `[size]` (instance size / STATIC_SIZE_ASSERT), `[member]`
-(type/offset/one-sided/reorder), `[fn-order]` (member-fn decl order), enum
-`[values]`/`[underlying]`. Sources (joined by engine-relative path): `[fn-order]`
-(definition order, LCS relative) and `[const]` (constants by type+value; rename =
-misname). `--raw-line-table-counts` additionally exposes `[line-table]`, a raw
-CodeView entry-count diagnostic that is excluded by default because optimized
-attribution and line packing are not semantic statement structure. Use
-`pdb_fetch --view structure-diff`, named locals, and assembly for structure. Use
-the base PDB from a FRESH tip build (a stale base shows already-fixed types).
+| Question | Evidence owner | Strength |
+|---|---|---|
+| complete class shape and declaration order | `pdb_topology --classes` | direct field-list evidence |
+| same-name class record variants/multiplicity | `pdb_topology --classes` | direct raw-TPI inventory |
+| enum values/underlying type | `pdb_divergence` plus raw variant inspection | semantic after variant ambiguity is excluded |
+| source definition order and constants | `pdb_divergence` | semantic when both files/functions pair |
+| function locals/statements/lexical blocks | `pdb_fetch --view structure-diff` | direct procedure evidence |
+| DBI/TPI/global/module-symbol sequence | `pdb_topology --order` | physical/linker-derived diagnostic |
+| out-of-line function presence | `pdb_divergence --list-presence-fns` and the match DB | scheduling/reachability evidence |
+| emitted member use | target/base disassembly at a real consumer | direct for that access path |
 
-**Deferred (skipped above):** render (matched last), sound (dedicated rewrite),
-scaleform / `flash_*` / `Scaleform::` (vendor GFx), third-party
-(bullet/opcode/stlport/vorbis/ogg/zlib).
+`pdb_divergence` remains useful as a broad normalized compatibility view. Its
+class/enum model collapses same-name records, so a row involving a multi-variant
+name is not a source verdict by itself. `report.json` owns emitted byte results;
+it does not explain every record retained in the linked PDB.
 
-## Scoreboard — tip 70d369b5e, 2026-06-25
+## Reproducible audit
 
-| category | count |
-|---|---|
-| [size]   | 42 (26 our-type) |
-| [member] | 142 |
-| [fn-order] | 630 |
-| legacy raw [stmt] snapshot | 616 |
-| [values] (enum) | 15 |
-| [const]  | 4 |
+1. Start from a clean worktree and run a successful full
+   `python3 -m vostok build -j6`. A module-only build or `derive refresh` is not
+   current PDB evidence.
+2. Record the commit and SHA-256 of both PDBs. Use `base` for the reconstructed
+   candidate and `target` for retail consistently.
+3. Run the unfiltered comparison first. Then run the campaign-filtered view with
+   every `--skip` value written out; never describe a hidden filter as “our
+   types.”
+4. Run `pdb_topology --classes --json` and preserve these categories separately:
+   `identical`, `record-multiplicity`, `variant-overlap`, disjoint `different`,
+   target-missing-base, and base-only names.
+5. Run `pdb_topology --order --json`. Order claims use only keys that occur once
+   on both sides. Report changed unique records, one-sided records, multiplicity,
+   excluded non-unique keys, and inversions separately.
+6. Run target-vs-target self-checks when the comparator changes. They must have
+   no semantic or order differences; duplicate keys may still be listed as
+   excluded from pairing.
+7. Derive review counts from the uncapped JSON and summarize them in the
+   measured snapshot; attach the raw JSON externally when individual rows need
+   review. Do not paste a capped terminal view and call it complete.
 
-(Raw first run, no deferral skips, was 322 / 452 / 1104 / 971; the drop is the
-skips + the integrated fixes engine_world / ui×4 / base_particle / brain_unit_cook_params.)
+## Honest classifications
 
-## Open `[size]` layout levers (our types) — each can ripple like engine_world(+38)/ui(+35)
+Use only these conclusions until stronger evidence exists:
 
-- **survarium scene/menu:** free_fly_camera, game_scene, main_menu, main_menu_external_handler, object_light, object_particle_visual
-- **ai:** ai_world, planning::search, planning::search_base (+ vertex_allocator_impl_type)
-- **network:** network_world, match_client_impl · **network_core:** udp_match_client / _client_session / _connection
-- **resources:** resources_manager · **vfs:** fat_node_info, pack_archive_args, patch_args, save_archive_args · **tasks:** task_allocator, task_manager
-- **misc:** animation::skeleton_animation_cook, game_test_suite
+- **exact** — the compared semantic sets agree;
+- **record multiplicity** — equal shape, unequal repeated-record count;
+- **variant overlap** — at least one equal shape plus unmatched shapes;
+- **disjoint variants** — the same name exists but no complete shape agrees;
+- **one-sided** — the named entity exists in only one compared scope;
+- **consumer-bound** — assembly/procedure evidence binds one emitted consumer to
+  one shape;
+- **unresolved provenance** — the PDB contains competing records and they have
+  not been bound to compilands or consumers.
 
-## Enum `[values]` divergences (overlaps `enum_queue.md`)
+Do not call a record `phantom`, `stale`, `unused`, or `canonical` because a
+same-name sibling exists, because one selector chose another record, or because
+one consumer uses another layout. Those terms require record provenance or an
+equivalent direct demonstration. See
+[`divergence-phantom-duplicate-type-record.md`](patterns/divergence-phantom-duplicate-type-record.md).
 
-keyboard_key_group, scene_ready_type, ai::predicate_types_enum,
-animation::mixing::time_event_types_enum, animation::reserved_channel_ids_enum,
-core::log_flags_enum, input::mouse_button, login_client/match_client/match_server
-message_types_enum, network_core::udp_match_packets_count_enum,
-particle::enum_particle_entity_type, resources::class_id_enum.
+## Campaign filters
 
-## Notes
+The historical campaign view excluded third-party and deferred subsystems with:
 
-- The retail-vs-base record-name STYLE divergence (`T<enum E,...>` and
-  `const `-with-trailing-space in retail, bare in base) was a Wine artifact,
-  now fixed build-side (native VC90 CRT) — see
-  `patterns/pdb-names-undname-crt-wine.md`. The pdb-parser `canon_display()`
-  normalization that used to paper over it is REMOVED (parser e4ed03e); the
-  native CRT makes both PDBs spell records the same, and removing the proxy
-  un-masks ~55 real `class`-vs-`struct` drifts (base header types now 302, up
-  from the fenced 247) that ARE workable matching signal.
-- `[fn-order]` is dominated by top-level-`const`-on-value-param spelling diffs
-  (target `const T`, base `T`) — byte-neutral but a real divergence; sweep them
-  (see the const-param sweep). `uninitialized_reference<T>` `[size]` rows are
-  derivative — they track the wrapped type, fix the wrapped type and they follow.
-- Drop a row when a re-run shows the type at 0 divergences.
-- **Before believing a `[member]` flag, confirm against the emitted asm — some are
-  PHANTOM** (target carries a duplicate `_1` type record, OR the base PDB is stale
-  from incremental relink). See `patterns/divergence-phantom-duplicate-type-record.md`.
-  `report.json` is authoritative for "did my fix land"; `pdb_divergence` is
-  trustworthy only after a CLEAN RELINK (`rm` exe+pdb, rebuild). Confirmed-phantom
-  `[member]` flags (do NOT re-chase): network_core `udp_match_connection`/session/
-  server/`udp_match_client` `sequence_number<u8>`/`0xB20`, network `match_client_impl`
-  `boost::array<...,2048>` — base is asm-correct.
+```text
+bullet opcode stlport vorbis ogg zlib render sound scaleform flash
+```
 
-## Member-levers sweep (tip 396d3dbe, 2026-06-25 — match/member-levers-2)
-
-FIXED (clean relink confirms 0 divergences + report.json wins, 0 regressions):
-- `particle::particle_system_lod` — field REORDER (`m_parent` first @0x0) — particle_system
-  load_lod_actions_binary/index_to_action/load_binary → 100%.
-- `tasks::task_allocator` `max_task_count` 950000→4096 (target buffer `u8[393216]`,
-  granularity 0x60, ctor loop `cmp edx,1000h`) — also clears the derivative `task_manager`
-  `[size]` rows (it embeds the allocator); task_allocator ctor/allocate/deallocate +
-  task_manager ctor → 100%.
-- `physics::character_move_test_callback` — `const` on `m_up_vector`/`m_minSlopeDot`
-  + ctor param (byte-neutral, faithful; stays 100%).
-- `network_core` `delayed_packets_predicate` — member rename `m_delayed_packets_to_appear`
-  →`m_packets` (byte-neutral; predicate op() stays 100%). The `boost::noncopyable` BASE
-  could NOT be added (std::remove_if copy-constructs the predicate → C2248); sushi@TODO +
-  review_todos row left.
-PARKED (out of layout-only scope — body/render-coupled rewrites, leave for a particle/input matcher):
-  `particle_emitter_instance` / `particle_system_instance(_impl)` (reference→pointer +
-  new `render::base_scene_ptr m_scene` + removed `self_ptr` + ctor/method-set rewrite),
-  `input::receiver::keyboard` (DirectInput event-buffer rewrite, 0x210→0x914),
-  `console_commands::cc_bool` (`cc_value<bool>` base refactor), `core` `mutex_mt_raii`
-  (+`const bool m_is_tasks_aware`, out-of-line ctor logic), `core` `regions_filler`
-  (+`m_high_memory_regions`, 2-arg ctor + region-routing body), `game_test_suite`
-  (`m_rtp_world` is base-only but used by rtp_learn/rtp modules — can't remove without
-  touching them). All others in scope are type-spelling SKIP (`enum X`/`const X`/`char const `).
+That filtered view is useful for scheduling but is not the total retail/candidate
+PDB difference. Always publish both totals and filtered totals, and identify
+which remaining rows are vendor/deferred rather than subtracting them in prose.

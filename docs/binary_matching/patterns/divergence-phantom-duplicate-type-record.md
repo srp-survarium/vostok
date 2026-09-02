@@ -1,89 +1,93 @@
-# pdb_divergence `[member]` flag may be a STALE/DUPLICATE type record — confirm against the emitted asm
+# Duplicate PDB type records are competing variants, not automatic phantoms
 
-- confidence: 8
+- confidence: 9
 - cpp tags: cpp:member cpp:struct cpp:template
 - asm tags: asm:mov asm:cmp
 - topic tags: topic:tooling topic:structure-shape topic:scoring-artifact
 
 ## Symptom
 
-`pdb_divergence --headers-only` reports a `[member]` `changed` row where the base
-and target differ in a member's TYPE/SIZE/OFFSET, e.g.
+`pdb_divergence --headers-only` can report one `[member]` or `[size]` row for a
+qualified name even though the same PDB contains several complete records with
+that name and different layouts. For example, the network cluster has records
+that disagree about `sequence_number<u8>` versus `sequence_number<u16>` and
+about related containing-class sizes.
 
-    class vostok::network_core::udp_match_connection
-      [member]
-        changed  m_local_sequence_id: base(sequence_number< u16 > @0x124)  target(sequence_number< u8 > @0x124)
-        ...
-      [size] base=0x538  target=0x530
+The historical comparator normalized the merged type stream to one record per
+name. Any verdict derived from that one selected record overstates the evidence.
 
-…but the base value is the one a prior matcher already pinned against the
-disassembly. Editing the header to the "target" value is WRONG.
+## What the PDB actually establishes
 
-## Cause
+A merged/LTCG PDB may contain:
 
-The original `survarium.pdb` type stream carries MORE THAN ONE record for the
-same qualified type (per-TU type drift in the shipped build, or an incremental
-relink). `pdb_divergence` joins by name and picks ONE of them — sometimes a
-STALE / phantom record whose layout never shipped. The tell:
+- repeated records with exactly the same semantic shape;
+- several different semantic variants under the same qualified name;
+- different variant sets or record multiplicities in retail and candidate.
 
-- the target structure-dump has BOTH `…/udp_match_connection.h` (the flagged one)
-  AND `…/udp_match_connection_1.h` (or a `_1` sibling) with DIFFERENT member
-  types/sizes, each ending in its own `STATIC_SIZE_ASSERT`;
-- one record's layout matches the base; the other is what the divergence flagged.
+None of those facts identifies one globally canonical definition. Different
+variants may reflect per-compiland definitions, incremental-link history,
+CodeView merging, or a real ODR/layout inconsistency in the shipped program.
+Calling an unmatched record `stale` or `phantom` requires evidence beyond its
+position or name in the type stream.
 
-This is the same root cause as the `[size]` "phantom timer record" trap in
-`review_todos.md` (ai_world/search) — the structure extractor picks a
-stale/duplicate record from the type stream, while `pdb_fetch` on the emitted
-FUNCTION reads the real one.
+Use the raw variant-set query first:
 
-### TWO different phantom sources — don't conflate them
+```sh
+pdb_topology \
+  --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --classes --class 'vostok::network_core::udp_match_connection'
+```
 
-1. **Target-side duplicate record** (the `_1` sibling above): the SHIPPED
-   `survarium.pdb` genuinely carries two records; the base was already right.
-2. **Base-side STALE record from incremental relink**: MSVC accumulates old type
-   records in `survarium-dx11-win32-gold.pdb` across links, so after you EDIT a
-   header and rebuild, `pdb_divergence` may still read the BASE's pre-edit layout
-   and report the divergence as unchanged — even though your fix landed. The tell:
-   `report.json` (objdiff vs the freshly-compiled `.obj`s) shows the consuming
-   functions jumped to 100%, but `pdb_divergence` still prints the old `[member]`
-   row. **`report.json` is authoritative for "did my layout fix land"; the PDB-vs-PDB
-   divergence is only trustworthy after a CLEAN RELINK** (`rm` the exe + pdb [+ ilk]
-   and rebuild) flushes the accumulated records. Verified 2026-06-25: particle_system_lod
-   reorder / task_allocator `[4096]` / character_move_test_callback const-members /
-   delayed_packets_predicate rename all read 100% in report.json with 0 regressions,
-   while a dirty-PDB `pdb_divergence` still showed every pre-edit row.
+The statuses are deliberately narrow:
 
-## Resolution — the emitted function asm is the tie-breaker, NOT the type stream
+- `identical`: equal semantic variant sets and record multiplicities;
+- `record-multiplicity`: equal shapes, unequal equal-record counts;
+- `variant-overlap`: at least one shared shape plus unmatched variants;
+- `different`: no shared shape for that name.
 
-Read the consuming function's asm with `pdb_fetch --view target` and look at how
-the member is actually accessed:
+PDB-local type indexes are preserved as provenance. They are allocation
+positions, not cross-PDB identities.
 
-- a `mov [eax], cx` (16-bit word store) / `mov cx, [ebp+8]` into the member, or a
-  2-byte-spaced offset sequence (`+0x124`, `+0x126`, `+0x128`, `+0x12a`) ⇒ the
-  member is `u16`/2 bytes → the `<u16>` record is real, the `<u8>` flag is phantom.
-- a `mov [eax], cl` (byte store) / 1-byte-spaced offsets (`+0x124`, `+0x125`, …)
-  ⇒ the member is 1 byte → the `<u8>` record is real.
-- a `cmp edx, 1000h` loop bound / `add ecx, 60h` stride in a ctor proves an array's
-  element count (e.g. `task_allocator::m_task_buffer[4096]`, granularity 0x60) over a
-  flagged-but-phantom array size.
+## How to resolve a consumer
 
-Also check the function's `--view info` recorded PARAM/LOCAL types: if the body's
-params/locals are `<u16>` and the divergence claims the matching MEMBER is `<u8>`,
-the member-flag is the phantom (the source bridges the two with a
-`reinterpret_cast`, but a value STORE width never lies).
+The assembly of a real consuming function can bind that function to one layout:
 
-Verified network_core cluster (2026-06-25, divergence-member sweep): the
-`sequence_number<u8>` flags on `udp_match_connection` (+ `udp_match_client_session`,
-`udp_match_server` member_hook constant, `packets_in_list_predicate`,
-`sequence_id_predicate`) and `udp_match_client`/`match_client_impl` `0xB20`/`2048`
-flags were ALL phantom — the emitted `update_acknowledgements` stores 16-bit words
-at 2-byte-spaced offsets, and `match_client_impl`'s ctor builds a `0x2000*0x12C`
-arena (8192, not 2048). Base was already correct; every edit was reverted.
+- `mov [eax], cx`, a word load/store, or offsets spaced by two bytes establishes
+  a 16-bit member for that access path;
+- `mov [eax], cl`, a byte load/store, or offsets spaced by one byte establishes a
+  byte member for that access path;
+- loop bounds and element strides can establish the array extent used by a
+  constructor or allocator;
+- the function's CodeView procedure/local types and its owning field-list binding
+  can strengthen the association.
 
-## Counter-example (a REAL `[member]` flag)
+This proves which shape the inspected code uses. It does **not** prove that every
+other same-named record is fictitious or that no other shipped compiland uses it.
+Record-to-compiland and record-to-consumer provenance must be shown before a
+whole-name divergence is closed.
 
-Not every flag is phantom. `particle_system_lod` had a genuine field REORDER
-(`m_parent` first @0x0 in target vs @0x18 in base) with a SINGLE canonical record —
-reorder the declarations to match. The discriminators: only ONE record exists for
-the type, and a reorder/one-sided-field/offset-shift (not just a type-spelling
-`enum X`/`const X`/`<u8>`-vs-`<u16>` swap) shows up with no contradicting asm.
+For candidate-side history, use a fresh full link before classifying anything.
+An old incremental PDB can retain records that no current object emits. A byte
+match in `report.json` proves the current object code for a function, but does not
+by itself explain every type record in the linked PDB.
+
+## Reclassified network evidence
+
+The existing `udp_match_connection::update_acknowledgements` disassembly supports
+the `<u16>` shape for that function: it uses 16-bit stores at two-byte-spaced
+offsets. The inspected `match_client_impl` constructor supports an 8192-element
+arena for its access path. Those are useful consumer-level facts.
+
+They are not sufficient to label the disagreeing retail records, or all related
+network rows, as phantoms. Keep the rows as variant/provenance questions until a
+fresh PDB audit shows the exact target/candidate variant sets and binds the
+relevant records to compilands or emitted consumers.
+
+## Counter-example
+
+`particle_system_lod` had a genuine field reorder and the emitted accesses agreed
+with the reordered layout. That was actionable. The lesson is not that
+single-record rows are real and duplicate-record rows are fake; it is that the
+type-stream result and the code using the type must be made consistent before a
+source change or a parked classification is justified.
