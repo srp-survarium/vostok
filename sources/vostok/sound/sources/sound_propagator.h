@@ -8,174 +8,126 @@
 #define SOUND_PROPAGATOR_H_INCLUDED
 
 #include <vostok/sound/sound.h>
-#include <vostok/sound/sound_producer.h>
-#include <vostok/sound/sound_instance_proxy.h>
-#include <vostok/memory_single_size_buffer_allocator.h>
-#include "create_sound_propagator_params.h"
+#include <vostok/fixed_vector.h>
+#include <vostok/sound/sound_propagator_emitter.h>
+
+struct IXAudio2SubmixVoice;
 
 namespace vostok {
+
+namespace memory {
+class writer;
+} // namespace memory
+
 namespace sound {
 
-struct play_params;
-struct propagator_statistic;
-class encoded_sound_interface;
-class world_user;
 class sound_instance_proxy_internal;
-class sound_instance_emitter;
-class sound_propagator_emitter;
 class sound_voice;
-class sound_spl;
-class sound_rms;
+struct sound_voice_params;
 
-typedef	resources::resource_ptr < encoded_sound_interface, resources::unmanaged_intrusive_base > encoded_sound_ptr;
-typedef	resources::resource_ptr < sound_spl, resources::unmanaged_intrusive_base > sound_spl_ptr;
-typedef	resources::managed_resource_ptr sound_rms_ptr;
-
-class sound_propagator : private boost::noncopyable
+class new_sound_propagator : private noncopyable
 {
 public:
-								sound_propagator		(	playback_mode mode,
-															u32 playback_id,
-															u32	playing_offset,
-															u32 before_playing_offset,
-															u32 after_playing_offset,
-															sound_instance_proxy_internal& proxy,
-															sound_propagator_emitter const& emitter,
-															sound_producer const* const producer,
-															sound_receiver const* const	ignorable_receiver = 0);
-
-								~sound_propagator		( );
-			void				tick					( u32 time_delta_in_msec );
-
-			void	pause_produce_and_preserve_state_for_resume	( );
-			void	clear_preservation_state_for_resume			( );
-	inline	bool	is_state_preserved_for_resume				( ) const { return m_is_state_preserved_for_resume; }
-
-			void				pause_propagation		( );
-			void				resume_propagation		( );
-	inline	bool				is_propagation_paused	( ) const { return m_is_pause_propagating_requested; }
-
-			void				stop_produce_sound		( );
-			void				stop_propagate_sound	( );
-
-	inline	bool				is_sound_producing		( ) const { return m_is_sound_producing; }
-	inline	bool				is_propagation_finished	( ) const { return m_is_propagation_finished; }
-	inline	bool				can_be_deleted			( ) const { return	m_is_propagation_finished &&
-																			!m_is_state_preserved_for_resume; }
-	inline	u32					get_sound_length		( ) const { return m_sound_length; }
-	inline	u32					get_playback_id			( ) const { return m_playback_id; }
-	inline	u32					get_playing_offset		( ) const { return m_playing_offset; }
-	inline	u32				get_sound_length_original	( ) const { return m_sound_length_original;}
-	inline	u32				get_before_playing_offset	( ) const { return m_before_playing_offset; }
-			float				get_unheard_distance	( ) const;
-	inline	playback_mode		get_playback_mode		( ) const { return m_mode; }
-
-	inline	u32					get_after_palying_offset	( ) const { return m_after_playing_offset; }
-	inline	u32					get_before_palying_offset	( ) const { return m_before_playing_offset; }
-
-	inline	bool				is_callback_executer	( ) const { return m_is_callbak_executer; }
-	inline	void				set_as_callback_executer( bool val ) { m_is_callbak_executer = val; }			
-
-	inline sound_propagator_emitter const&	get_propagator_emitter	( ) const { return m_emitter; }
-
-	inline	bool				has_sound_voice			( ) const { return m_sound_voice != 0; }
-			void				attach_sound_voice		( u32 delta_time_from_last_tick );
-			void				detach_sound_voice		( );
-
-			float			get_propagation_outer_radius( ) const;
-			float			get_propagation_inner_radius( ) const;
-
-	inline	float3 const&	get_listener_position			( ) const { return m_listener_position; }
-
-			float	get_propagation_outer_radius_for_listener	( ) const;
-			float	get_propagation_inner_radius_for_listener	( ) const;
-
-
-	inline	sound_producer const*			get_producer				( ) const { return m_producer; }
-	inline	void							clear_producer				( ) { m_producer = 0; }
-	inline	sound_receiver const* const		get_ignorable_receiver		( ) const { return m_ignorable_receiver; }
-	inline	sound_instance_proxy_internal&	get_proxy					( ) const { return m_proxy; }
-	// hdr audio functions
-	inline	float					get_percived_loudness	( ) const		{ return m_perceived_loudness; }
-	inline	void					set_percived_loudness	( float pl )	{ m_perceived_loudness = pl; }
-
-	inline	float					get_attenuated_loudness	( ) const		{ return m_attenuated_loudness; }
-	inline	void					set_attenuated_loudness	( float al )	{ m_attenuated_loudness = al; }
-
-			float					get_sound_spl			( float distance ) const;
-			float					get_sound_rms_value		( ) const;
-			sound_rms_ptr const&	get_sound_rms			( ) const;
-
-			void					serialize				( memory::writer& w ) const;
-			void					deserialize				( memory::reader& r );
-
-			void					set_quality				( u32 quality );
-
-#ifndef MASTER_GOLD
-			void					dump_debug_snapshot		( configs::lua_config_value& val ) const;
-			void					fill_statistic			( propagator_statistic& statistic ) const;
-#endif // #ifndef MASTER_GOLD
-private:			
-			void					on_finish_playing_sound	( );
-			void					on_finish_propagating	( );
-			void					execute_user_callback	( ) const;
-			void					stop_playing_sound		( );
-
-			void					tick_for_once_mode		( u32 time_delta_in_msec );
-			void					tick_for_looped_mode	( u32 time_delta_in_msec );
-
-			float				get_outer_radius_internal	( ) const;
+	enum propagation_state
+	{
+		propagating,
+		propagating_paused,
+		propagating_finished
+	}; // enum propagation_state
 
 public:
-	sound_propagator*		m_next_for_proxies;
+											new_sound_propagator			(
+												float3 const&						start_position,
+												float3 const&						listener_position,
+												playback_mode						mode,
+												u32									playback_id,
+												u32									playing_offset,
+												u32									before_playing_offset,
+												u32									after_playing_offset,
+												sound_instance_proxy_internal&		proxy,
+												sound_propagator_emitter const&		emitter
+											);
+											~new_sound_propagator			( );
+
+			void							tick							( u32 time_delta_in_msec );
+
+	inline	bool							can_be_deleted					( ) const { return m_propagation_state == propagating_finished; }
+
+			void							distribute_voices				( u32 count, vectora< sound_voice_params > const& voices_params );
+
+	inline	u32								get_length_with_offsets			( ) const { return m_sound_length_with_offsets; }
+
+	inline	void							set_quality						( u32 quality );
+	inline	void							set_as_callback_executer		( bool value ) { m_is_callback_executer = value; }
+
+	inline	bool							is_sound_producing				( ) const { return m_voice != 0; }
+
+			void							pause_propagation				( );
+			void							resume_propagation				( );
+			void							stop_propagation				( );
+			u32								stop_produce					( );
+
+	inline	float							get_percived_loudness			( ) const { return m_perceived_loudness; }
+	inline	void							set_percived_loudness			( float value ) { m_perceived_loudness = value; }
+	inline	float							get_attenuated_loudness			( ) const { return m_attenuated_loudness; }
+	inline	void							set_attenuated_loudness			( float value ) { m_attenuated_loudness = value; }
+
+	inline	float							get_sound_spl					( float distance ) const;
+	inline	float							get_sound_rms_value				( ) const;
+	inline	resources::managed_resource_ptr const&	get_sound_rms					( ) const;
+
+	inline	void							serialize						( memory::writer& writer );
+
+	inline	sound_instance_proxy_internal&	get_proxy						( ) { return m_proxy; }
+
 private:
-	// Keep propagation and listener positions independent during fast motion.
-	float3								m_start_propagation_position;
-	float3								m_listener_position;
-	sound_instance_proxy_internal&		m_proxy;
-	sound_propagator_emitter const&		m_emitter;
-	sound_producer const*				m_producer;
-	sound_receiver const*				m_ignorable_receiver;
-	sound_voice*						m_sound_voice;
-	float								m_end_propagation_distance;
-	u32									m_end_propagation_time;
-	u32									m_propagating_time;
-	u32									m_sound_length;
-	u32									m_sound_length_original;
-	u32									m_sound_playing_time;
-	u32									m_playback_id;
-	u32									m_playing_offset;
-	u32									m_playing_offset_original;
-	u32									m_before_playing_offset;
-	u32									m_after_playing_offset;
-	u32									m_tick_precision_for_listener;
-	playback_mode						m_mode;
-	bool								m_is_on_finish_playing_called;
-	bool								m_is_propagation_finished;
-	bool								m_is_callbak_executer;
-	bool								m_is_pause_producing_sound_requested;
-	bool								m_is_pause_propagating_requested;
-	bool								m_is_stop_producing_sound_requested;
-	bool								m_is_state_preserved_for_resume;
-	bool								m_is_sound_producing;
-	// hdr audio members
-	float								m_perceived_loudness;
-	float								m_attenuated_loudness;
+			u32								sound_playing_time				( ) const;
+			u32								sound_playing_time_with_offsets	( ) const;
+
+			sound_voice*					attach_voice					( u32 offset );
+			void							attach_voices					( u32 count, vectora< sound_voice_params > const& voices_params );
+			void							detach_voices					( u32 count );
+			void							detach_voice					( sound_voice* voice );
+
+			void							set_voice_channel_matrix		( sound_voice* voice, float const* channel_matrix, float lp_coeff );
+
+			void							execute_callback				( );
+
 public:
-	u32									m_dbg_id;
-}; // class sound_propagator
+	new_sound_propagator*					m_next_for_proxies;
+private:
+	sound_voice*							m_voice;
+	fixed_vector< IXAudio2SubmixVoice*, 4 >	m_submix_voices;
+	float3									m_start_position;
+	sound_instance_proxy_internal&			m_proxy;
+	sound_propagator_emitter const&			m_emitter;
+	playback_mode							m_mode;
+	bool									m_is_callback_executer;
+	s32										m_playing_offset;
+	u32										m_playback_id;
+	u32										m_end_propagation_time;
+	u32										m_time_to_listener;
+	u32										m_propagation_time;
+	u32										m_sound_length;
+	u32										m_sound_length_with_offsets;
+	u32										m_before_playing_offsets;
+	u32										m_after_playing_offsets;
+	propagation_state						m_propagation_state;
+	float									m_perceived_loudness;
+	float									m_attenuated_loudness;
+}; // class new_sound_propagator
 
-template class VOSTOK_SOUND_API intrusive_list <	sound_propagator,
-												sound_propagator*,
-												&sound_propagator::m_next_for_proxies,
-												threading::single_threading_policy	>;
+STATIC_SIZE_ASSERT( new_sound_propagator, 0x6C );
 
-typedef intrusive_list	<	sound_propagator,
-							sound_propagator*,
-							&sound_propagator::m_next_for_proxies,
-							threading::single_threading_policy,
-							size_policy
-						>	propagators_list;
+typedef intrusive_list	<	new_sound_propagator,
+							new_sound_propagator*,
+							&new_sound_propagator::m_next_for_proxies,
+							threading::single_threading_policy
+						>	new_sound_propagator_list;
+
+inline void new_sound_propagator::serialize	( memory::writer& )
+{
+}
 
 } // namespace sound
 } // namespace vostok
