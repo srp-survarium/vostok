@@ -109,3 +109,7 @@ ipch/
 /clangd-vfs.yaml
 /.cache/
 binaries.old*/
+
+## Regenerable worklists (vostok ledger mismatch-queue --write-queue, pdb_divergence) - not committed
+docs/binary_matching/structure_mismatch_queue.md
+docs/binary_matching/match_queue.md
