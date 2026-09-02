@@ -58,6 +58,7 @@ REPO = _find_repo()
 SCRIPTS = REPO / "scripts"
 SOURCES = REPO / "sources"
 CONFIG = REPO / "config"
+CODEX_WALL_REVIEWS = CONFIG / "codex_wall_reviews.tsv"
 DOCS = REPO / "docs"
 # Recovered HLSL shader sources (the tree the shipped blobs' dependency tables
 # name as `resources.sources/shaders/...`). 176 of the 261 shipped shader

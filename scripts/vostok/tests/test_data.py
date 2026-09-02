@@ -3,6 +3,7 @@
 import struct
 import tempfile
 import unittest
+from unittest import mock
 from collections import Counter
 from pathlib import Path
 
@@ -46,11 +47,13 @@ from vostok.data.render_relocs import (
     _accept_unique,
     _classify_extentless_comparison,
     _datum_token,
+    _datum_token_aliases,
     _direct_call_graph,
     _extentless_end,
     _first_diff,
     _function_data_rows,
     _function_data_resolution,
+    _current_source_hash,
     _function_fingerprint_pairs,
     _pattern,
     _problem_tags,
@@ -61,9 +64,56 @@ from vostok.data.render_relocs import (
     _select_extentless_candidate,
     _window,
 )
+from vostok.data.reviews import matches as _review_matches
 
 
 class FunctionDataResolutionTests(unittest.TestCase):
+    def test_extentless_review_hashes_current_owning_unit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "sources/vostok/particle/action.h"
+            source.parent.mkdir(parents=True)
+            source.write_text("class action {};\n", encoding="latin-1")
+            with mock.patch(
+                "vostok.derive.maxima.SOURCES", Path(directory) / "sources"
+            ):
+                self.assertEqual(
+                    _current_source_hash(
+                        "??_Gaction@@UAEPAXI@Z",
+                        "vostok/particle/action.h",
+                        {"module": "particle", "hash": "stale-ledger"},
+                        None,
+                    ),
+                    "e2f12c7bf31a",
+                )
+
+    def test_gfx_review_hashes_lib_overlay_before_pristine_sdk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            overlay = root / "sources/scaleform/sdk-overlay/GFx/example.cpp"
+            sdk = root / "sdk/Src/GFx/example.cpp"
+            overlay.parent.mkdir(parents=True)
+            sdk.parent.mkdir(parents=True)
+            overlay.write_text("overlay\n", encoding="latin-1")
+            sdk.write_text("sdk\n", encoding="latin-1")
+            with (
+                mock.patch(
+                    "vostok.derive.maxima.SOURCES", root / "sources"
+                ),
+                mock.patch(
+                    "vostok.data.render_relocs.paths.SCALEFORM_SDK",
+                    root / "sdk",
+                ),
+            ):
+                self.assertEqual(
+                    _current_source_hash(
+                        "?gfx@@YAXXZ",
+                        "src/gfx/example.cpp",
+                        {"module": "gfx"},
+                        None,
+                    ),
+                    "e3eb0451f80e",
+                )
+
     def test_direct_exact_needs_no_ledger_evidence(self):
         self.assertEqual(_function_data_resolution("EXACT", {}), "EXACT")
 
@@ -116,6 +166,32 @@ class FunctionDataResolutionTests(unittest.TestCase):
             ),
             "CALL_CONE_EXACT",
         )
+
+    def test_current_diff_scoped_review_settles_wall(self):
+        self.assertEqual(
+            _function_data_resolution(
+                "USE_DIFF", {}, cone_status="DIFF", reviewed=True
+            ),
+            "REVIEWED_WALL",
+        )
+
+    def test_review_requires_current_source_and_diff_hashes(self):
+        review = {
+            "status": "bounded",
+            "src_hash": "source-a",
+            "diff_hash": "diff-a",
+        }
+        self.assertTrue(_review_matches(review, "source-a", "diff-a"))
+        self.assertFalse(_review_matches(review, "source-b", "diff-a"))
+        self.assertFalse(_review_matches(review, "source-a", "diff-b"))
+
+    def test_open_review_is_not_terminal(self):
+        review = {
+            "status": "open",
+            "src_hash": "source-a",
+            "diff_hash": "diff-a",
+        }
+        self.assertFalse(_review_matches(review, "source-a", "diff-a"))
 
 
 class DataGateTests(unittest.TestCase):
@@ -732,6 +808,43 @@ class RenderRelocationTests(unittest.TestCase):
                 _datum_token(index, 0x2020, "E:global"),
             )
 
+    def test_datum_token_deduplicates_interior_references(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            datum = Datum(
+                0x2000, 16, ".rdata", "rdata", "E:array", "array",
+                "float[4]", "pdb",
+            )
+            index = DatumIndex([datum], PEImage(path))
+            self.assertEqual(
+                _datum_token(index, 0x2000, datum.identity),
+                _datum_token(index, 0x200C, datum.identity),
+            )
+
+    def test_address_at_next_object_start_keeps_one_past_alias(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            previous = Datum(
+                0x2000, 0x1C, ".rdata", "rdata", "L:ignored",
+                "ignored", "enum[7]", "pdb",
+            )
+            following = Datum(
+                0x201C, 0x24, ".rdata", "rdata", "L:captions",
+                "captions", "char*[9]", "pdb",
+            )
+            index = DatumIndex([previous, following], PEImage(path))
+            aliases = _datum_token_aliases(
+                index, 0x201C, following.identity, one_past=True
+            )
+            self.assertIn(
+                _datum_token(index, previous.rva, previous.identity), aliases
+            )
+            self.assertIn(
+                _datum_token(index, following.rva, following.identity), aliases
+            )
+
     def test_compiler_constant_tokens_ignore_storage_and_encoded_name(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.exe"
@@ -759,6 +872,164 @@ class RenderRelocationTests(unittest.TestCase):
                 _datum_token(index, 0x3000, local_data.identity),
             }
             self.assertEqual(len(tokens), 1)
+
+    def test_asio_placeholder_hashes_share_their_four_zero_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target_datum = Datum(
+                0x3040, None, ".data", "bss",
+                "E:?error@?A0x11111111@placeholders@asio@boost@@"
+                "3AAU?$arg@$00@4@A",
+                "error", "public", "pdb",
+            )
+            base_datum = Datum(
+                0x3060, None, ".data", "bss",
+                "E:?error@?A0x22222222@placeholders@asio@boost@@"
+                "3AAU?$arg@$00@4@A",
+                "error", "public", "pdb",
+            )
+            target = DatumIndex([target_datum], image)
+            base = DatumIndex([base_datum], image)
+            self.assertEqual(_extentless_end(target_datum, target), 0x3044)
+            self.assertEqual(
+                _datum_token(target, 0x3040, target_datum.identity, base),
+                _datum_token(base, 0x3060, base_datum.identity, target),
+            )
+
+    def test_asio_placeholder_pairs_local_and_public_pdb_spellings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            local = Datum(
+                0x2040, 1, ".rdata", "rdata",
+                "L:network:login_client_impl_connect.obj:_2",
+                "_2", "cv:0x1234", "pdb",
+            )
+            public = Datum(
+                0x3060, None, ".data", "bss",
+                "E:?iterator@?A0x22222222@placeholders@asio@boost@@"
+                "3AAU?$arg@$01@4@A",
+                "iterator", "public", "pdb",
+            )
+            target = DatumIndex([local], image)
+            base = DatumIndex([public], image)
+            self.assertEqual(
+                _datum_token(target, 0x2040, local.identity, base),
+                _datum_token(base, 0x3060, public.identity, target),
+            )
+
+    def test_asio_placeholder_indices_remain_distinct(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            first = Datum(
+                0x2040, 1, ".rdata", "rdata",
+                "L:network_core:async_connector.obj:_1",
+                "_1", "cv:0x1234", "pdb",
+            )
+            second = Datum(
+                0x2050, 1, ".rdata", "rdata",
+                "L:network_core:async_connector.obj:_2",
+                "_2", "cv:0x1234", "pdb",
+            )
+            index = DatumIndex([first, second], image)
+            self.assertNotEqual(
+                _datum_token(index, 0x2040, first.identity),
+                _datum_token(index, 0x2050, second.identity),
+            )
+
+    def test_boost_stored_vtable_uses_bytes_and_paired_referents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<I", data, 0x404, 0x11010)
+            path.write_bytes(data)
+            image = PEImage(path)
+            target_datum = Datum(
+                0x3000, 8, ".data", "data",
+                "L:target.obj:stored_vtable", "stored_vtable",
+                "boost::function::basic_vtable", "pdb",
+            )
+            base_datum = Datum(
+                0x3000, 8, ".data", "data",
+                "L:base.obj:stored_vtable", "stored_vtable",
+                "boost::function::basic_vtable", "pdb",
+            )
+            identities = {0x1010: frozenset(("P:?callee@@YAXXZ",))}
+            target = DatumIndex([target_datum], image, identities)
+            base = DatumIndex([base_datum], image, identities)
+            self.assertEqual(
+                _datum_token(target, 0x3000, target_datum.identity, base),
+                _datum_token(base, 0x3000, base_datum.identity, target),
+            )
+
+    def test_boost_stored_vtable_rejects_different_referents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<I", data, 0x404, 0x11010)
+            path.write_bytes(data)
+            image = PEImage(path)
+            target_datum = Datum(
+                0x3000, 8, ".data", "data",
+                "L:target.obj:stored_vtable", "stored_vtable",
+                "boost::function::basic_vtable", "pdb",
+            )
+            base_datum = Datum(
+                0x3000, 8, ".data", "data",
+                "L:base.obj:stored_vtable", "stored_vtable",
+                "boost::function::basic_vtable", "pdb",
+            )
+            target = DatumIndex(
+                [target_datum], image,
+                {0x1010: frozenset(("P:?target@@YAXXZ",))},
+            )
+            base = DatumIndex(
+                [base_datum], image,
+                {0x1010: frozenset(("P:?base@@YAXXZ",))},
+            )
+            self.assertNotEqual(
+                _datum_token(target, 0x3000, target_datum.identity, base),
+                _datum_token(base, 0x3000, base_datum.identity, target),
+            )
+
+    def test_public_boost_stored_vtable_has_eight_byte_extent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            datum = Datum(
+                0x3000, None, ".data", "data",
+                "E:?stored_vtable@?1???$assign_to@boost@@",
+                "stored_vtable", "public", "pdb",
+            )
+            index = DatumIndex([datum], image)
+            self.assertEqual(_extentless_end(datum, index), 0x3008)
+
+    def test_external_zero_global_remains_identity_sensitive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            left = Datum(
+                0x3040, None, ".data", "bss", "E:left", "left",
+                "public", "pdb",
+            )
+            right = Datum(
+                0x3060, None, ".data", "bss", "E:right", "right",
+                "public", "pdb",
+            )
+            index = DatumIndex([left, right], image)
+            self.assertNotEqual(
+                _datum_token(index, 0x3040, left.identity),
+                _datum_token(index, 0x3060, right.identity),
+            )
 
     def test_shared_local_identity_wins_over_content_canonicalization(self):
         with tempfile.TemporaryDirectory() as directory:

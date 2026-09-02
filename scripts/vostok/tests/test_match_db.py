@@ -1095,6 +1095,21 @@ class MaximaFoldTests(unittest.TestCase):
 
 
 class EffectiveSourceHashTests(unittest.TestCase):
+    def test_whole_file_hash_supports_extentless_helpers(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/particle/sources/action.h"
+            source.parent.mkdir(parents=True)
+            source.write_text("whole owning header\n", encoding="latin-1")
+
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                self.assertEqual(
+                    maxima.whole_source_file_hash(
+                        "vostok/particle/sources/action.h"
+                    ),
+                    maxima.source_hash("whole owning header\n"),
+                )
+
     def test_resolves_pdb_lowercase_path_against_caseful_checkout(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)

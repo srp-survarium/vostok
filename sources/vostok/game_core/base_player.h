@@ -51,7 +51,7 @@ bool query_animation_playback_state( pcvoid const object, u32 const mask, animat
 
 // sushi@TODO: <0x122e20>|0x000:'149'
 
-struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
+struct VOSTOK_NOVTABLE base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
 public:
 	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );
