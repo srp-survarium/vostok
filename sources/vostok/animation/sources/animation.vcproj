@@ -1459,6 +1459,22 @@
 						RelativePath=".\bi_spline_skeleton_animation.cpp"
 						>
 						<FileConfiguration
+							Name="Release|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
 							Name="Master Gold|Win32"
 							ExcludedFromBuild="true"
 							>
@@ -1497,6 +1513,22 @@
 						<File
 							RelativePath=".\bi_spline_bone_animation.cpp"
 							>
+							<FileConfiguration
+								Name="Release|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
+							<FileConfiguration
+								Name="Debug|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 							<FileConfiguration
 								Name="Master Gold|Win32"
 								ExcludedFromBuild="true"

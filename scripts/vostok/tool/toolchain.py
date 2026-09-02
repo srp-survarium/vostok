@@ -266,6 +266,9 @@ def ensure_gfx_alias(parent: Path, name: str, target: Path) -> None:
 
 
 def generate_ninja(vcproj_exe: Path) -> None:
+    # Setup only ever builds the matching graph; the solution's other
+    # configurations are generated on demand by
+    # `vostok.build.ninja_regen --configuration ...` into their own dirs.
     # Pass native Linux paths for I/O (vcproj2ninja reads/writes them directly),
     # and --wine so the *emitted* build graph uses the drive-rooted `Z:\...` form
     # that ninja.exe/cl.exe resolve under Wine. The .exe sometimes exits non-zero
@@ -276,7 +279,7 @@ def generate_ninja(vcproj_exe: Path) -> None:
         "wine", str(vcproj_exe),
         "--wine",
         "--sln-path", str(SLN_PATH),
-        "--configuration-platform", "Master Gold|Win32",
+        "--configuration-platform", paths.GOLD_CONFIGURATION,
         "--output-dir", str(BUILD_DIR),
         "--project-name", "survarium - PC - DirectX 11",
     ], check=False)

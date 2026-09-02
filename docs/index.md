@@ -12,6 +12,7 @@
 * [materials.md](materials.md) — recovered SDK material authoring, runtime material/effect/shader interaction, and the map-porting workflow.
 * [shaders.md](shaders.md) — shipped shader cache format, permutation recovery, and byte-exact roundtrip validation.
 * [build/toolchain-build.md](build/toolchain-build.md) — how the vostok-toolchain is built on Linux/Wine (mspdb DLLs, SP1 via `PATCH=`) and why Wine must be **staging** (cl `/Zi` → C1902 on wine-10.0 stable).
+* [sdk-editor.md](sdk-editor.md) — the three solution configurations (`Master Gold`/`Release`/`Debug|Win32`), how to build a non-matching configuration and the `--no-lto` variant, and the two walls (no `netfx` toolchain payload; non-`MASTER_GOLD` engine gaps) that still block the SDK editor build.
 * [build-flags.md](build-flags.md) — per-project compiler-flag comparison (target vs. base) recovered from the PDBs, and which vcproj were built with/without optimizations.
 * [target-vs-base.md](target-vs-base.md) — synthesis of every target-vs-base comparison the PDB/EXE tooling makes (PE/Rich header, flags, link order, RTTI): what's the same, what's different, and which differences are actionable.
 
