@@ -23,7 +23,6 @@ namespace survarium {
 static bool s_freeze_culling_value = false;
 static vostok::console_commands::cc_bool s_freeze_culling( "freeze_culling", s_freeze_culling_value, false, vostok::console_commands::command_type_user_specific );
 
-// claude@NOTE: target structure matches; residual is the retained engine base-subobject vtable store.
 base_game_scene::base_game_scene( game& g ) :
 	m_mouse_pos			( 0, 0 ),
 	m_text_manager		( NULL ),

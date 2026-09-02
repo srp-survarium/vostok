@@ -1,17 +1,17 @@
 metric	maximum	note
 AMBIGUOUS	157	linked allocation comparisons with ambiguous ownership
-BASE_ONLY	3907	candidate allocations without a paired retail allocation
-BYTES	856	paired allocations with normalized byte differences
-INVALID_EXTENT	13	PDB allocations whose recorded extent is unusable
-RELOCS	1427	paired allocations with relocation-target differences
-RELOC_TOPOLOGY	1	paired allocations with different pointer-cell layout
-SIZE	318	paired allocations with different complete extents
-TARGET_ONLY	2488	retail allocations without a paired candidate allocation
-blockers	32696	consumer-owned allocation copies blocked from objdiff projection
-wrong_referent_regions	1242	functions whose candidate accesses resolve to another allocation
-ordering_only_regions	24	functions differing only in repeated-access order
-multiplicity_only_regions	81	functions differing only in repeated-access count
-access_shape_functions	707	functions with a different decoded data-access shape
-base_missing_functions	2026	functions with a retail allocation absent from the candidate image
-referent_debt_functions	1537	normal code matches rejected by strict referent comparison
-referent_debt_code_bytes	597112	code bytes in normal matches rejected by strict referent comparison
+BASE_ONLY	1456	candidate allocations without a paired retail allocation
+BYTES	812	paired allocations with normalized byte differences
+INVALID_EXTENT	9	PDB allocations whose recorded extent is unusable
+RELOCS	391	paired allocations with relocation-target differences
+RELOC_TOPOLOGY	0	paired allocations with different pointer-cell layout
+SIZE	311	paired allocations with different complete extents
+TARGET_ONLY	1145	retail allocations without a paired candidate allocation
+blockers	31430	consumer-owned allocation copies blocked from objdiff projection
+wrong_referent_regions	1130	functions whose candidate accesses resolve to another allocation
+ordering_only_regions	26	functions differing only in repeated-access order
+multiplicity_only_regions	77	functions differing only in repeated-access count
+access_shape_functions	730	functions with a different decoded data-access shape
+base_missing_functions	477	functions with a retail allocation absent from the candidate image
+referent_debt_functions	1462	normal code matches rejected by strict referent comparison
+referent_debt_code_bytes	578826	code bytes in normal matches rejected by strict referent comparison

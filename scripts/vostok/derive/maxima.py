@@ -110,6 +110,32 @@ def source_hash(text):
     return hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
 
 
+def whole_source_file_hash(relative):
+    """Hash one current source file, or return ``None`` if it is unavailable.
+
+    Compiler-generated helpers can have an owning file but no usable statement
+    extent.  Consumers that must invalidate evidence when that source changes
+    use this deliberately conservative whole-file scope.
+    """
+    return whole_source_tree_hash(SOURCES, relative)
+
+
+def whole_source_tree_hash(root, relative):
+    """Hash a case-insensitively resolved file below an arbitrary source tree."""
+    return source_path_hash(_source_file(str(root), relative))
+
+
+def source_path_hash(path):
+    """Hash a complete source file at an already-resolved path."""
+    if path is None:
+        return None
+    try:
+        with open(path, encoding="latin-1") as source:
+            return source_hash(source.read())
+    except OSError:
+        return None
+
+
 def effective_source_hash(rec):
     """The source-body hash for a rich-index record, or None with no source.
 

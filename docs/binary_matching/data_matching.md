@@ -70,10 +70,13 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   observed and neighbouring boundaries, candidate-address votes, normalized
   hashes, and retail/candidate byte-pattern previews.
 - `binaries/gen/render_function_data.tsv` compares the deduplicated whole-datum
-  set reached by every paired function. Compiler-owned constants pair by their
+  set reached by every paired function. References to different fields or
+  elements of one complete allocation therefore enrol that allocation once;
+  the strict-referent objdiff report separately preserves exact symbol-relative
+  addends at each instruction. Compiler-owned constants pair by their
   complete normalized bytes even when LTCG changes their PDB pool owner or
   moves them between `.data` and `.rdata`; named allocations without such a
-  byte identity retain their PDB identity and symbol-relative addend. Missing
+  byte identity retain their PDB identity. Missing
   uses and allocations missing from either linked image are separate columns.
   A second set of columns expands exact encoded E8 calls and E9/EB tail jumps
   from each paired root. It records both cone sizes, remaining cone differences,
@@ -96,6 +99,14 @@ Tracked evidence and policy use the same names and locations as Gruntz:
 - `binaries/gen/data_function_open.tsv` is the corresponding complete work
   queue. It contains every function datum-use row whose resolution is `OPEN`;
   the zero gate requires it to contain only its header.
+- `config/codex_wall_reviews.tsv` records manually proved residuals using
+  Gruntz's `open`, `bounded`, and `exact` statuses and wall-class vocabulary.
+  Vostok additionally binds every terminal review to both the function's
+  source-body hash and its exact datum-difference hash, so a source, referent,
+  or call-cone change automatically makes the review stale and reopens the row.
+- `docs/data_matching/datum_use_audit.md` is the closeout report for the first
+  complete all-module datum-use audit. It separates source corrections from
+  compiler/linker walls and records what the zero gate does and does not prove.
 - `binaries/data-objdiff/` is the complete parallel comparison project. The
   ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
   objdiff CLI and never consumes data manifests.
@@ -152,6 +163,8 @@ python3 -m vostok data module-relocs MODULE
 python3 -m vostok data module-relocs MODULE --check
 python3 -m vostok data module-relocs MODULE PATTERN
 python3 -m vostok data module-relocs all
+python3 -m vostok data review PATTERN --status bounded --class inline --evidence TEXT
+python3 -m vostok data review --list
 python3 -m vostok data report
 python3 -m vostok data function PATTERN
 python3 -m vostok data access PATTERN
@@ -226,6 +239,12 @@ that the paired roots reach identical complete datum sets through decoded
 internal calls. A display-name match is never used as an edge: destinations
 come from the executable instruction bytes and must land on a rich-index
 function start. Any cone referent difference remains `OPEN`.
+
+`REVIEWED_WALL` is the only manual terminal result. Record it only after the
+target PDB, assembly, complete allocation bytes, and source establish that the
+remaining datum-set difference is a compiler, linker, or external build-input
+boundary rather than a source correction. The review command captures the
+current source and diff hashes; it cannot permanently excuse a changing row.
 
 The deferred PDB-extent review and shifting-candidate identity-transfer work is
 specified in

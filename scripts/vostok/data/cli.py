@@ -12,6 +12,7 @@ Commands:
   refresh         refresh image audits and generated binaries/gen tables
   render-relocs [PATTERN] direct render relocation/data audit or inspection
   module-relocs MODULE [PATTERN] direct relocation/data audit for any module
+  review PATTERN  record a source-and-diff-scoped datum wall review
   report          summarize exactness and divergence classes
   symbol PATTERN  inspect matching ledger rows
   access PATTERN  find retail/base code references to a data symbol or address
@@ -37,7 +38,7 @@ from pathlib import Path
 
 from vostok.core import paths
 from vostok.data import gate as data_gate
-from vostok.data import missing, pipeline, render_relocs
+from vostok.data import missing, pipeline, render_relocs, reviews as data_reviews
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
 from vostok.core import log as _log
@@ -200,6 +201,7 @@ def _check(gate: bool) -> int:
         paths.DATA_RENDER_FUNCTION_DATA, paths.DATA_RENDER_RELOC_REPORT,
         paths.DATA_RENDER_PROBLEMS,
         paths.DATA_MODULE_RELOC_REPORT, paths.DATA_FUNCTION_OPEN,
+        paths.CODEX_WALL_REVIEWS,
     )
     missing_paths = [path for path in required if not path.is_file()]
     if missing_paths:
@@ -207,6 +209,8 @@ def _check(gate: bool) -> int:
               file=sys.stderr)
         return 1
     if missing.check():
+        return 1
+    if data_reviews.check():
         return 1
     if data_gate.check(require_zero=gate):
         return 1
@@ -345,6 +349,14 @@ def main(argv: list[str] | None = None) -> int:
     module_relocs.add_argument("module")
     module_relocs.add_argument("pattern", nargs="?")
     module_relocs.add_argument("--check", action="store_true")
+    review = sub.add_parser("review")
+    review.add_argument("target", nargs="?")
+    review.add_argument("--status", choices=data_reviews.STATUSES)
+    review.add_argument(
+        "--class", dest="wall_class", choices=data_reviews.CLASSES
+    )
+    review.add_argument("--evidence")
+    review.add_argument("--list", action="store_true")
     report = sub.add_parser("report")
     report.add_argument("--module")
     for name in ("symbol", "access", "relocs", "function", "missing-symbol"):
@@ -397,6 +409,18 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             module_report = render_relocs.refresh(args.module)
             render_relocs.print_report(module_report)
+        elif args.command == "review":
+            if args.list:
+                return data_reviews.list_reviews()
+            if not all((
+                args.target, args.status, args.wall_class, args.evidence,
+            )):
+                parser.error(
+                    "review requires TARGET, --status, --class, and --evidence"
+                )
+            return data_reviews.record(
+                args.target, args.status, args.wall_class, args.evidence
+            )
         elif args.command == "report":
             _print_report(args.module)
         elif args.command == "symbol":

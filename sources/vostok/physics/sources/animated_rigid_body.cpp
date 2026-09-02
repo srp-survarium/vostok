@@ -77,12 +77,12 @@ static btCollisionShape* new_bt_primitive( const collision::primitive_type type,
 		}
 		case collision::primitive_box:
 		{
-			btVector3 half_extents = from_vostok( dimension );
+			btVector3 half_extents( dimension.x, dimension.y, dimension.z );
 			return VOSTOK_NEW_IMPL( allocator, btBoxShape )( half_extents );
 		}
 		case collision::primitive_cylinder:
 		{
-			btVector3 half_extents = from_vostok( dimension );
+			btVector3 half_extents( dimension.x, dimension.y, dimension.z );
 			return VOSTOK_NEW_IMPL( allocator, btCylinderShape )( half_extents );
 		}
 		case collision::primitive_capsule:
@@ -92,7 +92,7 @@ static btCollisionShape* new_bt_primitive( const collision::primitive_type type,
 			return VOSTOK_NEW_IMPL( allocator, btCapsuleShape )( radius, height );
 		}
 		default:
-			NODEFAULT( );
+			return NULL;
 	}
 }
 

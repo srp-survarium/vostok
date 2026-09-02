@@ -7,7 +7,7 @@ namespace survarium {
 
 class bullet_manager;
 
-struct engine {
+struct VOSTOK_NOVTABLE engine {
 	virtual	bullet_manager&		get_bullet_manager	( ) const = 0;
 
 }; // struct engine
