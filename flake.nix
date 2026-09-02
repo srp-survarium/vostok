@@ -17,6 +17,9 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
+      #   50a8f49  source-definition order requires both attributed line order
+      #            and compiland procedure-symbol order, rejecting #line-only
+      #            inversions.
       #   c8124fd  normalized order-distance/locality metrics, causal grouping
       #            by library/record kind, and explicit base/target definition
       #            orders for actionable source rows.
@@ -47,7 +50,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/c8124fd9a16eec429518c904d65dd128a499a23c";
+      url = "github:srp-survarium/vostok-pdb-parser/50a8f49664178f56d2f665c923c9c5748ef9d747";
       flake = false;
     };
     vcproj2ninja-src = {
