@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "lobby_camera.h"
 #include "base_game_scene.h"
@@ -67,9 +67,6 @@ bool lobby_camera::on_mouse_key_action(
 
 	return false;
 }
-
-
-
 
 bool lobby_camera::on_mouse_move(
 	input::world*		input_world,
@@ -161,9 +158,6 @@ void lobby_camera::process_collision(
 	if ( result.object )
 		distance_to_focus_point = ( result.hit_point_world - target_point ).length( );
 }
-
-
-
 
 void lobby_camera::on_focus( bool b_focus_enter )
 {

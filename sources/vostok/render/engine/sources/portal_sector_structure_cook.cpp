@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "portal_sector_structure_cook.h"
-
 #include <vostok/render/culling/portal_sector_structure.h>
 
 namespace vostok {

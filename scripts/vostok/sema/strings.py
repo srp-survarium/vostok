@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.strings - the literals a function reaches, in both directions.
 
 `strings <fn>` lists what one function references; `--find <text>` is the

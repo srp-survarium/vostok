@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Normalize project-specific PDB symbol names in objdiff target objects.
 
 vostok-delinker deliberately emits PDB procedure names verbatim.  The retail

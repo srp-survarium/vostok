@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_CLOUD_SIMULATION_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_CLOUD_SIMULATION_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>

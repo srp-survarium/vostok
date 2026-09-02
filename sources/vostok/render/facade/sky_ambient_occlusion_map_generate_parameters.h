@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SKY_AMBIENT_OCCLUSION_MAP_GENERATE_PARAMETERS_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SKY_AMBIENT_OCCLUSION_MAP_GENERATE_PARAMETERS_H_INCLUDED
-
 #include <vostok/fixed_string.h>
 #include <vostok/math_float3.h>
 #include <vostok/math_int2.h>

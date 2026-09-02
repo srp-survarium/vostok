@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_DECALS_ACCUMULATE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_DECALS_ACCUMULATE_H_INCLUDED
-
 #include <vostok/render/core/res_effect.h>
 
 #include "stage.h"

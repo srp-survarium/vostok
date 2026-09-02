@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_EFFECT_FSTAGE_BLEND_SUBUV_MATERIALS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_EFFECT_FSTAGE_BLEND_SUBUV_MATERIALS_H_INCLUDED
-
 #include "effect_material_base.h"
 
 namespace vostok {

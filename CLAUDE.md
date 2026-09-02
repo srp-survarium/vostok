@@ -16,6 +16,18 @@ being matched, an ordering that matters). When deeper rationale or context would
 bloat the code, surface it in chat or record it in `CLAUDE-WORK.md` instead of a
 long inline comment.
 
+## License tags (`SPDX-License-Identifier`)
+
+Project-written files carry one line, `// SPDX-License-Identifier: GPL-3.0-or-later`
+(`#` in Python/Nix, `::` in .bat), as line 1 (after a shebang). That covers the
+tooling and every engine unit we generated - the ones with the dated `Created`
+banner or no GSC banner at all. Files that reproduce the original engine sources
+(the `Copyright (C) GSC Game World` banner), vendored code, the shader sources and
+anything with another party's notice (the Scaleform `d3d1x_*` family) get NO tag.
+In engine sources the tag was added by replacing one blank line, so `__LINE__`
+geometry never moved; a new generated unit should do the same, or pin its
+functions with `#line`.
+
 ## Review TODOs (`sushi@TODO:`)
 
 When a PR review leaves an inline comment that is an **open matching question**
@@ -122,10 +134,14 @@ one text row per target function. Query and update it with `vostok ledger` -
 it reads the file directly, so it needs no database and no build.
 
     python3 -m vostok ledger report --module render      # byte-weighted rollup
-    python3 -m vostok ledger report --per-unit --module render
+    python3 -m vostok ledger report --per-unit --module render   # per TU, worst first
+    python3 -m vostok ledger report --unit medkit        # one unit by path substring
     python3 -m vostok ledger queue --module render       # one batch per TU, worst first
     python3 -m vostok ledger list --module render --class QUANTITY,SPLIT
+    python3 -m vostok ledger list --module render --status parked   # every park + why
+    python3 -m vostok ledger list --module render --status blocked  # incl. target-only
     python3 -m vostok ledger list --headroom             # hist > max: we had it better once
+    git diff <rev> -- config/match_state.tsv             # which functions moved, and how
     python3 -m vostok ledger tried <mangled> --note "what was attempted"
     python3 -m vostok ledger park <mangled> --cause "why it stops here"
     python3 -m vostok ledger open <mangled>              # undo a park
@@ -156,6 +172,46 @@ earlier implementation scored better and we lost it - that IS worth working.
 `status` is `done` (max >= 100) / `inprogress` / `blocked` (something missing,
 including target-only) / `parked` (worked, could not raise it - `note` says why).
 Keep `note` short; it is what stops the next matcher re-deriving a dead end.
+
+### Structure evidence: `cls` is approximate, `structure-diff` is the verdict
+
+The ledger's `cls` column is an *approximate* shape class - `MATCH` (same
+statement count and per-statement bytes), `SIZE` (same count, some statement's
+bytes differ: inline-vs-call / LTCG / reg-alloc residual), `SPLIT` (equal counts
+and bytes, but alignment leaves paired target-only/base-only rows), `QUANTITY`
+(statement counts differ: real missing/extra statements), `-` (unpaired). Full
+definitions: `docs/binary_matching/ledger_design.md`, "Structure
+classification". A high fuzzy % over `QUANTITY`/`SPLIT` is the trap: bytes
+lining up over the wrong statement shape. Confirm every hit with the parser's
+two-sided diff, which is the authoritative verdict:
+
+    pdb_fetch --target-index binaries/rich/target/index.jsonl \
+              --base-index binaries/rich/base/index.jsonl \
+              --function 'weapon_core::tick' --view structure-diff
+
+It prints each diverging statement tagged `SIZE +/-N` / `BASE_ONLY` /
+`TRGT_ONLY`, the target-vs-base statement counts, and `; STRUCTURE MATCH` when
+the shape is clean. `--function` is a signature substring; `--view` also takes
+`target,base,structure,diff`. This is how a `QUANTITY` is confirmed real
+(recoverable statements) vs a stale label (`0/0 STRUCTURE MATCH`) vs blocked.
+
+Raw CodeView topology around one target function (procedure/frame/scope
+records, PDB line lengths, TPI neighbours, the owning class field-list entry,
+module-level neighbours), and the same compared base-vs-target ignoring
+PDB-local RVA/type-index churn:
+
+    pdb_topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
+      --module render_engine_world_pc_dx11 --function 'world::draw_scene'
+    pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+      --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+      --module render_engine_world_pc_dx11 --function 'world::draw_scene'
+    pdb_topology --target-pdb ... --base-pdb ... --classes [--class 'vostok::render::engine::world']
+
+`--classes` compares every complete target class/struct/interface definition to
+base (`--json` keeps the whole model). Adjacency sections are heuristic;
+explicit references and class bindings are authoritative - read
+`docs/binary_matching/pdb_topology.md` before taking record order as source
+order.
 
 ## Match score (README regression tracker)
 

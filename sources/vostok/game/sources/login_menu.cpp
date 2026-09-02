@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "login_menu.h"
 
@@ -71,13 +71,6 @@ void login_menu::tick(
 	m_cursor_ui->movie->Advance( deltaTime, 0 );
 }
 
-
-
-
-
-
-
-
 void login_menu::query_resources( )
 {
 	render::scene_configuration	render_configuration;
@@ -115,6 +108,7 @@ void login_menu::clear_resources( )
 	hide_movie( m_cursor_ui );
 }
 
+#line 95
 void login_menu::set_status( login_menu_status_enum status )
 {
 	m_status				= status;

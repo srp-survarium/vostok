@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_EFFECT_COMPLEX_POST_PROCESS_BLEND_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_EFFECT_COMPLEX_POST_PROCESS_BLEND_H_INCLUDED
-
 #include <vostok/render/core/effect_descriptor.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
 

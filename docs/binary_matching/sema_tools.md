@@ -541,7 +541,7 @@ built in:
 * **It says nothing about statements or locals.** Structure verdicts stay
   `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
   statement level.
-* **`sema` does not read `binaries/match.db`.** It never did anything the two
+* **`sema` does not read the ledger.** It never did anything the two
   rich indexes and the committed ledger cannot answer, and reading a derived
   cache meant `sema` could not answer at all on a tree that had never run a
   derivation. The split now is: `binaries/rich/{target,base}/index.jsonl` owns

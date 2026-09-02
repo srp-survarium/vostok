@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "main_menu.h"
 #include "main_menu_external_handler.h"
@@ -49,13 +49,6 @@ void main_menu::tick(
 {
 	base_game_scene::tick( frame_delta_in_ms, current_time_in_ms, is_game_paused );
 }
-
-
-
-
-
-
-
 
 void main_menu::query_resources( )
 {

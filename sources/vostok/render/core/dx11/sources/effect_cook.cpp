@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/effect_cook.h>
 #include <vostok/render/core/effect_compile_data.h>
@@ -7,7 +8,6 @@
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/dx11/shader_binary_source_cook.h>
-
 namespace vostok {
 namespace render {
 

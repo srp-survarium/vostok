@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "scene.h"
 #include <vostok/console_command.h>
@@ -25,7 +26,6 @@
 #include "statistics.h"
 #include "streaming.h"
 #include "system_renderer.h"
-
 static const u32 s_max_vertex_count	= 64*1024;
 
 static bool s_use_poral_culling_value = true;

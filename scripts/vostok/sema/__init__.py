@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """sema - CONTROL-FLOW views over the delinked base<->target function pair.
 
 The layer vostok did not have. `pdb_fetch --view structure-diff` compares SOURCE

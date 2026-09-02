@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/dx11/res_declaration.h>
 #include <vostok/render/core/dx11/res_geometry.h>
@@ -5,7 +6,6 @@
 #include <vostok/render/engine/model_format.h>
 #include "skeleton_mesh_gpu_skinning_3weights.h"
 #include "streaming.h"
-
 D3D_INPUT_ELEMENT_DESC hardware_3weights_skinning_vertex_layout[] =
 {
 	{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,	0, 0,	D3D_INPUT_PER_VERTEX_DATA, 0},

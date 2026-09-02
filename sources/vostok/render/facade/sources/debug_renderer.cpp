@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/sources/debug_renderer.h>
 #include <vostok/render/engine/world.h>
@@ -5,7 +6,6 @@
 #include <vostok/render/facade/sources/debug_draw_triangles_command.h>
 #include <vostok/render/facade/one_way_render_channel.h>
 #include <vostok/geometry_primitives.h>
-
 namespace vostok {
 namespace render {
 namespace debug {

@@ -198,7 +198,7 @@ are NOT written anymore. The source carries exactly two things:
 - `sushi@` / `claude@` `@MATCH/@NOTE/@TODO` comments (see "Comment tags").
 
 Everything else is DERIVED and lives outside the source
-(design: `match_db_design.md`):
+(design: `ledger_design.md`):
 - **current %s**: `report.json` / `vostok ledger readme` - the only live numbers.
 - **bulk status, queues, reports**: `config/match_state.tsv`, regenerated
   from report.json + the rich indexes + the PDB declaration dump by `vostok build`

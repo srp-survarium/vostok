@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """PDB data-index records and stable cross-build identities."""
 
 from __future__ import annotations

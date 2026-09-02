@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/options.h>
-
 #include "ambient_volume.h"
 
 namespace vostok {

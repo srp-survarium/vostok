@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_FIND_BY_ID_PREDICATE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_FIND_BY_ID_PREDICATE_H_INCLUDED
-
 namespace vostok {
 namespace render {
 

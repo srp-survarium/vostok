@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 ////////////////////////////////////////////////////////////////////////////
-
 #ifndef PLAYER_LOGIC_BASE_STATE_H_INCLUDED
 #define PLAYER_LOGIC_BASE_STATE_H_INCLUDED
 
@@ -118,8 +118,6 @@ enum animation_type_enum {
 	animation_types_count		= 0x21,
 	invalid_animation_type		= 0xFFFFFFFF,
 };
-
-
 
 } // namespace survarium
 

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_DEBUG_DRAW_LINES_COMMAND_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_DEBUG_DRAW_LINES_COMMAND_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/render/engine/vertex_colored.h>
 #include <vostok/render/facade/base_command.h>

@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
-
 #include <vostok/render/core/dx11/effect_constant_storage.h>
 
 namespace vostok {

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_FUNCTOR_COMMAND_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_FUNCTOR_COMMAND_H_INCLUDED
-
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
 #include <vostok/render/facade/base_command.h>

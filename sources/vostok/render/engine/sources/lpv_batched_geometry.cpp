@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
-
 #include "lpv_batched_geometry.h"
 #include "render_surface.h"
 #include "render_surface_instance.h"

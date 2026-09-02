@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_CUSTOM_CONFIG_VALUE_H_INCLUDED
 #define VOSTOK_RENDER_CORE_CUSTOM_CONFIG_VALUE_H_INCLUDED
-
 #include <vostok/configs.h>
 #include <vostok/strings_functions.h>
 #include <vostok/render/core/static_type.h>

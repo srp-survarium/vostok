@@ -4,7 +4,7 @@ Goal (sushi 2026-07-31): drive render to **100% max**. Match **from roots, not
 leaves** - under LTO/O2 a leaf carries no context, so a leaf match measures
 nothing useful until its callers exist. Two Opus matcher lanes run in parallel
 on disjoint file scopes; the orchestrator integrates each finished batch onto a
-single linear stack, rebuilds, and commits a measured `match.db` snapshot per
+single linear stack, rebuilds, and commits a measured ledger snapshot per
 batch.
 
 Branch: `campaign/render-matching`, stacked on `xray-2.0-prog-v0.100b` at
@@ -151,7 +151,7 @@ whose base counterpart is still an in-class body.
 - **Absolute paths for every build.** The harness resets cwd between calls, so
   `cd X && nix develop --command ...` can execute in a SIBLING worktree and
   clobber its artifacts (this happened once in batch A2 - no sources were
-  modified, but `binaries/`, `match.db` and `README.md` of the sibling were
+  modified, but `binaries/`, `config/match_state.tsv` and `README.md` of the sibling were
   regenerated). Use
   `nix develop /abs/worktree --command bash -c 'cd /abs/worktree &&
   PYTHONPATH=/abs/worktree/scripts python3 -m vostok build <module>'`. Spell
@@ -259,9 +259,9 @@ actually doing (`vostok build --help` -> ninja's job count) would have found it 
 one step.
 
 **Never `git commit --amend` a DB snapshot after a failed build.** Doing so
-stamps a stale `match.db`/README onto the batch commit, and the tell is subtle:
+stamps a stale ledger/README onto the batch commit, and the tell is subtle:
 the score line reads *identical to the previous batch*. Verify the build exited
-0 AND that `git diff --stat docs/binary_matching/match.db` is non-empty before
+0 AND that `git diff --stat config/match_state.tsv` is non-empty before
 amending.
 
 ## Batch A5 notes
@@ -859,7 +859,7 @@ convergence.
 
 The 78-function QUANTITY/SPLIT queue (54,934 target bytes) is fully triaged:
 every row is recovered, exactly structure-matched, or SKIP-parked with a
-verified cause in `match.db`. Byte-exact wins: `get_num_digits` (clause
+verified cause in the ledger. Byte-exact wins: `get_num_digits` (clause
 order). Struct-exact: `res_sampler_list::compare`, `~grass_patch`,
 `stage_pre_rain::execute` (27:27), `res_texture_list::compare` (10:10).
 Measured fuzzy gains: dump_scene_statistics +31.2, translate_query +6.1,

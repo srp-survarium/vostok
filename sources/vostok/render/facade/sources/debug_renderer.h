@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_DEBUG_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_DEBUG_RENDERER_H_INCLUDED
-
 #include <vostok/detail_noncopyable.h>
 #include <vostok/math_color.h>
 #include <vostok/math_float3.h>

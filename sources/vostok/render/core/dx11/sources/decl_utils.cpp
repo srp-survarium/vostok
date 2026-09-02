@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/decl_utils.h>
-
 namespace vostok {
 namespace render {
 namespace decl_utils {

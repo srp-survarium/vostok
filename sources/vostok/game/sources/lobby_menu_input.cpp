@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "lobby_menu.h"
 #include "game.h"
@@ -144,11 +144,6 @@ bool lobby_menu::on_mouse_move(
 	math::uint2 const& window_size = output_window_size( );
 	math::clamp( m_mouse_pos.x, 0, ( s32 )window_size.x );
 	math::clamp( m_mouse_pos.y, 0, ( s32 )window_size.y );
-
-
-
-
-
 
 	float scroll_delta = z * ( 1.f / 120.f ); m_cursor_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
 	get_game( ).get_chat_handler( ).get_movie( )->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.core.paths - every repo path, in one place.
 
 THE RULE: no module outside this one spells a repo-relative path. Nine scripts

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_LPV_RENDER_SURFACE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_LPV_RENDER_SURFACE_H_INCLUDED
-
 #include "render_model_instance_impl.h"
 
 namespace vostok {

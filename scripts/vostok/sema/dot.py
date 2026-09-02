@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.dot - the CFG as graphviz, optionally with the diff painted on.
 
 `--diff` colours every target block red when it has no content-equal partner on

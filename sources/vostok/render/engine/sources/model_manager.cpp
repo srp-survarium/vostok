@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "model_manager.h"
 #include <vostok/render/engine/model_format.h>
@@ -12,7 +13,6 @@
 #include "skeleton_mesh_gpu_skinning_2weights.h"
 #include "skeleton_mesh_gpu_skinning_3weights.h"
 #include "skeleton_mesh_gpu_skinning_4weights.h"
-
 namespace vostok {
 namespace render {
 namespace model_factory {

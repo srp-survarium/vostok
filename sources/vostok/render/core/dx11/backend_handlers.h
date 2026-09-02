@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_BACKEND_HANDLERS_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_BACKEND_HANDLERS_H_INCLUDED
-
 #include <vostok/intrusive_ptr.h>
 #include <vostok/render/core/res_sampler_list.h>
 #include <vostok/render/core/res_texture_list.h>

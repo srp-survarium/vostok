@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.disasm - pdb_fetch renders the assembly, this parses it.
 
 Both sides come out of the same delinker and the same disassembler, so almost

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.ledger - the committed record of the matching campaign.
 
 `config/match_state.tsv` is one text row per target function and

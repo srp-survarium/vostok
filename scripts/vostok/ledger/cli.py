@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """match - query and update the matching ledger.
 
 Replaced vostok derive's query surface. That tool answered every question with

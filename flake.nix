@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# SPDX-License-Identifier: GPL-3.0-or-later
 {
   description = "Vostok Engine decompilation - Linux build environment";
 
@@ -503,13 +506,14 @@
           # Scripts + handy tools
           pkgs.python3
           pkgs.ruff
+          pkgs.libfaketime
           pkgs.ripgrep
           pkgs.file
           pkgs.xxd
           pkgs.jq
           pkgs.llvmPackages.bintools
-          # sqlite3 CLI - pdb_fetch.nvim reads docs/binary_matching/match.db for
-          # per-function match metrics (cur %, best %, structure, retries).
+          # sqlite3 CLI - handy for ad-hoc inspection; the matching record itself is
+          # the text ledger (config/match_state.tsv), there is no database any more.
           pkgs.sqlite
 
           # clangd - source navigation/LSP over the generated

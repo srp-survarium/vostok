@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Render the independent image-data summary in README.md."""
 
 from __future__ import annotations

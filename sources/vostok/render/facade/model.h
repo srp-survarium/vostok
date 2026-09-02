@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_MODEL_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_MODEL_H_INCLUDED
-
 #include <vostok/animation/skeleton.h>
 #include <vostok/fixed_string.h>
 #include <vostok/math_aabb.h>

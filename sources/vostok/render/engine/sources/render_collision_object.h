@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_COLLISION_OBJECT_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_COLLISION_OBJECT_H_INCLUDED
-
 #include <vostok/collision/object.h>
 
 namespace vostok {

@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "speedtree.h"
 #include "speedtree_cook.h"
-
 #if VOSTOK_PLATFORM_WINDOWS_32
 #	if VOSTOK_STATIC_LIBRARIES
 #		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MT_Static.lib" )

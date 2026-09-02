@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/index_buffer.h>
 #include <vostok/render/core/resource_manager.h>
-
 namespace vostok {
 namespace render {
 

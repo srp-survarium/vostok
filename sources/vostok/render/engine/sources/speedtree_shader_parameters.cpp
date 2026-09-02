@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "speedtree_shader_parameters.h"
-
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/shader_constant_defines.h>
 #include <vostok/render/core/shader_constant_host.h>

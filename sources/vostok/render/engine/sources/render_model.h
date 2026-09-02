@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_H_INCLUDED
-
 #include <vostok/math_aabb.h>
 #include <vostok/resources_unmanaged_resource.h>
 

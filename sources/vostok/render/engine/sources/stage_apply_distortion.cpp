@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_apply_distortion.h"
-
 #include <vostok/render/core/effect_manager.h>
 #include "effect_apply_distortion.h"
 #include <vostok/render/core/backend.h>

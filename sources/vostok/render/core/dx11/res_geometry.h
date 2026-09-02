@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_RES_GEOMETRY_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_RES_GEOMETRY_H_INCLUDED
-
 #include <vostok/intrusive_ptr.h>
 #include <vostok/render/core/resource_intrusive_base.h>
 #include <vostok/render/core/untyped_buffer.h>

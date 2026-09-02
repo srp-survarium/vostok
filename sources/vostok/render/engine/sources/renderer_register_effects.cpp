@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/effect_manager.h>
 #include <vostok/render/core/memory.h>
@@ -37,7 +38,6 @@
 #include "effect_sky_sphere_default_materials.h"
 #include "sphere_light_effect.h"
 #include "spot_light_effect.h"
-
 namespace vostok {
 namespace render {
 

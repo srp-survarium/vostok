@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/dx11/device_caps.h>

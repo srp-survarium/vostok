@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "game.h"
 #include "game_map_description.h"
@@ -85,7 +85,7 @@ namespace survarium {
 float g_max_angular_velocity[ 2 ];
 
 // TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
-// in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
+// in git show 3320ded27:temp/triage_log.md) - the type of the s_max_angular_velocity_command static
 class max_angular_velocity_command : public console_commands::cc_float {
 	typedef console_commands::cc_float super;
 
@@ -399,8 +399,6 @@ void game::on_base_resources_created( resources::queries_result& data )
 	m_console = m_engine.create_game_console( ui_world( ), input_world( ) );
 	m_stats = VOSTOK_NEW_IMPL( *g_allocator, stats )( *m_ui_world );
 
-
-
 	m_fps_graph = VOSTOK_NEW_IMPL( *g_allocator, stats_graph )( 1.f, math::infinity, 30.f, 60.f, 0xff00ff00 );
 
 	m_main_menu = VOSTOK_NEW_IMPL( *g_allocator, class main_menu )( *this );
@@ -409,9 +407,6 @@ void game::on_base_resources_created( resources::queries_result& data )
 
 	m_viewport.left = 0.f; m_viewport.top = 0.f; m_viewport.right = 1.f; m_viewport.bottom = 1.f;
 
-
-
-
 	enable( m_enabled );
 
 	if ( m_is_active )
@@ -419,11 +414,6 @@ void game::on_base_resources_created( resources::queries_result& data )
 		m_is_active = false;
 		on_application_deactivate( );
 	}
-
-
-
-
-
 
 	fixed_string< 512 > client_str;
 	if ( s_net_login_client.is_set_as_string( &client_str ) )
@@ -437,18 +427,7 @@ void game::on_base_resources_created( resources::queries_result& data )
 	else
 	{
 
-
-
 		create_and_assign_network_client( "188.93.23.27:25100", false );
-
-
-
-
-
-
-
-
-
 
 	}
 }
@@ -558,47 +537,13 @@ void game::enable( bool value )
 		m_input_world->unacquire	( );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void game::on_renderer_created( resources::queries_result& data )
 {
 }
 
 void game::on_config_loaded( resources::queries_result& data, bool create_renderer )
 {
+#line 595
 	if ( !data.is_successful( ) )
 	{
 		LOG_ERROR					( "config file loading FAILED" );
@@ -886,14 +831,6 @@ void game::switch_to_login( login_menu_status_enum status )
 
 // claude@NOTE: target receives this in EAX and drops project_cooker_simple's constant this argument.
 // The first static's base PDB line attribution returns when the caller's LTCG convention matches.
-
-
-
-
-
-
-
-
 
 void game::register_cooks( )
 {

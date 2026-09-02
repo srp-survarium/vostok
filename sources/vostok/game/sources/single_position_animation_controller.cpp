@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "single_position_animation_controller.h"
 // Complete types are required by the by-value expression and resource_ptr teardown.
@@ -32,10 +32,6 @@ static float s_aim_transition_time = 0.3f;
 
 // The initializer list is the complete retail constructor body.
 
-
-
-
-
 single_position_animation_controller::single_position_animation_controller(
 	animation_space_graph_ptr const&	graph,
 	ai::navigation::world const&		ai_navigation_world,
@@ -53,10 +49,6 @@ single_position_animation_controller::single_position_animation_controller(
 
 // Member destruction order is supplied by the compiler after these owned deletes.
 
-
-
-
-
 single_position_animation_controller::~single_position_animation_controller( )
 {
 	DELETE( m_search_service );
@@ -71,9 +63,6 @@ void single_position_animation_controller::initialize( )
 
 // Retail returns the empty expression directly.
 
-
-
-
 animation::mixing::expression single_position_animation_controller::try_finalize( base_animation_controller& next_controller, mutable_buffer& buffer )
 {
 	return													animation::mixing::expression( );
@@ -84,14 +73,13 @@ void single_position_animation_controller::query_new_target_if_needed( )
 	if ( m_next_key_point > m_navigation_path.size( ) - 1 ) {
 		// Notify the owner before clearing both controller parameter sets.
 
-
-
 		m_owner.on_movement_end( );
 		m_current_parameters.reset( );
 		m_target_parameters.reset( );
 	}
 }
 
+#line 68
 animation::mixing::expression single_position_animation_controller::selected_animations( mutable_buffer& buffer )
 {
 	if ( m_current_parameters != m_target_parameters )
@@ -212,10 +200,6 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 }
 
 // The checked downcast disappears in the retail build.
-
-
-
-
 
 void single_position_animation_controller::set_target( animation_controller_parameters const& target )
 {

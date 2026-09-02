@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SKELETON_COMBINED_COOK_DATA_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SKELETON_COMBINED_COOK_DATA_H_INCLUDED
-
 #include <vostok/animation/skeleton.h>
 #include <vostok/configs_binary_config.h>
 #include <vostok/fs/virtual_path_string.h>

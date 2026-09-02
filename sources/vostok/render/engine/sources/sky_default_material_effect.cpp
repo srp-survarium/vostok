@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "sky_default_material_effect.h"
-
 #include <vostok/render/core/custom_config_value.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
 

@@ -1,6 +1,7 @@
 ## Index
 
 ### Writing matched code
+* [binary_matching/matching_guide.md](binary_matching/matching_guide.md) - the matching guide: tools, the SRP projects, tips for reading assembly.
 * [binary_matching/MATCHING.md](binary_matching/MATCHING.md) - conventions for the source we generate (naming, alignment, asserts, the `UNKNOWN_EXPRESSION` placeholder, STATE markers, carcass comments, `sushi@`/`claude@` `MATCH/NOTE/TODO` tags). Scoped to the non-optimized `/Od` modules (per target codegen): `game_core`, `network_core`, `logging` active, plus `sound`, `network`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug` matchable.
 * [binary_matching/agentic_loop.md](binary_matching/agentic_loop.md) - the matching loop (queue, rebuild/diff, compile wiring, missing types, inlining, one commit + PR per unit/batch).
 * [binary_matching/assembly_patterns.md](binary_matching/assembly_patterns.md) - the pattern knowledge base entry point: search protocol, per-file schema, tag vocabulary. One file per pattern under [binary_matching/patterns/](binary_matching/patterns/), indexed in [binary_matching/patterns/INDEX.md](binary_matching/patterns/INDEX.md) (grep by `cpp:`/`asm:`/`topic:` tag or symptom; new pattern = new file + one INDEX line).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/particles.h>
 #include <vostok/render/core/backend.h>
@@ -9,7 +10,6 @@
 #include "render_particle_emitter_instance.h"
 #include "statistics.h"
 #include "system_renderer.h"
-
 namespace vostok {
 namespace render {
 

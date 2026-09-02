@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.ninja - run ninja.exe under Wine to build a Vostok target.
 

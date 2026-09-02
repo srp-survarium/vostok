@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "speedtree_convert_type.h"
 #include "speedtree_instance_impl.h"
-
 namespace vostok {
 namespace render {
 

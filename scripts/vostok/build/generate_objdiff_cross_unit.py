@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Recover strict scores hidden by COFF/PDB attribution.
 
 The linker can select a COMDAT body from different translation units in the

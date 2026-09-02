@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_SAMPLER_STATE_DESCRIPTOR_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SAMPLER_STATE_DESCRIPTOR_H_INCLUDED
-
 #include <cfloat>
 
 #include <vostok/math_float4.h>

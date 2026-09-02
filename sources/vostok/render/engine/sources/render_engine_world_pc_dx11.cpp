@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/vertex_input_type.h>
@@ -53,7 +54,6 @@
 #include "scene_view_cook.h"
 #include "render_output_window_cook.h"
 #include "grass_world.h"
-
 #include <GFx.h>
 
 struct singletons_on_preinitialize {

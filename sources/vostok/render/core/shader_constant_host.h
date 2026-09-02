@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
-
 // claude@NOTE: the available developer sources contain declarations but no bodies for these overloads.
 #include <vostok/math_float2.h>
 #include <vostok/math_float3.h>

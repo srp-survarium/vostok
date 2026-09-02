@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_GRASS_PATCH_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_GRASS_PATCH_H_INCLUDED
-
 #include <vostok/math_aabb.h>
 #include <vostok/render/core/untyped_buffer.h>
 #include <vostok/render/facade/render_stage_types.h>

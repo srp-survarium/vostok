@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "key_binder.h"
 #include "game.h"
@@ -313,14 +313,7 @@ keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 	return NULL;
 }
 
-
-
-
-
-
-
-
-
+#line 324
 keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 {
 	s32 idx = 0;

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "speedtree_tree.h"
-
 #include "material_manager.h"
 #include "speedtree_tree_component_billboard.h"
 #include "speedtree_tree_component_branch.h"

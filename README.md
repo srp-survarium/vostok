@@ -109,9 +109,9 @@ regen touches nothing, so there are no spurious rebuilds), builds
 Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 `binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
 also writes an overall match summary to `binaries/objdiff/report.json`, logs
-the code / function match percentages, and refreshes the matching ledger
-(`config/match_state.tsv`, via the regenerable
-committed ledger) from that fresh report at the end of the run.
+the code / function match percentages, and refreshes the committed matching
+ledger (`config/match_state.tsv`) and the score block at the top of this README
+from that fresh report at the end of the run.
 
 Useful individual steps (all run inside `nix develop`):
 
@@ -146,10 +146,6 @@ python3 -m vostok.ledger report --module render
 python3 -m vostok.sema blocks <fn> --diff --lite
 ```
 
-New repo paths go in `scripts/vostok/core/paths.py` - it is the only module
-that spells one. After editing anything under `scripts/`, run `ruff check
-scripts/` and `python3 -m vostok.tests.test_match_db`.
-
 ### Source navigation (clangd)
 
 `compile_commands.json` + `clangd-vfs.yaml` at the repo root (`vcproj2ninja
@@ -175,10 +171,6 @@ python3 -m vostok tool clangd refs  <file> <line> [col]   # all references
 python3 -m vostok tool clangd hover <file> <line> [col]   # type/expansion at point
 ```
 
-A new `#include` changes neither generated file (include tracking lives in the
-ninja graph), so the background index never reindexes more than the TUs whose
-content actually changed.
-
 ## Game data
 
 The whole game comes from one installer extraction, split into three outputs of
@@ -200,136 +192,76 @@ To build any one standalone (e.g. outside the shell): `nix build .#survarium-res
 
 ## Matching campaigns
 
-Repository skills under [`.agents/skills/`](.agents/skills/) cover unit matching,
-structure verification, stack review, and module-scale orchestration. Ask the agent
-to use `$vostok-orchestrate-matching` for a whole module or `$vostok-match-unit`
-for one translation unit.
-
-A campaign prepares clean, warm sibling worktrees from the current integration
-tip and dispatches disjoint translation units in parallel. Finished work is
-integrated one commit at a time into a single advancing stack. Every commit is
-fully rebuilt and carries the corresponding `README.md` and
-`config/match_state.tsv`; parallel
-branches are never merged into a fan and the approved stack is never squashed.
-After roughly 10-15 units, the batch receives a structure audit before review and
-landing.
-
-Warm worktrees should already contain `binaries/rich/target` and
-`binaries/objdiff`. Full campaign rules live in
-[`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agentic_loop.md)
-and [the orchestration skill](.agents/skills/vostok-orchestrate-matching/SKILL.md).
-
-## Reviewing match % (no rebuild needed)
-
-`config/match_state.tsv` is **committed**, so every query below
-answers on a fresh clone that has never compiled anything - no database, no
-build. For *current* numbers after edits, run `python3 -m vostok build` first
-(it re-derives the ledger at the end of the build);
-`python3 -m vostok derive refresh` only re-derives from an already-built
-`report.json` (it does NOT rebuild - run `vostok build` if sources moved).
-A function is **DONE only when the compile says so** (`cls`/`max` below); the
-only hand-set status is a **PARK** (with a cause) - so a low % is "still open",
-never silently "done".
+`config/match_state.tsv` is the committed per-function ledger (current score,
+the peak proven for the function's own source body, the all-time peak, status),
+so a fresh clone answers progress questions without compiling anything:
 
 ```sh
-# headline + per-module table (overall fuzzy %, functions-exact) - READ-ONLY print;
-# the README score block itself is refreshed by vostok build at the end of every build.
-python3 -m vostok ledger readme
-
-# per-UNIT rollup for a module, worst first. Columns: fns, done/open/park/blkd
-# counts, `held` (cur < max: compiler noise, NOT a regression - do not chase it),
-# `head` (hist > max: we had it better once, and that IS worth working), then the
-# byte-weighted cur% and max%.
-python3 -m vostok ledger report --module game_core --per-unit
-
-# ONE unit by path substring (works on report and list alike)
-python3 -m vostok ledger report --unit medkit
-
-# every function in a module/unit: size, cur%, max%, cls, status, mangled name.
-# --json gives full untruncated names; pipe wide output to `less -S`.
-python3 -m vostok ledger list --module game_core
-python3 -m vostok ledger list --unit vostok/game_core/sources/weapon_core.cpp
-python3 -m vostok ledger list --module game_core --status blocked   # incl. target-only
-
-# TRAP FINDER: high % over the WRONG statement shape. QUANTITY/SPLIT are the
-# steerable structural classes; a 100%/QUANTITY is the classic false win. The `cls`
-# column is an APPROXIMATION - confirm each hit with the structure-diff below.
-python3 -m vostok ledger list --module game_core --class QUANTITY,SPLIT
-
-# every PARKED function + why (the blocker, in the committed record - not buried in a PR body)
-python3 -m vostok ledger list --module game_core --status parked
-
-# we had it better once: hist > max, i.e. an earlier implementation scored higher
-# and we lost it. The highest-value queue in the tree.
-python3 -m vostok ledger list --module game_core --headroom
-
-# one batch per TU, worst first - what an orchestrator hands a matcher
-python3 -m vostok ledger queue --module game_core [--limit N] [--json]
-
-# REGRESSION TRACKING is `git diff`: the ledger is text, one row per function, so a
-# commit range shows exactly which functions moved and how. This is why the record is
-# a .tsv and not a database - a SQLite file re-serialises its pages on every write, so
-# it could neither be diffed nor merged.
-git diff <hash> -- config/match_state.tsv          # commit vs working tree
-git diff <hash>..<hash> -- config/match_state.tsv  # two commits
-# Reading a row's numbers: `cur` is THIS build and is noisy (under LTCG/ICF a function
-# moves without its source moving). `max` is the peak proven for this exact source body
-# and resets only when that body changes - driving every max to 100 is the campaign.
-# `hist` is the all-time peak and never resets.
-
-# AUTHORITATIVE per-function structure diff (the `cls` column above is only an approximation).
-# Prints each diverging statement tagged SIZE +/-N / BASE_ONLY / TRGT_ONLY, the target-vs-base
-# statement counts, and `; STRUCTURE MATCH` when the shape is clean. --function is a substring of
-# the signature; --view also takes target,base,structure,diff. This is how you confirm a
-# QUANTITY is real (recoverable statements) vs a stale label (0/0 STRUCTURE MATCH) vs blocked.
-pdb_fetch --target-index binaries/rich/target/index.jsonl --base-index binaries/rich/base/index.jsonl \
-  --function 'weapon_core::tick' --view structure-diff
-
-# Raw CodeView topology around one target function: exact procedure/frame/scope
-# records, PDB line lengths, TPI neighbors, the owning class field-list entry,
-# and physical/module-level symbol neighbors. Adjacency sections are explicitly
-# labelled heuristic; explicit references and class bindings are authoritative.
-pdb_topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
-  --module render_engine_world_pc_dx11 --function 'world::draw_scene'
-
-# Compare the same raw evidence while ignoring PDB-local RVA/type-index churn.
-pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
-  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
-  --module render_engine_world_pc_dx11 --function 'world::draw_scene'
-
-# Compare every complete target class/struct/interface definition to base.
-# Text prints differing/missing classes; --json preserves the complete model.
-pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
-  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes
-
-# Narrow a class audit without changing whole-scan semantics.
-pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
-  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes \
-  --class 'vostok::render::engine::world'
+python3 -m vostok ledger report --module render   # byte-weighted rollup, --per-unit for worst-first
+python3 -m vostok ledger queue --module render    # one batch per TU, what a matcher is handed
+git diff <rev> -- config/match_state.tsv          # regression tracking: which functions moved
 ```
 
-See [`pdb_topology.md`](docs/binary_matching/pdb_topology.md) for how to interpret
-the record-order evidence without confusing linker/type deduplication with source
-order.
-
-**`cls` (structure class)** is the DB's *approximate* shape verdict (the
-authoritative one is the structure-verifier's `pdb_fetch --view structure-diff`;
-full defs in [`match_db_design.md`](docs/binary_matching/match_db_design.md)):
-
-| `cls` | meaning |
-|---|---|
-| `MATCH` | same statement **count** *and* per-statement byte **sizes** - clean structure; only sub-statement noise left |
-| `SIZE` | same count, >=1 statement differs in **bytes** - skeleton matches; residual = inline-vs-call / LTCG / reg-alloc |
-| `SPLIT` | equal counts *and* total bytes, but alignment leaves paired target-only/base-only rows (line-attribution split) |
-| `QUANTITY` | statement **counts differ** - real missing/extra source statements (the high-%-over-WRONG-structure trap) |
-| `-` (NULL) | unpaired/open - no base match yet |
-
-A high `fuzzy_pct` with `cls = QUANTITY`/`SPLIT` is the trap the structure-verifier
-exists to catch: the bytes line up over the **wrong** statement shape.
+Campaigns are agent-driven. Repository skills under [`.agents/skills/`](.agents/skills/)
+cover unit matching, structure verification, stack review, and module-scale
+orchestration; ask the agent to use `$vostok-orchestrate-matching` for a whole
+module or `$vostok-match-unit` for one translation unit. The working agreements -
+ledger columns, the structure-diff and PDB evidence commands, commit rules - live
+in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md); the full loop is
+[`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agentic_loop.md).
 
 ## Docs
 
-- [Matching guide](https://gist.github.com/sushi-shi/8bf16f82c3b1c65fd357d73ecfda909e) - how to actually match assembly.
+- [docs/binary_matching/matching_guide.md](docs/binary_matching/matching_guide.md) - how to actually match assembly.
 - [docs/index.md](docs/index.md) - index of build and per-module matching notes.
 - [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine (and why Wine must be staging).
 - [docs/windows-setup.md](docs/windows-setup.md) - the legacy manual Windows/VS2008 workflow.
+
+## License
+
+Everything this project adds on top - the reconstruction work in the engine
+sources, the Python tooling, the Nix flake, and the docs - is licensed under the
+[GNU General Public License, version 3 or later](LICENSE), to the extent the
+contributors can do so. The tooling and the engine units the project generated
+carry a one-line `SPDX-License-Identifier: GPL-3.0-or-later` tag.
+
+The engine sources carry their original `Copyright (C) GSC Game World`
+headers: the Vostok Engine and Survarium remain the property of their rights
+holders, and the GPL covers only the contributors' work. No game binaries or
+packed resources are stored in the repository; the retail inputs the flake
+fetches, and build outputs that incorporate them, are not covered by this
+license.
+
+### Third-party code in the tree
+
+`sources/` vendors the third-party code the engine was built against, as it
+came with the engine's source tree. Each tree keeps its own terms; a file
+carrying its own copyright or license notice is governed by that notice, not
+by the GPL. Several of these SDKs are proprietary and are included only so the
+engine builds as shipped; **if a rights holder asks for one to be removed, it
+will be.**
+
+| Tree | Version | Terms as carried in the tree | Used by |
+| :-- | :-- | :-- | :-- |
+| `boost` | 1.48.0 | Boost Software License | engine |
+| `stlport` | 5.2.1 | STLport license (permissive) | engine STL |
+| `bullet` | 2.79 | zlib | physics |
+| `ode` | 0.11.1 | LGPL / BSD dual | physics |
+| `opcode` | 1.3 | Pierre Terdiman's free-use terms | collision |
+| `WildMagic` | 4.9 | LGPL (Geometric Tools) | engine math, collision |
+| `zlib`, `minizip` | 1.2.3, 1.01 | zlib | fs, vfs |
+| `ogg`, `vorbis`, `theora` | 1.1.4, 1.2.3, 1.1.1 | BSD | sound, video |
+| `lua`, `luajit`, `luabind` | 5.1 | MIT | scripting, configs |
+| `openssl` | 1.0.0g | OpenSSL / SSLeay | network |
+| `mysql` | Connector 6.02 | GPL v2 (FOSS exception) | servers |
+| `freeimage` | 3.12.0 | FreeImage Public License / GPL dual; bundled codecs BSD | textures |
+| `BugTrap` | 1.3.3291 | IntelleSoft terms, see the tree | crash reporting |
+| `fastdelegate` | 2005-05-30 | CodeProject terms | engine |
+| `ParticleAPI` | 2.21 | author's terms, see the tree | particles |
+| `cs` | 1.3 | GSC-authored helper library, same headers as the engine | engine |
+| `nvidia` | nvtt, DDS utilities, PerfSDK 6.62 | MIT (nvtt, squish); NVIDIA SDK terms (PerfSDK) | tools, benchmark |
+| `amd` | compress, GPUPerfAPI 2.3, tootle 2.2 | AMD library licenses (`compress/LibraryLicense.rtf`) | editor, tools |
+| `WeifenLuo.WinFormsUI.Docking`, `WPFToolkit.Extended`, `PropertyBag` | 2.3, 1.4.0, 1.0 | MIT, Ms-PL, CodeProject | editor (.NET) |
+| `scaleform` | GFx 4.2.22 subset (retail linked 4.2.21) | Autodesk Scaleform SDK terms, proprietary | UI (Flash) |
+| `SpeedTree` | 5.2.1 | IDV proprietary, confidentiality markings | render (trees, grass) |
+| `maya2011`, `maya2012` | devkits | Autodesk proprietary markings | Maya plugin |

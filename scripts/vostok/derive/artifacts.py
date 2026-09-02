@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.artifacts - the inputs, loaded once, checked before use.
 
 Everything the derivation knows comes from four generated files:

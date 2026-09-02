@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_UPDATE_MODEL_VERTEX_BUFFER_COMMAND_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_UPDATE_MODEL_VERTEX_BUFFER_COMMAND_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/render/facade/base_command.h>
 #include <vostok/render/facade/common_types.h>

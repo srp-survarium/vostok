@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_LIGHT_PROPS_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_LIGHT_PROPS_H_INCLUDED
-
 #include <vostok/math_curve.h>
 #include <vostok/math_float4x4.h>
 

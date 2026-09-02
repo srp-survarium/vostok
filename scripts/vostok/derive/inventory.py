@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.inventory - one side's functions, as the campaign sees them.
 
 The rich index says what the linker emitted; report.json says which translation

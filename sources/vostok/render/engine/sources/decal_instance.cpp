@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "decal_instance.h"
 #include "decal_shader_constants_and_geometry.h"
@@ -15,7 +16,6 @@
 #include "material_effects_instance.h"
 #include "material_manager.h"
 #include "renderer_context.h"
-
 namespace vostok {
 namespace render {
 

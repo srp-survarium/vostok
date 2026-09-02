@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.generate_delink - run vostok-delinker to split an EXE into per-unit COFF .obj files
 for objdiff comparison, for one side:

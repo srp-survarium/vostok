@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDERER_H_INCLUDED
-
 #include <vostok/fixed_vector.h>
 #include <vostok/intrusive_list.h>
 #include <vostok/render/core/effect_descriptor.h>

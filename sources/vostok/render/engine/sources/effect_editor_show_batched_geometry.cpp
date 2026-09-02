@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_editor_show_batched_geometry.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/facade/vertex_input_type.h>
-
 namespace vostok {
 namespace render {
 

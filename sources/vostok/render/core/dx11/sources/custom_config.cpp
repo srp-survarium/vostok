@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/configs_binary_config.h>
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/effect_options_descriptor.h>
 #include <vostok/render/core/static_type.h>
 #include <boost/crc.hpp>
-
 namespace vostok {
 namespace render {
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.gfx_mspdbsrv - mspdbsrv-stall-free `wine cmd /c cl @rsp` for the direct GFx drivers.
 

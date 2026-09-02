@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.index - the rich PDB index, keyed for pairing.
 
 `binaries/rich/<side>/index.jsonl` is one JSON record per emitted function. The

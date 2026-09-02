@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 import os
 import pathlib
 import json
@@ -1136,6 +1137,48 @@ class StructureClassificationTests(unittest.TestCase):
 
         self.assertEqual(classification[0], "SPLIT")
         self.assertGreater(classification[4], 0)
+    def test_hash_follows_line_directives(self):
+        """`#line` pins __LINE__ geometry; the PDB then reports virtual numbers."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "prologue\n#line 40\nbody line\nother function\n", encoding="latin-1"
+            )
+            record = {
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 40}],
+            }
+
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                self.assertEqual(
+                    effective_source_hash(record), maxima.source_hash("body line\n")
+                )
+
+    def test_fold_rekeys_a_body_banked_under_physical_line_numbers(self):
+        """Adding `#line` above a body must not reset its banked max."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text("#line 3\nbody line\nother\n", encoding="latin-1")
+            record = {
+                "mangled": "?f@@YAXXZ",
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 3}],
+            }
+            pairing = Pairing(pairs={"?f@@YAXXZ": Pair(
+                "?f@@YAXXZ", 0x1000, 0x2000, 90.0, "SIZE", 1, 1, 0, 0, 0
+            )})
+            artifacts = mock.Mock(base={"?f@@YAXXZ": record})
+            # the old scheme sliced physical line 3, which is "other"
+            banked = {"?f@@YAXXZ": (maxima.source_hash("other\n"), 100.0)}
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                folded = maxima.fold(pairing, artifacts, banked)["?f@@YAXXZ"]
+
+            self.assertEqual(folded, (maxima.source_hash("body line\n"), 100.0))
+
         self.assertGreater(classification[5], 0)
 
 

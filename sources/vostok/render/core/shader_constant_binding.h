@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_BINDING_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SHADER_CONSTANT_BINDING_H_INCLUDED
-
 #include <vostok/render/core/shader_constant_defines.h>
 #include <vostok/render/core/shader_constant_source.h>
 #include <vostok/shared_string.h>

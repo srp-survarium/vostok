@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "player_input_handler.h"
 #include "game_world.h"	// game_camera base needs game_world complete (upcast to base_game_scene)
@@ -94,8 +94,6 @@ bool player_input_handler::on_gamepad_action(
 	VOSTOK_UNREFERENCED_PARAMETERS( input_world, button, actions_mask );
 	return false;
 }
-
-
 
 bool player_input_handler::on_mouse_key_action(
 	input::world*					input_world,
@@ -212,13 +210,6 @@ inline bool player_input_handler::action_present( const game_action_id action, a
 	state	= found->second;
 	return true;
 }
-
-
-
-
-
-
-
 
 void player_input_handler::process_first_person_mode( const bool use_mouse_move )
 {
@@ -356,12 +347,6 @@ void player_input_handler::process_third_person_mode( )
 
 // Branch order follows the target; the third-person offset keeps its sign-mask evaluation.
 
-
-
-
-
-
-
 void player_input_handler::update_inverted_view( float4x4 const& player_head_transform )
 {
 	if ( m_input_mode == first_person_mode )
@@ -380,12 +365,6 @@ void player_input_handler::update_inverted_view( float4x4 const& player_head_tra
 
 	m_input_mode_changed		= false;
 }
-
-
-
-
-
-
 
 void player_input_handler::set_yaw_pitch_distance( const float yaw, const float arg_1, const float arg_2 )
 {

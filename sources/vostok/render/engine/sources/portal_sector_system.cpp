@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "portal_sector_system.h"
-
 #include <vostok/collision/common_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/buffer_vector.h>

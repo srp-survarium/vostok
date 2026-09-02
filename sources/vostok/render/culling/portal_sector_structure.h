@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CULLING_PORTAL_SECTOR_STRUCTURE_H_INCLUDED
 #define VOSTOK_RENDER_CULLING_PORTAL_SECTOR_STRUCTURE_H_INCLUDED
-
 #include <vostok/buffer_vector.h>
 #include <vostok/math_aabb.h>
 #include <vostok/math_plane.h>

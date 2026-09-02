@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_STATISTICS_INLINE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STATISTICS_INLINE_H_INCLUDED
-
 #include <vostok/c_array_functions.h>
 #include <vostok/math_functions.h>
 

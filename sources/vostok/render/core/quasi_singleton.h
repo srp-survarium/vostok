@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_QUASI_SINGLETON_H_INCLUDED
 #define VOSTOK_RENDER_CORE_QUASI_SINGLETON_H_INCLUDED
-
 #include <vostok/debug/static_cast_checked.h>
 
 namespace vostok {

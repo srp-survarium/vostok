@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_GAME_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_GAME_RENDERER_H_INCLUDED
-
 #include <vostok/math_rectangle.h>
 #include <vostok/render/api.h>
 #include <vostok/render/engine/base_classes.h>

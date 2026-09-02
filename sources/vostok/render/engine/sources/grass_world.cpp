@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
@@ -15,7 +16,6 @@
 #include "scene_view.h"
 #include "statistics.h"
 #include "system_renderer.h"
-
 namespace vostok {
 namespace render {
 

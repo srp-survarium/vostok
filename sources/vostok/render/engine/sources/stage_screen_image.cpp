@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "stage_screen_image.h"
-
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/effect_manager.h>

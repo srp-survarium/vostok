@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/core/logging_extensions.h>
 #include <vostok/console_command.h>
@@ -13,7 +14,6 @@
 #include "testing_impl.h"
 #include <vostok/os_include.h>
 #include <fcntl.h>
-
 // Required by the Visual Studio CRT used for the target build.
 extern "C" FILE* __iob_func(void);
 

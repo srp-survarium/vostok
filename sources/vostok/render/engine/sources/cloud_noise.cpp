@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
-
 #include "cloud_noise.h"
 #include "help_math.h"
 

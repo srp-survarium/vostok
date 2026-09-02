@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/state_utils.h>
 #include <boost/crc.hpp>
-
 namespace vostok {
 namespace render {
 namespace state_utils {

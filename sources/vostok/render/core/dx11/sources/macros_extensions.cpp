@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <d3dx11.h>
 #include <vostok/render/core/macros_extensions.h>
-
 pcstr make_d3d11_error_string( HRESULT error_code )
 {
 	switch ( error_code )

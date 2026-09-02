@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_SOURCES_EVENT_QUERY_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SOURCES_EVENT_QUERY_H_INCLUDED
-
 #include <vostok/detail_noncopyable.h>
 
 struct ID3D11Query;

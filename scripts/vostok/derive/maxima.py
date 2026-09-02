@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.maxima - the hash-scoped MAX, and what may reset it.
 
 MAX is the campaign's correctness gate: the best score PROVEN for a given source
@@ -12,6 +15,7 @@ function, so this module is a pure fold: previous evidence in, this build's
 observations folded on top, out.
 """
 
+import re
 import hashlib
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
@@ -64,14 +68,42 @@ def _source_extent(rec):
         return None
     if lines:
         lo, hi = min(lines), max(lines)
-        text = "".join(source_lines[lo - 1 : hi])
+        text = _extent_text(source_lines, lo, hi)
+        legacy = "".join(source_lines[lo - 1 : hi])
     else:
         # Compiler-generated helpers and some ICF-selected header bodies carry
         # a real source file but no line records. Hash the whole owning file:
         # broader than a function extent, but conservative and source-scoped.
         lo, hi = 1, len(source_lines)
-        text = "".join(source_lines)
-    return rec["file"], lo, hi, text
+        text = legacy = "".join(source_lines)
+    return rec["file"], lo, hi, text, legacy
+
+
+_LINE_DIRECTIVE = re.compile(r"^\s*#\s*line\s+(\d+)")
+
+
+def _extent_text(source_lines, lo, hi):
+    """The physical lines the PDB's `lo..hi` line numbers denote.
+
+    `#line N` renumbers everything after it (matchers pin `__LINE__` geometry
+    with it), so a PDB line number is the compiler's virtual number, not a
+    physical index. Directive lines themselves are not source body.
+    """
+    number = 1
+    selected = []
+    renumbered = False
+    for line in source_lines:
+        directive = _LINE_DIRECTIVE.match(line)
+        if directive:
+            number = int(directive.group(1))
+            renumbered = True
+            continue
+        if lo <= number <= hi:
+            selected.append(line)
+        number += 1
+    if not renumbered:
+        return "".join(source_lines[lo - 1 : hi])
+    return "".join(selected)
 
 
 def source_hash(text):
@@ -102,7 +134,7 @@ def fold(pairing, artifacts, banked):
     Returns {mangled: (hash, max)}.
     """
     rows = {}
-    raised = reset = 0
+    raised = reset = rekeyed = 0
     for mangled, pair in pairing.pairs.items():
         if pair.fuzzy is None:
             continue
@@ -110,6 +142,12 @@ def fold(pairing, artifacts, banked):
         if extent is None:
             continue
         effective_hash = source_hash(extent[3])
+        if (previous is not None and previous[0] != effective_hash
+                and previous[0] == source_hash(extent[4])):
+            # the same body, banked before extents followed `#line`: re-key
+            # the evidence under the hash that now describes it, no reset
+            previous = (effective_hash, previous[1])
+            rekeyed += 1
         previous = banked.get(mangled)
         maximum = canonical_peak(pair.fuzzy)
         if previous is not None and previous[0] == effective_hash:
@@ -122,6 +160,7 @@ def fold(pairing, artifacts, banked):
         elif previous is not None:
             reset += 1
         rows[mangled] = (effective_hash, maximum)
-    if raised or reset:
-        log(f"source MAX: {raised} raised, {reset} source bodies changed (reset)")
+    if raised or reset or rekeyed:
+        log(f"source MAX: {raised} raised, {reset} source bodies changed (reset), "
+            f"{rekeyed} re-keyed under #line-aware extents")
     return rows

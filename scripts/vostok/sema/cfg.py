@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.cfg - the control-flow graph, and the two things it is for.
 
 `cfg()` turns one side's instruction list into basic blocks whose branch

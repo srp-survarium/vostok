@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "material_effects_instance_cook.h"
-
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/effect_compile_data.h>

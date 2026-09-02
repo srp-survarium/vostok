@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_EFFECT_DESCRIPTOR_H_INCLUDED
 #define VOSTOK_RENDER_CORE_EFFECT_DESCRIPTOR_H_INCLUDED
-
 #include <vostok/fs/virtual_path_string.h>
 #include <vostok/render/core/memory.h>
 

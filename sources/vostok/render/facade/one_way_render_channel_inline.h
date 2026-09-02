@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_INLINE_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_INLINE_H_INCLUDED
-
 namespace vostok {
 namespace render {
 

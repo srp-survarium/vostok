@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+// SPDX-License-Identifier: GPL-3.0-or-later
 //! Query and compare raw CodeView function/class topology without flattening the PDB.
 
 use std::collections::{BTreeMap, HashMap, HashSet};

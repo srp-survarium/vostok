@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "text_translator.h"
 #include <vostok/console_command.h>
@@ -34,19 +34,9 @@ void text_translator::load_text_localization( )
 		boost::bind( &text_translator::on_texts_ready, this, _1 ),
 		g_allocator
 
-
-
-
-
-
-
-
-
-
-
-
 	);
 }
+#line 50
 void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
 {
 	size_t converted_chars_count;

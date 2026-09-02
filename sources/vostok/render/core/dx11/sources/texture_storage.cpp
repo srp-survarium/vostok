@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "texture_storage.h"
 #include "texture_pool.h"
-
 namespace vostok {
 namespace render {
 

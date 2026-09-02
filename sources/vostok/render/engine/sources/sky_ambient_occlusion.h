@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SKY_AMBIENT_OCCLUSION_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SKY_AMBIENT_OCCLUSION_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/math_aabb.h>
 #include <vostok/render/core/resource_intrusive_base.h>

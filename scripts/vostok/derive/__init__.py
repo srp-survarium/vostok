@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive - report.json + the rich indexes -> the match roster.
 
 The derivation nobody else may duplicate. Given artifacts that already exist -
@@ -27,7 +30,7 @@ already-built report.
     python3 -m vostok derive refresh          # re-derive from the built report
     python3 -m vostok ledger report --module render     # ask the record
 
-Design: docs/binary_matching/match_db_design.md. The ledger answers BULK
+Design: docs/binary_matching/ledger_design.md. The ledger answers BULK
 questions (queues, per-TU reports, unpaired functions); `pdb_fetch` stays the
 authoritative per-function view.
 """

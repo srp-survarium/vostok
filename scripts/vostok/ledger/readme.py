@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Roll up the committed ledger into README.md's human-readable score block.
 
 Reads ``config/match_state.tsv`` - the committed record - for

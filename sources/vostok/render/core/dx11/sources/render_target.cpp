@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/render_target.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/utils.h>
 #include "com_utils.h"
-
 #ifndef MASTER_GOLD
 #	include <d3dx11tex.h>
 #endif // #ifndef MASTER_GOLD

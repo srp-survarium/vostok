@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/resource_manager.h>
-
 #include "sky_ambient_occlusion.h"
 
 namespace vostok {

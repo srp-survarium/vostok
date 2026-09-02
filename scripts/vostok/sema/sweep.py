@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.sweep - bulk classification over a module or TU.
 
 For every paired, non-100% function in scope: is the residual a FLOW divergence

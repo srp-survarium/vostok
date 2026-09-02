@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/resource_manager.h>
-
 #include "environment_probe.h"
 
 namespace vostok {

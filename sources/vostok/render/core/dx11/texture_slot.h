@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_TEXTURE_SLOT_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_TEXTURE_SLOT_H_INCLUDED
-
 #include <vostok/fixed_string.h>
 #include <vostok/intrusive_ptr.h>
 #include <vostok/render/core/res_texture.h>

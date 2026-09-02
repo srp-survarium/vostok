@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CULLING_PORTAL_ID_CLOSER_TO_POINT_H_INCLUDED
 #define VOSTOK_RENDER_CULLING_PORTAL_ID_CLOSER_TO_POINT_H_INCLUDED
-
 namespace vostok {
 namespace render {
 namespace culling {

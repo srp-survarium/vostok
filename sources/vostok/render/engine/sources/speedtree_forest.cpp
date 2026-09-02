@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/console_command.h>
 #include <vostok/render/core/options.h>
@@ -10,7 +11,6 @@
 #include "speedtree_tree.h"
 #include "speedtree_tree_component_billboard.h"
 #include "statistics.h"
-
 static u32 s_speedtree_lod_index_value = 0;
 static vostok::console_commands::cc_u32 s_speedtree_lod_index("speedtree_lod", s_speedtree_lod_index_value, 0, 10, true, vostok::console_commands::command_type_engine_internal);
 

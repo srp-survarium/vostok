@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/core/res_texture_list.h>
 #include <vostok/render/core/dx11/texture_slot.h>
 #include <vostok/render/core/resource_manager.h>
-
 namespace vostok {
 namespace render {
 

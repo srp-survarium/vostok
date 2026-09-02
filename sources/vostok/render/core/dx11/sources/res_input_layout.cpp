@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
-
 #include <vostok/render/core/dx11/res_input_layout.h>
 #include <vostok/render/core/dx11/res_signature.h>
 #include <vostok/render/core/device.h>

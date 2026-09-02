@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "lobby_client.h"
 
@@ -115,14 +115,13 @@ void lobby_client::on_error(
 	m_connection_info.need_resolve	= true;
 }
 
-
-
 void lobby_client::connect( server_connection_info const& lobby_connection_info )
 {
 	m_connection_info	= lobby_connection_info;
 	m_packet_client.connect	( m_connection_info.host, m_connection_info.port );
 }
 
+#line 122
 void lobby_client::disconnect( )
 {
 	m_net_client_connected	= false;
@@ -136,6 +135,7 @@ void lobby_client::disconnect( )
 	m_packet_client.disconnect	( );
 }
 
+#line 132
 void lobby_client::sign_in_on_packet_received( network_core::packet_reader& reader )
 {
 	lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );

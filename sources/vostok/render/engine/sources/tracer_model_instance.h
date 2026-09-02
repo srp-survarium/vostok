@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_TRACER_MODEL_INSTANCE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_TRACER_MODEL_INSTANCE_H_INCLUDED
-
 #include <vostok/math_color.h>
 #include <vostok/render/facade/model.h>
 

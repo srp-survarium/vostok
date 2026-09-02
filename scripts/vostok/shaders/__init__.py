@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.shaders - the shipped shader blobs, and the proof we can rebuild them.
 
 resources.db ships every shader as `shaders/sm_4_0/<name>.{vs,ps,gs}/<perm>`,

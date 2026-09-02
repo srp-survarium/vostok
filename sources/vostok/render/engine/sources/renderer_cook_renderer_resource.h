@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef RENDER_RENDERER_COOK_RENDERER_RESOURCE_H_INCLUDED
 #define RENDER_RENDERER_COOK_RENDERER_RESOURCE_H_INCLUDED
-
 #include "renderer_cook.h"
 
 namespace vostok {

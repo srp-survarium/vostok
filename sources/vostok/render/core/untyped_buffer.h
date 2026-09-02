@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_UNTYPED_BUFFER_H_INCLUDED
 #define VOSTOK_RENDER_CORE_UNTYPED_BUFFER_H_INCLUDED
-
 #include <vostok/intrusive_ptr.h>
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/render_include.h>

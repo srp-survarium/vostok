@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Direct retail/base relocation audit for the Vostok render module.
 
 This is intentionally simpler than the consumer-owned data projection.  It

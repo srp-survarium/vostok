@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "game_world.h"
 #include "game.h"			// get_game().get_sound_world() needs game complete
@@ -102,10 +102,6 @@ game_world::game_world( game& game ) :
 	m_step_manager = VOSTOK_NEW_IMPL( *g_allocator, step_manager )( );
 
 	init_physics( );
-
-
-
-
 
 	m_free_fly_camera = VOSTOK_NEW_IMPL( *g_allocator, free_fly_camera )( *this, get_camera_director( ) );
 	register_cooks( );
@@ -386,8 +382,6 @@ void game_world::load(
 		sound_configuration.propagators_count	= 0xc4;
 		sound_configuration.receivers_count		= 1;
 
-
-
 		user_datas.push_back( variant< 32 >( ) );
 		user_datas.back( ).set( scene_configuration );
 
@@ -405,11 +399,6 @@ void game_world::load(
 
 		requests.push_back( resources::create_request( "resources/flash_movies/hud.swf", resources::flash_movie_class ) );
 		user_data_ptrs.push_back( NULL );
-
-
-
-
-
 
 		for ( u32 i = 0; i < s_max_tracers_count; ++i ) {
 			requests.push_back( resources::create_request( "weapons/trace", resources::tracer_model_instance_class ) );
@@ -438,8 +427,6 @@ void game_world::load(
 
 	requests.push_back( resources::create_request( project_resource_name, resources::client_game_project_class ) );
 	user_data_ptrs.push_back( &user_datas.back( ) );
-
-
 
 	for ( u8 i = 0; i < victory_items_count; ++i )
 	{

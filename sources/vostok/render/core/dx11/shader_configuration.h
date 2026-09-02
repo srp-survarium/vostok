@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_SHADER_CONFIGURATION_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_SHADER_CONFIGURATION_H_INCLUDED
-
 namespace vostok {
 namespace render {
 namespace union_base {

@@ -26,7 +26,7 @@ of the Scaleform D3D11 render HAL (`d3d1x_*`). Scaffolded in game **batch 12**
 This is the ONLY engine module the structure generator (`pdb_parser`) never
 emitted a carcass for - a parser gap (see
 [../unanswered_questions.md](../unanswered_questions.md)), recorded in
-`temp/triage_log.md` "Pass 5". So unlike every other carcass, there is no
+the triage log (`git show 3320ded27:temp/triage_log.md`, "Pass 5"). So unlike every other carcass, there is no
 canonical `binaries/structure/target/sources/vostok/scaleform/` tree to
 reassemble from.
 
@@ -188,7 +188,7 @@ no includes), so they stay reference-only.
 The binary links GFx **4.2.21** (the exe embeds "4.2.21"; `Render::HAL` is
 `STATIC_SIZE_ASSERT 0x1D0`), so the vendored tree was upgraded 4.0.15 ->
 **4.2.22** (one build off 4.2.21, the closest checkout available;
-`/home/sheep/Projects/scaleform_sdk`, `Include/GFxVersion.h` = `"4.2.22"`). This
+`<scaleform_sdk checkout>`, `Include/GFxVersion.h` = `"4.2.22"`). This
 **reverses the 2026-06-13 "not a newer SDK" conclusion below** - the divergence
 is real and lives in the SHARED base render classes (`Render::HAL`,
 `Render::Texture`/`TextureManager`/`MappedTextureBase`, `Render::MatrixState`,
@@ -294,7 +294,7 @@ driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
 
     nix develop --command python3 -m vostok.build.gfx
 
-  Source is the PRISTINE external SDK (`/home/sheep/Projects/scaleform_sdk`,
+  Source is the PRISTINE external SDK (`<scaleform_sdk checkout>`,
   4.2.22; `$SCALEFORM_SDK` overrides). No `scaleform_build/` overlay (deleted -
   it existed only to carry the now-removed survarium patches + pch prepend).
 
@@ -318,7 +318,7 @@ the correct source.
 (`c:/survarium/sources` for target), but the GFx compilands are recorded under
 `C:\w\...\GFx_4.2.21\Src\...`, so they do NOT map into
 `binaries/objdiff/target` and the GFx TUs do not auto-pair in `report.json` /
-`match.db`. The GFx libs do not move the match-score table; the point of building
+the ledger. The GFx libs do not move the match-score table; the point of building
 them is a GREEN exe link with GFx OUT of the LTCG so the ~293 engine functions the
 bad `/GL` build poisoned recover. Per-symbol GFx byte-match would need the GFx
 prefix wired into the delinker (follow-up).

@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <d3dx11tex.h>
-
 #pragma comment( lib, "d3dx11.lib" )
 #include <vostok/console_command.h>
 #include <vostok/render/core/resource_manager.h>

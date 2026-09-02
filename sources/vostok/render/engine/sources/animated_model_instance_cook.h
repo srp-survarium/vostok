@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_ANIMATED_MODEL_INSTANCE_COOK_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_ANIMATED_MODEL_INSTANCE_COOK_H_INCLUDED
-
 #include <vostok/configs_binary_config.h>
 #include <vostok/resources_cook_classes.h>
 

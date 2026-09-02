@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
@@ -9,7 +10,6 @@
 #include <vostok/render/core/dx11/res_xs_hw.h>
 #include <vostok/render/core/untyped_buffer.h>
 #include "com_utils.h"
-
 namespace vostok {
 namespace render {
 

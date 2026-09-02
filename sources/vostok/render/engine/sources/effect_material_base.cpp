@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "blend_mode.h"
 #include "effect_material_base.h"
@@ -6,7 +7,6 @@
 #include <vostok/render/core/shader_include_getter.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/facade/vertex_input_type.h>
-
 namespace vostok {
 namespace render {
 

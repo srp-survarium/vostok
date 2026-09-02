@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/sources/engine_renderer.h>
 #include <vostok/render/engine/world.h>
-
 namespace vostok {
 namespace render {
 namespace engine {

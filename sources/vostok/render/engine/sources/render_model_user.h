@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_USER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_USER_H_INCLUDED
-
 #include "render_model_instance_impl.h"
 #include "render_surface.h"
 #include "render_surface_instance.h"

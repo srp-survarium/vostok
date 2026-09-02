@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SUN_CASCADE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SUN_CASCADE_H_INCLUDED
-
 #include <vostok/fixed_vector.h>
 #include <vostok/math_float4x4.h>
 

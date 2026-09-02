@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.sema.rva - the address/source/match dossier for one function.
 
 The first command of an investigation: where each side lives, how big it is,

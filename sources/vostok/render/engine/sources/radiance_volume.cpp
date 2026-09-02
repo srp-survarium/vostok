@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
@@ -10,7 +11,6 @@
 #include "radiance_volume.h"
 #include "renderer_context.h"
 #include "renderer_context_targets.h"
-
 static bool s_draw_radiance_debug_value = false;
 static bool s_draw_propagated_radiance_debug_value = false;
 static bool s_draw_radiance_occluders_debug_value = false;

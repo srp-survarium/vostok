@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SPEEDTREE_FOREST_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SPEEDTREE_FOREST_H_INCLUDED
-
 #include <speedtree/core/core.h>
 #include <speedtree/forest/forest.h>
 #include <speedtree/forest/grass.h>

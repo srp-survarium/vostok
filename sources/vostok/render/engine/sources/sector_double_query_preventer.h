@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_SECTOR_DOUBLE_QUERY_PREVENTER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_SECTOR_DOUBLE_QUERY_PREVENTER_H_INCLUDED
-
 #include <vostok/buffer_vector.h>
 #include <vostok/math_aabb.h>
 #include <vostok/math_color.h>

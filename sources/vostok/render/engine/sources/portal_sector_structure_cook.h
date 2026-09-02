@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_PORTAL_SECTOR_STRUCTURE_COOK_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_PORTAL_SECTOR_STRUCTURE_COOK_H_INCLUDED
-
 #include <boost/noncopyable.hpp>
 #include <vostok/resources_cook_classes.h>
 

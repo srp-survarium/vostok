@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include <vostok/render/facade/material_effects_instance_cook_data.h>
 #include <vostok/render/facade/model.h>
@@ -7,7 +8,6 @@
 #include "render_model.h"
 #include "render_model_skeleton.h"
 #include "render_surface.h"
-
 namespace vostok {
 namespace render {
 skeleton_combined_model_cook::skeleton_combined_model_cook( ) : resources::translate_query_cook( resources::skeleton_combined_model_class, reuse_true, use_current_thread_id )

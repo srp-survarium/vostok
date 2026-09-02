@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
 #include "effect_fstage_simpe_water_materials.h"
 #include <vostok/render/core/custom_config_value.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
-
 namespace vostok {
 namespace render {
 

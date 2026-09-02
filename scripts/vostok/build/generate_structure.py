@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.generate_structure - run pdb-parser to (re)generate the annotated C++ "structure"
 stubs used for objdiff/IDA comparison, for one side:

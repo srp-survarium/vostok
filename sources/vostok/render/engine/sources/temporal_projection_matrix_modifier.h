@@ -1,6 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_ENGINE_TEMPORAL_PROJECTION_MATRIX_MODIFIER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_TEMPORAL_PROJECTION_MATRIX_MODIFIER_H_INCLUDED
-
 #include <vostok/detail_noncopyable.h>
 
 namespace vostok {

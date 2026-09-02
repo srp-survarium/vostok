@@ -1,9 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ////////////////////////////////////////////////////////////////////////////
 //	Created 	: 06.12.2025
 //
 //	Playback state shared by animation clients.
 ////////////////////////////////////////////////////////////////////////////
-
 #ifndef VOSTOK_ANIMATION_ANIMATION_PLAYBACK_STATE_H_INCLUDED
 #define VOSTOK_ANIMATION_ANIMATION_PLAYBACK_STATE_H_INCLUDED
 

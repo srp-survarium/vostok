@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.generate_rich - run pdb_rich_context to (re)build the "rich" function index
 (disassembly paired with source-level statements) used by `pdb_fetch`, per side:
