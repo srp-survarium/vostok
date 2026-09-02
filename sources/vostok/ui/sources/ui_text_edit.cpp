@@ -109,6 +109,11 @@ void ui_text_edit::set_text( pcstr str )
 	}
 }
 
+void ui_text_edit::set_max_chars(u16 const count)
+{
+	m_max_chars_count	= count;
+}
+
 bool ui_text_edit::is_shift_state(enum_shift_state const state) const
 {
 	switch(state)
@@ -446,11 +451,6 @@ u16 ui_text_edit::calc_right_word_position(u16 caret) const
 	}
 
 	return (u16)(cur-str_begin);
-}
-
-void ui_text_edit::set_max_chars(u16 const count)
-{
-	m_max_chars_count	= count;
 }
 
 void ui_text_edit::set_caret_position(u16 const pos, bool b_move)
