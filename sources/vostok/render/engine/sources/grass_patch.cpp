@@ -2,6 +2,7 @@
 #include "pch.h"
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/math_randoms_generator.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>

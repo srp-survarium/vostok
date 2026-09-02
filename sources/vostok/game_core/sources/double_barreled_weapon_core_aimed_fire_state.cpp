@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/double_barreled_weapon_core_aimed_fire_state.h>
 
 #include <vostok/game_core/weapon_core.h>
@@ -14,8 +15,6 @@
 #include <vostok/resources_pinned_ptr.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
@@ -115,7 +114,7 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 		1,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( s_aim_transition_time )
+		animation::linear_interpolator( 0.3f )
 	);
 }
 
@@ -146,7 +145,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 
 	pcstr const user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
 
-	animation::linear_interpolator interpolator( s_aim_transition_time );
+	animation::linear_interpolator interpolator( 0.3f );
 
 	// claude@MATCH: chain ctor + all setters into ONE statement (target L101 carcass) feeding the
 	// animation_lexeme construction - matches the show/hide siblings; a named params local + separate

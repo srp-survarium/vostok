@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/breath_vibration_calculator.h>
 #include <vostok/game_core/breath_holding_params.h>
 #include "breath_holding_states.h"

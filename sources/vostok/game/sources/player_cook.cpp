@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_cook.h"
 #include "profile_skin_visual_cook.h"
 #include "player_creation_params.h"
