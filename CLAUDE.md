@@ -112,6 +112,12 @@ One package, run as `python3 -m vostok ...` (`python3 -m vostok` maps the surfac
 `ruff check scripts/` and `python3 -m vostok.tests.test_match_db`. If you change
 the build/diff flow, tool names or generated artifacts, update README.md too.
 
+Every `python3 -m vostok ...` run appends one line to `binaries/vostok_usage.log`
+(command, branch, duration, exit code, failure reason), pooled in the main
+checkout; wrap any new entry point's `__main__` in `vostok.core.log.run(prog, main)`.
+`python3 -m vostok tool usage [--failures|--slow|--unused]` reads it back: the
+evidence for which verbs earn their keep and which keep failing under agents.
+
 ## Source conventions
 
 - Comments stay lean: only the non-obvious *why* (a workaround, a quirk being
