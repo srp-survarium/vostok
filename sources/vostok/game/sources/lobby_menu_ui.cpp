@@ -48,7 +48,7 @@ inline network::login_client& lobby_menu::login_client( )
 }
 
 // TU-local (canonical headers/relocate_item_func.h; owner mapping in
-// git show 3320ded27:temp/triage_log.md) - lobby_menu holds it through m_relocate_item_func
+// git show :temp/triage_log.md) - lobby_menu holds it through m_relocate_item_func
 class relocate_item_func : public flash_function_handler , private boost::noncopyable {
 public:
 			explicit	relocate_item_func	( game& g );

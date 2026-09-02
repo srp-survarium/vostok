@@ -1,7 +1,7 @@
 # game legacy-body harvest — protocol
 
 > Closed record. `temp/game_legacy/` was deleted from the tree after the harvest;
-> every file it names is retrievable with `git show 3320ded27:temp/game_legacy/<file>`.
+> every file it names is retrievable with `git show :temp/game_legacy/<file>`.
 
 Bring the original game module's bodies (parked in `temp/game_legacy/`) into the
 enabled carcass, **for the simple cases**. This is a SEEDING pass: replace stub

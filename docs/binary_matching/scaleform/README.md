@@ -26,7 +26,7 @@ of the Scaleform D3D11 render HAL (`d3d1x_*`). Scaffolded in game **batch 12**
 This is the ONLY engine module the structure generator (`pdb_parser`) never
 emitted a carcass for - a parser gap (see
 [../unanswered_questions.md](../unanswered_questions.md)), recorded in
-the triage log (`git show 3320ded27:temp/triage_log.md`, "Pass 5"). So unlike every other carcass, there is no
+the triage log (`git show :temp/triage_log.md`, "Pass 5"). So unlike every other carcass, there is no
 canonical `binaries/structure/target/sources/vostok/scaleform/` tree to
 reassemble from.
 

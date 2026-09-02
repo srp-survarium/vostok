@@ -1,9 +1,9 @@
 # render legacy-body harvest — campaign log
 
 > Closed record (2026-07-31). `temp/render_legacy/`, `temp/render_harvest/` and the
-> triage logs were deleted from the tree. Bodies: `git show 8bb5b3dfc:temp/render_legacy/<path>`
-> (the last revision holding them); logs: `git show 3320ded27:temp/render_legacy/triage_log.md`
-> and `git show 3320ded27:temp/render_structure_queue_triage.md`.
+> triage logs were deleted from the tree. Bodies: `git show 885e1d4a4:temp/render_legacy/<path>`
+> (the last revision holding them); logs: `git show :temp/render_legacy/triage_log.md`
+> and `git show :temp/render_structure_queue_triage.md`.
 
 Bring the original render libraries' bodies (parked in `temp/render_legacy/`)
 into the enabled carcass, top-down. This is the missed legacy-harvesting phase
@@ -114,7 +114,7 @@ ports).
 
 **CLOSED 2026-07-31 - all gates met.** Structure queue empty; render_legacy
 empty (triage_log.md kept as the disposition record; recovery pointer =
-`git show 8bb5b3dfc:temp/render_legacy/<path>`); 652 remaining STATE[STUB]
+`git show 885e1d4a4:temp/render_legacy/<path>`); 652 remaining STATE[STUB]
 are all annotated target_only / no-legacy-ancestor / documented-divergence
 (matcher-phase work); full exe links green. Render 396/2,647 exact (15.0%)
 vs the 13.8% pre-restructure recovery bar - carcass rebuild recovered past

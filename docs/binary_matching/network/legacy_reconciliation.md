@@ -1,7 +1,7 @@
 # network module - legacy source reconciliation
 
 > Closed record. `temp/network_legacy/` was deleted from the tree; retrieve any
-> file with `git show 3320ded27:temp/network_legacy/<file>`.
+> file with `git show :temp/network_legacy/<file>`.
 
 Reconciles the reconstructed network bodies in `sources/vostok/network/sources/`
 against the authentic original source parked in `temp/network_legacy/`. Policy

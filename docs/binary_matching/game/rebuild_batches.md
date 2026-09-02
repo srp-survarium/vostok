@@ -10,12 +10,12 @@ every configuration - TU enablement is a separate leaf-first pass at the end
 (an enabled-but-uncompilable TU breaks the build for everyone).
 
 Method: [../library_carcass_rebuild.md](../library_carcass_rebuild.md).
-Module notes: [README.md](README.md). Legacy priors: `git show 3320ded27:temp/game_legacy/<file>`.
+Module notes: [README.md](README.md). Legacy priors: `git show :temp/game_legacy/<file>`.
 
 | # | Batch | Scope (queue stems) | Status |
 |--|-------|---------------------|--------|
 | 1 | enums | 10 standalone survarium enums | DONE (0732995a) |
-| 2 | predicates | DISSOLVED - TU-local types, reproduced inside their owner `.cpp` (mapping in the triage log, `git show 3320ded27:temp/triage_log.md`); 9 owner-unknown stay for batch 12 | DONE (analysis) |
+| 2 | predicates | DISSOLVED - TU-local types, reproduced inside their owner `.cpp` (mapping in the triage log, `git show :temp/triage_log.md`); 9 owner-unknown stay for batch 12 | DONE (analysis) |
 | 3 | weapon templates | `weapon_sound_events_handler_state*` (60), `shotgun_weapon_reload_state{,_cook}`, `rifle_scope{,_cook}`, `weapon_sound_effect`, `weapon_cook`, `weapon`, `weapon_user_dead_state` + pulled `fingers_to_weapon_corrector` (value member of `weapon`) - reconstruct the PRIMARY templates (union across `_N` variants, per-instantiation STATIC_SIZE_ASSERTs) | DONE (51951c87) |
 | 4 | flash/scaleform | `flash_*` (rest), `scaleform_*`, `swf_input_translator`, `vostok_scaleform_log`, `ui_label`, `text_translator` | DONE (8e7765dc) |
 | 5 | options/menus/keys | `options_*`, `main_menu*`, `lobby_menu*`, `login_menu*`, `chat_tab`, `chat_handler`, `key_*`, `keyboard_key_descr`, `game_action_descr`, `graphic_preset` + pulled `base_game_scene.h` (base of the menu scenes; its compiland stays for batch 9) | DONE (0fe95219) |
@@ -52,4 +52,4 @@ Interim devices still in place (retire during/after batch 14):
   temp_anchor;` in `create_world` - keep the engine_user cone alive under
   /OPT:REF; removed when the rebuilt game TUs reference those subsystems for real.
 - `temp/game_legacy/` - body-reference priors; deleted from the tree, retrievable
-  with `git show 3320ded27:temp/game_legacy/<file>`.
+  with `git show :temp/game_legacy/<file>`.
