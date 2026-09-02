@@ -26,7 +26,7 @@ The generated artifacts are:
   each paired function, plus missing uses and missing definitions;
 - `binaries/gen/render_reloc_report.json`: counts, input hashes, and output
   hashes;
-- `docs/next_binary_matching/render_data_problems.md`: the tracked human
+- `docs/data_matching/render_data_problems.md`: the tracked human
   report. Machine-complete rows stay in the TSVs; the Markdown omits settled
   extentless rows and records only real differences or unresolved evidence.
 

@@ -216,7 +216,7 @@ MATCH_DB_LOG = BINARIES / "match_db.log"
 
 # --- committed machine-readable state (config/, in git) --------------------
 DOCS_MATCHING = REPO / "docs" / "binary_matching"
-DOCS_NEXT_MATCHING = DOCS / "next_binary_matching"
+DOCS_DATA_MATCHING = DOCS / "data_matching"
 RETAIL_CONFIG = CONFIG / "retail"
 CLEANLINESS_CONFIG = CONFIG / "cleanliness"
 MATCH_STATE = CONFIG / "match_state.tsv"
@@ -234,7 +234,7 @@ DATA_INTEGRITY_RATCHET = CLEANLINESS_CONFIG / "data-integrity-ratchet.tsv"
 
 
 def data_module_problems(module: str) -> Path:
-    return DOCS_NEXT_MATCHING / f"{_data_module_name(module)}_data_problems.md"
+    return DOCS_DATA_MATCHING / f"{_data_module_name(module)}_data_problems.md"
 
 
 DATA_RENDER_PROBLEMS = data_module_problems("render")
