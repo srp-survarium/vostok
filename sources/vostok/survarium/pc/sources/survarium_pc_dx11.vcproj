@@ -515,8 +515,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Generate COFF files"
-				CommandLine="../../../../../scripts/vs/post-build-hook.bat"
 			/>
 		</Configuration>
 		<Configuration

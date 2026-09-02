@@ -8,6 +8,8 @@
                       reliable, its diagnostics are not build truth.
     toolchain         first dev-shell entry: wine prefix, staged libs, the ninja
                       graph, and the one-time target-side generation
+    libs_release      cut a vostok-libs release: the GFx suite rebuilt from source
+                      (vostok.build.gfx) dropped over the current package, zipped
     toolchain_release repackage a VS2008 install into the reproducible
                       vostok-toolchain tarball the flake pins
     libs              stage prebuilt third-party blobs into binaries.prebuilt/

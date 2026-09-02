@@ -92,7 +92,9 @@ docs runs it as `python3 -m vostok ...`, and the code is here:
               sweep (plus index/disasm/cfg/pairing underneath)
     build/    ninja_regen, ninja, generate_{delink,structure,rich}, rebuild
     diff/     layout, order, tu_order, enums
-    tool/     clangd, toolchain, libs, sizes, breakpoints
+    tool/     clangd, toolchain, libs, sizes, breakpoints, libs_release (the
+              vostok-libs zip: GFx rebuilt from source over the current package),
+              toolchain_release
     shaders/  shipped shader blobs: coverage, dump, disasm (ship-truth asm
               under binaries/shaders/disasm/), and the fxc roundtrip proof
               (docs/shaders.md; needs .#with-resources)

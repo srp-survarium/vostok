@@ -5,8 +5,8 @@ Binary-matching decompilation of the **Vostok Engine** used by Survarium
 (MSVC 8.0 / VS2008 SP1), produce byte-identical objects to `survarium.exe`.
 
 This README covers the **Nix / Linux** workflow, which builds the exact VS2008
-toolchain under Wine for you - no Windows install required. For the original
-manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
+toolchain under Wine for you - no Windows install required. Linux is the only
+supported host.
 
 <!-- match-score:start -->
 ## Match status
@@ -171,6 +171,32 @@ python3 -m vostok tool clangd refs  <file> <line> [col]   # all references
 python3 -m vostok tool clangd hover <file> <line> [col]   # type/expansion at point
 ```
 
+### Third-party libs and the GFx suite
+
+`binaries.prebuilt/` (gitignored) holds the third-party `.lib`/`.dll` blobs the
+engine links, laid out as the shipped game stored them. It is staged on first
+entry from the `vostok-libs` package the flake pins, a zip on the
+[vostok-build-env](https://github.com/srp-survarium/vostok-build-env/releases)
+release. The one part of that package this repo builds itself is the Scaleform
+GFx static-lib suite: the shipped exe links libs Survarium compiled from the
+pristine 4.2.22 SDK, and `vostok.build.gfx` reproduces them with the exact cl
+recipe the shipped PDB records (needs the SDK: `nix develop .#with-scaleform-sdk`,
+or a checkout in `$SCALEFORM_SDK`).
+
+```sh
+python3 -m vostok.build.gfx                        # all 8 libs -> binaries.prebuilt/Win32/libraries/shipping/
+python3 -m vostok tool libs-release --tag gfx421r2 # rebuild GFx, package a new vostok-libs zip, print its sha256
+```
+
+`libs-release` drops the fresh suite over the current package, zips it
+deterministically and prints the `gh release upload` line plus the sha256 to
+pin in `flake.nix`, the same flow `vostok tool toolchain-release` uses for the
+compiler tarball.
+
+To *play* the game rather than match it, `scripts/create-wine-prefix.py`
+assembles a separate run-only Wine prefix from a bare clone; it needs neither
+the toolchain nor the dev shell.
+
 ## Game data
 
 The whole game comes from one installer extraction, split into three outputs of
@@ -215,7 +241,6 @@ in [CLAUDE.md](CLAUDE.md) and [AGENTS.md](AGENTS.md); the full loop is
 - [docs/binary_matching/matching_guide.md](docs/binary_matching/matching_guide.md) - how to actually match assembly.
 - [docs/index.md](docs/index.md) - index of build and per-module matching notes.
 - [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine (and why Wine must be staging).
-- [docs/windows-setup.md](docs/windows-setup.md) - the legacy manual Windows/VS2008 workflow.
 
 ## License
 

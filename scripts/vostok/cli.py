@@ -34,6 +34,7 @@ DIFF = {"layout": "vostok.diff.layout", "order": "vostok.diff.order",
         "enums-compare": "vostok.diff.enums_compare"}
 TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "toolchain-release": "vostok.tool.toolchain_release",
+         "libs-release": "vostok.tool.libs_release",
          "libs": "vostok.tool.libs", "sizes": "vostok.tool.sizes",
          "breakpoints": "vostok.tool.breakpoints"}
 
