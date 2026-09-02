@@ -13,6 +13,19 @@ Usage:
   python3 -m vostok.build.ninja logging          # build just the logging project
   python3 -m vostok.build.ninja -t clean         # ninja flag (clean tool)
   python3 -m vostok.build.ninja -k 1             # stop at first failure
+  python3 -m vostok.build.ninja --configuration release   # non-matching build
+
+`--configuration {gold,release,debug}` selects the solution configuration.
+`gold` is the matching build (`Master Gold|Win32`) and the default; everything
+that reproduces the retail image - the two shipped __DATE__s, the clean final
+PDB, the post-link watchdog - belongs to it alone. `release`/`debug` build the
+same sources plainly from their own graph (binaries/ninja-{release,debug},
+generated on demand) into their own .vcproj output paths, so they cannot move
+what the ledger measures.
+
+`--no-lto` (non-gold only) strips /GL and /LTCG from a Release/Debug graph, into
+a separate `-nolto` dir - a per-TU optimized build with no whole-program pass.
+Gold is always LTO because retail is LTCG.
 
 Required env vars (set by flake.nix devShell):
   NINJA_DIR  - directory containing ninja.exe
@@ -60,6 +73,8 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+from vostok.build import ninja_regen
+from vostok.core import paths
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
@@ -331,6 +346,7 @@ def _run_plain(
     ninja_exe: Path,
     args: list[str],
     build_time: str | None = None,
+    build_dir: Path = BUILD_DIR,
 ) -> int:
     """Run a module build and reap the post-PDB-server Ninja wait.
 
@@ -345,7 +361,7 @@ def _run_plain(
     with _termination_cleanup_scope():
         proc = subprocess.Popen(
             _ninja_argv(ninja_exe, args, build_time),
-            cwd=str(BUILD_DIR),
+            cwd=str(build_dir),
             env=_ninja_env(build_time),
             start_new_session=True,
         )
@@ -585,6 +601,24 @@ def _run_with_watchdog(
         return 0 if reaped else 1
 
 
+def _take_configuration(args: list[str]) -> tuple[str, bool, list[str]]:
+    """Pull our own flags out of the args ninja itself will see.
+
+    Returns (configuration name, lto, remaining ninja args)."""
+    args = list(args)
+    lto = True
+    if "--no-lto" in args:
+        lto = False
+        args.remove("--no-lto")
+    if "--configuration" not in args:
+        return "gold", lto, args
+    i = args.index("--configuration")
+    if i + 1 >= len(args):
+        die("--configuration needs a value "
+            f"({', '.join(sorted(paths.CONFIGURATIONS))})")
+    return args[i + 1], lto, args[:i] + args[i + 2:]
+
+
 def main() -> None:
     ninja_dir = os.environ.get("NINJA_DIR")
     if not ninja_dir:
@@ -593,11 +627,33 @@ def main() -> None:
     ninja_exe = Path(ninja_dir) / "ninja.exe"
     if not ninja_exe.exists():
         die(f"ninja.exe not found at {ninja_exe}")
-    if not (BUILD_DIR / "build.ninja").is_file():
-        die(
-            f"{BUILD_DIR}/build.ninja missing",
-            "Run: python3 -m vostok tool toolchain",
-        )
+
+    argv = sys.argv[1:]
+    name, lto, argv = _take_configuration(argv)
+    if name not in paths.CONFIGURATIONS:
+        die(f"unknown configuration {name!r} "
+            f"({', '.join(sorted(paths.CONFIGURATIONS))})")
+    configuration = paths.configuration(name)
+    gold = configuration == paths.GOLD_CONFIGURATION
+    if gold and not lto:
+        die("--no-lto is not valid for the gold configuration (retail is LTCG)")
+    build_dir = paths.ninja_dir(configuration, lto=lto)
+
+    if gold:
+        # `vostok build` owns the matching graph and regenerates it itself.
+        if not (build_dir / "build.ninja").is_file():
+            die(
+                f"{build_dir}/build.ninja missing",
+                "Run: python3 -m vostok tool toolchain",
+            )
+    else:
+        # No `vostok build` wrapper for these, so regenerate here. It is
+        # write-if-changed, so an up-to-date graph costs one vcproj2ninja run
+        # and dirties nothing.
+        variant = configuration + ("" if lto else " (no LTO)")
+        print(f"[ninja] refreshing the {variant} graph in {build_dir}",
+              flush=True)
+        ninja_regen.regenerate(configuration=configuration, lto=lto)
 
     # THIS worktree's prefix, always - an inherited WINEPREFIX from a sibling
     # checkout would run our compiles in THEIR prefix, where each session's
@@ -624,7 +680,16 @@ def main() -> None:
     #           failures in one pass instead of stopping at the first
     # Both come before the user's args, so a later -k/-j on the command line
     # still wins (ninja takes the last occurrence).
-    args = sys.argv[1:] or [DEFAULT_TARGET]
+    args = argv or [DEFAULT_TARGET]
+
+    # Everything below reproduces the retail image: the two shipped __DATE__s,
+    # the clean final PDB, the post-LTCG-link zombie watchdog. Release and Debug
+    # are ordinary builds of the same sources, so they take the plain path
+    # against their own graph.
+    if not gold:
+        rc = _run_plain(ninja_exe, args, build_dir=build_dir)
+        _kill_prefix_processes(("mspdbsrv.exe",))
+        sys.exit(rc)
 
     # The stall watchdog only makes sense for the full-game build (the one that
     # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only

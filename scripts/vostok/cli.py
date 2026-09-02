@@ -29,6 +29,10 @@ Every module is also a direct entry (`python3 -m vostok.sema xref ...`), which
 is the only spelling for the ones this umbrella does not name: the build steps
 (`vostok.build.ninja`, `.ninja_regen`, `.generate_{delink,structure,rich}`,
 `.gfx`), `vostok.ledger.store` and `vostok.core.symbols`.
+
+`vostok build` is always the matching configuration. The solution's other two,
+`Release|Win32` and `Debug|Win32`, are built through the direct entry:
+`python3 -m vostok.build.ninja --configuration {release,debug}`.
 """
 
 from __future__ import annotations

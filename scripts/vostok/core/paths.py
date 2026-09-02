@@ -87,6 +87,54 @@ NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
 
+# --- build configurations --------------------------------------------------
+# The matching campaign only ever builds `Master Gold|Win32`, and its graph
+# stays at binaries/ninja - no other configuration may write there, or a stray
+# regen would silently retarget the build we measure. The other solution
+# configurations get their own graph dir; their .vcproj output paths already
+# carry $(ConfigurationName) and distinct library/exe suffixes, so the build
+# trees under binaries/Win32/ never collide either.
+GOLD_CONFIGURATION = "Master Gold|Win32"
+CONFIGURATIONS = {
+    "gold": GOLD_CONFIGURATION,
+    "release": "Release|Win32",
+    "debug": "Debug|Win32",
+}
+_NINJA_DIRS = {
+    GOLD_CONFIGURATION: NINJA_DIR,
+    "Release|Win32": BINARIES / "ninja-release",
+    "Debug|Win32": BINARIES / "ninja-debug",
+}
+
+
+def configuration(name: str) -> str:
+    """`gold`/`release`/`debug` (or a full "Cfg|Platform") -> the .sln name."""
+    return CONFIGURATIONS.get(name, name)
+
+
+def ninja_dir(
+    configuration_platform: str = GOLD_CONFIGURATION,
+    lto: bool = True,
+) -> Path:
+    """The generated ninja graph for one solution configuration.
+
+    `lto=False` selects the whole-program-optimization-off variant of a
+    non-gold configuration (its own dir, so the two never thrash each other).
+    Gold is always LTO - it reproduces retail's LTCG image - so lto=False is
+    refused there."""
+    try:
+        base = _NINJA_DIRS[configuration_platform]
+    except KeyError:
+        raise KeyError(
+            f"no ninja graph dir for {configuration_platform!r}; "
+            f"known: {', '.join(sorted(_NINJA_DIRS))}"
+        ) from None
+    if lto:
+        return base
+    if configuration_platform == GOLD_CONFIGURATION:
+        raise ValueError("the gold configuration is always LTO (retail is LTCG)")
+    return base.with_name(base.name + "-nolto")
+
 # Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
 # regenerable from resources.db + fxc, so it lives with the other artifacts.
 SHADER_DISASM = BINARIES / "shaders" / "disasm"
