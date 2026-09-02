@@ -376,9 +376,13 @@ agree.
 For whole-PDB structure, keep the evidence channels separate. Use
 `pdb_topology --classes` for raw complete class variant sets and declaration
 order, `pdb_divergence` for source definition order and the normalized enum
-view, and `pdb_topology --order` for physical DBI/TPI/global/module-symbol
-sequence diagnostics. A same-name duplicate record is not a canonical-source
-verdict. The reproducible audit and classifications live in
+view, and `pdb_topology --order` for complete observable MSF/PDB topology. That
+last view covers container pages/stream slots, DBI and source scopes, TPI/IPI
+records and hashes, global/public indexes, module symbols and C13 records, and
+optional FPO/frame streams; each channel labels whether its order is semantic,
+physical, hash-, type-index-, address-, or linker-derived. A same-name duplicate
+record is not a canonical-source verdict. The reproducible audit and
+classifications live in
 [`divergence_queue.md`](divergence_queue.md); raw-order confidence limits live in
 [`pdb_topology.md`](pdb_topology.md).
 

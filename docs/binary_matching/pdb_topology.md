@@ -3,7 +3,7 @@
 `pdb_parser` already uses the `pdb2` Rust crate, but its normal carcass and rich
 index intentionally flatten most CodeView records. `pdb_topology` owns the raw
 CodeView comparisons that need record identity or sequence: one-procedure
-topology, complete class variant sets, and selected whole-PDB order channels.
+topology, complete class variant sets, and the observable MSF/PDB stream layout.
 Inspect one procedure with:
 
 ```sh
@@ -100,8 +100,8 @@ phantom, or the record used by a particular emitted function.
 
 ## Whole-PDB order comparison
 
-`--order` compares the record sequences that have stable enough names to pair
-across PDBs:
+`--order` inventories every present MSF stream and compares the physical,
+semantic, hash, and address-derived sequences separately:
 
 ```sh
 pdb_topology \
@@ -110,31 +110,51 @@ pdb_topology \
   --order --limit 100
 ```
 
-The report has four independent channels:
+The coverage header states exactly which layers were decoded. They include:
 
-- DBI module/object order;
-- named complete TPI records (`class`, `struct`, `interface`, `union`, `enum`,
-  and alias records);
-- the global symbol stream;
-- named top-level symbol order inside each uniquely paired module/object
-  (`procedure`, data/TLS, constant, UDT, and thunk records).
+- MSF superblock, free-page map, directory/map pages, stream slots, page lists,
+  allocation runs, fragmentation, identified roles, and unidentified streams;
+- PDB Info named streams and `/names` strings, metadata, feature codes, live,
+  deleted, and hash-bucket order;
+- DBI substream layout, module/object and library groups, source-file lists,
+  section contributions/maps/headers, EC strings and hashes, and optional debug
+  stream presence;
+- all raw TPI/IPI record kinds, named complete records, complete enum value
+  order, per-record hashes, index checkpoints, and adjustment buckets;
+- all raw and recognized global/module symbol records, GSI/PSI hashes and
+  buckets, public address/thunk/section maps;
+- C13 subsections and their local strings, checksums, line programs, frame data,
+  inlinees, cross-scope maps, and ordered raw fallback for unknown payloads;
+- decoded legacy FPO and frame-data records, plus inventory of absent OMAP,
+  fixup, xdata/pdata, token/RID, and other optional streams.
 
-Only a key that occurs exactly once in both sequences participates in an order
-claim. Duplicate keys with equal counts are listed as `excluded-nonunique`;
-unequal counts are a `multiplicity` difference. One-sided records are reported
-separately, as are changed descriptions for a uniquely paired key. A `moved` row
-means that the shared unique record participates in at least one pairwise
-inversion; an insertion before it cannot manufacture a move.
-`--json` is uncapped, while `--limit` only bounds the human-readable rows.
+If a present stream has no stable role, it is still listed in the unidentified
+inventory. If a supported optional stream is absent, the coverage report says
+so instead of implying that it was compared. `--limit 0` is useful for printing
+all channel summaries without individual rows; `--json` remains uncapped.
 
-These whole-PDB streams are physical/linker-derived evidence. LTCG, COMDAT
-selection, type merging, and linker processing can reorder them, so they are
-useful for locating a divergence but are not source-order proof. Anonymous TPI
-records cannot be authoritatively paired across two independently allocated
-type streams and are deliberately not assigned invented identities. Source
-definition order remains owned by `pdb_divergence`; class declaration order and
-function-internal record order remain the high-confidence `--classes` and
-`--function` channels above.
+Only a key that occurs exactly once in both sequences participates in a semantic
+order claim. Duplicate keys with equal counts are `excluded-nonunique`; unequal
+counts are a `multiplicity` difference. One-sided records and changed
+descriptions are separate. A `moved` row means that the shared unique record
+participates in at least one pairwise inversion; an insertion before it cannot
+manufacture a move. Raw kind streams and address/ordinal-only formats are
+explicitly labeled weaker because they cannot always provide such an identity.
+
+Each comparison also reports exact inversion count/rate, longest ordered
+subsequence, retained and reversed adjacency, longest contiguous run,
+increasing runs, and rank displacement. A moved-participant count can make one
+block rotation look nearly total; the locality metrics preserve that distinction.
+
+Most whole-PDB streams are physical, linker-, hash-, type-index-, or
+address-derived evidence. LTCG, COMDAT selection, archive extraction, type
+merging, and linker processing can reorder them. Anonymous TPI records cannot
+be authoritatively paired across independently allocated streams and are not
+given invented identities. Source definition order remains owned by
+`pdb_divergence`; class and complete-enum declaration order and
+function-internal structure are the high-confidence `--classes`, enum-scope,
+and `--function` channels. The current measured coverage and confidence limits
+are recorded in `pdb_comparison_audit.md`.
 
 The output is divided by evidentiary strength:
 

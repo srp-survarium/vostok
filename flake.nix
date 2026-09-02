@@ -17,6 +17,12 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
+      #   1eee4a0  decodes residual DBI string/hash tables, TPI/IPI hashes and
+      #            index maps, GSI/PSI maps, C13 inner records, and optional
+      #            FPO/frame-data streams instead of hiding them as raw bytes.
+      #   5cd58bd  compares the complete observable MSF/PDB stream topology:
+      #            allocation pages, stream roles, DBI/TPI/IPI/symbol/module
+      #            order, source/line records, and raw fallbacks.
       #   50a8f49  source-definition order requires both attributed line order
       #            and compiland procedure-symbol order, rejecting #line-only
       #            inversions.
@@ -50,7 +56,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/50a8f49664178f56d2f665c923c9c5748ef9d747";
+      url = "github:srp-survarium/vostok-pdb-parser/1eee4a0a155f9ec911638f639c00818b2a84070e";
       flake = false;
     };
     vcproj2ninja-src = {

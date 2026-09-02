@@ -1,28 +1,35 @@
 # Retail/candidate PDB comparison audit — 2026-09-02
 
-This is a measured inventory, not a claim that every reported row requires a
-source edit. It replaces the stale qualification that five network layout rows
-were known duplicate-record “phantoms.” The retail PDB does contain competing
-same-name records, but the available evidence does not prove that the unmatched
-records are stale, unused, or otherwise disposable.
+This is a measured inventory of the current linked PDBs. It is not a count of
+source bugs. The comparison deliberately separates semantic source evidence,
+compiler/linker record order, hash-table serialization, and the physical MSF
+container. A difference in one layer does not automatically explain a
+difference in another.
 
-## Snapshot and reproduction
+The short answer is that the candidate PDB does **not** follow retail order for
+everything. Five high-confidence source-definition-order differences have been
+fixed, and their filtered comparison is now clean. Much broader and stable
+differences remain in stream placement, module extraction, type insertion,
+string tables, section contributions, line/checksum records, public-address
+order, FPO, and frame data. Most of those are diagnostics of different link
+inputs or emitted code, not instructions to reorder source blindly.
 
-The candidate used the reconstructed C++ state at commit
-`5ebab38e1b213efd6e38c376efa3c0c16a2db41b` and was built in an isolated
-worktree and Wine prefix with a successful full `python3 -m vostok build -j6`.
-No reconstructed C++ was changed for this audit. The comparison used
-`vostok-pdb-parser` commit
-`50a8f49664178f56d2f665c923c9c5748ef9d747`, which is pinned by this branch.
+## Current reproducible snapshot
+
+The candidate is commit `6d00b67e6fc9a4e68e1908096dce13f824b3f03c`,
+built and then clean-HEAD rebuilt in an isolated worktree and Wine prefix with
+`python3 -m vostok build -j6`. Both full builds measured 75.66% code and 37,041
+/ 44,600 exact functions, with zero regressions or improvements. The comparison
+uses pinned `vostok-pdb-parser` commit
+`1eee4a0a155f9ec911638f639c00818b2a84070e`.
 
 | PDB | bytes | SHA-256 |
 |---|---:|---|
-| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 105,073,664 | `3ebd4bd5c0624d392e32761ca5792bc9f3b949adfb51a3554ee158695a2dde70` |
+| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 104,352,768 | `a88cad5f439648d145bb4da1bf41adae0c27ec7a0153a2a65baa2d4a86c694e6` |
 | retail `survarium.pdb` | 101,673,984 | `0ffe85c27f8b95f23a65d91866af3384ab24ca343b3865a57f71a08902d5a238` |
 
-Both PDBs record the engine source tree under the canonical
-`c:\survarium\sources` prefix, so the normalized commands use that prefix on
-both sides:
+Both PDBs record the engine tree under `c:\survarium\sources`, so the same
+normalization prefix is used on both sides:
 
 ```text
 pdb_divergence \
@@ -31,116 +38,96 @@ pdb_divergence \
   --target-pdb <retail>/survarium.pdb \
   --target-engine-path 'c:\survarium\sources'
 
-pdb_divergence <paths-above> \
-  --skip bullet --skip opcode --skip stlport --skip vorbis --skip ogg \
-  --skip zlib --skip render --skip sound --skip scaleform --skip flash
-
 pdb_topology --target-pdb <retail>/survarium.pdb \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes --json
 
 pdb_topology --target-pdb <retail>/survarium.pdb \
-  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --order --json
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order --limit 0
 ```
 
-`pdb_divergence` warned that four Scaleform modules ended early while their
-symbol streams were read. The raw class inventory does not apply the campaign
-filters. These two facts are part of the result and prevent treating the tables
-as interchangeable counts.
+The JSON form is uncapped and owns the individual rows. `--limit 0` prints the
+complete channel summaries without millions of record details.
 
-## Normalized compatibility view
+## What is now compared
 
-The category counts overlap: one type can differ in size, members, declaration
-order, and visibility. “Diverged” is therefore not the sum of the following
-columns.
+The topology sweep inventories every present MSF stream slot and compares every
+decoded order-bearing layer in these PDBs:
 
-| scope | compared | diverged | size | member | member-function order | visibility | base-only | target-only |
+| layer | compared evidence |
+|---|---|
+| MSF 7.00 container | superblock, active free-page-map blocks and bits, directory/map pages, stream slots, sizes, page lists, allocation runs, fragmentation, identified roles, unidentified slots |
+| PDB Info and `/names` | live named-stream order, bucket positions, deleted buckets, feature order, strings, metadata, hash buckets, trailing name count |
+| DBI | header and substream offsets/sizes, modules, library grouping, per-module source files, section contributions, section map, image section headers, EC strings/metadata/hash buckets, optional stream references |
+| TPI and IPI | every raw record kind in insertion order, named complete records, enum value order, per-record hashes, index-offset checkpoints, hash-adjustment buckets |
+| global and public symbols | every raw symbol record, stable recognized identities, GSI and PSI hash-record and bucket order, public address map, thunk and section maps |
+| module streams | every raw/top-level symbol record and stable symbol kind, C13 subsection order, local strings, file checksums, line programs, frame data, inlinees, cross-scope maps, and raw-word fallback for unknown payloads |
+| optional debug streams | legacy FPO, frame data, OMAP, fixup, xdata/pdata, token/RID map and section-header presence; payloads are decoded when present |
+
+For this pair all present stream slots receive a role; there are no unidentified
+streams. IPI, OMAP, fixup, xdata/pdata, token/RID, C13 inlinee/cross-scope, and
+several other optional kinds are absent or empty in both inputs. Absence is
+reported, not treated as unmeasured content. A future unknown C13 payload is
+still preserved and compared as ordered raw words rather than silently skipped.
+
+This is complete for the observable serialization supported by these VS2008
+PDBs; it is not a claim that physical allocation has source semantics or that
+the PDB records information the compiler/linker discarded.
+
+## Semantic compatibility view
+
+The normalized categories overlap: one type can differ in size, members,
+declaration order, and visibility. “Diverged” is not their sum.
+
+| scope | compared | diverged | size | member | member-function order | visibility | candidate-only | retail-only |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | all non-external types | 16,650 | 125 | 30 | 50 | 90 | 21 | 929 | 965 |
 | campaign-filtered types | 6,570 | 57 | 6 | 19 | 32 | 17 | 196 | 182 |
 
-| scope | compared | diverged | base-only | target-only |
+| current campaign-filtered scope | compared | diverged | candidate-only | retail-only |
 |---|---:|---:|---:|---:|
-| all normalized enums | 825 | 3 | 51 | 68 |
-| campaign-filtered enums | 598 | 2 | 49 | 57 |
-| all paired source files | 1,183 | 12 | 3 | 2 |
-| campaign-filtered source files | 701 | 9 | 2 | 0 |
+| normalized enums | 598 | 2 | 49 | 57 |
+| paired source files | 701 | 4 | 2 | 0 |
 
-The filtered source result consists of five definition-order differences and
-four constant differences:
-
-| kind | engine-relative source |
-|---|---|
-| constant | `vostok/animation/sources/mixing_n_ary_tree.cpp` |
-| constant | `vostok/animation/sources/mixing_n_ary_tree_animation_event_iterator.cpp` |
-| order | `vostok/core/sources/core_entry_point.cpp` |
-| constant | `vostok/core/sources/math_quaternion.cpp` |
-| order | `vostok/engine/sources/engine_world.cpp` |
-| order | `vostok/game/sources/game_world.cpp` |
-| constant | `vostok/game/sources/lobby_menu_ui.cpp` |
-| order | `vostok/game/sources/weapon.cpp` |
-| order | `vostok/ui/sources/ui_text_edit.cpp` |
-
-The earlier line-only comparison also listed `login_menu.cpp`, `player_tick.cpp`,
-and `particle_emitter_instance.cpp`. Their attributed line orders invert, but
-their independent compiland procedure-symbol orders do not. `login_menu.cpp`
-demonstrates the failure directly: its physical source already places
-`clear_resources()` before `set_status()`, while a retained `#line 95` makes the
-later function appear to start on an earlier reported line. Source definition
-order now requires both evidence channels to invert, so these three rows are no
-longer presented as source edits.
-
-The out-of-line presence diagnostic reports 339 candidate-only and 294
-retail-only functions without filters, and 272 candidate-only and 219
-retail-only functions with the campaign filters. Presence is scheduling and
-reachability evidence; it is not by itself a missing-source verdict under LTCG.
-
-## Definition-order remediation on current xray
-
-The preceding tables describe the audit snapshot at `5ebab38e1`. They are kept
-as the discovery record, not presented as the current candidate state. The five
-dual-evidence definition-order rows were then handled as separate measured
-source changes:
-
-| source | disposition |
-|---|---|
-| `vostok/core/sources/core_entry_point.cpp` | reordered in `3ca48737d`; code-neutral full build |
-| `vostok/engine/sources/engine_world.cpp` | reordered in the current follow-up; code-neutral full build |
-| `vostok/game/sources/game_world.cpp` | reordered in `4a35a62cf`; code-neutral full build |
-| `vostok/game/sources/weapon.cpp` | reordered in `acd9c8340`; code-neutral full build |
-| `vostok/ui/sources/ui_text_edit.cpp` | reordered in `9054e72f5`; code-neutral full build |
-
-For `engine_world.cpp`, all eight definitions in the reported move group were
-already byte-exact and `STRUCTURE MATCH`. Retail source-line order and the
-independent `engine_world.obj` procedure-symbol stream both supported moving
-the unchanged definitions. A fresh full build from xray commit `1c227abc5`
-measured 75.66% code and 37,041 / 44,600 exact functions both before and after
-the edit, with 0 regressions and 0 improvements.
-
-The post-edit filtered comparison is:
-
-| current filtered scope | compared | diverged | relevant breakdown |
-|---|---:|---:|---|
-| normalized types | 6,570 | 57 | 6 size, 19 member, 32 member-function order, 17 visibility |
-| normalized enums | 598 | 2 | 49 candidate-only, 57 retail-only |
-| paired source files | 701 | 4 | 0 definition-order files, 4 anonymous-constant functions |
-
-The remaining four source rows are the anonymous local constants in
+The four source rows are anonymous local constants in
 `mixing_n_ary_tree.cpp`,
 `mixing_n_ary_tree_animation_event_iterator.cpp`, `math_quaternion.cpp`, and
-`lobby_menu_ui.cpp`. Removing all five definition-order rows is a real PDB
-structure improvement; it does not resolve or reclassify the 57 type rows, two
-enum rows, one-sided records, or physical linker-order diagnostics below.
+`lobby_menu_ui.cpp`. There are now zero high-confidence definition-order rows
+in the filtered view.
 
-The filtered label is literal. For example, `--skip bullet` does not exclude a
-type merely because its C++ name starts with `bt`; the remaining six size rows
-still include `btKinematicCharacterController`.
+Out-of-line presence remains large: the preceding audit snapshot reported 272
+candidate-only and 219 retail-only filtered functions. Presence is
+scheduling/reachability evidence under LTCG, not by itself proof of a missing or
+fabricated source body.
 
-## Raw complete-class variants
+## What was fixed
 
-The previous comparator selected one “best” record per qualified class name.
-The current raw view retains every complete record, groups equal semantic
-shapes, preserves all PDB-local type indexes, and classifies the full variant
-sets.
+The original source comparison found five files whose attributed line order and
+independent compiland procedure-symbol order both inverted. Each was reordered
+as a separate measured, code-neutral change:
+
+| source | measured commit |
+|---|---|
+| `vostok/core/sources/core_entry_point.cpp` | `3ca48737d` |
+| `vostok/engine/sources/engine_world.cpp` | current commit `6d00b67e6` |
+| `vostok/game/sources/game_world.cpp` | `4a35a62cf` |
+| `vostok/game/sources/weapon.cpp` | `acd9c8340` |
+| `vostok/ui/sources/ui_text_edit.cpp` | `9054e72f5` |
+
+The earlier line-only view also listed `login_menu.cpp`, `player_tick.cpp`, and
+`particle_emitter_instance.cpp`. Their compiland procedure order does not
+invert. `login_menu.cpp` contains a retained `#line` directive that directly
+demonstrates why attributed line order alone can lie about physical source
+order. Those three were comparator false positives, not source fixes.
+
+Fixing all five definition-order rows is real PDB progress, but it resolves only
+one semantic channel. It does not make the physical PDB layout equal.
+
+## Complete class variants
+
+The raw view retains every complete class/struct/interface record, groups equal
+semantic shapes, and preserves every PDB-local type index. It does not select a
+supposedly canonical same-name record.
 
 | class-name status | names |
 |---|---:|
@@ -159,193 +146,159 @@ sets.
 | names with repeated equal records | 642 | 651 |
 | unresolved referenced types | 2 | 2 |
 
-This raw inventory includes vendor/external classes. It is intentionally not a
-filtered replacement for the normalized table.
+Retail-vs-retail reports all 29,428 class names identical. This validates the
+comparison without pretending retail has one shape per name: it contains 267
+multi-variant names and 642 names with repeated equal records.
 
-A retail-vs-retail self-check reports all 29,428 retail class names identical,
-with no multiplicity, overlap, disjoint, or one-sided differences. This checks
-the comparison, not the proposition that retail contains only one shape per
-name: retail has 267 multi-variant names and 642 names with repeated equal
-records.
+### The six filtered size rows
 
-## Reclassification of the six filtered size rows
+| normalized row | raw evidence | honest disposition |
+|---|---|---|
+| `packets_in_list_predicate` | retail sizes `0x1` and `0x2`; candidate `0x2` exactly shares one retail shape | variant overlap; provenance of the unmatched retail form is unresolved |
+| `udp_match_connection` | retail `0x530`/`0x538`; candidate `0x538`, but complete nested/type/order shape is disjoint | consumer assembly supports candidate offsets on inspected paths; whole-record provenance remains unresolved |
+| `udp_match_client` | retail `0xb20`/`0xb28`; candidate `0xb28`, with other complete-shape differences | unresolved disjoint variants, not a proven duplicate phantom |
+| `udp_match_client_session` | retail `0x568`/`0x570`; candidate `0x570`, with property/typedef differences | unresolved disjoint variants |
+| `match_client_impl` | retail `0x96ba0`, `0x258ba0`, `0x258ba8`; candidate `0x258ba8`, with nested typedef/order differences | inspected constructor supports the 8192-element candidate arena; other records remain unresolved |
+| `btKinematicCharacterController` | one retail `0xe0` record versus candidate `0xd0` | real Bullet/vendor layout difference |
 
-| normalized row | retail complete variants | candidate | raw-set status | supported conclusion |
-|---|---|---|---|---|
-| `packets_in_list_predicate` | sizes `0x1`, `0x2` | size `0x2`, equal to one retail shape | variant overlap | one exact shape is shared; the retail `0x1` variant has unresolved provenance |
-| `udp_match_connection` | sizes `0x530`, `0x538` | size `0x538` | disjoint | size agrees with one retail variant, but nested types, enum labels, and declaration order still disagree |
-| `udp_match_client` | sizes `0xb20`, `0xb28` | size `0xb28` | disjoint | size agrees with one retail variant, but generated/member and nested-declaration details still disagree |
-| `udp_match_client_session` | sizes `0x568`, `0x570` | size `0x570` | disjoint | size agrees with one retail variant, but properties and nested typedef/declaration details still disagree |
-| `match_client_impl` | sizes `0x96ba0`, `0x258ba0`, `0x258ba8` | size `0x258ba8` | disjoint | the largest retail size is closest, but nested typedef presence and declaration order still disagree |
-| `btKinematicCharacterController` | size `0xe0` | size `0xd0` | disjoint | a real single-variant layout difference remains; this is Bullet/vendor work despite surviving the substring filters |
+The previous description of five rows as documented duplicate-record
+“phantoms” was too strong. A shared shape or one agreeing consumer cannot prove
+that every other retained record is stale or unused.
 
-`sequence_id_predicate` is another relevant network member row: both sides have
-the name, but no full shape agrees. The candidate is closest to the retail
-`u16` form and still differs in `boost::noncopyable` inheritance access; retail
-also retains a `u8` form.
+## Full stream/layout result
 
-Assembly previously inspected for `udp_match_connection` and
-`match_client_impl` supports the candidate layout at those consumers. That is
-consumer-bound evidence. It cannot establish that the other retail records are
-phantoms, nor can it erase the remaining whole-record differences. The honest
-state of the unmatched variants is unresolved provenance.
+The physical files are materially different before semantic record pairing:
 
-## Enum result
+| MSF inventory | candidate | retail |
+|---|---:|---:|
+| file pages | 101,907 | 99,291 |
+| present stream slots | 2,165 / 2,165 | 2,408 / 2,410 |
+| declared stream bytes | 102,622,317 | 99,206,885 |
+| stream pages | 101,296 | 98,115 |
+| allocation runs | 2,268 | 2,519 |
+| fragmented streams | 46 | 44 |
+| active free pages | 4 | 740 |
 
-The two filtered normalized enum rows are qualitatively different:
+The candidate directory occupies 405 pages in one run; retail uses 393 pages in
+seven runs. This is real byte/container layout, but page-number equality is not
+a source reconstruction target.
 
-- one is an anonymous-name collision between unrelated third-party enumerator
-  sets; it is not an engine enum source task;
-- `vostok::resources::class_id_enum` is a real normalized difference, with 11
-  candidate-only enumerators tied to still-present cooks and consumers.
+Representative record-order channels show where the difference comes from:
 
-Top-level enum comparison still collapses same-name `LF_ENUM` records. This
-audit therefore does not declare any selected enum record canonical. Raw enum
-variant-set and provenance reporting remains a tooling gap.
+| channel | candidate | retail | shared unique | inversion rate | key result |
+|---|---:|---:|---:|---:|---|
+| identified stream roles/slots | 2,166 | 2,409 | 2,110 | 19.1443% | 2,095 moved; 2,107 changed sizes/pages; 56 candidate-only, 299 retail-only |
+| DBI modules | 2,387 | 2,396 | 2,331 | 19.6655% | 2,329 moved; 56 candidate-only, 65 retail-only |
+| DBI EC strings | 958 | 1,139 | 687 | 42.4086% | 675 moved; 1,259/1,597 hash buckets differ |
+| global `/names` strings | 8,708 | 9,623 | 6,907 | 16.2759% | 6,905 moved; 10,514 candidate buckets differ and retail has 6,069 more buckets |
+| all TPI record kinds | 457,630 | 460,370 | 457,580 | 1.3820% | occurrence pairing finds 148,913 changed records; insertions make this a physical diagnostic |
+| named complete TPI records | 33,706 | 33,896 | 30,926 | 16.8261% | 30,926 moved; 4 changed; 262 multiplicity; 877 non-unique keys excluded |
+| global symbol stream | 160,408 | 155,692 | 145,083 | 4.7647% | 145,081 moved; 158 multiplicity; 1,279 non-unique keys excluded |
+| GSI serialized hashes | 81,844 | 77,304 | 67,240 | effectively zero | only 3 pair inversions; resolved identity order is almost exact |
+| PSI serialized hashes | 78,564 | 78,388 | 77,843 | 0% | shared unique hash-record order is exact |
+| PSI public address map | 78,564 | 78,388 | 77,843 | 3.6975% | 77,048 moved, reflecting different final addresses/order |
+| legacy FPO | 13,906 | 13,992 | 729 | 0% order | 721 shared keys have changed payload/address data |
+| frame data | 60,101 | 58,810 | 1,823 | 0% order | 1,822 shared keys have changed payload/address data |
 
-## Whole-PDB order diagnostics
+“Moved” is deliberately sensitive: moving one intact block marks records in
+both blocks. The report therefore also gives pair inversions, LIS, retained and
+reversed adjacency, contiguous runs, increasing runs, and displacement. For
+example, DBI retains a 457-object contiguous run despite 2,329 moved records;
+named TPI retains a 1,715-record run; the global symbol stream retains a
+2,629-record run.
 
-Order comparison pairs only keys that occur exactly once on both sides. It
-reports insertions/deletions, multiplicity differences, equal duplicate keys,
-semantic changes, and inversion participants separately. An insertion cannot
-manufacture a move, and PDB-local type indexes or source paths cannot
-manufacture a semantic change.
+### Modules, source files, and C13
 
-| physical channel | candidate total | retail total | shared unique | inversion participants | changed unique | candidate-only | retail-only | multiplicity | excluded non-unique |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| DBI module stream | 2,387 | 2,396 | 2,331 | 2,329 | 0 | 56 | 65 | 0 | 0 |
-| named complete TPI records | 33,722 | 33,896 | 30,844 | 30,844 | 4 | 458 | 677 | 278 | 877 |
-| global symbol stream | 163,527 | 155,692 | 140,998 | 140,996 | 0 | 13,974 | 7,480 | 154 | 1,278 |
+Of 2,331 uniquely paired module scopes:
 
-The four changed unique named TPI records are
-`btKinematicCharacterController` and three Scaleform classes. Module streams
-pair in 2,331 scopes; 1,472 have at least one symbol-stream difference. Across
-those differing scopes there are 13,825 inversion participants, 0 changed
-unique symbols, 97,361 candidate-only symbols, 16,434 retail-only symbols,
-10,583 multiplicity differences, and 8,786 excluded non-unique keys.
+| per-module channel | differing scopes |
+|---|---:|
+| source-file reference order | 1,679 |
+| all raw symbol records | 1,689 |
+| recognized top-level symbol sequence | 1,470 |
+| file-checksum records | 2,294 |
+| line-program records | 2,105 |
+| C13 subsection sequence | 1,201 |
+| C13 local string tables | 0 |
+| C13 frame/inlinee/cross-map/other payloads | 0 |
 
-“Inversion participant” is deliberately sensitive: moving one intact block can
-label nearly every record in both blocks. The comparator now also reports exact
-pair inversions, the longest ordered subsequence (LIS), adjacency retained after
-one-sided records are removed, the longest contiguous run, increasing runs, and
-rank displacement.
+The zero rows are meaningful only for the 2,331 paired scopes; the 56
+candidate-only and 65 retail-only modules remain one-sided.
 
-| physical channel | inverted pairs | inversion rate | LIS | retained adjacency | longest contiguous run |
-|---|---:|---:|---:|---:|---:|
-| DBI module stream | 534,038 / 2,715,615 | 19.6655% | 738 / 2,331 (31.66%) | 1,127 / 2,330 (48.37%) | 457 |
-| named complete TPI records | 80,313,846 / 475,660,746 | 16.8847% | 10,589 / 30,844 (34.33%) | 21,805 / 30,843 (70.70%) | 1,693 |
-| global symbol stream | 469,719,551 / 9,940,147,503 | 4.7255% | 85,614 / 140,998 (60.72%) | 116,107 / 140,997 (82.35%) | 2,629 |
+### Enum declaration order
 
-This is still a large physical difference, but it is not randomized or
-“almost entirely different.” Long runs survive, especially in TPI and global
-symbols. The old participant count hid that locality.
+Raw TPI contains 2,804 uniquely paired complete enum scopes. Twelve differ and
+111 same-name scopes are ambiguous because at least one side contains duplicate
+records. Only one of the twelve is a pure order mismatch:
+`vostok::render::mesh_type_enum` has all 12 comparable header/value records and
+10 pair inversions. Retail places `mt_user_mesh_editable` and
+`mt_user_mesh_wire` before the five skinned-mesh enumerators. This is direct,
+actionable source evidence and is handled in the follow-up measured commit.
 
-### Stability check
+The other eleven are value/name/multiplicity differences: the parked
+`resources::class_id_enum`, renamed `udp_match_connection` values, six
+Scaleform/vendor scopes, `math::convex`'s unnamed collision, and an
+`animation_player` unnamed target-only value. The 111 ambiguous scopes must not
+be resolved by arbitrarily selecting a record.
 
-An identical-input relink was forced by touching only the generated final-link
-response file. The build wrapper deleted the old output PDB before linking, so
-the test did not reuse a prior type stream. No object or library was rebuilt.
+## What the large physical difference means
 
-The fresh files had different raw identities:
-
-| artifact | preserved baseline SHA-256 | forced-relink SHA-256 | differing bytes |
-|---|---|---|---:|
-| EXE | `c29d8295f0f749d57b3cf0bd81b3f91e0583424699df09de43289458f1655ad7` | `9735990ce3b426e3ad6e53808de835840419b3a31f86df0c569b85e95d57b30c` | 22 |
-| PDB | `3ebd4bd5c0624d392e32761ca5792bc9f3b949adfb51a3554ee158695a2dde70` | `fb99f6fd84f7b65d49ab72409e88c9cb9ac6e3180090fe0d615c49be45080633` | 39,536 |
-
-Despite those identity/checksum bytes, baseline-vs-relink comparison was exact:
-all 2,387 DBI modules, 33,722 named complete TPI records, 163,527 global
-symbols, and all 2,387 paired module symbol streams had zero moves, changes,
-one-sided records, or multiplicity changes. PDB record order is reproducible for
-fixed link inputs. It is stable enough to use diagnostically; stability does
-not make a linker-derived channel direct source-order proof.
-
-### Causal grouping
-
-DBI order was split by contributing library. Of 51 multi-member library groups,
-27 have zero relative inversion among their shared objects. The engine groups
-for `debug`, `engine`, `input`, `libfoundation`, `ogg`, `opcode`, and `vorbis`
-are fully equal in both presence and order. Several groups that label every
-object “moved” are intact rotations:
-
-| library | shared objects | retained adjacency | increasing runs | inverted pairs |
-|---|---:|---:|---:|---:|
-| `vostok_ai-static-gold.lib` | 79 | 77 / 78 | 2 | 690 |
-| `vostok_collision-static-gold.lib` | 44 | 42 / 43 | 2 | 123 |
-| `vostok_fs-static-gold.lib` | 14 | 12 / 13 | 2 | 13 |
-| `vostok_logging-static-gold.lib` | 9 | 7 / 8 | 2 | 8 |
-| `vostok_physics-static-gold.lib` | 12 | 10 / 11 | 2 | 35 |
-| `vostok_ui-static-gold.lib` | 17 | 15 / 16 | 2 | 60 |
-| `vostok_vfs-static-gold.lib` | 60 | 58 / 59 | 2 | 884 |
-
-VFS is the clearest example. Candidate DBI order contains a 34-object block
-followed by a 26-object block; retail contains the same two blocks in the
-opposite order. Neither DBI sequence is archive member order:
-`vfs_lib.rsp` begins with `library_linkage.obj`, `pch.obj`, and the `find_*`
-objects, whereas candidate DBI begins with `mount_physical_path.obj` and retail
-begins with `mount_ptr.obj`. DBI is recording link extraction/demand order, not
-the `.vcproj` file list verbatim.
+DBI library grouping explains part of the movement. Of 51 multi-member library
+groups, 27 preserve relative order for all shared objects. Several other groups
+are intact rotations. VFS, for example, contains the same 34-object and
+26-object blocks in opposite order. Neither PDB's DBI order is the archive
+member order: it reflects linker extraction/demand order.
 
 The final response file already follows `RETAIL_LINK_LIBRARY_ORDER` in
-`scripts/vostok/build/ninja_regen.py`. That order was derived independently
-from retail section contributions. Commit `86e53d1a0` introduced it and moved
-the then-current build from 9,097 to 10,004 exact functions and from 88.38% to
-91.72% fuzzy. The current DBI interleaving also does not follow the response
-file's library sequence on either side. Changing that established order merely
-to make the DBI prefix look closer would discard much stronger code and section
-evidence.
+`scripts/vostok/build/ninja_regen.py`, derived independently from retail section
+contributions. Commit `86e53d1a0` moved the then-current build from 9,097 to
+10,004 exact functions and from 88.38% to 91.72% fuzzy. The current DBI
+interleaving follows neither side's response-file library sequence. Changing
+that established order merely to improve a PDB prefix would discard stronger
+code and section evidence.
 
-Module-local symbols were also grouped by record kind after scopes were ordered
-by their stable module key. This removes DBI module extraction order from the
-measurement:
+The stream-slot gap is also a roster difference, not just order: the candidate
+and retail link different sets of object/library streams, including candidate
+zlib/libjpeg objects versus retail LIBCMT-origin objects. Header inclusion can
+affect TPI and per-module UDT emission, but the stable unique module-local UDT
+subsequence is already close (369 inverted pairs among 7,732 shared unique
+records). That supports targeted declaration/PCH investigation, not wholesale
+include reordering.
 
-| module-local kind | candidate total | retail total | shared unique | candidate-only | retail-only | multiplicity | inverted pairs | retained adjacency | LIS |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| constant | 2,911 | 3,894 | 2,396 | 426 | 1,415 | 6 | 20 / 2,869,210 (0.000697%) | 2,369 / 2,395 (98.91%) | 99.54% |
-| data | 9,029 | 8,253 | 6,873 | 2,148 | 1,372 | 0 | 50,860 / 23,615,628 (0.215366%) | 3,632 / 6,872 (52.85%) | 70.03% |
-| procedure | 48,155 | 47,652 | 43,825 | 4,312 | 3,809 | 0 | 45,398 / 960,293,400 (0.004728%) | 40,403 / 43,824 (92.19%) | 95.81% |
-| thunk | 864 | 860 | 279 | 558 | 554 | 0 | 15 / 38,781 (0.038679%) | 269 / 278 (96.76%) | 98.92% |
-| UDT | 622,900 | 428,241 | 7,732 | 89,917 | 9,284 | 10,577 | 369 / 29,888,046 (0.001235%) | 7,290 / 7,731 (94.30%) | 97.85% |
+## Stability and limits
 
-The shared unique module-local UDT sequence—the channel most plausibly affected
-by header inclusion and declaration order—is already extremely close. The huge
-UDT total, one-sided, and multiplicity gap also means that only a small unique
-subset can make an order claim. It is evidence to investigate PCH/type-emission
-and missing/extra declarations, not evidence to reorder headers wholesale.
+A forced identical-input relink in the discovery audit deleted the output PDB
+first and rebuilt no object or library. The PDB changed in identity/checksum
+bytes, but all then-decoded module, named-TPI, global, and per-module symbol
+orders were identical. The expanded comparator's retail-vs-retail self-check
+reports zero moves, changes, one-sided rows, or differing scopes in all 58
+summary channels. Its unit and integration suite also checks synthetic stream
+reordering and malformed payloads.
 
-At the audit snapshot, `pdb_divergence` reported five high-confidence
-source-definition-order rows and printed both PDB sequences with attributed
-source lines. Those five rows were fixed one translation unit and measured
-commit at a time as recorded above. Physical DBI/TPI/global rows remain
-diagnostics and were not treated as equivalent source-order tasks.
+That establishes reproducibility for fixed inputs and comparator sanity. It
+does not turn linker-derived order into source-order proof. In particular:
 
-Retail-vs-retail has zero moves, semantic changes, one-sided records, or
-multiplicity differences in every channel and zero differing module scopes. It
-still excludes 1,021 non-unique named-type keys and 1,451 non-unique global
-symbol keys from order pairing, as intended.
+- type indexes and raw unnamed-record occurrence are insertion-sensitive;
+- contribution, public, FPO, and frame records are address-sensitive;
+- hashes and buckets change when their input set changes;
+- LTCG, COMDAT selection, type merging, and archive extraction affect record
+  presence and order;
+- absent optional streams contain no recoverable order evidence;
+- compiler-discarded source spelling cannot be reconstructed from physical page
+  allocation.
 
-These figures show a stable, materially different physical/linker order with
-substantial preserved locality. They do **not** show that 30,844 type
-declarations or 140,996 source declarations are misplaced: DBI, TPI, global,
-and module symbol streams are affected by compilation, LTCG, COMDAT selection,
-type merging, and linker processing. Use the order report to locate clusters,
-then prove source declaration or definition order with the higher-confidence
-class/source views.
+## Current conclusion
 
-## Current answer
+The candidate is semantically close enough to pair most named entities, but its
+PDB is not structurally or physically equal to retail. Five verified
+source-definition-order problems are fixed; one newly exposed enumerator-order
+problem is actionable; 57 filtered type rows, two normalized enum rows, four
+anonymous-constant source rows, raw same-name variants, one-sided entities, and
+large linker/container differences remain.
 
-Retail and candidate are close enough to pair most named entities, but they are
-not structurally equal. The current campaign-filtered normalized view has 57
-type names, 2 enum rows, and 4 source files with at least one reported
-difference, plus large one-sided function-presence sets. All five source
-definition-order rows found by the audit are fixed; the four remaining source
-rows are anonymous local constants. The raw class stream additionally exposes
-hundreds of multiplicity/variant-set differences. Linker-derived record order
-is stable and measurably different, but much of it consists of retained or
-rotated blocks; the established final library order and shared unique
-module-local UDT order are already strong.
-
-Those numbers are an evidence inventory, not an actionable queue. Before a row
-becomes a source task, exclude vendor/deferred scope, preserve all same-name
-variants, bind ambiguous records to a compiland or consumer where possible, and
-use function structure/assembly to decide what the shipped code actually uses.
+Those figures are an evidence inventory, not one flat work queue. Make a source
+change only when the PDB channel actually owns source semantics or when a
+physical cluster is corroborated by class structure, function structure,
+assembly, section layout, or controlled link experiments. Unmatched same-name
+records remain unresolved provenance until they are bound to a compiland or
+consumer; they are not honestly described as duplicate-record phantoms.

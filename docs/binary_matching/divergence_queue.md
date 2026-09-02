@@ -17,7 +17,7 @@ question:
 | enum values/underlying type | `pdb_divergence` plus raw variant inspection | semantic after variant ambiguity is excluded |
 | source definition order and constants | `pdb_divergence` | semantic when both files/functions pair |
 | function locals/statements/lexical blocks | `pdb_fetch --view structure-diff` | direct procedure evidence |
-| DBI/TPI/global/module-symbol sequence | `pdb_topology --order` | physical/linker-derived diagnostic |
+| complete MSF/PDB stream topology | `pdb_topology --order` | per-channel: semantic where identities survive; otherwise physical/linker/hash/address-derived diagnostic |
 | out-of-line function presence | `pdb_divergence --list-presence-fns` and the ledger | scheduling/reachability evidence |
 | emitted member use | target/base disassembly at a real consumer | direct for that access path |
 
@@ -39,9 +39,12 @@ it does not explain every record retained in the linked PDB.
 4. Run `pdb_topology --classes --json` and preserve these categories separately:
    `identical`, `record-multiplicity`, `variant-overlap`, disjoint `different`,
    target-missing-base, and base-only names.
-5. Run `pdb_topology --order --json`. Order claims use only keys that occur once
-   on both sides. Report changed unique records, one-sided records, multiplicity,
-   excluded non-unique keys, and inversions separately.
+5. Run `pdb_topology --order --json`. Preserve its coverage inventory and keep
+   MSF allocation, DBI/module extraction, TPI/IPI insertion and hashes,
+   GSI/PSI/public indexes, module/C13 records, and optional debug streams as
+   separate channels. Semantic order claims use only stable identities; report
+   changed unique records, one-sided records, multiplicity, excluded non-unique
+   keys, inversions, and locality separately.
 6. Run target-vs-target self-checks when the comparator changes. They must have
    no semantic or order differences; duplicate keys may still be listed as
    excluded from pairing.
