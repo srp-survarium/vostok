@@ -77,13 +77,13 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   uses and allocations missing from either linked image are separate columns.
 - `binaries/gen/render_reloc_report.json` hashes those inputs and tables. The
   human-readable problem list is tracked in
-  `docs/next_binary_matching/render_data_problems.md`. The machine TSVs remain
+  `docs/data_matching/render_data_problems.md`. The machine TSVs remain
   exhaustive; settled extentless comparisons are omitted from the Markdown so
   it contains differences and unresolved evidence rather than matched debt.
 - `python3 -m vostok data module-relocs MODULE` applies the same exhaustive
   audit to any ledger module. Its generated files use the module name in place
   of `render`; its readable dossier is
-  `docs/next_binary_matching/MODULE_data_problems.md`. `render-relocs` remains
+  `docs/data_matching/MODULE_data_problems.md`. `render-relocs` remains
   the compatibility spelling used by the authoritative build.
 - `binaries/data-objdiff/` is the complete parallel comparison project. The
   ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
@@ -209,4 +209,4 @@ calibrated; the non-PDB datum census is already hard-gated independently.
 
 The deferred PDB-extent review and shifting-candidate identity-transfer work is
 specified in
-[`data_extent_handoff.md`](../next_binary_matching/data_extent_handoff.md).
+[`data_extent_handoff.md`](../data_matching/data_extent_handoff.md).

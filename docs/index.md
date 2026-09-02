@@ -24,8 +24,10 @@ Each matched module has its own folder under `binary_matching/` (module notes in
 
 Matchable (`/Od` in the target) but not started — no folder yet: `sound`, `vfs`, `particle`, `ai`, `ai_navigation`, `fs`, `debug`.
 
-Parked — optimized, not 1:1-matchable (under `next_binary_matching/`):
-* [physics](next_binary_matching/physics.md)
+* [physics](binary_matching/physics/README.md) (Bullet notes in [binary_matching/bullet/](binary_matching/bullet/README.md))
+
+### Data matching
+* [binary_matching/data_matching.md](binary_matching/data_matching.md) — the data lane; per-module dossiers are regenerated into `data_matching/` by every build (not committed), the handoff is [data_matching/data_extent_handoff.md](data_matching/data_extent_handoff.md).
 
 ### Matching dept (general)
 * `static` functions are not delinked by the ghidra script.
