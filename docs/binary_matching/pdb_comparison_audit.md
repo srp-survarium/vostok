@@ -7,16 +7,16 @@ container. A difference in one layer does not automatically explain a
 difference in another.
 
 The short answer is that the candidate PDB does **not** follow retail order for
-everything. Five high-confidence source-definition-order differences have been
-fixed, and their filtered comparison is now clean. Much broader and stable
-differences remain in stream placement, module extraction, type insertion,
+everything. Five high-confidence source-definition-order differences and one
+complete-enum declaration-order difference have been fixed. Much broader and
+stable differences remain in stream placement, module extraction, type insertion,
 string tables, section contributions, line/checksum records, public-address
 order, FPO, and frame data. Most of those are diagnostics of different link
 inputs or emitted code, not instructions to reorder source blindly.
 
 ## Current reproducible snapshot
 
-The candidate is commit `6d00b67e6fc9a4e68e1908096dce13f824b3f03c`,
+The candidate is commit `392c006ecfded9bcb9456300a877e48b2f121b93`,
 built and then clean-HEAD rebuilt in an isolated worktree and Wine prefix with
 `python3 -m vostok build -j6`. Both full builds measured 75.66% code and 37,041
 / 44,600 exact functions, with zero regressions or improvements. The comparison
@@ -25,7 +25,7 @@ uses pinned `vostok-pdb-parser` commit
 
 | PDB | bytes | SHA-256 |
 |---|---:|---|
-| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 104,352,768 | `a88cad5f439648d145bb4da1bf41adae0c27ec7a0153a2a65baa2d4a86c694e6` |
+| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 104,352,768 | `5affe3a5a921b9155ae0ee38324463e91dea0123909046c9b95cfad8f701ab75` |
 | retail `survarium.pdb` | 101,673,984 | `0ffe85c27f8b95f23a65d91866af3384ab24ca343b3865a57f71a08902d5a238` |
 
 Both PDBs record the engine tree under `c:\survarium\sources`, so the same
@@ -109,7 +109,7 @@ as a separate measured, code-neutral change:
 | source | measured commit |
 |---|---|
 | `vostok/core/sources/core_entry_point.cpp` | `3ca48737d` |
-| `vostok/engine/sources/engine_world.cpp` | current commit `6d00b67e6` |
+| `vostok/engine/sources/engine_world.cpp` | `6d00b67e6` |
 | `vostok/game/sources/game_world.cpp` | `4a35a62cf` |
 | `vostok/game/sources/weapon.cpp` | `acd9c8340` |
 | `vostok/ui/sources/ui_text_edit.cpp` | `9054e72f5` |
@@ -122,6 +122,12 @@ order. Those three were comparator false positives, not source fixes.
 
 Fixing all five definition-order rows is real PDB progress, but it resolves only
 one semantic channel. It does not make the physical PDB layout equal.
+
+The complete-enum sweep then found one pure order mismatch:
+`vostok::render::mesh_type_enum`. Commit `392c006ec` moved the unchanged
+`mt_user_mesh_editable` and `mt_user_mesh_wire` declarations before the five
+skinned-mesh declarations, exactly as recorded in retail. A full rebuild was
+code-neutral and the raw enum residual fell from 12 scopes to 11.
 
 ## Complete class variants
 
@@ -227,15 +233,13 @@ candidate-only and 65 retail-only modules remain one-sided.
 
 ### Enum declaration order
 
-Raw TPI contains 2,804 uniquely paired complete enum scopes. Twelve differ and
+Raw TPI contains 2,804 uniquely paired complete enum scopes. Eleven differ and
 111 same-name scopes are ambiguous because at least one side contains duplicate
-records. Only one of the twelve is a pure order mismatch:
-`vostok::render::mesh_type_enum` has all 12 comparable header/value records and
-10 pair inversions. Retail places `mt_user_mesh_editable` and
-`mt_user_mesh_wire` before the five skinned-mesh enumerators. This is direct,
-actionable source evidence and is handled in the follow-up measured commit.
+records. Before commit `392c006ec`, `vostok::render::mesh_type_enum` was the
+twelfth and sole pure order mismatch, with all 12 header/value records shared
+and 10 pair inversions. It is now identical and absent from the residual set.
 
-The other eleven are value/name/multiplicity differences: the parked
+The remaining eleven are value/name/multiplicity differences: the parked
 `resources::class_id_enum`, renamed `udp_match_connection` values, six
 Scaleform/vendor scopes, `math::convex`'s unnamed collision, and an
 `animation_player` unnamed target-only value. The 111 ambiguous scopes must not
@@ -291,8 +295,8 @@ does not turn linker-derived order into source-order proof. In particular:
 
 The candidate is semantically close enough to pair most named entities, but its
 PDB is not structurally or physically equal to retail. Five verified
-source-definition-order problems are fixed; one newly exposed enumerator-order
-problem is actionable; 57 filtered type rows, two normalized enum rows, four
+source-definition-order problems and the one unambiguous enumerator-order
+problem are fixed; 57 filtered type rows, two normalized enum rows, four
 anonymous-constant source rows, raw same-name variants, one-sided entities, and
 large linker/container differences remain.
 
