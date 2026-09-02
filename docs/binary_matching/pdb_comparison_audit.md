@@ -94,6 +94,43 @@ retail-only functions without filters, and 272 candidate-only and 219
 retail-only functions with the campaign filters. Presence is scheduling and
 reachability evidence; it is not by itself a missing-source verdict under LTCG.
 
+## Definition-order remediation on current xray
+
+The preceding tables describe the audit snapshot at `5ebab38e1`. They are kept
+as the discovery record, not presented as the current candidate state. The five
+dual-evidence definition-order rows were then handled as separate measured
+source changes:
+
+| source | disposition |
+|---|---|
+| `vostok/core/sources/core_entry_point.cpp` | reordered in `3ca48737d`; code-neutral full build |
+| `vostok/engine/sources/engine_world.cpp` | reordered in the current follow-up; code-neutral full build |
+| `vostok/game/sources/game_world.cpp` | reordered in `4a35a62cf`; code-neutral full build |
+| `vostok/game/sources/weapon.cpp` | reordered in `acd9c8340`; code-neutral full build |
+| `vostok/ui/sources/ui_text_edit.cpp` | reordered in `9054e72f5`; code-neutral full build |
+
+For `engine_world.cpp`, all eight definitions in the reported move group were
+already byte-exact and `STRUCTURE MATCH`. Retail source-line order and the
+independent `engine_world.obj` procedure-symbol stream both supported moving
+the unchanged definitions. A fresh full build from xray commit `1c227abc5`
+measured 75.66% code and 37,041 / 44,600 exact functions both before and after
+the edit, with 0 regressions and 0 improvements.
+
+The post-edit filtered comparison is:
+
+| current filtered scope | compared | diverged | relevant breakdown |
+|---|---:|---:|---|
+| normalized types | 6,570 | 57 | 6 size, 19 member, 32 member-function order, 17 visibility |
+| normalized enums | 598 | 2 | 49 candidate-only, 57 retail-only |
+| paired source files | 701 | 4 | 0 definition-order files, 4 anonymous-constant functions |
+
+The remaining four source rows are the anonymous local constants in
+`mixing_n_ary_tree.cpp`,
+`mixing_n_ary_tree_animation_event_iterator.cpp`, `math_quaternion.cpp`, and
+`lobby_menu_ui.cpp`. Removing all five definition-order rows is a real PDB
+structure improvement; it does not resolve or reclassify the 57 type rows, two
+enum rows, one-sided records, or physical linker-order diagnostics below.
+
 The filtered label is literal. For example, `--skip bullet` does not exclude a
 type merely because its C++ name starts with `bt`; the remaining six size rows
 still include `btKinematicCharacterController`.
@@ -276,10 +313,11 @@ UDT total, one-sided, and multiplicity gap also means that only a small unique
 subset can make an order claim. It is evidence to investigate PCH/type-emission
 and missing/extra declarations, not evidence to reorder headers wholesale.
 
-By contrast, `pdb_divergence` reports five high-confidence source-definition
-order rows. The updated report prints both PDB sequences with attributed source
-lines. Those rows can be fixed directly, one translation unit and measured
-commit at a time; physical DBI/TPI/global rows cannot.
+At the audit snapshot, `pdb_divergence` reported five high-confidence
+source-definition-order rows and printed both PDB sequences with attributed
+source lines. Those five rows were fixed one translation unit and measured
+commit at a time as recorded above. Physical DBI/TPI/global rows remain
+diagnostics and were not treated as equivalent source-order tasks.
 
 Retail-vs-retail has zero moves, semantic changes, one-sided records, or
 multiplicity differences in every channel and zero differing module scopes. It
@@ -297,12 +335,14 @@ class/source views.
 ## Current answer
 
 Retail and candidate are close enough to pair most named entities, but they are
-not structurally equal. The campaign-filtered normalized view has 57 type names,
-2 enum rows, and 9 source files with at least one reported difference, plus
-large one-sided function-presence sets. The raw class stream additionally
-exposes hundreds of multiplicity/variant-set differences. Linker-derived record
-order is stable and measurably different, but much of it consists of retained
-or rotated blocks; the established final library order and shared unique
+not structurally equal. The current campaign-filtered normalized view has 57
+type names, 2 enum rows, and 4 source files with at least one reported
+difference, plus large one-sided function-presence sets. All five source
+definition-order rows found by the audit are fixed; the four remaining source
+rows are anonymous local constants. The raw class stream additionally exposes
+hundreds of multiplicity/variant-set differences. Linker-derived record order
+is stable and measurably different, but much of it consists of retained or
+rotated blocks; the established final library order and shared unique
 module-local UDT order are already strong.
 
 Those numbers are an evidence inventory, not an actionable queue. Before a row

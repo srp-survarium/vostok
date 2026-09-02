@@ -144,10 +144,6 @@ void engine_world::tick					( )
 	m_render_world->tick				( );
 }
 
-void engine_world::on_crash				( )
-{
-}
-
 bool engine_world::command_line_editor	( )
 {
 #ifdef VOSTOK_STATIC_LIBRARIES
@@ -243,17 +239,17 @@ void engine_world::on_application_deactivate( )
 	m_application_activated	= false;
 }
 
-void engine_world::on_fullscreen_alttab( bool first )
-{
-	m_engine_user_world->on_fullscreen_alttab	( first );
-}
-
 bool engine_world::is_application_active( )
 {
 	if ( m_application_activated )
 		return				true;
 
 	return					m_application_active;
+}
+
+void engine_world::on_fullscreen_alttab( bool first )
+{
+	m_engine_user_world->on_fullscreen_alttab	( first );
 }
 
 void engine_world::enable_game_impl		( bool const value )
@@ -288,4 +284,8 @@ int engine_world::get_exit_code			( ) const
 void engine_world::set_exit_code		( int const exit_code )
 {
 	m_exit_code			= exit_code;
+}
+
+void engine_world::on_crash				( )
+{
 }
