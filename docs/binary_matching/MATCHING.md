@@ -371,6 +371,15 @@ and source-line packing can change it without changing the semantic statement
 shape. Never combine statements or tune whitespace merely to make that count
 agree.
 
+For whole-PDB structure, keep the evidence channels separate. Use
+`pdb_topology --classes` for raw complete class variant sets and declaration
+order, `pdb_divergence` for source definition order and the normalized enum
+view, and `pdb_topology --order` for physical DBI/TPI/global/module-symbol
+sequence diagnostics. A same-name duplicate record is not a canonical-source
+verdict. The reproducible audit and classifications live in
+[`divergence_queue.md`](divergence_queue.md); raw-order confidence limits live in
+[`pdb_topology.md`](pdb_topology.md).
+
 **Named LOCALS are structure too, and structure beats the byte % for them as well.** The
 PDB records the source's named-local set; `pdb_fetch --view structure` prints a
 `locals (N): <name> <type>` block per side (or none). It is ground truth - "locals don't

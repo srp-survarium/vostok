@@ -2,7 +2,7 @@
 
 //! Query and compare raw CodeView function/class topology without flattening the PDB.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::PathBuf;
@@ -19,7 +19,7 @@ use vostok_pdb_parser::pdb_parser::PdbParser;
 ), group(
     ArgGroup::new("query")
         .required(true)
-        .args(["function", "classes"])
+        .args(["function", "classes", "order"])
 ))]
 struct Cli {
     /// Inspect one PDB without comparing it.
@@ -45,16 +45,28 @@ struct Cli {
     base_pdb: Option<PathBuf>,
 
     /// Case-insensitive substring of the PDB procedure name.
-    #[arg(long, conflicts_with = "classes")]
+    #[arg(long, conflicts_with_all = ["classes", "order"])]
     function: Option<String>,
 
     /// Compare every complete target class/struct/interface against the base PDB.
     #[arg(
         long,
         requires = "target_pdb",
-        conflicts_with_all = ["pdb", "function", "module"]
+        conflicts_with_all = ["pdb", "function", "module", "order"]
     )]
     classes: bool,
+
+    /// Compare whole-PDB record sequences without treating linker order as source order.
+    #[arg(
+        long,
+        requires = "target_pdb",
+        conflicts_with_all = ["pdb", "function", "module", "classes", "class_filter", "show_identical"]
+    )]
+    order: bool,
+
+    /// Maximum number of order differences printed per sequence (JSON is uncapped).
+    #[arg(long, default_value_t = 100, requires = "order")]
+    limit: usize,
 
     /// Restrict --classes to one case-insensitive qualified class name.
     #[arg(long = "class", requires = "classes")]
@@ -111,7 +123,21 @@ fn main() {
 }
 
 fn run(cli: &Cli) -> vostok_pdb_parser::Result<()> {
-    let output = if cli.classes {
+    let output = if cli.order {
+        let target_pdb = cli.target_pdb.as_ref().expect("clap requires target PDB");
+        let base_pdb = cli.base_pdb.as_ref().expect("clap requires base PDB");
+        let report = build_order_report(target_pdb, base_pdb)?;
+        if cli.json {
+            serde_json::to_string_pretty(&report).unwrap_or_else(|error| {
+                format!(
+                    "{{\"error\":{}}}\n",
+                    serde_json::Value::String(error.to_string())
+                )
+            })
+        } else {
+            render_order_report(&report, cli.limit)
+        }
+    } else if cli.classes {
         let target_pdb = cli.target_pdb.as_ref().expect("clap requires target PDB");
         let base_pdb = cli.base_pdb.as_ref().expect("clap requires base PDB");
         let report = build_class_report(cli, target_pdb, base_pdb)?;
@@ -348,6 +374,641 @@ fn render_single(cli: &Cli, matches: &[Match]) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// Whole-PDB record-order comparison
+
+#[derive(Clone, Debug, serde::Serialize)]
+struct OrderItem {
+    key: String,
+    value: String,
+    comparison_value: String,
+}
+
+#[derive(Default)]
+struct OrderSide {
+    modules: Vec<OrderItem>,
+    named_types: Vec<OrderItem>,
+    global_symbols: Vec<OrderItem>,
+    module_symbols: Vec<ModuleOrderScope>,
+}
+
+#[derive(Clone)]
+struct ModuleOrderScope {
+    key: String,
+    value: String,
+    symbols: Vec<OrderItem>,
+}
+
+#[derive(serde::Serialize)]
+struct OrderReport {
+    target_pdb: String,
+    base_pdb: String,
+    modules: SequenceComparison,
+    named_types: SequenceComparison,
+    global_symbols: SequenceComparison,
+    paired_module_symbol_streams: usize,
+    different_module_symbol_streams: usize,
+    ambiguous_module_scopes: Vec<MultiplicityDifference>,
+    module_symbols: Vec<ScopedSequenceComparison>,
+}
+
+#[derive(serde::Serialize)]
+struct ScopedSequenceComparison {
+    scope: String,
+    comparison: SequenceComparison,
+}
+
+#[derive(serde::Serialize)]
+struct SequenceComparison {
+    name: String,
+    confidence: &'static str,
+    base_total: usize,
+    target_total: usize,
+    shared_unique: usize,
+    only_base: Vec<PositionedOrderItem>,
+    only_target: Vec<PositionedOrderItem>,
+    multiplicity: Vec<MultiplicityDifference>,
+    excluded_nonunique: Vec<MultiplicityDifference>,
+    changed: Vec<ChangedOrderItem>,
+    moved: Vec<MovedOrderItem>,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct PositionedOrderItem {
+    key: String,
+    value: String,
+    position: usize,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct MultiplicityDifference {
+    key: String,
+    value: String,
+    base_count: usize,
+    target_count: usize,
+}
+
+#[derive(serde::Serialize)]
+struct MovedOrderItem {
+    key: String,
+    value: String,
+    base_position: usize,
+    target_position: usize,
+}
+
+#[derive(serde::Serialize)]
+struct ChangedOrderItem {
+    key: String,
+    base_value: String,
+    target_value: String,
+    base_position: usize,
+    target_position: usize,
+}
+
+fn build_order_report(
+    target_pdb: &PathBuf,
+    base_pdb: &PathBuf,
+) -> vostok_pdb_parser::Result<OrderReport> {
+    let target = load_order_side(target_pdb)?;
+    let base = load_order_side(base_pdb)?;
+    let modules = compare_sequence(
+        "DBI module stream",
+        "physical/linker-derived",
+        &base.modules,
+        &target.modules,
+    );
+    let named_types = compare_sequence(
+        "named complete TPI records",
+        "physical/linker-deduplicated",
+        &base.named_types,
+        &target.named_types,
+    );
+    let global_symbols = compare_sequence(
+        "global symbol stream",
+        "physical/linker-derived",
+        &base.global_symbols,
+        &target.global_symbols,
+    );
+
+    let (base_scopes, base_ambiguous) = unique_module_scopes(&base.module_symbols);
+    let (target_scopes, target_ambiguous) = unique_module_scopes(&target.module_symbols);
+    let mut ambiguous_keys = BTreeSet::new();
+    ambiguous_keys.extend(base_ambiguous);
+    ambiguous_keys.extend(target_ambiguous);
+    let ambiguous_module_scopes = ambiguous_keys
+        .into_iter()
+        .map(|key| {
+            let base_count = base
+                .module_symbols
+                .iter()
+                .filter(|scope| scope.key == key)
+                .count();
+            let target_count = target
+                .module_symbols
+                .iter()
+                .filter(|scope| scope.key == key)
+                .count();
+            let value = base
+                .module_symbols
+                .iter()
+                .chain(&target.module_symbols)
+                .find(|scope| scope.key == key)
+                .map(|scope| scope.value.clone())
+                .unwrap_or_else(|| key.clone());
+            MultiplicityDifference {
+                key,
+                value,
+                base_count,
+                target_count,
+            }
+        })
+        .collect();
+
+    let mut paired_module_symbol_streams = 0usize;
+    let mut module_symbols = Vec::new();
+    for (key, target_scope) in target_scopes {
+        let Some(base_scope) = base_scopes.get(&key) else {
+            continue;
+        };
+        paired_module_symbol_streams += 1;
+        let comparison = compare_sequence(
+            "top-level module symbol stream",
+            "physical/linker-derived",
+            &base_scope.symbols,
+            &target_scope.symbols,
+        );
+        if sequence_differs(&comparison) {
+            module_symbols.push(ScopedSequenceComparison {
+                scope: target_scope.value.clone(),
+                comparison,
+            });
+        }
+    }
+    module_symbols.sort_by(|left, right| left.scope.cmp(&right.scope));
+    let different_module_symbol_streams = module_symbols.len();
+
+    Ok(OrderReport {
+        target_pdb: target_pdb.display().to_string(),
+        base_pdb: base_pdb.display().to_string(),
+        modules,
+        named_types,
+        global_symbols,
+        paired_module_symbol_streams,
+        different_module_symbol_streams,
+        ambiguous_module_scopes,
+        module_symbols,
+    })
+}
+
+fn load_order_side(pdb_path: &PathBuf) -> vostok_pdb_parser::Result<OrderSide> {
+    let mut side = OrderSide::default();
+    PdbParser::with(pdb_path, |fmt| {
+        let file = std::fs::File::open(pdb_path)?;
+        let mut pdb = pdb::PDB::open(file)?;
+
+        {
+            let types = pdb.type_information()?;
+            let mut iter = types.iter();
+            while let Some(record) = iter.next()? {
+                let Ok(data) = record.parse() else {
+                    continue;
+                };
+                if let Some(item) = named_type_order_item(&fmt, record.index().0, data) {
+                    side.named_types.push(item);
+                }
+            }
+        }
+
+        {
+            let dbi = pdb.debug_information()?;
+            let mut modules = dbi.modules()?;
+            let mut module_id = 0usize;
+            while let Some(module) = modules.next()? {
+                let module_name = module.module_name().into_owned();
+                let object_file_name = module.object_file_name().into_owned();
+                let key = module_order_key(&module_name, &object_file_name);
+                let value = format!("module={module_name} object={object_file_name}");
+                side.modules.push(OrderItem {
+                    key: key.clone(),
+                    value: value.clone(),
+                    comparison_value: key.clone(),
+                });
+
+                let mut ordered_symbols = Vec::new();
+                if let Some(info) = pdb.module_info(&module)? {
+                    let mut symbols = info.symbols()?;
+                    let mut depth = 0usize;
+                    while let Some(symbol) = symbols.next()? {
+                        let closes = symbol.ends_scope();
+                        let record_depth = if closes {
+                            depth.saturating_sub(1)
+                        } else {
+                            depth
+                        };
+                        if record_depth == 0 {
+                            if let Ok(data) = symbol.parse() {
+                                if let Some(item) = module_symbol_order_item(&fmt, module_id, data)
+                                {
+                                    ordered_symbols.push(item);
+                                }
+                            }
+                        }
+                        if symbol.starts_scope() {
+                            depth += 1;
+                        }
+                        if closes {
+                            depth = depth.saturating_sub(1);
+                        }
+                    }
+                }
+                side.module_symbols.push(ModuleOrderScope {
+                    key,
+                    value,
+                    symbols: ordered_symbols,
+                });
+                module_id += 1;
+            }
+        }
+
+        {
+            let globals = pdb.global_symbols()?;
+            let mut symbols = globals.iter();
+            while let Some(symbol) = symbols.next()? {
+                if let Ok(data) = symbol.parse() {
+                    if let Some(item) = global_symbol_order_item(data) {
+                        side.global_symbols.push(item);
+                    }
+                }
+            }
+        }
+        Ok(())
+    })?;
+    Ok(side)
+}
+
+fn named_type_order_item(
+    fmt: &PdbParser<'_, '_>,
+    index: u32,
+    data: pdb::TypeData<'_>,
+) -> Option<OrderItem> {
+    let (kind, name, complete, detail) = match data {
+        pdb::TypeData::Class(value) => (
+            class_kind(value.kind),
+            value.name.to_string().into_owned(),
+            !value.properties.forward_reference(),
+            format!("size=0x{:x}", value.size),
+        ),
+        pdb::TypeData::Union(value) => (
+            "union",
+            value.name.to_string().into_owned(),
+            !value.properties.forward_reference(),
+            format!("size=0x{:x}", value.size),
+        ),
+        pdb::TypeData::Enumeration(value) => (
+            "enum",
+            value.name.to_string().into_owned(),
+            !value.properties.forward_reference(),
+            format!(
+                "underlying={}",
+                comparable_type_name(fmt, value.underlying_type)
+            ),
+        ),
+        pdb::TypeData::Alias(value) => (
+            "alias",
+            value.name.to_string().into_owned(),
+            true,
+            format!(
+                "underlying={}",
+                comparable_type_name(fmt, value.underlying_type)
+            ),
+        ),
+        _ => return None,
+    };
+    if !complete {
+        return None;
+    }
+    let normalized = normalize_cross_pdb_type(name.clone()).to_lowercase();
+    Some(OrderItem {
+        key: format!("{kind}|{normalized}"),
+        value: format!("type=0x{index:x} {kind} {name} {detail}"),
+        comparison_value: format!("{kind}|{normalized}|{detail}"),
+    })
+}
+
+fn module_symbol_order_item(
+    fmt: &PdbParser<'_, '_>,
+    module_id: usize,
+    data: SymbolData<'_>,
+) -> Option<OrderItem> {
+    let (kind, name) = match data {
+        SymbolData::Procedure(value) => (
+            "procedure",
+            function_name(fmt, module_id, &value.name, value.type_index),
+        ),
+        SymbolData::Data(value) => ("data", value.name.to_string().into_owned()),
+        SymbolData::ThreadStorage(value) => ("thread-data", value.name.to_string().into_owned()),
+        SymbolData::Constant(value) => ("constant", value.name.to_string().into_owned()),
+        SymbolData::UserDefinedType(value) => ("udt", value.name.to_string().into_owned()),
+        SymbolData::Thunk(value) => ("thunk", value.name.to_string().into_owned()),
+        _ => return None,
+    };
+    Some(named_order_item(kind, name))
+}
+
+fn global_symbol_order_item(data: SymbolData<'_>) -> Option<OrderItem> {
+    let name = data.name()?.to_string().into_owned();
+    let kind = match &data {
+        SymbolData::Public(_) => "public",
+        SymbolData::ProcedureReference(_) => "procedure-ref",
+        SymbolData::DataReference(_) => "data-ref",
+        SymbolData::AnnotationReference(_) => "annotation-ref",
+        SymbolData::TokenReference(_) => "token-ref",
+        SymbolData::UserDefinedType(_) => "udt",
+        SymbolData::Data(_) => "data",
+        SymbolData::ThreadStorage(_) => "thread-data",
+        SymbolData::Constant(_) => "constant",
+        _ => return None,
+    };
+    Some(named_order_item(kind, name))
+}
+
+fn named_order_item(kind: &str, name: String) -> OrderItem {
+    let normalized = normalize_cross_pdb_type(name.clone()).to_lowercase();
+    OrderItem {
+        key: format!("{kind}|{normalized}"),
+        value: format!("{kind} {name}"),
+        comparison_value: format!("{kind}|{normalized}"),
+    }
+}
+
+fn module_order_key(module_name: &str, object_file_name: &str) -> String {
+    format!(
+        "{}|{}",
+        module_leaf(module_name).to_lowercase(),
+        module_leaf(object_file_name).to_lowercase()
+    )
+}
+
+fn unique_module_scopes<'a>(
+    scopes: &'a [ModuleOrderScope],
+) -> (BTreeMap<String, &'a ModuleOrderScope>, BTreeSet<String>) {
+    let mut positions: BTreeMap<String, Vec<&ModuleOrderScope>> = BTreeMap::new();
+    for scope in scopes {
+        positions.entry(scope.key.clone()).or_default().push(scope);
+    }
+    let mut unique = BTreeMap::new();
+    let mut ambiguous = BTreeSet::new();
+    for (key, values) in positions {
+        if values.len() == 1 {
+            unique.insert(key, values[0]);
+        } else {
+            ambiguous.insert(key);
+        }
+    }
+    (unique, ambiguous)
+}
+
+fn compare_sequence(
+    name: &str,
+    confidence: &'static str,
+    base: &[OrderItem],
+    target: &[OrderItem],
+) -> SequenceComparison {
+    let base_positions = order_positions(base);
+    let target_positions = order_positions(target);
+    let keys: BTreeSet<String> = base_positions
+        .keys()
+        .chain(target_positions.keys())
+        .map(|key| (*key).clone())
+        .collect();
+    let mut only_base = Vec::new();
+    let mut only_target = Vec::new();
+    let mut multiplicity = Vec::new();
+    let mut excluded_nonunique = Vec::new();
+    let mut changed = Vec::new();
+    let mut target_unique = HashMap::new();
+
+    for key in keys {
+        let base_values = base_positions.get(&key).map(Vec::as_slice).unwrap_or(&[]);
+        let target_values = target_positions.get(&key).map(Vec::as_slice).unwrap_or(&[]);
+        if target_values.is_empty() {
+            only_base.extend(
+                base_values
+                    .iter()
+                    .map(|(position, item)| PositionedOrderItem {
+                        key: key.clone(),
+                        value: item.value.clone(),
+                        position: *position,
+                    }),
+            );
+        } else if base_values.is_empty() {
+            only_target.extend(
+                target_values
+                    .iter()
+                    .map(|(position, item)| PositionedOrderItem {
+                        key: key.clone(),
+                        value: item.value.clone(),
+                        position: *position,
+                    }),
+            );
+        } else if base_values.len() != 1 || target_values.len() != 1 {
+            let item = MultiplicityDifference {
+                key: key.clone(),
+                value: base_values
+                    .first()
+                    .or_else(|| target_values.first())
+                    .map(|(_, item)| item.value.clone())
+                    .unwrap_or_else(|| key.clone()),
+                base_count: base_values.len(),
+                target_count: target_values.len(),
+            };
+            if base_values.len() == target_values.len() {
+                excluded_nonunique.push(item);
+            } else {
+                multiplicity.push(item);
+            }
+        } else {
+            if base_values[0].1.comparison_value != target_values[0].1.comparison_value {
+                changed.push(ChangedOrderItem {
+                    key: key.clone(),
+                    base_value: base_values[0].1.value.clone(),
+                    target_value: target_values[0].1.value.clone(),
+                    base_position: base_values[0].0,
+                    target_position: target_values[0].0,
+                });
+            }
+            target_unique.insert(key, target_values[0].0);
+        }
+    }
+
+    let common: Vec<(&OrderItem, usize, usize)> = base
+        .iter()
+        .enumerate()
+        .filter_map(|(base_position, item)| {
+            target_unique
+                .get(&item.key)
+                .copied()
+                .map(|target_position| (item, base_position, target_position))
+        })
+        .collect();
+    let moved = inversion_participants(&common);
+
+    SequenceComparison {
+        name: name.to_owned(),
+        confidence,
+        base_total: base.len(),
+        target_total: target.len(),
+        shared_unique: common.len(),
+        only_base,
+        only_target,
+        multiplicity,
+        excluded_nonunique,
+        changed,
+        moved,
+    }
+}
+
+fn order_positions<'a>(
+    items: &'a [OrderItem],
+) -> BTreeMap<&'a String, Vec<(usize, &'a OrderItem)>> {
+    let mut positions: BTreeMap<&String, Vec<(usize, &OrderItem)>> = BTreeMap::new();
+    for (position, item) in items.iter().enumerate() {
+        positions
+            .entry(&item.key)
+            .or_default()
+            .push((position, item));
+    }
+    positions
+}
+
+fn inversion_participants(common: &[(&OrderItem, usize, usize)]) -> Vec<MovedOrderItem> {
+    if common.len() < 2 {
+        return Vec::new();
+    }
+    let mut prefix_max = vec![0usize; common.len()];
+    let mut suffix_min = vec![usize::MAX; common.len()];
+    for index in 0..common.len() {
+        prefix_max[index] = common[index].2;
+        if index > 0 {
+            prefix_max[index] = prefix_max[index].max(prefix_max[index - 1]);
+        }
+    }
+    for index in (0..common.len()).rev() {
+        suffix_min[index] = common[index].2;
+        if index + 1 < common.len() {
+            suffix_min[index] = suffix_min[index].min(suffix_min[index + 1]);
+        }
+    }
+    common
+        .iter()
+        .enumerate()
+        .filter(|(index, (_, _, target_position))| {
+            (*index > 0 && prefix_max[*index - 1] > *target_position)
+                || (*index + 1 < common.len() && suffix_min[*index + 1] < *target_position)
+        })
+        .map(
+            |(_, (item, base_position, target_position))| MovedOrderItem {
+                key: item.key.clone(),
+                value: item.value.clone(),
+                base_position: *base_position,
+                target_position: *target_position,
+            },
+        )
+        .collect()
+}
+
+fn sequence_differs(comparison: &SequenceComparison) -> bool {
+    !comparison.only_base.is_empty()
+        || !comparison.only_target.is_empty()
+        || !comparison.multiplicity.is_empty()
+        || !comparison.changed.is_empty()
+        || !comparison.moved.is_empty()
+}
+
+fn render_order_report(report: &OrderReport, limit: usize) -> String {
+    let mut out = String::new();
+    let _ = writeln!(out, "target PDB: {}", report.target_pdb);
+    let _ = writeln!(out, "base PDB:   {}", report.base_pdb);
+    let _ = writeln!(
+        out,
+        "order evidence is reported by channel; physical/linker-derived order is diagnostic, not source-order proof"
+    );
+    render_sequence_comparison(&mut out, &report.modules, limit);
+    render_sequence_comparison(&mut out, &report.named_types, limit);
+    render_sequence_comparison(&mut out, &report.global_symbols, limit);
+    let _ = writeln!(
+        out,
+        "\n[module symbol scopes] paired={} different={} ambiguous={}",
+        report.paired_module_symbol_streams,
+        report.different_module_symbol_streams,
+        report.ambiguous_module_scopes.len(),
+    );
+    for scope in report.module_symbols.iter().take(limit) {
+        let _ = writeln!(out, "\n=== {} ===", scope.scope);
+        render_sequence_comparison(&mut out, &scope.comparison, limit);
+    }
+    if report.module_symbols.len() > limit {
+        let _ = writeln!(
+            out,
+            "  ... {} more differing module scopes (use --json for the uncapped report)",
+            report.module_symbols.len() - limit
+        );
+    }
+    out
+}
+
+fn render_sequence_comparison(out: &mut String, comparison: &SequenceComparison, limit: usize) {
+    let _ = writeln!(
+        out,
+        "\n[{} — {}] base={} target={} shared-unique={} moved={} changed={} only-base={} only-target={} multiplicity={} excluded-nonunique={}",
+        comparison.name,
+        comparison.confidence,
+        comparison.base_total,
+        comparison.target_total,
+        comparison.shared_unique,
+        comparison.moved.len(),
+        comparison.changed.len(),
+        comparison.only_base.len(),
+        comparison.only_target.len(),
+        comparison.multiplicity.len(),
+        comparison.excluded_nonunique.len(),
+    );
+    for item in comparison.moved.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  moved base#{} -> target#{}: {}",
+            item.base_position, item.target_position, item.value
+        );
+    }
+    for item in comparison.changed.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  changed base#{} -> target#{}:\n    - {}\n    + {}",
+            item.base_position, item.target_position, item.base_value, item.target_value
+        );
+    }
+    for item in comparison.only_base.iter().take(limit) {
+        let _ = writeln!(out, "  only-base #{}: {}", item.position, item.value);
+    }
+    for item in comparison.only_target.iter().take(limit) {
+        let _ = writeln!(out, "  only-target #{}: {}", item.position, item.value);
+    }
+    for item in comparison.multiplicity.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  multiplicity base={} target={}: {}",
+            item.base_count, item.target_count, item.value
+        );
+    }
+    for item in comparison.excluded_nonunique.iter().take(limit) {
+        let _ = writeln!(
+            out,
+            "  excluded from order pairing (non-unique key, base={} target={}): {}",
+            item.base_count, item.target_count, item.value
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Whole-PDB class comparison
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
@@ -364,13 +1025,14 @@ struct ClassEntry {
     details: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[derive(Clone, Debug, serde::Serialize)]
 struct ClassModel {
     name: String,
     kind: &'static str,
     size: u64,
     properties: String,
     entries: Vec<ClassEntry>,
+    type_indices: Vec<u32>,
 }
 
 #[derive(Default)]
@@ -386,11 +1048,20 @@ struct ClassReport {
     target_classes: usize,
     compared_classes: usize,
     identical_classes: usize,
+    record_multiplicity_classes: usize,
+    variant_overlap_classes: usize,
     different_classes: usize,
     missing_base_classes: usize,
     base_only_classes: usize,
-    target_duplicate_variants: usize,
-    base_duplicate_variants: usize,
+    base_only_class_names: Vec<String>,
+    target_complete_records: usize,
+    base_complete_records: usize,
+    target_semantic_variants: usize,
+    base_semantic_variants: usize,
+    target_names_with_multiple_variants: usize,
+    base_names_with_multiple_variants: usize,
+    target_names_with_duplicate_records: usize,
+    base_names_with_duplicate_records: usize,
     target_unresolved_types: usize,
     base_unresolved_types: usize,
     difference_counts: BTreeMap<String, usize>,
@@ -401,9 +1072,29 @@ struct ClassReport {
 struct ClassComparison {
     name: String,
     status: &'static str,
-    target_variants: usize,
-    base_variants: usize,
+    target_variants: Vec<ClassVariantSummary>,
+    base_variants: Vec<ClassVariantSummary>,
+    diagnostic_pair: Option<DiagnosticVariantPair>,
     differences: Vec<ClassDifference>,
+}
+
+#[derive(serde::Serialize)]
+struct ClassVariantSummary {
+    type_indices: Vec<u32>,
+    summary: String,
+    kind: &'static str,
+    size: u64,
+    properties: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    declarations: Option<Vec<ClassEntry>>,
+    differences_from_first: BTreeMap<String, usize>,
+}
+
+#[derive(serde::Serialize)]
+struct DiagnosticVariantPair {
+    base_type_indices: Vec<u32>,
+    target_type_indices: Vec<u32>,
+    reason: &'static str,
 }
 
 #[derive(serde::Serialize)]
@@ -427,33 +1118,42 @@ fn build_class_report(
     let base = load_classes(base_pdb, filter.as_deref())?;
 
     let target_classes = target.classes.len();
-    let target_duplicate_variants = target
+    let target_complete_records = complete_record_count(&target);
+    let base_complete_records = complete_record_count(&base);
+    let target_semantic_variants = semantic_variant_count(&target);
+    let base_semantic_variants = semantic_variant_count(&base);
+    let target_names_with_multiple_variants = target
         .classes
         .values()
-        .map(|variants| variants.len().saturating_sub(1))
-        .sum();
-    let base_duplicate_variants = base
+        .filter(|variants| variants.len() > 1)
+        .count();
+    let base_names_with_multiple_variants = base
         .classes
         .values()
-        .map(|variants| variants.len().saturating_sub(1))
-        .sum();
+        .filter(|variants| variants.len() > 1)
+        .count();
+    let target_names_with_duplicate_records = names_with_duplicate_records(&target);
+    let base_names_with_duplicate_records = names_with_duplicate_records(&base);
     let target_unresolved_types = unresolved_type_count(&target);
     let base_unresolved_types = unresolved_type_count(&base);
-    let base_only_classes = base
+    let base_only_class_names: Vec<String> = base
         .classes
-        .keys()
-        .filter(|name| !target.classes.contains_key(*name))
-        .count();
+        .iter()
+        .filter(|(name, _)| !target.classes.contains_key(*name))
+        .map(|(_, variants)| display_class_name(variants))
+        .collect();
+    let base_only_classes = base_only_class_names.len();
     let mut compared_classes = 0usize;
     let mut identical_classes = 0usize;
+    let mut record_multiplicity_classes = 0usize;
+    let mut variant_overlap_classes = 0usize;
     let mut different_classes = 0usize;
     let mut missing_base_classes = 0usize;
     let mut difference_counts = BTreeMap::new();
     let mut classes = Vec::with_capacity(target_classes);
 
     for (key, target_variants) in &target.classes {
-        let target_class = canonical_class(target_variants);
-        let name = target_class.name.clone();
+        let name = display_class_name(target_variants);
         let Some(base_variants) = base.classes.get(key) else {
             missing_base_classes += 1;
             *difference_counts
@@ -462,38 +1162,64 @@ fn build_class_report(
             classes.push(ClassComparison {
                 name,
                 status: "missing-base",
-                target_variants: target_variants.len(),
-                base_variants: 0,
+                target_variants: variant_summaries(target_variants),
+                base_variants: Vec::new(),
+                diagnostic_pair: None,
                 differences: vec![ClassDifference {
                     category: "class-presence",
                     member: None,
                     base: None,
-                    target: Some(class_summary(target_class)),
+                    target: Some(variant_set_summary(target_variants)),
                 }],
             });
             continue;
         };
 
         compared_classes += 1;
-        let base_class = closest_base_class(base_variants, target_class);
-        let differences = compare_class(base_class, target_class);
-        let status = if differences.is_empty() {
+        let matches = matching_variants(base_variants, target_variants);
+        let exact_variant_sets =
+            matches.len() == base_variants.len() && matches.len() == target_variants.len();
+        let multiplicity_differences =
+            record_multiplicity_differences(base_variants, target_variants, &matches);
+        let (status, diagnostic_pair, differences) = if exact_variant_sets
+            && multiplicity_differences.is_empty()
+        {
             identical_classes += 1;
-            "identical"
+            ("identical", None, Vec::new())
+        } else if exact_variant_sets {
+            record_multiplicity_classes += 1;
+            ("record-multiplicity", None, multiplicity_differences)
+        } else if !matches.is_empty() {
+            variant_overlap_classes += 1;
+            (
+                "variant-overlap",
+                None,
+                variant_set_differences(base_variants, target_variants, &matches),
+            )
         } else {
             different_classes += 1;
-            for difference in &differences {
-                *difference_counts
-                    .entry(difference.category.to_owned())
-                    .or_insert(0) += 1;
-            }
-            "different"
+            let (base_class, target_class) = closest_variant_pair(base_variants, target_variants);
+            (
+                "different",
+                Some(DiagnosticVariantPair {
+                    base_type_indices: base_class.type_indices.clone(),
+                    target_type_indices: target_class.type_indices.clone(),
+                    reason: "closest disjoint semantic variants; diagnostic detail only",
+                }),
+                compare_class(base_class, target_class),
+            )
         };
+        for difference in &differences {
+            *difference_counts
+                .entry(difference.category.to_owned())
+                .or_insert(0) += 1;
+        }
         classes.push(ClassComparison {
             name,
             status,
-            target_variants: target_variants.len(),
-            base_variants: base_variants.len(),
+            target_variants: variant_summaries(target_variants),
+            base_variants: variant_summaries(base_variants),
+            diagnostic_pair,
             differences,
         });
     }
@@ -505,11 +1231,20 @@ fn build_class_report(
         target_classes,
         compared_classes,
         identical_classes,
+        record_multiplicity_classes,
+        variant_overlap_classes,
         different_classes,
         missing_base_classes,
         base_only_classes,
-        target_duplicate_variants,
-        base_duplicate_variants,
+        base_only_class_names,
+        target_complete_records,
+        base_complete_records,
+        target_semantic_variants,
+        base_semantic_variants,
+        target_names_with_multiple_variants,
+        base_names_with_multiple_variants,
+        target_names_with_duplicate_records,
+        base_names_with_duplicate_records,
         target_unresolved_types,
         base_unresolved_types,
         difference_counts,
@@ -549,12 +1284,18 @@ fn load_classes(pdb_path: &PathBuf, filter: Option<&str>) -> vostok_pdb_parser::
                 size: class.size,
                 properties: format!("{:?}", class.properties),
                 entries: Vec::new(),
+                type_indices: vec![ty.index().0],
             };
             if let Some(fields) = class.fields {
                 walk_class_fields(&finder, &fmt, fields, &mut model, &mut HashSet::new())?;
             }
             let variants = side.classes.entry(key).or_default();
-            if !variants.contains(&model) {
+            if let Some(existing) = variants
+                .iter_mut()
+                .find(|existing| same_class_shape(existing, &model))
+            {
+                existing.type_indices.push(ty.index().0);
+            } else {
                 variants.push(model);
             }
         }
@@ -895,30 +1636,197 @@ fn comparable_field_attributes(attributes: pdb::FieldAttributes) -> String {
 fn unresolved_type_count(side: &ClassSide) -> usize {
     side.classes
         .values()
-        .map(|variants| canonical_class(variants))
+        .flatten()
         .flat_map(|class| &class.entries)
         .filter(|entry| entry.type_name.starts_with("<unresolved-"))
         .count()
 }
 
-fn canonical_class(variants: &[ClassModel]) -> &ClassModel {
-    variants
-        .iter()
-        .max_by_key(|class| (class.entries.len(), class.size))
-        .expect("complete class variant list cannot be empty")
+fn complete_record_count(side: &ClassSide) -> usize {
+    side.classes
+        .values()
+        .flatten()
+        .map(|variant| variant.type_indices.len())
+        .sum()
 }
 
-fn closest_base_class<'a>(variants: &'a [ClassModel], target: &ClassModel) -> &'a ClassModel {
-    variants
+fn semantic_variant_count(side: &ClassSide) -> usize {
+    side.classes.values().map(Vec::len).sum()
+}
+
+fn names_with_duplicate_records(side: &ClassSide) -> usize {
+    side.classes
+        .values()
+        .filter(|variants| {
+            variants
+                .iter()
+                .any(|variant| variant.type_indices.len() > 1)
+        })
+        .count()
+}
+
+fn same_class_shape(left: &ClassModel, right: &ClassModel) -> bool {
+    left.kind == right.kind
+        && left.size == right.size
+        && left.properties == right.properties
+        && left.entries == right.entries
+}
+
+fn matching_variants(base: &[ClassModel], target: &[ClassModel]) -> Vec<(usize, usize)> {
+    target
         .iter()
-        .min_by_key(|class| {
+        .enumerate()
+        .filter_map(|(target_index, target_variant)| {
+            base.iter()
+                .position(|base_variant| same_class_shape(base_variant, target_variant))
+                .map(|base_index| (base_index, target_index))
+        })
+        .collect()
+}
+
+fn closest_variant_pair<'a>(
+    base: &'a [ClassModel],
+    target: &'a [ClassModel],
+) -> (&'a ClassModel, &'a ClassModel) {
+    base.iter()
+        .flat_map(|base_variant| {
+            target
+                .iter()
+                .map(move |target_variant| (base_variant, target_variant))
+        })
+        .min_by_key(|(base_variant, target_variant)| {
             (
-                compare_class(class, target).len(),
-                std::cmp::Reverse(class.entries.len()),
-                std::cmp::Reverse(class.size),
+                compare_class(base_variant, target_variant).len(),
+                base_variant
+                    .type_indices
+                    .first()
+                    .copied()
+                    .unwrap_or(u32::MAX),
+                target_variant
+                    .type_indices
+                    .first()
+                    .copied()
+                    .unwrap_or(u32::MAX),
             )
         })
-        .expect("complete class variant list cannot be empty")
+        .expect("complete class variant lists cannot be empty")
+}
+
+fn record_multiplicity_differences(
+    base: &[ClassModel],
+    target: &[ClassModel],
+    matches: &[(usize, usize)],
+) -> Vec<ClassDifference> {
+    matches
+        .iter()
+        .filter_map(|(base_index, target_index)| {
+            let base_variant = &base[*base_index];
+            let target_variant = &target[*target_index];
+            (base_variant.type_indices.len() != target_variant.type_indices.len()).then(|| {
+                ClassDifference {
+                    category: "record-multiplicity",
+                    member: Some(class_summary(target_variant)),
+                    base: Some(type_index_summary(&base_variant.type_indices)),
+                    target: Some(type_index_summary(&target_variant.type_indices)),
+                }
+            })
+        })
+        .collect()
+}
+
+fn variant_set_differences(
+    base: &[ClassModel],
+    target: &[ClassModel],
+    matches: &[(usize, usize)],
+) -> Vec<ClassDifference> {
+    let matched_base: HashSet<usize> = matches.iter().map(|(base, _)| *base).collect();
+    let matched_target: HashSet<usize> = matches.iter().map(|(_, target)| *target).collect();
+    let mut differences = record_multiplicity_differences(base, target, matches);
+    differences.extend(
+        base.iter()
+            .enumerate()
+            .filter(|(index, _)| !matched_base.contains(index))
+            .map(|(_, variant)| ClassDifference {
+                category: "variant-set",
+                member: None,
+                base: Some(variant_summary(variant)),
+                target: None,
+            }),
+    );
+    differences.extend(
+        target
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| !matched_target.contains(index))
+            .map(|(_, variant)| ClassDifference {
+                category: "variant-set",
+                member: None,
+                base: None,
+                target: Some(variant_summary(variant)),
+            }),
+    );
+    differences
+}
+
+fn display_class_name(variants: &[ClassModel]) -> String {
+    variants
+        .first()
+        .map(|variant| variant.name.clone())
+        .unwrap_or_else(|| "<missing-class-name>".to_owned())
+}
+
+fn variant_summaries(variants: &[ClassModel]) -> Vec<ClassVariantSummary> {
+    let first = variants.first();
+    let include_declarations = variants.len() > 1
+        || variants
+            .iter()
+            .any(|variant| variant.type_indices.len() > 1);
+    variants
+        .iter()
+        .map(|variant| ClassVariantSummary {
+            type_indices: variant.type_indices.clone(),
+            summary: class_summary(variant),
+            kind: variant.kind,
+            size: variant.size,
+            properties: variant.properties.clone(),
+            declarations: include_declarations.then(|| variant.entries.clone()),
+            differences_from_first: first
+                .map(|first| difference_category_counts(&compare_class(first, variant)))
+                .unwrap_or_default(),
+        })
+        .collect()
+}
+
+fn difference_category_counts(differences: &[ClassDifference]) -> BTreeMap<String, usize> {
+    let mut counts = BTreeMap::new();
+    for difference in differences {
+        *counts.entry(difference.category.to_owned()).or_insert(0) += 1;
+    }
+    counts
+}
+
+fn variant_set_summary(variants: &[ClassModel]) -> String {
+    variants
+        .iter()
+        .map(variant_summary)
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+fn variant_summary(variant: &ClassModel) -> String {
+    format!(
+        "{} records={}",
+        class_summary(variant),
+        type_index_summary(&variant.type_indices)
+    )
+}
+
+fn type_index_summary(indices: &[u32]) -> String {
+    indices
+        .iter()
+        .map(|index| format!("0x{index:x}"))
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 fn class_summary(class: &ClassModel) -> String {
@@ -1314,18 +2222,31 @@ fn render_class_report(report: &ClassReport, show_identical: bool) -> String {
     }
     let _ = writeln!(
         out,
-        "target classes={} compared={} identical={} different={} missing-base={} base-only={}",
+        "target names={} compared={} identical={} record-multiplicity={} variant-overlap={} disjoint-different={} missing-base={} base-only={}",
         report.target_classes,
         report.compared_classes,
         report.identical_classes,
+        report.record_multiplicity_classes,
+        report.variant_overlap_classes,
         report.different_classes,
         report.missing_base_classes,
         report.base_only_classes,
     );
     let _ = writeln!(
         out,
-        "deduplicated variants beyond canonical: target={} base={}",
-        report.target_duplicate_variants, report.base_duplicate_variants,
+        "complete records: target={} base={}; semantic variants: target={} base={}",
+        report.target_complete_records,
+        report.base_complete_records,
+        report.target_semantic_variants,
+        report.base_semantic_variants,
+    );
+    let _ = writeln!(
+        out,
+        "names with multiple semantic variants: target={} base={}; names with duplicate equal records: target={} base={}",
+        report.target_names_with_multiple_variants,
+        report.base_names_with_multiple_variants,
+        report.target_names_with_duplicate_records,
+        report.base_names_with_duplicate_records,
     );
     let _ = writeln!(
         out,
@@ -1338,17 +2259,62 @@ fn render_class_report(report: &ClassReport, show_identical: bool) -> String {
             let _ = writeln!(out, "  {category}: {count}");
         }
     }
+    if !report.base_only_class_names.is_empty() {
+        let _ = writeln!(out, "base-only class names:");
+        for name in &report.base_only_class_names {
+            let _ = writeln!(out, "  {name}");
+        }
+    }
 
     for class in &report.classes {
-        if class.status == "identical" && !show_identical {
+        let has_variant_provenance = class.target_variants.len() > 1
+            || class.base_variants.len() > 1
+            || class
+                .target_variants
+                .iter()
+                .chain(&class.base_variants)
+                .any(|variant| variant.type_indices.len() > 1);
+        if class.status == "identical"
+            && !show_identical
+            && report.class_filter.is_none()
+            && !has_variant_provenance
+        {
             continue;
         }
         let _ = writeln!(out, "\n=== {} [{}] ===", class.name, class.status);
-        if class.target_variants > 1 || class.base_variants > 1 {
+        if has_variant_provenance {
             let _ = writeln!(
                 out,
-                "  PDB variants: target={} base={} (richest target / closest base compared)",
-                class.target_variants, class.base_variants,
+                "  PDB semantic variants: target={} base={}",
+                class.target_variants.len(),
+                class.base_variants.len(),
+            );
+            for variant in &class.base_variants {
+                let _ = writeln!(
+                    out,
+                    "    base records={}: {}{}",
+                    type_index_summary(&variant.type_indices),
+                    variant.summary,
+                    render_variant_difference_counts(&variant.differences_from_first),
+                );
+            }
+            for variant in &class.target_variants {
+                let _ = writeln!(
+                    out,
+                    "    target records={}: {}{}",
+                    type_index_summary(&variant.type_indices),
+                    variant.summary,
+                    render_variant_difference_counts(&variant.differences_from_first),
+                );
+            }
+        }
+        if let Some(pair) = &class.diagnostic_pair {
+            let _ = writeln!(
+                out,
+                "  diagnostic pair: base={} target={} ({})",
+                type_index_summary(&pair.base_type_indices),
+                type_index_summary(&pair.target_type_indices),
+                pair.reason,
             );
         }
         if class.differences.is_empty() {
@@ -1370,6 +2336,18 @@ fn render_class_report(report: &ClassReport, show_identical: bool) -> String {
         }
     }
     out
+}
+
+fn render_variant_difference_counts(counts: &BTreeMap<String, usize>) -> String {
+    if counts.is_empty() {
+        return String::new();
+    }
+    let categories = counts
+        .iter()
+        .map(|(category, count)| format!("{category}={count}"))
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(" differences-from-first=[{categories}]")
 }
 
 #[derive(serde::Serialize)]
@@ -2301,5 +3279,135 @@ mod tests {
         let stable = lcs_values(&[0, 2, 1], &[0, 1, 2]);
         assert_eq!(stable.len(), 2);
         assert!(stable.contains(&0));
+    }
+
+    fn order_item(key: &str) -> OrderItem {
+        OrderItem {
+            key: key.to_owned(),
+            value: key.to_owned(),
+            comparison_value: key.to_owned(),
+        }
+    }
+
+    #[test]
+    fn sequence_order_does_not_call_insertions_moves() {
+        let base = [order_item("a"), order_item("b"), order_item("c")];
+        let target = [
+            order_item("a"),
+            order_item("inserted"),
+            order_item("b"),
+            order_item("c"),
+        ];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        assert!(comparison.moved.is_empty());
+        assert_eq!(comparison.only_target.len(), 1);
+        assert_eq!(comparison.only_target[0].key, "inserted");
+    }
+
+    #[test]
+    fn sequence_order_marks_both_sides_of_an_inversion() {
+        let base = [order_item("a"), order_item("b"), order_item("c")];
+        let target = [order_item("a"), order_item("c"), order_item("b")];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        let moved: BTreeSet<&str> = comparison
+            .moved
+            .iter()
+            .map(|item| item.key.as_str())
+            .collect();
+        assert_eq!(moved, BTreeSet::from(["b", "c"]));
+    }
+
+    #[test]
+    fn sequence_order_excludes_duplicate_keys_from_order_claims() {
+        let base = [order_item("a"), order_item("a"), order_item("b")];
+        let target = [order_item("a"), order_item("b")];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        assert!(comparison.moved.is_empty());
+        assert_eq!(comparison.multiplicity.len(), 1);
+        assert_eq!(comparison.multiplicity[0].key, "a");
+    }
+
+    #[test]
+    fn equal_duplicate_keys_are_ambiguous_but_not_different() {
+        let base = [order_item("a"), order_item("a"), order_item("b")];
+        let target = [order_item("a"), order_item("a"), order_item("b")];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        assert!(!sequence_differs(&comparison));
+        assert!(comparison.multiplicity.is_empty());
+        assert_eq!(comparison.excluded_nonunique.len(), 1);
+        assert_eq!(comparison.excluded_nonunique[0].key, "a");
+    }
+
+    #[test]
+    fn sequence_order_reports_unique_record_value_changes_separately() {
+        let base = [OrderItem {
+            key: "type|sample".to_owned(),
+            value: "class sample size=4".to_owned(),
+            comparison_value: "type|sample|size=4".to_owned(),
+        }];
+        let target = [OrderItem {
+            key: "type|sample".to_owned(),
+            value: "class sample size=8".to_owned(),
+            comparison_value: "type|sample|size=8".to_owned(),
+        }];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        assert!(comparison.moved.is_empty());
+        assert_eq!(comparison.changed.len(), 1);
+        assert_eq!(comparison.changed[0].key, "type|sample");
+    }
+
+    #[test]
+    fn sequence_order_ignores_pdb_local_record_identity() {
+        let base = [OrderItem {
+            key: "type|sample".to_owned(),
+            value: "type=0x1000 class sample size=4".to_owned(),
+            comparison_value: "class|sample|size=4".to_owned(),
+        }];
+        let target = [OrderItem {
+            key: "type|sample".to_owned(),
+            value: "type=0x2000 class sample size=4".to_owned(),
+            comparison_value: "class|sample|size=4".to_owned(),
+        }];
+        let comparison = compare_sequence("test", "diagnostic", &base, &target);
+        assert!(comparison.changed.is_empty());
+    }
+
+    fn class_variant(size: u64, type_indices: &[u32]) -> ClassModel {
+        ClassModel {
+            name: "sample".to_owned(),
+            kind: "class",
+            size,
+            properties: "ClassProperties(0)".to_owned(),
+            entries: Vec::new(),
+            type_indices: type_indices.to_vec(),
+        }
+    }
+
+    #[test]
+    fn class_shape_ignores_record_identity_but_not_semantics() {
+        assert!(same_class_shape(
+            &class_variant(4, &[0x1000]),
+            &class_variant(4, &[0x2000, 0x2001]),
+        ));
+        assert!(!same_class_shape(
+            &class_variant(4, &[0x1000]),
+            &class_variant(8, &[0x2000]),
+        ));
+    }
+
+    #[test]
+    fn overlapping_class_variant_sets_are_not_canonicalized() {
+        let base = [class_variant(4, &[0x1000]), class_variant(8, &[0x1001])];
+        let target = [class_variant(4, &[0x2000]), class_variant(12, &[0x2001])];
+        let matches = matching_variants(&base, &target);
+        assert_eq!(matches, vec![(0, 0)]);
+        let differences = variant_set_differences(&base, &target, &matches);
+        assert_eq!(
+            differences
+                .iter()
+                .filter(|difference| difference.category == "variant-set")
+                .count(),
+            2
+        );
     }
 }
