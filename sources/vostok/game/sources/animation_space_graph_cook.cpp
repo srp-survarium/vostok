@@ -12,7 +12,7 @@
 
 namespace survarium {
 
-extern float const agent_radius;
+static float const agent_radius = 0.35f;
 
  animation_space_graph_cook::animation_space_graph_cook( ai::navigation::world& navigation_world ) :
 	resources::translate_query_cook( resources::animation_space_graph_class, reuse_true, use_current_thread_id ),

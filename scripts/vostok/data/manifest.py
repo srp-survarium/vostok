@@ -21,7 +21,7 @@ from vostok.core import paths
 from vostok.core.tsv import write_if_changed
 from vostok.data.inventory import DataSymbol, display_bytes, load
 from vostok.data.pe import PEImage
-from vostok.data.pipeline import AddressResolver, image_paths
+from vostok.data.pipeline import AddressResolver, compare, image_paths
 
 
 MANIFEST_COLUMNS = (
@@ -78,7 +78,8 @@ def _trusted(symbol: DataSymbol, image: PEImage) -> bool:
 def _canonical_name(symbol: DataSymbol) -> str:
     if symbol.scope == "external":
         return display_bytes(symbol.public_name or symbol.name)
-    digest = hashlib.sha1(symbol.identity.encode("utf-8")).hexdigest()[:24]
+    allocation = f"{symbol.identity}@{symbol.rva:#x}"
+    digest = hashlib.sha1(allocation.encode("utf-8")).hexdigest()[:24]
     return f"__vostok_data_{digest}"
 
 
@@ -123,11 +124,11 @@ def _access_rows(side: str) -> list[dict[str, str]]:
 
 
 def _direct_consumers(
-    symbols: list[DataSymbol], image: PEImage, admitted: dict[str, DataSymbol]
-) -> tuple[dict[str, set[str]], list[dict[str, str]]]:
+    symbols: list[DataSymbol], image: PEImage, admitted: dict[int, DataSymbol]
+) -> tuple[dict[str, set[int]], list[dict[str, str]]]:
     resolver = AddressResolver(list(admitted.values()), [])
     raw_resolver = AddressResolver(symbols, [])
-    consumers: dict[str, set[str]] = defaultdict(set)
+    consumers: dict[str, set[int]] = defaultdict(set)
     blockers = []
     for row in _access_rows("target"):
         unit = row["caller_file"]
@@ -145,7 +146,7 @@ def _direct_consumers(
                 "reason": "no trusted complete PDB extent",
             })
         else:
-            consumers[unit].add(symbol.identity)
+            consumers[unit].add(symbol.rva)
             width = _WIDTH_BYTES.get(row["width"], 0)
             if width and symbol.end is not None and rva + width > symbol.end:
                 blockers.append({
@@ -179,14 +180,14 @@ def _direct_consumers(
 
 
 def _data_edges(
-    symbols: list[DataSymbol], image: PEImage, admitted: dict[str, DataSymbol]
-) -> tuple[dict[str, set[str]], dict[str, list[tuple[int, str]]]]:
+    symbols: list[DataSymbol], image: PEImage, admitted: dict[int, DataSymbol]
+) -> tuple[dict[int, set[int]], dict[int, list[tuple[int, str]]]]:
     resolver = AddressResolver(list(admitted.values()), [])
     raw_resolver = AddressResolver(symbols, [])
     sites = image.base_relocations()
-    edges: dict[str, set[str]] = defaultdict(set)
-    unresolved: dict[str, list[tuple[int, str]]] = defaultdict(list)
-    for identity, source in admitted.items():
+    edges: dict[int, set[int]] = defaultdict(set)
+    unresolved: dict[int, list[tuple[int, str]]] = defaultdict(list)
+    for source_rva, source in admitted.items():
         assert source.size is not None
         begin = bisect.bisect_left(sites, source.rva)
         end = bisect.bisect_left(sites, source.rva + source.size)
@@ -199,16 +200,59 @@ def _data_edges(
             if section is None or section.name not in {".data", ".rdata"}:
                 continue
             target = resolver.data_symbol_at(destination)
-            if target is not None and target.identity in admitted:
-                edges[identity].add(target.identity)
+            if target is not None and target.rva in admitted:
+                edges[source_rva].add(target.rva)
             else:
                 raw_target = raw_resolver.data_symbol_at(destination)
                 if raw_target is not None and raw_target.display_name.startswith("__imp_"):
                     continue
-                unresolved[identity].append((
+                unresolved[source_rva].append((
                     destination, raw_resolver.resolve(destination, image)
                 ))
     return edges, unresolved
+
+
+def _allocation_maps(
+    target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
+    target_image: PEImage, base_image: PEImage,
+) -> tuple[dict[int, DataSymbol], dict[int, DataSymbol], dict[int, DataSymbol]]:
+    """Deduplicate PDB aliases and retain the proven cross-image allocation map."""
+    target_trusted = [
+        symbol for symbol in target_symbols if _trusted(symbol, target_image)
+    ]
+    base_trusted = [
+        symbol for symbol in base_symbols if _trusted(symbol, base_image)
+    ]
+    target_resolver = AddressResolver(
+        target_trusted, [],
+        peer_identities={symbol.identity for symbol in base_trusted},
+    )
+    base_resolver = AddressResolver(
+        base_trusted, [],
+        peer_identities={symbol.identity for symbol in target_trusted},
+    )
+    target = {
+        rva: target_resolver.data_symbol_at(rva)
+        for rva in sorted({symbol.rva for symbol in target_trusted})
+    }
+    base = {
+        rva: base_resolver.data_symbol_at(rva)
+        for rva in sorted({symbol.rva for symbol in base_trusted})
+    }
+    target = {rva: symbol for rva, symbol in target.items() if symbol is not None}
+    base = {rva: symbol for rva, symbol in base.items() if symbol is not None}
+
+    paired = {}
+    for row in compare(
+        target_symbols, base_symbols, target_image, base_image
+    ):
+        if row["target_rva"] == "-" or row["base_rva"] == "-":
+            continue
+        target_rva = int(row["target_rva"], 0)
+        base_rva = int(row["base_rva"], 0)
+        if target_rva in target and base_rva in base:
+            paired[target_rva] = base[base_rva]
+    return target, base, paired
 
 
 def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
@@ -216,8 +260,9 @@ def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
     base_symbols = load(paths.DATA_BASE_INDEX)
     target_image = PEImage(image_paths("target")[0])
     base_image = PEImage(image_paths("base")[0])
-    target, target_identity_blockers = _unique_by_identity(target_symbols, target_image)
-    base, base_identity_blockers = _unique_by_identity(base_symbols, base_image)
+    target, _, paired = _allocation_maps(
+        target_symbols, base_symbols, target_image, base_image
+    )
     direct, blockers = _direct_consumers(target_symbols, target_image, target)
     edges, edge_blockers = _data_edges(target_symbols, target_image, target)
 
@@ -231,30 +276,32 @@ def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
                 if child not in reached:
                     reached.add(child)
                     queue.append(child)
-        for identity in sorted(reached):
-            symbol = target.get(identity)
+        for target_rva in sorted(reached):
+            symbol = target.get(target_rva)
             if symbol is None:
                 blockers.append({
-                    "unit": unit, "target_rva": "-", "identity": identity,
-                    "reason": target_identity_blockers.get(identity, "target allocation unavailable"),
+                    "unit": unit, "target_rva": f"{target_rva:#x}",
+                    "identity": "-", "reason": "target allocation unavailable",
                 })
                 continue
-            base_symbol = base.get(identity)
-            rows.append(ConsumerRow(unit, symbol, base_symbol, identity in roots))
+            base_symbol = paired.get(target_rva)
+            rows.append(ConsumerRow(
+                unit, symbol, base_symbol, target_rva in roots
+            ))
             if base_symbol is None:
                 blockers.append({
                     "unit": unit,
                     "target_rva": f"{symbol.rva:#x}",
-                    "identity": identity,
-                    "reason": base_identity_blockers.get(
-                        identity, "no base allocation with the retail PDB identity"
-                    ),
+                    "identity": symbol.identity,
+                    "reason": "no paired base allocation",
                 })
-            for rva, referent in edge_blockers.get(identity, ()):
+            for rva, referent in edge_blockers.get(target_rva, ()):
                 blockers.append({
                     "unit": unit, "target_rva": f"{rva:#x}",
-                    "identity": referent,
-                    "reason": f"initializer referent from {identity} has no trusted extent",
+                    "identity": referent, "reason": (
+                        f"initializer referent from {symbol.identity} "
+                        "has no trusted extent"
+                    ),
                 })
     return rows, blockers
 
@@ -272,7 +319,7 @@ def _write_manifest_side(rows: list[ConsumerRow], side: str) -> None:
         if row.base is not None:
             by_unit[row.unit].append(row)
     for unit, unit_rows in sorted(by_unit.items()):
-        unit_rows.sort(key=lambda row: row.target.identity)
+        unit_rows.sort(key=lambda row: row.target.rva)
         for ordinal, row in enumerate(unit_rows, 1):
             symbol = row.target if side == "target" else row.base
             assert symbol is not None and symbol.size is not None
@@ -412,7 +459,7 @@ def generate() -> dict:
         "consumer_units": len({row.unit for row in rows}),
         "allocation_copies": len(rows),
         "allocation_copy_bytes": sum(row.target.size or 0 for row in rows),
-        "unique_allocations": len({row.target.identity for row in rows}),
+        "unique_allocations": len({row.target.rva for row in rows}),
         "unique_allocation_bytes": _interval_union(unique_extents),
         "paired_copies": sum(row.base is not None for row in rows),
         "paired_copy_bytes": sum(

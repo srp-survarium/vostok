@@ -16,7 +16,7 @@ namespace vostok {
 template <int Size>
 fixed_string<Size>::fixed_string () : buffer_string(m_buffer, Size)
 {
-	if ( identity(Size) ) 
+	if ( Size )
 	{
 		m_buffer[0]					=	NULL;
 	}

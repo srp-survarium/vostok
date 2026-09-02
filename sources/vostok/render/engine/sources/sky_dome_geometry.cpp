@@ -53,7 +53,7 @@ sky_dome_geometry::sky_dome_geometry( ) :
 		float const move_xz = i / 15.f;
 		for ( float j = 0.f; j < 8.f; j += 1.f )
 		{
-			float const move_y = math::pi_x2 - j / 7.f * math::pi;
+			float const move_y = math::pi * 2.0f - j / 7.f * math::pi;
 			vertices[vertex_index].position.set(
 				math::cos( move_y ) * math::cos( move_xz * math::deg2rad( 100.f ) ),
 				math::sin( move_xz * math::deg2rad( 100.f ) ),
