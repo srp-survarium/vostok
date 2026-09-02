@@ -33,6 +33,8 @@ import subprocess
 from pathlib import Path
 
 from vostok.core.paths import REPO
+from vostok.core.wine import winepath_w
+from vostok.core.log import logger
 
 # VOSTOK_DIR is set by the nix-shell shellHook to $PWD (the repo root).
 # Fallback for manual invocations where the script is run from its own directory.
@@ -43,16 +45,11 @@ VOSTOK_DIR = Path(os.environ.get("VOSTOK_DIR", str(REPO)))
 RELEASE_EPOCH = 1368100800
 
 
-def log(msg: str) -> None:
-    print(f"[release] {msg}", flush=True)
+log = logger("release")
 
 
 def run(cmd: list, *, check: bool = True, **kwargs) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, check=check, **kwargs)
-
-
-def winepath_w(p: Path) -> str:
-    return subprocess.check_output(["winepath", "-w", str(p)], text=True).strip()
 
 
 def xvfb_prefix() -> list[str]:

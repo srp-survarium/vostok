@@ -30,7 +30,6 @@ import argparse
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 from vostok.core.paths import (
     BASE_EXE,
@@ -46,22 +45,15 @@ from vostok.core.paths import (
     survarium_bin,
 )
 from vostok.core.paths import ENGINE as ENGINE_DIR
+from vostok.core.wine import pdb_path
+from vostok.core.log import logger
 
 
-def log(msg: str) -> None:
-    print(f"[rich] {msg}", flush=True)
+log = logger("rich")
 
 
 def _pdb_rich() -> str:
     return os.environ.get("PDB_RICH", "pdb_rich_context")
-
-
-def _wine_path(p: Path) -> str:
-    r"""Render a native absolute path as MSVC-under-Wine records it in a PDB:
-    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
-    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
-    """
-    return "z:" + str(p).replace("/", "\\").lower()
 
 
 def generate(side: str) -> None:
@@ -78,11 +70,11 @@ def generate(side: str) -> None:
         # prefix during the one-build migration and for any unstaged archive
         # member that predates source-root reproduction.
         engine = [RETAIL_SOURCE_PREFIX + "\\",
-                  _wine_path(ENGINE_DIR.parent) + "\\",
-                  _wine_path(GFX_BUILD_TREE) + "\\",
+                  pdb_path(ENGINE_DIR.parent) + "\\",
+                  pdb_path(GFX_BUILD_TREE) + "\\",
                   GFX_RELEASE_PREFIX + "\\",
                   GFX_TREE_PREFIX + "\\",
-                  _wine_path(SCALEFORM_SDK) + "\\"]
+                  pdb_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]
         if not pdb.is_file() or not exe.is_file():

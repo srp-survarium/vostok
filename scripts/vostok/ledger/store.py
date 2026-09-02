@@ -332,50 +332,6 @@ def project(
     return save(rows, path)
 
 
-def advance(previous, mangled, *, module, cur, cls, body_hash, paired=True,
-            flagged=False, note=None):
-    """Fold one build observation into a ledger row.
-
-    NOT ON THE BUILD PATH - `project` is. This is the single-row form, kept for a
-    report-only writer; note that it bumps `tries` on a body change, which
-    `project` does not (there `tries` is a dispatch count nothing derives). Do
-    not read it as the live cur/max/hist policy.
-
-    `max` accumulates while `body_hash` holds and restarts when it changes;
-    `hist` only ever rises. A row whose function is absent from this build keeps
-    its banked numbers - `hist` guarantees nothing is ever lost.
-    """
-    old = previous.get(mangled) or {}
-    old_hash = old.get("hash") or ""
-    old_max = old.get("max")
-    old_hist = old.get("hist")
-    tries = old.get("tries") or 0
-
-    if body_hash and old_hash and body_hash != old_hash:
-        tries += 1
-        maximum = cur                      # new body: prove it again
-    else:
-        maximum = cur if old_max is None else max(old_max, cur or 0)
-
-    maximum = canonical_peak(maximum)
-
-    hist = max(v for v in (old_hist, maximum, cur, 0) if v is not None)
-
-    row = {
-        "mangled": mangled,
-        "module": module or old.get("module") or "",
-        "cls": cls or "",
-        "cur": cur,
-        "max": maximum,
-        "hist": hist,
-        "tries": tries,
-        "hash": body_hash or old_hash or "",
-        "note": note if note is not None else old.get("note", ""),
-    }
-    row["status"] = status_for(row, flagged=flagged, paired=paired)
-    return row
-
-
 def main(argv):
     """No verbs: the ledger is written by `vostok build` (through `project`) and
     queried with `vostok ledger`. This entry point only explains the format."""

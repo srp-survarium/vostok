@@ -152,11 +152,6 @@ class Pairing:
             return self.key_by_target_rva.get(rva)
         return self.key_by_base_rva.get(rva)
 
-    def record_at(self, side, rva):
-        key = self.key_at(side, rva)
-        source = self.target if side == "target" else self.base
-        return source.get(key) if key else None
-
     def demangled(self, key):
         """The retail PDB's signature, falling back to the base PDB's."""
         rec = self.target.get(key) or self.base.get(key)

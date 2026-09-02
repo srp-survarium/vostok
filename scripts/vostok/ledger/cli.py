@@ -103,8 +103,6 @@ def _rows(args):
     return rows
 
 
-def _pct(part, whole):
-    return 100.0 * part / whole if whole else 0.0
 
 
 def cmd_report(args):

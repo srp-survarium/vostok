@@ -28,6 +28,7 @@ from pathlib import Path
 
 from vostok.core.paths import BINARIES
 from vostok.tool.libs import GFX_SRC, LIBS_DIR
+from vostok.core.log import logger
 
 RELEASE_TAG = "v0.100b"
 RELEASE_REPO = "srp-survarium/vostok-build-env"
@@ -41,8 +42,7 @@ def _wine_prefix() -> str:
     return GFX_TREE_PREFIX
 
 
-def log(msg: str) -> None:
-    print(f"[libs-release] {msg}", flush=True)
+log = logger("libs-release")
 
 
 def build_gfx() -> None:

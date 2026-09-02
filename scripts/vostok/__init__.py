@@ -28,4 +28,16 @@ Layers (imports point strictly downward):
 every module runs as `python3 -m vostok.<pkg> ...` from anywhere in the tree.
 `python3 -m vostok` prints the umbrella map: `vostok build`, `vostok ledger`,
 `vostok derive`, `vostok sema`, `vostok diff`, `vostok tool`.
+
+Layers. Imports point downward only, `core` knows nothing above it:
+
+    core/     paths, tsv, symbols, log, wine, fmt - semantically blind helpers
+    derive/ ledger/ data/ sema/ diff/ shaders/ build/ tool/   one lane each
+    cli       the umbrella dispatch (python3 -m vostok)
+
+Known cross-lane imports, kept because they are one-way facts, not layering:
+build reads derive/ledger/data to refresh them after a build; tool drives
+build; data/sema read the ledger store and each other's pairing. The cycles
+ledger<->derive and ledger<->data are debt: the store should not need to know
+who fills it.
 """

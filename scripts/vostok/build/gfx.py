@@ -64,6 +64,7 @@ from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
 from vostok.core.paths import GFX_BUILD_TREE, GFX_TREE_PREFIX, PREBUILT, SCALEFORM_SDK, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
+from vostok.core.wine import drive_path
 
 SDK = SCALEFORM_SDK.resolve()
 SHIP = PREBUILT / "Win32/libraries/shipping"
@@ -131,10 +132,6 @@ OVERLAY_SKIP = {
     # pristine SDK file.
     "Src/Kernel/HeapMH/HeapMH_SysAllocMalloc.h",
 }
-
-
-def wine_path(p: Path) -> str:
-    return "Z:" + str(p).replace("/", "\\")
 
 
 def tree_path(rel) -> str:
@@ -242,13 +239,13 @@ def build_one(name):
 
     inc_args = " ".join(f'-I"{tree_path(d)}"' for d in includes)
     def_args = " ".join(f"-D{d}" for d in defines)
-    fd_arg = f'-Fd"{wine_path(obj_dir)}\\vc90.pdb"'
+    fd_arg = f'-Fd"{drive_path(obj_dir)}\\vc90.pdb"'
     base = f"{flags} {inc_args} {def_args} {fd_arg}"
 
     tu_list = tus(name)
     print(f"[{name}] {len(tu_list)} TUs -> {out_lib.name}")
     rsp = obj_dir / "cl_onetu.rsp"
-    rsp_arg = "@" + wine_path(rsp)
+    rsp_arg = "@" + drive_path(rsp)
 
     built = skipped = failed = 0
     fails, objs = [], []
@@ -264,7 +261,7 @@ def build_one(name):
         if obj.is_file() and obj.stat().st_size > 0:
             skipped += 1
             continue
-        fo = f'-Fo"{wine_path(obj)}"'
+        fo = f'-Fo"{drive_path(obj)}"'
         rsp.write_text(f'{base} {fo}\n"{tree_path(rel)}"\n')
         r = wine_cl(f"cl {rsp_arg}", cwd=obj_dir, obj_path=obj)
         if obj.is_file() and obj.stat().st_size > 0:
@@ -285,11 +282,11 @@ def build_one(name):
     print(f"[{name}] archiving {out_lib.name} ...")
     out_lib.unlink(missing_ok=True)
     lib_rsp = obj_dir / "lib.rsp"
-    lib_rsp.write_text(f'-out:"{wine_path(out_lib)}"\n'
-                       + "\n".join(f'"{wine_path(o)}"' for o in objs) + "\n")
+    lib_rsp.write_text(f'-out:"{drive_path(out_lib)}"\n'
+                       + "\n".join(f'"{drive_path(o)}"' for o in objs) + "\n")
     env = dict(os.environ)
     env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    r = subprocess.run(["wine", "cmd", "/c", f"lib -nologo @{wine_path(lib_rsp)}"],
+    r = subprocess.run(["wine", "cmd", "/c", f"lib -nologo @{drive_path(lib_rsp)}"],
                        cwd=str(obj_dir), env=env, capture_output=True, text=True)
     kill_mspdbsrv()
     if out_lib.is_file() and out_lib.stat().st_size > 0:

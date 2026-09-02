@@ -49,6 +49,8 @@ from vostok.derive.aliases import (instruction_stream_exact,
                                    strict_source_alias_candidates)
 from vostok.derive.index import index_by_mangled, load_index_records
 from vostok.derive.names import qualified_name
+from vostok.core.wine import pdb_path
+from vostok.core.log import logger
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
@@ -90,8 +92,7 @@ def _effective_symbol_map() -> Path:
     return EFFECTIVE_SYMBOL_MAP
 
 
-def log(msg: str) -> None:
-    print(f"[delink] {msg}", flush=True)
+log = logger("delink")
 
 
 def _delinker_bin(*, data_project: bool = False) -> str:
@@ -114,14 +115,6 @@ def _delinker_supports(delinker: str, flag: str) -> bool:
     except OSError:
         return False
     return flag in (out.stdout + out.stderr)
-
-
-def _wine_path(p: Path) -> str:
-    r"""Render a native absolute path the way MSVC-under-Wine records it in a PDB:
-    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
-    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
-    """
-    return "z:" + str(p).replace("/", "\\").lower()
 
 
 def _nonempty_dir(p: Path) -> bool:
@@ -539,16 +532,16 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
         # New engine objects use retail's C: source root.  Accept the legacy Z:
         # worktree root too while old archive members age out.
         engine = ["--engine-path", paths.RETAIL_SOURCE_PREFIX + "\\",
-                  "--engine-path", _wine_path(SOURCES) + "\\"]
+                  "--engine-path", pdb_path(SOURCES) + "\\"]
         # ...plus the GFx SDK, which is compiled in but lives outside sources/.
         # The merged build tree first (TUs compile from it now), then the
         # release libs' recorded build tree (foreign to this checkout), then
         # the raw SDK so objs from before the tree existed still strip to
         # Src\...
-        engine += ["--engine-path", _wine_path(GFX_BUILD_TREE) + "\\"]
+        engine += ["--engine-path", pdb_path(GFX_BUILD_TREE) + "\\"]
         engine += ["--engine-path", GFX_TREE_PREFIX + "\\"]
         engine += ["--engine-path", GFX_RELEASE_PREFIX + "\\"]
-        engine += ["--engine-path", _wine_path(SCALEFORM_SDK) + "\\"]
+        engine += ["--engine-path", pdb_path(SCALEFORM_SDK) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
         symbol_map = [

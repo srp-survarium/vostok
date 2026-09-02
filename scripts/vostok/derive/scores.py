@@ -8,7 +8,6 @@ best) and the cross-unit COMDAT report, which is the only place an island's
 exact score appears.
 """
 
-import hashlib
 
 from vostok.core import symbols as normalize_objdiff_symbols
 
@@ -95,14 +94,6 @@ def cross_unit_exact_score(mangled, scores):
 def island_report_score(expected, mangled, scores):
     """Read a manifested report identity, defaulting to the target spelling."""
     return report_score_for_target(expected.get("report_mangled", mangled), scores)
-
-
-def sha256_file(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def rank_island_delta(

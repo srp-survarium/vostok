@@ -126,15 +126,6 @@ def _strip_block_comments(text: str) -> str:
     return text
 
 
-def _normalize_method_name(raw: str) -> str | None:
-    """Normalize a method name token. Returns None for non-methods (e.g. ctors
-    we still want to record under the class name, operators kept verbatim)."""
-    raw = raw.strip()
-    if not raw:
-        return None
-    return raw
-
-
 def _arity(arglist: str) -> int:
     """Count comma-separated top-level args in a parenthesized arg list body."""
     s = arglist.strip()

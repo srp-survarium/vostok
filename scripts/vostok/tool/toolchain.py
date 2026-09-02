@@ -41,6 +41,7 @@ Required env vars (set automatically by flake.nix devShell):
 import argparse
 import os
 import subprocess
+import functools
 import sys
 from pathlib import Path
 
@@ -52,21 +53,19 @@ from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
+from vostok.core.wine import winepath_w
+from vostok.core.log import logger
+from vostok.core.log import die as core_die
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
 # the fingerprint says setup is already complete.
 STAGES = ("libs", "wine", "registry", "ninja", "target")
 
 
-def log(msg: str) -> None:
-    print(f"[setup] {msg}", flush=True)
+log = logger("setup")
 
 
-def die(msg: str, *hints: str) -> None:
-    log(f"ERROR: {msg}")
-    for h in hints:
-        print(f"  {h}", file=sys.stderr)
-    sys.exit(1)
+die = functools.partial(core_die, "setup")
 
 
 def require_env(name: str) -> str:
@@ -74,10 +73,6 @@ def require_env(name: str) -> str:
     if not v:
         die(f"{name} not set - run this from inside `nix develop`")
     return v
-
-
-def winepath_w(p: Path) -> str:
-    return subprocess.check_output(["winepath", "-w", str(p)], text=True).strip()
 
 
 def wine_reg(*args: str, capture: bool = False) -> subprocess.CompletedProcess:

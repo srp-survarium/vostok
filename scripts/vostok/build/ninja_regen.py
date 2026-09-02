@@ -32,6 +32,8 @@ from vostok.core import paths
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
+from vostok.core.wine import drive_path
+from vostok.core.log import logger
 
 # clangd inputs at the repo root (gitignored, so absent on fresh clones and
 # worktrees). They only depend on flags and file sets, never on #includes.
@@ -76,13 +78,7 @@ RETAIL_LINK_LIBRARY_ORDER = (
 )
 
 
-def log(msg: str) -> None:
-    print(f"[regen-ninja] {msg}", flush=True)
-
-
-def wine_path(p: Path) -> str:
-    """/a/b -> Z:\\a\\b (the drive-rooted form vcproj2ninja --wine emits)."""
-    return "Z:" + str(p).replace("/", "\\")
+log = logger("regen-ninja")
 
 
 def _normalize_link_rsp_paths(
@@ -226,7 +222,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
 
         # The temp path appears in two spellings: raw in `flags = @...` lines,
         # ninja-escaped (`:` -> `$:`) in the rsp implicit-input dep lines.
-        raw_t, raw_b = wine_path(tmp_dir), wine_path(BUILD_DIR)
+        raw_t, raw_b = drive_path(tmp_dir), drive_path(BUILD_DIR)
         esc_t, esc_b = raw_t.replace(":", "$:"), raw_b.replace(":", "$:")
 
         fresh = sorted(p for p in tmp_dir.rglob("*") if p.is_file())

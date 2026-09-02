@@ -20,6 +20,8 @@ from vostok.core import paths
 from vostok.core.tsv import write_if_changed
 from vostok.data.inventory import DataSymbol, load
 from vostok.data.pe import PEImage
+from vostok.core.wine import pdb_path
+from vostok.core.log import logger
 
 
 LEDGER_COLUMNS = (
@@ -36,12 +38,7 @@ EXACT = "EXACT"
 PAIRED_STATUSES = frozenset({EXACT, "BYTES", "RELOCS", "RELOC_TOPOLOGY", "SIZE"})
 
 
-def log(message: str) -> None:
-    print(f"[data] {message}", flush=True)
-
-
-def _wine_path(path: Path) -> str:
-    return "z:" + str(path).replace("/", "\\").lower()
+log = logger("data")
 
 
 def image_paths(side: str) -> tuple[Path, Path]:
@@ -73,10 +70,10 @@ def _engine_args(side: str) -> list[str]:
         ]
     return [
         "--engine-path", paths.RETAIL_SOURCE_PREFIX + "\\",
-        "--engine-path", _wine_path(paths.SOURCES) + "\\",
-        "--engine-path", _wine_path(paths.GFX_BUILD_TREE) + "\\",
+        "--engine-path", pdb_path(paths.SOURCES) + "\\",
+        "--engine-path", pdb_path(paths.GFX_BUILD_TREE) + "\\",
         "--engine-path", paths.GFX_RELEASE_PREFIX + "\\",
-        "--engine-path", _wine_path(paths.SCALEFORM_SDK) + "\\",
+        "--engine-path", pdb_path(paths.SCALEFORM_SDK) + "\\",
     ]
 
 

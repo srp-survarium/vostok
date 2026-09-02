@@ -54,6 +54,7 @@ import os
 import signal
 import shutil
 import subprocess
+import functools
 import sys
 import time
 from contextlib import contextmanager
@@ -63,6 +64,7 @@ from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import WINEPREFIX as OWN_WINEPREFIX
+from vostok.core.log import die as core_die
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
@@ -115,11 +117,7 @@ _ACTIVE_BUILD_COMMS = (
 )
 
 
-def die(msg: str, *hints: str) -> None:
-    print(f"[ninja] ERROR: {msg}", file=sys.stderr)
-    for h in hints:
-        print(f"  {h}", file=sys.stderr)
-    sys.exit(1)
+die = functools.partial(core_die, "ninja")
 
 
 def _in_our_prefix(entry: Path) -> bool:

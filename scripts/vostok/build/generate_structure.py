@@ -31,10 +31,10 @@ import sys
 
 from vostok.core.paths import (BASE_PDB, RETAIL_SOURCE_PREFIX, STRUCTURE_DIR,
                                survarium_bin)
+from vostok.core.log import logger
 
 
-def log(msg: str) -> None:
-    print(f"[structure] {msg}", flush=True)
+log = logger("structure")
 
 
 def _pdb_parser() -> str:

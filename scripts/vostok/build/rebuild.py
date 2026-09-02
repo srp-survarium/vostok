@@ -34,6 +34,7 @@ import os
 import re
 import select
 import subprocess
+import functools
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -47,6 +48,8 @@ from vostok.core import paths
 from vostok.core.paths import REBUILD_LOG as LOG_PATH
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import REPORT_HEAD
+from vostok.core.log import logger
+from vostok.core.log import die as core_die
 
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
@@ -57,13 +60,10 @@ from vostok.core.paths import REPORT_HEAD
 _CL_MODULE_RE = re.compile(r"vostok[\\/]([A-Za-z0-9_]+)[\\/]sources\b[^\n]*?&&\s*cl\b")
 
 
-def log(msg: str) -> None:
-    print(f"[rebuild] {msg}", flush=True)
+log = logger("rebuild")
 
 
-def die(msg: str) -> None:
-    print(f"[rebuild] ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
+die = functools.partial(core_die, "rebuild")
 
 
 def _git_branch() -> str:

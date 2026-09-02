@@ -440,14 +440,6 @@ def _values_equal(base_value: int | None, target_value: int) -> bool:
     )
 
 
-def _in_scope(name: str, include_render: bool) -> bool:
-    if not name.startswith(ENGINE_PREFIXES):
-        return False
-    if name.startswith(RENDER_PREFIX) and not include_render:
-        return False
-    return True
-
-
 def diff_enums(base, target, include_render):
     """Return (missing, mismatched, render_missing, render_mismatched).
 

@@ -37,13 +37,12 @@ import json
 from vostok.core.paths import FLAKE_LOCK, MATCH_STATE, README, REPORT
 from vostok.derive.modules import module_of
 from vostok.ledger import store
+from vostok.core.fmt import pct as _pct
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"
 
 
-def _pct(num: int, den: int) -> float:
-    return 100.0 * num / den if den else 0.0
 
 
 def _md_table(headers: list[str], aligns: str, rows: list[list[str]]) -> list[str]:

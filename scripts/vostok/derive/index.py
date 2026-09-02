@@ -13,11 +13,6 @@ import hashlib
 import json
 
 
-def load_index(path, preferred_files=None):
-    """Return one deterministic rich-index record per mangled spelling."""
-    return index_by_mangled(load_index_records(path), preferred_files)
-
-
 def load_index_records(path):
     """Load every rich-index record, including same-RVA PDB aliases."""
     with open(path, encoding="utf-8") as f:
