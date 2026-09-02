@@ -210,10 +210,13 @@ PDB-local RVA/type-index churn:
       --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
       --module render_engine_world_pc_dx11 --function 'world::draw_scene'
     pdb_topology --target-pdb ... --base-pdb ... --classes [--class 'vostok::render::engine::world']
+    pdb_topology --target-pdb ... --base-pdb ... --order [--limit 100]
 
 `--classes` compares every complete target class/struct/interface definition to
-base (`--json` keeps the whole model). Adjacency sections are heuristic;
-explicit references and class bindings are authoritative - read
+base without selecting one same-name variant as canonical. `--order` compares
+uniquely named physical DBI/TPI/global/module-symbol sequences and labels them
+linker-derived diagnostics (`--json` keeps either whole model). Adjacency
+sections are heuristic; explicit references and class bindings are authoritative - read
 `docs/binary_matching/pdb_topology.md` before taking record order as source
 order.
 

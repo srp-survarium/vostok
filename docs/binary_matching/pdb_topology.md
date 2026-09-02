@@ -1,8 +1,10 @@
 # Raw PDB topology evidence
 
 `pdb_parser` already uses the `pdb2` Rust crate, but its normal carcass and rich
-index intentionally flatten most CodeView records. `pdb_topology` queries the
-unflattened module symbol stream and TPI type stream around one procedure:
+index intentionally flatten most CodeView records. `pdb_topology` owns the raw
+CodeView comparisons that need record identity or sequence: one-procedure
+topology, complete class variant sets, and selected whole-PDB order channels.
+Inspect one procedure with:
 
 ```sh
 pdb_topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
@@ -45,8 +47,9 @@ pdb_topology \
   --classes
 ```
 
-The text view prints every differing or base-missing target class and a category
-summary. Add `--show-identical` to print clean classes too, or `--json` to retain
+The text view prints every differing or base-missing target class, plus identical
+names that still carry multiple semantic variants or repeated equal records. Add
+`--show-identical` to print the remaining clean classes too, or `--json` to retain
 all target classes as a queryable model regardless of status. `--class
 'qualified::name'` restricts a diagnostic run to one case-insensitive qualified
 name; the unfiltered command remains the authoritative sweep.
@@ -75,10 +78,63 @@ The type stream records argument *types* and qualifiers for all declared methods
 but does not retain source parameter names for declaration-only methods. Parameter
 name comparison is therefore not claimed. Malformed/unrenderable type records are
 kept as `<unresolved-type>` rather than aborting the sweep, and the summary counts
-those declarations. Duplicate complete definitions are deduplicated by semantic
-content. When several variants remain, the richest target record is compared
-with the closest base variant; the variant count remains visible so stale
-merged-PDB records are never silent or mistaken for current source shape.
+those declarations.
+
+Complete records are grouped by normalized qualified name and then by their
+entire semantic shape. The report preserves every PDB-local type index and uses
+four explicit outcomes instead of selecting a supposedly canonical record:
+
+- `identical`: both PDBs contain the same semantic variant set and the same
+  record multiplicity for every variant;
+- `record-multiplicity`: the semantic variant sets agree, but one PDB contains
+  more equal records;
+- `variant-overlap`: at least one semantic variant agrees, while either PDB also
+  contains unmatched variants;
+- `different`: the same name exists on both sides but no semantic variant agrees.
+  The detailed field diff uses the closest disjoint pair only as a diagnostic and
+  identifies both type-index sets; it is not called canonical.
+
+This distinction matters for merged/LTCG PDBs. A same-named second record is
+evidence of a variant set, not by itself proof that either record is stale, a
+phantom, or the record used by a particular emitted function.
+
+## Whole-PDB order comparison
+
+`--order` compares the record sequences that have stable enough names to pair
+across PDBs:
+
+```sh
+pdb_topology \
+  --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order --limit 100
+```
+
+The report has four independent channels:
+
+- DBI module/object order;
+- named complete TPI records (`class`, `struct`, `interface`, `union`, `enum`,
+  and alias records);
+- the global symbol stream;
+- named top-level symbol order inside each uniquely paired module/object
+  (`procedure`, data/TLS, constant, UDT, and thunk records).
+
+Only a key that occurs exactly once in both sequences participates in an order
+claim. Duplicate keys with equal counts are listed as `excluded-nonunique`;
+unequal counts are a `multiplicity` difference. One-sided records are reported
+separately, as are changed descriptions for a uniquely paired key. A `moved` row
+means that the shared unique record participates in at least one pairwise
+inversion; an insertion before it cannot manufacture a move.
+`--json` is uncapped, while `--limit` only bounds the human-readable rows.
+
+These whole-PDB streams are physical/linker-derived evidence. LTCG, COMDAT
+selection, type merging, and linker processing can reorder them, so they are
+useful for locating a divergence but are not source-order proof. Anonymous TPI
+records cannot be authoritatively paired across two independently allocated
+type streams and are deliberately not assigned invented identities. Source
+definition order remains owned by `pdb_divergence`; class declaration order and
+function-internal record order remain the high-confidence `--classes` and
+`--function` channels above.
 
 The output is divided by evidentiary strength:
 
