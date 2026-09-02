@@ -123,7 +123,7 @@ public:
 
 	void	close						()
 	{ 
-		if ( file )							
+		if ( file && !g_use_open_file_cache )
 		{
 			set_owned_by_pointer			(file, false);
 			device->close					(file); 

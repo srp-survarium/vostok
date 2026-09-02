@@ -80,7 +80,7 @@ void   log_vfs_nodes					(base_node<> * node, u32 level = 0, pcstr original_name
 	if ( folder )
 		folder_addr.assignf					(" folder[0x%08x]", folder);
 
-	LOG_FORCED								(logging::trace, 
+	LOG_TRACE								(
 											 "%s	%s (%s) [0x%08x]%s", string.c_str(), type.c_str(), 
 											 node->is_folder() ? "fold" : "file", node, folder_addr.c_str());
 

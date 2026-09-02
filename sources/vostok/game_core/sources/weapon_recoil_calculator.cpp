@@ -15,7 +15,7 @@ float pseudo_random::random_f( const float range )
 {
 	float pi_x24	= math::pi * 24.0f;
 	float t			= fmod( m_time, pi_x24 );
-	float k			= math::pow( 2.73f, math::sin( t ) ) - math::cos( 4.0f * t ) * 2.0f + math::pow( math::sin( ( t - math::pi_d2 ) / 12.0f ), 5 );
+	float k			= math::pow( 2.73f, math::sin( t ) ) - 2.0f * math::cos( 4.0f * t ) + math::pow( math::sin( ( t - math::pi_d2 ) / 12.0f ), 5 );
 	float result	= math::abs( fmod( k, 1.0f ) ) * range;
 	return result;
 }

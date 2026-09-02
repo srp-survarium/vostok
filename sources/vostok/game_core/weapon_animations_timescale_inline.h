@@ -9,7 +9,7 @@ namespace survarium {
 
 inline float computed_reload_animation_time_scale( resources::managed_resource_ptr const& reload_animation, const float reload_time )
 {
-	float const reload_animation_time	= resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( reload_animation )->length_in_frames( ) / 30.f;
+	float const reload_animation_time	= resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( reload_animation )->length_in_frames( ) * (1.f / 30.f);
 	return reload_animation_time / reload_time;
 }
 
@@ -33,17 +33,14 @@ inline float computed_shooting_animation_time_scale( resources::managed_resource
 		if ( channel->domain( i ).data == 7 )
 			++events_count;
 
-	float const									animation_time	= pinned_animation->length_in_frames( ) / 30.f;
+	float const									animation_time	= pinned_animation->length_in_frames( ) * (1.f / 30.f);
 
 	return													rounds_per_second / ( events_count / animation_time );
 }
 
-// claude@NOTE: target emits this COMDAT with x87 FP + length_in_frames() fully inlined;
-// our base picks SSE (divss) and out-of-lines length_in_frames - a COMDAT-codegen/FP-flag
-// difference owned by whichever TU wins the COMDAT, not steerable from this body.
 inline float computed_shotgun_reload_animation_time_scale( resources::managed_resource_ptr const& reload_one_round_anim, u32 const magazine_capacity, float const reload_time )
 {
-	float const one_round_animation_time	= resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( reload_one_round_anim )->length_in_frames( ) / 30.f;
+	float const one_round_animation_time	= resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation >( reload_one_round_anim )->length_in_frames( ) * (1.f / 30.f);
 	return one_round_animation_time * magazine_capacity / reload_time;
 }
 

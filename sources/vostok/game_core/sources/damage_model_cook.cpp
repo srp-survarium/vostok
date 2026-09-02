@@ -13,7 +13,7 @@ namespace survarium {
 fixed_vector< console_commands::command_token, 12 >	damage_model_cook::m_hit_types;
 console_commands::cc_token*							damage_model_cook::m_hit_types_commands;
 fixed_vector< fixed_string<24>, 12 >				damage_model_cook::m_hit_types_strings;
-u32 g_current_hit_type;	// sushi@TODO: There is `get_current_hit_type` function, which possibly relies on this. I didn't find any references to it though, so skipping for now.
+static u32 g_current_hit_type;
 
 damage_model_cook::damage_model_cook( ) :
 	resources::translate_query_cook( resources::damage_model_class, reuse_false, use_current_thread_id )

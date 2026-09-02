@@ -854,8 +854,12 @@ def _audit_one(target: Site | None, base: Site | None, pair_kind: str,
         "base_site_rva": _hex(base.rva if base else None),
         "function": left.function if left else right.function if right else "-",
         "unit": left.unit if left else right.unit if right else "-",
-        "target_function_rva": _hex(left.function_rva if left else None),
-        "base_function_rva": _hex(right.function_rva if right else None),
+        "target_function_rva": _hex(
+            left.function_rva if left else right.partner_rva if right else None
+        ),
+        "base_function_rva": _hex(
+            right.function_rva if right else left.partner_rva if left else None
+        ),
         "target_function_offset": _hex(left.function_offset if left else None),
         "base_function_offset": _hex(right.function_offset if right else None),
         "target_instruction_rva": _hex(left.instruction if left else None),
@@ -1315,7 +1319,14 @@ def _function_data_rows(
     for row in audit:
         key = (row["unit"], row["function"])
         group = groups[key]
-        group["paired"] |= row["pair_status"] == "PAIRED"
+        # A paired function can legitimately have no relocation on one side.
+        # Such target-only/base-only use sets are exactly the datum debt this
+        # gate exists to expose; site-level PAIRED must not be the admission
+        # criterion.
+        group["paired"] |= (
+            row["target_function_rva"] != "-"
+            and row["base_function_rva"] != "-"
+        )
         if row["target_function_rva"] != "-":
             group["target_rvas"].add(row["target_function_rva"])
         if row["base_function_rva"] != "-":

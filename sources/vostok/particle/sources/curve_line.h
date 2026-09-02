@@ -228,8 +228,8 @@ private:
 			rnd.random		( 65535 );
 #endif // #if 0
 
-		float const alpha0 = float(rnd.random(65535)) / 65535.0f;
-		float const alpha1 = float(rnd.random(65535)) / 65535.0f;
+		float const alpha0 = rnd.random_f(1.0f);
+		float const alpha1 = rnd.random_f(1.0f);
 		
 		switch (evaluate_type)
 		{

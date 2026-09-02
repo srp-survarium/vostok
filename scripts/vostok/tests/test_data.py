@@ -47,6 +47,7 @@ from vostok.data.render_relocs import (
     _datum_token,
     _extentless_end,
     _first_diff,
+    _function_data_rows,
     _function_data_resolution,
     _function_fingerprint_pairs,
     _pattern,
@@ -108,6 +109,40 @@ class FunctionDataResolutionTests(unittest.TestCase):
 
 
 class DataGateTests(unittest.TestCase):
+    class _EmptyIndex:
+        exact = {}
+        by_identity = {}
+
+        @staticmethod
+        def evidence_owner(_rva, _hint=""):
+            return None
+
+        @staticmethod
+        def resolve_all(_rva):
+            return frozenset(("E:candidate_only",))
+
+    def test_candidate_only_uses_in_paired_function_reach_zero_gate(self):
+        audit = [{
+            "pair_status": "BASE_ONLY",
+            "unit": "unit.cpp",
+            "function": "?function@@YAXXZ",
+            "target_function_rva": "0x1000",
+            "base_function_rva": "0x2000",
+            "target_target_rva": "-",
+            "base_target_rva": "0x3000",
+            "target_identity": "-",
+            "base_identity": "E:candidate_only",
+            "datum_status": "NO_TARGET_OWNER",
+        }]
+        rows = _function_data_rows(
+            audit, self._EmptyIndex(), self._EmptyIndex(), {},
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["target_datum_count"], "0")
+        self.assertEqual(rows[0]["base_datum_count"], "1")
+        self.assertEqual(rows[0]["status"], "TARGET_DEFINITION_MISSING")
+        self.assertEqual(rows[0]["resolution"], "OPEN")
+
     def test_aggregate_counts_only_open_resolution_as_debt(self):
         summary = _gate_summary({
             "game": {

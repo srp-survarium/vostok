@@ -226,9 +226,9 @@ struct query_notification_operation : core::noncopyable
 				LOGI_INFO					("watcher", "hot_mount '%s' already mounted, only updating size", m_physical_path.c_str(), new_size);
 
 			if ( old_size != new_size )
-				LOGI_INFO					("watcher", "updated size of '%s' to (%d)", m_physical_path.c_str(), new_size);
+				LOGI_INFO					("watcher", "updated size of '%s' to (%db)", m_physical_path.c_str(), new_size);
 			else
-				LOGI_INFO					("watcher", "no need of updating size for '%s'", m_physical_path.c_str());
+				LOGI_INFO					("watcher", "no need of updating size for '%s' (%db)", m_physical_path.c_str(), new_size);
 
 			m_callback						(mount_result(m_mount, result_success));
 			return;
@@ -398,4 +398,3 @@ void   virtual_file_system::on_watcher_notification	(vfs_notification const &			
 
 } // namespace vfs 
 } // namespace vostok 
-

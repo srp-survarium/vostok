@@ -55,6 +55,8 @@ Run inside `nix develop`. Idempotent: re-run to resume (skips objs already built
     python3 -m vostok.build.gfx libgfx     # one
 """
 import errno
+import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -230,6 +232,33 @@ def tus(name):
     return [ln.strip() for ln in f.read_text().splitlines() if ln.strip()]
 
 
+def build_key(name, flags, defines, includes, tu_list):
+    """Hash every input the resumable object cache is allowed to reuse.
+
+    The SDK lives in an immutable Nix store path.  The C++ libraries also see
+    the mutable reconstruction overlay, including headers whose consumers the
+    simple one-TU driver does not otherwise track.  Conservatively key the
+    whole C++ library on that overlay: source edits are rare and correctness is
+    more important than retaining stale objects.
+    """
+    inputs = {
+        "version": 1,
+        "sdk": str(SDK),
+        "flags": flags,
+        "defines": list(defines),
+        "includes": list(includes),
+        "tus": tu_list,
+        "overlays": [],
+    }
+    if name in CPP_LIBS:
+        for rel, source in sorted(_overlay_files()):
+            inputs["overlays"].append(
+                [rel, hashlib.sha256(source.read_bytes()).hexdigest()]
+            )
+    payload = json.dumps(inputs, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
 def build_one(name):
     flags, defines, includes = lib_config(name)
     obj_dir = OBJ_ROOT / name
@@ -244,6 +273,19 @@ def build_one(name):
 
     tu_list = tus(name)
     print(f"[{name}] {len(tu_list)} TUs -> {out_lib.name}")
+
+    cache_key = build_key(name, flags, defines, includes, tu_list)
+    cache_stamp = obj_dir / "build-key.sha256"
+    old_key = cache_stamp.read_text().strip() if cache_stamp.is_file() else ""
+    if old_key != cache_key:
+        invalidated = 0
+        for rel in tu_list:
+            obj = obj_dir / (Path(rel).stem + ".obj")
+            if obj.is_file():
+                obj.unlink()
+                invalidated += 1
+        print(f"[{name}] source/config key changed: invalidated {invalidated} object(s)")
+
     rsp = obj_dir / "cl_onetu.rsp"
     rsp_arg = "@" + drive_path(rsp)
 
@@ -290,6 +332,7 @@ def build_one(name):
                        cwd=str(obj_dir), env=env, capture_output=True, text=True)
     kill_mspdbsrv()
     if out_lib.is_file() and out_lib.stat().st_size > 0:
+        cache_stamp.write_text(cache_key + "\n")
         print(f"[{name}] {out_lib.name}: {out_lib.stat().st_size/1e6:.1f} MB")
         return 0
     print(f"[{name}] LIB FAILED:\n{(r.stdout + r.stderr)[:1500]}")

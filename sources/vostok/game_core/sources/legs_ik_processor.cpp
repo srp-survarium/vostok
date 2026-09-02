@@ -301,7 +301,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 
 	result.c.xyz( )		= foot_world_matrix.c.xyz( );
 
-	float3					up_dir( 0.0f, 0.082f, 0.005f );
+	float3					up_dir( 0.0f, 0.082f, 0.05f );
 	result.c.xyz( )		= result.transform_position( up_dir );
 
 	float3					capsule_size( s_ik_foot_capsule_radius_value, 0.12f, s_ik_foot_capsule_radius_value );
