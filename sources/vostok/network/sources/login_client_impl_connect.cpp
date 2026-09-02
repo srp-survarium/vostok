@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 
@@ -27,7 +25,7 @@ void login_client_impl::on_connected(
 
 		if ( retry_count ) {
 			LOG_INFO	( "[LOGIN] NOT connected!\r\n" );
-			LOG_ERROR	( "[LOGIN] error during connecting: %s", error_code.message( ).c_str( ) );
+			LOG_ERROR	( "[LOGIN] error during connecting: %s\r\n", error_code.message( ).c_str( ) );
 			LOG_INFO	( "[LOGIN] reconnecting...\r\n" );
 			connect		( successfully_resolved, start_iterator, retry_count - 1, functor );
 		}

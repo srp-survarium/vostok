@@ -11,7 +11,7 @@
 using vostok::animation::mixing::animation_lexeme_parameters;
 using vostok::animation::skeleton_animation_ptr;
 
-static char animation_intervals_channel_id[] = "anim_intervals";
+static char const animation_intervals_channel_id[] = "anim_intervals";
 
 void animation_lexeme_parameters::create_animation_intervals( skeleton_animation_ptr const& animation )
 {

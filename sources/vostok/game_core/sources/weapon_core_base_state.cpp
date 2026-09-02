@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 06.12.2025
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include <vostok/game_core/weapon_core_base_state.h>
 #include <vostok/game_core/weapon_core.h>		// m_weapon.deserializing() inlines a member read

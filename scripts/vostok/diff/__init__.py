@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.diff - target-vs-base SOURCE SHAPE, above the byte level.
 
 objdiff answers "do these bytes match". These answer the questions that come

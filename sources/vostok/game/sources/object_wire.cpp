@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "object_wire.h"
 #include "game_object_static.h"
@@ -81,7 +79,7 @@ void object_wire::load(
 
 	if ( m_points_count != 0 )
 	{
-		m_points		= ALLOC( float3, m_points_count );
+		m_points		= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, float3, m_points_count );
 		float3* p		= m_points;
 		for ( u32 i = 0; i < m_points_count; ++i )
 		{
@@ -133,14 +131,14 @@ void object_wire::remove( )
 		get_game_scene().renderer().scene().remove_model( get_game_scene().render_scene(), m_visual );
 }
 
-// claude@NOTE: DELETE(pbyte) remains out-of-line through get_top_pointer/destructor
+// claude@NOTE: VOSTOK_DELETE_IMPL(pbyte) remains out-of-line through get_top_pointer/destructor
 // helpers in base but reduces to the target's direct mspace_free. The following resource
 // pointer assignment aligns; reopen after the shared memory-helper inline context changes.
 void object_wire::resources_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
 	const_buffer user_data_to_create	= data[0].creation_data_from_user();
 	pbyte creation_data					= (pbyte)user_data_to_create.c_ptr();
-	DELETE								( creation_data );
+	VOSTOK_DELETE_IMPL					( ::survarium::g_allocator, creation_data );
 
 	m_visual							= static_cast_resource_ptr< render::render_model_instance_ptr >( data[0].get_unmanaged_resource() );
 

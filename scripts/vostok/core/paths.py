@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.core.paths - every repo path, in one place.
 
 THE RULE: no module outside this one spells a repo-relative path. Nine scripts
@@ -67,6 +68,12 @@ SLN = SOURCES / "vostok v2.0.sln"
 README = REPO / "README.md"
 FLAKE_LOCK = REPO / "flake.lock"
 COMPILE_COMMANDS = REPO / "compile_commands.json"
+
+# Retail compiled the engine from this virtual source root.  Its project
+# working directories used a lower-case drive while its source include switch
+# used an upper-case one; MSVC preserves both spellings in __FILE__.
+RETAIL_SOURCE_PREFIX = r"c:\survarium\sources"
+RETAIL_INCLUDE_SOURCE_PREFIX = r"C:\survarium\sources"
 
 # --- generated artifacts (binaries/, gitignored) ---------------------------
 BINARIES = REPO / "binaries"
@@ -139,10 +146,34 @@ DATA_FUNCTION_STATE = GEN_DIR / "data_function_state.tsv"
 DATA_MANIFEST_BLOCKERS = GEN_DIR / "data_manifest_blockers.tsv"
 DATA_STRICT_REPORT = GEN_DIR / "data_strict_report.json"
 DATA_SYMBOL_MAP = DATA_OBJDIFF_DIR / "target-symbol-map.tsv"
-DATA_RENDER_RELOC_AUDIT = GEN_DIR / "render_reloc_audit.tsv"
-DATA_RENDER_EXTENTLESS = GEN_DIR / "render_extentless_data.tsv"
-DATA_RENDER_FUNCTION_DATA = GEN_DIR / "render_function_data.tsv"
-DATA_RENDER_RELOC_REPORT = GEN_DIR / "render_reloc_report.json"
+
+
+def _data_module_name(module: str) -> str:
+    if not module or not module.replace("_", "").isalnum():
+        raise ValueError(f"invalid data-audit module name: {module!r}")
+    return module
+
+
+def data_module_reloc_audit(module: str) -> Path:
+    return GEN_DIR / f"{_data_module_name(module)}_reloc_audit.tsv"
+
+
+def data_module_extentless(module: str) -> Path:
+    return GEN_DIR / f"{_data_module_name(module)}_extentless_data.tsv"
+
+
+def data_module_function_data(module: str) -> Path:
+    return GEN_DIR / f"{_data_module_name(module)}_function_data.tsv"
+
+
+def data_module_reloc_report(module: str) -> Path:
+    return GEN_DIR / f"{_data_module_name(module)}_reloc_report.json"
+
+
+DATA_RENDER_RELOC_AUDIT = data_module_reloc_audit("render")
+DATA_RENDER_EXTENTLESS = data_module_extentless("render")
+DATA_RENDER_FUNCTION_DATA = data_module_function_data("render")
+DATA_RENDER_RELOC_REPORT = data_module_reloc_report("render")
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
@@ -193,7 +224,13 @@ RETAIL_DATA_SYMBOLS = RETAIL_CONFIG / "data_symbols.tsv"
 RETAIL_PDB_DATA_EXTENTS = RETAIL_CONFIG / "pdb_data_extents.tsv"
 RETAIL_RELOC_REFERENTS = RETAIL_CONFIG / "reloc_referents.tsv"
 DATA_INTEGRITY_RATCHET = CLEANLINESS_CONFIG / "data-integrity-ratchet.tsv"
-DATA_RENDER_PROBLEMS = DOCS_NEXT_MATCHING / "render_data_problems.md"
+
+
+def data_module_problems(module: str) -> Path:
+    return DOCS_NEXT_MATCHING / f"{_data_module_name(module)}_data_problems.md"
+
+
+DATA_RENDER_PROBLEMS = data_module_problems("render")
 
 
 def survarium_bin() -> Path:

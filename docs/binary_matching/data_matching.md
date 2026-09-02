@@ -80,6 +80,11 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   `docs/next_binary_matching/render_data_problems.md`. The machine TSVs remain
   exhaustive; settled extentless comparisons are omitted from the Markdown so
   it contains differences and unresolved evidence rather than matched debt.
+- `python3 -m vostok data module-relocs MODULE` applies the same exhaustive
+  audit to any ledger module. Its generated files use the module name in place
+  of `render`; its readable dossier is
+  `docs/next_binary_matching/MODULE_data_problems.md`. `render-relocs` remains
+  the compatibility spelling used by the authoritative build.
 - `binaries/data-objdiff/` is the complete parallel comparison project. The
   ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
   objdiff CLI and never consumes data manifests.
@@ -132,6 +137,9 @@ python3 -m vostok data refresh
 python3 -m vostok data render-relocs
 python3 -m vostok data render-relocs --check
 python3 -m vostok data render-relocs PATTERN
+python3 -m vostok data module-relocs MODULE
+python3 -m vostok data module-relocs MODULE --check
+python3 -m vostok data module-relocs MODULE PATTERN
 python3 -m vostok data report
 python3 -m vostok data function PATTERN
 python3 -m vostok data access PATTERN

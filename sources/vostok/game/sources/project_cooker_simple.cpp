@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "project_cooker_simple.h"
 #include "artefact_container.h"
@@ -110,16 +108,16 @@ void project_cooker_simple::create_game_objects(
 	fs_new::virtual_path_string project_source_path;
 	project_source_path.assignf( "%sprojects/%s", "resources/", parent_query->get_requested_path( ) );
 
-	simple_game_project* project = NEW( simple_game_project )( *base_game_scene );
+	simple_game_project* project = VOSTOK_NEW_IMPL( ::survarium::g_allocator, simple_game_project )( *base_game_scene );
 	project->m_config = project_cfg;
 
 	configs::binary_config_value collision_objects = ( *project_cfg )["collision_objects"];
 	project->m_static_collision_objects_count = collision_objects.size( );
-	project->m_static_collision_objects = NEW_ARRAY( static_collision, project->m_static_collision_objects_count );
+	project->m_static_collision_objects = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, static_collision, project->m_static_collision_objects_count );
 
 	configs::binary_config_value render_visuals = ( *project_cfg )["render_visuals"];
 	project->m_render_visuals_count = render_visuals.size( );
-	project->m_render_visuals = NEW_ARRAY( render_visual, project->m_render_visuals_count );
+	project->m_render_visuals = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, render_visual, project->m_render_visuals_count );
 
 	requests_type collision_and_render;
 	collision_and_render.resize( project->m_static_collision_objects_count + project->m_render_visuals_count );
@@ -173,42 +171,42 @@ void project_cooker_simple::create_game_objects(
 		game_object_* resource = NULL;
 
 		if ( strings::equal( "environment", type ) )
-			resource = NEW( object_environment )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_environment )( *base_game_scene );
 		else if ( strings::equal( "sky", type ) )
-			resource = NEW( object_sky )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_sky )( *base_game_scene );
 		else if ( strings::equal( "decal", type ) )
-			resource = NEW( object_decal )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_decal )( *base_game_scene );
 		else if ( strings::equal( "environment_probe", type ) )
-			resource = NEW( object_environment_probe )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_environment_probe )( *base_game_scene );
 		else if ( strings::equal( "sky_ambient_occlusion", type ) )
-			resource = NEW( object_sky_ambient_occlusion )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_sky_ambient_occlusion )( *base_game_scene );
 		else if ( strings::equal( "ambient_volume", type ) )
-			resource = NEW( object_ambient_volume )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_ambient_volume )( *base_game_scene );
 		else if ( strings::equal( "lpv_occluder", type ) )
-			resource = NEW( object_lpv_occluder )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_lpv_occluder )( *base_game_scene );
 		else if ( strings::equal( "volume_fog", type ) )
-			resource = NEW( object_volume_fog )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_volume_fog )( *base_game_scene );
 		else if ( strings::equal( "light", type ) )
-			resource = NEW( object_light )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_light )( *base_game_scene );
 		else if ( strings::equal( "particle", type ) )
-			resource = NEW( object_particle_visual )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_particle_visual )( *base_game_scene );
 		else if ( strings::equal( "collision_geometry", type ) )
 		{
-			collision_geometry* geometry = NEW( collision_geometry );
+			collision_geometry* geometry = VOSTOK_NEW_IMPL( ::survarium::g_allocator, collision_geometry );
 			geometry->load( *it );
 			project->register_named_object( ( *it )["full_name"], geometry );
 			project->m_collision_geometries.push_back( geometry );
 			continue;
 		}
 		else if ( strings::equal( "volumetric_sound", type ) )
-			resource = NEW( object_volumetric_sound )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_volumetric_sound )( *base_game_scene );
 		else if ( strings::equal( "wire_set", type ) )
-			resource = NEW( object_wire )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_wire )( *base_game_scene );
 		else if ( strings::equal( "object_sound", type ) )
-			resource = NEW( object_sound )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_sound )( *base_game_scene );
 		else if ( strings::equal( "victory_items_container", type ) )
 		{
-			victory_items_container* container = NEW( victory_items_container )( *base_game_scene );
+			victory_items_container* container = VOSTOK_NEW_IMPL( ::survarium::g_allocator, victory_items_container )( *base_game_scene );
 			container->load( *it );
 			project->register_named_object( ( *it )["full_name"], container );
 			project->register_object_to_resolve( container, *it );
@@ -217,7 +215,7 @@ void project_cooker_simple::create_game_objects(
 		}
 		else if ( strings::equal( "human_npc", type ) )
 		{
-			configs::binary_config_value* config = NEW( configs::binary_config_value )( *it );
+			configs::binary_config_value* config = VOSTOK_NEW_IMPL( ::survarium::g_allocator, configs::binary_config_value )( *it );
 			ext_objects_requests.push_back(
 				resources::creation_request(
 					( *config )["full_name"],
@@ -233,16 +231,16 @@ void project_cooker_simple::create_game_objects(
 			r.set( ( *it )["full_name"], resources::damage_zone_class );
 			damage_zones_requests.push_back( r );
 
-			variant< 32 >* ud = NEW( variant< 32 > );
+			variant< 32 >* ud = VOSTOK_NEW_IMPL( ::survarium::g_allocator, variant< 32 > );
 			ud->set( *it );
 			damage_zones_user_data.push_back( ud );
 			continue;
 		}
 		else if ( strings::equal( "vegetation", type ) )
-			resource = NEW( object_vegetation )( *base_game_scene );
+			resource = VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_vegetation )( *base_game_scene );
 		else if ( strings::equal( "artefact_container", type ) )
 		{
-			artefact_container* container = NEW( artefact_container )( *base_game_scene );
+			artefact_container* container = VOSTOK_NEW_IMPL( ::survarium::g_allocator, artefact_container )( *base_game_scene );
 			container->load( *it );
 			project->register_named_object( ( *it )["full_name"], container );
 			project->register_object_to_resolve( container, *it );
@@ -255,14 +253,14 @@ void project_cooker_simple::create_game_objects(
 			request.set( ( *it )["full_name"], resources::ladder_class );
 			ladders_requests.push_back( request );
 
-			variant< 32 >* ud = NEW( variant< 32 > );
+			variant< 32 >* ud = VOSTOK_NEW_IMPL( ::survarium::g_allocator, variant< 32 > );
 			ud->set( *it );
 			ladders_user_data.push_back( ud );
 			continue;
 		}
 		else if ( strings::equal( "generic_anomaly_core", type ) )
 		{
-			generic_anomaly* anomaly = NEW( generic_anomaly )( *base_game_scene );
+			generic_anomaly* anomaly = VOSTOK_NEW_IMPL( ::survarium::g_allocator, generic_anomaly )( *base_game_scene );
 			anomaly->load( *it );
 			project->register_object_to_resolve( anomaly, *it );
 			project->m_anomalies.push_back( anomaly );
@@ -284,7 +282,7 @@ void project_cooker_simple::create_game_objects(
 		it_e = ( *project_cfg )["respawn_points"].end( );
 		for ( ; it != it_e; ++it )
 		{
-			respawn_point_core* point = NEW( respawn_point_core );
+			respawn_point_core* point = VOSTOK_NEW_IMPL( ::survarium::g_allocator, respawn_point_core );
 			point->load( *it );
 			project->m_respawn_points[point->point_id] = point;
 		}
@@ -345,24 +343,24 @@ void project_cooker_simple::delete_resource( resources::resource_base* resource 
 
 	game_object_** it_e = project->m_objects.end( );
 	for ( game_object_** it = project->m_objects.begin( ); it != it_e; ++it )
-		DELETE( *it );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, *it );
 
 	for ( map< u32, respawn_point_core*, std::less< u32 > >::iterator it = project->m_respawn_points.begin( );
 		it != project->m_respawn_points.end( );
 		++it )
-		DELETE( it->second );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, it->second );
 	project->m_respawn_points.clear( );
 
 	collision_geometry** geom_end = project->m_collision_geometries.end( );
 	for ( collision_geometry** it = project->m_collision_geometries.begin( ); it != geom_end; ++it )
-		DELETE( *it );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, *it );
 
 	victory_items_container** vc_it_e = project->m_victory_items_containers.end( );
 	for ( victory_items_container** it = project->m_victory_items_containers.begin( ); it != vc_it_e; ++it )
-		DELETE( *it );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, *it );
 	project->m_victory_items_containers.clear( );
 
-	DELETE( project );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, project );
 }
 
 void project_cooker_simple::on_damage_zones_loaded( simple_game_project* project, resources::queries_result& data )

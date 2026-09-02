@@ -20,8 +20,8 @@ namespace command_line {
 } // namespace command_line
 } // namespace vostok
 
-static vostok::command_line::key s_mouse_unlock ( "mouse_unlock", "", "", "" );
-static vostok::command_line::key s_mouse_lock ( "mouse_lock", "", "", "" );
+static vostok::command_line::key s_mouse_unlock ( "mouse_unlock", "", "", "is mouse locked" );
+static vostok::command_line::key s_mouse_lock ( "mouse_lock", "", "", "is mouse locked" );
 
 mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& input_world ) 
 :	m_window_handle		( window_handle ),

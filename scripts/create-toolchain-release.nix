@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 # Entry point for building the vostok-toolchain release tarball.
 #
 # Fetches all required source ISOs into the Nix store, sets up Wine + tools,

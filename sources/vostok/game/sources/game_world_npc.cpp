@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game_world.h"
-#include "game_memory.h"	// DELETE (delete_weapons)
+#include "game_memory.h"	// survarium::g_allocator (delete_weapons)
 #include "ai_collision_object.h"
 
 #include "game.h"	// get_game().hide_game_stats / ui_world() (update_npc_stats)
@@ -23,11 +21,6 @@
 #include <vostok/collision/common_types.h>	// ray_triangle_result (ray_query_predicate)
 #include <vostok/physics/ray_result.h>	// closest_ray_result (get_first_npc... predicate)
 #include <vostok/physics/contact_test_predicate.h>
-
-#undef NEW
-#undef DELETE
-#define NEW( type )		VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
-#define DELETE( pointer )	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 
 namespace survarium {
 
@@ -195,7 +188,7 @@ u32 game_world::get_node_by_name( pcstr node_name ) const
 void delete_weapons( human_npc_ptr& owner )
 {
 	while ( object_weapon* weapon = owner->pop_weapon( ) )
-		DELETE						( weapon );
+		VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, weapon );
 }
 
 // Target LTCG eliminates the faithful delete_weapons/clear_resources cleanup from
@@ -241,7 +234,7 @@ void game_world::on_npc_attributes_received( configs::binary_config_value const&
 		u32 const type								= gun[ "type" ];
 		ai::weapon_types_enum const weapon_type		= ( ai::weapon_types_enum )type;
 		u32 const weapon_id							= gun[ "id" ];
-		attributes.weapons.push_back				( NEW( object_weapon )( weapon_type, m_ai_world->get_weapon_name_by_id( weapon_type, weapon_id ), weapon_id ) );
+		attributes.weapons.push_back				( VOSTOK_NEW_IMPL( ::survarium::g_allocator, object_weapon )( weapon_type, m_ai_world->get_weapon_name_by_id( weapon_type, weapon_id ), weapon_id ) );
 	}
 
 	finish_npc_creation					( owner, attributes );

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #ifndef NETWORK_CORE_TCP_PACKET_SOCKET_INLINE_H_INCLUDED
 #define NETWORK_CORE_TCP_PACKET_SOCKET_INLINE_H_INCLUDED
 
@@ -126,7 +124,7 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 
 	if ( error_code )
 	{
-		LOG_ERROR( "error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR( "error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		if ( m_on_error )
 			m_on_error( unable_to_write_to_socket, error_code );
 		return;
@@ -134,7 +132,7 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 
 	if ( !bytes_transferred )
 	{
-		LOG_ERROR( "unable to write to socket\n" );
+		LOG_ERROR( "unable to write to socket\r\n" );
 		if ( m_on_error )
 			m_on_error( unable_to_write_to_socket, error_code );
 		return;

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "object_sky.h"
 #include "base_game_scene.h"
@@ -39,7 +37,7 @@ void object_sky::load(
 	pcstr sky_material_name = pcstr( t["material_name"] );
 
 	render::material_effects_instance_cook_data* cook_data =
-		NEW( render::material_effects_instance_cook_data )( render::post_process_vertex_input_type, NULL, false );
+		VOSTOK_NEW_IMPL( ::survarium::g_allocator, render::material_effects_instance_cook_data )( render::post_process_vertex_input_type, NULL, false );
 
 	resources::user_data_variant user_data;
 	user_data.set( cook_data );
@@ -66,7 +64,7 @@ void object_sky::material_ready(
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	DELETE( cook_data );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, cook_data );
 
 	m_sky_material = data[0].get_unmanaged_resource();
 

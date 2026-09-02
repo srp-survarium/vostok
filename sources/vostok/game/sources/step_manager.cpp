@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "step_manager.h"
 #include "game_world.h"
@@ -42,7 +40,7 @@ void step_manager::on_step(
 	game_world&			world
 ) const
 {
-	physics::closest_ray_result ray_result	= world.get_physics_world( )->ray_test( position, float3( 0.f, -1.f, 0.f ), 48.f, 8, 48 );
+	physics::closest_ray_result ray_result	= world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 2.f, 8, 48 );
 
 	if ( !ray_result.object )
 		return;
@@ -79,7 +77,7 @@ void step_manager::on_step(
 			pair->decal1( ),
 			m_decal_id++,
 			pair->decal1_size( ),
-			0.f,	// claude@NOTE: depth - target folds an unnamed float global ('nscl') here
+			0.1f,
 			ray_result.hit_point_world,
 			direction,
 			ray_result.hit_normal_world,

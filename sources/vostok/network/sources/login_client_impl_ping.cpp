@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 
@@ -18,7 +16,7 @@ void login_client_impl::on_ping_sent(
 
 	if ( error_code ) {
 		ping		( try_count - 1 );
-		LOG_ERROR	( "[LOGIN] ping: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR	( "[LOGIN] ping: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 

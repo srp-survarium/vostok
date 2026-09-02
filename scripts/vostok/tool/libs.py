@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """
 vostok.tool.libs - stage prebuilt 3rd party libraries ('.dll's, '.lib's, ...)
 into the repo.

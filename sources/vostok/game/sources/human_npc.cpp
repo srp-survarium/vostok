@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "human_npc.h"
 #include "game_world.h"				// base game_object_ + ref members source off game_world
@@ -25,11 +23,11 @@
 #include <vostok/sound/world.h>				// enable: get_logic_world_user
 #include <vostok/sound/world_user.h>			// enable: register_receiver
 #include <vostok/physics/world.h>				// enable: m_physics_world.add
-#include "game_memory.h"						// enable: NEW( animations_selector )
+#include "game_memory.h"						// enable: survarium::g_allocator
 #include <vostok/console_command.h>
 
 static bool s_npc_debug_draw		= false;
-static vostok::console_commands::cc_bool s_npc_debug_draw_command( "npc_debug_draw", s_npc_debug_draw, true, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_npc_debug_draw_command( "npc_debug_draw", s_npc_debug_draw, true, vostok::console_commands::command_type_user_specific );
 
 namespace survarium {
 
@@ -120,7 +118,7 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 
  human_npc::~human_npc( )
 {
-	DELETE						( m_animations_selector );
+	VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, m_animations_selector );
 }
 
 void human_npc::clear_resources( )
@@ -175,7 +173,7 @@ void human_npc::enable( )
 
 	m_feet_target						= get_position();
 
-	m_animations_selector				= NEW( animations_selector )(
+	m_animations_selector				= VOSTOK_NEW_IMPL( ::survarium::g_allocator, animations_selector )(
 		*m_model_instance->m_animation_player,
 		m_animation_space_graph,
 		m_default_animation,
@@ -281,7 +279,7 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 	// target-side (set by their OTHER callers); ours pushes. The remaining
 	// delta is that convention + the scheduling cascade off it.
 	float3 const eyes_position		= get_eyes_position( );
-	float3 const eyes_direction		= get_eyes_direction( ) * 3.f;
+	float3 const eyes_direction		= get_eyes_direction( ) * 2.f;
 	m_renderer.debug( ).draw_arrow	( m_scene, eyes_position, eyes_position + eyes_direction, math::color( 255, 0, 0 ) );
 
 	if ( m_sound_perceived )
@@ -592,7 +590,7 @@ void human_npc::up_to_terrain( )
 	// forms either retain aggregate stack slots or lose the target's position statement.
 	float3 const position			= m_transform.c.xyz( );
 
-	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 2.f, 0x20, 2 );
+	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 10.f, 0x20, 2 );
 
 	if ( result.object )
 		m_feet_target			= result.hit_point_world;

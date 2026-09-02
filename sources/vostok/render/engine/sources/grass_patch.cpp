@@ -82,7 +82,7 @@ grass_patch::grass_patch(
 	float const in_size
 ) :
 	m_prev_view_pos( 0.f, 0.f, 0.f ),
-	m_aabb( math::create_aabb_min_max( float3( -1.f, -1.f, -1.f ), float3( 0.f, 0.f, 0.f ) ) ),
+	m_aabb( math::create_aabb_min_max( float3( -1.f, -1.f, -1.f ), float3( 1.f, 1.f, 1.f ) ) ),
 	m_origin( in_origin ),
 	m_size( 16.f ),
 	m_occlusion_info_index( u32( -1 ) ),

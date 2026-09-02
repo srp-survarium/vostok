@@ -62,9 +62,10 @@ void   binary_config_cook_impl::create_resource (query_result_for_cook &	in_out_
 	in_out_query.finish_query			(result_success);
 }
 
-static pcstr resources_converted_string	=	"resources.converted/";
+static pcstr resources_converted_string	=	"resources/";
 static pcstr resources_sources_string	=	"resources.sources/";
-static pcstr mounts_converted_string	=	"mounts.converted/";
+static pcstr mounts_converted_string	=	"mounts/";
+static pcstr mounts_sources_string		=	"mounts.sources/";
 
 #ifndef MASTER_GOLD
 static pcstr resources_string			=	"resources/";
@@ -98,7 +99,7 @@ void make_source_path					( fs_new::virtual_path_string *			out_sources_path,
 	}
 	else if ( in_converted_path.find(mounts_converted_string) != u32(-1) )
 	{
-		out_sources_path->replace			(mounts_converted_string, "mounts.sources/");
+		out_sources_path->replace			(mounts_converted_string, mounts_sources_string);
 	}
 	else
 	{

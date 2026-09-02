@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "player_cook.h"
 #include "profile_skin_visual_cook.h"
@@ -50,11 +48,9 @@ void player_cook::translate_query( resources::query_result_for_cook& parent )
 void player_cook::delete_resource( resources::resource_base* resource )
 {
 	player* player_resource								= static_cast_checked< player* >( resource );
-	DELETE												( player_resource );
+	VOSTOK_DELETE_IMPL									( ::survarium::g_allocator, player_resource );
 }
 
-// Target selects the player_profile const* variant helper here, but introducing
-// that specialization alone changes global COMDAT ownership; revisit with its compiler context.
 void player_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query( );
@@ -67,10 +63,10 @@ void player_cook::on_config_loaded( resources::queries_result& data )
 	requests.push_back							( resources::create_request( "combined_skin_123", resources::player_skin_visual_class ) );
 
 
-	requests.push_back							( resources::create_request( "character/human/scavengers_01/sc", resources::skeleton_model_instance_class ) );
+	requests.push_back							( resources::create_request( "character/human/scavengers_01/scavengers_01", resources::skeleton_model_instance_class ) );
 
 	fs_new::virtual_path_string					damage_config_path;
-	damage_config_path.assignf					( "resources/models/%s.skinned_model/skeleton", (pcstr)root["skeleton_model_instance"] );
+	damage_config_path.assignf					( "resources/models/%s.skinned_model/hit_targets", (pcstr)root["skeleton_model_instance"] );
 	requests.push_back							( resources::create_request( damage_config_path.c_str( ), resources::binary_config_class_impl ) );
 
 	fs_new::virtual_path_string					model_settings_config_path;
@@ -81,7 +77,7 @@ void player_cook::on_config_loaded( resources::queries_result& data )
 	requests.push_back							( resources::create_request( "inventory", resources::inventory_class ) );
 	requests.push_back							( resources::create_request( "player_parameters", resources::player_parameters_class ) );
 
-	player_creation_params* params				= NEW( player_creation_params );
+	player_creation_params* params				= VOSTOK_NEW_IMPL( ::survarium::g_allocator, player_creation_params );
 
 	parent->user_data( )->try_get				( params->initial_info );
 
@@ -101,13 +97,13 @@ void player_cook::on_config_loaded( resources::queries_result& data )
 	u32 const requests_count					= requests.size( );
 	buffer_vector< variant<32> const* > user_data	( ALLOCA( requests_count * sizeof( variant<32> const* ) ), requests_count, requests_count, NULL );
 
-	inventory_cooker_data* inventory_cook_data		= NEW( inventory_cooker_data );
+	inventory_cooker_data* inventory_cook_data		= VOSTOK_NEW_IMPL( ::survarium::g_allocator, inventory_cooker_data );
 	inventory_cook_data->profile					= params->initial_info.profile;
 	inventory_cook_data->dictionary				= params->items_dictionary;
 	inventory_cook_data->damage_model				= NULL;
 
 	variant<32> ud_skin_visual;
-	ud_skin_visual.set							( params->initial_info.profile );
+	ud_skin_visual.set							( ( player_profile const* )params->initial_info.profile );
 	user_data[0]								= &ud_skin_visual;
 
 
@@ -115,7 +111,7 @@ void player_cook::on_config_loaded( resources::queries_result& data )
 	id.set									( inventory_cook_data );
 	user_data[4]								= &id;
 
-	player_parameters_cooker_data* player_parameters_cook_data = NEW( player_parameters_cooker_data );
+	player_parameters_cooker_data* player_parameters_cook_data = VOSTOK_NEW_IMPL( ::survarium::g_allocator, player_parameters_cooker_data );
 	player_parameters_cook_data->profile			= params->initial_info.profile;
 	player_parameters_cook_data->dictionary			= params->items_dictionary;
 
@@ -141,11 +137,8 @@ void player_cook::on_subresources_loaded(
 )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
-	FREE												( inventory_cook_data );
-	FREE												( player_parameters_cook_data );
-
-
-
+	VOSTOK_FREE_IMPL									( ::survarium::g_allocator, inventory_cook_data );
+	VOSTOK_FREE_IMPL									( ::survarium::g_allocator, player_parameters_cook_data );
 
 	params->character_model								= static_cast_resource_ptr< render::skeleton_model_ptr >( data[0].get_unmanaged_resource() );
 	params->server_character_model							= static_cast_resource_ptr< render::skeleton_model_ptr >( data[1].get_unmanaged_resource() );
@@ -184,7 +177,7 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 
 	params->damage_model								= static_cast_resource_ptr< damage_model_ptr >( data[0].get_unmanaged_resource() );
 
-	player* player_resource								= NEW( player )( *params );
+	player* player_resource								= VOSTOK_NEW_IMPL( ::survarium::g_allocator, player )( *params );
 	if ( !player_resource )
 	{
 		parent->set_out_of_memory						( resources::unmanaged_memory, sizeof( player ) );
@@ -192,7 +185,7 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 		return;
 	}
 
-	DELETE												( params );
+	VOSTOK_DELETE_IMPL									( ::survarium::g_allocator, params );
 
 	parent->set_unmanaged_resource						( player_resource, resources::nocache_memory, sizeof( player ) );
 	parent->finish_query								( result_success );
@@ -257,7 +250,7 @@ void profile_skin_visual_cook::on_configs_loaded(
 	player_profile const*					profile
 )
 {
-	render::skeleton_combined_cook_data* cook_data = NEW( render::skeleton_combined_cook_data )( false );
+	render::skeleton_combined_cook_data* cook_data = VOSTOK_NEW_IMPL( ::survarium::g_allocator, render::skeleton_combined_cook_data )( false );
 	variant<32> ud;
 	ud.set( cook_data );
 
@@ -347,12 +340,12 @@ void profile_skin_visual_cook::on_visual_loaded(
 		data[0].get_unmanaged_resource( ),
 		resources::nocache_memory,
 		sizeof( render::skeleton_model_instance )
-#line 363
 	);
 	parent->finish_query( result_success );
-	DELETE( cook_data );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, cook_data );
 }
 
+#line 363
 void profile_skin_visual_cook::delete_resource( resources::resource_base* __formal )
 {
 	VOSTOK_UNREFERENCED_PARAMETER						( __formal );

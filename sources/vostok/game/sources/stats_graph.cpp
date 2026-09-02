@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "stats_graph.h"
 #include <vostok/render/facade/ui_renderer.h>
@@ -32,13 +30,13 @@ stats_graph::~stats_graph( )
 	for ( u32 i=0; i < m_count; ++i ) {
 		stats_value* value			= m_newest_value;
 		m_newest_value				= m_newest_value->next;
-		DELETE						( value );
+		VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, value );
 	}
 
 	while ( m_values_pool ) {
 		stats_value* value			= m_values_pool;
 		m_values_pool				= m_values_pool->next;
-		DELETE						( value );
+		VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, value );
 	}
 }
 
@@ -84,7 +82,7 @@ void stats_graph::add_value( const float time, const float value )
 
 	stats_value*					new_value;
 	if ( !m_values_pool )
-		new_value					= NEW( stats_value );
+		new_value					= VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_value );
 	else {
 		new_value					= m_values_pool;
 		m_values_pool				= m_values_pool->next;

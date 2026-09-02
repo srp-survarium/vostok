@@ -52,6 +52,7 @@ _kill_prefix_processes for why the kill must be prefix-scoped.
 
 import os
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -64,6 +65,12 @@ from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import WINEPREFIX as OWN_WINEPREFIX
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
+
+# The shipping core library and game executable were compiled on different
+# days.  MSVC 9 refuses to override the reserved __DATE__ macro, so reproduce
+# the compiler environment instead of changing the recovered source spelling.
+RETAIL_CORE_BUILD_TIME = "2013-05-11 12:00:00"
+RETAIL_GAME_BUILD_TIME = "2013-05-09 12:00:00"
 
 # Outputs the final link writes; the watchdog waits for both to be refreshed.
 LINK_OUTPUTS = (
@@ -271,14 +278,61 @@ def _assert_no_existing_build() -> None:
         )
 
 
-def _run_plain(ninja_exe: Path, args: list[str]) -> int:
+def _ninja_argv(
+    ninja_exe: Path,
+    args: list[str],
+    build_time: str | None = None,
+) -> list[str]:
+    command = ["wine", str(ninja_exe), "-v", "-k", "0", *args]
+    if build_time is None:
+        return command
+    if shutil.which("faketime") is None:
+        die("faketime not found - re-enter `nix develop`")
+    return ["faketime", build_time, *command]
+
+
+def _ninja_env(build_time: str | None = None) -> dict[str, str] | None:
+    if build_time is None:
+        return None
+    return dict(
+        os.environ,
+        FAKETIME_DONT_FAKE_MONOTONIC="1",
+        FAKETIME_DONT_FAKE_STAT="1",
+        WINEDEBUG="-all",
+    )
+
+
+def _stop_wine_session(build_time: str | None = None) -> None:
+    """Stop only this WINEPREFIX before changing its emulated wall clock."""
+    command = ["wineserver", "-k"]
+    if build_time is not None:
+        command = ["faketime", build_time, *command]
+    try:
+        subprocess.run(
+            command,
+            env=_ninja_env(build_time),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        _kill_prefix_processes(tuple(_WINE_SESSION))
+
+
+def _run_plain(
+    ninja_exe: Path,
+    args: list[str],
+    build_time: str | None = None,
+) -> int:
     """Run a module-only Ninja build with interruption-safe Wine cleanup."""
     _assert_no_existing_build()
     existing_pids = _prefix_process_ids(_INTERRUPT_BUILD_COMMS)
     with _termination_cleanup_scope():
         proc = subprocess.Popen(
-            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+            _ninja_argv(ninja_exe, args, build_time),
             cwd=str(BUILD_DIR),
+            env=_ninja_env(build_time),
             start_new_session=True,
         )
         try:
@@ -288,7 +342,11 @@ def _run_plain(ninja_exe: Path, args: list[str]) -> int:
             raise
 
 
-def _prepare_clean_final_pdb(ninja_exe: Path, args: list[str]) -> None:
+def _prepare_clean_final_pdb(
+    ninja_exe: Path,
+    args: list[str],
+    build_time: str | None = None,
+) -> None:
     """Remove the executable PDB only when Ninja has already scheduled its link.
 
     MSVC's linker reuses an existing output PDB even for a non-incremental LTCG
@@ -309,8 +367,9 @@ def _prepare_clean_final_pdb(ninja_exe: Path, args: list[str]) -> None:
         BASE_EXE.unlink()
 
     probe = subprocess.run(
-        ["wine", str(ninja_exe), "-n", "-v", "-k", "0", *args],
+        _ninja_argv(ninja_exe, ["-n", *args], build_time),
         cwd=str(BUILD_DIR),
+        env=_ninja_env(build_time),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         check=False,
@@ -360,7 +419,30 @@ def _explicit_targets(args: list[str]) -> list[str]:
     return targets
 
 
-def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
+def _ninja_options(args: list[str]) -> list[str]:
+    """Preserve Ninja options while replacing its explicit build targets."""
+    options: list[str] = []
+    index = 0
+    while index < len(args):
+        arg = args[index]
+        if arg == "--":
+            break
+        if not arg.startswith("-"):
+            index += 1
+            continue
+        options.append(arg)
+        if arg in NINJA_OPTIONS_WITH_VALUE and index + 1 < len(args):
+            index += 1
+            options.append(args[index])
+        index += 1
+    return options
+
+
+def _run_with_watchdog(
+    ninja_exe: Path,
+    args: list[str],
+    build_time: str | None = None,
+) -> int:
     """Run the full-game ninja build, reaping the post-link Wine zombie wait."""
     _assert_no_existing_build()
     start = time.time()
@@ -369,8 +451,9 @@ def _run_with_watchdog(ninja_exe: Path, args: list[str]) -> int:
     # so leaked wine children can't hold a pipe fd open (that itself hangs EOF).
     with _termination_cleanup_scope():
         proc = subprocess.Popen(
-            ["wine", str(ninja_exe), "-v", "-k", "0", *args],
+            _ninja_argv(ninja_exe, args, build_time),
             cwd=str(BUILD_DIR),
+            env=_ninja_env(build_time),
             start_new_session=True,
         )
 
@@ -474,9 +557,20 @@ def main() -> None:
     # it plainly.
     targets = _explicit_targets(args)
     full_build = (not targets) or (DEFAULT_TARGET in targets)
+    date_sensitive = "-t" not in args
+    if date_sensitive and (full_build or "core" in targets):
+        _stop_wine_session()
+        core_args = [*_ninja_options(args), "core"]
+        rc = _run_plain(ninja_exe, core_args, RETAIL_CORE_BUILD_TIME)
+        _kill_prefix_processes(("mspdbsrv.exe",))
+        _stop_wine_session(RETAIL_CORE_BUILD_TIME)
+        if rc != 0 or (targets == ["core"] and not full_build):
+            sys.exit(rc)
+
     if full_build:
-        _prepare_clean_final_pdb(ninja_exe, args)
-        rc = _run_with_watchdog(ninja_exe, args)
+        build_time = RETAIL_GAME_BUILD_TIME if date_sensitive else None
+        _prepare_clean_final_pdb(ninja_exe, args, build_time)
+        rc = _run_with_watchdog(ninja_exe, args, build_time)
     else:
         rc = _run_plain(ninja_exe, args)
 
@@ -487,6 +581,8 @@ def main() -> None:
     # stall per rebuild. The PDB is fully written once ninja returns, so
     # killing it here is safe; respawning next build costs ~a second.
     _kill_prefix_processes(("mspdbsrv.exe",))
+    if full_build and date_sensitive:
+        _stop_wine_session(RETAIL_GAME_BUILD_TIME)
     sys.exit(rc)
 
 

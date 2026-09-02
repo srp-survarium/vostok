@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "lobby_menu.h"
 #include "game_project.h" // complete simple_game_project for the resource_ptr dtor
@@ -40,7 +38,7 @@ namespace survarium {
 	, m_in_destroying					( false )
 	, m_match_stats						( )
 {
-	m_camera = NEW( lobby_camera )( *this );
+	m_camera = VOSTOK_NEW_IMPL( ::survarium::g_allocator, lobby_camera )( *this );
 	get_camera_director( ).switch_to_camera( m_camera, "lobby camera" );
 	init_physics( );
 	query_scene_resources( );
@@ -54,8 +52,8 @@ namespace survarium {
 	if ( m_update_friends_status_handler.m_active )
 		scheduler( ).unregister( &m_update_friends_status_handler );
 
-	DELETE( m_camera );
-	DELETE( m_character );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_camera );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_character );
 
 	m_lobby_game_project = NULL;
 

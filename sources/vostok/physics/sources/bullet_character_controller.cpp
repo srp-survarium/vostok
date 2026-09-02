@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 05.10.2025
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "bullet_character_controller.h"
 
@@ -25,13 +23,13 @@ static bool  s_cc_prevent_step_bouncing_value			= true;
 static console_commands::cc_bool  s_cc_prevent_step_bouncing_cc				( "cc_prevent_step_bouncing", s_cc_prevent_step_bouncing_value, false, console_commands::command_type_engine_internal );
 
 static u32 s_cc_smooth_positions_count_value			= 3;
-static console_commands::cc_u32 s_cc_smooth_positions_count_cc				( "cc_smooth_positions_count", s_cc_smooth_positions_count_value, 1, 100, true, console_commands::command_type_engine_internal );
+static console_commands::cc_u32 s_cc_smooth_positions_count_cc				( "cc_smooth_positions_count", s_cc_smooth_positions_count_value, 1, 100, false, console_commands::command_type_engine_internal );
 
 
 u16 const*	g_game_material_groups;
 s32			g_game_materials_count;
 
-static bool	logging	= false;
+bool	logging	= false;
 
 const btVector3 bullet_character_controller::m_up_vector = btVector3( 0.0f, 1.0f, 0.0f );
 
@@ -132,7 +130,7 @@ bullet_character_controller::bullet_character_controller(
 	m_collision_filter_mask		( collisionFilterMask ),
 	m_max_slope_in_radians		( math::pi_d3 ),
 	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
-	m_gravity					( 29.4f ),
+	m_gravity					( 9.8f * 3.0f ),
 	m_was_on_ground				( false ),
 	m_jumping					( false ),
 	m_useGhostObjectSweepTest	( true ),

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.tool - one module per external tool or operational helper.
 
     clangd            one-shot LSP queries over compile_commands.json: where is

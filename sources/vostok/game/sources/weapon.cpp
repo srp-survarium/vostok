@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "weapon.h"
 #include "game_world_ui.h"
@@ -31,31 +29,25 @@
 // TU-local console-command statics (file scope, no namespace prefix in the PDB).
 // finger_corrector_enable gates weapon::process_finger_correction.
 static bool s_enable_finger_corrector_value = true;
-static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
+static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, true, vostok::console_commands::command_type_user_specific );
 
 static bool s_draw_fire_point = false;
 static vostok::console_commands::cc_bool s_draw_fire_point_cc( "weapon_draw_fire_point", s_draw_fire_point, true, vostok::console_commands::command_type_user_specific );
 // hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
-// s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion. The
-// cc_float registration (dispersion_magic_coef_cc) takes the value's address, which keeps
-// the coef load alive in update_dispersion (without it MSVC folds the 1.0 default away).
-// sushi@TODO: the s_hide_crosshair_on_aim_value/s_dispersion_gui_scale_coef_value seeds and
-// the dispersion_magic_coef_cc command-name string are unrecoverable from the asm (data
-// section); cc_float min/max (0/10000) recovered from the initializer; function bytes are
-// seed/name-independent.
+// s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion.
 static bool s_hide_crosshair_on_aim_value = true;
-static float s_dispersion_gui_scale_coef_value = 1.0f;
+static float s_dispersion_gui_scale_coef_value = 120.0f;
 
 // aim FOV/near-plane transition duration, passed to player::set_target_fov_factor in
 // instant_aim_start/end (the [s_aim_transition_time] float-pool memload). sushi@TODO:
 // seed unrecoverable from asm (data section); 0.3f matches the documented aim transition.
 static float s_aim_transition_time = 0.3f;
-static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_magic_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_user_specific );	// sushi@TODO: name string + min/max source unverified
+static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_gui_scale_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
 // shared light-id counter (also in object_light.cpp); each light grabs ++light_ids.
-static u32 light_ids = 1000000;
+u32 light_ids = 1000000;
 
 // claude@NOTE: STUB-grade structure (6 target stmts vs our many). The target emits the
 // member-init/light_props setup as ONE batched /Od statement (line 86, 0x12d bytes,
@@ -63,8 +55,7 @@ static u32 light_ids = 1000000;
 // m_barrel/m_scope = identity). Walled structurally: m_weapon_fire_light_props is built
 // field-by-field here, but render::light_props has NO out-of-line ctor in our headers
 // (sushi@TODO in light_props.h) so we cannot reproduce the single batched statement - each
-// field assignment becomes its own line record (16 stmts). light_ids is a shared global
-// (file-static here + object_light.cpp, ?light_ids@survarium@@3IA via ICF). Field VALUES are
+// field assignment becomes its own line record (16 stmts). Field VALUES are
 // recovered (range=5, color=color_rgba(1,1,1,1)=0xFFFFFFFF, attenuation=2, intensity=1,
 // diffuse/specular=1, does_cast_shadows=true, type=point, anim_length const=200). Recovers
 // once the render-facade light_props ctor lands and the init can collapse.
@@ -235,6 +226,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 			0
 		)
 		.time_calculator		( &freeze_at_end_time_calculator )
+		.time_scale			( 0.5f )
 		.animated_object		( m_user )
 	);
 

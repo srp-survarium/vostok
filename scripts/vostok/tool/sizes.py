@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """
 count_sized.py - Display how much disk memory different extensions take in the project.
 """

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.sema.xref - the direct caller/callee graph, per side.
 
 `--callees` reads one function's call sites; the default direction scans the

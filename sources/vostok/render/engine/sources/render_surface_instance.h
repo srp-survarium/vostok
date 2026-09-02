@@ -17,7 +17,7 @@ struct render_surface_instance {
 	render_surface_instance( )
 	{
 		m_occlusion_info_index	= u32( -1 );
-		m_dynamic_screen_factor	= 0.f;
+		m_dynamic_screen_factor	= 1.f;
 		m_shader_lod_index		= 0;
 		m_occluded				= false;
 	}

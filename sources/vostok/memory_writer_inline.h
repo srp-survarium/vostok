@@ -10,7 +10,7 @@
 namespace vostok {
 namespace memory {
 
-static pcstr crlf = "\n";
+static pcstr crlf = "\r\n";
 
 inline void writer_base::write_u64	( u64 d )
 {
@@ -65,7 +65,7 @@ inline void	writer_base::write_string( pcstr p )
 inline void writer_base::write_string_CRLF	( pcstr p )
 {
 	write		( p, (u32)strlen( p ));	
-	write		( crlf, 1 );
+	write		( crlf, 2 );
 }
 
 inline void	writer_base::write_float3		( math::float3 const& vec )

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game_world_ui.h"
 #include "game_world.h"	// m_game_world.get_game()
@@ -28,9 +26,7 @@
 #include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/console_command.h>
 
-
-
-static bool is_ui_minimap_rotable		= true;
+static bool is_ui_minimap_rotable		= false;
 static bool is_ui_minimap_rotable_old	= is_ui_minimap_rotable;
 // The retained previous value detects user-specific console changes.
 

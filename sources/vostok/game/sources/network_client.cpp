@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "network_client.h"
 
@@ -31,10 +29,10 @@ namespace survarium {
 
 static bool s_show_network_statistics = false;
 static vostok::console_commands::cc_bool s_show_network_statistics_comand(
-	"show_network_statistics",
+	"net_stats",
 	s_show_network_statistics,
 	true,
-	vostok::console_commands::command_type_engine_internal
+	vostok::console_commands::command_type_user_specific
 );
 
  network_client::network_client( game& g, const bool is_spectator ) :

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.modules - which module owns a function.
 
 Ownership is a source question, not a link-layout one, and ICF makes the two

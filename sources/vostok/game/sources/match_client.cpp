@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "match_client.h"
 
@@ -13,12 +11,11 @@
 // dynamic initializers demangle without a survarium:: qualifier. Their string
 // members are constant-initialized in .data, so each dynamic initializer is just
 // the key ctor's protected_call( protected_key_construct, this ) tail. Read by
-// network_flow_emulator_options() outside MASTER_GOLD; literal names are a
-// best-guess (the .data they fill is unscored, only the dynamic init scores).
-static vostok::command_line::key	s_flow_emulator	( "net_flow_emulator", "", "network", "enable the network flow emulator" );
-static vostok::command_line::key	s_lost_packets	( "net_lost_packets", "", "network", "network flow emulator lost packet probability" );
-static vostok::command_line::key	s_min_ping		( "net_min_ping", "", "network", "network flow emulator minimum ping in ms" );
-static vostok::command_line::key	s_max_ping		( "net_max_ping", "", "network", "network flow emulator maximum ping in ms" );
+// network_flow_emulator_options() outside MASTER_GOLD.
+static vostok::command_line::key	s_flow_emulator	( "flow_emulator", "", "", "use network flow emulator" );
+static vostok::command_line::key	s_lost_packets	( "lost_packets", "", "", "probability of packets being lost on server side (flow emulator)" );
+static vostok::command_line::key	s_min_ping		( "min_ping", "", "", "set minimum ping time in milliseconds (flow emulator)" );
+static vostok::command_line::key	s_max_ping		( "max_ping", "", "", "set maximum ping time in milliseconds (flow emulator)" );
 
 // the flow-emulator options assembled from the keys are compiled out in
 // MASTER_GOLD; the function collapses to returning no options. STATIC at file

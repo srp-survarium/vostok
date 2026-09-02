@@ -285,7 +285,7 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	if ( m_family[rt_ssao_prev_accumulator_full_x].target.c_ptr() )
 	{
 		backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_full_x].target, 0, 0, 0 );
-		backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
+		backend::ref().clear_render_targets( 1.f, 0.f, 0.f, 0.f );
 		backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_z].target, 0, 0, 0 );
 		backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
 	}

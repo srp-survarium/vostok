@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.core.tsv - the one tracked-table convention.
 
 A tracked table is a tab-separated text file under `docs/binary_matching/`:

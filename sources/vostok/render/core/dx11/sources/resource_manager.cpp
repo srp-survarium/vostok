@@ -674,13 +674,13 @@ res_texture* resource_manager::create_texture(
 		return load_texture( physical_name, parent, mip_level_cut, use_pool, load_async, use_converter, num_last_mips_used);
 }
 
-static pcstr resources_textures_sources_string		=	"resources.sources/textures/";
-static pcstr resources_textures						=	"resources/textures/";
+static pcstr resources_textures_converted_string	=	"resources/textures/";
+static pcstr resources_textures						=	"resources.sources/textures/";
 
 static void fix_texture_name( fs_new::virtual_path_string& str )
 {
-	change_substring(&str, resources_textures_sources_string, "");
 	change_substring(&str, resources_textures, "");
+	change_substring(&str, resources_textures_converted_string, "");
 	fs_new::virtual_path_string::size_type pos = str.rfind('.');
 	if (pos!=fs_new::virtual_path_string::npos)
 		str.set_length(pos);
@@ -757,7 +757,7 @@ void resource_manager::on_texture_loaded(
 
 	pcbyte const dds_ptr = static_cast< pcbyte >( managed_typed_ptr->buffer( ).c_ptr( ) );
 	u32 dds_size = managed_typed_ptr->buffer( ).size( );
-	bool is_srgb_option = read_srgb_flag( dds_ptr, dds_size );
+	bool is_srgb_option = !s_no_srgb_textures_result && read_srgb_flag( dds_ptr, dds_size );
 	--dds_size;
 
 	D3DX_IMAGE_INFO dds_info = { 0 };

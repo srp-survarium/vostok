@@ -480,7 +480,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		float4 xf = light_full_transform_invert.transform( float4( corners[p], 1.f ) );
 		cascade_volume.light_cuboid_points[p] = xf.xyz( );
 	}
-	for ( u32 plane = 0; plane < 4; ++plane )
+	for ( s32 plane = 0; plane < 4; ++plane )
 		for ( u32 point = 0; point < 4; ++point )
 
 		cascade_volume.light_cuboid_polys[plane].points[point] = facetable[plane][point];

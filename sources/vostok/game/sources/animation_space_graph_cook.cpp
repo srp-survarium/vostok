@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "animation_space_graph_cook.h"
 #include "animation_space_graph.h"
@@ -183,10 +181,7 @@ void animation_space_graph_cook::on_animations_loaded( resources::queries_result
 
 	std::pair< u32, u32 > mixes_count = get_animation_mixes_count( groups );
 
-
-
-
-	animation_space_graph* graph = new ( MALLOC(
+	animation_space_graph* graph = new ( VOSTOK_MALLOC_IMPL( ::survarium::g_allocator,
 		sizeof( animation_space_graph ) +
 		animations_count * sizeof( animation_space_vertex ) +
 		mixes_count.first * sizeof( std::pair< animation_space_vertex const*, animation_space_vertex const* > ) +

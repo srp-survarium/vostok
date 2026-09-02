@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """
 vostok.build.generate_objdiff_config - generate the config `objdiff` consumes.
 """

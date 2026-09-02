@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive.maxima - the hash-scoped MAX, and what may reset it.
 
 MAX is the campaign's correctness gate: the best score PROVEN for a given source
@@ -15,8 +14,8 @@ function, so this module is a pure fold: previous evidence in, this build's
 observations folded on top, out.
 """
 
-import re
 import hashlib
+import re
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
@@ -142,13 +141,13 @@ def fold(pairing, artifacts, banked):
         if extent is None:
             continue
         effective_hash = source_hash(extent[3])
+        previous = banked.get(mangled)
         if (previous is not None and previous[0] != effective_hash
                 and previous[0] == source_hash(extent[4])):
             # the same body, banked before extents followed `#line`: re-key
             # the evidence under the hash that now describes it, no reset
             previous = (effective_hash, previous[1])
             rekeyed += 1
-        previous = banked.get(mangled)
         maximum = canonical_peak(pair.fuzzy)
         if previous is not None and previous[0] == effective_hash:
             previous_maximum = canonical_peak(previous[1])

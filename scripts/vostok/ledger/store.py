@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """match_state - the committed matching ledger, one text row per function.
 
 Replaced the committed `match.db` blob, and then the cache behind it. SQLite

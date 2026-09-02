@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-License-Identifier: GPL-3.0-or-later
 """vostok.derive - report.json + the rich indexes -> the match roster.
 
 The derivation nobody else may duplicate. Given artifacts that already exist -

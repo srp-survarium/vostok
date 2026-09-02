@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 #include <vostok/login_server/login_structures.h>
@@ -25,7 +23,7 @@ void login_client_impl::on_sign_up_answer_received(
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, unable_to_read_from_socket, login_server_invalid_message_type, sign_up_info );
-		LOG_ERROR			( "[LOGIN] on_SIGN_UP_answer_received: error during reading from socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] on_SIGN_UP_answer_received: error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -59,7 +57,7 @@ void login_client_impl::on_sign_up_info_written(
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type, sign_up_info );
-		LOG_ERROR			( "[LOGIN] on_SIGN_UP_password_written: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] on_SIGN_UP_password_written: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -143,7 +141,7 @@ void login_client_impl::on_sign_up_account_answer_received(
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, unable_to_read_from_socket, login_server_invalid_message_type, sign_up_info );
-		LOG_ERROR			( "[LOGIN] on_SIGN_UP_answer_received: error during reading from socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] on_SIGN_UP_answer_received: error during reading from socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -204,7 +202,7 @@ void login_client_impl::on_sign_up_written(
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type, sign_up_info );
-		LOG_ERROR			( "[LOGIN] SIGN_UP: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] SIGN_UP: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 

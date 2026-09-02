@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 
@@ -23,7 +21,7 @@ void login_client_impl::on_sign_out_password_written(
 		m_client_state		= signed_out;
 		close_connection	( true );
 		callback			( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type );
-		LOG_ERROR			( "[LOGIN] write_password_during_sign_OUT: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] write_password_during_sign_OUT: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -84,7 +82,7 @@ void login_client_impl::on_sign_out_written( boost::function< void ( connection_
 		close_connection	( true );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, no_handshake, unable_to_write_to_socket, login_server_invalid_message_type );
-		LOG_ERROR			( "[LOGIN] SIGN_OUT: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] SIGN_OUT: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 

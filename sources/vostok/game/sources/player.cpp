@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "player.h"
 #include "player_creation_params.h"	// params.game_scene field
@@ -116,10 +114,10 @@ player::~player( )
 {
 	inventory( ).unset_holder( );
 
-	DELETE( m_damage_collision );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_damage_collision );
 
-	DELETE( m_target.physics_controller );
-	DELETE( m_current.physics_controller );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_target.physics_controller );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_current.physics_controller );
 }
 
 // claude@NOTE: target and base share five statements and a ten-block CFG. The

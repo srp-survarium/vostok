@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game.h"
 #include "login_menu.h"
@@ -21,7 +19,7 @@
 
 namespace survarium {
 
-static bool s_store_user_pass	= true;
+bool s_store_user_pass	= false;
 static vostok::console_commands::cc_bool s_store_user_pass_cc	( "store_user_password", s_store_user_pass, true, vostok::console_commands::command_type_user_specific );
 
 void login_menu_external_handler::callback(
@@ -80,7 +78,7 @@ void login_menu::on_resources_ready( resources::queries_result& data )
 	m_cursor_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[3].get_unmanaged_resource( ) );
 	m_cursor_ui->movie->SetBackgroundAlpha( 0.f );
 
-	m_login_menu_ui->movie->SetExternalInterface( NEW( login_menu_external_handler )( get_game( ), *this ) );
+	m_login_menu_ui->movie->SetExternalInterface( VOSTOK_NEW_IMPL( ::survarium::g_allocator, login_menu_external_handler )( get_game( ), *this ) );
 
 	m_login_menu_ui->movie->SetViewAlignment( flash_movie::Align_Center );
 	m_login_menu_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );

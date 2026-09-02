@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.build - driving the era toolchain, and the artifacts it produces.
 
 The loop, in order:

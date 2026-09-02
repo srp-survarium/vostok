@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "human_npc_cook.h"
 #include "human_npc.h"
@@ -94,7 +92,7 @@ void human_npc_cook::on_npc_options_received(
 	configs::binary_config_value const& attributes		= config_value["attributes"];
 	configs::binary_config_value* project_config		= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
 
-	human_npc* const human								= NEW( human_npc )( m_game_world );
+	human_npc* const human								= VOSTOK_NEW_IMPL( ::survarium::g_allocator, human_npc )( m_game_world );
 
 
 	pcstr brain_unit_path								= attributes["brain_unit"];

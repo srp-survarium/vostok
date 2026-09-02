@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 // the original compiland really is messaging_client_process_messagess.cpp
 // (sic, PDB-attested typo) - keep the filename
 
@@ -184,7 +182,7 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 		m_network_client.send	( packet );
 	}
 	else
-		m_chat_handler.add_message		( messaging::player_system_channel, L"not connected to messaging server", L"System" );
+		m_chat_handler.add_message		( messaging::player_system_channel, L"not connected to messaging server...", L"System" );
 }
 
 void messaging_client::query_for_friend_list( )
