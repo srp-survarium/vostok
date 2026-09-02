@@ -17,6 +17,8 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
+      #   6262ce1  extends focused DBI queries with module-local file/C13 order.
+      #   90e7d9e  adds causal module/type/frame evidence and a focused DBI query.
       #   1eee4a0  decodes residual DBI string/hash tables, TPI/IPI hashes and
       #            index maps, GSI/PSI maps, C13 inner records, and optional
       #            FPO/frame-data streams instead of hiding them as raw bytes.
@@ -56,7 +58,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/1eee4a0a155f9ec911638f639c00818b2a84070e";
+      url = "github:srp-survarium/vostok-pdb-parser/6262ce150b12729b865a7eca6d82ad563256ba20";
       flake = false;
     };
     vcproj2ninja-src = {

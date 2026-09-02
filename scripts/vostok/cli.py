@@ -16,8 +16,9 @@
     vostok data <verb>             independent PDB/image data matching lane
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
-    vostok tool <name>             one external tool: clangd / toolchain / libs,
-                                   plus `usage` - the read-back of the usage log
+    vostok tool <name>             operational helpers: clangd / toolchain /
+                                   libs / pdb-order-probe, plus `usage` - the
+                                   read-back of the usage log
 
 Every one of these processes appends a line to binaries/vostok_usage.log
 (vostok.core.log): what was run, on which branch, how long it took, and how it
@@ -44,6 +45,7 @@ TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "libs-release": "vostok.tool.libs_release",
          "libs": "vostok.tool.libs", "sizes": "vostok.tool.sizes",
          "breakpoints": "vostok.tool.breakpoints",
+         "pdb-order-probe": "vostok.tool.pdb_order_probe",
          "usage": "vostok.tool.usage"}
 
 

@@ -17,21 +17,6 @@ enum channels_type
 	channels_type_count,
 }; // enum channels_type
 
-enum channels 
-{
-	front_left = 0,
-    front_right,
-    front_center,
-    lfe,
-    back_left,
-    back_right,
-    back_center,
-    side_left,
-    side_right,
-
-	channels_count
-}; // enum channels_type
-
 } // namespace sound
 } // namespace vostok
 

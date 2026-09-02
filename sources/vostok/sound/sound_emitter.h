@@ -9,6 +9,7 @@
 
 #include <vostok/sound/api.h>
 #include <vostok/sound/sound_instance_proxy.h>
+#include <vostok/sound/sound_cone_type.h>
 #include <vostok/sound/emitter_type.h>
 
 namespace vostok {

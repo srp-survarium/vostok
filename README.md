@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-09-02 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-09-03 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -54,7 +54,7 @@ _The projection has 14,350 paired copies across 1,695 units and 31,691 unresolve
 
 _The linked-image audit is 3.99% exact and covers 98.57% by PDB type extent, with 86.37% paired-only fidelity (10656 / 12178 definitions). Integrity ratchet: armed._
 
-_Updated 2026-09-02._
+_Updated 2026-09-03._
 <!-- data-match:end -->
 
 ## Requirements
@@ -101,6 +101,12 @@ python3 -m vostok tool clangd def   <file> <line> [col]   # definition; also ref
 ```
 
 clang is a reader here; the Wine build is the only verdict on correctness.
+
+To investigate linker/PDB ordering without rebuilding game sources, run the
+fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
+It records commands, artifacts, and complete `pdb_topology --order --json`
+comparisons under `binaries/gen/pdb-order-probes/`; see
+[`pdb_topology.md`](docs/binary_matching/pdb_topology.md#causal-order-probes).
 
 ## Third-party libs and the GFx suite
 

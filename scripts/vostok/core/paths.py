@@ -208,6 +208,11 @@ GFX_RELEASE_PREFIX = GFX_TREE_PREFIX
 
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
+# Tiny committed VS2008 inputs and generated evidence for causal PDB-order
+# experiments. These never compile or link the game.
+PDB_ORDER_PROBE_FIXTURES = SCRIPTS / "vostok" / "tool" / "data" / "pdb_order_probes"
+PDB_ORDER_PROBE_OUTPUT = GEN_DIR / "pdb-order-probes"
+
 REBUILD_LOG = BINARIES / "rebuild.log"
 
 

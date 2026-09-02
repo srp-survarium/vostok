@@ -16,16 +16,16 @@ inputs or emitted code, not instructions to reorder source blindly.
 
 ## Current reproducible snapshot
 
-The candidate is commit `392c006ecfded9bcb9456300a877e48b2f121b93`,
-built and then clean-HEAD rebuilt in an isolated worktree and Wine prefix with
-`python3 -m vostok build -j6`. Both full builds measured 75.66% code and 37,041
-/ 44,600 exact functions, with zero regressions or improvements. The comparison
-uses pinned `vostok-pdb-parser` commit
-`1eee4a0a155f9ec911638f639c00818b2a84070e`.
+The candidate is the measured `tooling/pdb-order-causal-attribution` worktree,
+based on xray commit `87f0201c6aedaee2dd865316188cf421f294eb52` plus the
+sound correction documented below. Its authoritative full build measured
+75.66% code and 37,041 / 44,600 exact functions, with zero regressions or
+improvements. The comparison uses pinned `vostok-pdb-parser` commit
+`6262ce150b12729b865a7eca6d82ad563256ba20`.
 
 | PDB | bytes | SHA-256 |
 |---|---:|---|
-| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 104,352,768 | `5affe3a5a921b9155ae0ee38324463e91dea0123909046c9b95cfad8f701ab75` |
+| candidate `binaries/Win32/survarium-dx11-win32-gold.pdb` | 104,352,768 | `2f91069016de117c57b5ee6341ed72dc7ee9dd172f892027639fdb6d43f777e8` |
 | retail `survarium.pdb` | 101,673,984 | `0ffe85c27f8b95f23a65d91866af3384ab24ca343b3865a57f71a08902d5a238` |
 
 Both PDBs record the engine tree under `c:\survarium\sources`, so the same
@@ -179,11 +179,11 @@ The physical files are materially different before semantic record pairing:
 |---|---:|---:|
 | file pages | 101,907 | 99,291 |
 | present stream slots | 2,165 / 2,165 | 2,408 / 2,410 |
-| declared stream bytes | 102,622,317 | 99,206,885 |
-| stream pages | 101,296 | 98,115 |
-| allocation runs | 2,268 | 2,519 |
-| fragmented streams | 46 | 44 |
-| active free pages | 4 | 740 |
+| declared stream bytes | 102,621,517 | 99,206,885 |
+| stream pages | 101,294 | 98,115 |
+| allocation runs | 2,266 | 2,519 |
+| fragmented streams | 44 | 44 |
+| active free pages | 6 | 740 |
 
 The candidate directory occupies 405 pages in one run; retail uses 393 pages in
 seven runs. This is real byte/container layout, but page-number equality is not
@@ -196,15 +196,23 @@ Representative record-order channels show where the difference comes from:
 | identified stream roles/slots | 2,166 | 2,409 | 2,110 | 19.1443% | 2,095 moved; 2,107 changed sizes/pages; 56 candidate-only, 299 retail-only |
 | DBI modules | 2,387 | 2,396 | 2,331 | 19.6655% | 2,329 moved; 56 candidate-only, 65 retail-only |
 | DBI EC strings | 958 | 1,139 | 687 | 42.4086% | 675 moved; 1,259/1,597 hash buckets differ |
-| global `/names` strings | 8,708 | 9,623 | 6,907 | 16.2759% | 6,905 moved; 10,514 candidate buckets differ and retail has 6,069 more buckets |
+| global `/names` strings | 8,708 | 9,623 | 6,907 | 16.2758% | 6,905 moved; 10,514 candidate buckets differ and retail has 6,069 more buckets |
 | all TPI record kinds | 457,630 | 460,370 | 457,580 | 1.3820% | occurrence pairing finds 148,913 changed records; insertions make this a physical diagnostic |
 | named complete TPI records | 33,706 | 33,896 | 30,926 | 16.8261% | 30,926 moved; 4 changed; 262 multiplicity; 877 non-unique keys excluded |
+| named TPI direct module references | 7,985 | 7,407 | 7,034 | 16.9075% | 7,034 moved; 2,366 reference sets changed; 50 multiplicity; 35 non-unique keys excluded |
 | global symbol stream | 160,408 | 155,692 | 145,083 | 4.7647% | 145,081 moved; 158 multiplicity; 1,279 non-unique keys excluded |
 | GSI serialized hashes | 81,844 | 77,304 | 67,240 | effectively zero | only 3 pair inversions; resolved identity order is almost exact |
 | PSI serialized hashes | 78,564 | 78,388 | 77,843 | 0% | shared unique hash-record order is exact |
 | PSI public address map | 78,564 | 78,388 | 77,843 | 3.6975% | 77,048 moved, reflecting different final addresses/order |
-| legacy FPO | 13,906 | 13,992 | 729 | 0% order | 721 shared keys have changed payload/address data |
-| frame data | 60,101 | 58,810 | 1,823 | 0% order | 1,822 shared keys have changed payload/address data |
+| legacy FPO | 13,906 | 13,992 | 10,427 | 3.4215% | 9,986 moved; 1,859,789 inversions; 765 shared payloads differ |
+| frame data | 60,101 | 58,810 | 19,347 | 19.8941% | 18,508 moved; 37,230,579 inversions; 817 shared payloads differ |
+
+An earlier version of this audit reported only 729 shared FPO and 1,823 shared
+frame rows, both with zero inversions. That was a comparator defect: it paired
+records by their changed RVAs. The current parser resolves unique RVAs back to
+stable module/procedure identities and keeps unresolved or ambiguous records on
+the weaker RVA key. The much larger shared populations and nonzero order gaps
+above are the corrected result, not a new linker regression.
 
 “Moved” is deliberately sensitive: moving one intact block marks records in
 both blocks. The report therefore also gives pair inversions, LIS, retained and
@@ -222,9 +230,9 @@ Of 2,331 uniquely paired module scopes:
 | source-file reference order | 1,679 |
 | all raw symbol records | 1,689 |
 | recognized top-level symbol sequence | 1,470 |
-| file-checksum records | 2,294 |
-| line-program records | 2,105 |
-| C13 subsection sequence | 1,201 |
+| file-checksum records | 1,679 |
+| line-program records | 1,316 |
+| C13 subsection sequence | 1,200 |
 | C13 local string tables | 0 |
 | C13 frame/inlinee/cross-map/other payloads | 0 |
 
@@ -250,8 +258,14 @@ be resolved by arbitrarily selecting a record.
 DBI library grouping explains part of the movement. Of 51 multi-member library
 groups, 27 preserve relative order for all shared objects. Several other groups
 are intact rotations. VFS, for example, contains the same 34-object and
-26-object blocks in opposite order. Neither PDB's DBI order is the archive
-member order: it reflects linker extraction/demand order.
+26-object blocks in opposite order. Neither PDB's DBI order is the raw archive
+member order. A full `/VERBOSE` relink extracts VFS in retail DBI order during
+pass 1 but still emits the candidate rotation, so the candidate DBI order does
+not reflect ordinary extraction/demand order. Small `/GL` probes likewise show
+that member order and root demand can disappear at LTCG integration while
+direct-input and separate-library order remain observable. The controlled
+evidence and failed split-library experiment are recorded in
+[`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
 
 The final response file already follows `RETAIL_LINK_LIBRARY_ORDER` in
 `scripts/vostok/build/ninja_regen.py`, derived independently from retail section
@@ -269,15 +283,25 @@ subsequence is already close (369 inverted pairs among 7,732 shared unique
 records). That supports targeted declaration/PCH investigation, not wholesale
 include reordering.
 
+The first such targeted production correction is now recorded in
+[`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
+It repairs sound header ownership/order across 39 measured compilands, makes two
+small sound objects exact in C13 source-file order, and is code-neutral. The
+sound population still contains large unrelated C13 residuals; this bounded
+result does not change the whole-PDB baseline table above into a completion
+score.
+
 ## Stability and limits
 
 A forced identical-input relink in the discovery audit deleted the output PDB
 first and rebuilt no object or library. The PDB changed in identity/checksum
 bytes, but all then-decoded module, named-TPI, global, and per-module symbol
 orders were identical. The expanded comparator's retail-vs-retail self-check
-reports zero moves, changes, one-sided rows, or differing scopes in all 58
-summary channels. Its unit and integration suite also checks synthetic stream
-reordering and malformed payloads.
+reports zero moves, changes, one-sided rows, or differing scopes in every
+summary channel. Its unit and integration suite also checks synthetic stream
+reordering and malformed payloads. The 110 ambiguous enum scopes in that
+self-check are genuine duplicate-name populations within retail, not
+target-vs-base differences.
 
 That establishes reproducibility for fixed inputs and comparator sanity. It
 does not turn linker-derived order into source-order proof. In particular:

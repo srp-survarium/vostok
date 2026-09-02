@@ -7,11 +7,10 @@
 #ifndef MEMORY_H_INCLUDED
 #define MEMORY_H_INCLUDED
 
-#include <vostok/sound/api.h>
-
 namespace vostok {
 namespace sound {
 
+typedef memory::doug_lea_allocator_type				allocator_type;
 extern allocator_type*							g_allocator;
 
 #define USER_ALLOCATOR							*::vostok::sound::g_allocator

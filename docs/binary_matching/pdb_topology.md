@@ -156,6 +156,55 @@ function-internal structure are the high-confidence `--classes`, enum-scope,
 and `--function` channels. The current measured coverage and confidence limits
 are recorded in `pdb_comparison_audit.md`.
 
+## Causal order probes
+
+Use the repository's fixed-input VS2008 probes before interpreting a whole-game
+order difference as a source or build lever:
+
+```sh
+python3 -m vostok tool pdb-order-probe
+python3 -m vostok tool pdb-order-probe --list
+python3 -m vostok tool pdb-order-probe --case archive-member-order
+```
+
+The harness compiles and links only tiny `/Z7` fixtures without the CRT. It
+keeps source and output paths fixed, changes one input per pair, and stores the
+exact commands, linker logs, file hashes, copied PDB/EXE artifacts, full
+`pdb_topology --order --json` reports, and channel summaries under
+`binaries/gen/pdb-order-probes/`. The directory is generated and gitignored;
+each invocation replaces it, so preserve a result externally if it must outlive
+the next run.
+
+The 21-case matrix separates direct object order, archive-member order,
+unresolved-root demand, and library order both with and without `/GL`/`/LTCG`.
+It also covers LTCG compilation chronology, direct-header order, PCH-internal
+order and composition, headers and declarations after a PCH, redundant includes
+on either side of the PCH boundary, type-contributor and within-TU type-use
+order, linker `/ORDER`, clean relinks, and replayed incremental relinks. A result
+establishes behavior for the small VS2008 fixture only. It is a causal model to
+test against the real link, not a license to reorder production inputs without
+target DBI/TPI/C13, section, and code evidence. The current conclusions and
+their open whole-game applications are tracked in
+[`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
+
+For a large real PDB, a focused query avoids loading TPI, global symbols, and
+physical stream topology when one module/library population is under test. It
+still decodes the DBI sequence and the matching modules' local C13 source-file,
+checksum, line, and subsection sequences:
+
+```sh
+pdb_topology \
+  --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order --module vostok_vfs --json
+```
+
+The case-insensitive substring is matched against both module and object/library
+names. The report retains the raw filtered target and base DBI sequences plus
+the usual unique-key inversion metrics and module-local C13 comparisons. Use
+the unfiltered `--order` command when TPI, public/frame, hash, or MSF channels
+are required.
+
 The output is divided by evidentiary strength:
 
 - **Explicit procedure evidence (high confidence):** procedure type/index,
