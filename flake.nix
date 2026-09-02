@@ -42,7 +42,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/e4ed03ee7496d2fb2703f93643c3e9c5a4bc6c6f";
+      url = "github:srp-survarium/vostok-pdb-parser/572a6ebd0732dfc358bfda0d7668b7bbc34993cf";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -58,7 +58,7 @@
     vostok-data-delinker-src = {
       # Gruntz's reviewed data-topology base. It writes a separate objdiff
       # project and therefore cannot perturb the code/MAX ledger.
-      url = "github:srp-survarium/vostok-delinker/81d34b204a0384a92cf3b4c641a8430256b2922e";
+      url = "github:srp-survarium/vostok-delinker/25719787a8b3d2dd5d461a6af3af837c45353079";
       flake = false;
     };
     objdiff-src = {
@@ -121,20 +121,6 @@
         src = vostok-pdb-parser-src;
         # Keep the campaign-specific raw CodeView topology query beside this
         # repository while it is evaluated for upstreaming into the parser.
-        postPatch = ''
-          patch -p1 < ${./tools/pdb_diff_all_files.patch}
-          patch -p1 < ${./tools/pdb_divergence_record_normalization.patch}
-          patch -p1 < ${./tools/pdb_divergence_line_table_counts.patch}
-          patch -p1 < ${./tools/pdb_source_line_collisions.patch}
-          patch -p1 < ${./tools/pdb_divergence_function_presence_sets.patch}
-          patch -p1 < ${./tools/pdb_divergence_function_fallbacks.patch}
-          patch -p1 < ${./tools/pdb_divergence_source_order.patch}
-          patch -p1 < ${./tools/pdb_divergence_zero_line_order.patch}
-          patch -p1 < ${./tools/pdb_divergence_line_group_order.patch}
-          patch -p1 < ${./tools/pdb_divergence_borrowed_line_order.patch}
-          patch -p1 < ${./tools/pdb_divergence_global_presence.patch}
-          cp ${./tools/pdb_topology.rs} src/bin/pdb_topology.rs
-        '';
         cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
       };
 
@@ -159,24 +145,9 @@
         pname = "vostok-data-delinker";
         version = "0.1.0";
         src = vostok-data-delinker-src;
-        patches = [
-          ./tools/vostok-data-manifest-folded-comdat.patch
-          ./tools/vostok-ilt-thunk-resolution.patch
-          ./tools/vostok-comdat-leader-nonzero-offset.patch
-          ./tools/vostok-grouped-section-names.patch
-          ./tools/vostok-legacy-data-not-into-comdat.patch
-          ./tools/vostok-data-hypothesis-must-contain.patch
-          ./tools/vostok-canonical-alias-owner.patch
-          ./tools/vostok-unprovisioned-identity-refusal.patch
-        ];
         # The data lane needs the identities and type-derived extents that the
         # delinker already reads from the PDB.  Exporting them is opt-in and
         # exits before normal COFF emission, so function pairing is unchanged.
-        postPatch = ''
-          patch -p1 < ${./tools/vostok_delinker_vostok_compat.patch}
-          patch -p1 < ${./tools/vostok_delinker_data_index.patch}
-          patch -p1 < ${./tools/vostok-delinker-missing-data-index.patch}
-        '';
         cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
         postInstall = ''
           mv $out/bin/vostok-delinker $out/bin/vostok-data-delinker
