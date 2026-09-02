@@ -20,6 +20,7 @@ toolchain. Run inside `nix develop` (the GFx build needs the pristine SDK:
 """
 import argparse
 import hashlib
+import os
 import shutil
 import subprocess
 import sys
@@ -62,8 +63,10 @@ def stage(work: Path) -> Path:
         shutil.rmtree(root)
     log(f"staging {LIBS_DIR} -> {root}")
     shutil.copytree(LIBS_DIR, root, symlinks=False)
-    for p in root.rglob("*"):
-        p.chmod(0o755 if p.is_dir() else 0o644)   # nix store copies are read-only
+    for d, dirs, files in os.walk(root):           # nix store copies are read-only: dirs first, top-down
+        os.chmod(d, 0o755)
+        for f in files:
+            os.chmod(os.path.join(d, f), 0o644)
     ship = root / "sources" / GFX_SRC
     ship.mkdir(parents=True, exist_ok=True)
     for name in gfx.DEFAULT_ORDER:
