@@ -194,20 +194,15 @@ SCALEFORM_SDK = Path(
 # the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
 GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 
-# The vostok-libs release ships the GFx suite PREBUILT, and its objects record
-# the tree the release was BUILT from - a foreign prefix to every other
-# checkout, exactly like the retail GFX_TARGET_PREFIX above. The base readers
-# strip it too, so release-staged libs key to the same `Src\...` paths as a
-# local rebuild. Bump this alongside any vostok-libs gfx release cut from a
-# different tree.
-GFX_RELEASE_PREFIX = r"z:\home\sheep\projects\survarium\vostok-gfx\binaries\gfx-sdk"
-
-# From now on the suite is compiled through a fixed Wine-side alias of
-# GFX_BUILD_TREE (C:\survarium\gfx-sdk, a symlink the toolchain creates beside
+# The suite is compiled through a fixed Wine-side alias of GFX_BUILD_TREE
+# (C:\survarium\gfx-sdk, a symlink the toolchain creates beside
 # C:\survarium\sources), so every object records this machine-independent
-# prefix instead of the checkout's Z: path. A release cut from it makes
-# GFX_RELEASE_PREFIX equal to this and the personal path above goes away.
+# prefix instead of the checkout's Z: path - and so does the vostok-libs
+# release, which `vostok tool libs-release` cuts from the same tree. The base
+# readers strip it like the retail GFX_TARGET_PREFIX above, so release-staged
+# and locally rebuilt libs key to the same `Src\...` paths.
 GFX_TREE_PREFIX = r"c:\survarium\gfx-sdk"
+GFX_RELEASE_PREFIX = GFX_TREE_PREFIX
 
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 

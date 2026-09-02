@@ -278,14 +278,16 @@
       # (built per the shipped PDB recipe; see docs + vostok/build/gfx.py).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
-        # gfx421r1: the GFx Shipping suite rebuilt from source with the 4.2.21
+        # gfx421r2: the GFx Shipping suite rebuilt from source with the 4.2.21
         # reconstructions (sockets config, pointers_to_members pragma,
-        # hash-verified header/TU rollbacks), plus the previously missing
-        # libgfxexpat.lib and pcre.lib the exe pragma-links.
+        # hash-verified header/TU rollbacks) plus libgfxexpat.lib and pcre.lib
+        # the exe pragma-links - cut by `vostok tool libs-release`, compiled
+        # through the C:\survarium\gfx-sdk alias so the objects record that
+        # neutral prefix (paths.GFX_RELEASE_PREFIX). Same machine code as r1.
         src = pkgs.fetchurl {
-          name = "vostok-libs-v0.100b-gfx421r1.zip";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx421r1.zip";
-          sha256 = "1k8mv572130nk9cc2nndlfpwxj56byiibllclskj3xmr297iw6cf";
+          name = "vostok-libs-v0.100b-gfx421r2.zip";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx421r2.zip";
+          sha256 = "3cd445a2c04518c14cbee924b597c672a747582646d76430abe878b94ccb4df2";
         };
         nativeBuildInputs = [ pkgs.unzip ];
       } ''
