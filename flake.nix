@@ -17,6 +17,9 @@
       # Pinned to the branch tip, newest first. Re-track master once these land.
       # Output is gitignored/reference-only, so a bump can never move the bytes.
       #
+      #   c8124fd  normalized order-distance/locality metrics, causal grouping
+      #            by library/record kind, and explicit base/target definition
+      #            orders for actionable source rows.
       #   ee1cfd5  raw class variant/multiplicity comparison and physical
       #            DBI/TPI/global/module-symbol order diagnostics.
       #   e4ed03e  reverts 93165d2: the undname-style record-name split was a
@@ -44,7 +47,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/ee1cfd5ee969e3975215949a5a5c4e95bb5ed7ef";
+      url = "github:srp-survarium/vostok-pdb-parser/c8124fd9a16eec429518c904d65dd128a499a23c";
       flake = false;
     };
     vcproj2ninja-src = {
