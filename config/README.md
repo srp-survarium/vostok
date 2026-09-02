@@ -28,6 +28,6 @@ reviewed overrides, and ratchets live here. Explanatory prose belongs in
 ## cleanliness/
 
 - `data-integrity-ratchet.tsv` holds maximum allowed projection debt. It remains
-  empty while the consumer-owned projection's target-only and unknown-extent
-  blocker classes are calibrated. This shadow mode does not relax the
-  independently hard-gated non-PDB datum census.
+  the Gruntz-style ceiling table for the consumer-owned projection. The same
+  `vostok data check --gate` invocation independently requires zero open
+  function datum-use rows across every module in the current match ledger.

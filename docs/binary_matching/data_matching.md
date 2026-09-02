@@ -85,6 +85,13 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   of `render`; its readable dossier is
   `docs/data_matching/MODULE_data_problems.md`. `render-relocs` remains
   the compatibility spelling used by the authoritative build.
+- `binaries/gen/data_module_reloc_report.json` aggregates every module present
+  in the current function ledger. Its module set is derived rather than
+  allowlisted, and each per-module report hash is pinned. The authoritative
+  build refreshes this complete denominator after regenerating the ledger.
+- `binaries/gen/data_function_open.tsv` is the corresponding complete work
+  queue. It contains every function datum-use row whose resolution is `OPEN`;
+  the zero gate requires it to contain only its header.
 - `binaries/data-objdiff/` is the complete parallel comparison project. The
   ordinary `binaries/objdiff/` project keeps its measured legacy delinker and
   objdiff CLI and never consumes data manifests.
@@ -140,6 +147,7 @@ python3 -m vostok data render-relocs PATTERN
 python3 -m vostok data module-relocs MODULE
 python3 -m vostok data module-relocs MODULE --check
 python3 -m vostok data module-relocs MODULE PATTERN
+python3 -m vostok data module-relocs all
 python3 -m vostok data report
 python3 -m vostok data function PATTERN
 python3 -m vostok data access PATTERN
@@ -202,10 +210,12 @@ literal, member, linkage, table entry, or named datum.
 
 `vostok data check` validates schemas and content hashes, requires every
 non-PDB datum to have all five reviewed fields, and requires the zlib control
-set to remain exact. `--gate` additionally reads the projection maxima in
-`config/cleanliness/data-integrity-ratchet.tsv`. The projection table stays in
-shadow mode until its target-only and unknown-extent blocker classes are
-calibrated; the non-PDB datum census is already hard-gated independently.
+set to remain exact. It also requires a fresh direct relocation report for
+every module in the function ledger. `--gate` additionally reads the projection
+maxima in `config/cleanliness/data-integrity-ratchet.tsv` and requires the
+aggregate function datum-use count with `resolution=OPEN` to be exactly zero.
+Raw relocation-set differences proved byte-exact for the current source-body
+hash remain visible as `HASH_MAX_EXACT` but do not count as open debt.
 
 The deferred PDB-extent review and shifting-candidate identity-transfer work is
 specified in

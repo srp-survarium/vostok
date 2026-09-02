@@ -174,6 +174,8 @@ DATA_RENDER_RELOC_AUDIT = data_module_reloc_audit("render")
 DATA_RENDER_EXTENTLESS = data_module_extentless("render")
 DATA_RENDER_FUNCTION_DATA = data_module_function_data("render")
 DATA_RENDER_RELOC_REPORT = data_module_reloc_report("render")
+DATA_MODULE_RELOC_REPORT = GEN_DIR / "data_module_reloc_report.json"
+DATA_FUNCTION_OPEN = GEN_DIR / "data_function_open.tsv"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,

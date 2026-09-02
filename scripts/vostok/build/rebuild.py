@@ -321,20 +321,23 @@ def main() -> None:
             log(f"WARNING: matching ledger NOT re-derived ({e}); "
                 "re-derive it with `python3 -m vostok derive refresh`")
 
-        # Render's direct relocation audit consumes the final function ledger,
-        # so refresh it after roster.regen rather than with the earlier image
-        # ledger. This keeps its input hash current at the end of every build.
+        # The direct relocation audits consume the final function ledger, so
+        # refresh every ledger module after roster.regen rather than with the
+        # earlier image ledger. The aggregate is the complete datum-use
+        # denominator; its zero gate remains an explicit `vostok data check
+        # --gate` while the queue is being drained.
         try:
-            from vostok.data import render_relocs
-            render_report = render_relocs.refresh()
+            from vostok.data import gate as data_gate
+            data_report = data_gate.refresh()
             log(
-                "render data relocation audit refreshed: "
-                f"{render_report['target_relocation_sites']:,} retail / "
-                f"{render_report['base_relocation_sites']:,} base sites."
+                "all-module data relocation audit refreshed: "
+                f"{data_report['summary']['modules']:,} modules, "
+                f"{data_report['summary']['open_function_data']:,} open "
+                "function datum-use rows."
             )
         except (Exception, SystemExit) as e:  # noqa: BLE001 - independent data lane
-            log(f"WARNING: render data relocation audit NOT refreshed ({e}); "
-                "refresh it with `python3 -m vostok data render-relocs`")
+            log(f"WARNING: all-module data relocation audit NOT refreshed ({e}); "
+                "refresh it with `python3 -m vostok data module-relocs all`")
 
         # ...and the README score block, the other report.json-derived artifact, so a
         # build keeps both current in one shot. Separately guarded: a score-write

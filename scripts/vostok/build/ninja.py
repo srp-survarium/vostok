@@ -116,6 +116,14 @@ _ACTIVE_BUILD_COMMS = (
     "link", "link.exe", "lib", "lib.exe",
 )
 
+# Short-lived workers whose disappearance proves a module build has stopped
+# compiling, archiving, or linking. Ninja itself and mspdbsrv are intentionally
+# absent: the Wine failure mode this detects leaves exactly those two alive.
+_MODULE_WORKER_COMMS = (
+    "cmd", "cmd.exe", "cl", "cl.exe", "link", "link.exe", "lib", "lib.exe",
+    "c1.dll", "c2.dll",
+)
+
 
 die = functools.partial(core_die, "ninja")
 
@@ -323,7 +331,14 @@ def _run_plain(
     args: list[str],
     build_time: str | None = None,
 ) -> int:
-    """Run a module-only Ninja build with interruption-safe Wine cleanup."""
+    """Run a module build and reap the post-PDB-server Ninja wait.
+
+    Wine can leave Ninja waiting on a spinning mspdbsrv even after every real
+    compiler/archive/link worker has exited. Unlike the final-game watchdog a
+    module build has no fixed EXE/PDB output pair, so wait for a full idle grace
+    period, kill only this invocation's PDB server, and still require Ninja to
+    return its own success status.
+    """
     _assert_no_existing_build()
     existing_pids = _prefix_process_ids(_INTERRUPT_BUILD_COMMS)
     with _termination_cleanup_scope():
@@ -333,8 +348,42 @@ def _run_plain(
             env=_ninja_env(build_time),
             start_new_session=True,
         )
+        idle_seconds = 0.0
+        start = time.time()
         try:
-            return proc.wait()
+            while True:
+                rc = proc.poll()
+                if rc is not None:
+                    return rc
+                time.sleep(POLL_SECONDS)
+                workers = (
+                    _prefix_process_ids(_MODULE_WORKER_COMMS) - existing_pids
+                )
+                idle_seconds = 0.0 if workers else idle_seconds + POLL_SECONDS
+                if idle_seconds >= IDLE_LIMIT_SECONDS:
+                    print(
+                        "[ninja] watchdog: no compiler/archive/link worker has "
+                        f"run for ~{int(idle_seconds)}s while Ninja has not "
+                        "returned; reaping this invocation's PDB server.",
+                        flush=True,
+                    )
+                    _kill_prefix_processes(
+                        ("mspdbsrv.exe",),
+                        exclude_pids=frozenset(existing_pids),
+                    )
+                    try:
+                        return proc.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        _stop_interrupted_build(proc, existing_pids)
+                        return 1
+                if time.time() - start > HARD_TIMEOUT_SECONDS:
+                    print(
+                        f"[ninja] watchdog: module hard timeout "
+                        f"({HARD_TIMEOUT_SECONDS}s); killing the build.",
+                        flush=True,
+                    )
+                    _stop_interrupted_build(proc, existing_pids)
+                    return 1
         except BaseException:
             _stop_interrupted_build(proc, existing_pids)
             raise

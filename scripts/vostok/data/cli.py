@@ -36,6 +36,7 @@ from collections import Counter
 from pathlib import Path
 
 from vostok.core import paths
+from vostok.data import gate as data_gate
 from vostok.data import missing, pipeline, render_relocs
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
@@ -197,6 +198,7 @@ def _check(gate: bool) -> int:
         paths.DATA_RENDER_RELOC_AUDIT, paths.DATA_RENDER_EXTENTLESS,
         paths.DATA_RENDER_FUNCTION_DATA, paths.DATA_RENDER_RELOC_REPORT,
         paths.DATA_RENDER_PROBLEMS,
+        paths.DATA_MODULE_RELOC_REPORT, paths.DATA_FUNCTION_OPEN,
     )
     missing_paths = [path for path in required if not path.is_file()]
     if missing_paths:
@@ -205,7 +207,7 @@ def _check(gate: bool) -> int:
         return 1
     if missing.check():
         return 1
-    if render_relocs.check():
+    if data_gate.check(require_zero=gate):
         return 1
     report = pipeline.load_report()
     if report.get("schema") != 2:
@@ -379,9 +381,19 @@ def main(argv: list[str] | None = None) -> int:
             render_relocs.print_report(render_relocs.refresh())
         elif args.command == "module-relocs":
             if args.check:
+                if args.module == "all":
+                    return data_gate.check(require_zero=True)
                 return render_relocs.check(args.module)
             if args.pattern:
                 return render_relocs.inspect(args.pattern, args.module)
+            if args.module == "all":
+                aggregate = data_gate.refresh()
+                print(
+                    "all-module datum use: "
+                    f"{aggregate['summary']['modules']} module(s), "
+                    f"OPEN={aggregate['summary']['open_function_data']:,}"
+                )
+                return 0
             module_report = render_relocs.refresh(args.module)
             render_relocs.print_report(module_report)
         elif args.command == "report":

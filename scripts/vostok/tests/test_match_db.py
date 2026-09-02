@@ -158,15 +158,37 @@ class CleanFinalPdbTests(unittest.TestCase):
 
     def test_interrupted_module_build_reaps_detached_wine_processes(self):
         proc = mock.Mock(pid=123)
-        proc.wait.side_effect = KeyboardInterrupt
+        proc.poll.return_value = None
         with (mock.patch.object(build_ninja, "_assert_no_existing_build"),
               mock.patch.object(build_ninja, "_prefix_process_ids", return_value={41, 42}),
               mock.patch.object(build_ninja.subprocess, "Popen", return_value=proc),
+              mock.patch.object(build_ninja.time, "sleep", side_effect=KeyboardInterrupt),
               mock.patch.object(build_ninja, "_stop_interrupted_build") as stop):
             with self.assertRaises(KeyboardInterrupt):
                 build_ninja._run_plain(Path("ninja.exe"), ["render"])
 
         stop.assert_called_once_with(proc, {41, 42})
+
+    def test_idle_module_build_reaps_only_its_pdb_server(self):
+        proc = mock.Mock(pid=123)
+        proc.poll.return_value = None
+        proc.wait.return_value = 0
+        with (mock.patch.object(
+                  build_ninja, "_prefix_process_ids",
+                  side_effect=(set(), {41, 42}, set()),
+              ),
+              mock.patch.object(build_ninja.subprocess, "Popen", return_value=proc),
+              mock.patch.object(build_ninja.time, "sleep"),
+              mock.patch.object(build_ninja, "IDLE_LIMIT_SECONDS", 5),
+              mock.patch.object(build_ninja, "_kill_prefix_processes") as kill):
+            self.assertEqual(
+                build_ninja._run_plain(Path("ninja.exe"), ["render"]), 0
+            )
+
+        kill.assert_called_once_with(
+            ("mspdbsrv.exe",), exclude_pids=frozenset({41, 42})
+        )
+        proc.wait.assert_called_once_with(timeout=30)
 
     def test_interrupted_full_build_reaps_detached_wine_processes(self):
         proc = mock.Mock(pid=123)

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from vostok.data.inventory import DataSymbol
 from vostok.data.inventory import identity_for
+from vostok.data.gate import _summary as _gate_summary
 from vostok.data.missing import (
     Candidate,
     ExtentIndex,
@@ -96,6 +97,28 @@ class FunctionDataResolutionTests(unittest.TestCase):
             _function_data_resolution("USE_DIFF", {"status": "inprogress"}),
             "OPEN",
         )
+
+
+class DataGateTests(unittest.TestCase):
+    def test_aggregate_counts_only_open_resolution_as_debt(self):
+        summary = _gate_summary({
+            "game": {
+                "target_relocation_sites": 10,
+                "base_relocation_sites": 11,
+                "open_function_data": 2,
+            },
+            "render": {
+                "target_relocation_sites": 20,
+                "base_relocation_sites": 19,
+                "open_function_data": 0,
+            },
+        })
+        self.assertEqual(summary, {
+            "modules": 2,
+            "target_relocation_sites": 30,
+            "base_relocation_sites": 30,
+            "open_function_data": 2,
+        })
 
 
 def _synthetic_pe(path: Path) -> None:
