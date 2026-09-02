@@ -805,7 +805,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 	else
 	{
 		set_ammunition( NULL );
-		LOG_INFO( "There is no ammo in both slots (%s)", request_path( ) );
+		LOGI_INFO( "weapon_core", "There is no ammo in both slots (%s)", request_path( ) );
 	}
 
 	m_ammo_slot = m_ammunition ? ( *m_ammunition ).profile_slot_id( ) : invalid_slot;

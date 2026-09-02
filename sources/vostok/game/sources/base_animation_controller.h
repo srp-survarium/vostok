@@ -24,7 +24,7 @@ namespace survarium {
 
 struct animation_controller_parameters;
 
-struct base_animation_controller : private boost::noncopyable {
+struct VOSTOK_NOVTABLE base_animation_controller : private boost::noncopyable {
 	virtual	void								initialize					( ) = 0;
 
 	virtual	animation::mixing::expression		try_finalize				( base_animation_controller& arg_0, mutable_buffer& arg_1 ) = 0;

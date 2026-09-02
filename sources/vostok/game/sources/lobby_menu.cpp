@@ -382,7 +382,7 @@ void lobby_menu::on_operation_denied_received( lobby_client_message_types_enum o
 			request_status_from_server		( 500 );
 		} break;
 	default:
-		break;
+		LOG_ERROR( "Unknown (operation denied) type received %d", op_type );
 	}
 }
 

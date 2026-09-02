@@ -16,7 +16,7 @@ namespace collision {
 namespace vostok {
 namespace physics {
 
-class base_physics_object : public loose_ptr_base {
+class VOSTOK_NOVTABLE base_physics_object : public loose_ptr_base {
 public:
 	inline						base_physics_object		( ) : user_data( NULL ) { }
 

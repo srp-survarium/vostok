@@ -29,9 +29,10 @@ from pathlib import Path
 
 from vostok.core import paths
 from vostok.core.tsv import write_if_changed
-from vostok.data import missing, pipeline
+from vostok.data import missing, pipeline, reviews as data_reviews
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
+from vostok.derive import maxima
 from vostok.ledger import store
 from vostok.sema import pairing as sema_pairing
 
@@ -72,7 +73,8 @@ FUNCTION_DATA_COLUMNS = (
     "target_cone_datum_count", "base_cone_datum_count", "cone_status",
     "cone_referent_paths", "cone_missing_target_datums",
     "cone_extra_base_datums",
-    "source_hash", "ledger_status",
+    "source_hash", "diff_hash", "review_status", "review_class",
+    "review_evidence", "ledger_status",
     "missing_target_datums", "extra_base_datums",
     "missing_base_definitions", "missing_target_definitions",
 )
@@ -180,6 +182,7 @@ class DatumIndex:
         self.function_identities = function_identities or {}
         self.exact: dict[int, list[Datum]] = defaultdict(list)
         self.by_identity: dict[str, list[Datum]] = defaultdict(list)
+        self.by_end: dict[int, list[Datum]] = defaultdict(list)
         self.pages: dict[int, list[Datum]] = defaultdict(list)
         self.starts_by_section: dict[str, list[int]] = defaultdict(list)
         for datum in datums:
@@ -187,6 +190,7 @@ class DatumIndex:
             self.by_identity[datum.identity].append(datum)
             if datum.complete:
                 assert datum.end is not None
+                self.by_end[datum.end].append(datum)
                 for page in range(datum.rva >> 12, ((datum.end - 1) >> 12) + 1):
                     self.pages[page].append(datum)
         for rva in sorted(self.exact):
@@ -266,6 +270,24 @@ class DatumIndex:
             f"S:{section.name}+{rva - section.rva:#x}"
             if section is not None else f"RVA:{rva:#x}",
         ))
+
+    def alias_owners(
+        self, rva: int, hint: str = "", *, one_past: bool = False,
+    ) -> tuple[Datum, ...]:
+        """Return every allocation spelling valid at one machine address."""
+        rows = list(self.exact.get(rva, ()))
+        rows.extend(
+            row for row in self.pages.get(rva >> 12, ())
+            if row.end is not None and row.rva <= rva < row.end
+        )
+        if one_past:
+            rows.extend(self.by_end.get(rva, ()))
+        owner = self.evidence_owner(rva, hint)
+        if owner is not None:
+            rows.append(owner)
+        return tuple(sorted(set(rows), key=lambda row: (
+            row.rva, row.size or 0, row.identity,
+        )))
 
 
 class _RangeIndex:
@@ -969,6 +991,43 @@ def _access_summary(rows: list[dict[str, str]]) -> str:
     )
 
 
+def _is_boost_asio_placeholder(identity: str) -> bool:
+    """Recognize Asio's value-less placeholder allocations.
+
+    MSVC gives the namespace globals a translation-unit-specific anonymous
+    namespace hash.  They are compiler-owned four-byte zero BSS allocations in
+    this executable; the hash spelling is not data identity.  Function-local
+    statics and their initialization guards remain ordinary named data.
+    """
+    return (
+        identity.startswith("E:?")
+        and not identity.startswith("E:??_B")
+        and "@placeholders@asio@boost@@" in identity
+        and "@?A0x" in identity
+    )
+
+
+def _boost_asio_placeholder_index(identity: str) -> int | None:
+    """Recover the source placeholder number across MSVC ownership spellings."""
+    if _is_boost_asio_placeholder(identity):
+        match = re.search(r"\?\$arg@\$0([0-9A-Fa-f]+)@", identity)
+        if match:
+            return int(match.group(1), 16) + 1
+    match = re.fullmatch(
+        r"L:(?:network|network_core):[^:]+\.obj:_([1-9][0-9]*)",
+        identity,
+    )
+    return int(match.group(1)) if match else None
+
+
+def _is_boost_stored_vtable(identity: str) -> bool:
+    """Recognize Boost.Function's two-pointer compiler-owned table."""
+    return (
+        (identity.startswith("L:") and identity.endswith(":stored_vtable"))
+        or identity.startswith("E:?stored_vtable@?1???$assign_to@")
+    )
+
+
 def _extentless_end(datum: Datum, index: DatumIndex) -> int:
     section = index.image.section_at(datum.rva)
     assert section is not None
@@ -983,6 +1042,15 @@ def _extentless_end(datum: Datum, index: DatumIndex) -> int:
         # MSVC's local static initialization guard is a 32-bit word even when
         # the fast path reads only its low byte.
         end = min(end, datum.rva + 4)
+    elif _is_boost_asio_placeholder(datum.identity):
+        # MSVC copies these otherwise value-less boost::arg placeholders with
+        # dword reads.  The surrounding BSS placement cannot supply an extent.
+        end = min(end, datum.rva + 4)
+    elif _is_boost_stored_vtable(datum.identity):
+        # boost::function's basic_vtable stores exactly the manager and invoker
+        # pointers.  MSVC alternates between a complete local CodeView record
+        # and a public-only record for the same compiler-owned allocation.
+        end = min(end, datum.rva + 8)
     if datum.identity.startswith("E:??_C@_0"):
         # `_0` string publics are narrow literals.  Their PDB public has no
         # trusted extent, but the first terminator is a semantic boundary;
@@ -1257,21 +1325,90 @@ def _write_tsv(path: Path, columns: tuple[str, ...], rows: list[dict[str, str]])
     write_if_changed(path, "\n".join(lines) + "\n")
 
 
+def _stable_relocation_signature(
+    targets: tuple[frozenset[str], ...],
+) -> tuple[tuple[str, ...], ...] | None:
+    """Retain only identities that are stable across the paired images."""
+    result = []
+    for identities in targets:
+        paired = tuple(sorted(
+            identity for identity in identities if identity.startswith("P:")
+        ))
+        if paired:
+            result.append(paired)
+            continue
+        mangled = tuple(sorted(
+            identity for identity in identities if identity.startswith("M:")
+        ))
+        if mangled:
+            result.append(mangled)
+            continue
+        named = tuple(sorted(
+            identity for identity in identities
+            if identity.startswith(("E:", "N:", "L:", "SELF+"))
+        ))
+        if not named:
+            return None
+        result.append(named)
+    return tuple(result)
+
+
 def _content_key(index: DatumIndex, datum: Datum) -> str | None:
-    """Identify compiler-owned constants by their complete normalized bytes."""
+    """Identify compiler-owned data by complete bytes and referents."""
+    placeholder = _boost_asio_placeholder_index(datum.identity)
+    if placeholder is not None:
+        # The same boost::arg<N> object is a one-byte TU-local `_N` on one
+        # image and a four-byte public-only Asio spelling on the other.  Its
+        # value-less source identity is stronger than the PDB's padded extent.
+        return f"A:boost-asio-placeholder:{placeholder}"
     size = None
     if datum.complete and datum.identity.startswith(("L:", "N:")):
         size = datum.size
-    elif datum.identity.startswith(("E:__real@", "E:__xmm@")):
-        size = _extentless_end(datum, index) - datum.rva
+    elif (
+        datum.identity.startswith(("E:__real@", "E:__xmm@"))
+        or _is_boost_asio_placeholder(datum.identity)
+        or _is_boost_stored_vtable(datum.identity)
+    ):
+        size = (
+            datum.size if datum.complete
+            else _extentless_end(datum, index) - datum.rva
+        )
     if not size:
         return None
-    _, normalized, offsets, _ = _window(index.image, datum.rva, size, index)
+    _, normalized, offsets, targets = _window(
+        index.image, datum.rva, size, index
+    )
     if offsets:
-        return None
-    digest = hashlib.sha256(normalized).hexdigest()
+        signature = _stable_relocation_signature(targets)
+        if signature is None:
+            return None
+        referents = "\0".join(
+            f"{offset:#x}:{'|'.join(identities)}"
+            for offset, identities in zip(offsets, signature)
+        ).encode()
+        digest = hashlib.sha256(normalized + b"\0RELOCS\0" + referents).hexdigest()
+    else:
+        digest = hashlib.sha256(normalized).hexdigest()
     preview = normalized[:16].hex()
     return f"C:{size:#x}:{preview}:{digest}"
+
+
+def _datum_token_for_datum(
+    index: DatumIndex,
+    datum: Datum,
+    counterpart: DatumIndex | None = None,
+) -> str:
+    key = _content_key(index, datum)
+    counterpart_rows = (
+        counterpart.by_identity.get(datum.identity, ())
+        if counterpart is not None else ()
+    )
+    if key is not None and not (
+        counterpart_rows
+        and not any(_content_key(counterpart, row) for row in counterpart_rows)
+    ):
+        return key
+    return f"I:{datum.identity}"
 
 
 def _datum_token(
@@ -1283,18 +1420,26 @@ def _datum_token(
     datum = index.evidence_owner(rva, hint)
     if datum is None:
         return " | ".join(sorted(index.resolve_all(rva)))
-    addend = rva - datum.rva
-    key = _content_key(index, datum)
-    counterpart_rows = (
-        counterpart.by_identity.get(datum.identity, ())
-        if counterpart is not None else ()
+    return _datum_token_for_datum(index, datum, counterpart)
+
+
+def _datum_token_aliases(
+    index: DatumIndex,
+    rva: int,
+    hint: str,
+    counterpart: DatumIndex | None = None,
+    *,
+    one_past: bool = False,
+) -> frozenset[str]:
+    if not hasattr(index, "alias_owners"):
+        return frozenset((_datum_token(index, rva, hint, counterpart),))
+    owners = index.alias_owners(rva, hint, one_past=one_past)
+    if not owners:
+        return frozenset((_datum_token(index, rva, hint, counterpart),))
+    return frozenset(
+        _datum_token_for_datum(index, datum, counterpart)
+        for datum in owners
     )
-    if key is not None and not (
-        counterpart_rows
-        and not any(_content_key(counterpart, row) for row in counterpart_rows)
-    ):
-        return f"{key}+{addend:#x}"
-    return f"I:{datum.identity}+{addend:#x}"
 
 
 def _content_keys(index: DatumIndex) -> set[str]:
@@ -1324,15 +1469,9 @@ def _token_is_available(
     ordinary code-use drift before the next expensive link.
     """
     if token.startswith("I:"):
-        identity, addend_text = token[2:].rsplit("+", 1)
-        addend = int(addend_text, 0)
-        return any(
-            addend >= 0 and (not datum.complete or addend <= (datum.size or 0))
-            for datum in index.by_identity.get(identity, ())
-        )
-    if token.startswith("C:"):
-        key, addend_text = token.rsplit("+", 1)
-        return int(addend_text, 0) >= 0 and key in content_keys
+        return bool(index.by_identity.get(token[2:], ()))
+    if token.startswith(("A:", "C:")):
+        return token in content_keys
     return False
 
 
@@ -1441,11 +1580,15 @@ def _function_data_rows(
     ledger: dict[str, dict],
     target_cones: CallConeIndex | None = None,
     base_cones: CallConeIndex | None = None,
+    reviews: dict[str, dict[str, str]] | None = None,
+    pairs: sema_pairing.Pairing | None = None,
 ) -> list[dict[str, str]]:
     groups: dict[tuple[str, str], dict] = defaultdict(lambda: {
         "paired": False,
         "target_rvas": set(), "base_rvas": set(),
         "target": defaultdict(set), "base": defaultdict(set),
+        "target_aliases": defaultdict(set),
+        "base_aliases": defaultdict(set),
     })
     for row in audit:
         key = (row["unit"], row["function"])
@@ -1468,12 +1611,26 @@ def _function_data_rows(
                 target_index, rva, row["target_identity"], base_index
             )
             group["target"][token].add(row["target_identity"])
+            group["target_aliases"][token].update(_datum_token_aliases(
+                target_index,
+                rva,
+                row["target_identity"],
+                base_index,
+                one_past=row.get("target_access") == "address",
+            ))
         if row["base_target_rva"] != "-":
             rva = int(row["base_target_rva"], 0)
             token = _datum_token(
                 base_index, rva, row["base_identity"], target_index
             )
             group["base"][token].add(row["base_identity"])
+            group["base_aliases"][token].update(_datum_token_aliases(
+                base_index,
+                rva,
+                row["base_identity"],
+                target_index,
+                one_past=row.get("base_access") == "address",
+            ))
 
     target_content = _content_keys(target_index)
     base_content = _content_keys(base_index)
@@ -1502,8 +1659,22 @@ def _function_data_rows(
             continue
         target_tokens = set(group["target"])
         base_tokens = set(group["base"])
-        missing = sorted(target_tokens - base_tokens)
-        extra = sorted(base_tokens - target_tokens)
+
+        def matches_peer(side: str, token: str, peer: str) -> bool:
+            aliases = group[f"{side}_aliases"].get(token, {token})
+            return any(
+                aliases & group[f"{peer}_aliases"].get(other, {other})
+                for other in group[peer]
+            )
+
+        missing = sorted(
+            token for token in target_tokens
+            if not matches_peer("target", token, "base")
+        )
+        extra = sorted(
+            token for token in base_tokens
+            if not matches_peer("base", token, "target")
+        )
         missing_base_definitions = [
             token for token in missing
             if token not in target_proven_in_base
@@ -1575,9 +1746,29 @@ def _function_data_rows(
                 )
             cone_referent_paths = ";".join(moved) or "-"
 
+        diff_payload = {
+            "status": status,
+            "target_count": len(target_tokens),
+            "base_count": len(base_tokens),
+            "missing": missing,
+            "extra": extra,
+            "missing_base_definitions": missing_base_definitions,
+            "missing_target_definitions": missing_target_definitions,
+            "cone_status": cone_status,
+            "cone_missing": cone_missing,
+            "cone_extra": cone_extra,
+        }
+        diff_hash = hashlib.sha256(json.dumps(
+            diff_payload, sort_keys=True, separators=(",", ":")
+        ).encode()).hexdigest()[:12]
         ledger_row = ledger.get(function, {})
+        source_hash = _current_source_hash(
+            function, unit, ledger_row, pairs
+        )
+        review = (reviews or {}).get(function)
+        reviewed = data_reviews.matches(review, source_hash, diff_hash)
         resolution = _function_data_resolution(
-            status, ledger_row, cone_status=cone_status
+            status, ledger_row, cone_status=cone_status, reviewed=reviewed
         )
 
         result.append({
@@ -1601,7 +1792,11 @@ def _function_data_rows(
             "cone_referent_paths": cone_referent_paths,
             "cone_missing_target_datums": cone_missing,
             "cone_extra_base_datums": cone_extra,
-            "source_hash": ledger_row.get("hash") or "-",
+            "source_hash": source_hash,
+            "diff_hash": diff_hash,
+            "review_status": (review or {}).get("status") or "-",
+            "review_class": (review or {}).get("wall_class") or "-",
+            "review_evidence": (review or {}).get("evidence") or "-",
             "ledger_status": ledger_row.get("status") or "-",
             "missing_target_datums": describe("target", missing),
             "extra_base_datums": describe("base", extra),
@@ -1615,11 +1810,54 @@ def _function_data_rows(
     return result
 
 
+def _current_source_hash(
+    function: str,
+    unit: str,
+    ledger_row: dict[str, object],
+    pairs: sema_pairing.Pairing | None,
+) -> str:
+    """Hash the checked-out source that owns one datum-use verdict.
+
+    Prefer the same PDB statement extent that scopes MAX.  Helpers without an
+    extent use their complete owning TU; this is broader, but it safely stales
+    a review on every relevant source change.  GFx PDB paths are rooted at the
+    SDK's ``Src`` directory while the reconstructed tree lives below
+    ``sources/scaleform``.
+    """
+    if pairs is not None:
+        record = pairs.base.get(function)
+        current = maxima.effective_source_hash(record)
+        if current is not None:
+            return current
+
+    candidates = [unit]
+    module = str(ledger_row.get("module") or "").casefold()
+    gfx_unit = module == "gfx" or unit.casefold().startswith("src/")
+    if gfx_unit:
+        relative = unit[4:] if unit.casefold().startswith("src/") else unit
+        # The lib-only overlay wins over both the shared reconstruction and
+        # the pristine SDK, matching build.gfx.materialize_tree().
+        candidates.extend((
+            f"scaleform/sdk-overlay/{relative}",
+            f"scaleform/{unit}",
+        ))
+    for candidate in candidates:
+        current = maxima.whole_source_file_hash(candidate)
+        if current is not None:
+            return current
+    if gfx_unit:
+        current = maxima.whole_source_tree_hash(paths.SCALEFORM_SDK, unit)
+        if current is not None:
+            return current
+    return "-"
+
+
 def _function_data_resolution(
     raw_status: str,
     ledger_row: dict[str, object],
     *,
     cone_status: str = "NOT_CHECKED",
+    reviewed: bool = False,
 ) -> str:
     """Separate raw relocation equality from hash-scoped byte proof.
 
@@ -1639,6 +1877,8 @@ def _function_data_resolution(
         return "HASH_MAX_EXACT"
     if cone_status == "EXACT":
         return "CALL_CONE_EXACT"
+    if reviewed:
+        return "REVIEWED_WALL"
     return "OPEN"
 
 
@@ -2082,6 +2322,7 @@ def _inputs() -> dict[str, str]:
         "ledger_sha256": pipeline._file_hash(paths.MATCH_STATE),
         "pdb_extents_sha256": pipeline._file_hash(paths.RETAIL_PDB_DATA_EXTENTS),
         "non_pdb_symbols_sha256": pipeline._file_hash(paths.RETAIL_DATA_SYMBOLS),
+        "wall_reviews_sha256": pipeline._file_hash(paths.CODEX_WALL_REVIEWS),
     }
 
 
@@ -2097,6 +2338,7 @@ class AuditContext:
     base_sites: dict[str, dict[int, Site]]
     target_cones: CallConeIndex
     base_cones: CallConeIndex
+    reviews: dict[str, dict[str, str]]
 
 
 def build_audit_context() -> AuditContext:
@@ -2132,6 +2374,7 @@ def build_audit_context() -> AuditContext:
             _direct_call_graph(pairs.base_records, base_image),
             base_tokens,
         ),
+        reviews=data_reviews.load(),
     )
 
 
@@ -2193,13 +2436,15 @@ def refresh(module: str = "render", context: AuditContext | None = None) -> dict
         ledger,
         context.target_cones,
         context.base_cones,
+        context.reviews,
+        pairs,
     )
     _write_tsv(artifacts.audit, AUDIT_COLUMNS, audit)
     _write_tsv(artifacts.extentless, EXTENTLESS_COLUMNS, extentless)
     _write_tsv(artifacts.function_data, FUNCTION_DATA_COLUMNS, function_data)
 
     report = {
-        "schema": 4,
+        "schema": 5,
         "module": module,
         "inputs": _inputs(),
         "target_relocation_sites": len(target_sites),
@@ -2287,7 +2532,7 @@ def check(module: str = "render") -> int:
               ", ".join(map(str, missing_paths)))
         return 1
     report = _load_report(module)
-    if report.get("schema") != 4 or report.get("module") != module:
+    if report.get("schema") != 5 or report.get("module") != module:
         print(f"unsupported {module} relocation report schema")
         return 1
     if report.get("inputs") != _inputs():

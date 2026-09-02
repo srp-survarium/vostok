@@ -34,7 +34,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > player_ptr;
 
-class base_network_client : private boost::noncopyable {
+class VOSTOK_NOVTABLE base_network_client : private boost::noncopyable {
 public:
 			explicit					base_network_client					( game& game );
 	virtual								~base_network_client				( );
