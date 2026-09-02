@@ -35,6 +35,12 @@ RELEASE_REPO = "srp-survarium/vostok-build-env"
 RELEASE_DATE = (2026, 1, 1, 0, 0, 0)
 
 
+def _wine_prefix() -> str:
+    """The source root the fresh objects record: GFX_BUILD_TREE as Wine spells it."""
+    from vostok.core.paths import GFX_BUILD_TREE
+    return "z:" + str(GFX_BUILD_TREE.resolve()).replace("/", "\\").lower()
+
+
 def log(msg: str) -> None:
     print(f"[libs-release] {msg}", flush=True)
 
@@ -111,6 +117,8 @@ def main() -> int:
     print("  2. In flake.nix (vostok-libs), set name/url to the new zip and")
     print(f'       sha256 = "{digest}";')
     print("  3. Re-enter `nix develop` so binaries.prebuilt/ is re-staged from the new package.")
+    print("  4. In vostok/core/paths.py set GFX_RELEASE_PREFIX to the tree the suite was built from:")
+    print(f'       GFX_RELEASE_PREFIX = r"{_wine_prefix()}"')
     if args.upload:
         subprocess.run(["gh", "release", "upload", RELEASE_TAG, str(output),
                         "--repo", RELEASE_REPO, "--clobber"], check=True)

@@ -77,7 +77,7 @@ the native `/home/...` path. The original game PDB instead uses
 ## Where the tooling lives (`scripts/vostok/`)
 
 All the Python tooling is one package - there are no loose `scripts/*.py` any
-more (what else lives in `scripts/` is non-Python: `ida/`, `vs/`, `samples/`,
+more (what else lives in `scripts/` is non-Python: `ida/`, `samples/`,
 the `*_tus.txt` lists, `create-toolchain-release.nix`). Every command in these
 docs runs it as `python3 -m vostok ...`, and the code is here:
 

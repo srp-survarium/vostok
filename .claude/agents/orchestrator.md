@@ -122,10 +122,10 @@ yours; do not load them.
 ## Work outside the main repo - one worktree per worker
 The main checkout is **read-only sequencing + final landing only** - never edit sources,
 run `vostok build`, enable a TU, or run a matcher in it. Every worker runs entirely inside a
-**sibling worktree** `/home/sheep/Projects/surv/vostok_<N>` - each a full checkout with its
+**sibling worktree** `<checkouts dir>/vostok_<N>` - each a full checkout with its
 OWN `binaries/` and `$PWD`-derived `WINEPREFIX`, so parallel Wine builds and `report.json`s
 never collide. In every worker prompt say: "work entirely inside `vostok_<N>`; start EVERY
-bash command with `cd /home/sheep/Projects/surv/vostok_<N> && ...`; never touch the main repo
+bash command with `cd <checkouts dir>/vostok_<N> && ...`; never touch the main repo
 or another worktree." Confirm the chosen worktree is clean and warm before dispatch
 (`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). `vostok build` regenerates the
 ninja graph itself on every run (write-if-changed), so resets/un-excluded TUs are picked up
