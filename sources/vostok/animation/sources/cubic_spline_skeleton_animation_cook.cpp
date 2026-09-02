@@ -8,6 +8,9 @@
 #include "cubic_spline_skeleton_animation_cook.h"
 #include "bi_spline_skeleton_animation_baked.h"
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
+#include <vostok/linkage_helper.h>
+
+VOSTOK_DECLARE_LINKAGE_ID(animation_cubic_spline_animation_cook)
 
 using vostok::animation::cubic_spline_skeleton_animation_cook;
 
