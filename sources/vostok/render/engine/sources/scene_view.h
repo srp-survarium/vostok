@@ -10,7 +10,6 @@
 #include <vostok/vectora.h>
 
 #include "camera.h"
-#include "light.h"
 #include "post_process_parameters.h"
 
 namespace survarium {
@@ -29,7 +28,14 @@ struct ambient_volume;
 struct environment_probe;
 struct decal_instance;
 struct grass_patch;
+class light;
 struct render_surface_instance;
+
+typedef intrusive_ptr<
+	light,
+	resource_intrusive_base,
+	threading::single_threading_policy
+> light_ptr;
 
 struct culling_result {
 	void* user_data;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_logic_jump_state.h"
 #include <vostok/game_core/base_player.h>
 
