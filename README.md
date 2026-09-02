@@ -181,7 +181,8 @@ release. The one part of that package this repo builds itself is the Scaleform
 GFx static-lib suite: the shipped exe links libs Survarium compiled from the
 pristine 4.2.22 SDK, and `vostok.build.gfx` reproduces them with the exact cl
 recipe the shipped PDB records (needs the SDK: `nix develop .#with-scaleform-sdk`,
-or a checkout in `$SCALEFORM_SDK`).
+or a checkout in `$SCALEFORM_SDK`). It compiles through the `C:\survarium\gfx-sdk`
+alias the toolchain creates, so the objects record a machine-independent prefix.
 
 ```sh
 python3 -m vostok.build.gfx                        # all 8 libs -> binaries.prebuilt/Win32/libraries/shipping/

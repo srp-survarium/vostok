@@ -37,8 +37,8 @@ RELEASE_DATE = (2026, 1, 1, 0, 0, 0)
 
 def _wine_prefix() -> str:
     """The source root the fresh objects record: GFX_BUILD_TREE as Wine spells it."""
-    from vostok.core.paths import GFX_BUILD_TREE
-    return "z:" + str(GFX_BUILD_TREE.resolve()).replace("/", "\\").lower()
+    from vostok.core.paths import GFX_TREE_PREFIX
+    return GFX_TREE_PREFIX
 
 
 def log(msg: str) -> None:
