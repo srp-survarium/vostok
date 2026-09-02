@@ -87,6 +87,7 @@ from vostok.derive.modules import module_of
 from vostok.derive.scores import report_fuzzy_scores
 
 from vostok.sema.pairing import pairing
+from vostok.core import log as _log
 
 
 class Roster:
@@ -349,4 +350,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.diff.tu_order", main))

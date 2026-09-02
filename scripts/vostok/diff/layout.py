@@ -59,6 +59,7 @@ from pathlib import Path
 from vostok.core.paths import ENGINE as BASE_HEADERS
 from vostok.core.paths import REPO as REPO_ROOT
 from vostok.core.paths import TARGET_HEADERS
+from vostok.core import log as _log
 
 # Namespaces we care about; everything else (boost, stlport, std, ...) is skipped.
 WANTED_ROOTS = ("vostok", "survarium")
@@ -913,4 +914,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    raise SystemExit(_log.run("vostok.diff.layout", main, sys.argv[1:]))

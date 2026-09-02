@@ -56,6 +56,7 @@ from vostok.core.paths import SLN as SLN_PATH
 from vostok.core.wine import winepath_w
 from vostok.core.log import logger
 from vostok.core.log import die as core_die
+from vostok.core import log as _log
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
 # the fingerprint says setup is already complete.
@@ -409,4 +410,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.toolchain", main))

@@ -23,9 +23,9 @@ import json
 import re
 import shutil
 import subprocess
-import sys
 from collections import defaultdict
 from pathlib import Path
+from vostok.core import log as _log
 
 
 _DYNAMIC_RE = re.compile(
@@ -298,4 +298,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.core.symbols", main))

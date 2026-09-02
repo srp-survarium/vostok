@@ -67,6 +67,7 @@ from vostok.core.paths import GFX_BUILD_TREE, GFX_TREE_PREFIX, PREBUILT, SCALEFO
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 from vostok.core.wine import drive_path
+from vostok.core import log as _log
 
 SDK = SCALEFORM_SDK.resolve()
 SHIP = PREBUILT / "Win32/libraries/shipping"
@@ -353,4 +354,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.build.gfx", main))

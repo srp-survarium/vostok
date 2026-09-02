@@ -3,5 +3,6 @@
 """`python3 -m vostok <command> ...`"""
 
 from vostok.cli import main
+from vostok.core import log as _log
 
-raise SystemExit(main())
+raise SystemExit(_log.run("vostok", main))

@@ -56,6 +56,7 @@ import sys
 from pathlib import Path
 
 from vostok.core.paths import STRUCTURE_DIR
+from vostok.core import log as _log
 
 # `enum NS::foo` or `enum NS::cls::foo` opening a definition. A trailing `;`
 # means a forward declaration (no body) - excluded by the regex.
@@ -257,4 +258,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.diff.enums_compare", main))

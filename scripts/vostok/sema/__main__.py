@@ -4,7 +4,8 @@
 
 import sys
 
+from vostok.core import log as _log
 from vostok.sema import main
 
 sys.argv[0] = "vostok.sema"
-main()
+raise SystemExit(_log.run("vostok.sema", main))

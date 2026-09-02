@@ -51,6 +51,7 @@ from vostok.derive.index import index_by_mangled, load_index_records
 from vostok.derive.names import qualified_name
 from vostok.core.wine import pdb_path
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
@@ -709,4 +710,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.generate_delink", main))

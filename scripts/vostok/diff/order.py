@@ -44,6 +44,7 @@ from pathlib import Path
 
 from vostok.core import paths
 from vostok.core.paths import STRUCTURE_DIR as STRUCTURE
+from vostok.core import log as _log
 
 # NAMESPACE buckets, not build modules - classes are keyed by the head of their
 # qualified name (see _module_of below), so every survarium:: type (all of `game`
@@ -475,4 +476,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.diff.order", main))

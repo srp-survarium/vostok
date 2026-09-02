@@ -8,6 +8,7 @@ import argparse
 import subprocess
 
 from vostok.core.paths import TARGET_SOURCES as BREAKPOINTS_DIR
+from vostok.core import log as _log
 
 
 def main():
@@ -63,4 +64,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.breakpoints", main))

@@ -40,6 +40,7 @@ from vostok.data import gate as data_gate
 from vostok.data import missing, pipeline, render_relocs
 from vostok.data.inventory import load
 from vostok.data.pe import PEImage
+from vostok.core import log as _log
 
 
 def _percent(value: float) -> str:
@@ -421,4 +422,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(_log.run("vostok.data.cli", main))

@@ -28,45 +28,11 @@ Usage:
 """
 
 import argparse
-import sys
 
-from vostok.core.paths import BINARIES, MATCH_DB_LOG
-from vostok.core.paths import REPO as VOSTOK
 from vostok.derive.roster import cmd_refresh
 
 
-def audit_log():
-    """Append this invocation to binaries/match_db.log (same format as
-    pdb_fetch.log: [timestamp][branch]: command) so a run's command history
-    is reconstructable. Never breaks the tool; skipped when binaries/ is absent."""
-    try:
-        log_dir = BINARIES
-        if not log_dir.is_dir():
-            return
-        import datetime
-        import subprocess
-
-        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
-        try:
-            branch = (
-                subprocess.run(
-                    ["git", "-C", str(VOSTOK), "rev-parse", "--abbrev-ref", "HEAD"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                ).stdout.strip()
-                or "?"
-            )
-        except Exception:
-            branch = "?"
-        with open(MATCH_DB_LOG, "a", encoding="utf-8") as f:
-            f.write(f"[{ts}][{branch}]: vostok derive {' '.join(sys.argv[1:])}\n")
-    except OSError:
-        pass
-
-
 def main():
-    audit_log()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

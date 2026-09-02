@@ -16,7 +16,13 @@
     vostok data <verb>             independent PDB/image data matching lane
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
-    vostok tool <name>             one external tool: clangd / toolchain / libs
+    vostok tool <name>             one external tool: clangd / toolchain / libs,
+                                   plus `usage` - the read-back of the usage log
+
+Every one of these processes appends a line to binaries/vostok_usage.log
+(vostok.core.log): what was run, on which branch, how long it took, and how it
+exited. `vostok tool usage` reads it back - that record is how the tooling
+learns which verbs earn their keep and which ones keep failing under agents.
 
 Every module is also a direct entry (`python3 -m vostok.sema xref ...`), which
 is the only spelling for the ones this umbrella does not name: the build steps
@@ -28,6 +34,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+from vostok.core import log as _log
 
 DIFF = {"layout": "vostok.diff.layout", "order": "vostok.diff.order",
         "tu-order": "vostok.diff.tu_order", "enums": "vostok.diff.enums",
@@ -36,7 +43,8 @@ TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "toolchain-release": "vostok.tool.toolchain_release",
          "libs-release": "vostok.tool.libs_release",
          "libs": "vostok.tool.libs", "sizes": "vostok.tool.sizes",
-         "breakpoints": "vostok.tool.breakpoints"}
+         "breakpoints": "vostok.tool.breakpoints",
+         "usage": "vostok.tool.usage"}
 
 
 def _run(module: str, argv: list[str], prog: str) -> int:
@@ -74,4 +82,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(_log.run("vostok", main))

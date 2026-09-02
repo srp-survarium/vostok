@@ -47,6 +47,7 @@ from vostok.core.paths import (
 from vostok.core.paths import ENGINE as ENGINE_DIR
 from vostok.core.wine import pdb_path
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 
 log = logger("rich")
@@ -140,4 +141,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.generate_rich", main))

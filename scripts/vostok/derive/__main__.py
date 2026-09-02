@@ -4,7 +4,8 @@
 
 import sys
 
+from vostok.core import log as _log
 from vostok.derive.cli import main
 
 sys.argv[0] = "vostok.derive"
-main()
+raise SystemExit(_log.run("vostok.derive", main))

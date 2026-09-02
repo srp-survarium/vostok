@@ -12,6 +12,7 @@ import os
 import sys
 
 from vostok.core.paths import SOURCES as SRC
+from vostok.core import log as _log
 
 
 ####################
@@ -60,4 +61,4 @@ def main():
         print(f"{humanize(size)} {ext}")
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.sizes", main))

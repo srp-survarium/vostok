@@ -16,12 +16,12 @@ roundtrip exits nonzero on any DIFF, so it can stand as an assertion.
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from vostok import shaders
 from vostok.core import paths
 from vostok.shaders import registry
+from vostok.core import log as _log
 
 
 def _coverage(args: argparse.Namespace) -> int:
@@ -155,4 +155,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.shaders", main))

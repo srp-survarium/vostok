@@ -32,6 +32,7 @@ import sys
 from vostok.core.paths import (BASE_PDB, RETAIL_SOURCE_PREFIX, STRUCTURE_DIR,
                                survarium_bin)
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 
 log = logger("structure")
@@ -127,4 +128,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.generate_structure", main))

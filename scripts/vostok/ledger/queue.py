@@ -63,7 +63,6 @@ Re-derive the live set anytime:
 
 import argparse
 import re
-import sys
 from pathlib import Path
 
 from vostok.core.paths import STRUCTURE_MISMATCH_QUEUE as QUEUE_FILE
@@ -71,6 +70,7 @@ from vostok.core.paths import STRUCTURE_MISMATCH_QUEUE as QUEUE_FILE
 from vostok.derive.names import fn_from_mangled
 from vostok.derive.roster import derive
 from vostok.ledger import store
+from vostok.core import log as _log
 
 # The 20 in-scope NON-RENDER engine modules (render matched last; game / game_core
 # are tracked only as the pre-seeded /Od BLOCKED block below).
@@ -472,4 +472,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.ledger.queue", main))

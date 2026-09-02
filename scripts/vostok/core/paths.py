@@ -209,7 +209,34 @@ GFX_RELEASE_PREFIX = GFX_TREE_PREFIX
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
-MATCH_DB_LOG = BINARIES / "match_db.log"
+
+
+def _main_worktree() -> Path:
+    """REPO, or - when REPO is a LINKED worktree - the main checkout.
+
+    Matching runs in throwaway sibling worktrees (`.claude/worktrees/`), each
+    with its own gitignored `binaries/`. A usage trail written there dies with
+    the worktree, so the one log that answers "how did the agents use the
+    tooling" is kept in the main checkout and keyed by branch. `.git` is read
+    rather than shelled out to: this resolves on every tool invocation.
+    """
+    dot_git = REPO / ".git"
+    try:
+        if dot_git.is_file():  # linked worktree: "gitdir: <main>/.git/worktrees/<n>"
+            gitdir = dot_git.read_text(encoding="utf-8").split("gitdir:", 1)[1]
+            main_git, sep, _ = gitdir.strip().partition("/worktrees/")
+            if sep:
+                return Path(main_git).parent
+    except (OSError, IndexError):
+        pass  # detached checkout, unreadable .git: log where we stand
+    return REPO
+
+
+# Every `python3 -m vostok...` invocation appends one line here (vostok.core.log
+# `record`); `vostok tool usage` reads it back. Same shape as pdb_fetch.log /
+# rebuild.log, but pooled in the main checkout so worktree agents
+# all feed the one trail.
+USAGE_LOG = _main_worktree() / "binaries" / "vostok_usage.log"
 
 # --- committed machine-readable state (config/, in git) --------------------
 DOCS_MATCHING = REPO / "docs" / "binary_matching"

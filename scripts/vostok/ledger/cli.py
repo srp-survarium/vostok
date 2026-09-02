@@ -42,6 +42,7 @@ import json
 import sys
 
 from vostok.ledger import store
+from vostok.core import log as _log
 
 EXACT = store.EXACT
 
@@ -309,4 +310,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.ledger.cli", main))

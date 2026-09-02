@@ -11,6 +11,7 @@ import struct
 from pathlib import Path
 
 from vostok.core.paths import OBJDIFF_DIR
+from vostok.core import log as _log
 
 
 VOSTOK_PRESET = [
@@ -144,4 +145,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    cli()
+    raise SystemExit(_log.run("vostok.build.generate_objdiff_config", cli))

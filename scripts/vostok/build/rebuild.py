@@ -50,6 +50,7 @@ from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import REPORT_HEAD
 from vostok.core.log import logger
 from vostok.core.log import die as core_die
+from vostok.core import log as _log
 
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
@@ -357,4 +358,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.rebuild", main))

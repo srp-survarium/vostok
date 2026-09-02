@@ -42,6 +42,7 @@ import sys
 from pathlib import Path
 
 from vostok.core import paths
+from vostok.core import log as _log
 
 VOSTOK = str(paths.REPO)
 STATE_PATH = str(paths.MATCH_STATE)
@@ -340,4 +341,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    raise SystemExit(_log.run("vostok.ledger.store", main, sys.argv))

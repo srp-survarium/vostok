@@ -34,6 +34,7 @@ from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
 from vostok.core.wine import drive_path
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 # clangd inputs at the repo root (gitignored, so absent on fresh clones and
 # worktrees). They only depend on flags and file sets, never on #includes.
@@ -326,4 +327,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.ninja_regen", main))

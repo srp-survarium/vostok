@@ -33,6 +33,7 @@ import time
 from pathlib import Path
 
 from vostok.core.paths import REPO as VOSTOK_DIR
+from vostok.core import log as _log
 
 
 class Clangd:
@@ -234,4 +235,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.clangd", main))

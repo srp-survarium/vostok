@@ -38,6 +38,7 @@ from vostok.core.paths import FLAKE_LOCK, MATCH_STATE, README, REPORT
 from vostok.derive.modules import module_of
 from vostok.ledger import store
 from vostok.core.fmt import pct as _pct
+from vostok.core import log as _log
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"
@@ -376,4 +377,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.ledger.readme", main))

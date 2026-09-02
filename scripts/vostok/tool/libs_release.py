@@ -23,13 +23,13 @@ import hashlib
 import os
 import shutil
 import subprocess
-import sys
 import zipfile
 from pathlib import Path
 
 from vostok.core.paths import BINARIES
 from vostok.tool.libs import GFX_SRC, LIBS_DIR
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 RELEASE_TAG = "v0.100b"
 RELEASE_REPO = "srp-survarium/vostok-build-env"
@@ -130,4 +130,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.tool.libs_release", main))

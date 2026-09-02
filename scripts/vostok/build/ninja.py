@@ -65,6 +65,7 @@ from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import WINEPREFIX as OWN_WINEPREFIX
 from vostok.core.log import die as core_die
+from vostok.core import log as _log
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
@@ -634,4 +635,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.build.ninja", main))

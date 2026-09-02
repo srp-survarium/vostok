@@ -19,6 +19,7 @@ import shutil
 from pathlib import Path
 
 from vostok.core.paths import PREBUILT, REPO
+from vostok.core import log as _log
 
 EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
 
@@ -102,4 +103,4 @@ def main():
     print(f"Copied {copied} files ({human_size(total_bytes)}) -> {dest}")
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.libs", main))

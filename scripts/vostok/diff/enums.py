@@ -77,6 +77,7 @@ from vostok.core import paths
 from vostok.core.paths import ENGINE as BASE_SOURCES
 from vostok.core.paths import ENUM_QUEUE as QUEUE_FILE
 from vostok.core.paths import TARGET_HEADERS as STRUCTURE_TARGET
+from vostok.core import log as _log
 
 # Engine namespaces we own and match (third-party lands under other namespaces,
 # emitted into the `others/` subtree - out of scope).
@@ -794,4 +795,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(_log.run("vostok.diff.enums", main))

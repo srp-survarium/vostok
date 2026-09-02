@@ -80,6 +80,7 @@ verdict from the printed `flow SAME | DIFFERS` line, never from rc.
 
 import argparse
 import sys
+from vostok.core import log as _log
 
 
 #: what every verb accepts as <fn>. Spelled out because the one thing a reader
@@ -149,4 +150,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.sema", main))

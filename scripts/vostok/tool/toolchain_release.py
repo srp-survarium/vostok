@@ -35,6 +35,7 @@ from pathlib import Path
 from vostok.core.paths import REPO
 from vostok.core.wine import winepath_w
 from vostok.core.log import logger
+from vostok.core import log as _log
 
 # VOSTOK_DIR is set by the nix-shell shellHook to $PWD (the repo root).
 # Fallback for manual invocations where the script is run from its own directory.
@@ -600,4 +601,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(_log.run("vostok.tool.toolchain_release", main))
