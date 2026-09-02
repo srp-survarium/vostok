@@ -33820,7 +33820,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 's_cc_lighting_material_strategy''	vostok/render/engine/sources/renderer_context.cpp	render	done	MATCH		100	100	1	87	f	9f0af4074110	Clean-room renderer_context owner rebuilt to target 0x4284 layout; recovered target-family switching, inverse-WV and eye-space propagation, constant bindings, and exact statement structure. Remaining constructor/set_w byte gaps track neighboring backend/compiler-state layout.
 `dynamic initializer for 's_cc_shadow_map_z_bias''	vostok/render/engine/sources/renderer_context.cpp	render	done	MATCH		100	100	1	94	f	9f0af4074110	Clean-room renderer_context owner rebuilt to target 0x4284 layout; recovered target-family switching, inverse-WV and eye-space propagation, constant bindings, and exact statement structure. Remaining constructor/set_w byte gaps track neighboring backend/compiler-state layout.
 `dynamic initializer for 's_clouds_time''	vostok/render/engine/sources/clouds.cpp	render	done	MATCH		100	100	1	94	f	6cdaf3cb8f40	
-`dynamic initializer for 's_core_synchronous_device''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH		100	100	0	13	f	baf0d9481cd6	
+`dynamic initializer for 's_core_synchronous_device''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH		100	100	1	13	f	baf0d9481cd6	aligned retail initializer order from source lines and procedure stream
 `dynamic initializer for 's_debug_profile_dip_cc''	vostok/render/engine/sources/stage_gbuffer.cpp	render	done	MATCH		100	100	1	79	f	eedcbab08f4e	Reconstructed complete gbuffer caller cone; remaining target-only helper retention and execute quantity residuals are LTCG decisions.
 `dynamic initializer for 's_debug_set_cascade_textures_cc''	vostok/render/engine/sources/stage_sun.cpp	render	done	MATCH		100	100	1	79	f	9f0af4074110	Reconstructed stage_sun ctor/execute and target console static; remaining execute/ctor/init residuals are verified LTCG/inlining and static-init store elimination.
 `dynamic initializer for 's_dispersion_enabled_cc''	vostok/game_core/sources/dispersion_calculator.cpp	game_core	done	MATCH		100	100	2	49		9f0af4074110	Moved the static cc_bool to target-evidenced global file scope and restored serializable=true. Both compiler helpers now pair at 100% with matching PDB structure.
@@ -33859,7 +33859,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic initializer for 's_max_video_memory''	vostok/core/sources/memory_video_win.cpp	core	done	MATCH	100	100	100	0	19	f	fb77f6128e12	
 `dynamic initializer for 's_min_ping''	vostok/game/sources/match_client.cpp	game	done	MATCH	100	100	100	1	19	f	81c3435dddcb	
 `dynamic initializer for 's_minimum_resources_memory_size''	vostok/core/sources/memory_win.cpp	core	done	MATCH	100	100	100	0	19	f	56dcace7f29b	
-`dynamic initializer for 's_mount_mounts_path''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH		100	100	0	19	f	5f1d683059c2	
+`dynamic initializer for 's_mount_mounts_path''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH		100	100	1	19	f	5f1d683059c2	aligned retail initializer order from source lines and procedure stream
 `dynamic initializer for 's_mouse_lock''	vostok/input/sources/receiver_mouse_win.cpp	input	done	MATCH	100	100	100	0	19	f	0c85b64cc107	
 `dynamic initializer for 's_mouse_unlock''	vostok/input/sources/receiver_mouse_win.cpp	input	done	MATCH	100	100	100	0	19	f	cfd8958d7918	
 `dynamic initializer for 's_navigation_debug_controls''	vostok/ai_navigation/sources/navigation_world.cpp	ai_navigation	done	MATCH	100	100	100	0	40		9248e0460c53	
@@ -34012,7 +34012,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `vostok::ai::ai_world::register_cooks'::`2'::`dynamic atexit destructor for 's_behaviour_cook''	vostok/ai/sources/percept_memory_object_types.h	ai	done	MATCH	100	100	100	0	38		39682c4794fd	
 `vostok::ai::ai_world::register_cooks'::`2'::`dynamic atexit destructor for 's_brain_unit_cook''	vostok/ai/sources/percept_memory_object_types.h	ai	done	MATCH	100	100	100	0	25		39682c4794fd	
 `vostok::collision::initialize'::`2'::`dynamic atexit destructor for 'collision_cooker''	vostok/collision/sources/collision_cook.cpp	collision	done	MATCH	100	100	100	0	11	f	e191fe3e098b	
-`vostok::core::initialize_resources'::`4'::`dynamic atexit destructor for 's_unmanaged_allocation_cook''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH	100	100	100	0	11	f	be4049d3fa28	
+`vostok::core::initialize_resources'::`4'::`dynamic atexit destructor for 's_unmanaged_allocation_cook''	vostok/core/sources/core_entry_point.cpp	core	done	MATCH	100	100	100	0	11	f	282aa82c2aa0	
 `vostok::logging::log_file::skip_next_line'::`2'::processor::dummy	vostok/logging/sources/log_file.cpp	logging	done	MATCH	100	100	100	2	5		e164d9d5bba1	auto: at 100% ceiling, demoted from queue
 `vostok::math::curve_line_points<float,0>::sort_points_by_time'::`5'::predicate::compare	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	1	44		9765f405b48c	auto: at 100% ceiling, demoted from queue
 `vostok::math::curve_line_points<vostok::math::float3_pod,0>::sort_points_by_time'::`5'::predicate::compare	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	1	44		9765f405b48c	auto: at 100% ceiling, demoted from queue

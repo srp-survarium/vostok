@@ -54,6 +54,8 @@ using vostok::debug::bugtrap_usage;
 static bool	s_initialized				= false;
 static vostok::core::engine * s_engine	=	NULL;
 
+static vostok::command_line::key s_mount_mounts_path("mount_mounts_path", "", "vfs", "");
+
 vostok::uninitialized_reference<vostok::fs_new::synchronous_device_interface>	s_core_synchronous_device;
 
 namespace vostok {
@@ -88,8 +90,6 @@ extern doug_lea_allocator_type				g_log_allocator;
 } // namespace memory
 
 } // namespace vostok
-
-static vostok::command_line::key s_mount_mounts_path("mount_mounts_path", "", "vfs", "");
 
 void vostok::core::preinitialize		( core::engine *							engine,
 									  logging::log_file_usage_enum const			log_file_usage,
