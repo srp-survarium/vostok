@@ -228,9 +228,10 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
 def ensure_retail_source_root(wineprefix: Path) -> None:
     """Expose this checkout as the source root recorded by the retail build."""
     parent = wineprefix / "drive_c" / "survarium"
+    parent.mkdir(parents=True, exist_ok=True)
+    ensure_gfx_tree_root(parent)
     link = parent / "sources"
     target = paths.SOURCES.resolve()
-    parent.mkdir(parents=True, exist_ok=True)
     if link.is_symlink():
         if link.resolve() == target:
             return
@@ -241,7 +242,6 @@ def ensure_retail_source_root(wineprefix: Path) -> None:
         )
     link.symlink_to(target, target_is_directory=True)
     log(f"Retail source root: C:\\survarium\\sources -> {target}")
-    ensure_gfx_tree_root(parent)
 
 
 def ensure_gfx_tree_root(parent: Path) -> None:

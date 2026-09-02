@@ -82,7 +82,9 @@ the `*_tus.txt` lists, `create-toolchain-release.nix`). Every command in these
 docs runs it as `python3 -m vostok ...`, and the code is here:
 
     core/     paths.py (EVERY repo path, once), tsv.py (the tracked-table
-              shape), symbols.py (objdiff symbol normalization)
+              shape), symbols.py (objdiff symbol normalization), log.py (the
+              `[tag]` logger and die), wine.py (drive/pdb/winepath spellings),
+              fmt.py - blind helpers; core imports nothing above it
     ledger/   store.py (the committed record + the cur/max/hist policy),
               cli.py (the verbs), readme.py (the README block), queue.py
     derive/   report.json + the rich indexes -> the committed ledger:
