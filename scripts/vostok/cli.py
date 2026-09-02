@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok - the umbrella CLI over the matching toolchain.
 
     vostok build [ninja args...]   THE canonical build: ninja under Wine, then

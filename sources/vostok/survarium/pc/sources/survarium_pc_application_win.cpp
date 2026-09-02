@@ -22,7 +22,7 @@ using survarium::application;
 
 static HWND	s_splash_screen			= 0;
 
-static HANDLE	s_presence_mutex		= 0;
+static HANDLE	s_presence_mutex		= INVALID_HANDLE_VALUE;
 
 static vostok::fixed_string512		s_finger_print;
 

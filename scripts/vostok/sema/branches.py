@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.sema.branches - read an established difference, branch by branch.
 
 This view pairs branches POSITIONALLY, which is only meaningful once `blocks`

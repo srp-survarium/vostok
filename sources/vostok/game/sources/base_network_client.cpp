@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "base_network_client.h"
 #include "player.h"
 #include "game.h"					// m_game.get_game_world()
 #include "game_world.h"				// game_world::game_ui member
-#include "player_input_handler.h"	// NEW( player_input_handler )( game_world& )
-#include "stats_graph.h"			// NEW( stats_graph )( ... )
-#include "game_memory.h"			// NEW / DELETE ( survarium::g_allocator )
+#include "player_input_handler.h"	// player_input_handler( game_world& )
+#include "stats_graph.h"			// stats_graph( ... )
+#include "game_memory.h"			// survarium::g_allocator
 #include <vostok/console_command.h>	// console_commands::cc_delegate
 #include <vostok/math_constants.h>	// math::infinity
 
@@ -17,9 +15,9 @@ namespace survarium {
 
 base_network_client::base_network_client( game& game ) :
 	m_current_player			( ),
-	m_input_handler				( NEW( player_input_handler )( game.get_game_world( ) ) ),
-	m_linear_speed_graph		( NEW( stats_graph )( 1.f, math::infinity, 4.f, 4.5f, 0xff00ff00 ) ),
-	m_angular_speed_graph		( NEW( stats_graph )( 1.f, math::infinity, 5.f, 10.f, 0xff00ff00 ) ),
+	m_input_handler				( VOSTOK_NEW_IMPL( ::survarium::g_allocator, player_input_handler )( game.get_game_world( ) ) ),
+	m_linear_speed_graph		( VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_graph )( 1.f, math::infinity, 4.f, 4.5f, 0xff00ff00 ) ),
+	m_angular_speed_graph		( VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_graph )( 1.f, math::infinity, 5.f, 10.f, 0xff00ff00 ) ),
 	m_game						( game )
 {
 	static console_commands::cc_delegate s_use_physics_controller_for_current_command(
@@ -32,9 +30,9 @@ base_network_client::base_network_client( game& game ) :
 
 base_network_client::~base_network_client( )
 {
-	DELETE( m_input_handler );
-	DELETE( m_linear_speed_graph );
-	DELETE( m_angular_speed_graph );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_input_handler );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_linear_speed_graph );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_angular_speed_graph );
 }
 
 bool base_network_client::is_player_current( const u8 id ) const

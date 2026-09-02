@@ -230,6 +230,24 @@ def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
     log("Wine prefix ready.")
 
 
+def ensure_retail_source_root(wineprefix: Path) -> None:
+    """Expose this checkout as the source root recorded by the retail build."""
+    parent = wineprefix / "drive_c" / "survarium"
+    link = parent / "sources"
+    target = paths.SOURCES.resolve()
+    parent.mkdir(parents=True, exist_ok=True)
+    if link.is_symlink():
+        if link.resolve() == target:
+            return
+        link.unlink()
+    elif link.exists():
+        raise RuntimeError(
+            f"retail source root exists but is not a symlink: {link}"
+        )
+    link.symlink_to(target, target_is_directory=True)
+    log(f"Retail source root: C:\\survarium\\sources -> {target}")
+
+
 def generate_ninja(vcproj_exe: Path) -> None:
     # Pass native Linux paths for I/O (vcproj2ninja reads/writes them directly),
     # and --wine so the *emitted* build graph uses the drive-rooted `Z:\...` form
@@ -340,6 +358,7 @@ def main() -> None:
 
     if setup_current and not force:
         log("Wine/ninja setup already complete.")
+        ensure_retail_source_root(wineprefix)
         ensure_compdb()
         ensure_target_side()
         return
@@ -351,6 +370,7 @@ def main() -> None:
         copy_libs(libs_dir)
     if not setup_current or "wine" in force:
         init_wine_prefix(wineprefix, force="wine" in force)
+    ensure_retail_source_root(wineprefix)
     if not setup_current or "registry" in force:
         log("Configuring Wine environment (PATH, INCLUDE, LIB) ...")
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)

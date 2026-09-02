@@ -25,7 +25,7 @@ quaternion::quaternion	( float4x4 const& matrix_raw )
 	matrix.set_scale( float3(1.f, 1.f, 1.f) );
 	float const	trace = matrix.e00 + matrix.e11 + matrix.e22;
 	float		s;
-	if (trace > 0.0f){
+	if (trace > vostok::math::epsilon_3){
 		s = sqrt(trace + 1.0f);
 		w 		= s * 0.5f;
 		s 		= 0.5f / s;

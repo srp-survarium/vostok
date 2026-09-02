@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game_options.h"
 
@@ -37,14 +35,51 @@
 
 namespace survarium {
 
-// the table values live in .rdata and do not affect this TU's code bytes; the real
-// preset contents are recovered separately.
-static graphic_preset default_graphic_preset[10];
+graphic_preset default_graphic_preset[10] =
+{
+	{ texture_quality_option, 4 }, { geometry_quality_option, 4 },
+	{ shadow_quality_option, 4 }, { lightning_quality_option, 4 },
+	{ shading_quality_option, 4 }, { decorations_option, 4 },
+	{ post_process_option, 4 }, { ambient_occlusion_option, 4 },
+	{ particles_quality_option, 4 }, { motion_blur_amount_option, 4 },
+};
 
-// the per-action keybind descriptor table walked by the binding methods; its 33
-// entries (action_id / str_description / group_id / type) live in .rdata and do not
-// affect the consuming functions' code bytes. The real contents are recovered separately.
-key_bind_descr key_bind_descriptions[33];
+key_bind_descr key_bind_descriptions[33] =
+{
+	{ kJUMP, "st_jump_action", game_type, unlocked_action },
+	{ kCROUCH, "st_crouch_action", game_type, unlocked_action },
+	{ kACCEL, "st_sprint_action", game_type, unlocked_action },
+	{ kSET_NEXT_FIRE_QUEUE_TYPE, "st_next_fire_queue_action", game_type, unlocked_action },
+	{ kSET_NEXT_AMMO_TYPE, "st_next_ammo_action", game_type, unlocked_action },
+	{ kFWD, "st_move_forward_action", game_type, unlocked_action },
+	{ kBACK, "st_move_backward_action", game_type, unlocked_action },
+	{ kL_STRAFE, "st_left_strafe_action", game_type, unlocked_action },
+	{ kR_STRAFE, "st_right_strafe_action", game_type, unlocked_action },
+	{ kWPN_1, "st_first_weapon_action", game_type, unlocked_action },
+	{ kWPN_2, "st_second_weapon_action", game_type, unlocked_action },
+	{ kWPN_FIRE, "st_weapon_fire_action", game_type, unlocked_action },
+	{ kWPN_RELOAD, "st_weapon_reload_action", game_type, unlocked_action },
+	{ kWPN_AIM, "st_weapon_aim_action", game_type, unlocked_action },
+	{ kDELAY_BREATH, "st_dealy_breath_action", game_type, unlocked_action },
+	{ kQUICK_USE_1, "st_quick_use_action_1", game_type, unlocked_action },
+	{ kQUICK_USE_2, "st_quick_use_action_2", game_type, unlocked_action },
+	{ kQUICK_USE_3, "st_quick_use_action_3", game_type, unlocked_action },
+	{ kQUICK_USE_4, "st_quick_use_action_4", game_type, unlocked_action },
+	{ kQUICK_USE_5, "st_quick_use_action_5", game_type, unlocked_action },
+	{ kQUICK_USE_6, "st_quick_use_action_6", game_type, unlocked_action },
+	{ kBACK_SLOT_USE, "st_back_use_action", game_type, unlocked_action },
+	{ kCHAT, "st_start_chat_action", game_type, unlocked_action },
+	{ kUSE, "st_use_action", game_type, unlocked_action },
+	{ kDROP, "st_drop_action", game_type, unlocked_action },
+	{ kCHARACTER, "st_show_character_action", lobby_type, unlocked_action },
+	{ kINVENTORY, "st_show_inventory_action", lobby_type, unlocked_action },
+	{ kSHOP, "st_show_shop_action", lobby_type, unlocked_action },
+	{ kOPTIONS, "st_show_options_action", lobby_type, unlocked_action },
+	{ kFRIENDS, "st_show_friends_action", lobby_type, unlocked_action },
+	{ kSEND_MESSAGE, "st_send_message_action", chat_type, locked_action },
+	{ kSELECT_SEND_TO, "st_select_send_to_action", chat_type, locked_action },
+	{ kPTT, "st_ptt_action", chat_type, locked_action },
+};
 
 void game_options::apply_default_graphic( )
 {
@@ -136,13 +171,13 @@ game_options::game_options( game& g ) :
 game_options::~game_options( )
 {
 	for ( u32 i = 0; i < 4; ++i )
-		DELETE( m_options[i] );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_options[i] );
 }
 
 void game_options::initialize( )
 {
 	for ( u32 i = 0; i < options_count; ++i )
-		m_options[i] = NEW( options_tab )( m_game, m_options_ui, options_enum( i ) );
+		m_options[i] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_tab )( m_game, m_options_ui, options_enum( i ) );
 
 	resources::request requests[2];
 	requests[0].set( "resources/flash_movies/main_menu.swf", resources::flash_movie_class );
@@ -283,7 +318,7 @@ void game_options::fill_menu_buttons( bool in_game_world )
 
 void game_options::fill_settings_data( )
 {
-	fixed_string< 64 >* gameplay_options_labels = NEW_ARRAY( fixed_string< 64 >, 9 );
+	fixed_string< 64 >* gameplay_options_labels = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, fixed_string< 64 >, 9 );
 	gameplay_options_labels[0] = "st_invite_from_friends_option";
 	gameplay_options_labels[1] = "st_friends_signin_notification_option";
 	gameplay_options_labels[2] = "st_messages_censor_option";
@@ -294,7 +329,7 @@ void game_options::fill_settings_data( )
 	gameplay_options_labels[7] = "st_crosshair_static_option";
 	gameplay_options_labels[8] = "st_minimap_rotable_option";
 
-	fixed_string< 64 >* video_options_labels = NEW_ARRAY( fixed_string< 64 >, 19 );
+	fixed_string< 64 >* video_options_labels = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, fixed_string< 64 >, 19 );
 	video_options_labels[0] = "st_monitor_count_option";
 	video_options_labels[1] = "st_resolution_option";
 	video_options_labels[2] = "st_fullscreen_option";
@@ -315,7 +350,7 @@ void game_options::fill_settings_data( )
 	video_options_labels[17] = "st_particles_quality_options";
 	video_options_labels[18] = "st_motion_blur_amount_options";
 
-	fixed_string< 64 >* sound_options_labels = NEW_ARRAY( fixed_string< 64 >, 7 );
+	fixed_string< 64 >* sound_options_labels = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, fixed_string< 64 >, 7 );
 	sound_options_labels[0] = "st_general_volume_option";
 	sound_options_labels[1] = "st_ingame_volume_option";
 	sound_options_labels[2] = "st_music_volume_option";
@@ -324,7 +359,7 @@ void game_options::fill_settings_data( )
 	sound_options_labels[5] = "st_microphone_sensitivity_option";
 	sound_options_labels[6] = "st_ptt_button_option";
 
-	fixed_string< 64 >* controllers_options_labels = NEW_ARRAY( fixed_string< 64 >, 2 );
+	fixed_string< 64 >* controllers_options_labels = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, fixed_string< 64 >, 2 );
 	controllers_options_labels[0] = "st_mouse_invertion_option";
 	controllers_options_labels[1] = "st_mouse_sensitivity_option";
 
@@ -392,10 +427,10 @@ void game_options::fill_settings_data( )
 		m_options_ui->movie->Invoke( "root.set_settings", NULL, options_args, 2 );
 	}
 
-	DELETE_ARRAY( gameplay_options_labels );
-	DELETE_ARRAY( video_options_labels );
-	DELETE_ARRAY( sound_options_labels );
-	DELETE_ARRAY( controllers_options_labels );
+	VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, gameplay_options_labels );
+	VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, video_options_labels );
+	VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, sound_options_labels );
+	VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, controllers_options_labels );
 }
 
 void game_options::activate( base_game_scene* parent_scene )

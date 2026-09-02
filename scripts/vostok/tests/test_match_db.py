@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 import os
 import pathlib
 import json
@@ -10,6 +11,7 @@ from unittest import mock
 
 from vostok.build import ninja as build_ninja
 from vostok.build import ninja_regen
+from vostok.tool import toolchain
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
                                                        _resolve_reviewed_aliases)
@@ -44,6 +46,19 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    def test_retail_source_root_is_worktree_symlink(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prefix = Path(tmp) / "prefix"
+            sources = Path(tmp) / "checkout" / "sources"
+            sources.mkdir(parents=True)
+            with mock.patch.object(toolchain.paths, "SOURCES", sources):
+                toolchain.ensure_retail_source_root(prefix)
+                toolchain.ensure_retail_source_root(prefix)
+
+            link = prefix / "drive_c" / "survarium" / "sources"
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(link.resolve(), sources.resolve())
+
     def test_shipping_link_libraries_follow_retail_ltcg_order(self):
         libraries = [
             f"Z:/libs/{name}"
@@ -86,6 +101,49 @@ class CleanFinalPdbTests(unittest.TestCase):
             '/OUT:"Z:/work/vostok/binaries/base.exe" '
             '/IMPLIB:"Z:/work/vostok/binaries/base.lib" '
             '"Z:/work/vostok/sources\\/render.lib"',
+        )
+
+    def test_compile_rsp_uses_retail_source_include_root_only(self):
+        text = (
+            '/I "Z:/work/vostok/sources\\/stlport" '
+            '/I "Z:/work/vostok/sources\\\\" '
+            '/Fp"Z:/work/vostok/sources\\../binaries/pch"'
+        )
+
+        self.assertEqual(
+            ninja_regen._normalize_compile_rsp_source_root(
+                text, repo_dir=Path("/work/vostok")
+            ),
+            '/I "C:/survarium/sources\\/stlport" '
+            '/I "C:/survarium/sources\\\\" '
+            '/Fp"Z:/work/vostok/sources\\../binaries/pch"',
+        )
+
+    def test_only_compile_rule_uses_retail_working_source_root(self):
+        text = (
+            "proj_dir = Z:/work/vostok/sources/vostok/render/core/dx11/sources\n"
+            "\n"
+            "rule cl\n"
+            '  command = cmd /c cd "$proj_dir" && cl $flags\n'
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "rule link\n"
+            '  command = cmd /c cd "$proj_dir" && link $flags\n'
+        )
+
+        self.assertEqual(
+            ninja_regen._normalize_compile_working_source_root(
+                text, repo_dir=Path("/work/vostok")
+            ),
+            "proj_dir = Z:/work/vostok/sources/vostok/render/core/dx11/sources\n"
+            "compile_dir = c:/survarium/sources/vostok/render/core/dx11/sources\n"
+            "\n"
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "rule link\n"
+            '  command = cmd /c cd "$proj_dir" && link $flags\n',
         )
 
     def test_ninja_options_only_select_default_full_build(self):
@@ -1079,6 +1137,48 @@ class EffectiveSourceHashTests(unittest.TestCase):
 
             self.assertNotEqual(first, second)
 
+    def test_hash_follows_line_directives(self):
+        """`#line` pins __LINE__ geometry; the PDB then reports virtual numbers."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "prologue\n#line 40\nbody line\nother function\n", encoding="latin-1"
+            )
+            record = {
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 40}],
+            }
+
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                self.assertEqual(
+                    effective_source_hash(record), maxima.source_hash("body line\n")
+                )
+
+    def test_fold_rekeys_a_body_banked_under_physical_line_numbers(self):
+        """Adding `#line` above a body must not reset its banked max."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text("#line 3\nbody line\nother\n", encoding="latin-1")
+            record = {
+                "mangled": "?f@@YAXXZ",
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 3}],
+            }
+            pairing = Pairing(pairs={"?f@@YAXXZ": Pair(
+                "?f@@YAXXZ", 0x1000, 0x2000, 90.0, "SIZE", 1, 1, 0, 0, 0
+            )})
+            artifacts = mock.Mock(base={"?f@@YAXXZ": record})
+            # the old scheme sliced physical line 3, which is "other"
+            banked = {"?f@@YAXXZ": (maxima.source_hash("other\n"), 100.0)}
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                folded = maxima.fold(pairing, artifacts, banked)["?f@@YAXXZ"]
+
+            self.assertEqual(folded, (maxima.source_hash("body line\n"), 100.0))
+
 
 class StructureClassificationTests(unittest.TestCase):
     @staticmethod
@@ -1137,48 +1237,6 @@ class StructureClassificationTests(unittest.TestCase):
 
         self.assertEqual(classification[0], "SPLIT")
         self.assertGreater(classification[4], 0)
-    def test_hash_follows_line_directives(self):
-        """`#line` pins __LINE__ geometry; the PDB then reports virtual numbers."""
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            source = root / "sources/vostok/animation/sources/example.cpp"
-            source.parent.mkdir(parents=True)
-            source.write_text(
-                "prologue\n#line 40\nbody line\nother function\n", encoding="latin-1"
-            )
-            record = {
-                "file": "vostok/animation/sources/example.cpp",
-                "statements": [{"line": 40}],
-            }
-
-            with mock.patch.object(maxima, "SOURCES", root / "sources"):
-                self.assertEqual(
-                    effective_source_hash(record), maxima.source_hash("body line\n")
-                )
-
-    def test_fold_rekeys_a_body_banked_under_physical_line_numbers(self):
-        """Adding `#line` above a body must not reset its banked max."""
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            root = Path(temporary_directory)
-            source = root / "sources/vostok/animation/sources/example.cpp"
-            source.parent.mkdir(parents=True)
-            source.write_text("#line 3\nbody line\nother\n", encoding="latin-1")
-            record = {
-                "mangled": "?f@@YAXXZ",
-                "file": "vostok/animation/sources/example.cpp",
-                "statements": [{"line": 3}],
-            }
-            pairing = Pairing(pairs={"?f@@YAXXZ": Pair(
-                "?f@@YAXXZ", 0x1000, 0x2000, 90.0, "SIZE", 1, 1, 0, 0, 0
-            )})
-            artifacts = mock.Mock(base={"?f@@YAXXZ": record})
-            # the old scheme sliced physical line 3, which is "other"
-            banked = {"?f@@YAXXZ": (maxima.source_hash("other\n"), 100.0)}
-            with mock.patch.object(maxima, "SOURCES", root / "sources"):
-                folded = maxima.fold(pairing, artifacts, banked)["?f@@YAXXZ"]
-
-            self.assertEqual(folded, (maxima.source_hash("body line\n"), 100.0))
-
         self.assertGreater(classification[5], 0)
 
 

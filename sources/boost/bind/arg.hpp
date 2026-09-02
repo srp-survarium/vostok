@@ -31,12 +31,6 @@ template< int I > struct arg
     {
     }
 
-    // non-trivial copy: the target never reads the placeholder globals when a
-    // bind expression copies _N by value (a trivial copy loads the dummy byte)
-    arg( arg const & /* other */ )
-    {
-    }
-
     template< class T > arg( T const & /* t */ )
     {
         // static assert I == is_placeholder<T>::value

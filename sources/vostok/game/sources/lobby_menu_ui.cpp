@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 // The reconstructed UI paths retain a few target/base Scaleform wrapper
 // inline-boundary differences under LTCG.
 
@@ -287,6 +285,17 @@ void lobby_menu_external_handler::callback(
 // to flash_value::SetString/SetStringW because its wrappers inline GFx::Value::operator=;
 // the base wrappers call operator= and are then inlined here. Reopen only with the
 // exact Scaleform 4.2.21 inline-header/compiler partition.
+ui_label match_making_labels[] =
+{
+	{ "label_status",			"st_label_status" },
+	{ "label_quenue",			"st_label_quenue" },
+	{ "label_time_current",		"st_time_current" },
+	{ "label_time_average",		"st_label_time_average" },
+	{ "label_teamA",			"st_label_teamA" },
+	{ "label_teamB",			"st_label_teamB" },
+	{ "btnLeave",				"st_label_leave_queue_btn" },
+};
+
 void lobby_menu::show_match_making( bool b_show )
 {
 	if ( m_is_in_match_making != b_show )
@@ -300,28 +309,17 @@ void lobby_menu::show_match_making( bool b_show )
 			flash_value labels_array;
 			m_match_making_ui->movie->CreateArray( &labels_array );
 
-			static const struct { pcstr name; pcstr translate_id; } c_labels[] =
-			{
-				{ "label_status",			"st_label_status" },
-				{ "label_quenue",			"st_label_quenue" },
-				{ "label_time_current",		"st_time_current" },
-				{ "label_time_average",		"st_label_time_average" },
-				{ "label_teamA",			"st_label_teamA" },
-				{ "label_teamB",			"st_label_teamB" },
-				{ "btnLeave",				"st_label_leave_queue_btn" },
-			};
-
 			for ( u32 i = 0; i < 7; ++i )
 			{
 				flash_value label;
 				m_match_making_ui->movie->CreateObject( &label );
 
 				flash_value label_member;
-				label_member.SetString			( c_labels[ i ].name );
+				label_member.SetString			( match_making_labels[ i ].name );
 				label.SetMember					( "name", label_member );
 
 				wchar_t label_txt[512];
-				get_game( ).text_translator( ).translate_text( c_labels[ i ].translate_id, label_txt );
+				get_game( ).text_translator( ).translate_text( match_making_labels[ i ].label, label_txt );
 				label_member.SetStringW			( label_txt );
 				label.SetMember					( "label", label_member );
 
@@ -340,7 +338,7 @@ void lobby_menu::show_match_making( bool b_show )
 			text.SetStringW						( L"" );
 			m_match_making_ui->movie->Invoke	( "root.set_place", NULL, &text, 1 );
 
-			text.SetStringW						( L"\x041e\x0436\x0438\x0434\x0430\x043d\x0438\x0435 \x043c\x0430\x0442\x0447\x0430!" );
+			text.SetStringW						( L"\x0421\x043e\x0437\x0434\x0430\x043d\x0438\x0435 \x043c\x0430\x0442\x0447\x0430!" );
 			m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
 
 			show_movie							( m_match_making_ui );
@@ -357,9 +355,6 @@ void lobby_menu::show_match_making( bool b_show )
 // claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); structure
 // is faithful and the residual is LTCG scheduling of the inlined flash_value
 // ctor/dtor, not the old inline-vs-call wall.
-// sushi@TODO: the level-name localization key L"st_loading_level" is a LENGTH-matched
-// guess (16 wide chars => the 4x movq + word copy the target emits); content is loaded
-// from rdata and does not affect this function's bytes, but the exact key is unverified.
 void lobby_menu::update_level_loading_progress( )
 {
 	char buff[64];
@@ -370,7 +365,7 @@ void lobby_menu::update_level_loading_progress( )
 
 	m_last_queries_count = resources::pending_queries_count( );
 
-	wchar_t w_text[512] = L"st_loading_level";
+	wchar_t w_text[512] = L"\x0417\x0430\x0433\x0440\x0443\x0437\x043a\x0430 \x0443\x0440\x043e\x0432\x043d\x044f[";
 
 	wchar_t level_name[512];
 	mbstowcs_s							( NULL, level_name, 512, get_game( ).project_resource_name( ), _TRUNCATE );
@@ -379,7 +374,7 @@ void lobby_menu::update_level_loading_progress( )
 	mbstowcs_s							( NULL, queries_count, 512, buff, _TRUNCATE );
 
 	wcscat_s							( w_text, sizeof( w_text ), level_name );
-	wcscat_s							( w_text, sizeof( w_text ), L"=" );
+	wcscat_s							( w_text, sizeof( w_text ), L"]" );
 	wcscat_s							( w_text, sizeof( w_text ), queries_count );
 
 	flash_value text;
@@ -397,8 +392,8 @@ void lobby_menu::update_level_loading_progress( )
 
 void lobby_menu::on_ui_destroy( )
 {
-	DELETE	( m_lobby_menu_external_handler );
-	DELETE	( m_relocate_item_func );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_lobby_menu_external_handler );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_relocate_item_func );
 }
 
 void lobby_menu::update_ui( const u32 frame_delta_in_ms, const u32 current_time_in_ms )
@@ -469,7 +464,7 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 	);
 
 	m_lobby_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[3].get_unmanaged_resource( ) );
-	m_character = NEW( profile_player_character )( *this );
+	m_character = VOSTOK_NEW_IMPL( ::survarium::g_allocator, profile_player_character )( *this );
 
 	m_cursor_ui = static_cast_resource_ptr< flash_movie_resource_ptr >( data[4].get_unmanaged_resource( ) );
 	m_cursor_ui->movie->SetBackgroundAlpha( 0.f );
@@ -490,7 +485,7 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 	configs::binary_config_ptr player_config = static_cast_resource_ptr< configs::binary_config_ptr >( data[8].get_unmanaged_resource( ) );
 	m_player_max_carried_weight = player_config->get_root( )["player"]["stamina_params"]["max_carried_weight"];
 
-	m_lobby_menu_external_handler = NEW( lobby_menu_external_handler )( get_game( ) );
+	m_lobby_menu_external_handler = VOSTOK_NEW_IMPL( ::survarium::g_allocator, lobby_menu_external_handler )( get_game( ) );
 	m_lobby_menu_ui->movie->SetExternalInterface( m_lobby_menu_external_handler );
 	m_match_making_ui->movie->SetExternalInterface( m_lobby_menu_external_handler );
 
@@ -506,7 +501,7 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 
 	flash_value proxy;
 	m_lobby_menu_ui->movie->GetVariable( &proxy, "_root.player_profile" );
-	m_relocate_item_func = NEW( relocate_item_func )( get_game( ) );
+	m_relocate_item_func = VOSTOK_NEW_IMPL( ::survarium::g_allocator, relocate_item_func )( get_game( ) );
 	flash_value func;
 	m_lobby_menu_ui->movie->CreateFunction( &func, m_relocate_item_func );
 	proxy.SetMember( "_relocateFunction", func );
@@ -543,90 +538,82 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 
 }
 
-// claude@NOTE: walks the file-scope survarium::lobby_labels ui_label table (73 {name,label}
-// pairs); the table is a fabricated placeholder - the strings are read at runtime (data only,
-// zero bytes in this function), so its content does not affect the match, but the exact 73
-// pairs are unrecoverable from the binary (same data wall as login_menu::fill_labels).
-// Residual is the scaleform flash /Od inline wall (CreateObject/SetMember/SetStringW + the
-// flash_value ctor/dtor) and LTCG scheduling.
-static ui_label lobby_labels_data[0x49] =
+ui_label lobby_labels[] =
 {
-	{ "label_0", "st_label_0" },
-	{ "label_1", "st_label_1" },
-	{ "label_2", "st_label_2" },
-	{ "label_3", "st_label_3" },
-	{ "label_4", "st_label_4" },
-	{ "label_5", "st_label_5" },
-	{ "label_6", "st_label_6" },
-	{ "label_7", "st_label_7" },
-	{ "label_8", "st_label_8" },
-	{ "label_9", "st_label_9" },
-	{ "label_10", "st_label_10" },
-	{ "label_11", "st_label_11" },
-	{ "label_12", "st_label_12" },
-	{ "label_13", "st_label_13" },
-	{ "label_14", "st_label_14" },
-	{ "label_15", "st_label_15" },
-	{ "label_16", "st_label_16" },
-	{ "label_17", "st_label_17" },
-	{ "label_18", "st_label_18" },
-	{ "label_19", "st_label_19" },
-	{ "label_20", "st_label_20" },
-	{ "label_21", "st_label_21" },
-	{ "label_22", "st_label_22" },
-	{ "label_23", "st_label_23" },
-	{ "label_24", "st_label_24" },
-	{ "label_25", "st_label_25" },
-	{ "label_26", "st_label_26" },
-	{ "label_27", "st_label_27" },
-	{ "label_28", "st_label_28" },
-	{ "label_29", "st_label_29" },
-	{ "label_30", "st_label_30" },
-	{ "label_31", "st_label_31" },
-	{ "label_32", "st_label_32" },
-	{ "label_33", "st_label_33" },
-	{ "label_34", "st_label_34" },
-	{ "label_35", "st_label_35" },
-	{ "label_36", "st_label_36" },
-	{ "label_37", "st_label_37" },
-	{ "label_38", "st_label_38" },
-	{ "label_39", "st_label_39" },
-	{ "label_40", "st_label_40" },
-	{ "label_41", "st_label_41" },
-	{ "label_42", "st_label_42" },
-	{ "label_43", "st_label_43" },
-	{ "label_44", "st_label_44" },
-	{ "label_45", "st_label_45" },
-	{ "label_46", "st_label_46" },
-	{ "label_47", "st_label_47" },
-	{ "label_48", "st_label_48" },
-	{ "label_49", "st_label_49" },
-	{ "label_50", "st_label_50" },
-	{ "label_51", "st_label_51" },
-	{ "label_52", "st_label_52" },
-	{ "label_53", "st_label_53" },
-	{ "label_54", "st_label_54" },
-	{ "label_55", "st_label_55" },
-	{ "label_56", "st_label_56" },
-	{ "label_57", "st_label_57" },
-	{ "label_58", "st_label_58" },
-	{ "label_59", "st_label_59" },
-	{ "label_60", "st_label_60" },
-	{ "label_61", "st_label_61" },
-	{ "label_62", "st_label_62" },
-	{ "label_63", "st_label_63" },
-	{ "label_64", "st_label_64" },
-	{ "label_65", "st_label_65" },
-	{ "label_66", "st_label_66" },
-	{ "label_67", "st_label_67" },
-	{ "label_68", "st_label_68" },
-	{ "label_69", "st_label_69" },
-	{ "label_70", "st_label_70" },
-	{ "label_71", "st_label_71" },
-	{ "label_72", "st_label_72" },
+	{ "shop_label", "st_shop_label" },
+	{ "inventory_label", "st_inventory_label" },
+	{ "friends_online", "st_friends_online" },
+	{ "points_earned", "st_points_earned" },
+	{ "points_aviable", "st_points_aviable" },
+	{ "enter_search_player_name", "st_enter_search_player_name" },
+	{ "enter_chat_message", "st_enter_chat_message" },
+	{ "add_to_friends", "st_add_to_friends" },
+	{ "add_to_ignore", "st_add_to_ignore" },
+	{ "remove_from_friends", "st_remove_from_friends" },
+	{ "remove_from_ignore", "st_remove_from_ignore" },
+	{ "invite_to_squad", "st_invite_to_squad" },
+	{ "ok", "st_ok" },
+	{ "accept", "st_accept" },
+	{ "confirm", "st_confirm" },
+	{ "cancel", "st_cancel" },
+	{ "reroll", "st_reroll" },
+	{ "relocate", "st_relocate" },
+	{ "character", "st_character" },
+	{ "inventrory", "st_inventrory" },
+	{ "shop", "st_shop" },
+	{ "missions", "st_missions" },
+	{ "clan", "st_clan" },
+	{ "tournaments", "st_tournaments" },
+	{ "settings", "st_settings" },
+	{ "fix", "st_fix" },
+	{ "wear", "st_wear" },
+	{ "sell", "st_sell" },
+	{ "buy", "st_buy" },
+	{ "filter_all", "st_filter_all" },
+	{ "filter_equipment", "st_filter_equipment" },
+	{ "filter_weapons", "st_filter_weapons" },
+	{ "filter_ammo", "st_filter_ammo" },
+	{ "filter_items", "st_filter_items" },
+	{ "filter_body_armor", "st_filter_body_armor" },
+	{ "filter_helmet", "st_filter_helmet" },
+	{ "filter_gloves", "st_filter_gloves" },
+	{ "filter_boots", "st_filter_boots" },
+	{ "filter_pants", "st_filter_pants" },
+	{ "filter_mask", "st_filter_mask" },
+	{ "filter_rig", "st_filter_rig" },
+	{ "filter_pistol", "st_filter_pistol" },
+	{ "filter_submachine_gun", "st_filter_submachine_gun" },
+	{ "filter_assault_rifle", "st_filter_assault_rifle" },
+	{ "filter_machine_gun", "st_filter_machine_gun" },
+	{ "filter_shotgun", "st_filter_shotgun" },
+	{ "filter_sniper_rifle", "st_filter_sniper_rifle" },
+	{ "filter_ammo_pistol", "st_filter_ammo_pistol" },
+	{ "filter_ammo_submachine_gun", "st_filter_ammo_submachine_gun" },
+	{ "filter_ammo_assault_rifle", "st_filter_ammo_assault_rifle" },
+	{ "filter_ammo_machine_gun", "st_filter_ammo_machine_gun" },
+	{ "filter_ammo_shotgun", "st_filter_ammo_shotgun" },
+	{ "filter_ammo_sniper_rifle", "st_filter_ammo_sniper_rifle" },
+	{ "filter_medkit", "st_filter_medkit" },
+	{ "filter_mine", "st_filter_mine" },
+	{ "filter_grenade", "st_filter_grenade" },
+	{ "filter_device", "st_filter_device" },
+	{ "paperdoll_btn_ammo", "st_paperdoll_btn_ammo" },
+	{ "paperdoll_btn_fix", "st_paperdoll_btn_fix" },
+	{ "paperdoll_btn_weight", "st_paperdoll_btn_weight" },
+	{ "support", "st_support" },
+	{ "add", "st_add" },
+	{ "item_piece_postfix", "st_item_piece_postfix" },
+	{ "friend_state_lobby", "st_friend_state_lobby" },
+	{ "friend_state_game", "st_friend_state_game" },
+	{ "friend_state_offline", "st_friend_state_offline" },
+	{ "friend_state_away", "st_friend_state_away" },
+	{ "message_reroll_text", "st_message_reroll_text" },
+	{ "refill_ammo_btn", "st_refill_ammo_btn" },
+	{ "refill_ammo_label", "st_refill_ammo_label" },
+	{ "backpack", "st_backpack" },
+	{ "cost", "st_cost" },
+	{ "storage", "st_storage" },
 };
-
-ui_label* lobby_labels = lobby_labels_data;
 
 void lobby_menu::fill_inventory_labels( )
 {
@@ -962,7 +949,7 @@ void lobby_menu::on_profile_changed( u8 profile_id )
 
 	m_lobby_menu_ui->movie->Invoke( "root.player_profile.fillProfileItems", NULL, &profile_descriptor, 1 );
 
-	player_parameters_cooker_data* cook_data = NEW( player_parameters_cooker_data );
+	player_parameters_cooker_data* cook_data = VOSTOK_NEW_IMPL( ::survarium::g_allocator, player_parameters_cooker_data );
 	cook_data->dictionary = &get_game( ).items_dictionary( );
 	cook_data->profile = &profile;
 
@@ -980,7 +967,7 @@ void lobby_menu::on_profile_changed( u8 profile_id )
 
 void lobby_menu::player_parameters_ready( resources::queries_result& data, player_parameters_cooker_data* cook_data )
 {
-	DELETE( cook_data );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, cook_data );
 
 	player_parameters_modifyer_ptr player_parameters =
 		static_cast_resource_ptr< player_parameters_modifyer_ptr >( data[0].get_unmanaged_resource( ) );
@@ -1423,13 +1410,14 @@ bool lobby_menu::is_mouse_over_ui( )
 // (the three independent message blocks) is faithful and the residual is LTCG
 // scheduling of the inlined flash_value ctor/dtor + SetStringW/SetMember/SetUInt, not
 // the old inline-vs-call wall.
-// sushi@TODO: the L"joined"/L"left"/L"in_queue"/L"team" wcsstr prefix literals are
-// length-matched guesses (loaded from rdata; do not affect this function's bytes), exact
-// keys unverified.
-static wchar_t const player_joined_pref[]	= L"joined";
-static wchar_t const player_left_pref[]		= L"left";
-static wchar_t const player_queue_pref[]	= L"in_queue";
-static wchar_t const player_team_pref[]		= L"team";
+static wchar_t const player_joined_pref[]	= L"#+p:[ ";
+static wchar_t const player_left_pref[]		= L"#-p:[ ";
+static wchar_t const player_queue_pref[]	= L"#q:[";
+static wchar_t const player_team_pref[]		= L"#t:[";
+static wchar_t const player_id_pref[]		= L"Player [ ";
+static wchar_t const player_exp_pref[]		= L"#e:[";
+static wchar_t const match_count_pref[]		= L"#mc:[";
+static wchar_t const player_count_pref[]	= L"#pc:[";
 
 void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 {
@@ -1494,10 +1482,10 @@ void lobby_menu::on_stats_message_arrived(
 	messaging::message_channel_enum		message_channel
 )
 {
-	wchar_t const* player_id	= wcsstr( w_text, L"player_id" );
-	wchar_t const* player_exp	= wcsstr( w_text, L"player_exp" );
-	wcsstr( w_text, L"match_count" );
-	wchar_t const* player_count	= wcsstr( w_text, L"player_count" );
+	wchar_t const* player_id	= wcsstr( w_text, player_id_pref );
+	wchar_t const* player_exp	= wcsstr( w_text, player_exp_pref );
+	wcsstr( w_text, match_count_pref );
+	wchar_t const* player_count	= wcsstr( w_text, player_count_pref );
 
 	if ( player_id )
 	{

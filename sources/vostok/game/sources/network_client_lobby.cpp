@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "network_client.h"
 
@@ -49,7 +47,7 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 
 			m_last_tick_time_in_ms	= m_game.game_time_ms( );
 
-			LOG_INFO	( "[R] connect_to_game_server: %s: %d", host, m_last_tick_time_in_ms );
+			LOG_INFO	( "[R] connect_to_game_server: %s: %d game time is %d", host, port, m_last_tick_time_in_ms );
 
 			m_match_client.set_on_disconnect	( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
 			m_match_client.connect	( host, port, lobby_client( ).session_id( ), m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );

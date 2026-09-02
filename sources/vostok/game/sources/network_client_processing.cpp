@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "network_client.h"
 
@@ -312,16 +310,16 @@ void network_client::process_match_wait_timer( network_core::packet_reader& pack
 // TU console values backing setup_camera_for_warmup: cc_float3 console commands
 // (the warmup camera offset relative to the local player); the warmup function
 // reads each via the float3 value the cc_float3 references.
-static float3							s_warmup_camera_position( 0.f, 0.f, 0.f );
-static float3							s_warmup_camera_target( 0.f, 0.f, 0.f );
+static float3							s_warmup_camera_position( 1.f, 2.f, 3.f );
+static float3							s_warmup_camera_target( 0.f, 1.5f, 0.f );
 static console_commands::cc_float3		cc_warmup_camera_position(
 											"warmup_camera_position", s_warmup_camera_position,
 											float3( -1000, -1000, -1000 ), float3( 1000, 1000, 1000 ),
-											false, console_commands::command_type_user_specific );
+											true, console_commands::command_type_engine_internal );
 static console_commands::cc_float3		cc_warmup_camera_target(
 											"warmup_camera_target", s_warmup_camera_target,
 											float3( -1000, -1000, -1000 ), float3( 1000, 1000, 1000 ),
-											false, console_commands::command_type_user_specific );
+											true, console_commands::command_type_engine_internal );
 
 void network_client::setup_camera_for_warmup( )
 {

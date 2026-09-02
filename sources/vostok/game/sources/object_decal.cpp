@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "object_decal.h"
 #include "game_object_static.h"
@@ -85,7 +83,7 @@ void object_decal::load(
 	pcstr decal_material_name = pcstr( t["decal_material"] );
 
 	render::material_effects_instance_cook_data* cook_data =
-		NEW( render::material_effects_instance_cook_data )( render::decal_vertex_input_type, NULL, false );
+		VOSTOK_NEW_IMPL( ::survarium::g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, NULL, false );
 
 	resources::user_data_variant user_data;
 	user_data.set( cook_data );
@@ -136,7 +134,7 @@ void object_decal::material_ready(
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	DELETE( cook_data );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, cook_data );
 
 	m_material = data[0].get_unmanaged_resource();
 

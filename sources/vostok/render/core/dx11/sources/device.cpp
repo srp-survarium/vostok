@@ -2,8 +2,7 @@
 #include "pch.h"
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/dx11/device_caps.h>
-#include <vostok/render/core/dx11/sources/com_utils.h>
-
+#include "com_utils.h"
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "dxgi.lib" )
 // D3DReflect is provided by d3dcompiler.lib.

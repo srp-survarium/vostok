@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game_camera.h"
 #include "camera_director.h"
@@ -9,8 +7,8 @@
 
 namespace survarium {
 
-float s_camera_far_plane	= 5000.0f;
-float default_vertical_fov	= 57.5f;
+float s_camera_far_plane	= 500.0f;
+float default_vertical_fov	= 65.0f;
 
 game_camera::game_camera( base_game_scene& w ) :
 	m_game_scene( w ),

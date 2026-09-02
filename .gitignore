@@ -108,3 +108,4 @@ ipch/
 /compile_commands.json
 /clangd-vfs.yaml
 /.cache/
+binaries.old*/

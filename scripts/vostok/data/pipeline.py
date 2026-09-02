@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """Generate and compare retail/base image data without touching function scores."""
 
 from __future__ import annotations
@@ -67,10 +68,11 @@ def reloc_path(side: str) -> Path:
 def _engine_args(side: str) -> list[str]:
     if side == "target":
         return [
-            "--engine-path", "c:/survarium/sources",
+            "--engine-path", paths.RETAIL_SOURCE_PREFIX,
             "--engine-path", paths.GFX_TARGET_PREFIX + "\\",
         ]
     return [
+        "--engine-path", paths.RETAIL_SOURCE_PREFIX + "\\",
         "--engine-path", _wine_path(paths.SOURCES) + "\\",
         "--engine-path", _wine_path(paths.GFX_BUILD_TREE) + "\\",
         "--engine-path", paths.GFX_RELEASE_PREFIX + "\\",

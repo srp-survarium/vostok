@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "options_gamma_selector.h"
 #include "options_graphics_quality_selector.h"
@@ -28,15 +26,6 @@
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_function_handler_params.h>
 
-#undef NEW
-#undef NEW_ARRAY
-#undef DELETE
-#undef DELETE_ARRAY
-#define NEW( type ) VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
-#define NEW_ARRAY( type, count ) VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, type, count )
-#define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
-#define DELETE_ARRAY( pointer ) VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, pointer )
-
 namespace vostok {
 namespace render {
 	extern int g_num_monitors;
@@ -46,9 +35,44 @@ namespace render {
 
 namespace survarium {
 
-// the per-quality-preset table (presets x 10 options). String/data bytes live in
-// .rdata and are recovered separately; the code here only relocates the symbol.
-graphic_preset g_graphic_presets[ 5 ][ 10 ];
+graphic_preset g_graphic_presets[ 5 ][ 10 ] =
+{
+	{
+		{ texture_quality_option, 0 }, { geometry_quality_option, 1 },
+		{ shadow_quality_option, 0 }, { lightning_quality_option, 0 },
+		{ shading_quality_option, 0 }, { decorations_option, 0 },
+		{ post_process_option, 0 }, { ambient_occlusion_option, 0 },
+		{ particles_quality_option, 0 }, { motion_blur_amount_option, 0 },
+	},
+	{
+		{ texture_quality_option, 1 }, { geometry_quality_option, 1 },
+		{ shadow_quality_option, 1 }, { lightning_quality_option, 1 },
+		{ shading_quality_option, 1 }, { decorations_option, 1 },
+		{ post_process_option, 1 }, { ambient_occlusion_option, 1 },
+		{ particles_quality_option, 1 }, { motion_blur_amount_option, 1 },
+	},
+	{
+		{ texture_quality_option, 2 }, { geometry_quality_option, 1 },
+		{ shadow_quality_option, 2 }, { lightning_quality_option, 2 },
+		{ shading_quality_option, 2 }, { decorations_option, 2 },
+		{ post_process_option, 2 }, { ambient_occlusion_option, 2 },
+		{ particles_quality_option, 2 }, { motion_blur_amount_option, 2 },
+	},
+	{
+		{ texture_quality_option, 3 }, { geometry_quality_option, 1 },
+		{ shadow_quality_option, 3 }, { lightning_quality_option, 3 },
+		{ shading_quality_option, 3 }, { decorations_option, 3 },
+		{ post_process_option, 3 }, { ambient_occlusion_option, 3 },
+		{ particles_quality_option, 3 }, { motion_blur_amount_option, 3 },
+	},
+	{
+		{ texture_quality_option, 4 }, { geometry_quality_option, 1 },
+		{ shadow_quality_option, 4 }, { lightning_quality_option, 4 },
+		{ shading_quality_option, 4 }, { decorations_option, 4 },
+		{ post_process_option, 4 }, { ambient_occlusion_option, 4 },
+		{ particles_quality_option, 4 }, { motion_blur_amount_option, 4 },
+	},
+};
 
  options_item_base::options_item_base(
 	options_tab&				parent_tab,
@@ -310,7 +334,7 @@ void options_resolution_selector::fill_resolutions( u8 monitor_number )
 	if ( m_values )
 	{
 		old_resolution = m_values[ m_current_value ];
-		DELETE_ARRAY( m_values );
+		VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, m_values );
 	}
 
 	u8 resolutions_count = 0;
@@ -323,7 +347,7 @@ void options_resolution_selector::fill_resolutions( u8 monitor_number )
 				render::g_monitor_resolutions[ monitor_number ][ i ].y
 			);
 
-	m_values = NEW_ARRAY( pcstr, resolutions_count );
+	m_values = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, pcstr, resolutions_count );
 	m_values_count = resolutions_count;
 
 	for ( u32 i = 0; i < resolutions_count; ++i )
@@ -380,7 +404,7 @@ void options_resolution_selector::apply( )
 	for ( u8 i = 0; i < array_size( m_cached_monitors_names ); ++i )
 		m_cached_monitors_names[ i ].assignf( "%d", i );
 
-	m_values		= NEW_ARRAY( pcstr, render::g_num_monitors );
+	m_values		= VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, pcstr, render::g_num_monitors );
 	m_values_count	= ( u8 )render::g_num_monitors;
 
 	for ( u8 i = 0; i < render::g_num_monitors; ++i )
@@ -407,12 +431,12 @@ void options_monitor_index_selector::refill_resolutions_data( )
 // The PDB identifies this table but not its initializer strings.
 static pcstr graphics_quality_data[ 6 ] =
 {
-	"minimal",
-	"low",
-	"medium",
-	"high",
-	"max",
-	"extreme"
+	"st_options_minimum",
+	"st_options_low",
+	"st_options_medium",
+	"st_options_high",
+	"st_options_ultra",
+	"st_options_custom"
 };
 
  options_graphics_quality_selector::options_graphics_quality_selector( options_tab& parent_tab )
@@ -439,19 +463,18 @@ void options_graphics_quality_selector::call( flash_function_handler_params& par
 		}
 }
 
-// The PDB identifies these tables and their element counts, but not their strings.
-static pcstr antialiasing_data[ 3 ]				= { "off", "fxaa", "msaa" };
-static pcstr anisotrophic_filtering_data[ 5 ]	= { "off", "x2", "x4", "x8", "x16" };
-static pcstr texture_quality_data[ 3 ]			= { "low", "medium", "high" };
-static pcstr geometry_quality_data[ 2 ]			= { "low", "high" };
-static pcstr shadow_quality_data[ 4 ]			= { "off", "low", "medium", "high" };
-static pcstr lighting_quality_data[ 4 ]			= { "off", "low", "medium", "high" };
-static pcstr shading_quality_data[ 4 ]			= { "low", "medium", "high", "max" };
-static pcstr decorations_quality_data[ 3 ]		= { "off", "low", "high" };
-static pcstr post_process_quality_data[ 4 ]		= { "off", "low", "medium", "high" };
-static pcstr ambient_occlusion_data[ 4 ]		= { "off", "low", "medium", "high" };
-static pcstr particles_quality_data[ 3 ]		= { "low", "medium", "high" };
-static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" };
+static pcstr antialiasing_data[ 3 ]				= { "st_options_off", "st_options_fxaa", "st_options_2taa" };
+static pcstr anisotrophic_filtering_data[ 5 ]	= { "st_options_off", "2x", "4x", "8x", "16x" };
+static pcstr texture_quality_data[ 3 ]			= { "st_options_low", "st_options_medium", "st_options_high" };
+static pcstr geometry_quality_data[ 2 ]			= { "st_options_medium", "st_options_high" };
+static pcstr shadow_quality_data[ 4 ]			= { "st_options_low", "st_options_medium", "st_options_high", "st_options_ultra" };
+static pcstr lighting_quality_data[ 4 ]			= { "st_options_low", "st_options_medium", "st_options_high", "st_options_ultra" };
+static pcstr shading_quality_data[ 4 ]			= { "st_options_low", "st_options_medium", "st_options_high", "st_options_ultra" };
+static pcstr decorations_quality_data[ 3 ]		= { "st_options_low", "st_options_medium", "st_options_high" };
+static pcstr post_process_quality_data[ 4 ]		= { "st_options_minimum", "st_options_low", "st_options_medium", "st_options_high" };
+static pcstr ambient_occlusion_data[ 4 ]		= { "st_options_off", "st_options_ssao", "st_options_hbao", "st_options_ssdo" };
+static pcstr particles_quality_data[ 3 ]		= { "st_options_low", "st_options_medium", "st_options_high" };
+static pcstr motion_blur_quality_data[ 4 ]		= { "st_options_off", "st_options_low", "st_options_medium", "st_options_high" };
 
  options_tab::options_tab( game& g, flash_movie_resource_ptr& movie, options_enum type )
 	: m_type( type )
@@ -464,52 +487,52 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 		{
 
 			m_options_count = 9;
-			m_options = NEW_ARRAY( options_item_base*, 9 );
+			m_options = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, options_item_base*, 9 );
 
-			m_options[ 0 ] = NEW( options_item_bool )( *this, "g_invite_from_friends", 0 );
-			m_options[ 1 ] = NEW( options_item_bool )( *this, "g_friends_signin_notification", 1 );
-			m_options[ 2 ] = NEW( options_item_bool )( *this, "g_messages_censor", 2 );
-			m_options[ 3 ] = NEW( options_item_bool )( *this, "g_messages_only_from_friends", 3 );
-			m_options[ 4 ] = NEW( options_item_bool )( *this, "g_private_messages_in_game", 4 );
-			m_options[ 5 ] = NEW( options_item_bool )( *this, "g_hide_spam", 5 );
-			m_options[ 6 ] = NEW( options_item_int )( *this, "g_crosshair_type", 6, NULL, 0 );
-			m_options[ 7 ] = NEW( options_item_bool )( *this, "g_crosshair_static", 7 );
-			m_options[ 8 ] = NEW( options_item_bool )( *this, "is_ui_minimap_rotable", 8 );
+			m_options[ 0 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_invite_from_friends", 0 );
+			m_options[ 1 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_friends_signin_notification", 1 );
+			m_options[ 2 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_messages_censor", 2 );
+			m_options[ 3 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_messages_only_from_friends", 3 );
+			m_options[ 4 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_private_messages_in_game", 4 );
+			m_options[ 5 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_hide_spam", 5 );
+			m_options[ 6 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "g_crosshair_type", 6, NULL, 0 );
+			m_options[ 7 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "g_crosshair_static", 7 );
+			m_options[ 8 ] = VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "is_ui_minimap_rotable", 8 );
 			break;
 		}
 		case video_options_type:
 		{
 			m_options_count = 19;
-			m_options = NEW_ARRAY( options_item_base*, 19 );
+			m_options = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, options_item_base*, 19 );
 
-			m_options[ 0 ]	= NEW( options_monitor_index_selector )( *this );
-			m_options[ 1 ]	= NEW( options_resolution_selector )( *this );
-			m_options[ 2 ]	= NEW( options_item_bool )( *this, "r_fullscreen", 2 );
-			m_options[ 3 ]	= NEW( options_item_bool )( *this, "r_vsync", 3 );
-			m_options[ 4 ]	= NEW( options_item_int )( *this, "r_antialiasing_method", 4, antialiasing_data, 3 );
-			m_options[ 5 ]	= NEW( options_item_int )( *this, "r_max_anisotropic", 5, anisotrophic_filtering_data, 5 );
-			m_options[ 6 ]	= NEW( options_gamma_selector )( *this );
-			m_options[ 7 ]	= NEW( options_item_float )( *this, "fov", 7, 1.0f );
-			m_options[ 8 ]	= NEW( options_graphics_quality_selector )( *this );
-			m_options[ 9 ]	= NEW( options_item_int )( *this, "r_texture_quality", 9, texture_quality_data, 3 );
-			m_options[ 10 ]	= NEW( options_item_int )( *this, "r_geometry_quality", 10, geometry_quality_data, 2 );
-			m_options[ 11 ]	= NEW( options_item_int )( *this, "r_shadow_quality", 11, shadow_quality_data, 4 );
-			m_options[ 12 ]	= NEW( options_item_int )( *this, "r_lighting_quality", 12, lighting_quality_data, 4 );
-			m_options[ 13 ]	= NEW( options_item_int )( *this, "r_shading_quality", 13, shading_quality_data, 4 );
-			m_options[ 14 ]	= NEW( options_item_int )( *this, "r_decorations_quality", 14, decorations_quality_data, 3 );
-			m_options[ 15 ]	= NEW( options_item_int )( *this, "r_post_process_quality", 15, post_process_quality_data, 4 );
-			m_options[ 16 ]	= NEW( options_item_int )( *this, "r_ambient_occlusion_quality", 16, ambient_occlusion_data, 4 );
-			m_options[ 17 ]	= NEW( options_item_int )( *this, "r_particles_quality", 17, particles_quality_data, 3 );
-			m_options[ 18 ]	= NEW( options_item_int )( *this, "r_motion_blur_quality", 18, motion_blur_quality_data, 4 );
+			m_options[ 0 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_monitor_index_selector )( *this );
+			m_options[ 1 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_resolution_selector )( *this );
+			m_options[ 2 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "r_fullscreen", 2 );
+			m_options[ 3 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "r_vsync", 3 );
+			m_options[ 4 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_antialiasing_method", 4, antialiasing_data, 3 );
+			m_options[ 5 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_max_anisotropic", 5, anisotrophic_filtering_data, 5 );
+			m_options[ 6 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_gamma_selector )( *this );
+			m_options[ 7 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "fov", 7, 1.0f );
+			m_options[ 8 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_graphics_quality_selector )( *this );
+			m_options[ 9 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_texture_quality", 9, texture_quality_data, 3 );
+			m_options[ 10 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_geometry_quality", 10, geometry_quality_data, 2 );
+			m_options[ 11 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_shadow_quality", 11, shadow_quality_data, 4 );
+			m_options[ 12 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_lighting_quality", 12, lighting_quality_data, 4 );
+			m_options[ 13 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_shading_quality", 13, shading_quality_data, 4 );
+			m_options[ 14 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_decorations_quality", 14, decorations_quality_data, 3 );
+			m_options[ 15 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_post_process_quality", 15, post_process_quality_data, 4 );
+			m_options[ 16 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_ambient_occlusion_quality", 16, ambient_occlusion_data, 4 );
+			m_options[ 17 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_particles_quality", 17, particles_quality_data, 3 );
+			m_options[ 18 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_int )( *this, "r_motion_blur_quality", 18, motion_blur_quality_data, 4 );
 			break;
 		}
 		case controllers_options_type:
 		{
 			m_options_count = 2;
-			m_options = NEW_ARRAY( options_item_base*, 2 );
+			m_options = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, options_item_base*, 2 );
 
-			m_options[ 0 ]	= NEW( options_item_bool )( *this, "mouse_invertion", 0 );
-			m_options[ 1 ]	= NEW( options_item_float )( *this, "sensitivity", 1, 0.05f );
+			m_options[ 0 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "mouse_invertion", 0 );
+			m_options[ 1 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "sensitivity", 1, 0.05f );
 			break;
 		}
 
@@ -517,15 +540,15 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 		case sound_options_type:
 		{
 			m_options_count = 7;
-			m_options = NEW_ARRAY( options_item_base*, 7 );
+			m_options = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, options_item_base*, 7 );
 
-			m_options[ 0 ]	= NEW( options_item_float )( *this, "s_general_volume", 0, 1.0f );
-			m_options[ 1 ]	= NEW( options_item_float )( *this, "s_ingame_volume", 1, 1.0f );
-			m_options[ 2 ]	= NEW( options_item_float )( *this, "s_music_volume", 2, 1.0f );
-			m_options[ 3 ]	= NEW( options_item_float )( *this, "s_chat_volume", 3, 1.0f );
-			m_options[ 4 ]	= NEW( options_item_bool )( *this, "s_use_microphone", 4 );
-			m_options[ 5 ]	= NEW( options_item_float )( *this, "s_mic_sens", 5, 1.0f );
-			m_options[ 6 ]	= NEW( options_item_bool )( *this, "s_ptt_button", 6 );
+			m_options[ 0 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "s_general_volume", 0, 1.0f );
+			m_options[ 1 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "s_ingame_volume", 1, 1.0f );
+			m_options[ 2 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "s_music_volume", 2, 1.0f );
+			m_options[ 3 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "s_chat_volume", 3, 1.0f );
+			m_options[ 4 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "s_use_microphone", 4 );
+			m_options[ 5 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_float )( *this, "s_mic_sens", 5, 1.0f );
+			m_options[ 6 ]	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, options_item_bool )( *this, "s_ptt_button", 6 );
 			break;
 		}
 	}
@@ -534,9 +557,9 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
  options_tab::~options_tab( )
 {
 	for ( u8 i = 0; i < m_options_count; ++i )
-		DELETE( m_options[ i ] );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_options[ i ] );
 
-	DELETE_ARRAY( m_options );
+	VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, m_options );
 }
 
 void options_tab::apply( flash_movie_resource_ptr& movie )

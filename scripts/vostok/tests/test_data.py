@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 import struct
 import tempfile
 import unittest
@@ -45,6 +46,7 @@ from vostok.data.render_relocs import (
     _datum_token,
     _extentless_end,
     _first_diff,
+    _function_data_resolution,
     _function_fingerprint_pairs,
     _pattern,
     _problem_tags,
@@ -54,6 +56,46 @@ from vostok.data.render_relocs import (
     _select_candidate_vote,
     _select_extentless_candidate,
 )
+
+
+class FunctionDataResolutionTests(unittest.TestCase):
+    def test_direct_exact_needs_no_ledger_evidence(self):
+        self.assertEqual(_function_data_resolution("EXACT", {}), "EXACT")
+
+    def test_hash_scoped_max_settles_retention_drift(self):
+        row = {"max": 100.0, "status": "done", "hash": "abc", "note": ""}
+        self.assertEqual(
+            _function_data_resolution("BASE_DEFINITION_MISSING", row),
+            "HASH_MAX_EXACT",
+        )
+
+    def test_parked_code_note_does_not_acquit_data_drift(self):
+        row = {
+            "max": 99.0,
+            "status": "parked",
+            "hash": "abc",
+            "note": "exact structure; inline boundary",
+        }
+        self.assertEqual(
+            _function_data_resolution("USE_DIFF", row), "OPEN"
+        )
+
+    def test_two_sided_missing_definition_stays_open(self):
+        row = {
+            "max": 99.0,
+            "status": "parked",
+            "hash": "abc",
+            "note": "build path",
+        }
+        self.assertEqual(
+            _function_data_resolution("DEFINITION_MISSING_BOTH", row), "OPEN"
+        )
+
+    def test_unreviewed_difference_stays_open(self):
+        self.assertEqual(
+            _function_data_resolution("USE_DIFF", {"status": "inprogress"}),
+            "OPEN",
+        )
 
 
 def _synthetic_pe(path: Path) -> None:

@@ -15,7 +15,7 @@ namespace vostok {
 namespace fs_new {
 
 open_file_cache				g_open_file_cache	[2];
-u32							g_open_file_counter	=	0;
+u32							g_open_file_counter	=	1;
 bool						g_use_open_file_cache	=	false;
 
 signalling_bool   calculate_file_size	(synchronous_device_interface const &	device, 

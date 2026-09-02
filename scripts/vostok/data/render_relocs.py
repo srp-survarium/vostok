@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Direct retail/base relocation audit for the Vostok render module.
+
+"""Direct retail/base relocation audit for one Vostok module.
 
 This is intentionally simpler than the consumer-owned data projection.  It
-starts with every physical HIGHLOW relocation in a render function whose value
+starts with every physical HIGHLOW relocation in a module function whose value
 lands in .rdata or .data (including the loader-zero BSS tail), pairs sites only
 through function evidence, and records what each side actually addresses.
 
@@ -66,7 +67,8 @@ EXTENTLESS_COLUMNS = (
 
 FUNCTION_DATA_COLUMNS = (
     "unit", "function", "target_function_rvas", "base_function_rvas",
-    "target_datum_count", "base_datum_count", "status",
+    "target_datum_count", "base_datum_count", "status", "resolution",
+    "source_hash", "ledger_status",
     "missing_target_datums", "extra_base_datums",
     "missing_base_definitions", "missing_target_definitions",
 )
@@ -145,6 +147,25 @@ class Datum:
     @property
     def complete(self) -> bool:
         return self.size is not None and self.size > 0
+
+
+@dataclasses.dataclass(frozen=True)
+class ModuleArtifacts:
+    audit: Path
+    extentless: Path
+    function_data: Path
+    report: Path
+    problems: Path
+
+
+def _artifacts(module: str) -> ModuleArtifacts:
+    return ModuleArtifacts(
+        audit=paths.data_module_reloc_audit(module),
+        extentless=paths.data_module_extentless(module),
+        function_data=paths.data_module_function_data(module),
+        report=paths.data_module_reloc_report(module),
+        problems=paths.data_module_problems(module),
+    )
 
 
 class DatumIndex:
@@ -302,12 +323,12 @@ def _storage(image: PEImage, rva: int, datum: Datum | None = None) -> str:
     return section.name.lstrip(".")
 
 
-def _render_records(side: str, pairs: sema_pairing.Pairing,
-                    ledger: dict[str, dict]) -> list[dict]:
+def _module_records(side: str, pairs: sema_pairing.Pairing,
+                    ledger: dict[str, dict], module: str) -> list[dict]:
     records = pairs.target_records if side == "target" else pairs.base_records
     return [
         row for row in records
-        if (sema_pairing.ledger_row(row, ledger) or {}).get("module") == "render"
+        if (sema_pairing.ledger_row(row, ledger) or {}).get("module") == module
     ]
 
 
@@ -326,8 +347,8 @@ def _owner_records(rows: list[dict]) -> dict[tuple[str, str], list[dict]]:
 
 
 def _load_sites(side: str, pairs: sema_pairing.Pairing,
-                ledger: dict[str, dict]) -> dict[int, Site]:
-    records = _render_records(side, pairs, ledger)
+                ledger: dict[str, dict], module: str) -> dict[int, Site]:
+    records = _module_records(side, pairs, ledger, module)
     owners = _owner_records(records)
     path = paths.DATA_TARGET_ACCESS if side == "target" else paths.DATA_BASE_ACCESS
     grouped: dict[int, set[Access]] = defaultdict(set)
@@ -342,7 +363,7 @@ def _load_sites(side: str, pairs: sema_pairing.Pairing,
         ]
         for owner in containing:
             ledger_row = sema_pairing.ledger_row(owner, ledger)
-            if not ledger_row or ledger_row.get("module") != "render":
+            if not ledger_row or ledger_row.get("module") != module:
                 continue
             site = int(raw["site_rva"], 0)
             grouped[site].add(Access(
@@ -370,8 +391,8 @@ def _load_sites(side: str, pairs: sema_pairing.Pairing,
 
 
 def _expected_sites(side: str, image: PEImage, pairs: sema_pairing.Pairing,
-                    ledger: dict[str, dict]) -> set[int]:
-    functions = _RangeIndex(_render_records(side, pairs, ledger))
+                    ledger: dict[str, dict], module: str) -> set[int]:
+    functions = _RangeIndex(_module_records(side, pairs, ledger, module))
     text = image.section(".text")
     result = set()
     for site in image.base_relocations():
@@ -1280,6 +1301,7 @@ def _function_data_rows(
     audit: list[dict[str, str]],
     target_index: DatumIndex,
     base_index: DatumIndex,
+    ledger: dict[str, dict],
 ) -> list[dict[str, str]]:
     groups: dict[tuple[str, str], dict] = defaultdict(lambda: {
         "paired": False,
@@ -1364,6 +1386,9 @@ def _function_data_rows(
         else:
             status = "USE_DIFF"
 
+        ledger_row = ledger.get(function, {})
+        resolution = _function_data_resolution(status, ledger_row)
+
         result.append({
             "unit": unit,
             "function": function,
@@ -1376,6 +1401,9 @@ def _function_data_rows(
             "target_datum_count": str(len(target_tokens)),
             "base_datum_count": str(len(base_tokens)),
             "status": status,
+            "resolution": resolution,
+            "source_hash": ledger_row.get("hash") or "-",
+            "ledger_status": ledger_row.get("status") or "-",
             "missing_target_datums": describe("target", missing),
             "extra_base_datums": describe("base", extra),
             "missing_base_definitions": describe(
@@ -1386,6 +1414,26 @@ def _function_data_rows(
             ),
         })
     return result
+
+
+def _function_data_resolution(
+    raw_status: str, ledger_row: dict[str, object],
+) -> str:
+    """Separate raw relocation equality from hash-scoped byte proof.
+
+    Direct datum ownership moves across function boundaries under LTCG.  A raw
+    USE_DIFF therefore remains valuable evidence.  Only a byte-exact result for
+    this exact source hash may close it automatically: ordinary parked ledger
+    notes describe code-matching work and are not data-audit evidence.  This is
+    deliberately conservative so an old generic wall cannot hide a newly
+    exposed wrong value.
+    """
+    if raw_status == "EXACT":
+        return "EXACT"
+    maximum = ledger_row.get("max")
+    if isinstance(maximum, (int, float)) and maximum >= 100:
+        return "HASH_MAX_EXACT"
+    return "OPEN"
 
 
 def _problem_tags(row: dict[str, str]) -> list[str]:
@@ -1425,7 +1473,8 @@ def _write_markdown(audit: list[dict[str, str]],
                     extentless: list[dict[str, str]],
                     function_data: list[dict[str, str]], report: dict,
                     target_image: PEImage, base_image: PEImage,
-                    target_index: DatumIndex, base_index: DatumIndex) -> None:
+                    target_index: DatumIndex, base_index: DatumIndex,
+                    module: str, artifacts: ModuleArtifacts) -> None:
     settled_extentless = {
         row["target_rva"] for row in extentless
         if row["compare_status"] in _SETTLED_EXTENTLESS
@@ -1465,10 +1514,10 @@ def _write_markdown(audit: list[dict[str, str]],
         if any(row["identity_status"] == "EXACT" for row in rows)
     }
     lines = [
-        "# Render data relocation problems",
+        f"# {module} data relocation problems",
         "",
-        "_Generated by `python3 -m vostok data render-relocs`. Every physical",
-        "retail and candidate render relocation into `.rdata`, `.data`, or the",
+        f"_Generated by `python3 -m vostok data module-relocs {module}`. Every physical",
+        f"retail and candidate {module} relocation into `.rdata`, `.data`, or the",
         "loader-zero BSS tail is represented exactly once in the machine audit.",
         "This file contains every problem found by that audit._",
         "",
@@ -1487,8 +1536,10 @@ def _write_markdown(audit: list[dict[str, str]],
         f"  - Wrong-referent/pairing comparison windows: "
         f"{len(complete_mismatches) - len(identity_aligned_complete):,}",
         f"- Extentless allocation dossiers: {len(extentless):,}",
-        f"- Paired functions with different deduplicated datum sets: "
+        f"- Paired functions with raw deduplicated datum-set differences: "
         f"{sum(count for status, count in report['function_data_status'].items() if status != 'EXACT'):,}",
+        f"- Open function datum-use rows: "
+        f"{report['function_data_resolution'].get('OPEN', 0):,}",
         "",
         "Pairing modes: " + ", ".join(
             f"`{name}`={count:,}" for name, count in report["pair_kind"].items()
@@ -1535,6 +1586,10 @@ def _write_markdown(audit: list[dict[str, str]],
         "A `*_DEFINITION_MISSING` result is stronger: at least one allocation",
         "has neither a stable identity/content counterpart nor an exact complete",
         "window proved elsewhere by aligned relocation evidence.",
+        "`HASH_MAX_EXACT` means this exact source-body hash previously emitted",
+        "the retail body byte-for-byte. Ordinary parked code-matching notes do",
+        "not close datum-use rows; every other raw difference remains `OPEN`",
+        "until byte proof or dedicated data-audit evidence settles it.",
         "",
         "## Function-level datum-set differences",
         "",
@@ -1549,9 +1604,9 @@ def _write_markdown(audit: list[dict[str, str]],
             "by their whole normalized bytes, so folded constants do not depend",
             "on which TU supplied their symbol.",
             "",
-            "| Class | Unit | Function | Retail/base datums | Missing retail "
+            "| Class | Resolution | Unit | Function | Retail/base datums | Missing retail "
             "uses | Extra candidate uses | Missing definitions |",
-            "|---|---|---|---:|---|---|---|",
+            "|---|---|---|---|---:|---|---|---|",
         ))
         for row in different_functions:
             missing_definitions = "; ".join(
@@ -1561,8 +1616,9 @@ def _write_markdown(audit: list[dict[str, str]],
                 ) if value != "-"
             ) or "-"
             lines.append(
-                "| `{}` | `{}` | `{}` | `{}/{}` | `{}` | `{}` | `{}` |".format(
+                "| `{}` | `{}` | `{}` | `{}` | `{}/{}` | `{}` | `{}` | `{}` |".format(
                     row["status"],
+                    row["resolution"],
                     _markdown_cell(row["unit"]),
                     _markdown_cell(row["function"]),
                     row["target_datum_count"], row["base_datum_count"],
@@ -1798,7 +1854,7 @@ def _write_markdown(audit: list[dict[str, str]],
                 )
             )
         lines.append("")
-    write_if_changed(paths.DATA_RENDER_PROBLEMS, "\n".join(lines) + "\n")
+    write_if_changed(artifacts.problems, "\n".join(lines) + "\n")
 
 
 def _inputs() -> dict[str, str]:
@@ -1815,22 +1871,25 @@ def _inputs() -> dict[str, str]:
     }
 
 
-def refresh() -> dict:
+def refresh(module: str = "render") -> dict:
+    artifacts = _artifacts(module)
     pairs = sema_pairing.Pairing()
     ledger = store.load()
     target_image = PEImage(pipeline.image_paths("target")[0])
     base_image = PEImage(pipeline.image_paths("base")[0])
-    target_sites = _load_sites("target", pairs, ledger)
-    base_sites = _load_sites("base", pairs, ledger)
-    expected_target = _expected_sites("target", target_image, pairs, ledger)
-    expected_base = _expected_sites("base", base_image, pairs, ledger)
+    target_sites = _load_sites("target", pairs, ledger, module)
+    base_sites = _load_sites("base", pairs, ledger, module)
+    expected_target = _expected_sites(
+        "target", target_image, pairs, ledger, module
+    )
+    expected_base = _expected_sites("base", base_image, pairs, ledger, module)
     if set(target_sites) != expected_target:
         raise RuntimeError(
-            "target access map does not cover every physical render data relocation"
+            f"target access map does not cover every physical {module} data relocation"
         )
     if set(base_sites) != expected_base:
         raise RuntimeError(
-            "base access map does not cover every physical render data relocation"
+            f"base access map does not cover every physical {module} data relocation"
         )
 
     site_pairs, used_base = _pair_sites(target_sites, base_sites)
@@ -1862,16 +1921,14 @@ def refresh() -> dict:
     extentless = _extentless_rows(
         audit, target_index, base_index, target_image, base_image
     )
-    function_data = _function_data_rows(audit, target_index, base_index)
-    _write_tsv(paths.DATA_RENDER_RELOC_AUDIT, AUDIT_COLUMNS, audit)
-    _write_tsv(paths.DATA_RENDER_EXTENTLESS, EXTENTLESS_COLUMNS, extentless)
-    _write_tsv(
-        paths.DATA_RENDER_FUNCTION_DATA, FUNCTION_DATA_COLUMNS, function_data
-    )
+    function_data = _function_data_rows(audit, target_index, base_index, ledger)
+    _write_tsv(artifacts.audit, AUDIT_COLUMNS, audit)
+    _write_tsv(artifacts.extentless, EXTENTLESS_COLUMNS, extentless)
+    _write_tsv(artifacts.function_data, FUNCTION_DATA_COLUMNS, function_data)
 
     report = {
-        "schema": 2,
-        "module": "render",
+        "schema": 3,
+        "module": module,
         "inputs": _inputs(),
         "target_relocation_sites": len(target_sites),
         "base_relocation_sites": len(base_sites),
@@ -1905,35 +1962,36 @@ def refresh() -> dict:
         "function_data_status": dict(sorted(Counter(
             row["status"] for row in function_data
         ).items())),
+        "function_data_resolution": dict(sorted(Counter(
+            row["resolution"] for row in function_data
+        ).items())),
     }
     _write_markdown(
         audit, extentless, function_data, report,
-        target_image, base_image, target_index, base_index,
+        target_image, base_image, target_index, base_index, module, artifacts,
     )
     report["outputs"] = {
-        "audit_sha256": pipeline._file_hash(paths.DATA_RENDER_RELOC_AUDIT),
-        "extentless_sha256": pipeline._file_hash(paths.DATA_RENDER_EXTENTLESS),
-        "function_data_sha256": pipeline._file_hash(
-            paths.DATA_RENDER_FUNCTION_DATA
-        ),
-        "problems_sha256": pipeline._file_hash(paths.DATA_RENDER_PROBLEMS),
+        "audit_sha256": pipeline._file_hash(artifacts.audit),
+        "extentless_sha256": pipeline._file_hash(artifacts.extentless),
+        "function_data_sha256": pipeline._file_hash(artifacts.function_data),
+        "problems_sha256": pipeline._file_hash(artifacts.problems),
     }
     write_if_changed(
-        paths.DATA_RENDER_RELOC_REPORT,
+        artifacts.report,
         json.dumps(report, indent=2, sort_keys=True) + "\n",
     )
     return report
 
 
-def _load_report() -> dict:
-    return json.loads(paths.DATA_RENDER_RELOC_REPORT.read_text(encoding="utf-8"))
+def _load_report(module: str = "render") -> dict:
+    return json.loads(_artifacts(module).report.read_text(encoding="utf-8"))
 
 
-def print_report(report: dict | None = None) -> None:
-    report = report or _load_report()
+def print_report(report: dict | None = None, module: str = "render") -> None:
+    report = report or _load_report(module)
     paired = report["pair_status"].get("PAIRED", 0)
     print(
-        "Render data relocations: {target_relocation_sites:,} retail / "
+        "{module} data relocations: {target_relocation_sites:,} retail / "
         "{base_relocation_sites:,} base; {paired:,} paired; "
         "{extentless_allocations:,} extentless allocation dossier(s)".format(
             paired=paired, **report
@@ -1942,59 +2000,52 @@ def print_report(report: dict | None = None) -> None:
     for key in (
         "pair_kind", "access_status", "identity_status", "extent_status",
         "datum_status", "extentless_status", "function_data_status",
+        "function_data_resolution",
     ):
         print("  " + key + ": " + "  ".join(
             f"{name}={count:,}" for name, count in report[key].items()
         ))
 
 
-def check() -> int:
-    required = (
-        paths.DATA_RENDER_RELOC_AUDIT,
-        paths.DATA_RENDER_EXTENTLESS,
-        paths.DATA_RENDER_FUNCTION_DATA,
-        paths.DATA_RENDER_RELOC_REPORT,
-        paths.DATA_RENDER_PROBLEMS,
-    )
+def check(module: str = "render") -> int:
+    artifacts = _artifacts(module)
+    required = tuple(dataclasses.astuple(artifacts))
     if missing_paths := [path for path in required if not path.is_file()]:
-        print("missing render relocation artifacts: " + ", ".join(map(str, missing_paths)))
+        print(f"missing {module} relocation artifacts: " +
+              ", ".join(map(str, missing_paths)))
         return 1
-    report = _load_report()
-    if report.get("schema") != 2 or report.get("module") != "render":
-        print("unsupported render relocation report schema")
+    report = _load_report(module)
+    if report.get("schema") != 3 or report.get("module") != module:
+        print(f"unsupported {module} relocation report schema")
         return 1
     if report.get("inputs") != _inputs():
-        print("render relocation report inputs are stale")
+        print(f"{module} relocation report inputs are stale")
         return 1
     outputs = {
-        "audit_sha256": pipeline._file_hash(paths.DATA_RENDER_RELOC_AUDIT),
-        "extentless_sha256": pipeline._file_hash(paths.DATA_RENDER_EXTENTLESS),
-        "function_data_sha256": pipeline._file_hash(
-            paths.DATA_RENDER_FUNCTION_DATA
-        ),
-        "problems_sha256": pipeline._file_hash(paths.DATA_RENDER_PROBLEMS),
+        "audit_sha256": pipeline._file_hash(artifacts.audit),
+        "extentless_sha256": pipeline._file_hash(artifacts.extentless),
+        "function_data_sha256": pipeline._file_hash(artifacts.function_data),
+        "problems_sha256": pipeline._file_hash(artifacts.problems),
     }
     if report.get("outputs") != outputs:
-        print("render relocation report outputs are stale")
+        print(f"{module} relocation report outputs are stale")
         return 1
-    with paths.DATA_RENDER_RELOC_AUDIT.open(newline="", encoding="utf-8") as source:
+    with artifacts.audit.open(newline="", encoding="utf-8") as source:
         reader = csv.DictReader(source, delimiter="\t")
         if tuple(reader.fieldnames or ()) != AUDIT_COLUMNS:
-            print("render relocation audit has an unexpected schema")
+            print(f"{module} relocation audit has an unexpected schema")
             return 1
         audit = list(reader)
-    with paths.DATA_RENDER_EXTENTLESS.open(newline="", encoding="utf-8") as source:
+    with artifacts.extentless.open(newline="", encoding="utf-8") as source:
         reader = csv.DictReader(source, delimiter="\t")
         if tuple(reader.fieldnames or ()) != EXTENTLESS_COLUMNS:
-            print("render extentless audit has an unexpected schema")
+            print(f"{module} extentless audit has an unexpected schema")
             return 1
         extentless = list(reader)
-    with paths.DATA_RENDER_FUNCTION_DATA.open(
-        newline="", encoding="utf-8"
-    ) as source:
+    with artifacts.function_data.open(newline="", encoding="utf-8") as source:
         reader = csv.DictReader(source, delimiter="\t")
         if tuple(reader.fieldnames or ()) != FUNCTION_DATA_COLUMNS:
-            print("render function data audit has an unexpected schema")
+            print(f"{module} function data audit has an unexpected schema")
             return 1
         function_data = list(reader)
     target_sites = [
@@ -2006,46 +2057,52 @@ def check() -> int:
         for row in audit if row["base_site_rva"] != "-"
     ]
     if len(target_sites) != len(set(target_sites)):
-        print("a retail render relocation appears more than once in the audit")
+        print(f"a retail {module} relocation appears more than once in the audit")
         return 1
     if len(base_sites) != len(set(base_sites)):
-        print("a base render relocation appears more than once in the audit")
+        print(f"a base {module} relocation appears more than once in the audit")
         return 1
     pairs = sema_pairing.Pairing()
     ledger = store.load()
     target_image = PEImage(pipeline.image_paths("target")[0])
     base_image = PEImage(pipeline.image_paths("base")[0])
-    if set(target_sites) != _expected_sites("target", target_image, pairs, ledger):
-        print("render relocation audit does not contain every retail site")
+    if set(target_sites) != _expected_sites(
+        "target", target_image, pairs, ledger, module
+    ):
+        print(f"{module} relocation audit does not contain every retail site")
         return 1
-    if set(base_sites) != _expected_sites("base", base_image, pairs, ledger):
-        print("render relocation audit does not contain every base site")
+    if set(base_sites) != _expected_sites(
+        "base", base_image, pairs, ledger, module
+    ):
+        print(f"{module} relocation audit does not contain every base site")
         return 1
     if len(audit) != report["audit_rows"] or len(extentless) != report[
         "extentless_allocations"
     ]:
-        print("render relocation report row counts are inconsistent")
+        print(f"{module} relocation report row counts are inconsistent")
         return 1
     if dict(sorted(Counter(
         row["status"] for row in function_data
     ).items())) != report["function_data_status"]:
-        print("render function data report counts are inconsistent")
+        print(f"{module} function data report counts are inconsistent")
+        return 1
+    if dict(sorted(Counter(
+        row["resolution"] for row in function_data
+    ).items())) != report["function_data_resolution"]:
+        print(f"{module} function data resolution counts are inconsistent")
         return 1
     print(
-        f"render relocation audit complete: {len(target_sites):,} retail and "
+        f"{module} relocation audit complete: {len(target_sites):,} retail and "
         f"{len(base_sites):,} base site(s), each represented exactly once"
     )
     return 0
 
 
-def inspect(pattern: str) -> int:
+def inspect(pattern: str, module: str = "render") -> int:
     needle = pattern.casefold()
     matches = 0
-    for path in (
-        paths.DATA_RENDER_FUNCTION_DATA,
-        paths.DATA_RENDER_EXTENTLESS,
-        paths.DATA_RENDER_RELOC_AUDIT,
-    ):
+    artifacts = _artifacts(module)
+    for path in (artifacts.function_data, artifacts.extentless, artifacts.audit):
         with path.open(newline="", encoding="utf-8") as source:
             for row in csv.DictReader(source, delimiter="\t"):
                 if needle not in "\t".join(row.values()).casefold():

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.names - reading MSVC names, and rendering them short.
 
 Two directions. `qualified_name`/`norm_name`/`mangled_name_part` normalize a

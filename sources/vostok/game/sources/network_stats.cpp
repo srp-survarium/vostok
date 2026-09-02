@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "network_stats.h"
 
 #include "stats_graph.h"
 #include "flash_text_manager.h"
-#include "game_memory.h"		// NEW / DELETE ( survarium::g_allocator )
+#include "game_memory.h"		// survarium::g_allocator
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/math_constants.h>
 
@@ -17,8 +15,8 @@ stats_stream::~stats_stream( )
 {
 	if( text_manager )
 	{
-		DELETE( bytes_per_second_graph );
-		DELETE( graph );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, bytes_per_second_graph );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, graph );
 
 		text_manager->destroy_text( count_per_second );
 		text_manager->destroy_text( bits_per_second );
@@ -59,8 +57,8 @@ void stats_stream::create(
 	count_per_second.set_color		( color.get_R( ), color.get_G( ), color.get_B( ), color.get_A( ) );
 	count_per_second.set_position	( start_width + column0_width + column1_width + column2_width, start_height );
 
-	graph					= NEW( stats_graph )( 3.f, math::infinity, 256.f, 1024.f, 0xFF00FF00 );
-	bytes_per_second_graph	= NEW( stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
+	graph					= VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_graph )( 3.f, math::infinity, 10.f, 30.f, 0xFF00FF00 );
+	bytes_per_second_graph	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
 }
 
 void stats_stream::set_text(
@@ -80,13 +78,13 @@ void stats_stream::set_text(
 	sprintf_big_number	( text, new_stats.bytes, 1024, "b", "bytes" );
 	bytes.set_text		( text );
 
-	if( graph->cumulative_time( ) > math::epsilon_5 )
+	if( graph->cumulative_time( ) > 0.f )
 	{
 		sprintf_big_number		( text, (u32)math::floor( graph->cumulative_value( ) / graph->cumulative_time( ) ), "" );
 		count_per_second.set_text	( text );
 	}
 
-	if( bytes_per_second_graph->cumulative_time( ) > math::epsilon_5 )
+	if( bytes_per_second_graph->cumulative_time( ) > 0.f )
 	{
 		vostok::sprintf< 256 >	( text, "%4.1f Kbits", bytes_per_second_graph->cumulative_value( ) / bytes_per_second_graph->cumulative_time( ) * ( 1.f / 128.f ) );
 		bits_per_second.set_text	( text );
@@ -97,7 +95,7 @@ stats_row::~stats_row( )
 {
 	if( text_manager )
 	{
-		DELETE( data_bytes_per_second_graph );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, data_bytes_per_second_graph );
 
 		text_manager->destroy_text( messages_per_second );
 		text_manager->destroy_text( data_bits_per_message );
@@ -150,7 +148,7 @@ void stats_row::create(
 	messages_per_second.set_color		( color.get_R( ), color.get_G( ), color.get_B( ), color.get_A( ) );
 	messages_per_second.set_position	( 1305.f, start_height );
 
-	data_bytes_per_second_graph	= NEW( stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
+	data_bytes_per_second_graph	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
 }
 
 void stats_row::set_text(
@@ -171,7 +169,7 @@ void stats_row::set_text(
 	sprintf_big_number	( text, new_stats.data_bytes, 1024, "b", "bytes" );
 	data_bytes.set_text	( text );
 
-	if( data_bytes_per_second_graph->cumulative_time( ) > math::epsilon_5 )
+	if( data_bytes_per_second_graph->cumulative_time( ) > 0.f )
 	{
 		vostok::sprintf< 256 >		( text, "%4.1f Kbits", data_bytes_per_second_graph->cumulative_value( ) / data_bytes_per_second_graph->cumulative_time( ) * ( 1.f / 128.f ) );
 		data_bits_per_second.set_text	( text );
@@ -183,7 +181,7 @@ void stats_row::set_text(
 		data_bits_per_message.set_text	( text );
 	}
 
-	if( packets.graph->cumulative_value( ) > math::epsilon_5 )
+	if( packets.graph->cumulative_value( ) > 0.f )
 	{
 		vostok::sprintf< 256 >			( text, "%5.2f mpp", messages.graph->cumulative_value( ) / packets.graph->cumulative_value( ) );
 		messages_per_second.set_text	( text );

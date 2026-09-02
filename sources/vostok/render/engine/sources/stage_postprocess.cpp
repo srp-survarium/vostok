@@ -176,7 +176,7 @@ void bloom_shader_constants::set( float bloom_scale, float bloom_max_color, floa
 	float4 bloom_parameters(bloom_scale, bloom_max_color, 0.0f, 0.0f);
 
 	backend::ref().set_ps_constant(m_bloom_parameters, bloom_parameters);
-	backend::ref().set_ps_constant(m_bloom_parameters1, float4(halo_color, 0.0f));
+	backend::ref().set_ps_constant(m_bloom_parameters1, float4(halo_color, 1.0f));
 }
 
 dof_shader_constants::dof_shader_constants( )

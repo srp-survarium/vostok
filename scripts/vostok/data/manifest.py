@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """Consumer-owned data projections for target/base delinking.
 
 The linked LTCG image does not preserve ordinary compiler object boundaries.

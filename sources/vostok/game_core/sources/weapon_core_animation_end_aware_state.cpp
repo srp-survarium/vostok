@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 06.12.2025
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 #include <vostok/game_core/weapon_core.h>		// m_weapon.set/remove_animation_callback, get_user

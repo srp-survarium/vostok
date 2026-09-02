@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "player.h"
 #include "game.h"
@@ -254,7 +252,7 @@ void player::apply_input_before_new_transform(
 	if( is_local )
 		apply_input( player_state, previous_input.angular_velocity, m_input.angular_acceleration, time_delta );
 
-	if( math::abs( angle ) >= math::epsilon_3 )
+	if( math::abs( angle ) >= math::epsilon_7 )
 		player_state.transform = math::mul4x3(
 			math::create_rotation( new_rotation ),
 			player_state.transform );

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game_world.h"
 #include "game.h"			// get_game().get_sound_world() needs game complete
@@ -60,16 +58,16 @@ using namespace vostok;
 
 // file-scope debug console commands (global namespace - mangled @@3IA / @@3_NA);
 // s_max_tracers_count caps the per-frame bullet-tracer request fan-out in load()
-u32	s_max_tracers_count		= 8;
+u32	s_max_tracers_count		= 64;
 bool	s_draw_respawn_debug	= false;
 bool	s_draw_game_match_stats	= false;
 
 static console_commands::cc_u32		bullet_tracers_max_count_cc(
 	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
 static console_commands::cc_bool	draw_respawn_debug_cc(
-	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_engine_internal );
+	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_user_specific );
 static console_commands::cc_bool	draw_match_stats_cc(
-	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_engine_internal );
+	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_user_specific );
 
 namespace survarium {
 
@@ -133,10 +131,10 @@ void game_world::register_cooks( )
 
 game_world::~game_world( )
 {
-	DELETE( m_free_fly_camera );
-	DELETE( m_active_npc_stats );
-	DELETE( m_step_manager );
-	DELETE( m_damage_model_stats );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_free_fly_camera );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_active_npc_stats );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_step_manager );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_damage_model_stats );
 }
 
 void game_world::on_after_tick( )
@@ -236,7 +234,7 @@ void game_world::on_project_loaded(
 	if ( !m_game_material_manager )
 	{
 		m_game_material_manager	= static_cast_resource_ptr< game_material_manager_ptr >( data[resource_index++].get_unmanaged_resource( ) );
-		m_bullet_manager		= NEW( bullet_manager )( m_game_material_manager.c_ptr( ), get_physics_world( ), this );
+		m_bullet_manager		= VOSTOK_NEW_IMPL( ::survarium::g_allocator, bullet_manager )( m_game_material_manager.c_ptr( ), get_physics_world( ), this );
 	}
 
 	m_game_project = static_cast_resource_ptr< simple_game_project_ptr >( data[resource_index++].get_unmanaged_resource( ) );
@@ -512,8 +510,8 @@ void game_world::clear_resources( )
 		get_game( ).get_sound_world( ).get_logic_world_user( ).remove_sound_scene(
 			reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ) );
 
-	DELETE( m_damage_model_stats );
-	DELETE( m_active_npc_stats );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_damage_model_stats );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_active_npc_stats );
 
 	m_ai_navigation_world->clear_resources( );
 	m_ai_world->clear_resources( );
@@ -528,7 +526,7 @@ void game_world::clear_resources( )
 		m_game_material_manager->clear_resources( );
 		m_game_material_manager = NULL;
 
-		DELETE( m_bullet_manager );
+		VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_bullet_manager );
 	}
 }
 

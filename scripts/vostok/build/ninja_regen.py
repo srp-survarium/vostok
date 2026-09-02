@@ -28,6 +28,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+from vostok.core import paths
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
@@ -99,6 +100,61 @@ def _normalize_link_rsp_paths(
     source = "Z:" + str(solution_dir)
     root = "Z:" + str(repo_dir) + "/"
     return text.replace(source + r"\../", root).replace(source + r"\/../", root)
+
+
+def _normalize_compile_rsp_source_root(
+    text: str,
+    repo_dir: Path = VOSTOK_DIR,
+) -> str:
+    """Compile through retail's C:\\survarium\\sources include root.
+
+    Only include switches move.  Object, PCH, and PDB outputs deliberately stay
+    on the worktree's Z: path; rewriting the source-root substring globally
+    would redirect ``sources\\../binaries`` outside the build tree.
+    """
+    local = "Z:" + str(repo_dir / "sources")
+    retail = paths.RETAIL_INCLUDE_SOURCE_PREFIX.replace("\\", "/")
+    return text.replace(f'/I "{local}', f'/I "{retail}')
+
+
+def _normalize_compile_working_source_root(
+    text: str,
+    repo_dir: Path = VOSTOK_DIR,
+) -> str:
+    """Run ``cl`` from retail's source drive without moving other tools.
+
+    Relative source and quoted-include paths are compiler input and therefore
+    affect ``__FILE__``.  Library response files, however, contain object paths
+    relative to the real checkout, so the ``lib`` and ``link`` rules must keep
+    using ``proj_dir`` on Z:.
+    """
+    local = "Z:" + str(repo_dir / "sources")
+    retail = paths.RETAIL_SOURCE_PREFIX.replace("\\", "/")
+    marker = f"proj_dir = {local}"
+    if marker not in text:
+        return text
+
+    lines = text.splitlines(keepends=True)
+    project_dir = next(
+        line.removeprefix("proj_dir = ").rstrip("\r\n")
+        for line in lines
+        if line.startswith("proj_dir = ")
+    )
+    if not project_dir.startswith(local):
+        return text
+    compile_dir = retail + project_dir[len(local):]
+
+    for index, line in enumerate(lines):
+        if line.startswith("proj_dir = "):
+            ending = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+            lines.insert(index + 1, f"compile_dir = {compile_dir}{ending}")
+            break
+    command = '  command = cmd /c cd "$proj_dir" && cl $flags'
+    lines = [
+        line.replace(command, '  command = cmd /c cd /d "$compile_dir" && cl $flags')
+        for line in lines
+    ]
+    return "".join(lines)
 
 
 def _normalize_link_rsp_library_order(text: str) -> str:
@@ -180,6 +236,10 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             if fp.name.endswith("_link.rsp"):
                 text = _normalize_link_rsp_paths(text)
                 text = _normalize_link_rsp_library_order(text)
+            elif fp.suffix == ".rsp" and "_cl_" in fp.name:
+                text = _normalize_compile_rsp_source_root(text)
+            elif fp.suffix == ".ninja":
+                text = _normalize_compile_working_source_root(text)
             dst = BUILD_DIR / rel
             if dst.is_file() and dst.read_text() == text:
                 continue

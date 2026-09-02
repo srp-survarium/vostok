@@ -46,7 +46,7 @@ void lights_db::initialize_sun( light_data& light_to_add )
 	m_sun->flags.is_static		= true;
 }
 
-static u32		s_v0_value = 2011;
+static u32		s_v0_value = 2012;
 static u32		s_v1_value = 10;
 static u32		s_v2_value = 31;
 static u32		s_v3_value = 12;

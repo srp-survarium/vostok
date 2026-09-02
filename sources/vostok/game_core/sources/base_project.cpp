@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 03.11.2025
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include <vostok/game_core/base_project.h>
 #include <vostok/game_core/static_collision.h> // sushi@TODO: Most likely needs to be merged into `base_project.h`.

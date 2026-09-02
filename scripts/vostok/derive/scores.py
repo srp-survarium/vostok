@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.scores - what objdiff measured, per function.
 
 report.json is per-UNIT; these read a function's score out of it, including the

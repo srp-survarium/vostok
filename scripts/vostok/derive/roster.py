@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.roster - the derivation, end to end.
 
 Five steps, one per module, and the order between them is the whole design:

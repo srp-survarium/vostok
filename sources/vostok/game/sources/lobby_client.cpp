@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "lobby_client.h"
 
@@ -64,8 +62,8 @@ lobby_client::~lobby_client( )
 
 void lobby_client::clear_initial_info( )
 {
-	FREE	( m_profile_slot_restrictions );
-	FREE	( m_items_compatibility );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_profile_slot_restrictions );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_items_compatibility );
 }
 
 void lobby_client::clear_profile_info( )
@@ -75,11 +73,11 @@ void lobby_client::clear_profile_info( )
 
 	m_account_money	= account_money( );
 
-	FREE	( m_player_skills );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_skills );
 	m_player_skills_count	= 0;
-	FREE	( m_player_reputations );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_reputations );
 	m_player_reputations_count	= 0;
-	FREE	( m_player_perks );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_perks );
 	m_player_perks_count	= 0;
 }
 
@@ -295,7 +293,7 @@ u8 lobby_client::read_price_items( network_core::packet_reader& reader )
 
 	if ( price.count )
 	{
-		price.items	= ALLOC( price_item, price.count );
+		price.items	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, price_item, price.count );
 		reader.r	( price.items, price.count * sizeof( price_item ), price.count * sizeof( price_item ) );
 	}
 
@@ -304,10 +302,10 @@ u8 lobby_client::read_price_items( network_core::packet_reader& reader )
 
 bool lobby_client::read_profile_slots_restrictions( network_core::packet_reader& reader )
 {
-	FREE	( m_profile_slot_restrictions );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_profile_slot_restrictions );
 
 	m_profile_slot_restrictions_count	= reader.r< u32 >( );
-	m_profile_slot_restrictions	= ALLOC( profile_slot_restriction, m_profile_slot_restrictions_count );
+	m_profile_slot_restrictions	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, profile_slot_restriction, m_profile_slot_restrictions_count );
 
 	if ( m_profile_slot_restrictions_count )
 		reader.r	( m_profile_slot_restrictions, m_profile_slot_restrictions_count * sizeof( profile_slot_restriction ), m_profile_slot_restrictions_count * sizeof( profile_slot_restriction ) );
@@ -317,10 +315,10 @@ bool lobby_client::read_profile_slots_restrictions( network_core::packet_reader&
 
 bool lobby_client::read_items_compatibility( network_core::packet_reader& reader )
 {
-	FREE	( m_items_compatibility );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_items_compatibility );
 
 	m_items_compatibilities_count	= reader.r< u32 >( );
-	m_items_compatibility	= ALLOC( items_compatibility, m_items_compatibilities_count );
+	m_items_compatibility	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, items_compatibility, m_items_compatibilities_count );
 
 	if ( m_items_compatibilities_count )
 		reader.r	( m_items_compatibility, m_items_compatibilities_count * sizeof( items_compatibility ), m_items_compatibilities_count * sizeof( items_compatibility ) );
@@ -330,21 +328,21 @@ bool lobby_client::read_items_compatibility( network_core::packet_reader& reader
 
 bool lobby_client::read_player_skills( network_core::packet_reader& reader )
 {
-	FREE	( m_player_skills );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_skills );
 
 	m_player_leveling_info.total_experience			= reader.r< u32 >( );
 	m_player_leveling_info.next_level_experience	= reader.r< u32 >( );
 	m_player_leveling_info.prev_level_experience	= reader.r< u32 >( );
 
 	m_player_skills_count	= reader.r< u8 >( );
-	m_player_skills	= ALLOC( survarium::player_skill, m_player_skills_count );
+	m_player_skills	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, survarium::player_skill, m_player_skills_count );
 	if ( m_player_skills_count )
 		reader.r	( m_player_skills, m_player_skills_count * sizeof( survarium::player_skill ), m_player_skills_count * sizeof( survarium::player_skill ) );
 
-	FREE	( m_player_perks );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_perks );
 
 	m_player_perks_count	= reader.r< u8 >( );
-	m_player_perks	= ALLOC( u8, m_player_perks_count );
+	m_player_perks	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, u8, m_player_perks_count );
 	if ( m_player_perks_count )
 		reader.r	( m_player_perks, m_player_perks_count * sizeof( u8 ), m_player_perks_count * sizeof( u8 ) );
 
@@ -481,10 +479,10 @@ bool lobby_client::read_service_prices( network_core::packet_reader& reader )
 
 bool lobby_client::read_player_reputations( network_core::packet_reader& reader )
 {
-	FREE	( m_player_reputations );
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_player_reputations );
 
 	m_player_reputations_count	= reader.r< u8 >( );
-	m_player_reputations	= ALLOC( player_reputation, m_player_reputations_count );
+	m_player_reputations	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, player_reputation, m_player_reputations_count );
 
 	if ( m_player_reputations_count )
 		reader.r	( m_player_reputations, m_player_reputations_count * sizeof( player_reputation ), m_player_reputations_count * sizeof( player_reputation ) );

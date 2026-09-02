@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 
@@ -23,7 +21,7 @@ void login_client_impl::on_sign_in_answer_received(
 		m_client_state		= signed_out;
 		close_connection	( false );
 		if ( error_code )
-			LOG_ERROR		( "[LOGIN] error during reading sign in answer: %s", error_code.message( ).c_str( ) );
+			LOG_ERROR		( "[LOGIN] error during reading sign in answer: %s\r\n", error_code.message( ).c_str( ) );
 
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, no_socket_error, sign_in_attempt_interval_violated_message_type );
@@ -92,7 +90,7 @@ void login_client_impl::on_sign_in_password_written(
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, successfully_handshaked, unable_to_write_to_socket, login_server_invalid_message_type );
-		LOG_ERROR			( "[LOGIN] write_password_during_SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] write_password_during_SIGN_IN: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -160,7 +158,7 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, no_handshake, unable_to_read_from_socket, login_server_invalid_message_type );
-		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 
@@ -210,7 +208,7 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 		close_connection	( false );
 		if ( !m_in_destructor )
 			callback		( successfully_connected, no_handshake, unable_to_write_to_socket, login_server_invalid_message_type );
-		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s", error_code.message( ).c_str( ) );
+		LOG_ERROR			( "[LOGIN] SIGN_IN: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		return;
 	}
 

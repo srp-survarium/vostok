@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """Referenced retail allocations absent from the retail PDB."""
 
 from __future__ import annotations

@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.classify - the structure verdict for one paired function.
 
 Bytes are objdiff's business. This asks the other question: do the two sides

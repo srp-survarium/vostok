@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "damage_zone_cook.h"
 #include "damage_zone.h"
@@ -53,7 +51,7 @@ void damage_zone_cook::on_sub_resources_loaded( resources::queries_result& data,
 		i = 0; i != n; ++i )
 		resources.push_back( data[i].get_unmanaged_resource( ) );
 
-	static u32 start_light_id;
+	static u32 start_light_id = 1024;
 	zone->load( cfg_val, resources, vector< render::light_props >( ), start_light_id );
 	start_light_id += 64;
 

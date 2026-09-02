@@ -28,10 +28,9 @@ import argparse
 import os
 import subprocess
 import sys
-from pathlib import Path
 
-from vostok.core.paths import BASE_PDB, STRUCTURE_DIR, survarium_bin
-from vostok.core.paths import ENGINE as ENGINE_DIR
+from vostok.core.paths import (BASE_PDB, RETAIL_SOURCE_PREFIX, STRUCTURE_DIR,
+                               survarium_bin)
 
 
 def log(msg: str) -> None:
@@ -40,14 +39,6 @@ def log(msg: str) -> None:
 
 def _pdb_parser() -> str:
     return os.environ.get("PDB_PARSER", "pdb_parser")
-
-
-def _wine_path(p: Path) -> str:
-    r"""Render a native absolute path the way MSVC-under-Wine records it in a PDB:
-    on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
-    e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
-    """
-    return "z:" + str(p).replace("/", "\\").lower()
 
 
 def generate(side: str) -> None:
@@ -61,12 +52,9 @@ def generate(side: str) -> None:
     if side == "base":
         pdb = BASE_PDB
         # pdb-parser strips this prefix from every source path recorded in the
-        # PDB. The base PDB is MSVC-built under Wine, so those paths look like
-        #   z:\home\...\vostok\sources\vostok\<module>\...   (lowercased, `\`-separated)
-        # Pass the Wine form of <repo>/sources - the dir CONTAINING the engine
-        # `vostok` folder, mirroring the target's `c:/survarium/sources` - with a
-        # trailing separator so the remaining tree is rooted at `vostok\...`.
-        engine = _wine_path(ENGINE_DIR.parent) + "\\"
+        # PDB. Engine includes are compiled through the retail virtual root, so
+        # both PDBs reduce to the same `vostok\...` tree.
+        engine = RETAIL_SOURCE_PREFIX + "\\"
         extra = ["--as-base", "--skip-non-engine-headers"]
         if not pdb.is_file():
             raise RuntimeError(
@@ -76,7 +64,7 @@ def generate(side: str) -> None:
     elif side == "target":
         survarium = survarium_bin()
         pdb = survarium / "survarium.pdb"
-        engine = "c:/survarium/sources"
+        engine = RETAIL_SOURCE_PREFIX
         extra = []
         if not pdb.is_file():
             raise RuntimeError(

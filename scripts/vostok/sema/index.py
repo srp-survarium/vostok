@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.sema.index - which function, on which side, at which RVA.
 
 Everything else here takes a resolved record. One selector - a mangled name, a

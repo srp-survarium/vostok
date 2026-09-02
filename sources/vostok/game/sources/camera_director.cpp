@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "camera_director.h"
 #include "base_game_scene.h"
@@ -11,7 +9,7 @@
 #include <vostok/console_command.h>
 
 namespace survarium {
-static vostok::console_commands::cc_float	cc_cam_fov( "fov", default_vertical_fov, 60.0f, 70.0f, true, vostok::console_commands::command_type_user_specific );
+static vostok::console_commands::cc_float	cc_cam_fov( "fov", default_vertical_fov, 60.0f, 70.0f, true, vostok::console_commands::command_type_engine_internal );
 // sushi@NOTE: Retail preserves the final cc_value<float3> arguments on the stack;
 // base specializes the same out-of-line template body to a shorter LTCG convention.
 camera_director::camera_director( base_game_scene& w ) :

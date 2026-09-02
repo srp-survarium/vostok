@@ -29,7 +29,7 @@ static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type 
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_ai_allocator;
 static vostok::uninitialized_reference< vostok::memory::doug_lea_allocator_type >	s_game_allocator;
 static vostok::uninitialized_reference< survarium::game >							s_game;
-static vostok::command_line::key											s_generate_shaders( "generate_shaders", "", "", "generate shaders" );
+static vostok::command_line::key											s_generate_shaders( "generate_shaders", "", "", "" );
 static vostok::uninitialized_reference< survarium::generate_shaders_world >			s_generate_shaders_world;
 
 namespace survarium {

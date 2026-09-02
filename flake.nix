@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-License-Identifier: GPL-3.0-or-later
 {
   description = "Vostok Engine decompilation - Linux build environment";
 
@@ -506,8 +505,8 @@
           # Scripts + handy tools
           pkgs.python3
           pkgs.ruff
-          pkgs.libfaketime
           pkgs.ripgrep
+          pkgs.libfaketime
           pkgs.file
           pkgs.xxd
           pkgs.jq

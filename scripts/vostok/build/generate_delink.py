@@ -536,12 +536,10 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
     if side == "base":
         exe = WIN32_DIR / "survarium-dx11-win32-gold.exe"
         pdb = WIN32_DIR / "survarium-dx11-win32-gold.pdb"
-        # The base PDB is MSVC-built under Wine, which records source paths under
-        # the Z: drive (Wine maps `/` -> Z:), e.g. z:\home\...\vostok\sources\....
-        # Pass the Wine form of <repo>/sources with a trailing separator (the
-        # delinker strips this prefix off each recorded path), mirroring target's
-        # bare `c:/survarium/sources`.
-        engine = ["--engine-path", _wine_path(SOURCES) + "\\"]
+        # New engine objects use retail's C: source root.  Accept the legacy Z:
+        # worktree root too while old archive members age out.
+        engine = ["--engine-path", paths.RETAIL_SOURCE_PREFIX + "\\",
+                  "--engine-path", _wine_path(SOURCES) + "\\"]
         # ...plus the GFx SDK, which is compiled in but lives outside sources/.
         # The merged build tree first (TUs compile from it now), then the
         # release libs' recorded build tree (foreign to this checkout), then
@@ -565,7 +563,7 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
         survarium = survarium_bin()
         exe = survarium / "survarium.exe"
         pdb = survarium / "survarium.pdb"
-        engine = ["--engine-path", "c:/survarium/sources",
+        engine = ["--engine-path", paths.RETAIL_SOURCE_PREFIX,
                   "--engine-path", GFX_TARGET_PREFIX + "\\"]
         # Record target's choice for each folded symbol group so the base delink
         # can reproduce it.

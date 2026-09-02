@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """Parallel roundtrip probe: same verdicts as `vostok.shaders roundtrip`,
 but concurrent and able to report the permutation strings that DIFF.
 

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "game.h"
 #include "game_map_description.h"
@@ -41,11 +39,11 @@ using vostok::console_commands::command_type_engine_internal;
 #include <vostok/scaleform/sources/flash_movie.h>	// delete movie (delete_resource)
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
 #include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
-#include "network_client.h"	// NEW( network_client ) (create_network_client)
-#include "stats.h"	// DELETE( m_stats ) (~game)
-#include "stats_graph.h"	// DELETE( m_fps_graph ) (~game)
-#include "key_binder.h"	// DELETE( m_key_binder ) (~game)
-#include "chat_handler.h"	// DELETE( m_chat_handler ) (~game)
+#include "network_client.h"	// network_client (create_network_client)
+#include "stats.h"	// m_stats (~game)
+#include "stats_graph.h"	// m_fps_graph (~game)
+#include "key_binder.h"	// m_key_binder (~game)
+#include "chat_handler.h"	// m_chat_handler (~game)
 #include "global_input_handler.h"
 #include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
@@ -74,7 +72,7 @@ static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect a
 static bool s_draw_snd_stats_value;
 static cc_bool s_draw_snd_stats( "draw_sound_stats", s_draw_snd_stats_value, true, command_type_user_specific );
 
-static bool s_draw_stats_value = true;
+static bool s_draw_stats_value = false;
 static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
 
 static bool s_show_profiler;
@@ -82,7 +80,9 @@ static cc_bool s_show_profiler_command( "show_profiler", s_show_profiler, false,
 
 namespace survarium {
 
-float g_max_angular_velocity[ 2 ];
+float g_max_angular_velocity[ 2 ] = {
+	math::deg2rad( 2880000.f ), math::deg2rad( 2880000.f )
+};
 
 // TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
 // in git show 3320ded27:temp/triage_log.md) - the type of the s_max_angular_velocity_command static
@@ -274,17 +274,17 @@ void game::build_lpv_geometry( )
 {
 	vostok::console_commands::save	( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 
-	DELETE							( m_network_client );
-	DELETE							( m_main_menu );
-	DELETE							( m_lobby_menu );
-	DELETE							( m_login_menu );
-	DELETE							( m_console );
-	DELETE							( m_stats );
-	DELETE							( m_fps_graph );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_network_client );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_main_menu );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_lobby_menu );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_login_menu );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_console );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_stats );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_fps_graph );
 
-	DELETE							( m_flash_factory );
-	DELETE							( m_key_binder );
-	DELETE							( m_chat_handler );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_flash_factory );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_key_binder );
+	VOSTOK_DELETE_IMPL				( ::survarium::g_allocator, m_chat_handler );
 
 	deinitialize_modules			( );
 }
@@ -312,7 +312,7 @@ void game::on_configs_loaded( resources::queries_result& result )
 {
 	initialize_modules				( );
 
-	m_key_binder					= NEW( key_binder )( *this );
+	m_key_binder					= VOSTOK_NEW_IMPL( ::survarium::g_allocator, key_binder )( *this );
 
 	load_cc_script					( result[0].get_managed_resource( ), false );
 	load_cc_script					( result[1].get_managed_resource( ), true );
@@ -486,7 +486,7 @@ void game::create_network_client( const bool is_spectator )
 	const u16 port					= atoi( m_network_client_options.c_str( ) + offset + 1 );
 
 	set_network_client				(
-		NEW( class network_client )	( *this, is_spectator ),
+		VOSTOK_NEW_IMPL( ::survarium::g_allocator, class network_client )	( *this, is_spectator ),
 		host.c_str					( ),
 		port,
 		is_spectator
@@ -495,12 +495,12 @@ void game::create_network_client( const bool is_spectator )
 
 void game::create_lobby_menu( )
 {
-	m_lobby_menu					= NEW( class lobby_menu )( *this );
+	m_lobby_menu					= VOSTOK_NEW_IMPL( ::survarium::g_allocator, class lobby_menu )( *this );
 }
 
 void game::create_login_menu( )
 {
-	m_login_menu					= NEW( class login_menu )( *this );
+	m_login_menu					= VOSTOK_NEW_IMPL( ::survarium::g_allocator, class login_menu )( *this );
 }
 
 void game::query_base_resources( )
@@ -541,9 +541,9 @@ void game::on_renderer_created( resources::queries_result& data )
 {
 }
 
+#line 595
 void game::on_config_loaded( resources::queries_result& data, bool create_renderer )
 {
-#line 595
 	if ( !data.is_successful( ) )
 	{
 		LOG_ERROR					( "config file loading FAILED" );
@@ -722,7 +722,7 @@ void game::update_stats( const u32 current_frame_id )
 	if ( s_draw_snd_stats_value && m_game_world.is_active( ) )
 	{
 		if ( !m_sound_stats )
-			m_sound_stats = NEW( sound::sound_debug_stats )( g_allocator,
+			m_sound_stats = VOSTOK_NEW_IMPL( ::survarium::g_allocator, sound::sound_debug_stats )( g_allocator,
 				m_sound_world.get_logic_world_user( ), m_game_world.get_sound_scene( ), *m_ui_world );
 
 		if ( m_sound_stats->is_stats_available( ) )
@@ -751,7 +751,7 @@ void game::clear_resources( )
 	if ( m_network_client )
 	{
 		m_network_client->disconnect( );
-		DELETE						( m_network_client );
+		VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, m_network_client );
 	}
 
 	m_input_world->clear_resources	( );
@@ -1003,7 +1003,7 @@ void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, 
 	resources::managed_resource_ptr raw_data	= data[0].get_managed_resource( );
 	resources::pinned_ptr_const< u8 > pinned	( raw_data );
 
-	flash_movie_resource* const resource	= NEW( flash_movie_resource );
+	flash_movie_resource* const resource	= VOSTOK_NEW_IMPL( ::survarium::g_allocator, flash_movie_resource );
 
 	resource->movie					= m_factory.build_movie( (void*)pinned.c_ptr( ), pinned.size( ), parent->reusable_request_name( ).c_str( ) );
 

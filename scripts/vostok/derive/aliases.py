@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok.derive.aliases - pairing two sides that spell a function differently.
 
 Three ways the obvious {mangled: mangled} join fails, all handled here:

@@ -38,6 +38,7 @@ from vostok.core.paths import (
     GFX_BUILD_TREE,
     GFX_RELEASE_PREFIX,
     GFX_TARGET_PREFIX,
+    RETAIL_SOURCE_PREFIX,
     RICH_DIR,
     SCALEFORM_SDK,
     WIN32_DIR,
@@ -72,11 +73,11 @@ def generate(side: str) -> None:
 
     if side == "base":
         pdb, exe = BASE_PDB, BASE_EXE
-        # Same prefix logic as generate_structure: the base PDB is MSVC-built
-        # under Wine, so recorded paths are z:\...\vostok\sources\vostok\<module>.
-        # Strip the Wine form of <repo>/sources (trailing sep) so file paths in the
-        # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
-        engine = [_wine_path(ENGINE_DIR.parent) + "\\",
+        # New objects record the retail C: source root.  Keep the old worktree
+        # prefix during the one-build migration and for any unstaged archive
+        # member that predates source-root reproduction.
+        engine = [RETAIL_SOURCE_PREFIX + "\\",
+                  _wine_path(ENGINE_DIR.parent) + "\\",
                   _wine_path(GFX_BUILD_TREE) + "\\",
                   GFX_RELEASE_PREFIX + "\\",
                   _wine_path(SCALEFORM_SDK) + "\\"]
@@ -91,7 +92,7 @@ def generate(side: str) -> None:
         survarium = survarium_bin()
         pdb = survarium / "survarium.pdb"
         exe = survarium / "survarium.exe"
-        engine = ["c:/survarium/sources",          # normalized to c:\...\
+        engine = [RETAIL_SOURCE_PREFIX,             # normalized to c:\...\
                   GFX_TARGET_PREFIX + "\\"]
         extra = []  # target has no local sources; statements carry line placeholders
         if not pdb.is_file() or not exe.is_file():

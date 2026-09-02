@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "chat_handler.h"
 #include "chat_tab.h"
@@ -306,7 +304,7 @@ void chat_handler::set_local_player_name( pcstr account_name )
 
 	flash_value local_player_name;
 	local_player_name.SetStringW( an );
-	get_movie( )->movie->Invoke( "root.set_local_player_name", NULL, &local_player_name, 1 );
+	get_movie( )->movie->Invoke( "root.set_local_player", NULL, &local_player_name, 1 );
 }
 
 void chat_handler::focus( bool b_focused )

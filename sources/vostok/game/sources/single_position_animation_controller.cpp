@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "single_position_animation_controller.h"
 // Complete types are required by the by-value expression and resource_ptr teardown.
@@ -38,8 +36,8 @@ single_position_animation_controller::single_position_animation_controller(
 	human_npc&							owner
 ) :
 	m_animation_space_graph( graph ),
-	m_search_service( NEW( animations_search_service ) ),
-	m_target_vertex( NEW( animation_space_vertex_id ) ),
+	m_search_service( VOSTOK_NEW_IMPL( ::survarium::g_allocator, animations_search_service ) ),
+	m_target_vertex( VOSTOK_NEW_IMPL( ::survarium::g_allocator, animation_space_vertex_id ) ),
 	m_ai_navigation_world( ai_navigation_world ),
 	m_owner( owner ),
 	m_navigation_path( g_allocator ),
@@ -51,8 +49,8 @@ single_position_animation_controller::single_position_animation_controller(
 
 single_position_animation_controller::~single_position_animation_controller( )
 {
-	DELETE( m_search_service );
-	DELETE( m_target_vertex );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_search_service );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_target_vertex );
 }
 
 void single_position_animation_controller::initialize( )
@@ -79,7 +77,7 @@ void single_position_animation_controller::query_new_target_if_needed( )
 	}
 }
 
-#line 68
+#line 95
 animation::mixing::expression single_position_animation_controller::selected_animations( mutable_buffer& buffer )
 {
 	if ( m_current_parameters != m_target_parameters )

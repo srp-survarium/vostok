@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "fingers_to_weapon_corrector.h"
 
@@ -21,27 +19,27 @@ namespace survarium {
 static pcstr s_arm_fingers_phalanges[fingers_to_weapon_corrector::hands_count][16] =
 {
 	{
-		"LeftHandThumb1",  "LeftHandThumb2",  "LeftHandThumb3",
-		"LeftHandIndex1",  "LeftHandIndex2",  "LeftHandIndex3",
-		"LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3",
-		"LeftHandRing1",   "LeftHandRing2",   "LeftHandRing3",
-		"LeftHandPinky1",  "LeftHandPinky2",  "LeftHandPinky3",
+		"LeftThumb1",  "LeftThumb2",  "LeftThumb3",
+		"LeftIndex1",  "LeftIndex2",  "LeftIndex3",
+		"LeftMiddle1", "LeftMiddle2", "LeftMiddle3",
+		"LeftRing1",   "LeftRing2",   "LeftRing3",
+		"LeftPinky1",  "LeftPinky2",  "LeftPinky3",
 		"LeftHand",
 	},
 	{
-		"RightHandThumb1",  "RightHandThumb2",  "RightHandThumb3",
-		"RightHandIndex1",  "RightHandIndex2",  "RightHandIndex3",
-		"RightHandMiddle1", "RightHandMiddle2", "RightHandMiddle3",
-		"RightHandRing1",   "RightHandRing2",   "RightHandRing3",
-		"RightHandPinky1",  "RightHandPinky2",  "RightHandPinky3",
+		"RightThumb1",  "RightThumb2",  "RightThumb3",
+		"RightIndex1",  "RightIndex2",  "RightIndex3",
+		"RightMiddle1", "RightMiddle2", "RightMiddle3",
+		"RightRing1",   "RightRing2",   "RightRing3",
+		"RightPinky1",  "RightPinky2",  "RightPinky3",
 		"RightHand",
 	},
 };
 
-// Parent matrix index of each phalange in the locator chain (15 phalanges).
-static u32 s_index_of_parent[15] =
+// Parent matrix index of each phalange in the locator chain.
+static u32 s_index_of_parent[16] =
 {
-	15, 0, 1, 15, 3, 4, 15, 6, 7, 15, 9, 10, 15, 12, 13,
+	15, 0, 1, 15, 3, 4, 15, 6, 7, 15, 9, 10, 15, 12, 13, u32( -1 ),
 };
 
 // claude@NOTE: init-list ctor, 0 body statements - structurally correct. Residual is an

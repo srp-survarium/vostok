@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
+
 """vostok data - image-level matching for globals, constants, BSS, and pointers.
 
 Commands:
@@ -10,6 +11,7 @@ Commands:
   project         regenerate consumer-owned target/base delink manifests
   refresh         refresh image audits and generated binaries/gen tables
   render-relocs [PATTERN] direct render relocation/data audit or inspection
+  module-relocs MODULE [PATTERN] direct relocation/data audit for any module
   report          summarize exactness and divergence classes
   symbol PATTERN  inspect matching ledger rows
   access PATTERN  find retail/base code references to a data symbol or address
@@ -336,6 +338,10 @@ def main(argv: list[str] | None = None) -> int:
     render = sub.add_parser("render-relocs")
     render.add_argument("pattern", nargs="?")
     render.add_argument("--check", action="store_true")
+    module_relocs = sub.add_parser("module-relocs")
+    module_relocs.add_argument("module")
+    module_relocs.add_argument("pattern", nargs="?")
+    module_relocs.add_argument("--check", action="store_true")
     report = sub.add_parser("report")
     report.add_argument("--module")
     for name in ("symbol", "access", "relocs", "function", "missing-symbol"):
@@ -371,6 +377,13 @@ def main(argv: list[str] | None = None) -> int:
             if args.pattern:
                 return render_relocs.inspect(args.pattern)
             render_relocs.print_report(render_relocs.refresh())
+        elif args.command == "module-relocs":
+            if args.check:
+                return render_relocs.check(args.module)
+            if args.pattern:
+                return render_relocs.inspect(args.pattern, args.module)
+            module_report = render_relocs.refresh(args.module)
+            render_relocs.print_report(module_report)
         elif args.command == "report":
             _print_report(args.module)
         elif args.command == "symbol":

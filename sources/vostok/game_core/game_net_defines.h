@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 06.12.2025
-////////////////////////////////////////////////////////////////////////////
+
 #ifndef GAME_NET_DEFINES_H_INCLUDED
 #define GAME_NET_DEFINES_H_INCLUDED
 
@@ -33,9 +31,6 @@ namespace survarium {
 
 // per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
 // (one copy per includer, like player_templates_count's dynamic initializer).
-// claude@NOTE: the per-slot mode VALUES below are a semantic guess (armor/weapon =
-// condition, ammo = amount, quick = both); the table content is unrecoverable but is
-// not part of the byte-match (deserialize only relocates against the symbol address).
 static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
 {
 	serialize_just_condition_stack_values,	// helmet_slot
@@ -46,11 +41,11 @@ static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
 	serialize_just_condition_stack_values,	// gloves_slot
 	serialize_just_condition_stack_values,	// boots_slot
 	serialize_just_condition_stack_values,	// weapon1_slot
-	serialize_just_amount_values,			// ammo1_weapon1_slot
-	serialize_just_amount_values,			// ammo2_weapon1_slot
+	serialize_both_values,					// ammo1_weapon1_slot
+	serialize_both_values,					// ammo2_weapon1_slot
 	serialize_just_condition_stack_values,	// weapon2_slot
-	serialize_just_amount_values,			// ammo1_weapon2_slot
-	serialize_just_amount_values,			// ammo2_weapon2_slot
+	serialize_both_values,					// ammo1_weapon2_slot
+	serialize_both_values,					// ammo2_weapon2_slot
 	serialize_both_values,					// quick_slot1
 	serialize_both_values,					// quick_slot2
 	serialize_both_values,					// quick_slot3

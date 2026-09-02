@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "lobby_menu.h"
 // this compiland also holds the out-of-line bodies of these two (batch 6) types
@@ -20,11 +18,6 @@
 #include <vostok/render/facade/scene_renderer.h>	// *_ready: add_model / remove_model
 #include <vostok/sound/sound_scene_creation_params.h>
 #include <boost/bind.hpp>
-
-#undef NEW
-#undef DELETE
-#define NEW( type ) VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
-#define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 
 namespace survarium {
 
@@ -124,7 +117,7 @@ void profile_player_character::profile_changed( player_profile const* profile )
 
 void profile_player_character::query_profile_contents( player_profile const* profile )
 {
-	player_profile* profile_to_cook = NEW( player_profile );
+	player_profile* profile_to_cook = VOSTOK_NEW_IMPL( ::survarium::g_allocator, player_profile );
 	memory::copy( profile_to_cook, sizeof( player_profile ), profile, sizeof( player_profile ) );
 
 	player_initial_info info;
@@ -147,7 +140,7 @@ void profile_player_character::query_profile_contents( player_profile const* pro
 
 void profile_player_character::on_player_ready( resources::queries_result& data, player_profile* profile_to_cook )
 {
-	DELETE( profile_to_cook );
+	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, profile_to_cook );
 
 	clear_resources( );
 	m_player = static_cast_resource_ptr< player_ptr >( data[0].get_unmanaged_resource( ) );

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "key_binder.h"
 #include "game.h"
@@ -84,7 +82,7 @@ static console_commands::cc_bool set_mouse_invert_cc(
 	true,
 	console_commands::command_type_user_specific );
 // TU-local action table; the ctor populates per-action m_keyboard slots through it.
-game_action_descr	actions[] = {
+static game_action_descr	actions_[] = {
 	{ "left",						kLEFT,						game_world_group | weapon_aim_group,	hold_action,	"kLEFT"		},
 	{ "right",						kRIGHT,						game_world_group | weapon_aim_group,	hold_action,	"kRIGHT"	},
 	{ "up",							kUP,						game_world_group | weapon_aim_group,	hold_action,	"kUP"		},
@@ -222,7 +220,7 @@ key_binder::key_binder( game& g )
 	memset( m_key_bindings, 0, sizeof( m_key_bindings ) );
 
 
-	for ( game_action_descr* action = actions; action != actions + bindings_count; ++action )
+	for ( game_action_descr* action = actions_; action != actions_ + bindings_count; ++action )
 	{
 		m_key_bindings[action->id].m_action =
 			action;
@@ -240,9 +238,9 @@ key_binder::key_binder( game& g )
 void key_binder::set_default_controls( )
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
-		if ( actions[idx].default_key ) {
+		if ( actions_[idx].default_key ) {
 			pcstr arg	= NULL;
-			STR_JOINA	( arg, actions[idx].action_name, " ", actions[idx].default_key );
+			STR_JOINA	( arg, actions_[idx].action_name, " ", actions_[idx].default_key );
 			bind_key	( arg, 0 );
 		}
 	}
@@ -263,8 +261,8 @@ void key_binder::remap_keys( )
 pcstr key_binder::id_to_action_name( game_action_id _id ) const
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
-		if ( _id == actions[idx].id )
-			return actions[idx].action_name;
+		if ( _id == actions_[idx].id )
+			return actions_[idx].action_name;
 	}
 	LOG_INFO	( "can't find corresponding [action_name] for id" );
 
@@ -283,8 +281,8 @@ game_action_id key_binder::action_name_to_id( pcstr _name )
 game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 {
 	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
-		if ( !_stricmp( _name, actions[idx].action_name ) )
-			return &actions[idx];
+		if ( !_stricmp( _name, actions_[idx].action_name ) )
+			return &actions_[idx];
 	}
 
 	LOG_INFO	( "! cant find corresponding [id] for action_name", _name );

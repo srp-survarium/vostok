@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "base_game_scene.h"
 #include "game.h"
@@ -22,19 +20,8 @@
 
 namespace survarium {
 
-// TU console-command static (survarium:: namespace scope). The atexit destructor
-// (??__F) is a byte-for-byte match. The dynamic initializer (??__E) reconstructs
-// to the SAME shape as every matched game-module cc_bool static (human_npc
-// s_npc_debug_draw_command, login_menu s_store_user_pass_cc): list insertion +
-// value-pointer + need_args byte + cc_bool vtable + atexit. The shared residual is
-// the target's two extra console_command-base bool stores at +0x3C/+0x3D, which our
-// console_command.h layout lacks - a cross-module (core) gap present in all repo
-// cc_bool initializers, not steerable here. The command name / command_type /
-// default live in .data (separate object), not these function bytes - "freeze_culling"
-// is a best-guess for this render-debug culling toggle; the scored ??__E/??__F symbols
-// do not depend on it.
 static bool s_freeze_culling_value = false;
-static vostok::console_commands::cc_bool s_freeze_culling( "freeze_culling", s_freeze_culling_value, true, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_bool s_freeze_culling( "freeze_culling", s_freeze_culling_value, false, vostok::console_commands::command_type_user_specific );
 
 // claude@NOTE: target structure matches; residual is the retained engine base-subobject vtable store.
 base_game_scene::base_game_scene( game& g ) :

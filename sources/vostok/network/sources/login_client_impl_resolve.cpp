@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 09.06.2026
-////////////////////////////////////////////////////////////////////////////
+
 #include "pch.h"
 #include "login_client_impl.h"
 
@@ -25,7 +23,7 @@ void login_client_impl::on_resolved(
 
 	if ( error_code ) {
 		LOG_INFO	( "[LOGIN] NOT resolved!\r\n" );
-		LOG_INFO	( "[LOGIN] error during resolving: %s", error_code.message( ).c_str( ) );
+		LOG_INFO	( "[LOGIN] error during resolving: %s\r\n", error_code.message( ).c_str( ) );
 		m_connection_state	= unresolved;
 		if ( retry_count ) {
 			LOG_INFO	( "[LOGIN] reconnecting...\r\n" );
@@ -55,7 +53,7 @@ void login_client_impl::on_resolved(
 
 		delete		resolver;
 		functor		( cannot_resolve, iterator );
-		LOG_INFO	( "[LOGIN] can't resolve endpoints: %s", error_code.message( ).c_str( ) );
+		LOG_INFO	( "[LOGIN] can't resolve endpoints: %s\r\n", error_code.message( ).c_str( ) );
 		LOG_INFO	( "[LOGIN] please, try again later\r\n" );
 		return;
 	}
