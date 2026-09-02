@@ -24,8 +24,7 @@
 #include <vostok/game_core/server_player_update.h>	// process_player_action: action.deserialize / state.transform
 #include <vostok/game_core/player_initial_info.h>	// query_players: info filled per player
 #include <vostok/game_core/profile_slot_enum.h>
-#include <vostok/game_core/affect_event_type_enum.h>
-#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/affect_types.h>
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/buffer_vector.h>					// query_players: ALLOCA buffer_vectors
 #include <vostok/resources_queries_result.h>		// on_players_ready: data[ i ]

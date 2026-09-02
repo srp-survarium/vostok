@@ -3,8 +3,6 @@
 #include "pch.h"
 #include <vostok/game_core/game_material.h>
 
-static float s_aim_transition_time = 0.3f;
-
 namespace survarium {
 
 // game_id -> physics_group
@@ -15,7 +13,7 @@ game_material::game_material( )	:
 	m_material_resistance			( 50.0f ),
 	m_bullet_reflection_speed_down	( 1.0f ),
 	m_width							( 0.1f ),
-	m_ricochet_koef					( s_aim_transition_time ),
+	m_ricochet_koef					( 0.3f ),
 	m_id							( u16(-1) ),
 	m_mine_can_place				( false ),
 	m_mine_can_stick				( false )

@@ -4,6 +4,7 @@
 #define BULLET_H_INCLUDED
 
 #include <vostok/game_core/weapon_ammunition.h>
+#include <vostok/game_core/hit_initiator.h>
 
 namespace vostok {
 namespace physics {

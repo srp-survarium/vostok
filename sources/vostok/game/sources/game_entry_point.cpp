@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/input/api.h>
 #include <vostok/physics/api.h>
 #include <vostok/ai_navigation/api.h>

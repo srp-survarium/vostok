@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "animated_model_instance_cook.h"
 #include "animated_model_instance.h"
 #include <vostok/resources.h>
