@@ -361,7 +361,7 @@ void weapon_core::update_dispersion( const bool is_moving, u32 current_time_in_m
 void weapon_core::update_breath_vibration( const bool is_holding_breath, u32 current_time_in_ms, const float time_scale )
 {
 	m_breath_vibration_calculator.hold_breath( is_holding_breath );
-	m_breath_vibration_calculator.set_character_multiplier( 0.0f );
+	m_breath_vibration_calculator.set_character_multiplier( 1.0f );
 	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 

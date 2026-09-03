@@ -124,7 +124,7 @@ void free_fly_camera::build_view_matrix(
 {
 	float4x4 const view_inverted	= m_camera_director.get_inverted_view_matrix( );
 	float3 const angles_zxy			= view_inverted.get_angles( math::rotation_zxy );
-	float3 new_angles_zxy			= float3( angles_zxy.x - raw_angles.x, angles_zxy.y - raw_angles.y, angles_zxy.z * 0.75f );
+	float3 new_angles_zxy			= float3( angles_zxy.x - raw_angles.x, angles_zxy.y - raw_angles.y, angles_zxy.z * 0.0f );
 	new_angles_zxy.x				= math::clamp_r( new_angles_zxy.x, -math::pi_d2, math::pi_d2 );
 	float4x4 rotation				= math::create_rotation( new_angles_zxy, math::rotation_zxy );
 	float3 const position			=	view_inverted.c.xyz( ) +
