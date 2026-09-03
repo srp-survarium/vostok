@@ -2,18 +2,22 @@ diff --git a/src/data_manifest.rs b/src/data_manifest.rs
 index d02f84b..7139120 100644
 --- a/src/data_manifest.rs
 +++ b/src/data_manifest.rs
-@@ -65,6 +65,7 @@ impl DataManifest {
+@@ -65,6 +65,8 @@ impl DataManifest {
          let mut local_names = HashSet::new();
          let mut proved_rvas = HashSet::new();
          let mut folded_comdat_owners = HashMap::<FoldedComdatKey, HashSet<&[u8]>>::new();
 +        let mut consumer_projection_sections = HashSet::new();
++        let mut consumer_projection_rvas = HashSet::new();
          let mut saw_header = false;
          let mut has_section_ordinals = false;
  
-@@ -224,5 +225,15 @@ impl DataManifest {
+@@ -224,4 +226,18 @@ impl DataManifest {
                      .any(|window| window == b"source-reviewed-DATA");
              let object: &'static [u8] = object.into_bytes().leak();
-+            if provenance == b"consumer-owned-pdb-extent" {
++            let consumer_projection = provenance == b"consumer-owned-pdb-extent";
++            let projected_duplicate =
++                consumer_projection && consumer_projection_rvas.contains(&rva);
++            if consumer_projection {
 +                let Some(ordinal) = section_ordinal else {
 +                    anyhow::bail!(
 +                        "{}:{}: consumer projection requires a section ordinal",
@@ -22,11 +26,24 @@ index d02f84b..7139120 100644
 +                    );
 +                };
 +                consumer_projection_sections.insert((object, ordinal));
++                consumer_projection_rvas.insert(rva);
 +            }
              // A COMDAT is emitted into EVERY object that references it and folded by
              // the linker to one surviving rva, so N objects legitimately claim that
-             // rva under one external name. Such copies are interchangeable by
-@@ -304,10 +316,16 @@ impl DataManifest {
+@@ -251,7 +267,11 @@ impl DataManifest {
+             } else {
+                 false
+             };
+-            if address_authoritative && !proved_rvas.insert(rva) && !folded_comdat_copy {
++            if address_authoritative
++                && !proved_rvas.insert(rva)
++                && !folded_comdat_copy
++                && !projected_duplicate
++            {
+                 anyhow::bail!("{}:{}: duplicate data RVA", path.display(), line_number);
+             }
+             match scope {
+@@ -304,10 +324,16 @@ impl DataManifest {
          // adjacent-pair scan below sees them as a group rather than as an overlap.
          by_rva.sort_by_key(|definition| (definition.rva, definition.size, definition.name.as_bytes()));
          for pair in by_rva.windows(2) {
@@ -43,7 +60,7 @@ index d02f84b..7139120 100644
              {
                  anyhow::bail!("overlapping data manifest definitions");
              }
-@@ -325,15 +343,18 @@ impl DataManifest {
+@@ -325,15 +351,18 @@ impl DataManifest {
      pub fn owner_and_addend_for_rva(&self, rva: usize) -> Option<(DataDefinition, usize)> {
          self.definitions
              .iter()
@@ -69,7 +86,7 @@ index d02f84b..7139120 100644
      }
  
      pub fn hypothesis_owner_and_addend_for_rva(
-@@ -705,6 +727,23 @@ mod tests {
+@@ -705,6 +734,31 @@ mod tests {
          assert_eq!(parsed.definitions()[0].provisional);
      }
  
@@ -88,6 +105,14 @@ index d02f84b..7139120 100644
 +        let (owner, addend) = parsed.owner_and_addend_for_rva(0x114).unwrap();
 +        assert_eq!(owner.name.as_bytes(), b"suffix");
 +        assert_eq!(addend, 4);
++
++        let exact = parse(concat!(
++            "name\tobject\trva\tsize\tstorage\talignment\tsection_ordinal\tsection_offset\tscope\tprovenance\n",
++            "first\tu.c\t0x200\t8\trdata\t1\t1\t0\texternal\tconsumer-owned-pdb-extent\n",
++            "second\tu.c\t0x200\t8\trdata\t1\t2\t0\texternal\tconsumer-owned-pdb-extent\n",
++        ))
++        .unwrap();
++        assert_eq!(exact.definitions().len(), 2);
 +    }
 +
      #[test]
