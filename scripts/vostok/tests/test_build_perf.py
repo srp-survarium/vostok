@@ -163,6 +163,9 @@ class AuditReuseTests(unittest.TestCase):
             stack.enter_context(mock.patch.object(render_relocs, 'PEImage'))
             stack.enter_context(mock.patch.object(render_relocs.pipeline, 'image_paths',
                                                    return_value=(Path('/image'), Path('/pdb'))))
+            for name in ('_comparison_symbols', '_augment_comparison_symbols'):
+                stack.enter_context(mock.patch.object(render_relocs.pipeline, name,
+                                                       return_value=({}, {})))
             stack.enter_context(mock.patch.object(render_relocs, '_load_site_inventory',
                                                    return_value=({}, {})))
             stack.enter_context(mock.patch.object(render_relocs.data_reviews, 'load', return_value={}))

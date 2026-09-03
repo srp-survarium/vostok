@@ -1419,7 +1419,7 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
 		}
 #endif
 			{
-				static btVector3 prim_color(1,1,0);
+				static btVector3 prim_color(btScalar(0.3),btScalar(0.3),0);
 
 				switch (shape->getShapeType())
 			{
@@ -1537,19 +1537,19 @@ void	btCollisionWorld::debugDrawWorld()
 			{
 				if (getDebugDrawer() && (getDebugDrawer()->getDebugMode() & btIDebugDraw::DBG_DrawWireframe))
 				{
-					btVector3 color(btScalar(1.),btScalar(1.),btScalar(1.));
+					btVector3 color(btScalar(0.3),btScalar(0.3),btScalar(0.3));
 					switch(colObj->getActivationState())
 					{
 					case  ACTIVE_TAG:
-						color = btVector3(btScalar(1.),btScalar(1.),btScalar(1.)); break;
+						color = btVector3(btScalar(0.3),btScalar(0.3),btScalar(0.3)); break;
 					case ISLAND_SLEEPING:
-						color =  btVector3(btScalar(0.),btScalar(1.),btScalar(0.));break;
+						color =  btVector3(btScalar(0.),btScalar(0.3),btScalar(0.));break;
 					case WANTS_DEACTIVATION:
-						color = btVector3(btScalar(0.),btScalar(1.),btScalar(1.));break;
+						color = btVector3(btScalar(0.),btScalar(0.3),btScalar(0.3));break;
 					case DISABLE_DEACTIVATION:
-						color = btVector3(btScalar(1.),btScalar(0.),btScalar(0.));break;
+						color = btVector3(btScalar(0.3),btScalar(0.),btScalar(0.));break;
 					case DISABLE_SIMULATION:
-						color = btVector3(btScalar(1.),btScalar(1.),btScalar(0.));break;
+						color = btVector3(btScalar(0.3),btScalar(0.3),btScalar(0.));break;
 					default:
 						{
 							color = btVector3(btScalar(1),btScalar(0.),btScalar(0.));
