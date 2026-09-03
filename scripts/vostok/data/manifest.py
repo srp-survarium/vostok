@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import bisect
 import csv
+import dataclasses
 import hashlib
 import json
 from collections import Counter, defaultdict, deque
@@ -26,6 +27,7 @@ from vostok.data.pipeline import (
     _apply_access_extents,
     _apply_target_extents,
     _augment_comparison_symbols,
+    _current_code_audit_rows,
     _has_identity_extent,
     _transfer_target_extents,
     compare,
@@ -94,6 +96,19 @@ def _canonical_name(symbol: DataSymbol) -> str:
     allocation = f"{symbol.identity}@{symbol.rva:#x}"
     digest = hashlib.sha1(allocation.encode("utf-8")).hexdigest()[:24]
     return f"__vostok_data_{digest}"
+
+
+def _projection_name(
+    row: ConsumerRow,
+    split_names: set[str],
+) -> str:
+    """Name one private projection while retaining an external COMDAT leader."""
+    name = _canonical_name(row.target)
+    if name not in split_names:
+        return name
+    allocation = f"{name}\0{row.unit}\0{row.target.identity}\0{row.target.rva:#x}"
+    digest = hashlib.sha1(allocation.encode("utf-8")).hexdigest()[:16]
+    return f"{name}$vostok_projection${digest}"
 
 
 def _storage(symbol: DataSymbol) -> str:
@@ -268,6 +283,75 @@ def _allocation_maps(
     return target, base, paired
 
 
+def _consumer_code_pairs(
+    target_symbols: list[DataSymbol],
+    base_image: PEImage,
+    audit_rows: list[dict[str, str]] | None = None,
+) -> dict[tuple[str, int], DataSymbol]:
+    """Transfer each TU's retail allocation to its candidate representative."""
+    resolver = AddressResolver(target_symbols, [])
+    votes: dict[tuple[str, int], Counter[int]] = defaultdict(Counter)
+    relocation_sites = base_image.base_relocations()
+    rows = _current_code_audit_rows() if audit_rows is None else audit_rows
+    for row in rows:
+        if (
+            row.get("pair_status") != "PAIRED"
+            or row.get("access_status") != "EXACT"
+            or not row.get("unit")
+            or row.get("target_datum_rva") in {None, "-"}
+            or row.get("inferred_base_datum_rva") in {None, "-"}
+        ):
+            continue
+        target_rva = int(row["target_datum_rva"], 0)
+        target = resolver.data_symbol_at(target_rva)
+        if target is None or target.rva != target_rva or target.size is None:
+            continue
+        votes[(row["unit"], target_rva)][
+            int(row["inferred_base_datum_rva"], 0)
+        ] += 1
+
+    result = {}
+    for key, candidates in votes.items():
+        ranked = candidates.most_common(2)
+        if len(ranked) > 1 and ranked[0][1] < 4 * ranked[1][1]:
+            continue
+        base_rva = ranked[0][0]
+        target = resolver.data_symbol_at(key[1])
+        assert target is not None and target.size is not None
+        section = base_image.section_at(base_rva)
+        end_rva = base_rva + target.size
+        tail_reloc = bisect.bisect_left(
+            relocation_sites, max(base_rva, end_rva - 3)
+        )
+        if (
+            section is None
+            or section.name not in {".rdata", ".data"}
+            or not section.contains(base_rva, target.size)
+            # A HIGHLOW cell starting in the final three bytes cannot belong
+            # to this allocation.  Code-xref transfer occasionally votes for
+            # an overlapping, unrelated linked datum; retain the ordinary
+            # identity pairing instead of emitting an invalid COFF relocation.
+            or (
+                tail_reloc < len(relocation_sites)
+                and relocation_sites[tail_reloc] < end_rva
+            )
+        ):
+            continue
+        storage = (
+            "rdata" if section.name == ".rdata"
+            else "data" if base_rva - section.rva < section.raw_size
+            else "bss"
+        )
+        result[key] = dataclasses.replace(
+            target,
+            rva=base_rva,
+            section=section.name,
+            storage=storage,
+            size_kind="retail-consumer-xref",
+        )
+    return result
+
+
 def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
     target_image = PEImage(image_paths("target")[0])
     base_image = PEImage(image_paths("base")[0])
@@ -284,6 +368,7 @@ def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
     target, _, paired = _allocation_maps(
         target_symbols, base_symbols, target_image, base_image
     )
+    consumer_pairs = _consumer_code_pairs(target_symbols, base_image)
     direct, blockers = _direct_consumers(target_symbols, target_image, target)
     edges, edge_blockers = _data_edges(target_symbols, target_image, target)
 
@@ -305,7 +390,10 @@ def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
                     "identity": "-", "reason": "target allocation unavailable",
                 })
                 continue
-            base_symbol = paired.get(target_rva)
+            base_symbol = (
+                consumer_pairs.get((unit, target_rva))
+                if target_rva in roots else None
+            ) or paired.get(target_rva)
             rows.append(ConsumerRow(
                 unit, symbol, base_symbol, target_rva in roots
             ))
@@ -330,6 +418,19 @@ def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
 def _write_manifest_side(rows: list[ConsumerRow], side: str) -> None:
     manifest = ["\t".join(MANIFEST_COLUMNS)]
     sections = ["\t".join(SECTION_COLUMNS)]
+    physical_rvas: dict[str, tuple[set[int], set[int]]] = defaultdict(
+        lambda: (set(), set())
+    )
+    for row in rows:
+        if row.base is None:
+            continue
+        name = _canonical_name(row.target)
+        physical_rvas[name][0].add(row.target.rva)
+        physical_rvas[name][1].add(row.base.rva)
+    split_names = {
+        name for name, (target_rvas, base_rvas) in physical_rvas.items()
+        if len(target_rvas) > 1 or len(base_rvas) > 1
+    }
     by_unit: dict[str, list[ConsumerRow]] = defaultdict(list)
     for row in rows:
         # Objdiff needs one identical section sequence on both sides. A
@@ -346,9 +447,12 @@ def _write_manifest_side(rows: list[ConsumerRow], side: str) -> None:
             assert symbol is not None and symbol.size is not None
             storage = _storage(symbol)
             section_name, characteristics = _section_properties(storage)
-            name = _canonical_name(row.target)
+            name = _projection_name(row, split_names)
             manifest.append("\t".join((
                 name, unit, f"{symbol.rva:#x}", f"{symbol.size:#x}", storage,
+                # Associative COMDAT sections require an external leader. A
+                # split name above keeps TU-specific LTCG representatives
+                # distinct without discarding the readable PDB identity.
                 "0x1", str(ordinal), "0x0", "external",
                 "consumer-owned-pdb-extent",
             )))
