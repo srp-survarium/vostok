@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import dataclasses
 import struct
 import tempfile
 import unittest
@@ -29,20 +30,32 @@ from vostok.data.missing import (
 from vostok.data.manifest import (
     _canonical_name,
     _classify_function_refs,
+    _direct_consumers,
     _section_properties,
 )
 from vostok.data.pe import PEImage
 from vostok.data.pipeline import (
+    AddressResolver,
     _FunctionIndex,
     _access_form,
     _access_kind,
+    _apply_access_extents,
+    _apply_target_extents,
     _comparison_key,
     _consumer_fallback_key,
+    _derived_target_extent,
     _function_identity_tokens,
+    _has_identity_extent,
+    _infer_base_symbols_from_data_xrefs,
+    _infer_base_symbols_from_code_xrefs,
+    _paired_function_access_referents,
     _interval_union,
+    _load_pdb_functions,
+    _load_function_symbols,
     _ordinal_local,
     _physical_allocations,
     _relocation_signatures_match,
+    _transfer_target_extents,
     compare,
 )
 from vostok.data.cli import _all_zero_failures
@@ -125,18 +138,18 @@ class FunctionDataResolutionTests(unittest.TestCase):
     def test_direct_exact_needs_no_ledger_evidence(self):
         self.assertEqual(_function_data_resolution("EXACT", {}), "EXACT")
 
-    def test_hash_scoped_max_settles_retention_drift(self):
+    def test_hash_scoped_max_does_not_acquit_wrong_data(self):
         row = {"max": 100.0, "status": "done", "hash": "abc", "note": ""}
         self.assertEqual(
             _function_data_resolution("BASE_DEFINITION_MISSING", row),
-            "HASH_MAX_EXACT",
+            "OPEN",
         )
 
-    def test_current_exact_settles_before_max_is_banked(self):
+    def test_current_exact_does_not_acquit_wrong_data(self):
         row = {"cur": 100.0, "max": 99.0, "hash": "abc"}
         self.assertEqual(
             _function_data_resolution("USE_DIFF", row),
-            "CURRENT_EXACT",
+            "OPEN",
         )
 
     def test_parked_code_note_does_not_acquit_data_drift(self):
@@ -214,6 +227,82 @@ class DataGateTests(unittest.TestCase):
         @staticmethod
         def resolve_all(_rva):
             return frozenset(("E:candidate_only",))
+
+    class _TokenIndex(_EmptyIndex):
+        def __init__(self, token):
+            self.token = token
+
+        def resolve_all(self, _rva):
+            return frozenset((self.token,))
+
+    def test_exact_paired_window_aliases_unstable_content_tokens(self):
+        audit = [{
+            "pair_status": "PAIRED",
+            "unit": "unit.cpp",
+            "function": "?function@@YAXXZ",
+            "target_function_rva": "0x1000",
+            "base_function_rva": "0x2000",
+            "target_target_rva": "0x3000",
+            "base_target_rva": "0x4000",
+            "target_identity": "E:same+0x0",
+            "base_identity": "E:same+0x0",
+            "target_access": "address",
+            "base_access": "address",
+            "identity_status": "EXACT",
+            "datum_status": "EXACT",
+        }]
+        rows = _function_data_rows(
+            audit,
+            self._TokenIndex("C:target-alias-set"),
+            self._TokenIndex("C:base-alias-set"),
+            {},
+        )
+        self.assertEqual(rows[0]["status"], "EXACT")
+        self.assertEqual(rows[0]["resolution"], "EXACT")
+
+    def test_logical_icf_owner_inherits_cross_module_candidate_body(self):
+        target_access = Access(
+            site=0x1010,
+            instruction=0x100F,
+            target=0x3000,
+            access="read",
+            width="dword",
+            form="direct",
+            scale=0,
+            identity="E:shared",
+            instruction_text="mov eax, dword ptr [0x3000]",
+            function="?retail_alias@@YAXXZ",
+            unit="unit.cpp",
+            function_rva=0x1000,
+            function_size=0x20,
+            partner_rva=0x2000,
+        )
+        base_access = dataclasses.replace(
+            target_access,
+            site=0x2010,
+            instruction=0x200F,
+            target=0x4000,
+            instruction_text="mov eax, dword ptr [0x4000]",
+            function="?candidate_representative@@YAXXZ",
+            unit="other.cpp",
+            function_rva=0x2000,
+            partner_rva=0x1000,
+        )
+        index = self._TokenIndex("E:shared")
+        rows = _function_data_rows(
+            [],
+            index,
+            index,
+            {},
+            target_sites={0x1010: Site(0x1010, (target_access,))},
+            base_sites={},
+            base_function_accesses={0x2000: (base_access,)},
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["function"], "?retail_alias@@YAXXZ")
+        self.assertEqual(rows[0]["target_datum_count"], "1")
+        self.assertEqual(rows[0]["base_datum_count"], "1")
+        self.assertEqual(rows[0]["resolution"], "EXACT")
 
     def test_candidate_only_uses_in_paired_function_reach_zero_gate(self):
         audit = [{
@@ -667,6 +756,287 @@ class DataPipelineTests(unittest.TestCase):
         second = self._symbol(0x2004, b"value", b"?value@second@@3HA")
         self.assertNotEqual(_comparison_key(first), _comparison_key(second))
 
+    def test_compiler_public_symbol_extents_are_derived_from_retail_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            data[0x300:0x306] = b"hello\0"
+            struct.pack_into("<II", data, 0x320, 0x11000, 0x11000)
+            path.write_bytes(data)
+            image = PEImage(path)
+            string = dataclasses.replace(
+                self._symbol(0x2000, b"??_C@_05dummy@hello?$AA@"),
+                scope="external", size=None, type_index=0,
+            )
+            real = dataclasses.replace(
+                self._symbol(0x2010, b"__real@3f800000"),
+                scope="external", size=None, type_index=0,
+            )
+            vtable = dataclasses.replace(
+                self._symbol(0x2020, b"??_7owner@@6B@"),
+                scope="external", size=None, type_index=0,
+            )
+            rtti = dataclasses.replace(
+                self._symbol(0x2040, b"??_R0?AVowner@@@8"),
+                scope="external", size=None, type_index=0,
+            )
+            data[0x348:0x354] = b".?AVowner@@\0"
+            path.write_bytes(data)
+            image = PEImage(path)
+            self.assertEqual(
+                _derived_target_extent(string, image, frozenset()),
+                (6, "derived-string"),
+            )
+            self.assertEqual(
+                _derived_target_extent(real, image, frozenset()),
+                (4, "derived-fppool"),
+            )
+            self.assertEqual(
+                _derived_target_extent(
+                    vtable, image, frozenset({0x2020, 0x2024})
+                ),
+                (8, "derived-vtable"),
+            )
+            self.assertEqual(
+                _derived_target_extent(rtti, image, frozenset()),
+                (20, "derived-rtti-type-descriptor"),
+            )
+
+    def test_fixed_abi_public_symbol_extents_are_derived_by_class(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+
+            def extent(name: bytes):
+                symbol = dataclasses.replace(
+                    self._symbol(0x2000, name),
+                    scope="external", size=None, type_index=0,
+                )
+                return _derived_target_extent(symbol, image, frozenset())
+
+            self.assertEqual(extent(b"__GUID_01234567_89ab_cdef_0123_456789abcdef"),
+                             (16, "derived-guid"))
+            self.assertEqual(extent(b"??_B?1??owner@@YAXXZ@51"),
+                             (1, "derived-static-guard"))
+            self.assertEqual(extent(b"?stored_vtable@owner@@4Utable@@B"),
+                             (8, "derived-boost-function-vtable"))
+            self.assertEqual(extent(b"?error@placeholders@@3U?$arg@$00@boost@@A"),
+                             (1, "derived-boost-placeholder"))
+            self.assertEqual(
+                extent(
+                    b"??_7?$verify_callback@V?$bind_t@_NVowner@@"
+                    b"U?$arg@$00@boost@@@detail@@6B@"
+                ),
+                None,
+            )
+            self.assertEqual(extent(b"?current_id@owner@@4GA"),
+                             (2, "derived-u16-static"))
+            self.assertEqual(extent(b"?v@owner@@4T__m128i@@A"),
+                             (16, "derived-simd-constant"))
+            self.assertEqual(extent(b"__DELAY_IMPORT_DESCRIPTOR_USER32_dll"),
+                             (32, "derived-delay-import-descriptor"))
+            self.assertEqual(extent(b"___xc_z"),
+                             (4, "derived-crt-initializer-sentinel"))
+            self.assertEqual(extent(b"__TI2?AVbad_alloc@std@@"),
+                             (16, "derived-throw-info"))
+            self.assertEqual(extent(b"__CTA4?AVout_of_range@stlp_std@@"),
+                             (20, "derived-catchable-type-array"))
+            self.assertEqual(extent(b"__CT??_R0?AVbad_alloc@std@@@8copy"),
+                             (28, "derived-catchable-type"))
+            self.assertEqual(extent(b"??_8?$basic_istream@D@@7B@"),
+                             (8, "derived-stlport-vbtable"))
+            self.assertEqual(extent(b"___clocalestr"),
+                             (8, "derived-crt-locale-anchor"))
+            self.assertEqual(extent(b"___lc_handle"),
+                             (24, "derived-crt-locale-handles"))
+
+    def test_resolver_recognizes_exact_negative_four_datum_addend(self):
+        symbol = self._symbol(0x2004, b"array")
+        resolver = AddressResolver([symbol], [])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            self.assertIs(resolver.data_symbol_at(0x2000), symbol)
+            self.assertEqual(
+                resolver.resolve(0x2000, image),
+                "D:L:module:unit.obj:value-0x4",
+            )
+            self.assertIsNone(resolver.data_symbol_at(0x1FFC))
+
+    def test_access_extent_expands_for_real_reads_not_address_uses(self):
+        first = dataclasses.replace(self._symbol(0x2000, b"first"), size=1)
+        second = dataclasses.replace(self._symbol(
+            0x2004, b"second", identity="L:module:unit.obj:second"
+        ), size=1)
+        rows = (
+            "site_rva\tinstruction_rva\taccess\twidth\tend_rva\tform\tscale\t"
+            "target_rva\ttarget_identity\tcaller_mangled\tcaller_name\t"
+            "caller_file\tinstruction\n"
+            "0x1000\t0x1000\treadwrite\tdword\t0x2004\tdirect\t0\t0x2000\t"
+            "D:first\tf\tf\tu.cpp\tor dword ptr [first], eax\n"
+            "0x1004\t0x1004\taddress\tdword\t0x2008\tdirect\t0\t0x2004\t"
+            "D:second\tf\tf\tu.cpp\tmov [out], second\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            access = Path(directory) / "access.tsv"
+            access.write_text(rows, encoding="utf-8")
+            with mock.patch("vostok.data.pipeline.access_path", return_value=access):
+                result = _apply_access_extents([first, second], "target")
+        self.assertEqual(
+            [(row.size, row.size_kind) for row in result],
+            [(4, "retail-access"), (1, "type")],
+        )
+
+    def test_code_xref_infers_unique_candidate_allocation_alias(self):
+        target = self._symbol(0x2000, b"value")
+        base_image_path = None
+        row = {
+            "pair_status": "PAIRED",
+            "access_status": "EXACT",
+            "target_datum_rva": "0x2000",
+            "inferred_base_datum_rva": "0x2020",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            base_image_path = Path(directory) / "base.exe"
+            _synthetic_pe(base_image_path)
+            inferred = _infer_base_symbols_from_code_xrefs(
+                [target], [], PEImage(base_image_path), [row]
+            )
+        self.assertEqual(len(inferred), 1)
+        self.assertEqual(
+            (inferred[0].rva, inferred[0].identity, inferred[0].size_kind),
+            (0x2020, target.identity, "retail-code-xref"),
+        )
+
+    def test_code_xref_rejects_ambiguous_candidate_vote(self):
+        target = self._symbol(0x2000, b"value")
+        rows = [
+            {
+                "pair_status": "PAIRED", "access_status": "EXACT",
+                "target_datum_rva": "0x2000",
+                "inferred_base_datum_rva": candidate,
+            }
+            for candidate in ("0x2020", "0x2030")
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            self.assertEqual(
+                _infer_base_symbols_from_code_xrefs(
+                    [target], [], PEImage(path), rows
+                ),
+                [],
+            )
+
+    def test_code_xref_accepts_overwhelming_candidate_vote(self):
+        target = self._symbol(0x2000, b"value")
+        rows = [
+            {
+                "pair_status": "PAIRED", "access_status": "EXACT",
+                "target_datum_rva": "0x2000",
+                "inferred_base_datum_rva": candidate,
+            }
+            for candidate in ("0x2020",) * 8 + ("0x2030",)
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            inferred = _infer_base_symbols_from_code_xrefs(
+                [target], [], PEImage(path), rows
+            )
+        self.assertEqual([row.rva for row in inferred], [0x2020])
+
+    def test_code_xref_does_not_replace_exact_candidate_pdb_datum(self):
+        target = self._symbol(0x2000, b"retail_value")
+        candidate = dataclasses.replace(
+            self._symbol(0x2020, b"candidate_value"),
+            size=None,
+            size_kind="unknown",
+            type_index=0,
+        )
+        row = {
+            "pair_status": "PAIRED",
+            "access_status": "EXACT",
+            "target_datum_rva": "0x2000",
+            "inferred_base_datum_rva": "0x2020",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            inferred = _infer_base_symbols_from_code_xrefs(
+                [target], [candidate], PEImage(path), [row]
+            )
+        self.assertEqual(inferred, [])
+
+    def test_code_xref_prefers_function_offset_over_sequence_vote(self):
+        target = self._symbol(0x2000, b"value")
+        rows = [
+            {
+                "pair_status": "PAIRED", "access_status": "EXACT",
+                "pair_kind": pair_kind,
+                "target_datum_rva": "0x2000",
+                "inferred_base_datum_rva": candidate,
+            }
+            for pair_kind, candidate in (
+                ("function-offset", "0x2020"),
+                ("access-sequence", "0x2030"),
+            )
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            inferred = _infer_base_symbols_from_code_xrefs(
+                [target], [], PEImage(path), rows
+            )
+        self.assertEqual([row.rva for row in inferred], [0x2020])
+
+    def test_complete_named_function_access_sequence_pairs_vendor_referent(self):
+        header = (
+            "site_rva\tinstruction_rva\taccess\twidth\tend_rva\tform\tscale\t"
+            "target_rva\ttarget_identity\tcaller_mangled\tcaller_name\t"
+            "caller_file\tinstruction\n"
+        )
+        target_row = (
+            "0x1010\t0x100e\tread\tdword\t0x3004\tdirect\t0\t0x3000\t"
+            "D:target\t_vendor\tvendor\t\tmov eax, [0x13000]\n"
+        )
+        base_row = (
+            "0x2010\t0x200e\tread\tdword\t0x4004\tdirect\t0\t0x4000\t"
+            "D:base\t_vendor\tvendor\t\tmov eax, [0x14000]\n"
+        )
+        functions = {
+            "target": [{
+                "rva": 0x1000, "size": 0x40, "mangled": "_vendor", "file": "",
+            }],
+            "base": [{
+                "rva": 0x2000, "size": 0x40, "mangled": "_vendor", "file": "",
+            }],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            target_path = Path(directory) / "target.tsv"
+            base_path = Path(directory) / "base.tsv"
+            target_path.write_text(header + target_row, encoding="utf-8")
+            base_path.write_text(header + base_row, encoding="utf-8")
+            with (
+                mock.patch(
+                    "vostok.data.pipeline._load_function_symbols",
+                    side_effect=lambda side: functions[side],
+                ),
+                mock.patch(
+                    "vostok.data.pipeline.access_path",
+                    side_effect=lambda side: (
+                        target_path if side == "target" else base_path
+                    ),
+                ),
+            ):
+                self.assertEqual(
+                    _paired_function_access_referents(),
+                    [(0x3000, 0x4000, "function-sequence")],
+                )
+
     def test_physical_allocation_deduplicates_only_same_rva_and_extent(self):
         duplicate = self._symbol(0x2000, b"value", b"?value@first@@3HA")
         aliases = [duplicate, duplicate, self._symbol(
@@ -676,6 +1046,89 @@ class DataPipelineTests(unittest.TestCase):
             [symbol.rva for symbol in _physical_allocations(aliases)],
             [0x2000, 0x2004],
         )
+
+    def test_reviewed_target_extent_replaces_unusable_pdb_extent(self):
+        symbol = self._symbol(0x2000, b"value")
+        symbol = dataclasses.replace(symbol, size=0)
+        extent = mock.Mock(rva=0x2000, size=0x40)
+        with mock.patch(
+            "vostok.data.missing.load_pdb_extents", return_value=[extent]
+        ):
+            result = _apply_target_extents([symbol])
+        self.assertEqual((result[0].size, result[0].size_kind), (0x40, "reviewed-retail"))
+        self.assertTrue(_has_identity_extent(result[0]))
+
+    def test_unique_target_extent_transfers_to_extentless_candidate(self):
+        target = dataclasses.replace(self._symbol(0x2000, b"value"), size=0x40)
+        base = dataclasses.replace(self._symbol(0x3000, b"value"), size=0)
+        result = _transfer_target_extents([target], [base])
+        self.assertEqual((result[0].size, result[0].size_kind), (0x40, "retail-paired"))
+
+    def test_retail_paired_public_anchor_becomes_comparable_allocation(self):
+        target = dataclasses.replace(
+            self._symbol(0x2000, b"value"),
+            scope="external",
+            identity="E:?value@@3HA",
+            size=4,
+        )
+        base_anchor = dataclasses.replace(
+            target,
+            rva=0x2004,
+            size=None,
+            size_kind="unknown",
+            type_index=0,
+        )
+        base = _transfer_target_extents([target], [base_anchor])[0]
+        self.assertTrue(_has_identity_extent(base))
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            with mock.patch(
+                "vostok.data.pipeline._load_function_symbols", return_value=[]
+            ):
+                rows = compare([target], [base], image, image)
+        self.assertEqual([row["status"] for row in rows], ["EXACT"])
+
+    def test_reviewed_target_extent_replaces_candidate_scalar_extent(self):
+        target = dataclasses.replace(
+            self._symbol(0x2000, b"value"),
+            size=0x40,
+            size_kind="reviewed-retail",
+        )
+        base = dataclasses.replace(self._symbol(0x3000, b"value"), size=8)
+        result = _transfer_target_extents([target], [base])
+        self.assertEqual((result[0].size, result[0].size_kind), (0x40, "retail-paired"))
+
+    def test_reviewed_datum_transfers_through_exact_paired_data_xref(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target_path = Path(directory) / "target.exe"
+            base_path = Path(directory) / "base.exe"
+            _synthetic_pe(target_path)
+            _synthetic_pe(base_path)
+            for path, destination in ((target_path, 0x2020), (base_path, 0x2040)):
+                data = bytearray(path.read_bytes())
+                struct.pack_into("<I", data, 0x404, 0x10000 + destination)
+                data[0x320:0x324] = b"name"
+                data[0x340:0x344] = b"name"
+                path.write_bytes(data)
+            source_target = dataclasses.replace(
+                self._symbol(0x3000, b"source"),
+                section=".data", storage="data", size=8,
+            )
+            source_base = dataclasses.replace(source_target, rva=0x3000)
+            reviewed = dataclasses.replace(
+                self._symbol(0x2020, b"literal"),
+                identity="R:literal", size_kind="reviewed-retail",
+            )
+            inferred = _infer_base_symbols_from_data_xrefs(
+                [source_target], [source_base], [reviewed],
+                PEImage(target_path), PEImage(base_path), (0x3004,), (0x3004,),
+            )
+            self.assertEqual(
+                [(row.rva, row.identity, row.size) for row in inferred],
+                [(0x2040, "R:literal", 4)],
+            )
 
     def test_same_name_local_allocations_compare_as_a_multiset(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -691,11 +1144,41 @@ class DataPipelineTests(unittest.TestCase):
                 self._symbol(0x200C, b"value"),
             ]
             with mock.patch(
-                "vostok.data.pipeline._load_rich", return_value=[]
+                "vostok.data.pipeline._load_function_symbols", return_value=[]
             ):
                 rows = compare(target, base, image, image)
             self.assertEqual([row["status"] for row in rows], ["EXACT", "EXACT"])
             self.assertTrue(all("allocation multiset" in row["note"] for row in rows))
+
+    def test_same_name_multiset_prefers_exact_consumer_ownership(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target = [
+                self._symbol(0x2000, b"value"),
+                self._symbol(0x2004, b"value"),
+            ]
+            base = [
+                self._symbol(0x2008, b"value"),
+                self._symbol(0x200C, b"value"),
+            ]
+            first = (("first", "unit.cpp", "read", "byte", "direct", "0", 0),)
+            second = (("second", "unit.cpp", "read", "byte", "direct", "0", 0),)
+            with mock.patch(
+                "vostok.data.pipeline._load_function_symbols", return_value=[]
+            ), mock.patch(
+                "vostok.data.pipeline._consumer_fingerprints",
+                side_effect=[
+                    {0x2000: first, 0x2004: second},
+                    {0x2008: second, 0x200C: first},
+                ],
+            ):
+                rows = compare(target, base, image, image)
+            self.assertEqual(
+                {(row["target_rva"], row["base_rva"]) for row in rows},
+                {("0x2000", "0x200c"), ("0x2004", "0x2008")},
+            )
 
     def test_initializer_bytes_alone_do_not_pair_unrelated_locals(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -710,7 +1193,7 @@ class DataPipelineTests(unittest.TestCase):
                 0x2004, b"base", b"?base@owner_b@@3HB",
                 "L:module:owner_b.obj:base",
             )]
-            with mock.patch("vostok.data.pipeline._load_rich", return_value=[]), \
+            with mock.patch("vostok.data.pipeline._load_function_symbols", return_value=[]), \
                  mock.patch(
                      "vostok.data.pipeline._consumer_fingerprints",
                      return_value={},
@@ -735,7 +1218,7 @@ class DataPipelineTests(unittest.TestCase):
                 "L:module:owner_b.obj:base",
             )]
             fingerprint = (("?owner@@YAXXZ", "owner.cpp", "read", "dword", "direct", "0", 0),)
-            with mock.patch("vostok.data.pipeline._load_rich", return_value=[]), \
+            with mock.patch("vostok.data.pipeline._load_function_symbols", return_value=[]), \
                  mock.patch(
                      "vostok.data.pipeline._consumer_fingerprints",
                      side_effect=[{0x2000: fingerprint}, {0x2004: fingerprint}],
@@ -762,6 +1245,79 @@ class DataPipelineTests(unittest.TestCase):
             [(0, frozenset({"F:M:second"}))],
         ))
 
+    def test_complete_pdb_function_index_preserves_aliases_and_missing_sizes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "functions.tsv"
+            path.write_text(
+                "rva\tsize\tname_hex\tmodule_hex\n"
+                "0x1000\t12\t5f66756e63\t756e69742e6f626a\n"
+                "0x1000\t-\t66756e63\t\n",
+                encoding="ascii",
+            )
+            with mock.patch(
+                "vostok.data.pipeline.function_index_path", return_value=path
+            ), mock.patch(
+                "vostok.data.pipeline._load_rich",
+                return_value=[{"file": "module/unit.cpp"}],
+            ):
+                records = _load_pdb_functions("target")
+        self.assertEqual(
+            records,
+            [
+                {
+                    "rva": 0x1000, "size": 12, "mangled": "_func",
+                    "file": "module/unit.cpp", "module": "unit.obj",
+                },
+                {
+                    "rva": 0x1000, "size": 0, "mangled": "func",
+                    "file": "", "module": "",
+                },
+            ],
+        )
+
+    def test_complete_function_alias_inherits_same_rva_compiland_owner(self):
+        rich = [{
+            "rva": 0x1000, "size": 12, "mangled": "module_name",
+            "file": "module/unit.cpp", "name": "module name",
+        }]
+        aliases = [{
+            "rva": 0x1000, "size": 12, "mangled": "public_name",
+            "file": "", "module": "",
+        }]
+        with mock.patch(
+            "vostok.data.pipeline._load_rich", return_value=rich
+        ), mock.patch(
+            "vostok.data.pipeline._load_pdb_functions", return_value=aliases
+        ):
+            records = _load_function_symbols("base")
+        public = next(row for row in records if row["mangled"] == "public_name")
+        self.assertEqual(public["file"], "module/unit.cpp")
+
+    def test_extentless_pdb_function_alias_still_resolves_at_its_start(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            resolver = AddressResolver(
+                [], [{"rva": 0x1000, "size": 0, "mangled": "_func"}]
+            )
+            self.assertEqual(
+                resolver.resolve_all(0x1000, image), frozenset({"F:M:_func"})
+            )
+
+    def test_function_interior_resolves_as_owner_plus_addend(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            resolver = AddressResolver(
+                [], [{"rva": 0x1000, "size": 0x40, "mangled": "_func"}]
+            )
+            self.assertEqual(
+                resolver.resolve_all(0x1014, image),
+                frozenset({"F:M:_func+0x14"}),
+            )
+
     def test_function_identities_bridge_dynamic_initializer_spellings(self):
         target = _function_identity_tokens({
             "mangled": "`dynamic initializer for 'owner::value''",
@@ -782,7 +1338,7 @@ class DataPipelineTests(unittest.TestCase):
         self.assertEqual(_access_kind("lea\teax, [0x1234]"), ("address", "-"))
         self.assertEqual(
             _access_kind("mov\tdword ptr [0x1234], 0x5678", 0x5678),
-            ("address", "dword"),
+            ("address", "-"),
         )
 
     def test_access_form_preserves_index_scale_evidence(self):
@@ -854,6 +1410,43 @@ class RenderRelocationTests(unittest.TestCase):
             self.assertEqual(offsets, (4,))
             self.assertEqual(targets, (frozenset({"SELF+0x20"}),))
 
+    def test_unindexed_adjustor_thunk_resolves_through_named_destination(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            destination = 0x1080
+            displacement = destination - (0x1000 + 8)
+            data[0x200:0x208] = (
+                b"\x83\xe9\x10\xe9" + struct.pack("<i", displacement)
+            )
+            path.write_bytes(data)
+            index = DatumIndex(
+                [], PEImage(path),
+                {destination: frozenset(("P:?callee@@YAXXZ",))},
+            )
+            self.assertEqual(
+                index.resolve_all(0x1000),
+                frozenset(("THUNK:83e910e9:P:?callee@@YAXXZ",)),
+            )
+
+    def test_unindexed_delay_purecall_stub_uses_import_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            data[0x200:0x206] = b"\xff\x35" + struct.pack("<I", 0x13000)
+            path.write_bytes(data)
+            purecall = Datum(
+                0x3000, 4, ".data", "data", "E:___pPurecall",
+                "___pPurecall", "void*", "pdb",
+            )
+            index = DatumIndex([purecall], PEImage(path))
+            self.assertEqual(
+                index.resolve_all(0x1000),
+                frozenset(("DELAY_PURECALL:E:___pPurecall+0x0",)),
+            )
+
     def test_vftable_extent_excludes_the_next_tables_rtti_locator(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.exe"
@@ -868,6 +1461,25 @@ class RenderRelocationTests(unittest.TestCase):
             )
             index = DatumIndex([table, following], PEImage(path))
             self.assertEqual(_extentless_end(table, index), 0x3004)
+
+    def test_vftable_extent_keeps_a_final_function_pointer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<I", data, 0x304, 0x11010)
+            path.write_bytes(data)
+            table = Datum(
+                0x2000, None, ".rdata", "rdata", "E:??_7table@@6B@",
+                "table", "public", "pdb",
+            )
+            following = Datum(
+                0x2008, None, ".rdata", "rdata", "E:??_7next@@6B@",
+                "next", "public", "pdb",
+            )
+            index = DatumIndex([table, following], PEImage(path))
+            index.relocations = (0x2004,)
+            self.assertEqual(_extentless_end(table, index), 0x2008)
 
     def test_narrow_literal_extent_ends_at_terminator(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -995,6 +1607,115 @@ class RenderRelocationTests(unittest.TestCase):
                 _datum_token(index, 0x2000, "L:left"),
                 _datum_token(index, 0x2020, "E:global"),
             )
+
+    def test_aliases_include_negative_four_indexed_table_base(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            preceding = Datum(
+                0x1FF0, 0x14, ".rdata", "rdata", "E:preceding",
+                "preceding", "table", "pdb",
+            )
+            table = Datum(
+                0x2004, 24, ".rdata", "rdata", "L:table", "table",
+                "u32[6]", "pdb",
+            )
+            index = DatumIndex([preceding, table], PEImage(path))
+            self.assertEqual(
+                {row.identity for row in index.alias_owners(0x2000)},
+                {"E:preceding", "L:table"},
+            )
+
+    def test_paired_index_bias_recovers_shared_later_table_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target = DatumIndex([
+                Datum(
+                    0x2000, 0x60, ".rdata", "rdata", "E:target_owner",
+                    "target_owner", "public", "pdb",
+                ),
+                Datum(
+                    0x2040, 0x10, ".rdata", "rdata", "E:table",
+                    "table", "void*[4]", "pdb",
+                ),
+            ], image)
+            base = DatumIndex([
+                Datum(
+                    0x2080, 0x60, ".rdata", "rdata", "E:base_owner",
+                    "base_owner", "public", "pdb",
+                ),
+                Datum(
+                    0x20C0, 0x10, ".rdata", "rdata", "E:table",
+                    "table", "void*[4]", "pdb",
+                ),
+            ], image)
+            audit = [{
+                "pair_status": "PAIRED",
+                "unit": "unit.cpp",
+                "function": "?indexed@@YAXXZ",
+                "target_function_rva": "0x1000",
+                "base_function_rva": "0x1100",
+                "target_target_rva": "0x2000",
+                "base_target_rva": "0x2080",
+                "target_identity": "D:E:target_owner+0x0",
+                "base_identity": "D:E:base_owner+0x0",
+                "target_access": "read",
+                "base_access": "read",
+                "target_scale": "4",
+                "base_scale": "4",
+                "identity_status": "DIFF",
+                "datum_status": "BYTES",
+            }]
+            rows = _function_data_rows(audit, target, base, {})
+            self.assertEqual(rows[0]["status"], "EXACT")
+            self.assertEqual(rows[0]["resolution"], "EXACT")
+
+    def test_folded_vtable_representatives_share_exact_bounded_prefix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            for raw in (0x300, 0x304, 0x340, 0x344):
+                struct.pack_into("<I", data, raw, 0x11010)
+            path.write_bytes(data)
+            image = PEImage(path)
+            identities = {0x1010: frozenset(("P:?callee@@YAXXZ",))}
+            target = DatumIndex([
+                Datum(
+                    0x2000, 0x20, ".rdata", "rdata",
+                    "E:??_7target@@6B@", "target", "public", "pdb",
+                ),
+            ], image, identities)
+            base = DatumIndex([
+                Datum(
+                    0x2040, 8, ".rdata", "rdata",
+                    "E:??_7base@@6B@", "base", "public", "pdb",
+                ),
+            ], image, identities)
+            target.relocations = (0x2000, 0x2004)
+            base.relocations = (0x2040, 0x2044)
+            audit = [{
+                "pair_status": "PAIRED",
+                "unit": "unit.cpp",
+                "function": "?folded@@YAXXZ",
+                "target_function_rva": "0x1000",
+                "base_function_rva": "0x1100",
+                "target_target_rva": "0x2000",
+                "base_target_rva": "0x2040",
+                "target_identity": "D:E:??_7target@@6B@+0x0",
+                "base_identity": "D:E:??_7base@@6B@+0x0",
+                "target_access": "address",
+                "base_access": "address",
+                "target_scale": "0",
+                "base_scale": "0",
+                "identity_status": "DIFF",
+                "datum_status": "BYTES",
+            }]
+            rows = _function_data_rows(audit, target, base, {})
+            self.assertEqual(rows[0]["status"], "EXACT")
+            self.assertEqual(rows[0]["resolution"], "EXACT")
 
     def test_datum_token_deduplicates_interior_references(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -1364,6 +2085,34 @@ class ConsumerManifestTests(unittest.TestCase):
             self.assertTrue(name.startswith("."))
             self.assertNotEqual(characteristics & 0x1000, 0)
             self.assertNotEqual(characteristics & 0x100000, 0)
+
+    def test_projection_ignores_references_without_a_comparison_unit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            symbol = dataclasses.replace(
+                self._symbol(), section=".rdata", storage="rdata"
+            )
+            accesses = [
+                {
+                    "caller_file": unit,
+                    "target_rva": "0x2000",
+                    "target_identity": symbol.identity,
+                    "width": "dword",
+                    "form": "direct",
+                    "scale": "0",
+                }
+                for unit in ("", "-", "render/unit.cpp")
+            ]
+            with mock.patch(
+                "vostok.data.manifest._access_rows", return_value=accesses
+            ):
+                consumers, blockers = _direct_consumers(
+                    [symbol], image, {symbol.rva: symbol}
+                )
+        self.assertEqual(consumers, {"render/unit.cpp": {symbol.rva}})
+        self.assertEqual(blockers, [])
 
     def test_function_referent_classification_matches_gruntz_categories(self):
         def ref(offset, identity):

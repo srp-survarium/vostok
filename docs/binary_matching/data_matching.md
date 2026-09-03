@@ -85,7 +85,12 @@ Tracked evidence and policy use the same names and locations as Gruntz:
   A second set of columns expands exact encoded E8 calls and E9/EB tail jumps
   from each paired root. It records both cone sizes, remaining cone differences,
   and the shortest target/base path to every direct referent that moved across
-  an inline or overlapping-PDB-owner boundary.
+  an inline or overlapping-PDB-owner boundary. Physical instructions remain
+  unique in the relocation audit, while every PDB function alias folded onto
+  that instruction receives the same evidence in the function table. This
+  projection follows paired function RVAs across module ownership because an
+  LTCG representative selected from another module is still the implementation
+  of the target function alias.
 - `binaries/gen/render_reloc_report.json` hashes those inputs and tables. The
   human-readable problem list is tracked in
   `docs/data_matching/render_data_problems.md`. The machine TSVs remain
@@ -237,14 +242,15 @@ set to remain exact. It also requires a fresh direct relocation report for
 every module in the function ledger. `--gate` additionally reads the projection
 maxima in `config/cleanliness/data-integrity-ratchet.tsv` and requires the
 aggregate function datum-use count with `resolution=OPEN` to be exactly zero.
-Raw relocation-set differences proved byte-exact by the current build or by
-the hash-scoped MAX for the current source body remain visible as
-`CURRENT_EXACT` or `HASH_MAX_EXACT`, but do not count as open debt.
-`CALL_CONE_EXACT` likewise preserves the raw direct difference while proving
-that the paired roots reach identical complete datum sets through decoded
-internal calls. A display-name match is never used as an edge: destinations
-come from the executable instruction bytes and must land on a rich-index
-function start. Any cone referent difference remains `OPEN`.
+Code equality never acquits a datum difference: objdiff deliberately normalizes
+relocation targets, so a byte-exact function can still use the wrong object.
+Only direct datum-set equality, `CALL_CONE_EXACT`, or a source-and-diff-scoped
+`REVIEWED_WALL` closes a function row. `CALL_CONE_EXACT` preserves the raw
+direct difference while proving that the paired roots reach identical complete
+datum sets through decoded internal calls. A display-name match is never used
+as an edge: destinations come from the executable instruction bytes and must
+land on a rich-index function start. Any cone referent difference remains
+`OPEN`.
 
 `--all-zero` is the deliberately uncompromising completion oracle. In addition
 to the normal gate, it requires every linked-image allocation to be `EXACT`,
