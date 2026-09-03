@@ -72,4 +72,4 @@ void skeleton_animation_cook::delete_resource		( vostok::resources::resource_bas
 	NODEFAULT					( );
 }
 
-static skeleton_animation_cook s_skeleton_animation_cook;
+skeleton_animation_cook s_skeleton_animation_cook;

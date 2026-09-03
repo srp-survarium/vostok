@@ -312,6 +312,9 @@ def _check(gate: bool, all_zero: bool = False) -> int:
             "exe_sha256": pipeline._file_hash(exe),
             "pdb_sha256": pipeline._file_hash(pdb),
             "index_sha256": pipeline._file_hash(pipeline.index_path(side)),
+            "function_index_sha256": pipeline._file_hash(
+                pipeline.function_index_path(side)
+            ),
             "access_sha256": pipeline._file_hash(pipeline.access_path(side)),
             "relocations_sha256": pipeline._file_hash(pipeline.reloc_path(side)),
         }
@@ -441,8 +444,14 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "missing-symbol":
             return missing.inspect(args.pattern)
         elif args.command == "refresh":
+            # A clean clone has no code-xref audit yet. Build the raw
+            # projection, derive every module's paired access map once, then
+            # rerun the image/manifest pass so those proven candidate aliases
+            # participate immediately rather than one invocation later.
+            pipeline.prepare_manifests()
+            data_gate.refresh()
             pipeline.refresh()
-            render_relocs.print_report(render_relocs.refresh())
+            render_relocs.print_report(render_relocs._load_report("render"))
         elif args.command == "project":
             pipeline.prepare_manifests()
         elif args.command == "render-relocs":

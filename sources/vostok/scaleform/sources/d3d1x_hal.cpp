@@ -924,8 +924,40 @@ struct BlendModeDescAlpha
     D3D1x(BLEND)     SrcAlphaArg, DestAlphaArg;
 };
 
+#line 923
 bool HAL::createBlendStates()
 {
+    static BlendModeDescAlpha acmodes[Blend_Count] =
+    {
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE),       D3D1x(BLEND_INV_SRC_ALPHA) }, // None
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE),       D3D1x(BLEND_INV_SRC_ALPHA) }, // Normal
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE),       D3D1x(BLEND_INV_SRC_ALPHA) }, // Layer
+
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_DEST_COLOR), D3D1x(BLEND_ZERO),        D3D1x(BLEND_DEST_ALPHA), D3D1x(BLEND_ZERO)          }, // Multiply
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA),  D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE),      D3D1x(BLEND_INV_SRC_ALPHA) }, // Screen
+
+        { D3D1x(BLEND_OP_MAX),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE) }, // Lighten
+        { D3D1x(BLEND_OP_MIN),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE) }, // Darken
+
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_INV_SRC_ALPHA) }, // Difference
+
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE) }, // Add
+        { D3D1x(BLEND_OP_REV_SUBTRACT), D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE) }, // Subtract
+
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_INV_SRC_ALPHA) }, // Invert
+
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_ZERO), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE), D3D1x(BLEND_ONE) }, // Alpha
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_ZERO), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE), D3D1x(BLEND_ONE) }, // Erase
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_INV_SRC_ALPHA) }, // Overlay
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_SRC_ALPHA), D3D1x(BLEND_INV_SRC_ALPHA), D3D1x(BLEND_ONE), D3D1x(BLEND_INV_SRC_ALPHA) }, // Hardlight
+
+        // The following are used internally.
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_ONE), D3D1x(BLEND_ZERO), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE) }, // Overwrite
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_ONE), D3D1x(BLEND_ZERO), D3D1x(BLEND_ONE), D3D1x(BLEND_ZERO) }, // OverwriteAll
+        { D3D1x(BLEND_OP_ADD),          D3D1x(BLEND_ONE), D3D1x(BLEND_ONE), D3D1x(BLEND_ONE), D3D1x(BLEND_ONE) }, // FullAdditive
+    };
+
+
     memset(BlendStates, 0, sizeof BlendStates);
     for (unsigned i = 0; i < BlendTypeCount; ++i )
     {
@@ -971,12 +1003,12 @@ bool HAL::createBlendStates()
         }
         mode %= Blend_Count;
 
-        rt0.BlendOp        = (D3D1x(BLEND_OP))BlendModeTable[mode].Operator;
-        rt0.SrcBlend       = (D3D1x(BLEND))BlendModeTable[mode].SourceColor;
-        rt0.DestBlend      = (D3D1x(BLEND))BlendModeTable[mode].DestColor;
-        rt0.BlendOpAlpha   = (D3D1x(BLEND_OP))BlendModeTable[mode].Operator;
-        rt0.SrcBlendAlpha  = (D3D1x(BLEND))BlendModeTable[mode].SourceAlpha;
-        rt0.DestBlendAlpha = (D3D1x(BLEND))BlendModeTable[mode].DestAlpha;
+        rt0.BlendOp        = acmodes[mode].BlendOp;
+        rt0.SrcBlend       = acmodes[mode].SrcArg;
+        rt0.DestBlend      = acmodes[mode].DestArg;
+        rt0.BlendOpAlpha   = acmodes[mode].BlendOp;
+        rt0.SrcBlendAlpha  = acmodes[mode].SrcAlphaArg;
+        rt0.DestBlendAlpha = acmodes[mode].DestAlphaArg;
 
         if ( sourceAc && rt0.SrcBlend == D3D1x(BLEND_SRC_ALPHA) )
             rt0.SrcBlend        = D3D1x(BLEND_ONE);

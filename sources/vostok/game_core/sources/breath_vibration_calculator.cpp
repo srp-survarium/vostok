@@ -17,12 +17,12 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	:	m_user						( 0 ),
 		m_params					( 0 ),
 		m_last_time_in_ms			( 0 ),
-		m_current_multiplier		( 0.0f ),
-		m_target_multiplier			( 0.0f ),
+		m_current_multiplier		( 1.0f ),
+		m_target_multiplier			( 1.0f ),
 		m_vertical_value			( 0.0f ),
 		m_horizontal_value			( 0.0f ),
-		m_character_multiplier		( 0.0f ),
-		m_breath_holding_reserve	( 0.0f ),
+		m_character_multiplier		( 1.0f ),
+		m_breath_holding_reserve	( 1.0f ),
 		m_is_breath_holded			( false )
 {
 	initialize_logic( );

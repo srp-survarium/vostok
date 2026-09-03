@@ -1,0 +1,165 @@
+diff --git a/src/function_index.rs b/src/function_index.rs
+index 35a96a6..4f9596a 100644
+--- a/src/function_index.rs
++++ b/src/function_index.rs
+@@ -3,10 +3,49 @@ use crate::pdb_symbols::PdbSymbols;
+ use std::fmt::Write as _;
+ use std::path::Path;
+ 
+-const HEADER: &str = "rva\tsize\tname_hex\n";
++const HEADER: &str = "rva\tsize\tname_hex\tmodule_hex\n";
++
++fn write_hex(output: &mut String, bytes: &[u8]) -> std::fmt::Result {
++    for byte in bytes {
++        write!(output, "{byte:02x}")?;
++    }
++    Ok(())
++}
++
++fn write_row(
++    output: &mut String,
++    rva: usize,
++    size: &str,
++    name: &[u8],
++    module: &[u8],
++) -> std::fmt::Result {
++    write!(output, "{rva:#x}\t{size}\t")?;
++    write_hex(output, name)?;
++    output.push('\t');
++    write_hex(output, module)?;
++    output.push('\n');
++    Ok(())
++}
+ 
+ pub fn write(symbols: &PdbSymbols, path: &Path) -> anyhow::Result<()> {
+-    let aliases = symbols.functions.values().map(Vec::len).sum::<usize>();
++    let aliases = symbols
++        .functions
++        .iter()
++        .map(|(rva, names)| {
++            names
++                .iter()
++                .map(|name| {
++                    symbols.function_modules.get(rva).map_or(1, |owners| {
++                        owners
++                            .iter()
++                            .filter(|(owner, _)| owner.as_bytes() == name.as_bytes())
++                            .count()
++                            .max(1)
++                    })
++                })
++                .sum::<usize>()
++        })
++        .sum::<usize>();
+     let mut output = String::with_capacity(aliases * 80);
+     output.push_str(HEADER);
+     for (rva, names) in &symbols.functions {
+@@ -16,11 +55,26 @@ pub fn write(symbols: &PdbSymbols, path: &Path) -> anyhow::Result<()> {
+             .map(|value| value.to_string())
+             .unwrap_or_else(|| "-".to_owned());
+         for name in names {
+-            write!(output, "{rva:#x}\t{size}\t")?;
+-            for byte in name.as_bytes() {
+-                write!(output, "{byte:02x}")?;
++            let owners = symbols
++                .function_modules
++                .get(rva)
++                .into_iter()
++                .flatten()
++                .filter(|(owner, _)| owner.as_bytes() == name.as_bytes())
++                .collect::<Vec<_>>();
++            if owners.is_empty() {
++                write_row(&mut output, *rva, &size, name.as_bytes(), b"")?;
++            } else {
++                for (_, module) in owners {
++                    write_row(
++                        &mut output,
++                        *rva,
++                        &size,
++                        name.as_bytes(),
++                        module.as_bytes(),
++                    )?;
++                }
+             }
+-            output.push('\n');
+         }
+     }
+     if let Some(parent) = path.parent() {
+@@ -45,7 +99,7 @@ mod tests {
+         let symbols = PdbSymbols::default();
+         let mut output = String::new();
+         output.push_str(HEADER);
+-        assert_eq!(output, "rva\tsize\tname_hex\n");
++        assert_eq!(output, "rva\tsize\tname_hex\tmodule_hex\n");
+         assert!(symbols.functions.is_empty());
+     }
+ }
+diff --git a/src/pdb_symbols.rs b/src/pdb_symbols.rs
+index 15383e2..69fb323 100644
+--- a/src/pdb_symbols.rs
++++ b/src/pdb_symbols.rs
+@@ -9,6 +9,7 @@ use crate::utils::{ToUsize, leak};
+ pub struct PdbSymbols {
+     pub functions: BTreeMap<usize, Vec<RawString<'static>>>,
+     pub function_sizes: BTreeMap<usize, usize>,
++    pub function_modules: BTreeMap<usize, Vec<(RawString<'static>, String)>>,
+     pub symbol_starts: BTreeSet<usize>,
+     pub modules: Vec<(String, String)>,
+     pub strings: BTreeMap<usize, (RawString<'static>, Vec<u8>)>,
+@@ -161,9 +162,10 @@ impl PdbSymbols {
+         let mut modules = env.dbi.modules()?;
+ 
+         while let Some(module) = modules.next()? {
++            let object_file_name = module.object_file_name().into_owned();
+             self.modules.push((
+                 module.module_name().into_owned(),
+-                module.object_file_name().into_owned(),
++                object_file_name.clone(),
+             ));
+             let Some(module_info) = pdb.module_info(&module)? else {
+                 continue;
+@@ -180,7 +182,14 @@ impl PdbSymbols {
+                         len,
+                         ..
+                     })) => {
+-                        self.add_function_symbol(env, name, offset, len, coalesce_common_functions)
++                        self.add_function_symbol(
++                            env,
++                            name,
++                            offset,
++                            len,
++                            coalesce_common_functions,
++                            &object_file_name,
++                        )
+                     }
+                     Ok(pdb2::SymbolData::Thunk(pdb2::ThunkSymbol {
+                         name, offset, len, ..
+@@ -190,6 +199,7 @@ impl PdbSymbols {
+                         offset,
+                         u32::from(len),
+                         coalesce_common_functions,
++                        &object_file_name,
+                     ),
+ 
+                     Ok(pdb2::SymbolData::Data(pdb2::DataSymbol { offset, name, .. })) => {
+@@ -251,6 +261,7 @@ impl PdbSymbols {
+         offset: pdb2::PdbInternalSectionOffset,
+         size: u32,
+         coalesce_common_functions: bool,
++        module: &str,
+     ) {
+         let symbol_rva = env.text.rva + offset.offset.to_usize();
+ 
+@@ -262,6 +273,12 @@ impl PdbSymbols {
+             .and_modify(|existing| *existing = (*existing).max(size.to_usize()))
+             .or_insert(size.to_usize());
+         self.symbol_starts.insert(symbol_rva);
++        let owners = self.function_modules.entry(symbol_rva).or_default();
++        if !owners.iter().any(|(owner, path)| {
++            owner.as_bytes() == name.as_bytes() && path == module
++        }) {
++            owners.push((name, module.to_owned()));
++        }
+         self.add_function_at_rva(symbol_rva, name, fun_body, coalesce_common_functions);
+     }
+ 

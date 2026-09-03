@@ -21,7 +21,16 @@ from vostok.core import paths
 from vostok.core.tsv import write_if_changed
 from vostok.data.inventory import DataSymbol, display_bytes, load
 from vostok.data.pe import PEImage
-from vostok.data.pipeline import AddressResolver, compare, image_paths
+from vostok.data.pipeline import (
+    AddressResolver,
+    _apply_access_extents,
+    _apply_target_extents,
+    _augment_comparison_symbols,
+    _has_identity_extent,
+    _transfer_target_extents,
+    compare,
+    image_paths,
+)
 
 
 MANIFEST_COLUMNS = (
@@ -67,7 +76,11 @@ class ConsumerRow:
 
 
 def _trusted(symbol: DataSymbol, image: PEImage) -> bool:
-    if symbol.type_index == 0 or symbol.size is None or symbol.size <= 0:
+    if (
+        not _has_identity_extent(symbol)
+        or symbol.size is None
+        or symbol.size <= 0
+    ):
         return False
     try:
         return image.section(symbol.section).contains(symbol.rva, symbol.size)
@@ -132,7 +145,7 @@ def _direct_consumers(
     blockers = []
     for row in _access_rows("target"):
         unit = row["caller_file"]
-        if unit == "-":
+        if not unit or unit == "-":
             continue
         rva = int(row["target_rva"], 0)
         symbol = resolver.data_symbol_at(rva)
@@ -256,10 +269,18 @@ def _allocation_maps(
 
 
 def build_consumer_rows() -> tuple[list[ConsumerRow], list[dict[str, str]]]:
-    target_symbols = load(paths.DATA_TARGET_INDEX)
-    base_symbols = load(paths.DATA_BASE_INDEX)
     target_image = PEImage(image_paths("target")[0])
     base_image = PEImage(image_paths("base")[0])
+    target_symbols = _apply_target_extents(
+        load(paths.DATA_TARGET_INDEX), target_image
+    )
+    target_symbols = _apply_access_extents(target_symbols, "target")
+    base_symbols = _transfer_target_extents(
+        target_symbols, load(paths.DATA_BASE_INDEX)
+    )
+    target_symbols, base_symbols = _augment_comparison_symbols(
+        target_symbols, base_symbols, target_image, base_image
+    )
     target, _, paired = _allocation_maps(
         target_symbols, base_symbols, target_image, base_image
     )
