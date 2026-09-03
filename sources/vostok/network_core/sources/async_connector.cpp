@@ -39,7 +39,7 @@ void async_connector::connect( boost::asio::ip::tcp::resolver::iterator const& i
 	boost::asio::async_connect(
 		*m_socket,
 		iterator,
-		boost::bind( &async_connector::on_connected, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
+		boost::bind( &async_connector::on_connected, this, _1, _2 ) );
 }
 
 void async_connector::on_resolved(
@@ -64,7 +64,7 @@ void async_connector::on_resolved(
 					this,
 					resolver,
 					boost::asio::placeholders::error,
-					boost::asio::placeholders::iterator
+					boost::asio::placeholders::bytes_transferred
 				)
 			);
 			return;
@@ -112,7 +112,7 @@ void async_connector::connect(
 	boost::asio::ip::tcp::resolver::query	query( host, port );
 	resolver->async_resolve(
 		query,
-		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
+		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred ) );
 }
 
 void async_connector::reset( )

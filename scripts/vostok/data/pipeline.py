@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import bisect
 import csv
+import dataclasses
 import hashlib
 import json
 import os
@@ -14,15 +15,17 @@ import shutil
 import subprocess
 import tempfile
 from collections import Counter, defaultdict
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from vostok.core import paths
 from vostok.core.tsv import write_if_changed
-from vostok.data.inventory import DataSymbol, load
+from vostok.data.inventory import DataSymbol, display_bytes, load, owner_for
 from vostok.data.pe import PEImage
 from vostok.core.wine import pdb_path
 from vostok.core.log import logger
 from vostok.derive.aliases import dyn_canon_base
+from vostok.derive.modules import module_of
 
 
 LEDGER_COLUMNS = (
@@ -53,6 +56,14 @@ def image_paths(side: str) -> tuple[Path, Path]:
 
 def index_path(side: str) -> Path:
     return paths.DATA_TARGET_INDEX if side == "target" else paths.DATA_BASE_INDEX
+
+
+def function_index_path(side: str) -> Path:
+    return (
+        paths.DATA_TARGET_FUNCTION_INDEX
+        if side == "target"
+        else paths.DATA_BASE_FUNCTION_INDEX
+    )
 
 
 def access_path(side: str) -> Path:
@@ -93,9 +104,10 @@ def export_index(side: str) -> Path:
     help_result = subprocess.run(
         [delinker, "--help"], capture_output=True, text=True, check=False
     )
-    if "--write-data-index" not in help_result.stdout + help_result.stderr:
+    help_text = help_result.stdout + help_result.stderr
+    if not {"--write-data-index", "--write-function-index"} <= set(help_text.split()):
         raise RuntimeError(
-            "installed vostok-delinker lacks --write-data-index; re-enter the "
+            "installed vostok-delinker lacks the data/function index exports; re-enter the "
             "updated Nix development shell"
         )
     output = index_path(side)
@@ -106,6 +118,7 @@ def export_index(side: str) -> Path:
         "--pdb-path", str(pdb),
         "--exe-path", str(exe),
         "--write-data-index", str(output),
+        "--write-function-index", str(function_index_path(side)),
         *_engine_args(side),
     ], check=True)
     return output
@@ -117,6 +130,115 @@ def _load_rich(side: str) -> list[dict]:
         return []
     with path.open(encoding="utf-8") as source:
         return [json.loads(line) for line in source if line.strip()]
+
+
+_OBJECT_NAME = re.compile(r"([^\\/()]+)\.obj(?:\)|$)", re.IGNORECASE)
+
+
+def _function_unit(module: str, files: set[str]) -> str:
+    """Map a PDB compiland object path to an existing objdiff source unit."""
+    if not module:
+        return ""
+    match = _OBJECT_NAME.search(module)
+    if not match:
+        return ""
+    stem = match.group(1).casefold()
+    candidates = {
+        file for file in files
+        if Path(file).stem.casefold() == stem
+        and Path(file).suffix.casefold() in {".c", ".cc", ".cpp", ".cxx"}
+    }
+    if len(candidates) == 1:
+        return next(iter(candidates))
+    modules_by_stem: dict[str, set[str]] = defaultdict(set)
+    for file in files:
+        modules_by_stem[Path(file).stem.casefold()].add(module_of(file))
+    stem_modules = {
+        file_stem: next(iter(modules))
+        for file_stem, modules in modules_by_stem.items()
+        if len(modules) == 1
+    }
+    owner = owner_for(module.encode("utf-8"), b"", stem_modules)
+    owned = {file for file in candidates if module_of(file) == owner}
+    return next(iter(owned)) if len(owned) == 1 else ""
+
+
+def _load_pdb_functions(side: str) -> list[dict]:
+    path = function_index_path(side)
+    if not path.is_file():
+        return []
+    with path.open(newline="", encoding="ascii") as source:
+        reader = csv.DictReader(source, delimiter="\t")
+        columns = tuple(reader.fieldnames or ())
+        if columns not in {
+            ("rva", "size", "name_hex"),
+            ("rva", "size", "name_hex", "module_hex"),
+        }:
+            raise ValueError(f"{path}: unexpected function-index columns")
+        rows = list(reader)
+    rich = _load_rich(side)
+    rich_files = {record["file"] for record in rich if record.get("file")}
+    files_by_symbol: dict[tuple[int, str], set[str]] = defaultdict(set)
+    for record in rich:
+        if (
+            isinstance(record.get("rva"), int)
+            and record.get("mangled")
+            and record.get("file")
+        ):
+            files_by_symbol[(record["rva"], record["mangled"])].add(
+                record["file"]
+            )
+    result = []
+    for row in rows:
+        rva = int(row["rva"], 0)
+        mangled = display_bytes(bytes.fromhex(row["name_hex"]))
+        direct = files_by_symbol.get((rva, mangled), set())
+        module = display_bytes(bytes.fromhex(row.get("module_hex", "")))
+        unit = (
+            next(iter(direct)) if len(direct) == 1
+            else _function_unit(module, rich_files)
+        )
+        result.append({
+            "rva": rva,
+            "size": 0 if row["size"] == "-" else int(row["size"], 0),
+            "mangled": mangled,
+            "file": unit,
+            "module": module,
+        })
+    return result
+
+
+def _load_function_symbols(side: str) -> list[dict]:
+    """All rich functions plus the delinker's complete PDB alias table."""
+    records = [*_load_rich(side), *_load_pdb_functions(side)]
+    if side == "target":
+        from vostok.data import missing
+
+        records.extend(
+            {"rva": row.rva, "size": row.size or 0, "mangled": row.name}
+            for row in missing.load_symbols()
+            if row.type_name == "code"
+        )
+    owners_by_rva: dict[int, set[str]] = defaultdict(set)
+    for record in records:
+        if isinstance(record.get("rva"), int) and record.get("file"):
+            owners_by_rva[record["rva"]].add(record["file"])
+    expanded = []
+    for record in records:
+        owners = owners_by_rva.get(record.get("rva"), set())
+        if not record.get("file") and owners:
+            expanded.extend({**record, "file": owner} for owner in sorted(owners))
+        else:
+            expanded.append(record)
+    result = {}
+    for record in expanded:
+        key = (
+            record.get("rva"), record.get("size"), record.get("mangled"),
+            record.get("file"),
+        )
+        if key not in result or record.get("name"):
+            result[key] = record
+    return list(result.values())
 
 
 class AddressResolver:
@@ -135,11 +257,34 @@ class AddressResolver:
         self.peer_identities = peer_identities or set()
         self.peer_function_identities = peer_function_identities or set()
         self.function_starts: dict[int, set[str]] = defaultdict(set)
+        self.function_pages: dict[int, list[tuple[int, int, frozenset[str]]]] = (
+            defaultdict(list)
+        )
         for record in functions:
-            rva, size = record.get("rva"), record.get("size")
-            if not isinstance(rva, int) or not isinstance(size, int) or size <= 0:
+            rva = record.get("rva")
+            if not isinstance(rva, int):
                 continue
-            self.function_starts[rva].update(_function_identity_tokens(record))
+            identities = _function_identity_tokens(record)
+            self.function_starts[rva].update(identities)
+            size = record.get("size")
+            if isinstance(size, int) and size > 0:
+                end = rva + size
+                for page in range(rva >> 12, ((end - 1) >> 12) + 1):
+                    self.function_pages[page].append((rva, end, identities))
+
+    def _data_symbol_at_negative_four(self, rva: int) -> DataSymbol | None:
+        """Resolve MSVC indexed bases and sentinels expressed as datum - 4."""
+        candidates = [
+            symbol for symbol in self.data_starts.get(rva + 4, ())
+            if symbol.size is not None and symbol.size > 0
+        ]
+        if not candidates:
+            return None
+        return min(candidates, key=lambda item: (
+            item.identity not in self.peer_identities,
+            item.size or 0,
+            item.identity,
+        ))
 
     def data_symbol_at(self, rva: int) -> DataSymbol | None:
         def rank(item: DataSymbol) -> tuple:
@@ -152,7 +297,9 @@ class AddressResolver:
             symbol for symbol in self.data_pages.get(rva >> 12, ())
             if symbol.rva <= rva and symbol.end is not None and rva < symbol.end
         ]
-        return min(candidates, key=rank, default=None)
+        return min(candidates, key=rank, default=None) or (
+            self._data_symbol_at_negative_four(rva)
+        )
 
     def resolve(self, rva: int, image: PEImage) -> str:
         return " | ".join(sorted(self.resolve_all(rva, image)))
@@ -173,10 +320,26 @@ class AddressResolver:
                 f"D:{symbol.identity}+{rva - symbol.rva:#x}"
                 for symbol in owners
             )
+        if owner := self._data_symbol_at_negative_four(rva):
+            return frozenset((f"D:{owner.identity}-0x4",))
         if functions := self.function_starts.get(rva):
             shared = functions & self.peer_function_identities
             identities = shared or functions
             return frozenset(f"F:{identity}" for identity in identities)
+        containing = [
+            row for row in self.function_pages.get(rva >> 12, ())
+            if row[0] <= rva < row[1]
+        ]
+        if containing:
+            start = max(row[0] for row in containing)
+            functions = set().union(*(
+                row[2] for row in containing if row[0] == start
+            ))
+            shared = functions & self.peer_function_identities
+            identities = shared or functions
+            return frozenset(
+                f"F:{identity}+{rva - start:#x}" for identity in identities
+            )
         section = image.section_at(rva)
         if section is not None:
             return frozenset((f"S:{section.name}+{rva - section.rva:#x}",))
@@ -190,6 +353,16 @@ def _trusted(symbol: DataSymbol, image: PEImage) -> bool:
         return image.section(symbol.section).contains(symbol.rva, symbol.size)
     except KeyError:
         return False
+
+
+def _has_identity_extent(symbol: DataSymbol) -> bool:
+    """Whether a PDB row has a complete extent tied to its identity.
+
+    Public-only rows normally remain address anchors.  Once a unique retail
+    identity supplies their extent, however, they are no longer extentless and
+    can participate in the same byte/relocation comparison as typed rows.
+    """
+    return symbol.type_index != 0 or symbol.size_kind != "unknown"
 
 
 def _function_identity_tokens(record: dict) -> frozenset[str]:
@@ -338,6 +511,665 @@ def _comparison_key(symbol: DataSymbol) -> tuple[str, bytes]:
     return symbol.identity, qualified
 
 
+def _terminated_literal_size(
+    image: PEImage, rva: int, width: int
+) -> int | None:
+    section = image.section_at(rva)
+    if section is None:
+        return None
+    maximum = min(section.end - rva, 1024 * 1024)
+    offset = 0
+    while offset < maximum:
+        length = min(4096, maximum - offset)
+        if width == 2 and length % 2:
+            length -= 1
+        if length <= 0:
+            break
+        chunk = image.read_rva(rva + offset, length)
+        if width == 1:
+            terminator = chunk.find(b"\0")
+            if terminator >= 0:
+                return offset + terminator + 1
+        else:
+            for index in range(0, len(chunk) - 1, 2):
+                if chunk[index:index + 2] == b"\0\0":
+                    return offset + index + 2
+        offset += length
+    return None
+
+
+def _derived_target_extent(
+    symbol: DataSymbol,
+    image: PEImage,
+    relocation_sites: frozenset[int],
+) -> tuple[int, str] | None:
+    """Recover extents encoded by compiler-owned public symbol classes."""
+    name = symbol.display_name
+    if name.startswith("??_C@_0"):
+        size = _terminated_literal_size(image, symbol.rva, 1)
+        return (size, "derived-string") if size else None
+    if name.startswith("??_C@_1"):
+        size = _terminated_literal_size(image, symbol.rva, 2)
+        return (size, "derived-string") if size else None
+    if match := re.fullmatch(r"__real@([0-9a-fA-F]+)", name):
+        size = len(match.group(1)) // 2
+        if size in {4, 8, 10, 16}:
+            return size, "derived-fppool"
+    if name == "__mask@@NegFloat@":
+        return 16, "derived-fppool"
+    if name.startswith("??_R0"):
+        # x86 MSVC TypeDescriptor: two pointer-sized header cells followed by
+        # a NUL-terminated decorated class name, rounded to DWORD alignment.
+        string_size = _terminated_literal_size(image, symbol.rva + 8, 1)
+        if string_size:
+            return (8 + string_size + 3) & ~3, "derived-rtti-type-descriptor"
+    if name.startswith("__GUID_"):
+        return 16, "derived-guid"
+    if name.startswith("??_B"):
+        return 1, "derived-static-guard"
+    if name.startswith("?stored_vtable@"):
+        # boost::function's basic_vtableN stores its manager and invoker.
+        return 8, "derived-boost-function-vtable"
+    if (
+        "@placeholders@" in name
+        and re.search(r"@@3(?:AA)?U\?\$arg@\$", name)
+    ):
+        # The public Boost.Asio placeholder symbols are empty boost::arg<N>
+        # objects. Their linker allocation is a single byte.
+        return 1, "derived-boost-placeholder"
+    if name.startswith("?current_id@") and name.endswith("@4GA"):
+        return 2, "derived-u16-static"
+    if name.startswith("?v@") and name.endswith("@4T__m128i@@A"):
+        return 16, "derived-simd-constant"
+    if name == "?mask@?1??Select@@YAHABUbtDbvtAabbMm@@00@Z@4QBIB":
+        return 16, "derived-bullet-mask"
+    if name.startswith("?tmp@?1???$ToType@"):
+        if "@J@" in name or "@K@" in name:
+            return 4, "derived-scaleform-static"
+        if "@N@" in name:
+            return 8, "derived-scaleform-static"
+    if name.startswith("__DELAY_IMPORT_DESCRIPTOR_"):
+        return 32, "derived-delay-import-descriptor"
+    if name in {"___xc_z", "___xi_a", "___xt_z"}:
+        return 4, "derived-crt-initializer-sentinel"
+    if name.startswith("__TI"):
+        # x86 MSVC ThrowInfo has attributes and three pointer fields. Some
+        # linked COMDATs contain additional records after this header; those
+        # exceptional contributions are retained in the reviewed extent table.
+        return 16, "derived-throw-info"
+    if match := re.match(r"__CTA(\d+)", name):
+        # CatchableTypeArray: signed count followed by that many pointers.
+        return 4 + 4 * int(match.group(1)), "derived-catchable-type-array"
+    if name.startswith("__CT??_R0"):
+        # x86 MSVC CatchableType: properties, TypeDescriptor*, PMD, size,
+        # and copy-function pointer.
+        return 28, "derived-catchable-type"
+    if name.startswith("??_8"):
+        # The two surviving extentless STLport virtual-base tables contain the
+        # vbptr displacement and one virtual-base displacement.
+        return 8, "derived-stlport-vbtable"
+    if name == "___clocalestr":
+        return 8, "derived-crt-locale-anchor"
+    if name == "___lc_handle":
+        return 24, "derived-crt-locale-handles"
+    if name == (
+        "?mutex@?1??accept_mutex@engine@detail@ssl@asio@boost@@"
+        "CAAAUwin_static_mutex@356@XZ@4U7356@A"
+    ):
+        return 4, "derived-asio-static-mutex"
+    if name.startswith("??_7"):
+        text = image.section(".text")
+        cursor = symbol.rva
+        while cursor in relocation_sites:
+            value = image.u32_rva(cursor)
+            destination = (
+                value - image.image_base if value >= image.image_base else value
+            )
+            if not text.contains(destination):
+                break
+            cursor += 4
+        if cursor > symbol.rva:
+            return cursor - symbol.rva, "derived-vtable"
+    return None
+
+
+def _apply_target_extents(
+    symbols: list[DataSymbol], image: PEImage | None = None
+) -> list[DataSymbol]:
+    """Apply reviewed and compiler-encoded retail extents."""
+    from vostok.data import missing
+
+    extents = {row.rva: row.size for row in missing.load_pdb_extents()}
+    relocation_sites = frozenset(image.base_relocations()) if image else frozenset()
+    result = []
+    for symbol in symbols:
+        if symbol.rva in extents:
+            result.append(dataclasses.replace(
+                symbol, size=extents[symbol.rva], size_kind="reviewed-retail"
+            ))
+            continue
+        derived = (
+            _derived_target_extent(symbol, image, relocation_sites)
+            if image is not None and (symbol.size is None or symbol.size <= 0)
+            else None
+        )
+        result.append(
+            dataclasses.replace(symbol, size=derived[0], size_kind=derived[1])
+            if derived else symbol
+        )
+    return result
+
+
+def _apply_access_extents(
+    symbols: list[DataSymbol], side: str,
+) -> list[DataSymbol]:
+    """Extend a typed allocation only through bytes retail/base code reads.
+
+    PDB types describe several compiler-owned cells more narrowly than the
+    emitted instruction does: x86 static guards are byte-typed but updated as
+    DWORDs, and the CRT assembly labels one double inside a 128-bit constant.
+    The access map is direct evidence for the consumed allocation extent. An
+    instruction may intentionally consume adjacent PDB-labelled scalar cells
+    as one vector, so these consumer-owned projections may overlap.
+    """
+    path = access_path(side)
+    if not path.is_file():
+        return symbols
+    resolver = AddressResolver(symbols, [])
+    required: dict[int, int] = {}
+    widths = {"byte": 1, "word": 2, "dword": 4, "qword": 8, "xmmword": 16}
+    with path.open(newline="", encoding="utf-8") as source:
+        for row in csv.DictReader(source, delimiter="\t"):
+            if row["access"] not in {"read", "write", "readwrite"}:
+                continue
+            width = widths.get(row["width"], 0)
+            if not width:
+                continue
+            rva = int(row["target_rva"], 0)
+            symbol = resolver.data_symbol_at(rva)
+            if symbol is None:
+                continue
+            extent = rva + width - symbol.rva
+            if extent <= (symbol.size or 0):
+                continue
+            required[symbol.rva] = max(required.get(symbol.rva, 0), extent)
+    return [
+        dataclasses.replace(
+            symbol, size=required[symbol.rva], size_kind="retail-access"
+        )
+        if required.get(symbol.rva, 0) > (symbol.size or 0)
+        else symbol
+        for symbol in symbols
+    ]
+
+
+def _transfer_target_extents(
+    target: list[DataSymbol], base: list[DataSymbol]
+) -> list[DataSymbol]:
+    """Use a unique retail allocation's reviewed extent on its paired base row."""
+    target_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
+    for symbol in target:
+        target_by_key[_comparison_key(symbol)].append(symbol)
+    sizes = {
+        key: (
+            rows[0].size,
+            rows[0].size_kind in {"reviewed-retail", "retail-access"},
+        )
+        for key, rows in target_by_key.items()
+        if len(rows) == 1 and rows[0].size is not None and rows[0].size > 0
+    }
+    return [
+        dataclasses.replace(
+            symbol, size=sizes[key][0], size_kind="retail-paired"
+        )
+        if (key := _comparison_key(symbol)) in sizes
+        and ((symbol.size is None or symbol.size <= 0) or sizes[key][1])
+        else symbol
+        for symbol in base
+    ]
+
+
+def _reviewed_data_symbols(image: PEImage) -> list[DataSymbol]:
+    """Materialize the manually admitted non-PDB data starts for resolution."""
+    from vostok.data import missing
+
+    result = []
+    for row in missing.load_symbols():
+        section = image.section_at(row.rva)
+        if (
+            section is None or section.name not in {".rdata", ".data"}
+            or row.size is None or row.size <= 0
+        ):
+            continue
+        storage = (
+            "rdata" if section.name == ".rdata"
+            else "data" if row.rva - section.rva < section.raw_size
+            else "bss"
+        )
+        result.append(DataSymbol(
+            rva=row.rva,
+            section=section.name,
+            storage=storage,
+            size=row.size,
+            size_kind="reviewed-retail",
+            type_index=-1,
+            scope="reviewed",
+            module_path=b"",
+            archive_path=b"",
+            name=row.name.encode("utf-8"),
+            public_name=b"",
+            identity=f"N:{row.name}",
+            owner_module="reviewed",
+        ))
+    return result
+
+
+def _current_code_audit_rows() -> list[dict[str, str]]:
+    """Load only all-module access audits derived from the current inputs."""
+    from vostok.data import gate as data_gate
+    from vostok.data import render_relocs
+
+    expected = render_relocs._inputs()
+    rows = []
+    for module in data_gate.modules():
+        artifacts = render_relocs._artifacts(module)
+        if not artifacts.report.is_file() or not artifacts.audit.is_file():
+            return []
+        report = json.loads(artifacts.report.read_text(encoding="utf-8"))
+        if report.get("schema") != 5 or report.get("inputs") != expected:
+            return []
+        with artifacts.audit.open(newline="", encoding="utf-8") as source:
+            rows.extend(csv.DictReader(source, delimiter="\t"))
+    return rows
+
+
+_ACCESS_ABSOLUTE = re.compile(
+    r"(?<![A-Za-z0-9_])(?:0x[0-9a-fA-F]+|[0-9]{4,})(?![A-Za-z0-9_])"
+)
+
+
+def _paired_function_access_referents() -> list[tuple[int, int, str]]:
+    """Pair complete data-access sequences for uniquely named PDB functions.
+
+    The module audits deliberately cover only ledger-owned game functions.
+    Vendor and CRT functions still have authoritative PDB names and extents, so
+    pair their whole relocation sequence directly when one physical function
+    with that spelling exists on each side and every access shape agrees.
+    """
+    records_by_side = {
+        side: _load_function_symbols(side) for side in ("target", "base")
+    }
+
+    def record_groups(side: str):
+        exact: dict[tuple[str, str], set[int]] = defaultdict(set)
+        by_name: dict[str, set[int]] = defaultdict(set)
+        records: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        names: dict[str, list[dict]] = defaultdict(list)
+        for record in records_by_side[side]:
+            rva, size = record.get("rva"), record.get("size")
+            mangled = record.get("mangled")
+            if (
+                not isinstance(rva, int) or not isinstance(size, int)
+                or size <= 0 or not mangled
+            ):
+                continue
+            file = record.get("file") or "-"
+            exact[(mangled, file)].add(rva)
+            by_name[mangled].add(rva)
+            records[(mangled, file)].append(record)
+            names[mangled].append(record)
+        return exact, by_name, records, names
+
+    target_exact, target_names, target_records, target_name_records = (
+        record_groups("target")
+    )
+    base_exact, base_names, base_records, base_name_records = record_groups("base")
+    partner_votes: dict[int, set[int]] = defaultdict(set)
+    for key in target_exact.keys() & base_exact.keys():
+        if len(target_exact[key]) == 1 and len(base_exact[key]) == 1:
+            partner_votes[next(iter(target_exact[key]))].add(
+                next(iter(base_exact[key]))
+            )
+    for name in target_names.keys() & base_names.keys():
+        if len(target_names[name]) == 1 and len(base_names[name]) == 1:
+            partner_votes[next(iter(target_names[name]))].add(
+                next(iter(base_names[name]))
+            )
+    partners = {
+        target_rva: next(iter(base_rvas))
+        for target_rva, base_rvas in partner_votes.items()
+        if len(base_rvas) == 1
+    }
+    reverse_partners = {base_rva: target_rva for target_rva, base_rva in partners.items()}
+
+    def access_events(side: str, accepted: set[int]) -> dict[int, set[tuple]]:
+        path = access_path(side)
+        if not path.is_file():
+            return {}
+        exact_records = target_records if side == "target" else base_records
+        name_records = target_name_records if side == "target" else base_name_records
+        result: dict[int, set[tuple]] = defaultdict(set)
+        with path.open(newline="", encoding="utf-8") as source:
+            for row in csv.DictReader(source, delimiter="\t"):
+                instruction = int(row["instruction_rva"], 0)
+                key = (row["caller_mangled"], row["caller_file"] or "-")
+                candidates = exact_records.get(key) or name_records.get(
+                    row["caller_mangled"], ()
+                )
+                for record in candidates:
+                    rva, size = record["rva"], record["size"]
+                    if rva not in accepted or not rva <= instruction < rva + size:
+                        continue
+                    normalized = _ACCESS_ABSOLUTE.sub(
+                        "<value>", row["instruction"].casefold()
+                    )
+                    result[rva].add((
+                        int(row["site_rva"], 0) - rva,
+                        int(row["target_rva"], 0),
+                        row["access"], row["width"], row["form"],
+                        int(row["scale"], 0), normalized,
+                    ))
+        return result
+
+    target_events = access_events("target", set(partners))
+    base_events = access_events("base", set(reverse_partners))
+    result = []
+    for target_function, base_function in sorted(partners.items()):
+        left = sorted(target_events.get(target_function, ()))
+        right = sorted(base_events.get(base_function, ()))
+        left_tokens = [row[2:-1] for row in left]
+        right_tokens = [row[2:-1] for row in right]
+        if not left or not right:
+            continue
+        if left_tokens == right_tokens:
+            result.extend(
+                (target_row[1], base_row[1], "function-sequence")
+                for target_row, base_row in zip(left, right)
+            )
+            continue
+
+        used_left = set()
+        used_right = set()
+        right_by_offset: dict[int, list[int]] = defaultdict(list)
+        for index, row in enumerate(right):
+            right_by_offset[row[0]].append(index)
+        for left_index, target_row in enumerate(left):
+            candidates = [
+                index for index in right_by_offset.get(target_row[0], ())
+                if right[index][2:-1] == target_row[2:-1]
+            ]
+            if len(candidates) != 1:
+                continue
+            right_index = candidates[0]
+            if right_index in used_right:
+                continue
+            used_left.add(left_index)
+            used_right.add(right_index)
+            result.append((
+                target_row[1], right[right_index][1], "function-offset"
+            ))
+
+        left_remainder = [
+            (index, row) for index, row in enumerate(left)
+            if index not in used_left
+        ]
+        right_remainder = [
+            (index, row) for index, row in enumerate(right)
+            if index not in used_right
+        ]
+        matcher = SequenceMatcher(
+            None,
+            [row[2:] for _, row in left_remainder],
+            [row[2:] for _, row in right_remainder],
+            autojunk=False,
+        )
+        for block in matcher.get_matching_blocks():
+            for offset in range(block.size):
+                _, target_row = left_remainder[block.a + offset]
+                _, base_row = right_remainder[block.b + offset]
+                result.append((
+                    target_row[1], base_row[1], "access-sequence"
+                ))
+    return result
+
+
+def _infer_base_symbols_from_code_xrefs(
+    target_symbols: list[DataSymbol],
+    base_symbols: list[DataSymbol],
+    base_image: PEImage,
+    audit_rows: list[dict[str, str]] | None = None,
+    access_pairs: list[tuple[int, int, str]] | None = None,
+) -> list[DataSymbol]:
+    """Transfer retail allocation aliases through uniquely paired code xrefs."""
+    rows = _current_code_audit_rows() if audit_rows is None else audit_rows
+    target_by_rva: dict[int, list[DataSymbol]] = defaultdict(list)
+    for symbol in target_symbols:
+        if _has_identity_extent(symbol):
+            target_by_rva[symbol.rva].append(symbol)
+    base_keys = {_comparison_key(symbol) for symbol in base_symbols}
+    base_starts = {symbol.rva for symbol in base_symbols}
+    strong_votes: dict[int, Counter] = defaultdict(Counter)
+    sequence_votes: dict[int, Counter] = defaultdict(Counter)
+    target_resolver = AddressResolver(target_symbols, [])
+    for row in rows:
+        if (
+            row.get("pair_status") != "PAIRED"
+            or row.get("access_status") != "EXACT"
+            or row.get("target_datum_rva") in {None, "-"}
+            or row.get("inferred_base_datum_rva") in {None, "-"}
+        ):
+            continue
+        target_rva = int(row["target_datum_rva"], 0)
+        if target_rva not in target_by_rva:
+            continue
+        votes = (
+            sequence_votes if row.get("pair_kind") == "access-sequence"
+            else strong_votes
+        )
+        votes[target_rva][int(row["inferred_base_datum_rva"], 0)] += 1
+    paired_referents = (
+        _paired_function_access_referents()
+        if access_pairs is None and audit_rows is None else access_pairs or []
+    )
+    for target_referent, base_referent, pair_kind in paired_referents:
+        owner = target_resolver.data_symbol_at(target_referent)
+        if owner is None or owner.rva not in target_by_rva:
+            continue
+        votes = (
+            sequence_votes if pair_kind == "access-sequence" else strong_votes
+        )
+        votes[owner.rva][
+            base_referent - (target_referent - owner.rva)
+        ] += 1
+
+    def select(votes: Counter) -> int | None:
+        ranked = votes.most_common(2)
+        if not ranked:
+            return None
+        if len(ranked) == 1 or ranked[0][1] >= 4 * ranked[1][1]:
+            return ranked[0][0]
+        return None
+
+    inferred = []
+    for target_rva in sorted(set(strong_votes) | set(sequence_votes)):
+        candidates = strong_votes.get(target_rva) or sequence_votes[target_rva]
+        base_rva = select(candidates)
+        if base_rva is None:
+            continue
+        # A relocation vote can name an otherwise anonymous candidate datum,
+        # but must never erase a conflicting identity already recorded by the
+        # candidate PDB.  Those conflicts are precisely the source/data bugs
+        # this audit is meant to expose.
+        if base_rva in base_starts:
+            continue
+        section = base_image.section_at(base_rva)
+        if section is None or section.name not in {".rdata", ".data"}:
+            continue
+        for symbol in target_by_rva[target_rva]:
+            if _comparison_key(symbol) in base_keys or symbol.size is None:
+                continue
+            if not section.contains(base_rva, symbol.size):
+                continue
+            storage = (
+                "rdata" if section.name == ".rdata"
+                else "data" if base_rva - section.rva < section.raw_size
+                else "bss"
+            )
+            inferred.append(dataclasses.replace(
+                symbol,
+                rva=base_rva,
+                section=section.name,
+                storage=storage,
+                size_kind="retail-code-xref",
+            ))
+    return inferred
+
+
+def _infer_base_symbols_from_data_xrefs(
+    target_symbols: list[DataSymbol],
+    base_symbols: list[DataSymbol],
+    referents: list[DataSymbol],
+    target_image: PEImage,
+    base_image: PEImage,
+    target_sites: tuple[int, ...],
+    base_sites: tuple[int, ...],
+) -> list[DataSymbol]:
+    """Transfer a retail datum identity through complete paired data xrefs.
+
+    A vote is admitted only when the named source allocation is unique on both
+    sides, the relocation occupies the same source offset, the retail referent
+    has no internal relocations, and its complete bytes agree at the inferred
+    candidate start. Conflicting or many-to-one votes remain unresolved.
+    """
+    target_resolver = AddressResolver(referents, [])
+    target_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
+    base_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
+    for symbol in target_symbols:
+        target_by_key[_comparison_key(symbol)].append(symbol)
+    for symbol in base_symbols:
+        base_by_key[_comparison_key(symbol)].append(symbol)
+    votes: dict[tuple[int, tuple[str, bytes]], set[int]] = defaultdict(set)
+    owners: dict[tuple[int, tuple[str, bytes]], DataSymbol] = {}
+    for key in target_by_key.keys() & base_by_key.keys():
+        target = _physical_allocations(target_by_key[key])
+        base = _physical_allocations(base_by_key[key])
+        if len(target) != 1 or len(base) != 1:
+            continue
+        source, candidate_source = target[0], base[0]
+        if source.size is None or candidate_source.size != source.size:
+            continue
+        begin = bisect.bisect_left(target_sites, source.rva)
+        end = bisect.bisect_left(target_sites, source.rva + source.size)
+        candidate_offsets = {
+            site - candidate_source.rva
+            for site in base_sites[
+                bisect.bisect_left(base_sites, candidate_source.rva):
+                bisect.bisect_left(
+                    base_sites, candidate_source.rva + candidate_source.size
+                )
+            ]
+        }
+        for site in target_sites[begin:end]:
+            offset = site - source.rva
+            if offset not in candidate_offsets:
+                continue
+            target_value = target_image.u32_rva(site)
+            target_rva = (
+                target_value - target_image.image_base
+                if target_value >= target_image.image_base else target_value
+            )
+            owner = target_resolver.data_symbol_at(target_rva)
+            if owner is None or owner.size is None:
+                continue
+            owner_key = (owner.rva, _comparison_key(owner))
+            if owner_key[1] in base_by_key:
+                continue
+            internal_begin = bisect.bisect_left(target_sites, owner.rva)
+            internal_end = bisect.bisect_left(target_sites, owner.rva + owner.size)
+            if internal_begin != internal_end:
+                continue
+            candidate_site = candidate_source.rva + offset
+            base_value = base_image.u32_rva(candidate_site)
+            base_rva = (
+                base_value - base_image.image_base
+                if base_value >= base_image.image_base else base_value
+            )
+            candidate = base_rva - (target_rva - owner.rva)
+            section = base_image.section_at(candidate)
+            if (
+                section is None or section.name != owner.section
+                or not section.contains(candidate, owner.size)
+                or target_image.read_rva(owner.rva, owner.size)
+                != base_image.read_rva(candidate, owner.size)
+            ):
+                continue
+            votes[owner_key].add(candidate)
+            owners[owner_key] = owner
+    reverse: dict[int, set[tuple[int, tuple[str, bytes]]]] = defaultdict(set)
+    for target_key, candidates in votes.items():
+        if len(candidates) == 1:
+            reverse[next(iter(candidates))].add(target_key)
+    return [
+        dataclasses.replace(
+            owners[target_key],
+            rva=next(iter(candidates)),
+            size_kind="retail-xref-paired",
+            type_index=(owners[target_key].type_index or -1),
+        )
+        for target_key, candidates in sorted(votes.items())
+        if len(candidates) == 1
+        and len(reverse[next(iter(candidates))]) == 1
+    ]
+
+
+def _comparison_symbols() -> tuple[list[DataSymbol], list[DataSymbol]]:
+    target = _apply_access_extents(
+        _apply_target_extents(
+            load(paths.DATA_TARGET_INDEX), PEImage(image_paths("target")[0])
+        ),
+        "target",
+    )
+    base = _transfer_target_extents(target, load(paths.DATA_BASE_INDEX))
+    return target, base
+
+
+def _augment_comparison_symbols(
+    target_symbols: list[DataSymbol],
+    base_symbols: list[DataSymbol],
+    target_image: PEImage,
+    base_image: PEImage,
+) -> tuple[list[DataSymbol], list[DataSymbol]]:
+    """Enroll reviewed retail allocations and proven candidate aliases."""
+    target_symbols = [*target_symbols, *_reviewed_data_symbols(target_image)]
+    code_inferred = _infer_base_symbols_from_code_xrefs(
+        target_symbols, base_symbols, base_image
+    )
+    base_symbols = [*base_symbols, *code_inferred]
+    inferred_base = _infer_base_symbols_from_data_xrefs(
+        target_symbols,
+        base_symbols,
+        target_symbols,
+        target_image,
+        base_image,
+        target_image.base_relocations(),
+        base_image.base_relocations(),
+    )
+
+    def unique(rows: list[DataSymbol]) -> list[DataSymbol]:
+        seen = set()
+        result = []
+        for row in rows:
+            key = (
+                row.rva, row.section, row.storage, row.size, row.identity,
+            )
+            if key not in seen:
+                seen.add(key)
+                result.append(row)
+        return result
+
+    return unique(target_symbols), unique([*base_symbols, *inferred_base])
+
+
 def _physical_allocations(symbols: list[DataSymbol]) -> list[DataSymbol]:
     """Collapse duplicate PDB records, never distinct linked allocations."""
     by_allocation: dict[tuple[int, str, str, int | None], list[DataSymbol]] = (
@@ -371,8 +1203,12 @@ def _pair_candidates(
     target_image: PEImage, base_image: PEImage,
     target_sites: tuple[int, ...], base_sites: tuple[int, ...],
     target_resolver: AddressResolver, base_resolver: AddressResolver,
+    target_fingerprints: dict[int, tuple] | None = None,
+    base_fingerprints: dict[int, tuple] | None = None,
 ) -> tuple[list[dict], list[DataSymbol], list[DataSymbol]]:
     """Compare a same-name allocation multiset without address-order guesses."""
+    target_fingerprints = target_fingerprints or {}
+    base_fingerprints = base_fingerprints or {}
     candidates = []
     for target_index, target_symbol in enumerate(target):
         for base_index, base_symbol in enumerate(base):
@@ -385,8 +1221,15 @@ def _pair_candidates(
                 if target_symbol.size is not None and base_symbol.size is not None
                 else 1 << 30
             )
+            target_consumer = target_fingerprints.get(target_symbol.rva)
+            base_consumer = base_fingerprints.get(base_symbol.rva)
+            consumer_rank = int(
+                target_consumer is None
+                or base_consumer is None
+                or target_consumer != base_consumer
+            )
             candidates.append((
-                _PAIR_RANK[row["status"]], size_delta,
+                consumer_rank, _PAIR_RANK[row["status"]], size_delta,
                 target_symbol.rva, base_symbol.rva,
                 target_index, base_index, row,
             ))
@@ -473,18 +1316,21 @@ def _consumer_fallback_key(
 
 def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
             target_image: PEImage, base_image: PEImage) -> list[dict]:
+    target_symbols, base_symbols = _augment_comparison_symbols(
+        target_symbols, base_symbols, target_image, base_image
+    )
     target_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
     base_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
     ordinal_target = []
     ordinal_base = []
     for symbol in target_symbols:
-        if symbol.type_index != 0:  # public-only rows are address anchors
+        if _has_identity_extent(symbol):
             if _ordinal_local(symbol):
                 ordinal_target.append(symbol)
             else:
                 target_by_key[_comparison_key(symbol)].append(symbol)
     for symbol in base_symbols:
-        if symbol.type_index != 0:
+        if _has_identity_extent(symbol):
             if _ordinal_local(symbol):
                 ordinal_base.append(symbol)
             else:
@@ -492,8 +1338,8 @@ def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
 
     target_sites = target_image.base_relocations()
     base_sites = base_image.base_relocations()
-    target_functions = _load_rich("target")
-    base_functions = _load_rich("base")
+    target_functions = _load_function_symbols("target")
+    base_functions = _load_function_symbols("base")
     target_function_names = {
         token for record in target_functions
         for token in _function_identity_tokens(record)
@@ -515,6 +1361,10 @@ def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
         peer_identities=target_identities,
         peer_function_identities=target_function_names,
     )
+    target_fingerprints = _consumer_fingerprints(
+        "target", target_symbols, target_image
+    )
+    base_fingerprints = _consumer_fingerprints("base", base_symbols, base_image)
     rows = []
     unpaired_target = _physical_allocations(ordinal_target)
     unpaired_base = _physical_allocations(ordinal_base)
@@ -524,15 +1374,12 @@ def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
         paired, target_remainder, base_remainder = _pair_candidates(
             target, base, target_image, base_image, target_sites, base_sites,
             target_resolver, base_resolver,
+            target_fingerprints, base_fingerprints,
         )
         rows.extend(paired)
         unpaired_target.extend(target_remainder)
         unpaired_base.extend(base_remainder)
 
-    target_fingerprints = _consumer_fingerprints(
-        "target", target_symbols, target_image
-    )
-    base_fingerprints = _consumer_fingerprints("base", base_symbols, base_image)
     target_by_consumer: dict[tuple, list[DataSymbol]] = defaultdict(list)
     base_by_consumer: dict[tuple, list[DataSymbol]] = defaultdict(list)
     for symbol in unpaired_target:
@@ -552,6 +1399,7 @@ def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
         paired, target_remainder, base_remainder = _pair_candidates(
             target, base, target_image, base_image, target_sites, base_sites,
             target_resolver, base_resolver,
+            target_fingerprints, base_fingerprints,
         )
         for row in paired:
             row["note"] = (
@@ -709,7 +1557,7 @@ def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage,
 
 
 def _write_relocations(side: str, symbols: list[DataSymbol], image: PEImage) -> None:
-    resolver = AddressResolver(symbols, _load_rich(side))
+    resolver = AddressResolver(symbols, _load_function_symbols(side))
     lines = ["site_rva\tsource_identity\tsource_offset\traw_value\ttarget"]
     for site in image.base_relocations():
         section = image.section_at(site)
@@ -744,7 +1592,9 @@ def _access_kind(instruction: str, absolute_value: int | None = None) -> tuple[s
         None,
     )
     if selected is not None and "[" not in split_operands[selected]:
-        return "address", width
+        # The memory width belongs to the destination receiving the pointer;
+        # taking a datum's address does not read that many bytes from it.
+        return "address", "-"
     if mnemonic == "lea" or "[" not in operands:
         return "address", width
     if selected is not None and selected > 0:
@@ -806,7 +1656,7 @@ def _write_access(side: str, symbols: list[DataSymbol], image: PEImage) -> None:
     if objdump is None:
         raise RuntimeError("llvm-objdump is required for the data access map")
     exe, _ = image_paths(side)
-    functions = _load_rich(side)
+    functions = _load_function_symbols(side)
     function_index = _FunctionIndex(functions)
     resolver = AddressResolver(symbols, functions)
     text = image.section(".text")
@@ -1015,6 +1865,16 @@ def _write_coverage_gaps(symbols: list[DataSymbol], image: PEImage) -> None:
 
 
 def init_target(*, force: bool = False) -> None:
+    if paths.DATA_TARGET_INDEX.is_file() and not function_index_path("target").is_file():
+        log("retail inventory predates the complete PDB function index; regenerating")
+        force = True
+    if function_index_path("target").is_file() and not force:
+        with function_index_path("target").open(encoding="ascii") as source:
+            if source.readline().rstrip("\n").split("\t") != [
+                "rva", "size", "name_hex", "module_hex",
+            ]:
+                log("retail function index predates compiland ownership; regenerating")
+                force = True
     if paths.DATA_TARGET_INDEX.is_file() and not force:
         with paths.DATA_TARGET_INDEX.open(encoding="ascii") as source:
             has_public_anchors = any(
@@ -1026,8 +1886,8 @@ def init_target(*, force: bool = False) -> None:
             log("retail inventory predates public address anchors; regenerating")
             force = True
     if paths.DATA_TARGET_INDEX.is_file() and not force:
-        symbols = load(paths.DATA_TARGET_INDEX)
         image = PEImage(image_paths("target")[0])
+        symbols = _apply_target_extents(load(paths.DATA_TARGET_INDEX), image)
         # The PDB census is immutable, but these maps encode our current
         # resolver and access-classification rules. Re-derive them so a tooling
         # change can never leave apparently valid target evidence stale.
@@ -1037,8 +1897,8 @@ def init_target(*, force: bool = False) -> None:
         log("retail inventory reused; derived evidence refreshed")
     else:
         export_index("target")
-        symbols = load(paths.DATA_TARGET_INDEX)
         image = PEImage(image_paths("target")[0])
+        symbols = _apply_target_extents(load(paths.DATA_TARGET_INDEX), image)
         _write_relocations("target", symbols, image)
         _write_access("target", symbols, image)
         _write_retail_census(symbols, force=force)
@@ -1063,13 +1923,20 @@ def prepare_manifests() -> dict:
     """Refresh both access graphs and project consumer-owned delink manifests."""
     init_target()
     export_index("base")
-    base_symbols = load(paths.DATA_BASE_INDEX)
+    target_image = PEImage(image_paths("target")[0])
+    target_symbols = _apply_target_extents(
+        load(paths.DATA_TARGET_INDEX), target_image
+    )
+    target_symbols = _apply_access_extents(target_symbols, "target")
+    base_symbols = _transfer_target_extents(
+        target_symbols, load(paths.DATA_BASE_INDEX)
+    )
     base_image = PEImage(image_paths("base")[0])
     _write_relocations("base", base_symbols, base_image)
     _write_access("base", base_symbols, base_image)
     from vostok.data import manifest
     summary = manifest.generate()
-    _write_coverage_gaps(load(paths.DATA_TARGET_INDEX), PEImage(image_paths("target")[0]))
+    _write_coverage_gaps(target_symbols, target_image)
     log(
         "consumer projection: {consumer_units:,} units, "
         "{allocation_copies:,} allocation copies, {blockers:,} blockers".format(
@@ -1081,8 +1948,7 @@ def prepare_manifests() -> dict:
 
 def refresh() -> dict:
     consumer_summary = prepare_manifests()
-    target_symbols = load(paths.DATA_TARGET_INDEX)
-    base_symbols = load(paths.DATA_BASE_INDEX)
+    target_symbols, base_symbols = _comparison_symbols()
     target_image = PEImage(image_paths("target")[0])
     base_image = PEImage(image_paths("base")[0])
     rows = compare(target_symbols, base_symbols, target_image, base_image)
@@ -1123,6 +1989,7 @@ def refresh() -> dict:
             "exe_sha256": _file_hash(exe),
             "pdb_sha256": _file_hash(pdb),
             "index_sha256": _file_hash(index_path(side)),
+            "function_index_sha256": _file_hash(function_index_path(side)),
             "access_sha256": _file_hash(access_path(side)),
             "relocations_sha256": _file_hash(reloc_path(side)),
         }

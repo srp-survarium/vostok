@@ -162,6 +162,11 @@
         pname = "vostok-data-delinker";
         version = "0.1.0";
         src = vostok-data-delinker-src;
+        patches = [
+          ./tools/vostok-data-delinker-function-index.patch
+          ./tools/vostok-data-delinker-function-owners.patch
+          ./tools/vostok-data-delinker-overlapping-projections.patch
+        ];
         # The data lane needs the identities and type-derived extents that the
         # delinker already reads from the PDB.  Exporting them is opt-in and
         # exits before normal COFF emission, so function pairing is unchanged.

@@ -9,7 +9,7 @@ namespace collision {
 template < class ConfigValueType >
 u32 get_bones_count_from_hit_targets_config( ConfigValueType const& config )
 {
-	ConfigValueType const targets_table			= config["targets"];
+	ConfigValueType const targets_table			= config["hit_targets"];
 	return										targets_table.size();
 }
 
