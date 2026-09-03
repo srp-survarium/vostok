@@ -63,7 +63,19 @@ class PdbOrderProbeTests(unittest.TestCase):
 
     def test_list_does_not_require_the_toolchain(self):
         self.assertEqual(main(["--list"]), 0)
-        self.assertIn("function-order", CASES)
+        self.assertTrue(
+            {
+                "function-order",
+                "ltcg-indexed-archive-member-order",
+                "ltcg-indexed-root-demand-order",
+                "ltcg-batch-source-order",
+                "ltcg-shared-pdb-compile-order",
+                "ltcg-shared-pdb-batch-source-order",
+                "function-definition-order",
+                "ltcg-function-definition-order",
+                "module-stream-roster",
+            }.issubset(CASES)
+        )
 
     def test_custom_output_requires_probe_marker_before_replacement(self):
         with tempfile.TemporaryDirectory() as temporary:

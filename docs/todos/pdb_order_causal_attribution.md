@@ -1,8 +1,10 @@
 # PDB order causal attribution
 
 Status: **open**. Small VS2008 experiments establish several causal rules, and
-one bounded C13/header-order correction has now been accepted in the game. The
-large DBI/TPI/public/MSF residuals remain open.
+two bounded C13-guided corrections have now been accepted in the game. The
+large DBI/TPI/public residuals remain open; the current MSF slot gap is fully
+attributed to the unequal semantic module roster, while physical equality must
+wait for that roster and the stream sizes to converge.
 
 ## Honest progress statement
 
@@ -13,13 +15,15 @@ this causal campaign was limited to:
 - two moved `engine_world` definitions from the source-definition comparison;
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
-The work recorded here added a reproducible 21-case toy harness, corrected two
+The work recorded here added a reproducible 29-case toy harness, corrected two
 false comparison signals, established the cause of several PDB channels, and
 applied the first rule to the sound library. That production change corrected
 header presence/order in 39 measured sound compilands, brought two small
 compilands to zero source-file-order inversions, and left the authoritative code
-comparison exactly neutral. It did not correct VFS DBI order, the global named
-TPI sequence, or physical MSF allocation.
+comparison exactly neutral. A second application recovered a missing direct
+header dependency and the target callee in `particle/evaluate_type.cpp`, taking
+its only function from 86.25% to byte-exact 100%. These changes did not correct
+VFS DBI order, the global named TPI sequence, or physical MSF allocation.
 
 Physical PDB order is not direct source-order proof. It is also not inherently
 non-actionable. The useful classification is: **causally understood in the toy
@@ -42,7 +46,7 @@ commands, linker logs, PDB/EXE hashes, copied artifacts, full
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
-The current matrix contains 21 cases and emits 27 comparisons because clean and
+The current matrix contains 29 cases and emits 35 comparisons because clean and
 incremental relink cases compare multiple states. Wine output goes directly to
 each command's log file: VS2008's persistent `mspdbsrv.exe` can inherit a pipe
 after `cl.exe` or `link.exe` has finished and otherwise make a completed probe
@@ -66,7 +70,9 @@ not raw moved-row totals.
 | separate libraries `alpha.lib beta.lib` vs the reverse | 1 | 1 | 1 | 1 | search, load, pass-2, DBI/TPI, and placement all reverse together |
 | shared-type contributor objects reversed | 1 | 2 | 1 | 1 | the shared named type moves from `0x1002` to `0x1001`; its earliest retained direct module reference and module-reference sequence reverse |
 | first local use of two already-declared types reversed inside one TU | 0 | 0 | 0 | 0 | local use order does not control named TPI order in this case; only the source checksum changes |
+| definitions of two `/Gy` functions reversed in one source file | 0 | 0 | 1 | 1 | lexical definition order controls final placement here without moving DBI, TPI, or C13 record order |
 | linker `/ORDER` file reverses two functions | 0 | 0 | 1 | 1 | public and frame order follow final function placement independently of DBI/TPI/C13 |
+| one additional direct object/module | 0 among the three shared modules; one new module | 0 among the shared type | 0 among the shared publics | 0 among the shared frames | one semantic module role adds one stream slot, while downstream stream sizes and physical allocation change |
 
 The same inputs under `/GL`/`/LTCG` do not obey all of the non-LTCG rules:
 
@@ -75,8 +81,14 @@ The same inputs under `/GL`/`/LTCG` do not obey all of the non-LTCG rules:
 | direct object arguments reversed | 1 | 1 | 1 | the two objects reverse in DBI/TPI/placement; a synthetic `* CIL *` module is present |
 | archive members reversed | 0 | 0 | 0 | archive member order does not control the surviving LTCG module order |
 | unresolved-root demand reversed | 0 | 0 | 0 | pass-1 demand does not control the surviving LTCG module order or placement here |
+| archive members reversed with a librarian `/LTCG` index | 0 | 0 | 0 | the librarian's CIL index does not make member order observable in the surviving order |
+| unresolved-root demand reversed with a librarian `/LTCG` index | 0 | 0 | 0 | indexed-library demand order remains neutral |
 | separate libraries reversed | 3 | 1 | 1 | library order changes the LTCG module sequence and downstream placement; the library modules appear in reverse library order in this fixture |
 | compilation order reversed, archive and link fixed | 0 | 0 | 0 | object timestamps or compilation chronology do not control the result |
+| source arguments reversed inside one compiler invocation | 0 | 0 | 0 | `/GL` batch source order is not retained when archive and link order stay fixed |
+| separate `/Zi` compilations reversed in one shared compiler PDB | 0 | 0 | 0 | compiler-PDB contribution chronology is not retained |
+| source arguments reversed inside one `/Zi` batch and shared compiler PDB | 0 | 0 | 0 | neither batch order nor shared compiler-PDB state changes the semantic or stable-stream order |
+| definitions of two `/Gy` functions reversed inside one `/GL` source file | 0 | 0 | 1 | final placement follows definition order in this fixture; legacy FPO has the same one inversion, while DBI, TPI, and C13 sequence order stay fixed |
 
 These `/GL` controls invalidate a simple production recipe of “put archive
 members in retail DBI order.” The LTCG integration phase can discard that
@@ -128,6 +140,44 @@ not justify global include sorting. A real edit needs the first differing
 adjacency in one compiland, dependency-valid source order, and agreement with
 class/enum/function evidence.
 
+A real negative control in `particle\help_functions.obj` reinforces that last
+restriction. Retail has 22 inversions among ten shared checksum rows, with the
+`math_randoms_generator.h` contribution before the local helper contribution.
+Reversing the two direct includes in `help_functions.cpp` did not reproduce
+that block: the disposable full link rose to 25 inversions and still placed the
+math/random contribution after the helper. The edit was reverted. In this
+case the checksum sequence reflects emitted inline/function contributions, not
+the apparent lexical include adjacency alone.
+
+## Production validation: public and frame/FPO placement
+
+The source-definition and linker-`/ORDER` fixtures establish two independent
+ways to move the same downstream channels. Real records must therefore be
+checked against both source-line order and emitted address order.
+
+Two exact adjacent swaps in `sound_scene.cpp` provide that check:
+
+- source/PDB lines put `compare_propagator_info_by_distance` before
+  `sound_scene::notify_listener` (retail lines 421 and 426), but retail address
+  and frame order put `notify_listener` first; and
+- source/PDB lines put `closest_point_on_segment` before
+  `sound_scene::get_portal_nearest_point` (retail lines 1307 and 1315), but
+  retail address and frame order again put the large member function first.
+
+All four functions have matching statement counts and exact target/base byte
+sizes. The candidate follows lexical order for both pairs, while retail
+reverses it at placement. Reordering definitions would therefore make source
+structure less faithful; these frame rows are downstream linker-placement
+evidence, not a license to sort the source by RVA.
+
+The same distinction appears under LTCG in `udp_match_connection.cpp`. Retail
+places the constructor immediately before `is_low_level_packet` and the
+destructor immediately before `instant_disconnect`; the candidate reverses
+each pair even though the current lexical definition order already starts with
+constructor then destructor then `is_low_level_packet`. The helper also has a
+known inline-vs-call body mismatch. This makes source/body convergence and CIL
+placement the next evidence, not a manual public-order edit.
+
 ## Results: MSF stream allocation and relinking
 
 The allocation experiments distinguish output identity, semantic content, and
@@ -152,6 +202,38 @@ This establishes deterministic physical allocation for a fixed fresh state and
 update count in the toy environment, not byte-identical PDBs and not a universal
 page formula. Whole-game page matching should wait until semantic stream rosters,
 sizes, link mode, and incremental history agree.
+
+The module-roster control makes that prerequisite concrete. A clean link with
+`root.obj` and `alpha.obj` was compared with the same link plus one direct,
+otherwise unreferenced `beta.obj` under `/OPT:NOREF`. The added object produced
+exactly one additional DBI module and one additional identified module stream:
+15 to 16 present stream slots. No shared DBI, named-TPI, public, or frame pair
+changed order. Nevertheless, 14 of 17 stable roles changed in at least one of
+stream index, size, page list, or run layout because the added module also
+changed DBI/TPI/symbol/frame contents. This is direct evidence that page movement
+can be a downstream consequence of a semantic-roster difference rather than an
+independent writer-order defect.
+
+The whole-game stream inventory has the same causal obstruction at production
+scale:
+
+- all 56 candidate-only and all 299 retail-only identified stream roles are DBI
+  modules; neither PDB has an unidentified stream;
+- the net semantic-role difference is `299 - 56 = 243`, exactly the difference
+  between 2,408 retail and 2,165 candidate present streams;
+- 234 of the retail-only module streams come from `LIBCMT.lib`; another 49 are
+  retail `libjpeg.lib`, `libpng.lib`, and `zlib.lib` modules whose candidate
+  counterparts appear under the reconstructed `libgfx_libjpeg.lib`,
+  `libgfx_libpng.lib`, and `zlibN.lib` ownership;
+- only 10 shared stable roles retain the same stream index, and only PDB-info
+  retains the same index, size, and page count. Even that fixed stream occupies
+  a different physical page (`101496` candidate versus `61511` retail).
+
+Therefore the current 243-slot gap is completely explained as a semantic module
+roster gap. It is not evidence for 243 independently missing allocator actions.
+MSF page/run comparison becomes a source/linker task only after module ownership,
+CRT/vendor participation, stream sizes, and link history agree; before then it
+is useful as a deterministic end-state check.
 
 ## Comparator defects exposed by the probes
 
@@ -220,12 +302,27 @@ explanation:
    Repeating the first library on the response line did not turn the split into
    a clean retail-order lever.
 
-The honest status is therefore: **explained past ordinary extraction, not yet
-fixed**. The remaining candidate causes are LTCG library admission/rooting,
-CIL integration scheduling, or another linker-internal boundary. A production
-change is acceptable only if one isolated lever produces retail DBI/TPI order
-and a full build shows no code, section, public/frame, or structure regression.
-The failed split-library layouts are evidence, not changes to keep.
+6. The compiler response-file order matches neither PDB block, and reversing
+   source arguments within one `/GL` invocation or the chronology in a shared
+   compiler PDB is neutral in the small fixtures.
+7. Giving a small archive a librarian `/LTCG` index leaves both archive-member
+   and unresolved-root-demand reversals neutral.
+8. A temporary real 68-member VFS archive was rebuilt with all 60 extracted
+   members in retail's exact `A + B` order, followed by the eight unused
+   members. An otherwise unchanged full link still emitted the exact candidate
+   `B + A` DBI sequence and all 884 inversions. The repository archive was
+   restored byte-for-byte after the experiment.
+
+The honest status is therefore: **not fixed, but parked behind a concrete
+CIL-internal integration-order wall under the faithful one-library topology**.
+Raw archive order, pass-1 extraction, root demand, compiler invocation order,
+shared compiler-PDB chronology, and librarian indexing have all been varied
+independently without producing retail order. Splitting VFS into multiple
+libraries can steer order, but it changes PDB ownership/topology and already
+produced a third, non-retail sequence; retaining that split would falsify the
+shipped build structure. A future attempt needs new evidence about the CIL
+scheduler or an object-content correction that changes its dependency graph.
+The failed layouts are evidence, not changes to keep.
 
 After this VFS rotation is explained end to end or parked behind a concrete
 non-steerable linker boundary, apply the proven rule to other intact groups. Do
@@ -299,6 +396,52 @@ A separate attempt to move a direct include in `node_lock.h` had no effect: both
 types had already entered through that module's PCH. It was reverted. This is
 the production counterpart of the PCH-boundary negative control above and is a
 reason to inspect actual contribution provenance before editing include order.
+
+## Second production C13 correction: Particle callee provenance
+
+`particle\evaluate_type.obj` was selected because its source-file stream had
+only three inversions among six shared unique files and one genuine retail-only
+first-party row: `vostok/strings_functions.h`. The source called
+`vostok::strings::compare(...) == 0` while depending on the Particle PCH for
+string declarations. Direct target disassembly instead called
+`vostok::strings::equal` twice, and that helper is independently byte-exact in
+the candidate.
+
+Adding the direct `strings_functions.h` include and spelling the two conditions
+with `strings::equal` produced all of the intended evidence in the authoritative
+build:
+
+- the function remains `STRUCTURE MATCH`, with three statements and target/base
+  size `0x3f`;
+- all 24 instructions now agree and the ledger score rises from 86.25% to
+  100%;
+- the checksum roster changes from candidate 7 / retail 8 / shared 6 to 8 / 8 /
+  7, removing the only retail-only first-party file;
+- the module's C13 subsection comparison changes from one differing payload to
+  identical; and
+- checksum order retains three inversions. They are the position of
+  `strings_functions_inline.h` relative to the local source/header rows, not a
+  missing include or a remaining function-body mismatch.
+
+This result also corrects an earlier incomplete park conclusion. Testing the
+`equal` spelling without the C13 provenance had looked like an unhelpful
+conversion/inlining variant. The missing-header row identified the complete
+source change; on a fresh authoritative LTCG link it emits the retail call,
+including the boolean return conversion, and matches exactly. The remaining
+three checksum inversions are therefore kept as downstream emitted-line/COMDAT
+placement evidence rather than chased with redundant includes or artificial
+inlining controls.
+
+The first required relink also changed the global LTCG fold selection: the raw
+objdiff report moved from 75.66% to 75.60%, with 133 regressed, 184 improved,
+and 103 separately classified fold-churn functions. The derived ledger, which
+recovers exact folded aliases and preserves hash-scoped evidence, moved in the
+opposite direction: current exact functions increased from 10,304 to 10,306 and
+exact-MAX functions from 10,875 to 10,876. An unchanged authoritative rebuild
+then reported zero added, removed, improved, regressed, or fold-churn functions,
+and the Particle function remained exact. Both views are recorded because the
+local correction is proven, but the broad raw-link redistribution is a review
+risk rather than something to conceal behind the net ledger improvement.
 
 ## Subsequent production applications
 

@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include <vostok/strings_functions.h>
 #include "evaluate_type.h"
 
 namespace vostok {
@@ -12,8 +13,8 @@ namespace particle {
 
 enum_evaluate_type string_to_evaluate_type(pcstr name)
 {
-		 if	(vostok::strings::compare(name, "Age")==0)	return age_evaluate_type;
-	else if (vostok::strings::compare(name, "Random")==0)	return random_evaluate_type;
+		 if	(vostok::strings::equal(name, "Age"))	return age_evaluate_type;
+	else if (vostok::strings::equal(name, "Random"))	return random_evaluate_type;
 	
 	return age_evaluate_type;
 }

@@ -37,8 +37,13 @@ CASES = (
     "ltcg-object-order",
     "ltcg-archive-member-order",
     "ltcg-root-demand-order",
+    "ltcg-indexed-archive-member-order",
+    "ltcg-indexed-root-demand-order",
     "ltcg-library-order",
     "ltcg-compile-order",
+    "ltcg-batch-source-order",
+    "ltcg-shared-pdb-compile-order",
+    "ltcg-shared-pdb-batch-source-order",
     "header-order",
     "pch-order",
     "post-pch-header-order",
@@ -48,7 +53,10 @@ CASES = (
     "type-contributor-order",
     "type-use-order",
     "pch-composition",
+    "function-definition-order",
+    "ltcg-function-definition-order",
     "function-order",
+    "module-stream-roster",
     "clean-relink",
     "incremental-relink",
 )
@@ -279,13 +287,44 @@ class ProbeRunner:
         )
         return output_path
 
-    def make_lib(self, label: str, output: str, objects: list[Path]) -> Path:
+    def compile_batch(
+        self,
+        label: str,
+        sources: tuple[str, ...],
+        *,
+        extra: tuple[str, ...] = (),
+    ) -> dict[str, Path]:
+        self.wine(
+            label,
+            self.cl,
+            [
+                *COMMON_CL,
+                *extra,
+                f"/Fo{drive_path(self.work)}\\",
+                *(drive_path(self.work / source) for source in sources),
+            ],
+        )
+        return {source: self.work / f"{Path(source).stem}.obj" for source in sources}
+
+    def make_lib(
+        self,
+        label: str,
+        output: str,
+        objects: list[Path],
+        *,
+        extra: tuple[str, ...] = (),
+    ) -> Path:
         output_path = self.work / output
         output_path.unlink(missing_ok=True)
         self.wine(
             label,
             self.lib,
-            ["/nologo", f"/OUT:{drive_path(output_path)}", *map(drive_path, objects)],
+            [
+                "/nologo",
+                f"/OUT:{drive_path(output_path)}",
+                *extra,
+                *map(drive_path, objects),
+            ],
         )
         return output_path
 
@@ -511,6 +550,81 @@ class ProbeRunner:
             )
         ]
 
+    def ltcg_indexed_archive_member_order(self) -> list[dict]:
+        root, alpha, beta = self.basic_objects(
+            label_prefix="ltcg-indexed-archive-member", compile_extra=("/GL",)
+        )
+        archive = self.make_lib(
+            "ltcg-indexed-archive-member-ab-lib",
+            "probe.lib",
+            [alpha, beta],
+            extra=("/LTCG",),
+        )
+        ab = self.link_once(
+            "ltcg-indexed-archive-member-ab",
+            [root, archive],
+            extra=("/LTCG", "/VERBOSE"),
+        )
+        archive = self.make_lib(
+            "ltcg-indexed-archive-member-ba-lib",
+            "probe.lib",
+            [beta, alpha],
+            extra=("/LTCG",),
+        )
+        ba = self.link_once(
+            "ltcg-indexed-archive-member-ba",
+            [root, archive],
+            extra=("/LTCG", "/VERBOSE"),
+        )
+        return [
+            self.compare(
+                "ltcg-indexed-archive-member-order",
+                "/GL archive member order with a librarian /LTCG index and "
+                "fixed root demand",
+                ab,
+                ba,
+            )
+        ]
+
+    def ltcg_indexed_root_demand_order(self) -> list[dict]:
+        root, alpha, beta = self.basic_objects(
+            "root_demand_order",
+            label_prefix="ltcg-indexed-root-demand",
+            compile_extra=("/GL",),
+        )
+        archive = self.make_lib(
+            "ltcg-indexed-root-demand-lib",
+            "probe.lib",
+            [alpha, beta],
+            extra=("/LTCG",),
+        )
+        ab = self.link_once(
+            "ltcg-indexed-root-demand-ab",
+            [root, archive],
+            extra=("/LTCG", "/VERBOSE"),
+        )
+        self.overlay("root_demand_order", "ba")
+        root = self.compile(
+            "ltcg-indexed-root-demand-compile-root-ba",
+            "root.cpp",
+            "root.obj",
+            ("/GL",),
+        )
+        ba = self.link_once(
+            "ltcg-indexed-root-demand-ba",
+            [root, archive],
+            extra=("/LTCG", "/VERBOSE"),
+        )
+        return [
+            self.compare(
+                "ltcg-indexed-root-demand-order",
+                "/GL unresolved-root demand with a fixed librarian /LTCG "
+                "index",
+                ab,
+                ba,
+            )
+        ]
+
     def ltcg_library_order(self) -> list[dict]:
         root, alpha, beta = self.basic_objects(
             label_prefix="ltcg-library-order", compile_extra=("/GL",)
@@ -567,6 +681,127 @@ class ProbeRunner:
             self.compare(
                 "ltcg-compile-order",
                 "/GL object compilation order with fixed link and archive order",
+                *snapshots,
+            )
+        ]
+
+    def ltcg_batch_source_order(self) -> list[dict]:
+        snapshots = []
+        for variant, order in (
+            ("ab", ("alpha.cpp", "beta.cpp")),
+            ("ba", ("beta.cpp", "alpha.cpp")),
+        ):
+            self.reset_work("object_order")
+            root = self.compile(
+                f"ltcg-batch-source-order-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                ("/GL",),
+            )
+            objects = self.compile_batch(
+                f"ltcg-batch-source-order-{variant}-batch",
+                order,
+                extra=("/GL",),
+            )
+            archive = self.make_lib(
+                f"ltcg-batch-source-order-{variant}-lib",
+                "probe.lib",
+                [objects["alpha.cpp"], objects["beta.cpp"]],
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-batch-source-order-{variant}",
+                    [root, archive],
+                    extra=("/LTCG", "/VERBOSE"),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-batch-source-order",
+                "source order within one /GL compiler invocation with fixed "
+                "link and archive order",
+                *snapshots,
+            )
+        ]
+
+    def ltcg_shared_pdb_compile_order(self) -> list[dict]:
+        snapshots = []
+        for variant, order in (("ab", ("alpha", "beta")), ("ba", ("beta", "alpha"))):
+            self.reset_work("object_order")
+            compiler_pdb = f"/Fd{drive_path(self.work / 'vc90.pdb')}"
+            debug_options = ("/GL", "/Zi", "/FD", compiler_pdb)
+            root = self.compile(
+                f"ltcg-shared-pdb-compile-order-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                debug_options,
+            )
+            objects = {}
+            for name in order:
+                objects[name] = self.compile(
+                    f"ltcg-shared-pdb-compile-order-{variant}-{name}",
+                    f"{name}.cpp",
+                    f"{name}.obj",
+                    debug_options,
+                )
+            archive = self.make_lib(
+                f"ltcg-shared-pdb-compile-order-{variant}-lib",
+                "probe.lib",
+                [objects["alpha"], objects["beta"]],
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-shared-pdb-compile-order-{variant}",
+                    [root, archive],
+                    extra=("/LTCG", "/VERBOSE"),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-shared-pdb-compile-order",
+                "/GL /Zi compilation chronology in one shared compiler PDB with "
+                "fixed link and archive order",
+                *snapshots,
+            )
+        ]
+
+    def ltcg_shared_pdb_batch_source_order(self) -> list[dict]:
+        snapshots = []
+        for variant, order in (
+            ("ab", ("alpha.cpp", "beta.cpp")),
+            ("ba", ("beta.cpp", "alpha.cpp")),
+        ):
+            self.reset_work("object_order")
+            compiler_pdb = f"/Fd{drive_path(self.work / 'vc90.pdb')}"
+            debug_options = ("/GL", "/Zi", "/FD", compiler_pdb)
+            root = self.compile(
+                f"ltcg-shared-pdb-batch-source-order-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                debug_options,
+            )
+            objects = self.compile_batch(
+                f"ltcg-shared-pdb-batch-source-order-{variant}-batch",
+                order,
+                extra=debug_options,
+            )
+            archive = self.make_lib(
+                f"ltcg-shared-pdb-batch-source-order-{variant}-lib",
+                "probe.lib",
+                [objects["alpha.cpp"], objects["beta.cpp"]],
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-shared-pdb-batch-source-order-{variant}",
+                    [root, archive],
+                    extra=("/LTCG", "/VERBOSE"),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-shared-pdb-batch-source-order",
+                "source order inside one /GL /Zi compiler invocation sharing "
+                "one compiler PDB, with fixed link and archive order",
                 *snapshots,
             )
         ]
@@ -769,6 +1004,66 @@ class ProbeRunner:
             )
         ]
 
+    def function_definition_order(self) -> list[dict]:
+        snapshots = []
+        for variant in ("ab", "ba"):
+            self.reset_work("function_definition_order", variant)
+            root = self.compile(
+                f"function-definition-order-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                ("/O2", "/Oy"),
+            )
+            functions = self.compile(
+                f"function-definition-order-{variant}-functions",
+                "functions.cpp",
+                "functions.obj",
+                ("/O2", "/Oy"),
+            )
+            snapshots.append(
+                self.link_once(
+                    f"function-definition-order-{variant}", [root, functions]
+                )
+            )
+        return [
+            self.compare(
+                "function-definition-order",
+                "definition order of two /Gy functions in one source file",
+                *snapshots,
+            )
+        ]
+
+    def ltcg_function_definition_order(self) -> list[dict]:
+        snapshots = []
+        for variant in ("ab", "ba"):
+            self.reset_work("function_definition_order", variant)
+            root = self.compile(
+                f"ltcg-function-definition-order-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                ("/O2", "/Oy", "/GL"),
+            )
+            functions = self.compile(
+                f"ltcg-function-definition-order-{variant}-functions",
+                "functions.cpp",
+                "functions.obj",
+                ("/O2", "/Oy", "/GL"),
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-function-definition-order-{variant}",
+                    [root, functions],
+                    extra=("/LTCG",),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-function-definition-order",
+                "definition order of two /Gy /GL functions in one source file",
+                *snapshots,
+            )
+        ]
+
     def function_order(self) -> list[dict]:
         self.reset_work("function_order")
         probe = self.compile(
@@ -788,6 +1083,32 @@ class ProbeRunner:
             extra=(f"/ORDER:@{drive_path(self.work / 'order_ba.txt')}",),
         )
         return [self.compare("function-order", "linker /ORDER file", ab, ba)]
+
+    def module_stream_roster(self) -> list[dict]:
+        self.reset_work("stream_roster")
+        root = self.compile(
+            "module-stream-roster-compile-root", "root.cpp", "root.obj"
+        )
+        alpha = self.compile(
+            "module-stream-roster-compile-alpha", "alpha.cpp", "alpha.obj"
+        )
+        beta = self.compile(
+            "module-stream-roster-compile-beta", "beta.cpp", "beta.obj"
+        )
+        two_modules = self.link_once(
+            "module-stream-roster-two", [root, alpha]
+        )
+        three_modules = self.link_once(
+            "module-stream-roster-three", [root, alpha, beta]
+        )
+        return [
+            self.compare(
+                "module-stream-roster",
+                "one additional direct object and DBI module stream",
+                two_modules,
+                three_modules,
+            )
+        ]
 
     def clean_relink(self) -> list[dict]:
         root, alpha, beta = self.basic_objects()
