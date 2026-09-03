@@ -28,7 +28,7 @@ inline float4x4::float4x4					( float4 const& other_i, float4 const& other_j, fl
 {
 }
 
-inline DISABLE_LINKER_GL float4x4& float4x4::identity			( )
+inline float4x4& float4x4::identity			( )
 {
 	i			= float4( 1.f, 0.f, 0.f, 0.f );
 	j			= float4( 0.f, 1.f, 0.f, 0.f );
@@ -219,7 +219,7 @@ inline float4x4 transpose					( float4x4 const& other )
 	return		( result );
 }
 
-inline DISABLE_LINKER_GL float4x4 create_translation			( float3 const& position )
+inline float4x4 create_translation			( float3 const& position )
 {
 	float4x4	result;
 
@@ -250,7 +250,7 @@ inline float4x4 create_rotation ( float3 const& angles, vostok::math::axis_rotat
 	return		( result );
 }
 
-inline DISABLE_LINKER_GL float4x4 create_rotation				( float3 const& angles )
+inline float4x4 create_rotation				( float3 const& angles )
 {
 	float4x4	result;
 

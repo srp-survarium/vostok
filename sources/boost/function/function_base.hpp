@@ -758,7 +758,7 @@ public: // should be protected, but GCC 2.95.3 will fail to allow access
 class bad_function_call : public std::runtime_error
 {
 public:
-  __declspec(dllexport) bad_function_call() : std::runtime_error("call to empty boost::function") {}
+  bad_function_call() : std::runtime_error("call to empty boost::function") {}
 };
 
 #ifndef BOOST_NO_SFINAE

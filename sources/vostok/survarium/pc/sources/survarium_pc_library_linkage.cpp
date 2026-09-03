@@ -29,6 +29,4 @@
 #	include <ode/library_linkage.h>
 #	include <vostok/render/engine/library_linkage.h>
 
-#	include <vostok/linkage_helper.h>
-	VOSTOK_INCLUDE_TO_LINKAGE(sound_library_linkage)
 #endif // #ifdef VOSTOK_STATIC_LIBRARIES

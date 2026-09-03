@@ -131,12 +131,12 @@ inline float3& float3_pod::cross_product		( float3_pod const& other )
 	return		( static_cast<float3&>(*this) );
 }
 
-inline DISABLE_LINKER_GL float3& float3_pod::normalize	( )
+inline float3& float3_pod::normalize			( )
 {
 	return		( *this /= length( ) );
 }
 
-inline float3_pod::type float3_pod::normalize_r			( )
+inline float3_pod::type float3_pod::normalize_r		( )
 {
 	type const	length = this->length( );
 	*this		/= length;

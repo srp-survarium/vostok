@@ -209,7 +209,7 @@ float3 float4x4::get_angles_xyz				( ) const
 	return result;
 }
 
-DISABLE_LINKER_GL float4x4 vostok::math::mul4x3			( float4x4 const& left, float4x4 const& right )
+float4x4 vostok::math::mul4x3						( float4x4 const& left, float4x4 const& right )
 {
 	float4x4	result;
 

@@ -1,10 +1,11 @@
 # PDB order causal attribution
 
-Status: **open**. Small VS2008 experiments establish several causal rules, and
-two bounded C13-guided corrections have now been accepted in the game. The
-large DBI/TPI/public residuals remain open; the current MSF slot gap is fully
-attributed to the unequal semantic module roster, while physical equality must
-wait for that roster and the stream sizes to converge.
+Status: **open**. Small VS2008 experiments establish several causal rules. Two
+bounded C13-guided corrections and two false-compiland removals have now been
+accepted in the game. The large DBI/TPI/public residuals remain open; the
+current MSF slot gap is fully attributed to the unequal semantic module roster,
+while physical equality must wait for that roster and the stream sizes to
+converge.
 
 ## Honest progress statement
 
@@ -15,7 +16,7 @@ this causal campaign was limited to:
 - two moved `engine_world` definitions from the source-definition comparison;
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
-The work recorded here added a reproducible 29-case toy harness, corrected two
+The work recorded here added a reproducible 30-case toy harness, corrected two
 false comparison signals, established the cause of several PDB channels, and
 applied the first rule to the sound library. That production change corrected
 header presence/order in 39 measured sound compilands, brought two small
@@ -24,6 +25,18 @@ comparison exactly neutral. A second application recovered a missing direct
 header dependency and the target callee in `particle/evaluate_type.cpp`, taking
 its only function from 86.25% to byte-exact 100%. These changes did not correct
 VFS DBI order, the global named TPI sequence, or physical MSF allocation.
+
+The next application produced the first broad code result from order evidence.
+It traced a candidate-only sound PCH compiland to five false exports, then used
+the PE export table to find three more false exports from the same reconstruction
+mechanism. Removing all eight annotations dropped `sound\pch.obj` from the
+linked PDB and moved the full comparison from 75.60% to 76.29%, with 297 more
+exact functions. Removing a separate redundant linkage pin then dropped the
+last candidate-only sound compiland, `sound_library_linkage.obj`; that second
+link rotation cost 0.05 points and 120 exact functions. The combined measured
+state is 76.24%, 177 exact functions above the starting point, with the sound
+module roster exactly 54 versus 54. All 51 order inversions among those 54
+shared sound objects remain.
 
 Physical PDB order is not direct source-order proof. It is also not inherently
 non-actionable. The useful classification is: **causally understood in the toy
@@ -39,18 +52,19 @@ python3 -m vostok tool pdb-order-probe --list
 python3 -m vostok tool pdb-order-probe --case archive-member-order
 ```
 
-The harness compiles only tiny VS2008 `/Z7` fixtures, links without the CRT, and
-never builds game sources. It keeps source/output paths fixed and writes exact
-commands, linker logs, PDB/EXE hashes, copied artifacts, full
+The harness compiles only tiny VS2008 fixtures, normally with `/Z7` and with a
+targeted `/Zi` control where compiler-PDB behavior matters. It links without the
+CRT and never builds game sources. It keeps source/output paths fixed and writes
+exact commands, linker logs, PDB/EXE hashes, copied artifacts, full
 `pdb_topology --order --json` reports, and compact channel summaries under
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
-The current matrix contains 29 cases and emits 35 comparisons because clean and
-incremental relink cases compare multiple states. Wine output goes directly to
-each command's log file: VS2008's persistent `mspdbsrv.exe` can inherit a pipe
-after `cl.exe` or `link.exe` has finished and otherwise make a completed probe
-look hung.
+The current matrix contains 30 cases and emits 37 comparisons because clean,
+incremental, and `/Z7`/`/Zi` control cases compare multiple states. Wine output
+goes directly to each command's log file: VS2008's persistent `mspdbsrv.exe`
+can inherit a pipe after `cl.exe` or `link.exe` has finished and otherwise make
+a completed probe look hung.
 
 Every conclusion below is scoped to these fixtures and the repository's
 VS2008 SP1 toolchain.
@@ -108,6 +122,24 @@ Therefore a real DBI rotation is not automatically an extraction-demand
 rotation. Inspect pass 1, pass 2, direct-object arguments, archive member order,
 and library order separately. Public/frame movement is the useful downstream
 check for the placement path.
+
+### PCH archive retention
+
+The `pch-archive-retention` case compares a plain inline definition with an
+otherwise identical `__declspec(dllexport)` inline definition in a PCH. Under
+both `/Z7` and `/Zi`, the exported variant makes the consumer reference
+`___@@_PchSym_...`; pass 1 then extracts `pch.obj` from the archive. The plain
+variant extracts only `consumer.obj`. The exported link also creates the normal
+`probe.exp` module, so its two added DBI modules must not both be attributed to
+PCH retention.
+
+The debug modes differ only in the consequence of omitting the creator object.
+Plain `/Z7` emits LNK4206 and loses the consumer's precompiled debug types;
+plain `/Zi` retains them in the compiler PDB without extracting `pch.obj`.
+`/Yd` does not suppress the export-induced reference. Nor does `/Yl-` disable it
+with VS2008: the hyphen is parsed as the requested PCH-symbol suffix. The usable
+production rule is therefore to remove a false export, not to hide the PCH
+dependency with a compiler switch.
 
 ### Named-type provenance
 
@@ -217,10 +249,10 @@ independent writer-order defect.
 The whole-game stream inventory has the same causal obstruction at production
 scale:
 
-- all 56 candidate-only and all 299 retail-only identified stream roles are DBI
+- all 54 candidate-only and all 299 retail-only identified stream roles are DBI
   modules; neither PDB has an unidentified stream;
-- the net semantic-role difference is `299 - 56 = 243`, exactly the difference
-  between 2,408 retail and 2,165 candidate present streams;
+- the net semantic-role difference is `299 - 54 = 245`, exactly the difference
+  between 2,408 retail and 2,163 candidate present streams;
 - 234 of the retail-only module streams come from `LIBCMT.lib`; another 49 are
   retail `libjpeg.lib`, `libpng.lib`, and `zlib.lib` modules whose candidate
   counterparts appear under the reconstructed `libgfx_libjpeg.lib`,
@@ -229,8 +261,10 @@ scale:
   retains the same index, size, and page count. Even that fixed stream occupies
   a different physical page (`101496` candidate versus `61511` retail).
 
-Therefore the current 243-slot gap is completely explained as a semantic module
-roster gap. It is not evidence for 243 independently missing allocator actions.
+Therefore the current 245-slot gap is completely explained as a semantic module
+roster gap. It is not evidence for 245 independently missing allocator actions.
+The gap grew by two when the false sound PCH and linkage modules were removed;
+that is a correctness improvement, not an allocator regression.
 MSF page/run comparison becomes a source/linker task only after module ownership,
 CRT/vendor participation, stream sizes, and link history agree; before then it
 is useful as a deterministic end-state check.
@@ -263,16 +297,16 @@ scheduling inventory, not a count of actionable source edits:
 
 | channel | current observation | likely evidence to collect next |
 |---|---|---|
-| DBI modules | 2,331 shared unique objects; 534,038 pair inversions (19.6655%); many are intact rotations | direct/link response order, archive member order, full `/VERBOSE` pass 1 and pass 2 |
-| named complete TPI | 30,926 shared unique records; 80,461,493 pair inversions (16.8261%); a 1,715-record contiguous run survives | named-type direct-module references, DBI grouping, then PCH/header evidence |
+| DBI modules | 2,331 shared unique objects; 531,285 pair inversions (19.5641%); many are intact rotations | direct/link response order, archive member order, full `/VERBOSE` pass 1 and pass 2 |
+| named complete TPI | 30,927 shared unique records; 79,969,353 pair inversions (16.7221%); a 1,715-record contiguous run survives | named-type direct-module references, DBI grouping, then PCH/header evidence |
 | module source files | 1,679 of 2,331 paired scopes differ | module-local direct/PCH include graph and first differing adjacency |
-| module checksums and lines | 1,679 checksum, 1,316 line, and 1,200 C13-subsection scopes differ | actual source roster, checksum content, statement/function ownership |
-| public address map | 112,023,306 pair inversions (3.6975%) among 77,843 shared unique publics | extraction and final section/function placement |
-| FPO and frame data | 1,859,789 and 37,230,579 pair inversions among 10,427 and 19,347 stable shared identities | downstream extraction, placement, size, and frame-shape validation |
-| MSF allocation | 2,165 candidate stream slots versus 2,408 present retail slots | stream roster/size, clean/incremental mode, writer history |
+| module checksums and lines | 1,679 checksum, 1,308 line, and 1,192 C13-subsection scopes differ | actual source roster, checksum content, statement/function ownership |
+| public address map | 114,882,652 pair inversions (3.7909%) among 77,853 shared unique publics | extraction and final section/function placement |
+| FPO and frame data | 1,852,818 and 37,236,749 pair inversions among 10,440 and 19,364 stable shared identities | downstream extraction, placement, size, and frame-shape validation |
+| MSF allocation | 2,163 candidate stream slots versus 2,408 present retail slots | stream roster/size, clean/incremental mode, writer history |
 
-GSI has only three pair inversions among 67,240 shared unique records and PSI
-hash-record order has none among 77,843. That control remains important: large
+GSI has only three pair inversions among 67,252 shared unique records and PSI
+hash-record order has none among 77,853. That control remains important: large
 movement in one physical channel does not imply every internal index is wrong.
 
 ### Focused named-TPI attribution
@@ -484,6 +518,55 @@ then reported zero added, removed, improved, regressed, or fold-churn functions,
 and the Particle function remained exact. Both views are recorded because the
 local correction is proven, but the broad raw-link redistribution is a review
 risk rather than something to conceal behind the net ledger improvement.
+
+## Third production application: false exports and sound PCH retention
+
+The focused sound DBI report initially contained 56 candidate modules versus 54
+retail modules. Its one-sided rows were `pch.obj` and
+`sound_library_linkage.obj`. The archive itself legitimately contains both, so
+deleting members or PCH support would have been the wrong fix; the question was
+why the final link extracted them.
+
+The sound PCH object's `.drectve` section exported five inline definitions:
+Boost's `bad_function_call` constructor, `float3_pod::normalize`,
+`float4x4::identity`, `create_translation`, and `create_rotation`. Their
+consumers also carried `PchSym` references. The small PCH-retention probe above
+reproduced that exact edge. An independent PE check then showed 27 candidate
+exports versus 21 retail exports. The eight candidate-only exports were those
+five plus `mul4x3`, `interlocked_and`, and `interlocked_or`; none existed in the
+retail export table. They all came from the reconstruction-only
+`DISABLE_LINKER_GL` export macro or an explicit Boost `dllexport`.
+
+Removing those annotations gives three mutually supporting results:
+
+- the eight candidate-only exports disappear; the remaining export-table
+  difference is only the two retail-only Scaleform allocator exports;
+- the seven inspected consumers no longer reference `PchSym`, and the final
+  PDB no longer contains `sound\pch.obj`; and
+- the affected functions themselves remain present and byte-exact, including
+  the five PCH definitions and the three out-of-line definitions.
+
+That authoritative build moved raw code match from 75.60% to 76.29% and exact
+functions from 36,926 to 37,223. It reported 495 improvements, 143 regressions,
+and 84 separately classified fold-churn rows. The +0.69 points and +297 exact
+functions are the measured link outcome, not a claim that every moved function
+was independently repaired by its own source edit.
+
+The other one-sided module was caused by an explicit
+`VOSTOK_INCLUDE_TO_LINKAGE(sound_library_linkage)` in the Survarium executable's
+linkage TU. Removing only that pin reduced sound from 55 candidate modules to
+54, exactly matching the retail population. It left the sound library and its
+entry-point linkage intact. This second clean link moved 76.29% to 76.24% and
+37,223 to 37,103 exact functions, with 196 improvements, 129 regressions, and
+105 fold-churn rows. The PDB-roster correction is retained despite that local
+score cost because the candidate-only compiland is direct contrary evidence.
+
+Across both corrections, raw code match is up 0.64 points and 177 exact
+functions. Sound is now 54/54 modules with no one-sided row, but its 54 shared
+members still have 51 pair inversions, an LIS of 36, and only 18 preserved
+adjacencies. Neither export cleanup nor linkage-root removal changed those
+metrics. They fixed two false presences and identified the remaining archive
+order problem; they did not solve it.
 
 ## Subsequent production applications
 

@@ -42,9 +42,9 @@ public:
 #endif // #if defined(_MSC_VER)
 
 public:
-	inline						float4x4				( );
-	inline						float4x4				( float4 const& other_i, float4 const& other_j, float4 const& other_k, float4 const& other_c );
-	inline	DISABLE_LINKER_GL	float4x4&	identity	( );
+	inline				float4x4						( );
+	inline				float4x4						( float4 const& other_i, float4 const& other_j, float4 const& other_k, float4 const& other_c );
+	inline	float4x4&	identity						( );
 
 	inline	float4x4&	operator *=						( float4x4::type value );
 	inline	float4x4&	operator /=						( float4x4::type value );
@@ -81,8 +81,8 @@ inline float3			operator *						( float3 const& left, float4x4 const& right );		
 inline float4			operator *						( float4 const& left, float4x4 const& right );
 
 // 4x3 operations
-inline	float4x4		operator *							( float4x4 const& left, float4x4 const& right );	/// this is 4x3 multiplication, for full one call mul4x4
-DISABLE_LINKER_GL VOSTOK_CORE_API float4x4	mul4x3			( float4x4 const& left, float4x4 const& right );	/// this is 4x3 multiplication
+inline	float4x4		operator *						( float4x4 const& left, float4x4 const& right );	/// this is 4x3 multiplication, for full one call mul4x4
+VOSTOK_CORE_API float4x4	mul4x3							( float4x4 const& left, float4x4 const& right );	/// this is 4x3 multiplication
 VOSTOK_CORE_API float4x4	invert4x3						( float4x4 const& other );							/// this is 4x3 invert, for full one call invert4x4
 
 // 4x4 operations
@@ -96,9 +96,9 @@ VOSTOK_CORE_API float4x4	lerp							( float4x4 const& left, float4x4 const& righ
 
 // matrix construction
 
-inline DISABLE_LINKER_GL float4x4			create_translation				( float3 const& position );
+inline float4x4			create_translation				( float3 const& position );
 
-inline DISABLE_LINKER_GL float4x4			create_rotation					( float3 const& angles );
+inline float4x4			create_rotation					( float3 const& angles );
 inline float4x4			create_rotation					( float3 const& angles, axis_rotation_order const );
 inline float4x4			create_rotation_x				( float4x4::type angle );
 inline float4x4			create_rotation_y				( float4x4::type angle );

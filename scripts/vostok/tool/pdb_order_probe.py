@@ -53,6 +53,7 @@ CASES = (
     "type-contributor-order",
     "type-use-order",
     "pch-composition",
+    "pch-archive-retention",
     "function-definition-order",
     "ltcg-function-definition-order",
     "function-order",
@@ -1003,6 +1004,66 @@ class ProbeRunner:
                 *snapshots,
             )
         ]
+
+    def pch_archive_retention(self) -> list[dict]:
+        comparisons = []
+        for debug_mode in ("z7", "zi"):
+            snapshots = []
+            for export_mode in ("plain", "exported"):
+                self.reset_work("pch_archive_retention", export_mode)
+                compiler_pdb = f"/Fd{drive_path(self.work / 'vc90.pdb')}"
+                debug_options = (
+                    ("/Zi", "/FD", "/MP", compiler_pdb)
+                    if debug_mode == "zi"
+                    else ()
+                )
+                pch = self.compile(
+                    f"pch-archive-retention-{debug_mode}-create-{export_mode}",
+                    "pch.cpp",
+                    "pch.obj",
+                    (
+                        *debug_options,
+                        "/Ycpch.h",
+                        f"/Fp{drive_path(self.work / 'probe.pch')}",
+                    ),
+                )
+                consumer = self.compile(
+                    f"pch-archive-retention-{debug_mode}-use-{export_mode}",
+                    "consumer.cpp",
+                    "consumer.obj",
+                    (
+                        *debug_options,
+                        "/Yupch.h",
+                        f"/Fp{drive_path(self.work / 'probe.pch')}",
+                    ),
+                )
+                root = self.compile(
+                    f"pch-archive-retention-{debug_mode}-root-{export_mode}",
+                    "root.cpp",
+                    "root.obj",
+                    debug_options,
+                )
+                archive = self.make_lib(
+                    f"pch-archive-retention-{debug_mode}-lib-{export_mode}",
+                    "input.lib",
+                    [pch, consumer],
+                )
+                snapshots.append(
+                    self.link_once(
+                        f"pch-archive-retention-{debug_mode}-{export_mode}",
+                        [root, archive],
+                        extra=("/VERBOSE",),
+                    )
+                )
+            comparisons.append(
+                self.compare(
+                    f"pch-archive-retention-{debug_mode}",
+                    f"plain versus dllexport inline definition in an "
+                    f"otherwise identical /{debug_mode.upper()} PCH",
+                    *snapshots,
+                )
+            )
+        return comparisons
 
     def function_definition_order(self) -> list[dict]:
         snapshots = []

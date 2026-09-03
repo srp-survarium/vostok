@@ -74,6 +74,7 @@ class PdbOrderProbeTests(unittest.TestCase):
                 "function-definition-order",
                 "ltcg-function-definition-order",
                 "module-stream-roster",
+                "pch-archive-retention",
             }.issubset(CASES)
         )
 

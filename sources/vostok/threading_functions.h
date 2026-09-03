@@ -85,9 +85,9 @@ VOSTOK_CORE_API	atomic32_value_type	interlocked_decrement		( atomic32_type& valu
 VOSTOK_CORE_API	atomic32_value_type	interlocked_exchange_add	( atomic32_type& value,  atomic32_value_type  increment );
 VOSTOK_CORE_API	atomic32_value_type	interlocked_exchange_sub	( atomic32_type& value,  atomic32_value_type  subtract );
 // sushi@TODO: remove - noinline hack to beat /GL inline-vs-call wall (interlocked_or/and out-of-line); revisit if a faithful cause is found
-VOSTOK_CORE_API	__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type	interlocked_and				( atomic32_type& target, atomic32_value_type  mask );
+VOSTOK_CORE_API	__declspec(noinline) atomic32_value_type	interlocked_and				( atomic32_type& target, atomic32_value_type  mask );
 // sushi@TODO: remove - noinline hack to beat /GL inline-vs-call wall (interlocked_or/and out-of-line); revisit if a faithful cause is found
-VOSTOK_CORE_API	__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type	interlocked_or				( atomic32_type& target, atomic32_value_type  mask );
+VOSTOK_CORE_API	__declspec(noinline) atomic32_value_type	interlocked_or				( atomic32_type& target, atomic32_value_type  mask );
 //VOSTOK_CORE_API	atomic32_value_type	interlocked_xor				( atomic32_type& target, atomic32_value_type  mask );
 VOSTOK_CORE_API	atomic32_value_type	interlocked_exchange		( atomic32_type& target, atomic32_value_type  value );
 VOSTOK_CORE_API	pvoid				interlocked_exchange_pointer( atomic_ptr_type& target, pvoid value );

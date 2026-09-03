@@ -21,12 +21,12 @@ namespace threading {
 // sushi@TODO: remove - noinline+Oy-off hack to beat /GL inline-vs-call wall (interlocked_or/and out-of-line); revisit if a faithful cause is found
 #pragma optimize( "y", off )
 
-__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type interlocked_and		( atomic32_type& target, atomic32_value_type mask )
+__declspec(noinline) atomic32_value_type interlocked_and		( atomic32_type& target, atomic32_value_type mask )
 {
 	return				( _InterlockedAnd( &target, mask ) );
 }
 
-__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type interlocked_or		( atomic32_type& target, atomic32_value_type mask )
+__declspec(noinline) atomic32_value_type interlocked_or		( atomic32_type& target, atomic32_value_type mask )
 {
 	return				( _InterlockedOr( &target, mask ) );
 }
