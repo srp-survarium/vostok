@@ -420,25 +420,101 @@ These corrections matter before production interpretation: otherwise the tool
 can turn ordinary string-table relocation or function movement into a misleading
 source-level difference.
 
-## Whole-game baseline residual inventory
+## Current merged residual inventory
 
-The complete pre-correction production snapshot remains in
-[`pdb_comparison_audit.md`](../binary_matching/pdb_comparison_audit.md). It is a
-scheduling inventory, not a count of actionable source edits:
+This snapshot was measured on 2026-09-03 at `1550c4510`, after the final
+authoritative build for PR 555. The older pre-correction snapshot remains in
+[`pdb_comparison_audit.md`](../binary_matching/pdb_comparison_audit.md).
 
-| channel | current observation | likely evidence to collect next |
-|---|---|---|
-| DBI modules | 2,331 shared unique objects; 531,234 pair inversions (19.5622%); many are intact rotations | direct/link response order, archive member order, full `/VERBOSE` pass 1 and pass 2 |
-| named complete TPI | 30,927 shared unique records; 79,962,967 pair inversions (16.7208%); a 1,715-record contiguous run survives | named-type direct-module references, DBI grouping, then PCH/header evidence |
-| module source files | 1,679 of 2,331 paired scopes differ | module-local direct/PCH include graph and first differing adjacency |
-| module checksums and lines | 1,679 checksum, 1,308 line, and 1,192 C13-subsection scopes differ | actual source roster, checksum content, statement/function ownership |
-| public address map | 114,884,712 pair inversions (3.7909%) among 77,853 shared unique publics | extraction and final section/function placement |
-| FPO and frame data | 1,852,818 and 37,236,749 pair inversions among 10,440 and 19,364 stable shared identities | downstream extraction, placement, size, and frame-shape validation |
-| MSF allocation | 2,163 candidate stream slots versus 2,408 present retail slots | stream roster/size, clean/incremental mode, writer history |
+There is no meaningful single PDB-order percentage. The tables use three
+different denominators and do not combine them:
 
-GSI has only three pair inversions among 67,252 shared unique records and PSI
-hash-record order has none among 77,853. That control remains important: large
-movement in one physical channel does not imply every internal index is wrong.
+- **reversed pairs** is the fraction of all pairs of shared unique records whose
+  relative order is reversed; it measures rank disorder, not a fraction of bad
+  declarations;
+- **participants** is the fraction of shared unique records involved in at least
+  one inversion; one moved block can make this approach 100%;
+- **different scopes** is the fraction of paired modules whose scoped stream has
+  any order, membership, or comparable-payload difference. It is broader than
+  order alone.
+
+All `candidate-only / retail-only` counts below are record counts. Duplicate
+keys are excluded from order claims. These are residual diagnostics, not a
+count or percentage of authorized source edits.
+
+### Primary global sequences
+
+| channel | shared unique | reversed pairs | participants | candidate-only / retail-only | other residual |
+|---|---:|---:|---:|---:|---:|
+| DBI modules | 2,331 | 19.5622% | 99.91% | 54 / 65 | 531,234 inversions |
+| DBI section contributions | 41,481 | 21.9924% | 100.00% | 24,331 / 24,222 | 23,329 changed payloads |
+| named complete TPI | 30,992 | 16.6597% | 100.00% | 257 / 546 | 257 duplicate identities; 3 changed payloads |
+| named-TPI direct module references | 7,040 | 16.6307% | 100.00% | 727 / 151 | 50 duplicate identities; 2,329 changed reference sets |
+| global symbol stream | 145,170 | 4.7255% | 99.9986% | 5,906 / 3,297 | 146 duplicate identities |
+| PSI public address map | 77,888 | 3.7517% | 98.77% | 684 / 498 | 113,796,245 inversions |
+| legacy FPO | 10,442 | 3.4076% | 95.78% | 3,470 / 3,550 | 726 changed payloads |
+| frame data | 19,393 | 19.8610% | 95.60% | 40,729 / 39,417 | 807 changed payloads |
+| global `/names` strings | 6,908 | 16.2013% | 99.97% | 1,790 / 2,715 | serialization order, not source ownership |
+| DBI edit-and-continue names | 687 | 42.3869% | 98.25% | 269 / 452 | serialization order, not source ownership |
+| identified MSF stream roles | 2,110 | 19.0183% | 99.29% | 54 / 299 | 2,107 changed bindings |
+
+The lower-level TPI occurrence stream has 1.4221% reversed pairs across 458,037
+shared ordinal records, and its per-record hash-value sequence has 2.6483%
+across 439,942 shared unique values. Both are physical/type-index-derived and
+inherit insertions and deduplication; the named-complete TPI row is the stronger
+source-facing inventory.
+
+### Paired module-local streams
+
+| scoped channel | differing / paired scopes | differing scopes |
+|---|---:|---:|
+| raw module symbol records | 1,689 / 2,331 | 72.46% |
+| DBI source-file references | 1,679 / 2,331 | 72.03% |
+| C13 file checksums | 1,679 / 2,331 | 72.03% |
+| semantic module symbols | 1,450 / 2,331 | 62.21% |
+| C13 line records | 1,308 / 2,331 | 56.11% |
+| C13 subsection records | 1,188 / 2,331 | 50.97% |
+| complete enum value order | 11 / 2,810 | 0.3915% |
+
+Enum comparison also has 33 candidate-only scopes, 78 retail-only scopes, and
+111 duplicate-name scopes excluded as ambiguous. The decoded module-local C13
+string, frame-data, inlinee, cross-import, cross-export, and unknown-subsection
+channels have zero differing paired scopes; their 54 candidate-only and 65
+retail-only module scopes follow the DBI roster rather than a shared-scope order
+difference.
+
+### Stable controls and physical MSF state
+
+The PSI serialized hash-record order has zero inversions among 77,888 shared
+unique records. GSI has three inversions among 67,282, a reversed-pair density
+of 0.000000133%. Named-stream order, DBI logical-substream order, section-map
+order, and image-section-header order also have zero inversions, although their
+payloads or membership are not all equal. Both IPI streams are absent.
+
+The candidate has 2,163 present streams against retail's 2,408, a 10.17%
+deficit relative to retail. As established above, the net 245-stream difference
+equals the identified semantic module-role gap exactly. It remains a physical
+PDB mismatch but does not create 245 independent allocator tasks. The active
+free-page maps share only one page, with 7 candidate-only and 739 retail-only
+pages; page-order work remains blocked on semantic roster, size, and link-history
+equality.
+
+### Frozen actionable remainder
+
+Only one residual currently has a bounded unreviewed count: eight of the ten
+same-earliest-module first-party adjacent named-TPI swaps remain uninspected.
+The Bullet and Scaleform pairs are the other two and are parked below with
+stronger symbol, declaration, or construction-order evidence against the tested
+source edits.
+
+The DBI, C13, public/FPO/frame, and global-symbol percentages above have not yet
+been reduced to an honest source-actionable denominator. Known bounded examples
+remain documented in their production sections: the VFS DBI archive rotation,
+four `game_core\\entry_point.obj` C13 inversions plus two absent retail stdlib
+files, and the generated deleting-destructor public-order wall. The MSF slot gap
+has zero independent allocator actions while its semantic-roster prerequisite
+remains unequal. This file freezes those residuals for later work; no production
+reordering is justified by the percentages alone.
 
 ### Focused named-TPI attribution
 
