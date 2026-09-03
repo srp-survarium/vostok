@@ -81,6 +81,8 @@ class PdbOrderProbeTests(unittest.TestCase):
                 "ltcg-pch-batch-source-order",
                 "function-definition-order",
                 "ltcg-function-definition-order",
+                "deleting-destructor-demand-order",
+                "ltcg-deleting-destructor-demand-order",
                 "module-stream-roster",
                 "pch-archive-retention",
             }.issubset(CASES)

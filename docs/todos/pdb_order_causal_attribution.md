@@ -2,7 +2,9 @@
 
 Status: **open**. Small VS2008 experiments establish several causal rules. Two
 bounded C13-guided corrections, two false-compiland removals, and one complete
-library-local DBI order correction have now been accepted in the game. The
+library-local DBI order correction have now been accepted in the game. A new
+section-contribution ownership pass also found and corrected one definition-order
+pair whose module-symbol, FPO, and public order all disagreed with retail. The
 large DBI/TPI/public residuals remain open; the current MSF slot gap is fully
 attributed to the unequal semantic module roster, while physical equality must
 wait for that roster and the stream sizes to converge.
@@ -16,7 +18,7 @@ this causal campaign was limited to:
 - two moved `engine_world` definitions from the source-definition comparison;
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
-The work recorded here added a reproducible 38-case toy harness, corrected two
+The work recorded here added a reproducible 40-case toy harness, corrected two
 false comparison signals, established the cause of several PDB channels, and
 applied the first rule to the sound library. That production change corrected
 header presence/order in 39 measured sound compilands, brought two small
@@ -50,6 +52,19 @@ counts did not move. The authoritative full build remained 76.24% with
 complete PDB-order correction, not evidence that every physical order channel
 improved with it.
 
+The next pass assigned public, legacy-FPO, and frame rows to their unique DBI
+section-contribution owner. That reduced the global address streams to
+module-sized subsequences and exposed a seven-function
+`object_volumetric_sound.obj` FPO population with one exact adjacent inversion.
+Retail source and module symbols both define `resolve_links` before `insert`,
+while the candidate source did the reverse. Swapping those two already-exact
+empty definitions removed the inversion from the module-symbol stream and FPO
+stream, and reduced the module's public inversions from two to one. Code stayed
+exactly 76.24% and 37,103/44,600. The remaining public inversion is the class's
+scalar/vector deleting-destructor pair; a new small probe found that merely
+reversing scalar-delete and vector-delete demand does not steer that generated
+order, with or without LTCG.
+
 Physical PDB order is not direct source-order proof. It is also not inherently
 non-actionable. The useful classification is: **causally understood in the toy
 model, still requiring validation on the real link**.
@@ -72,7 +87,7 @@ exact commands, linker logs, PDB/EXE hashes, copied artifacts, full
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
-The current matrix contains 38 cases and emits 47 comparisons because clean,
+The current matrix contains 40 cases and emits 49 comparisons because clean,
 incremental, and `/Z7`/`/Zi` control cases compare multiple states. Wine output
 goes directly to each command's log file: VS2008's persistent `mspdbsrv.exe`
 can inherit a pipe after `cl.exe` or `link.exe` has finished and otherwise make
@@ -98,6 +113,7 @@ not raw moved-row totals.
 | first local use of two already-declared types reversed inside one TU | 0 | 0 | 0 | 0 | local use order does not control named TPI order in this case; only the source checksum changes |
 | definitions of two `/Gy` functions reversed in one source file | 0 | 0 | 1 | 1 | lexical definition order controls final placement here without moving DBI, TPI, or C13 record order |
 | linker `/ORDER` file reverses two functions | 0 | 0 | 1 | 1 | public and frame order follow final function placement independently of DBI/TPI/C13 |
+| scalar-delete and vector-delete call order reversed | 0 | 0 | 0 | 0 | generated scalar/vector deleting-destructor order stays fixed in the defining object; only the root frame payload changes with its body size |
 | one additional direct object/module | 0 among the three shared modules; one new module | 0 among the shared type | 0 among the shared publics | 0 among the shared frames | one semantic module role adds one stream slot, while downstream stream sizes and physical allocation change |
 
 The same inputs under `/GL`/`/LTCG` do not obey all of the non-LTCG rules:
@@ -117,6 +133,7 @@ The same inputs under `/GL`/`/LTCG` do not obey all of the non-LTCG rules:
 | direction of one cross-module call reversed, roots and archive fixed | 0 | 0 | 0 | a simple code-dependency edge does not schedule the surviving modules in this fixture |
 | direction of one cross-module volatile-data reference reversed, roots and archive fixed | 0 | 0 | 0 | a simple data-dependency edge is likewise neutral |
 | definitions of two `/Gy` functions reversed inside one `/GL` source file | 0 | 0 | 1 | final placement follows definition order in this fixture; legacy FPO has the same one inversion, while DBI, TPI, and C13 sequence order stay fixed |
+| scalar-delete and vector-delete call order reversed | 0 | 0 | 0 | the LTCG link also preserves the defining object's generated destructor order |
 
 These `/GL` controls invalidate simple production recipes of “put archive
 members in retail DBI order” or “make the dependency graph point in retail
@@ -264,6 +281,30 @@ constructor then destructor then `is_low_level_packet`. The helper also has a
 known inline-vs-call body mismatch. This makes source/body convergence and CIL
 placement the next evidence, not a manual public-order edit.
 
+### Section-contribution ownership
+
+Global public, legacy-FPO, and frame sequences are now also grouped by the DBI
+section contribution that contains each record's address. Publics retain their
+original section/offset; FPO and frame RVAs are converted back through the PDB
+address map first. A record is admitted only when exactly one half-open
+contribution range contains it. Overlaps remain ambiguous and addresses outside
+all contributions remain unowned instead of being guessed.
+
+The current whole-game coverage is:
+
+| channel | candidate owned | retail owned | differing module groups | differing library groups |
+|---|---:|---:|---:|---:|
+| frame data | 60,086 / 60,086 | 58,810 / 58,810 | 881 / 940 | 21 / 22 |
+| legacy FPO | 13,912 / 13,912 | 13,992 / 13,992 | 476 / 706 | 23 / 24 |
+| PSI public address map | 76,993 / 78,563 | 76,953 / 78,388 | 974 / 1,998 | 55 / 69 |
+
+This is **placement ownership**, not proof of the original lexical source owner.
+ICF aliases may resolve into the surviving contribution, and the global stream
+still reflects linker placement. Its benefit is bounded attribution: a small
+module can now be inspected as a small ordered subsequence instead of searching
+millions of global pairs. A candidate source edit still requires agreement with
+the target compiland symbols, source lines, declarations, and bodies.
+
 ## Results: MSF stream allocation and relinking
 
 The allocation experiments distinguish output identity, semantic content, and
@@ -325,8 +366,8 @@ is useful as a deterministic end-state check.
 
 ## Comparator defects exposed by the probes
 
-The small cases found two false signals in the parser and one missing evidence
-channel:
+The small cases found two false signals in the parser, missing attribution
+channels, and one indexing trap in the new ownership implementation:
 
 1. Some VS2008 C13 checksum records use offsets in global `/names` when the
    module-local string table is empty. Resolving those offsets only locally made
@@ -338,6 +379,12 @@ channel:
 3. Named TPI rows lacked compiland evidence. The new direct-module-reference
    channel exposes reference sets, their earliest DBI-ordered module, and the
    first retained typed symbol inside that module without inventing ownership.
+4. `pdb2` exposes a DBI section contribution's module index as zero-based. An
+   initial ownership join subtracted one and attributed every address to the
+   previous module. The deleting-destructor fixture made the error obvious by
+   assigning the root entry point to the defining object. The join now uses the
+   index directly and has explicit zero-based, half-open-range, overlap, and
+   global-subsequence tests.
 
 These corrections matter before production interpretation: otherwise the tool
 can turn ordinary string-table relocation or function movement into a misleading
@@ -672,6 +719,46 @@ several physical PDB channels in different directions. It does not make public
 order a source-edit target, solve the LTCG VFS rotation, or reduce the semantic
 stream-roster gap.
 
+## Fifth production application: `object_volumetric_sound` placement
+
+The ownership summaries selected `object_volumetric_sound.obj` as the smallest
+first-party legacy-FPO group with a pure order difference: seven records existed
+on each side with identical payloads, and the only inversion was
+`resolve_links` versus `insert`. Three independent target channels agreed on the
+cause:
+
+- the retail source reconstruction defines `resolve_links` before `insert`;
+- the target module symbol stream emits them in that order; and
+- target FPO/address order places `insert` at `0x5b3680` and `resolve_links` at
+  `0x5b3690`, consistent with the target's reverse-emission behavior for this
+  pair.
+
+The current header already had the retail declaration order, `insert` then
+`resolve_links`; declaration and definition order are separate evidence. Both
+empty bodies were already byte- and structure-exact. The retained edit therefore
+changes only their out-of-class definition order to match the retail source.
+
+| owned channel in `object_volumetric_sound.obj` | before | after |
+|---|---:|---:|
+| module-symbol inversions among 8 shared unique records | 1 | 0 |
+| legacy-FPO inversions among 7 shared unique records | 1 | 0 |
+| public-address inversions among 27 shared unique records | 2 | 1 |
+
+The whole legacy-FPO inventory correspondingly fell from 477 to 476 differing
+module groups. The authoritative code comparison remained 76.24%, with
+37,103/44,600 exact functions and zero improved, regressed, added, or removed
+rows. This is one source-faithful order correction with three matching PDB
+effects; it is not a function-body score gain.
+
+The remaining public inversion is the generated scalar- versus vector-deleting
+destructor pair. A dedicated fixture reversed only the order of `delete p` and
+`delete[] q`, under ordinary `/O2 /Gy /OPT:ICF` and `/GL /LTCG` links. Neither
+variant moved the generated destructor order, public map, DBI, or named TPI. The
+ordinary root frame record changed size because its call sequence generated a
+different body, but no frame-order inversion appeared. Consequently local
+delete-demand order is excluded as the lever; the production destructor pair
+remains open rather than being forced with an unrelated call-site edit.
+
 ## Subsequent production applications
 
 For TPI, group named records by `named_type_module_references` first. Test
@@ -685,8 +772,10 @@ library, then run the mandatory full build before accepting it. Keep roster
 repairs separate from inversion changes, as the sound example demonstrates.
 
 Use public/frame order as validation of a justified placement change. Never tune
-function source directly for an address-map or FPO order row. Leave MSF page
-numbers until semantic content, stream sizes, link mode, and history converge.
+function source from an address-map or FPO row alone: require the target's
+definition, module-symbol, statement, and body evidence to agree, as they did
+for `object_volumetric_sound`. Leave MSF page numbers until semantic content,
+stream sizes, link mode, and history converge.
 
 ## Experiment record and completion criteria
 

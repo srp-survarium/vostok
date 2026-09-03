@@ -64,6 +64,8 @@ CASES = (
     "pch-archive-retention",
     "function-definition-order",
     "ltcg-function-definition-order",
+    "deleting-destructor-demand-order",
+    "ltcg-deleting-destructor-demand-order",
     "function-order",
     "module-stream-roster",
     "clean-relink",
@@ -1374,6 +1376,50 @@ class ProbeRunner:
             self.compare(
                 "ltcg-function-definition-order",
                 "definition order of two /Gy /GL functions in one source file",
+                *snapshots,
+            )
+        ]
+
+    def deleting_destructor_demand_order(self) -> list[dict]:
+        return self._deleting_destructor_demand_order(ltcg=False)
+
+    def ltcg_deleting_destructor_demand_order(self) -> list[dict]:
+        return self._deleting_destructor_demand_order(ltcg=True)
+
+    def _deleting_destructor_demand_order(self, *, ltcg: bool) -> list[dict]:
+        mode = "ltcg-" if ltcg else ""
+        compile_extra = (
+            ("/O2", "/Oy", "/GR-", "/GL")
+            if ltcg
+            else ("/O2", "/Oy", "/GR-")
+        )
+        link_extra = ("/LTCG", "/OPT:ICF") if ltcg else ("/OPT:ICF",)
+        snapshots = []
+        for variant in ("scalar-first", "vector-first"):
+            self.reset_work("deleting_destructor_order", variant)
+            item = self.compile(
+                f"{mode}deleting-destructor-{variant}-item",
+                "item.cpp",
+                "item.obj",
+                compile_extra,
+            )
+            root = self.compile(
+                f"{mode}deleting-destructor-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                compile_extra,
+            )
+            snapshots.append(
+                self.link_once(
+                    f"{mode}deleting-destructor-{variant}",
+                    [root, item],
+                    extra=link_extra,
+                )
+            )
+        return [
+            self.compare(
+                f"{mode}deleting-destructor-demand-order",
+                f"{'/GL ' if ltcg else ''}scalar-delete versus vector-delete call order with /OPT:ICF",
                 *snapshots,
             )
         ]

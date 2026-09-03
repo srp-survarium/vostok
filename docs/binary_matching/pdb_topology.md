@@ -126,7 +126,10 @@ The coverage header states exactly which layers were decoded. They include:
 - C13 subsections and their local strings, checksums, line programs, frame data,
   inlinees, cross-scope maps, and ordered raw fallback for unknown payloads;
 - decoded legacy FPO and frame-data records, plus inventory of absent OMAP,
-  fixup, xdata/pdata, token/RID, and other optional streams.
+  fixup, xdata/pdata, token/RID, and other optional streams;
+- public, legacy-FPO, and frame-data subsequences grouped by unique containing
+  DBI section-contribution owner, at both module and library scope, with explicit
+  owned/ambiguous/unowned coverage.
 
 If a present stream has no stable role, it is still listed in the unidentified
 inventory. If a supported optional stream is absent, the coverage report says
@@ -145,6 +148,14 @@ Each comparison also reports exact inversion count/rate, longest ordered
 subsequence, retained and reversed adjacency, longest contiguous run,
 increasing runs, and rank displacement. A moved-participant count can make one
 block rotation look nearly total; the locality metrics preserve that distinction.
+
+Address-stream ownership is a narrowing device, not source provenance. Public
+section/offsets are joined directly to half-open DBI contribution ranges. FPO
+and frame RVAs are first converted through the PDB address map. Exactly one
+containing contribution is required; overlaps and misses stay ambiguous or
+unowned. ICF can place an alias in the surviving contribution, so an owned row
+still means linker-placement ownership rather than proof of its lexical origin.
+The compact `--summary-json` schema exposes these reports under `ownership`.
 
 Most whole-PDB streams are physical, linker-, hash-, type-index-, or
 address-derived evidence. LTCG, COMDAT selection, archive extraction, type
@@ -177,7 +188,7 @@ linker logs, file hashes, copied PDB/EXE artifacts, full
 each invocation replaces it, so preserve a result externally if it must outlive
 the next run.
 
-The 38-case matrix emits 47 comparisons and separates direct object order,
+The 40-case matrix emits 49 comparisons and separates direct object order,
 archive-member order, unresolved-root demand, and library order both with and
 without `/GL`/`/LTCG`. It also covers LTCG compilation chronology and
 cross-module code/data dependency direction, direct-header order, PCH-internal
@@ -185,17 +196,18 @@ order and composition, headers and declarations after a PCH, `#pragma once`
 versus traditional-guard behavior across the PCH boundary, checksum-content
 controls, `/MP /Zi /GL` PCH-consuming batch order, exported-inline PCH retention
 under `/Z7` and `/Zi`, type-contributor and within-TU type-use order, linker
-`/ORDER`, clean relinks, and replayed incremental relinks. A result
+`/ORDER`, scalar/vector deleting-destructor demand order, clean relinks, and
+replayed incremental relinks. A result
 establishes behavior for the small VS2008 fixture only. It is a causal model to
 test against the real link, not a license to reorder production inputs without
 target DBI/TPI/C13, section, and code evidence. The current conclusions and
 their open whole-game applications are tracked in
 [`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
 
-For a large real PDB, a focused query avoids loading TPI, global symbols, and
-physical stream topology when one module/library population is under test. It
-still decodes the DBI sequence and the matching modules' local C13 source-file,
-checksum, line, and subsection sequences:
+For a large real PDB, a focused query restricts the reported evidence to one
+module/library population. It decodes the DBI sequence, the matching modules'
+local symbol and C13 source-file/checksum/line/subsection sequences, and the
+public, legacy-FPO, and frame records owned by their section contributions:
 
 ```sh
 pdb_topology \
@@ -205,11 +217,13 @@ pdb_topology \
 ```
 
 The case-insensitive substring is matched against both module and object/library
-names. The report retains the raw filtered target and base DBI sequences plus
-the raw target and base DBI source-file, C13 checksum, line-program, and
-subsection sequences for every selected module. The usual unique-key inversion
-metrics and scoped comparisons follow those raw sides. Use the unfiltered
-`--order` command when TPI, public/frame, hash, or MSF channels are required.
+names. The report retains the raw filtered target and base DBI sequences; module
+symbols; DBI source files; C13 checksums, line programs, and subsections; and
+owned public/FPO/frame subsequences. The usual unique-key inversion metrics and
+scoped comparisons follow those raw sides. Ownership requires the whole DBI and
+address streams internally, so this mode now narrows output and interpretation,
+not parser I/O. Use the unfiltered `--order` command for TPI, hash, MSF, global
+coverage totals, and module/library ownership summaries.
 
 For a small set of named TPI records, repeat `--type` instead. The focused
 report preserves their physical TPI sequence and lists the DBI-ordered modules

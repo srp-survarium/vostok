@@ -11,8 +11,8 @@ namespace survarium {
 // base ctor/dtor/load are STUBs on this branch (object_sound.cpp unmatched), so the
 // inlined base ctor + the base load call + the dtor tail-call line up differently
 // than the target. The link_resolver implicit ctor is also emitted out-of-line here
-// (target inlines the [+160h] vtable store). Structure is correct (ctor/dtor/insert/
-// resolve_links STRUCTURE MATCH); recovers once object_sound.cpp is matched.
+// (target inlines the [+160h] vtable store). Each body is structure-exact; the
+// remaining residuals recover once object_sound.cpp is matched.
 object_volumetric_sound::object_volumetric_sound( base_game_scene& w ) :
 	object_sound			( w ),
 	m_collision_geometry	( 0 ),
@@ -35,11 +35,11 @@ void object_volumetric_sound::load(
 	m_radius = t["radius"];
 }
 
-void object_volumetric_sound::insert( )
+void object_volumetric_sound::resolve_links( base_project* p, configs::binary_config_value config )
 {
 }
 
-void object_volumetric_sound::resolve_links( base_project* p, configs::binary_config_value config )
+void object_volumetric_sound::insert( )
 {
 }
 
