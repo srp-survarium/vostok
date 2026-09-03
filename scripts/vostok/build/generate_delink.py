@@ -40,7 +40,7 @@ from vostok.core import paths
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
 from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_BUILD_TREE,
-                               GFX_RELEASE_PREFIX, GFX_TARGET_PREFIX, GFX_TREE_PREFIX,
+                               GFX_TARGET_PREFIX,
                                OBJDIFF_DIR, RICH_DIR, SCALEFORM_SDK, SOURCES,
                                SYMBOL_MAP, SYMBOL_MAP_OVERRIDES, WIN32_DIR,
                                survarium_bin)
@@ -540,8 +540,8 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
         # the raw SDK so objs from before the tree existed still strip to
         # Src\...
         engine += ["--engine-path", pdb_path(GFX_BUILD_TREE) + "\\"]
-        engine += ["--engine-path", GFX_TREE_PREFIX + "\\"]
-        engine += ["--engine-path", GFX_RELEASE_PREFIX + "\\"]
+        for prefix in paths.gfx_release_prefixes():
+            engine += ["--engine-path", prefix + "\\"]
         engine += ["--engine-path", pdb_path(SCALEFORM_SDK) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).

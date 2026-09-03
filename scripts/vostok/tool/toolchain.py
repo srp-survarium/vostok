@@ -246,9 +246,14 @@ def ensure_retail_source_root(wineprefix: Path) -> None:
 
 
 def ensure_gfx_tree_root(parent: Path) -> None:
-    """Alias the GFx build tree as C:\\survarium\\gfx-sdk (see paths.GFX_TREE_PREFIX)."""
-    link = parent / "gfx-sdk"
-    target = paths.GFX_BUILD_TREE
+    """Give GFx source and object trees machine-independent Wine paths."""
+    ensure_gfx_alias(parent, "gfx-sdk", paths.GFX_BUILD_TREE)
+    ensure_gfx_alias(parent, "gfx-obj", paths.GFX_OBJECT_TREE)
+
+
+def ensure_gfx_alias(parent: Path, name: str, target: Path) -> None:
+    """Point one C:\\survarium GFx alias at this worktree's generated tree."""
+    link = parent / name
     target.mkdir(parents=True, exist_ok=True)
     if link.is_symlink():
         if link.resolve() == target.resolve():
@@ -257,7 +262,7 @@ def ensure_gfx_tree_root(parent: Path) -> None:
     elif link.exists():
         raise RuntimeError(f"gfx tree alias exists but is not a symlink: {link}")
     link.symlink_to(target, target_is_directory=True)
-    log(f"GFx tree alias: C:\\survarium\\gfx-sdk -> {target}")
+    log(f"GFx tree alias: C:\\survarium\\{name} -> {target}")
 
 
 def generate_ninja(vcproj_exe: Path) -> None:

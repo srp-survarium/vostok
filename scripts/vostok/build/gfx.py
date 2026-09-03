@@ -62,8 +62,21 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
-from vostok.core.paths import GFX_BUILD_TREE, GFX_TREE_PREFIX, PREBUILT, SCALEFORM_SDK, WIN32_DIR
+from vostok.build.gfx_mspdbsrv import (
+    fixed_time_command,
+    fixed_time_env,
+    kill_mspdbsrv,
+    stop_wine_session,
+    wine_cl,
+)
+from vostok.core.paths import (
+    GFX_BUILD_TREE,
+    GFX_OBJECT_PREFIX,
+    GFX_OBJECT_TREE,
+    GFX_TREE_PREFIX,
+    PREBUILT,
+    SCALEFORM_SDK,
+)
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 from vostok.core.wine import drive_path
@@ -71,7 +84,12 @@ from vostok.core import log as _log
 
 SDK = SCALEFORM_SDK.resolve()
 SHIP = PREBUILT / "Win32/libraries/shipping"
-OBJ_ROOT = WIN32_DIR / "intermediates/gfx"
+OBJ_ROOT = GFX_OBJECT_TREE
+
+# The retail game link already uses this reconstructed build date. Reusing it
+# for the separately-built GFx objects and archives removes host wall-clock
+# bytes without inventing another timestamp contract.
+GFX_BUILD_TIME = "2013-05-09 12:00:00"
 
 # Shared C++ flags (from the libgfx/as2/as3 PDB cmd; -Fo/-Fd are per-lib).
 CPP_FLAGS = (
@@ -142,6 +160,11 @@ def tree_path(rel) -> str:
     C:\\survarium\\gfx-sdk alias, so objects record GFX_TREE_PREFIX, not the
     checkout's Z: path (vostok.tool.toolchain creates the alias)."""
     return GFX_TREE_PREFIX + "\\" + str(rel).replace("/", "\\")
+
+
+def object_path(rel) -> str:
+    """A generated GFx object path through its machine-independent alias."""
+    return GFX_OBJECT_PREFIX + "\\" + str(rel).replace("/", "\\")
 
 
 def _overlay_files():
@@ -243,8 +266,10 @@ def build_key(name, flags, defines, includes, tu_list):
     more important than retaining stale objects.
     """
     inputs = {
-        "version": 1,
+        "version": 2,
         "sdk": str(SDK),
+        "build_time": GFX_BUILD_TIME,
+        "object_prefix": GFX_OBJECT_PREFIX,
         "flags": flags,
         "defines": list(defines),
         "includes": list(includes),
@@ -269,7 +294,7 @@ def build_one(name):
 
     inc_args = " ".join(f'-I"{tree_path(d)}"' for d in includes)
     def_args = " ".join(f"-D{d}" for d in defines)
-    fd_arg = f'-Fd"{drive_path(obj_dir)}\\vc90.pdb"'
+    fd_arg = f'-Fd"{object_path(Path(name) / "vc90.pdb")}"'
     base = f"{flags} {inc_args} {def_args} {fd_arg}"
 
     tu_list = tus(name)
@@ -304,9 +329,14 @@ def build_one(name):
         if obj.is_file() and obj.stat().st_size > 0:
             skipped += 1
             continue
-        fo = f'-Fo"{drive_path(obj)}"'
+        fo = f'-Fo"{object_path(Path(name) / obj.name)}"'
         rsp.write_text(f'{base} {fo}\n"{tree_path(rel)}"\n')
-        r = wine_cl(f"cl {rsp_arg}", cwd=obj_dir, obj_path=obj)
+        r = wine_cl(
+            f"cl {rsp_arg}",
+            cwd=obj_dir,
+            obj_path=obj,
+            build_time=GFX_BUILD_TIME,
+        )
         if obj.is_file() and obj.stat().st_size > 0:
             built += 1
             print(f"[{name}] [{i}/{len(tu_list)}] OK   {obj.name}")
@@ -327,12 +357,14 @@ def build_one(name):
     lib_rsp = obj_dir / "lib.rsp"
     lib_rsp.write_text(f'-out:"{drive_path(out_lib)}"\n'
                        + "\n".join(f'"{drive_path(o)}"' for o in objs) + "\n")
-    env = dict(os.environ)
-    env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    r = subprocess.run(["wine", "cmd", "/c", f"lib -nologo @{drive_path(lib_rsp)}"],
+    env = fixed_time_env(GFX_BUILD_TIME, fake_stat=True)
+    command = ["wine", "cmd", "/c", f"lib -nologo @{drive_path(lib_rsp)}"]
+    r = subprocess.run(fixed_time_command(command, GFX_BUILD_TIME, freeze=True),
                        cwd=str(obj_dir), env=env, capture_output=True, text=True)
     kill_mspdbsrv()
     if out_lib.is_file() and out_lib.stat().st_size > 0:
+        # Keep dependency tools on the real clock; only archive contents are fixed.
+        os.utime(out_lib, None)
         cache_stamp.write_text(cache_key + "\n")
         print(f"[{name}] {out_lib.name}: {out_lib.stat().st_size/1e6:.1f} MB")
         return 0
@@ -343,14 +375,18 @@ def build_one(name):
 def main():
     if not SDK.is_dir():
         raise SystemExit(f"pristine SDK not found: {SDK} (set SCALEFORM_SDK)")
-    materialize_tree()
-    names = sys.argv[1:] or DEFAULT_ORDER
-    for n in names:
-        if build_one(n) == 1:
-            print(f"\n*** {n} failed; stopping. ***")
-            return 1
-    print("\nAll libs built.")
-    return 0
+    stop_wine_session(GFX_BUILD_TIME)
+    try:
+        materialize_tree()
+        names = sys.argv[1:] or DEFAULT_ORDER
+        for n in names:
+            if build_one(n) == 1:
+                print(f"\n*** {n} failed; stopping. ***")
+                return 1
+        print("\nAll libs built.")
+        return 0
+    finally:
+        stop_wine_session(GFX_BUILD_TIME)
 
 
 if __name__ == "__main__":

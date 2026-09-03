@@ -9,12 +9,15 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from vostok.build import gfx
+from vostok.build import gfx_mspdbsrv
 from vostok.build import ninja as build_ninja
 from vostok.build import ninja_regen
 from vostok.tool import toolchain
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
                                                        _resolve_reviewed_aliases)
+from vostok.core import paths
 from vostok.core import symbols as NORMALIZE
 from vostok.derive import maxima
 from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
@@ -46,6 +49,59 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    @mock.patch.object(gfx_mspdbsrv.shutil, "which", return_value="/bin/faketime")
+    def test_gfx_fixed_time_command_freezes_clock(self, _which):
+        self.assertEqual(
+            gfx_mspdbsrv.fixed_time_command(
+                ["wine", "cmd"], "2013-05-09 12:00:00", freeze=True
+            ),
+            ["faketime", "-f", "2013-05-09 12:00:00", "wine", "cmd"],
+        )
+        self.assertEqual(
+            gfx_mspdbsrv.fixed_time_command(["wine", "cmd"], "2013-05-09 12:00:00"),
+            ["faketime", "2013-05-09 12:00:00", "wine", "cmd"],
+        )
+
+    def test_gfx_object_paths_use_machine_independent_alias(self):
+        self.assertEqual(
+            gfx.object_path(Path("libgfx") / "sample.obj"),
+            r"c:\survarium\gfx-obj\libgfx\sample.obj",
+        )
+
+    def test_gfx_archive_source_root_is_derived_from_compile_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cpp_archive = Path(tmp) / "libgfx.lib"
+            cpp_archive.write_bytes(
+                b'prefix\x00-nologo -IZ:\\builder\\vostok-gfx\\binaries\\gfx-sdk\\Include '
+                b'-IZ:\\builder\\vostok-gfx\\binaries\\gfx-sdk\\Src\x00suffix'
+            )
+            c_archive = Path(tmp) / "libgfx_libpng.lib"
+            c_archive.write_bytes(
+                b'prefix\x00-nologo -IZ:\\builder\\scaleform_sdk\\3rdParty\\libpng '
+                b'-DWIN32\x00suffix'
+            )
+
+            self.assertEqual(
+                paths.gfx_recorded_prefixes((cpp_archive, c_archive)),
+                (
+                    r"Z:\builder\vostok-gfx\binaries\gfx-sdk",
+                    r"Z:\builder\scaleform_sdk",
+                ),
+            )
+
+        with mock.patch.object(
+            paths,
+            "gfx_recorded_prefixes",
+            return_value=(r"Z:\builder\vostok-gfx\binaries\gfx-sdk",),
+        ):
+            self.assertEqual(
+                paths.gfx_release_prefixes(),
+                (
+                    paths.GFX_RELEASE_PREFIX,
+                    r"Z:\builder\vostok-gfx\binaries\gfx-sdk",
+                ),
+            )
+
     def test_retail_source_root_is_worktree_symlink(self):
         with tempfile.TemporaryDirectory() as tmp:
             prefix = Path(tmp) / "prefix"

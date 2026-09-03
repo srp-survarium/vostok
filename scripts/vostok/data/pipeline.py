@@ -72,7 +72,11 @@ def _engine_args(side: str) -> list[str]:
         "--engine-path", paths.RETAIL_SOURCE_PREFIX + "\\",
         "--engine-path", pdb_path(paths.SOURCES) + "\\",
         "--engine-path", pdb_path(paths.GFX_BUILD_TREE) + "\\",
-        "--engine-path", paths.GFX_RELEASE_PREFIX + "\\",
+        *[
+            argument
+            for prefix in paths.gfx_release_prefixes()
+            for argument in ("--engine-path", prefix + "\\")
+        ],
         "--engine-path", pdb_path(paths.SCALEFORM_SDK) + "\\",
     ]
 

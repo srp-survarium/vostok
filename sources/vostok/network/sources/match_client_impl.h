@@ -6,7 +6,7 @@
 #include <boost/array.hpp>
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <vostok/network_core/udp_match_client.h>
-#include <vostok/network_core/udp_match_types.h>
+#include <vostok/network_core/udp_match_packets_orderer.h>
 #include <vostok/network_core/disconnect_event_types_enum.h>
 #include <vostok/login_server/message_types.h>
 

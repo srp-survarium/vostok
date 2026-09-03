@@ -35,13 +35,12 @@ from vostok.core.paths import (
     BASE_EXE,
     BASE_PDB,
     GFX_BUILD_TREE,
-    GFX_RELEASE_PREFIX,
-    GFX_TREE_PREFIX,
     GFX_TARGET_PREFIX,
     RETAIL_SOURCE_PREFIX,
     RICH_DIR,
     SCALEFORM_SDK,
     WIN32_DIR,
+    gfx_release_prefixes,
     survarium_bin,
 )
 from vostok.core.paths import ENGINE as ENGINE_DIR
@@ -73,8 +72,7 @@ def generate(side: str) -> None:
         engine = [RETAIL_SOURCE_PREFIX + "\\",
                   pdb_path(ENGINE_DIR.parent) + "\\",
                   pdb_path(GFX_BUILD_TREE) + "\\",
-                  GFX_RELEASE_PREFIX + "\\",
-                  GFX_TREE_PREFIX + "\\",
+                  *(prefix + "\\" for prefix in gfx_release_prefixes()),
                   pdb_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]

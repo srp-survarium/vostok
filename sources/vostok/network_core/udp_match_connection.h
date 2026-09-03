@@ -17,7 +17,7 @@
 #include <vostok/network_core/handler_allocator.h>
 #include <vostok/network_core/client_error_codes_enum.h>
 #include <vostok/network_core/disconnect_event_types_enum.h>
-#include <vostok/network_core/udp_match_types.h>
+#include <vostok/network_core/udp_match_packets_orderer.h>
 
 #include <boost/asio.hpp>
 

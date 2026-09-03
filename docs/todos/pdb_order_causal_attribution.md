@@ -1,6 +1,6 @@
 # PDB order causal attribution
 
-Status: **open**. Small VS2008 experiments establish several causal rules. Two
+Status: **open**. Small VS2008 experiments establish several causal rules. Three
 bounded C13-guided corrections, two false-compiland removals, and one complete
 library-local DBI order correction have now been accepted in the game. A new
 section-contribution ownership pass also found and corrected one definition-order
@@ -35,9 +35,9 @@ mechanism. Removing all eight annotations dropped `sound\pch.obj` from the
 linked PDB and moved the full comparison from 75.60% to 76.29%, with 297 more
 exact functions. Removing a separate redundant linkage pin then dropped the
 last candidate-only sound compiland, `sound_library_linkage.obj`; that second
-link rotation cost 0.05 points and 120 exact functions. The combined measured
-state is 76.24%, 177 exact functions above the starting point, with the sound
-module roster exactly 54 versus 54.
+link rotation cost 0.05 points and 120 exact functions. The last measurement
+before the GFx artifact incident described below was 76.24%, 177 exact functions
+above the starting point, with the sound module roster exactly 54 versus 54.
 
 The next application established that sound is not an LTCG-order problem at
 all: its Master Gold configuration disables whole-program optimization and
@@ -64,6 +64,34 @@ exactly 76.24% and 37,103/44,600. The remaining public inversion is the class's
 scalar/vector deleting-destructor pair; a new small probe found that merely
 reversing scalar-delete and vector-delete demand does not steer that generated
 order, with or without LTCG.
+
+The latest C13 roster pass recovered three more retail source-file identities
+in `game_core\entry_point.obj`. It split the match message enums and UDP orderer
+out of two reconstruction-only combined headers, then restored the entry-point
+TU's direct `network_messages.h` dependency. The module moved from 2 to 5 shared
+unique retail file identities, while the executable comparison remained exactly
+neutral. The five shared rows still contain four order inversions and two retail
+stdlib rows remain absent, so this is a header-ownership result, not C13 order
+closure.
+
+Rebuilding the GFx suite from the current source and relinking moved the raw
+whole-executable report from the pre-restage 76.24% and 37,103 exact functions
+to 78.79% and 37,711 exact functions: +2.55 points and +608 exact. That is a
+vendor-archive/link result, not yield from the C13 header split. It also rotated
+many folded owners: the non-vendor ledger's current exact count moved from
+10,439 to 10,430 while its hash-scoped exact-max count stayed 11,029. The
+first direct-library repeat also showed that MSVC's librarian copied an
+advancing clock into every archive-member header: all eight archive hashes
+changed while the object cache was untouched. The builder now writes objects
+through a fixed Wine path and freezes only the librarian clock. Two consecutive
+cache-only passes then produced byte-identical output for all eight archives.
+This proves stable re-archiving of one object set; it does not prove that a clean
+recompile reproduces identical objects. A fresh-PDB game relink from the frozen
+archive set reproduced 78.79% and 37,711/44,600 exact functions with zero
+improved, regressed, added, removed, or fold-churn rows against the preceding
+link. The ignored rebuilt archives must still be published and pinned before
+this measured link is reproducible from a fresh checkout, so the raw increase
+is not claimed as a landed source result.
 
 Physical PDB order is not direct source-order proof. It is also not inherently
 non-actionable. The useful classification is: **causally understood in the toy
@@ -758,6 +786,119 @@ ordinary root frame record changed size because its call sequence generated a
 different body, but no frame-order inversion appeared. Consequently local
 delete-demand order is excluded as the lever; the production destructor pair
 remains open rather than being forced with an unrelated call-site edit.
+
+## Sixth production application: game-core network header ownership
+
+The compact C13 ranking selected `game_core\entry_point.obj` because retail had
+eight checksum/file identities while the candidate had only three. The two
+shared source identities were already in the same relative order; the useful
+signal was instead three retail-only first-party paths:
+
+- `vostok/network/message_types.h`;
+- `vostok/game_core/network_messages.h`; and
+- `vostok/network_core/udp_match_packets_orderer.h`.
+
+The current reconstruction had collapsed the client/server message enums into
+`game_core/network_messages.h`, and had collapsed the UDP count tag, message
+metadata, and abstract orderer into `network_core/udp_match_types.h`. The retail
+C13 paths prove that the first and third source files existed, while the target
+type structure independently confirms the orderer's class name and layout. The
+retained correction restores those two retail-named headers, leaves
+`udp_match_types.h` as a compatibility include, updates direct consumers, and
+includes `network_messages.h` in the entry-point TU.
+
+After the authoritative build, the entry-point file stream changed as follows:
+
+| metric | before | after | retail |
+|---|---:|---:|---:|
+| total file rows | 3 | 6 | 8 |
+| shared unique identities | 2 | 5 | 5 of the candidate rows |
+| retail-only first-party identities | 5 | 2 | 0 is the eventual goal |
+| inversions among the shared population | 0 among 2 rows | 4 among 5 rows | 0 |
+
+The rising inversion count is population expansion, not evidence that the old
+three-row roster was closer: absent rows could not participate in any pair. All
+three target-backed header identities are now present. Their candidate sequence
+is still `entry_point.cpp`, `network_messages.h`, `message_types.h`,
+`udp_match_packets_orderer.h`, `pch.h`, while retail places the message-types
+contribution before the generated PCH row and the network/orderer contributions
+after the source and PCH-header rows. A pre-PCH direct include was tested and
+MSVC correctly diagnosed it as skipped while looking for the PCH; it was
+reverted. The two remaining retail-only first-party files are
+`stdlib_extensions.h` and `stdlib_extensions_inline.h`.
+
+The full code report remained 76.24% and 37,103/44,600 exact functions, with
+zero improved, regressed, added, removed, or fold-churn rows. Therefore the
+accepted result is exactly three recovered PDB source identities and more
+faithful header ownership. The remaining four inversions and two missing stdlib
+rows are open; neither a warning-producing include before `pch.h` nor artificial
+references will be retained to make the file stream look better.
+
+A broader header split was explored but is not counted as a negative source
+result. Nine network login/match compilands have a retail-only
+`network/message_types.h` row where the candidate retains
+`login_server/message_types.h`, so moving the legacy declarations wholesale
+initially looked attractive. During that experiment an unrelated
+`vostok tool libs` invocation restaged the GFx shipping archives. The pinned
+archive payload records its builder's old
+`Z:\home\sheep\Projects\survarium\vostok-gfx\binaries\gfx-sdk` source root,
+while the current readers accept the release contract's
+`C:\survarium\gfx-sdk` root. The next relink consequently reduced the indexed
+base population from 35,665 to 19,434 and printed a false 42.34% comparison.
+Direct PDB inspection found essentially the same procedure population as the
+unaffected xray worktree PDB (48,698 versus 48,712), including 18,588 procedures
+under the unrecognised legacy root. The source experiment and restage were therefore
+confounded; the broad source move was reverted without assigning the collapse
+to it, and the fixed-root archives were rebuilt before further measurement.
+The base rich, delink, and data-index drivers now derive the actual GFx roots
+from compile-command records in the PDB being parsed, falling back to the
+staged archives before the first link. They accept those roots alongside the
+fixed release contract, so another restage cannot silently turn a
+path-provenance difference into thousands of missing functions. Raw PDB
+comparison still exposes the different paths. An intermediate end-to-end replay
+that recognized the C++ archive root expanded the rich index from 25,233 to
+43,821 rows, exactly recovering those 18,588 procedures; the generalized reader
+also covers the separately recorded C-library SDK root. That second replay
+produced 44,555 rich rows versus 44,542 in the unaffected xray worktree and
+recovered the report from 42.34% to 75.84% with 35,618 exact functions. It did
+not recover the pre-restage 76.24% and 37,103 exact functions, proving that the
+staged archive payload also changed real link/pairing state independently of
+the source-root filtering defect. The from-source archive rebuild is therefore
+part of restoring the measured state, not merely cosmetic PDB-path cleanup.
+
+Those nine C13 rows remain evidence for a future controlled split of generic
+network error/message declarations from the login-server configuration macro.
+They do not prove that the two current headers should be merged, and the
+confounded run proves nothing about the proposed split's executable effect.
+
+## Ranked address-order rows rejected as source edits
+
+Owner-scoped public/FPO ranking made several global differences small enough to
+audit. It did not turn them into automatic source edits. The following rows were
+checked and left unchanged because stronger retail evidence already agrees with
+the candidate source:
+
+- `console_impl_input.obj` (`make_next_tip` / `apply_new_tip`) and
+  `game_resman_free.obj` (`collect_to_free` /
+  `try_collect_parents_to_free`) have byte- and structure-exact functions with
+  target-faithful lexical order; only downstream addresses differ.
+- `synchronous_device_interface.obj`, `weapon_core_base_state.obj`, and
+  `effect_options_descriptor.obj` likewise retain the retail source-line order
+  even though their final public/FPO order differs.
+- `effect_editor_gbuffer_to_screen.obj` differs only in two literal addresses
+  inside an otherwise byte-exact function, so changing statement order would
+  contradict the instruction and line evidence.
+- the smallest Particle and panning-LUT public groups are scalar/vector deleting
+  destructor pairs. The dedicated fixture already showed that reversing delete
+  demand does not steer their generated order.
+- `affects_threshold.obj` reverses two static arrays, but another target/base
+  game-core compiland emits the same pair in the opposite order. A global header
+  reorder would fix one owner by breaking the other.
+
+These are actionable findings in the sense that their causal boundary is now
+known: they are placement/compiler-emission residuals, not unworked declaration
+or definition order. They are not actionable *source edits* without a new lever
+that also preserves the exact retail bodies, source lines, and ownership.
 
 ## Subsequent production applications
 

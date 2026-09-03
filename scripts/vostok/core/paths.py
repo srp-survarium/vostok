@@ -30,7 +30,9 @@ lives under `config/`; explanatory text lives under `docs/`.
 
 from __future__ import annotations
 
+import mmap
 import os
+import re
 from pathlib import Path
 
 _MARKERS = ("flake.nix", "sources")
@@ -195,6 +197,7 @@ SCALEFORM_SDK = Path(
 # an -I overlay cannot reach those. Both PDB readers strip this prefix on
 # the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
 GFX_BUILD_TREE = BINARIES / "gfx-sdk"
+GFX_OBJECT_TREE = WIN32_DIR / "intermediates" / "gfx"
 
 # The suite is compiled through a fixed Wine-side alias of GFX_BUILD_TREE
 # (C:\survarium\gfx-sdk, a symlink the toolchain creates beside
@@ -205,6 +208,66 @@ GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 # and locally rebuilt libs key to the same `Src\...` paths.
 GFX_TREE_PREFIX = r"c:\survarium\gfx-sdk"
 GFX_RELEASE_PREFIX = GFX_TREE_PREFIX
+GFX_OBJECT_PREFIX = r"c:\survarium\gfx-obj"
+GFX_SHIPPING_ARCHIVES = tuple(
+    PREBUILT / "Win32" / "libraries" / "shipping" / name
+    for name in (
+        "libgfx.lib",
+        "libgfx_as2.lib",
+        "libgfx_as3.lib",
+        "libgfx_zlib.lib",
+        "libgfx_libpng.lib",
+        "libgfx_libjpeg.lib",
+        "libgfxexpat.lib",
+        "pcre.lib",
+    )
+)
+
+_GFX_ARCHIVE_INCLUDE = re.compile(
+    rb"-I([A-Za-z]:\\[^ \x00\"\r\n]{1,300}\\(?:gfx-sdk|scaleform_sdk))"
+    rb"\\(?:Include|Src|3rdParty)",
+    re.IGNORECASE,
+)
+
+
+def gfx_recorded_prefixes(artifacts: tuple[Path, ...] | None = None) -> tuple[str, ...]:
+    """Return GFx source roots recorded by the current PDB or staged archives.
+
+    Release archives are supposed to record ``GFX_RELEASE_PREFIX``.  Older
+    C++ and C payloads recorded two different builder-absolute Wine paths
+    instead. Readers must recognize the provenance in the PDB they are parsing
+    so restaging those payloads cannot silently delete GFx functions from a
+    generated comparison. Before the first link, fall back to inspecting the
+    staged archives themselves.
+    """
+    if artifacts is None:
+        artifacts = (BASE_PDB,) if BASE_PDB.is_file() else GFX_SHIPPING_ARCHIVES
+    result: list[str] = []
+    seen: set[str] = set()
+    for artifact in artifacts:
+        if not artifact.is_file() or artifact.stat().st_size == 0:
+            continue
+        with artifact.open("rb") as source:
+            with mmap.mmap(source.fileno(), 0, access=mmap.ACCESS_READ) as contents:
+                matches = [match.group(1) for match in _GFX_ARCHIVE_INCLUDE.finditer(contents)]
+        for raw in matches:
+            prefix = raw.decode("ascii")
+            key = prefix.casefold()
+            if key not in seen:
+                seen.add(key)
+                result.append(prefix)
+    return tuple(result)
+
+
+def gfx_release_prefixes() -> tuple[str, ...]:
+    """All fixed and artifact-recorded GFx roots accepted on the base side."""
+    result = [GFX_RELEASE_PREFIX]
+    seen = {prefix.casefold() for prefix in result}
+    for recorded in gfx_recorded_prefixes():
+        if recorded.casefold() not in seen:
+            seen.add(recorded.casefold())
+            result.append(recorded)
+    return tuple(result)
 
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 

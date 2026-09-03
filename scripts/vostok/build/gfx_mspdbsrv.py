@@ -25,6 +25,7 @@ a sibling worktree may have a healthy build in flight in its own prefix).
 """
 
 import os
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -37,6 +38,52 @@ from pathlib import Path
 POLL_SECONDS = 0.5
 GRACE_AFTER_OBJ = 1.0          # let cl flush + exit cleanly before we reap mspdbsrv
 HARD_TIMEOUT_SECONDS = 900     # a genuinely stuck cl (not just mspdbsrv) ceiling
+
+
+def fixed_time_command(command, build_time=None, *, freeze=False):
+    """Run a command from one fixed start time, optionally freezing its clock."""
+    if build_time is None:
+        return command
+    if shutil.which("faketime") is None:
+        raise RuntimeError("faketime not found - re-enter `nix develop`")
+    if freeze:
+        # The ordinary syntax starts at ``build_time`` and then advances, which
+        # still leaks librarian duration into archive-member timestamps.
+        return ["faketime", "-f", build_time, *command]
+    return ["faketime", build_time, *command]
+
+
+def fixed_time_env(build_time=None, *, fake_stat=False):
+    """Environment paired with :func:`fixed_time_command`.
+
+    Compiles keep real filesystem mtimes so cache freshness works. The
+    librarian sees fixed input mtimes because COFF archive member headers copy
+    them into output bytes.
+    """
+    env = dict(os.environ)
+    env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
+    if build_time is not None:
+        env["FAKETIME_DONT_FAKE_MONOTONIC"] = "1"
+        if fake_stat:
+            env.pop("FAKETIME_DONT_FAKE_STAT", None)
+        else:
+            env["FAKETIME_DONT_FAKE_STAT"] = "1"
+    return env
+
+
+def stop_wine_session(build_time=None):
+    """Stop only this WINEPREFIX before entering or leaving a fixed clock."""
+    try:
+        subprocess.run(
+            fixed_time_command(["wineserver", "-k"], build_time),
+            env=fixed_time_env(build_time),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        pass
 
 
 def _in_our_prefix(entry: Path) -> bool:
@@ -78,7 +125,7 @@ def kill_mspdbsrv():
     _kill_prefix_processes(("mspdbsrv.exe",))
 
 
-def wine_cl(cmdline, cwd, obj_path):
+def wine_cl(cmdline, cwd, obj_path, build_time=None):
     """Run `wine cmd /c <cmdline>`, reaping the post-compile mspdbsrv pipe-hold.
 
     The compile is spawned in its own session with stdout/stderr redirected to a
@@ -90,12 +137,11 @@ def wine_cl(cmdline, cwd, obj_path):
     Returns a CompletedProcess-like object with `.returncode`, `.stdout`, `.stderr`
     (stderr is folded into stdout - cl writes diagnostics to stdout under cmd /c).
     """
-    env = dict(os.environ)
-    env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
+    env = fixed_time_env(build_time)
 
     with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as out:
         proc = subprocess.Popen(
-            ["wine", "cmd", "/c", cmdline],
+            fixed_time_command(["wine", "cmd", "/c", cmdline], build_time),
             cwd=str(cwd),
             env=env,
             stdout=out,
