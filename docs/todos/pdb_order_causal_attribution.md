@@ -248,8 +248,8 @@ channel:
    identities now key those records; unresolved or ambiguous RVAs still retain
    the weaker RVA key.
 3. Named TPI rows lacked compiland evidence. The new direct-module-reference
-   channel exposes reference sets and their earliest DBI-ordered module without
-   inventing ownership.
+   channel exposes reference sets, their earliest DBI-ordered module, and the
+   first retained typed symbol inside that module without inventing ownership.
 
 These corrections matter before production interpretation: otherwise the tool
 can turn ordinary string-table relocation or function movement into a misleading
@@ -274,6 +274,48 @@ scheduling inventory, not a count of actionable source edits:
 GSI has only three pair inversions among 67,240 shared unique records and PSI
 hash-record order has none among 77,843. That control remains important: large
 movement in one physical channel does not imply every internal index is wrong.
+
+### Focused named-TPI attribution
+
+The first adjacency pass found 232 physically adjacent swaps among named TPI
+records. Sixty-one pairs are wholly first-party. Ten of those 61 have the same
+earliest direct-reference module for both types in both PDBs, so module order
+alone cannot explain them. This is a triage reduction, not ten authorized source
+edits: the retained symbol sequence inside the module must also be checked.
+
+`pdb_topology --order --type <substring>` now performs that narrower query. It
+reports each selected type's physical TPI position, direct module sequence, and
+first retained typed symbol in the earliest module, including its containing
+procedure where available. Two production pairs establish the current limits:
+
+- `survarium::triangle_orientation` precedes `survarium::collision_result` in
+  retail TPI, while the candidate has the reverse. Both PDBs first reference
+  them in `bullet.obj`; more importantly, both retain the same direct-symbol
+  order: local `orientation` in `bullet::fix_collision_point_and_time`, then
+  local `result` in `bullet::check_collision`. The complete `survarium::bullet`
+  class, including method declaration order, is identical. Reordering these
+  uses or methods would contradict the stronger evidence. The causal boundary
+  lies earlier than the retained symbols, for example in dependency/PCH
+  contribution or type-server/link merging; direct declaration provenance must
+  be established before editing either type definition.
+- `survarium::vostok_scaleform_log` precedes
+  `survarium::vostok_file_opener` in retail TPI and in the retail data-symbol
+  sequence, while both orders are reversed in the candidate `factory.obj`.
+  Both complete class records are identical, both dynamic-initializer structures
+  match, and the global construction order already agrees with retail. A
+  controlled edit swapped only the two direct header includes. After an owning
+  library rebuild and authoritative relink, candidate TPI remained file opener
+  then logger and the first data symbols remained `g_file_opener` then
+  `g_vostok_logger`. The edit was reverted. Textual include order at that site
+  is therefore not the lever; the next evidence boundary is the Scaleform PCH,
+  dependency graph, or LTCG type merge.
+
+Thus order comparison has produced one useful exclusion rule and a bounded
+queue, but no accepted TPI-only production correction yet. Its demonstrated
+production fixes remain the sound C13 header topology and the Particle
+callee/header correction described below. Counting all 61 first-party swaps as
+actionable would overstate the result just as badly as dismissing all physical
+order as noise.
 
 ## First production application: VFS DBI rotation
 

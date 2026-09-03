@@ -175,7 +175,7 @@ exact commands, linker logs, file hashes, copied PDB/EXE artifacts, full
 each invocation replaces it, so preserve a result externally if it must outlive
 the next run.
 
-The 21-case matrix separates direct object order, archive-member order,
+The 29-case matrix separates direct object order, archive-member order,
 unresolved-root demand, and library order both with and without `/GL`/`/LTCG`.
 It also covers LTCG compilation chronology, direct-header order, PCH-internal
 order and composition, headers and declarations after a PCH, redundant includes
@@ -204,6 +204,28 @@ names. The report retains the raw filtered target and base DBI sequences plus
 the usual unique-key inversion metrics and module-local C13 comparisons. Use
 the unfiltered `--order` command when TPI, public/frame, hash, or MSF channels
 are required.
+
+For a small set of named TPI records, repeat `--type` instead. The focused
+report preserves their physical TPI sequence and lists the DBI-ordered modules
+that directly reference each type. It also identifies the first retained typed
+symbol inside the earliest module, including the containing procedure when the
+reference is local:
+
+```sh
+pdb_topology \
+  --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order \
+  --type 'survarium::collision_result' \
+  --type 'survarium::triangle_orientation' --json
+```
+
+This provenance distinguishes a direct within-compiland order difference from
+a type already admitted through a PCH, dependency, or earlier linker input. It
+does not claim that the first retained reference created or owns the TPI record.
+Filtering is against the named-type identity only, so a type name mentioned in
+another row's procedure provenance cannot pull that unrelated row into the
+comparison.
 
 The output is divided by evidentiary strength:
 
