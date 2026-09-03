@@ -8,6 +8,7 @@
 #define VOSTOK_SOUND_ENCODED_SOUND_INTERFACE_H_INCLUDED
 
 #include <vostok/sound/sound.h>
+#include <vostok/sound/channels_type.h>
 
 namespace vostok {
 namespace sound {

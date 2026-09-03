@@ -22,7 +22,7 @@
 #include "sound_environment.h"
 #include "sound_instance_proxy_order.h"
 #include "sound_world.h"
-#include "speakers.h"
+
 #include "propagator_info.h"
 #include "unique_propagator_info.h"
 #include "compare_by_propagator.h"

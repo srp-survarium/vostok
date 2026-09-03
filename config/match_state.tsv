@@ -8649,7 +8649,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Goracle@planning@ai@vostok@@UAEPAXI@Z	vostok/ai/search/search_backward_inline.h	ai	done	MATCH	100	100	100	0	44		25fd9f73d1b0	
 ??_Gorder@network@vostok@@UAEPAXI@Z	vostok/network_core/http_client.h	network_core	done	MATCH	100	100	100	0	56		01747ae68416	
 ??_Goxygen_tank@survarium@@EAEPAXI@Z	vostok/game_core/oxygen_tank.h	game_core	done	MATCH	100	100	100	1	44		b04af2efbfff	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
-??_Gpanning_lut@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/panning_lut.cpp	sound	done	MATCH	100	100	100	0	44		c0c7c7692aab	
+??_Gpanning_lut@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/panning_lut.cpp	sound	done	MATCH	100	100	100	0	44		97c770ab561b	
 ??_Gpanning_lut_cook@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/panning_lut_cook.cpp	sound	done	MATCH	100	100	100	0	44		dfd17825837b	
 ??_Gparticle_action_billboard@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_actions.h	particle	done	MATCH	100	100	100	1	46		3b189dbadffe	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gparticle_action_color_over_lifetime@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_actions.h	particle	done	MATCH	100	100	100	1	78		3b189dbadffe	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities

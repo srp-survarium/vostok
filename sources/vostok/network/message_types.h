@@ -44,7 +44,7 @@ enum match_server_message_types_enum
 	player_profile_message_type				= 0x92,
 	team_bases_message_type					= 0x93,
 	initialize_victory_items				= 0x94,
-	victory_item_take_or_put					= 0x95,
+	victory_item_take_or_put				= 0x95,
 	trap_placed								= 0x96,
 	trap_removed							= 0x97,
 	trap_fired								= 0x98,

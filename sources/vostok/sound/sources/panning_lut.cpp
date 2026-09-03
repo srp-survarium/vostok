@@ -6,7 +6,6 @@
 
 #include "pch.h"
 #include "panning_lut.h"
-#include "speakers.h"
 
 namespace vostok {
 namespace sound {

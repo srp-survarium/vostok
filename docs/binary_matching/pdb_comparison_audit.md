@@ -292,13 +292,19 @@ subsequence is already close (369 inverted pairs among 7,732 shared unique
 records). That supports targeted declaration/PCH investigation, not wholesale
 include reordering.
 
-The first such targeted production correction is now recorded in
+The first such targeted production correction, including its review revision,
+is recorded in
 [`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
-It repairs sound header ownership/order across 39 measured compilands, makes two
-small sound objects exact in C13 source-file order, and is code-neutral. The
-sound population still contains large unrelated C13 residuals; this bounded
-result does not change the whole-PDB baseline table above into a completion
-score.
+The initial producer-macro experiment recovered 39 missing sound-header rows and
+made two selected C13 streams exact, but it assigned the type to the wrong
+owner. The retained source instead follows the retail scope-set proof: the 43
+retail `channels_type.h` scopes are exactly the union of
+`encoded_sound_interface.h` and `panning_lut.h` scopes. Restoring those direct
+dependencies and removing the fabricated `speakers.h` leaves no candidate-only
+channel-header scope and one omission in a separately skeletal TU, at the cost
+of a higher raw inversion count. The sound population still contains large
+unrelated C13 residuals; this bounded result does not change the whole-PDB
+baseline table above into a completion score.
 
 Sound's DBI order has since provided a separate positive control. Unlike VFS,
 Master Gold sound is not `/GL`; its candidate DBI sequence followed the archive

@@ -8,9 +8,6 @@
 #define VOSTOK_SOUND_SOUND_H_INCLUDED
 
 #include <vostok/sound/playback_mode.h>
-#ifdef VOSTOK_SOUND_BUILDING
-#include <vostok/sound/channels_type.h>
-#endif // #ifdef VOSTOK_SOUND_BUILDING
 #include <vostok/sound/api.h>
 
 namespace vostok {

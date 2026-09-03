@@ -7,7 +7,7 @@
 #ifndef PANNING_LUT_H_INCLUDED
 #define PANNING_LUT_H_INCLUDED
 
-#include <vostok/sound/api.h>
+#include <vostok/sound/channels_type.h>
 
 namespace vostok {
 namespace sound {

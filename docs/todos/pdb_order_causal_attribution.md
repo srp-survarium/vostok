@@ -19,14 +19,15 @@ this causal campaign was limited to:
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
 The work recorded here added a reproducible 40-case toy harness, corrected two
-false comparison signals, established the cause of several PDB channels, and
-applied the first rule to the sound library. That production change corrected
-header presence/order in 39 measured sound compilands, brought two small
-compilands to zero source-file-order inversions, and left the authoritative code
-comparison exactly neutral. A second application recovered a missing direct
-header dependency and the target callee in `particle/evaluate_type.cpp`, taking
-its only function from 86.25% to byte-exact 100%. These changes did not correct
-VFS DBI order, the global named TPI sequence, or physical MSF allocation.
+false comparison signals, and established the cause of several PDB channels.
+Its first sound application did recover missing header identities, but review
+found that its `VOSTOK_SOUND_BUILDING` include gate assigned `channels_type.h`
+to the producer rather than to the interfaces that actually own it. The proper
+correction and its less flattering order numbers are recorded below. A second
+application recovered a missing direct header dependency and the target callee
+in `particle/evaluate_type.cpp`, taking its only function from 86.25% to
+byte-exact 100%. These changes did not correct VFS DBI order, the global named
+TPI sequence, or physical MSF allocation.
 
 The next application produced the first broad code result from order evidence.
 It traced a candidate-only sound PCH compiland to five false exports, then used
@@ -533,10 +534,10 @@ After this VFS rotation is explained end to end or parked behind a concrete
 non-steerable linker boundary, apply the proven rule to other intact groups. Do
 not schedule hundreds of moved rows as hundreds of edits.
 
-## First production C13 correction: sound header ownership
+## First production C13 correction: sound header ownership, revised
 
-The first accepted source correction started from one small compiland rather
-than treating the whole-PDB inversion inventory as a work queue.
+The first source correction started from one small compiland rather than
+treating the whole-PDB inversion inventory as a work queue.
 `sound\encoded_sound_interface.obj` originally exposed this relevant C13
 source-file sequence:
 
@@ -544,58 +545,76 @@ source-file sequence:
 - retail: `playback_mode.h`, `channels_type.h`, `api.h`.
 
 The cone/channels pair was initially one-sided, so the old comparator population
-showed only one inversion among the shared API/playback records. Inspection of
-the sound headers found two concrete source problems: `sound.h` included the
-cone header instead of the retail channels header, and `channels_type.h`
-contained a duplicate `channels` enum already owned by `speakers.h`.
+showed only one inversion among the shared API/playback records. The first
+experiment moved the cone dependency to `sound_emitter.h`, removed API from the
+sound PCH, and made `sound.h` include `channels_type.h` only under
+`VOSTOK_SOUND_BUILDING`. It gave the two selected objects zero inversions, but
+the mechanism was not target-faithful: the macro identifies the library being
+built for export/import selection; it does not identify the semantic owner of
+a channel type.
 
-The retained correction does four related things:
+A complete local scope-set comparison provides stronger attribution. In retail,
+`channels_type.h` occurs in 43 of the 54 sound scopes. Those 43 scopes are
+exactly the union of the 27 scopes containing `encoded_sound_interface.h` and
+the 30 containing `panning_lut.h`; there is neither a channels-only scope nor an
+owner scope without channels. Git history also shows that both owner headers
+directly included `channels_type.h` in the imported source before later
+reconstruction commits removed those dependencies.
 
-1. while building the sound library, `sound.h` includes `playback_mode.h`,
-   `channels_type.h`, then `api.h`;
-2. `channels_type.h` retains only `channels_type` and removes the duplicate
-   speaker-channel enum;
-3. `sound_emitter.h` directly includes the cone type that its interface uses;
-4. `sound_memory.h` declares the allocator typedef it needs instead of pulling
-   all of `api.h` into the sound PCH.
+The target type and C13 evidence agree on the remaining ownership detail. The
+PDB names the panning array's enum `vostok::sound::speakers`, while the retail
+`panning_lut.obj` C13 roster records `channels_type.h` and does not record the
+candidate-created `sources/speakers.h`. Therefore the revised correction:
 
-The fourth change matters independently. After the first three edits, the
-candidate sequence was `api.h`, `playback_mode.h`, `channels_type.h` because
-`sound_memory.h` had already contributed API through `pch.h`; retail remained
-`playback_mode.h`, `channels_type.h`, `api.h`, for two inversions. Moving that
-dependency out of the PCH made all eight comparable source-file records agree
-in order. The remaining one-sided source-file row is only the expected absolute
-path spelling of the generated `.pch` file. `panning_lut.obj` also moved from
-two inversions to zero.
+1. restores the direct `channels_type.h` includes in
+   `encoded_sound_interface.h` and `panning_lut.h`;
+2. restores the speaker enumerators to `channels_type.h` under their PDB-proven
+   `speakers`/`speakers_count` names;
+3. deletes the fabricated `sources/speakers.h` and its direct includes; and
+4. removes the `VOSTOK_SOUND_BUILDING` include gate from public `sound.h`.
+
+The earlier `sound_emitter.h` and sound-PCH API corrections remain independently
+grounded. The build macro remains in `pch.h` and `api.h` for its original DLL
+API-selection purpose; it no longer controls type ownership.
 
 For the same fixed population of 54 sound scopes:
 
 | state | inversions | moved rows | only candidate | only retail | candidate-only cone | candidate-only channels | retail-only channels |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | before the correction | 84,514 | 3,836 | 1,370 | 472 | 46 | 0 | 41 |
-| header ownership/order corrected, API still in PCH | 87,886 | 3,875 | 1,359 | 433 | 31 | 4 | 2 |
-| API removed from PCH | 87,130 | 3,870 | 1,359 | 433 | 31 | 4 | 2 |
+| producer-macro experiment, API still in PCH | 87,886 | 3,875 | 1,359 | 433 | 31 | 4 | 2 |
+| producer-macro experiment, API removed from PCH | 87,130 | 3,870 | 1,359 | 433 | 31 | 4 | 2 |
+| semantic owners restored, fabricated header removed | 89,308 | 3,878 | 1,351 | 432 | 31 | 0 | 1 |
 
-The first step removes 39 retail-only `channels_type.h` omissions and 50 net
-one-sided rows. Its inversion count rises because records that were absent and
-therefore incomparable become shared; that is not a regression and is why raw
-inversions cannot serve as a flat progress score. The PCH correction then
-removes 756 inversions from that comparable population. Most scopes improve,
-a few shift slightly, and substantial unrelated sound C13 differences remain.
+The experiment removed 39 retail-only `channels_type.h` omissions and 50 net
+one-sided rows. Its inversion count rose because formerly absent records became
+comparable; the PCH correction then removed 756 inversions. That was useful
+evidence, not a sufficient reason to retain the producer macro.
 
-The authoritative full build reports zero improved, regressed, added, removed,
-or fold-churn functions, with the code score unchanged at 75.66% and
-37,041/44,600 exact functions. Thus this is a demonstrated PDB-structure fix,
-not a claimed code-match gain.
+The revised ownership removes all four candidate-only `channels_type.h` scopes
+and one more retail-only omission. The remaining omission is
+`sound_object_commands.obj`, whose candidate C13 roster contains only 9 files
+against retail's 86 and is also missing `panning_lut.h`; it is a skeletal-TU
+body problem, not a channel-header placement problem. Raw inversions rise by
+2,178 from the macro experiment, and the two cherry-picked objects no longer
+read as exact: `encoded_sound_interface.obj` has five inversions and
+`panning_lut.obj` has one. Those numbers are retained because presenting the
+lower, macro-steered count as a fix would trade source ownership for a metric.
 
-The full-PDB check also rejected an initially unconditional `channels_type.h`
-include in public `sound.h`: despite fixing the sound population, it made that
-header candidate-only in 76 engine/game compilands where retail does not record
-it. Guarding the include with the sound library's existing
-`VOSTOK_SOUND_BUILDING` boundary retains the intended sound order without
-exporting the private contribution to those consumers. In the full PDB it
-reduces candidate-only `channels_type.h` scopes from 76 to 4; the remaining four
-are inside the sound population and are included in the table above.
+The full-PDB check had already rejected an unconditional `channels_type.h`
+include in public `sound.h`: it made that header candidate-only in 76
+engine/game compilands where retail does not record it. The revised scope-set
+attribution also rejects the guarded version instead of treating four false
+sound scopes as acceptable fallout.
+
+Deleting the fabricated include initially removed a physical source line from
+`sound_scene.cpp`. Three logging-heavy functions then regressed, and instruction
+diff showed the concrete cause: the candidate's embedded `__LINE__` operand had
+moved to `0x340` while retail has `0x341`. Retaining an empty line at that source
+position restored all three comparisons. The final authoritative build is net
+code-neutral against the pre-review branch state at 78.79% and 37,711/44,600
+exact functions; only the hash-scoped ledger key for the still-exact
+`panning_lut` deleting destructor changes.
 
 A separate attempt to move a direct include in `node_lock.h` had no effect: both
 types had already entered through that module's PCH. It was reverted. This is
@@ -803,9 +822,9 @@ The current reconstruction had collapsed the client/server message enums into
 metadata, and abstract orderer into `network_core/udp_match_types.h`. The retail
 C13 paths prove that the first and third source files existed, while the target
 type structure independently confirms the orderer's class name and layout. The
-retained correction restores those two retail-named headers, leaves
-`udp_match_types.h` as a compatibility include, updates direct consumers, and
-includes `network_messages.h` in the entry-point TU.
+retained correction restores those two retail-named headers, removes the now
+empty `udp_match_types.h` wrapper, updates direct consumers, and includes
+`network_messages.h` in the entry-point TU.
 
 After the authoritative build, the entry-point file stream changed as follows:
 
