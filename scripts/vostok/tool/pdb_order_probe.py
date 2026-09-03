@@ -40,6 +40,8 @@ CASES = (
     "ltcg-indexed-archive-member-order",
     "ltcg-indexed-root-demand-order",
     "ltcg-library-order",
+    "ltcg-code-dependency-order",
+    "ltcg-data-dependency-order",
     "ltcg-compile-order",
     "ltcg-batch-source-order",
     "ltcg-shared-pdb-compile-order",
@@ -645,6 +647,91 @@ class ProbeRunner:
         return [
             self.compare(
                 "ltcg-library-order", "/GL final library order", ab, ba
+            )
+        ]
+
+    def ltcg_code_dependency_order(self) -> list[dict]:
+        snapshots = []
+        for variant in ("alpha-to-beta", "beta-to-alpha"):
+            self.reset_work("ltcg_code_dependency_order", variant)
+            root = self.compile(
+                f"ltcg-code-dependency-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                ("/GL",),
+            )
+            alpha = self.compile(
+                f"ltcg-code-dependency-{variant}-alpha",
+                "alpha.cpp",
+                "alpha.obj",
+                ("/GL",),
+            )
+            beta = self.compile(
+                f"ltcg-code-dependency-{variant}-beta",
+                "beta.cpp",
+                "beta.obj",
+                ("/GL",),
+            )
+            archive = self.make_lib(
+                f"ltcg-code-dependency-{variant}-lib",
+                "probe.lib",
+                [alpha, beta],
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-code-dependency-{variant}",
+                    [root, archive],
+                    extra=("/LTCG", "/VERBOSE"),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-code-dependency-order",
+                "direction of one cross-module call with fixed roots and archive",
+                *snapshots,
+            )
+        ]
+
+    def ltcg_data_dependency_order(self) -> list[dict]:
+        snapshots = []
+        for variant in ("alpha-to-beta", "beta-to-alpha"):
+            self.reset_work("ltcg_data_dependency_order", variant)
+            root = self.compile(
+                f"ltcg-data-dependency-{variant}-root",
+                "root.cpp",
+                "root.obj",
+                ("/GL",),
+            )
+            alpha = self.compile(
+                f"ltcg-data-dependency-{variant}-alpha",
+                "alpha.cpp",
+                "alpha.obj",
+                ("/GL",),
+            )
+            beta = self.compile(
+                f"ltcg-data-dependency-{variant}-beta",
+                "beta.cpp",
+                "beta.obj",
+                ("/GL",),
+            )
+            archive = self.make_lib(
+                f"ltcg-data-dependency-{variant}-lib",
+                "probe.lib",
+                [alpha, beta],
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-data-dependency-{variant}",
+                    [root, archive],
+                    extra=("/LTCG", "/VERBOSE"),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-data-dependency-order",
+                "direction of one cross-module data reference with fixed roots "
+                "and archive",
+                *snapshots,
             )
         ]
 

@@ -14,14 +14,23 @@ string tables, section contributions, line/checksum records, public-address
 order, FPO, and frame data. Most of those are diagnostics of different link
 inputs or emitted code, not instructions to reorder source blindly.
 
-## Current reproducible snapshot
+## Reproducible discovery snapshot
 
-The candidate is the measured `tooling/pdb-order-causal-attribution` worktree,
+The table below preserves the measured discovery baseline rather than silently
+mixing later corrections into it. The candidate was the
+`tooling/pdb-order-causal-attribution` worktree,
 based on xray commit `87f0201c6aedaee2dd865316188cf421f294eb52` plus the
 sound correction documented below. Its authoritative full build measured
 75.66% code and 37,041 / 44,600 exact functions, with zero regressions or
 improvements. The comparison uses pinned `vostok-pdb-parser` commit
 `6262ce150b12729b865a7eca6d82ad563256ba20`.
+
+Later causal applications and their current counts are recorded in
+[`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
+In particular, false-compiland cleanup brought sound to the retail 54-module
+roster, and archive-member normalization subsequently reduced its 51 DBI
+inversions to zero. Those later results do not retroactively alter this
+snapshot's hashes or tables.
 
 | PDB | bytes | SHA-256 |
 |---|---:|---|
@@ -290,6 +299,13 @@ small sound objects exact in C13 source-file order, and is code-neutral. The
 sound population still contains large unrelated C13 residuals; this bounded
 result does not change the whole-PDB baseline table above into a completion
 score.
+
+Sound's DBI order has since provided a separate positive control. Unlike VFS,
+Master Gold sound is not `/GL`; its candidate DBI sequence followed the archive
+response exactly. Normalizing the complete 54-member retained subset to retail
+order removed all 51 inversions without changing any function comparison. This
+does not weaken the VFS conclusion: the latter remains behind the separately
+demonstrated CIL-integration boundary.
 
 ## Stability and limits
 

@@ -176,9 +176,10 @@ linker logs, file hashes, copied PDB/EXE artifacts, full
 each invocation replaces it, so preserve a result externally if it must outlive
 the next run.
 
-The 30-case matrix separates direct object order, archive-member order,
-unresolved-root demand, and library order both with and without `/GL`/`/LTCG`.
-It also covers LTCG compilation chronology, direct-header order, PCH-internal
+The 32-case matrix emits 39 comparisons and separates direct object order,
+archive-member order, unresolved-root demand, and library order both with and
+without `/GL`/`/LTCG`. It also covers LTCG compilation chronology and
+cross-module code/data dependency direction, direct-header order, PCH-internal
 order and composition, headers and declarations after a PCH, redundant includes
 on either side of the PCH boundary, exported-inline PCH retention under `/Z7`
 and `/Zi`, type-contributor and within-TU type-use order, linker `/ORDER`, clean

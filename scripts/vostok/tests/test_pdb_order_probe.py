@@ -68,6 +68,8 @@ class PdbOrderProbeTests(unittest.TestCase):
                 "function-order",
                 "ltcg-indexed-archive-member-order",
                 "ltcg-indexed-root-demand-order",
+                "ltcg-code-dependency-order",
+                "ltcg-data-dependency-order",
                 "ltcg-batch-source-order",
                 "ltcg-shared-pdb-compile-order",
                 "ltcg-shared-pdb-batch-source-order",

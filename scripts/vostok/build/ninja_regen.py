@@ -78,6 +78,69 @@ RETAIL_LINK_LIBRARY_ORDER = (
     "vostok_ogg-static-gold.lib",
 )
 
+# The Win32 Master Gold sound objects are ordinary /Od objects, not /GL CIL.
+# Their retained DBI module sequence follows archive-member order.  This is the
+# complete shared sound sequence from the retail PDB; members absent from the
+# retail executable keep their generated response-file slots.
+RETAIL_ARCHIVE_MEMBER_ORDERS = {
+    "sound_lib.rsp": (
+        "sound_world.obj",
+        "sound_world_orders.obj",
+        "world.obj",
+        "world_user.obj",
+        "sound_collection.obj",
+        "sound_collection_cook.obj",
+        "single_sound.obj",
+        "single_sound_cook.obj",
+        "composite_sound.obj",
+        "composite_sound_cook.obj",
+        "sound_emitter.obj",
+        "sound_receiver.obj",
+        "sound_propagator.obj",
+        "sound_voice.obj",
+        "sound_voice_callbacks.obj",
+        "sound_instance_proxy.obj",
+        "sound_instance_proxy_internal.obj",
+        "sound_producer.obj",
+        "ogg_utils.obj",
+        "ogg_sound.obj",
+        "ogg_sound_cook.obj",
+        "ogg_file_contents.obj",
+        "ogg_file_contents_cook.obj",
+        "sound_rms.obj",
+        "sound_rms_cook.obj",
+        "ogg_source_cook.obj",
+        "sound_instance_proxy_order.obj",
+        "sound_object_commands.obj",
+        "voice_bridge.obj",
+        "voice_factory.obj",
+        "sound_buffer.obj",
+        "sound_buffer_factory.obj",
+        "encoded_sound_interface.obj",
+        "encoded_sound_with_qualities.obj",
+        "ogg_encoded_sound_interface.obj",
+        "ogg_encoded_sound_interface_cook.obj",
+        "encoded_sound_with_qualities_cook.obj",
+        "wav_encoded_sound_interface.obj",
+        "wav_encoded_sound_interface_cook.obj",
+        "sound_spl.obj",
+        "sound_spl_cook.obj",
+        "panning_lut.obj",
+        "panning_lut_cook.obj",
+        "sound_scene.obj",
+        "sound_scene_environment.obj",
+        "sound_scene_propagators.obj",
+        "sound_scene_proxies.obj",
+        "sound_scene_cook.obj",
+        "debug_statistic.obj",
+        "sound_debug_stats.obj",
+        "search_service.obj",
+        "sound_environment.obj",
+        "sound_environment_cook.obj",
+        "sound_entry_point.obj",
+    ),
+}
+
 
 log = logger("regen-ninja")
 
@@ -186,6 +249,30 @@ def _normalize_link_rsp_library_order(text: str) -> str:
     return "".join(lines)
 
 
+def _normalize_archive_member_order(text: str, order: tuple[str, ...]) -> str:
+    """Reorder one evidenced member subset without guessing absent members."""
+    wanted = {name.casefold() for name in order}
+    lines = text.splitlines(keepends=True)
+    positions: list[int] = []
+    by_name: dict[str, str] = {}
+
+    for index, line in enumerate(lines):
+        token = line.strip().strip('"').replace("\\", "/")
+        name = token.rsplit("/", 1)[-1].casefold()
+        if name not in wanted:
+            continue
+        positions.append(index)
+        if name in by_name:
+            raise ValueError(f"archive response contains duplicate member {name}")
+        by_name[name] = line
+
+    if not wanted.issubset(by_name):
+        return text
+    for position, name in zip(positions, order, strict=True):
+        lines[position] = by_name[name.casefold()]
+    return "".join(lines)
+
+
 def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
     exe = os.environ.get("VCPROJ2NINJA_EXE")
     if not exe:
@@ -233,6 +320,10 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             if fp.name.endswith("_link.rsp"):
                 text = _normalize_link_rsp_paths(text)
                 text = _normalize_link_rsp_library_order(text)
+            elif fp.name in RETAIL_ARCHIVE_MEMBER_ORDERS:
+                text = _normalize_archive_member_order(
+                    text, RETAIL_ARCHIVE_MEMBER_ORDERS[fp.name]
+                )
             elif fp.suffix == ".rsp" and "_cl_" in fp.name:
                 text = _normalize_compile_rsp_source_root(text)
             elif fp.suffix == ".ninja":

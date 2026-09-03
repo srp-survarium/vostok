@@ -85,6 +85,35 @@ class CleanFinalPdbTests(unittest.TestCase):
             text,
         )
 
+    def test_archive_member_subset_follows_retail_order(self):
+        text = (
+            '/OUT:"probe.lib"\n'
+            '"obj\\gamma.obj"\n'
+            '"obj\\unobserved.obj"\n'
+            '"obj\\alpha.obj"\n'
+            '"obj\\beta.obj"\n'
+        )
+
+        self.assertEqual(
+            ninja_regen._normalize_archive_member_order(
+                text, ("alpha.obj", "beta.obj", "gamma.obj")
+            ),
+            '/OUT:"probe.lib"\n'
+            '"obj\\alpha.obj"\n'
+            '"obj\\unobserved.obj"\n'
+            '"obj\\beta.obj"\n'
+            '"obj\\gamma.obj"\n',
+        )
+
+    def test_incomplete_archive_member_subset_is_unchanged(self):
+        text = '"obj\\alpha.obj"\n"obj\\gamma.obj"\n'
+        self.assertEqual(
+            ninja_regen._normalize_archive_member_order(
+                text, ("alpha.obj", "beta.obj", "gamma.obj")
+            ),
+            text,
+        )
+
     def test_link_rsp_paths_crossing_solution_parent_are_normalized(self):
         text = (
             '/OUT:"Z:/work/vostok/sources\\../binaries/base.exe" '

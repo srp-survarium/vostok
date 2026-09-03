@@ -1,11 +1,11 @@
 # PDB order causal attribution
 
 Status: **open**. Small VS2008 experiments establish several causal rules. Two
-bounded C13-guided corrections and two false-compiland removals have now been
-accepted in the game. The large DBI/TPI/public residuals remain open; the
-current MSF slot gap is fully attributed to the unequal semantic module roster,
-while physical equality must wait for that roster and the stream sizes to
-converge.
+bounded C13-guided corrections, two false-compiland removals, and one complete
+library-local DBI order correction have now been accepted in the game. The
+large DBI/TPI/public residuals remain open; the current MSF slot gap is fully
+attributed to the unequal semantic module roster, while physical equality must
+wait for that roster and the stream sizes to converge.
 
 ## Honest progress statement
 
@@ -16,7 +16,7 @@ this causal campaign was limited to:
 - two moved `engine_world` definitions from the source-definition comparison;
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
-The work recorded here added a reproducible 30-case toy harness, corrected two
+The work recorded here added a reproducible 32-case toy harness, corrected two
 false comparison signals, established the cause of several PDB channels, and
 applied the first rule to the sound library. That production change corrected
 header presence/order in 39 measured sound compilands, brought two small
@@ -35,8 +35,20 @@ exact functions. Removing a separate redundant linkage pin then dropped the
 last candidate-only sound compiland, `sound_library_linkage.obj`; that second
 link rotation cost 0.05 points and 120 exact functions. The combined measured
 state is 76.24%, 177 exact functions above the starting point, with the sound
-module roster exactly 54 versus 54. All 51 order inversions among those 54
-shared sound objects remain.
+module roster exactly 54 versus 54.
+
+The next application established that sound is not an LTCG-order problem at
+all: its Master Gold configuration disables whole-program optimization and
+builds ordinary `/Od /Zi` objects. The candidate sound DBI sequence exactly
+followed `sound_lib.rsp`, so the non-LTCG archive-member rule was directly
+applicable. Normalizing the 54 retained members to the retail sequence removed
+all 51 sound inversions, raised its LIS from 36 to 54, and preserved all 53
+adjacencies. The whole-PDB DBI count fell by exactly 51 and named-TPI inversions
+fell by 6,386. Public-address inversions rose by 2,060, while C13, FPO, and frame
+counts did not move. The authoritative full build remained 76.24% with
+37,103/44,600 exact functions and no changed function comparisons. This is one
+complete PDB-order correction, not evidence that every physical order channel
+improved with it.
 
 Physical PDB order is not direct source-order proof. It is also not inherently
 non-actionable. The useful classification is: **causally understood in the toy
@@ -60,7 +72,7 @@ exact commands, linker logs, PDB/EXE hashes, copied artifacts, full
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
-The current matrix contains 30 cases and emits 37 comparisons because clean,
+The current matrix contains 32 cases and emits 39 comparisons because clean,
 incremental, and `/Z7`/`/Zi` control cases compare multiple states. Wine output
 goes directly to each command's log file: VS2008's persistent `mspdbsrv.exe`
 can inherit a pipe after `cl.exe` or `link.exe` has finished and otherwise make
@@ -102,12 +114,14 @@ The same inputs under `/GL`/`/LTCG` do not obey all of the non-LTCG rules:
 | source arguments reversed inside one compiler invocation | 0 | 0 | 0 | `/GL` batch source order is not retained when archive and link order stay fixed |
 | separate `/Zi` compilations reversed in one shared compiler PDB | 0 | 0 | 0 | compiler-PDB contribution chronology is not retained |
 | source arguments reversed inside one `/Zi` batch and shared compiler PDB | 0 | 0 | 0 | neither batch order nor shared compiler-PDB state changes the semantic or stable-stream order |
+| direction of one cross-module call reversed, roots and archive fixed | 0 | 0 | 0 | a simple code-dependency edge does not schedule the surviving modules in this fixture |
+| direction of one cross-module volatile-data reference reversed, roots and archive fixed | 0 | 0 | 0 | a simple data-dependency edge is likewise neutral |
 | definitions of two `/Gy` functions reversed inside one `/GL` source file | 0 | 0 | 1 | final placement follows definition order in this fixture; legacy FPO has the same one inversion, while DBI, TPI, and C13 sequence order stay fixed |
 
-These `/GL` controls invalidate a simple production recipe of “put archive
-members in retail DBI order.” The LTCG integration phase can discard that
-ordering evidence, while direct-input and separate-library boundaries remain
-observable levers.
+These `/GL` controls invalidate simple production recipes of “put archive
+members in retail DBI order” or “make the dependency graph point in retail
+order.” The LTCG integration phase can discard both kinds of ordering evidence,
+while direct-input and separate-library boundaries remain observable levers.
 
 The archive experiment separates two linker phases that must not be conflated:
 
@@ -297,11 +311,11 @@ scheduling inventory, not a count of actionable source edits:
 
 | channel | current observation | likely evidence to collect next |
 |---|---|---|
-| DBI modules | 2,331 shared unique objects; 531,285 pair inversions (19.5641%); many are intact rotations | direct/link response order, archive member order, full `/VERBOSE` pass 1 and pass 2 |
-| named complete TPI | 30,927 shared unique records; 79,969,353 pair inversions (16.7221%); a 1,715-record contiguous run survives | named-type direct-module references, DBI grouping, then PCH/header evidence |
+| DBI modules | 2,331 shared unique objects; 531,234 pair inversions (19.5622%); many are intact rotations | direct/link response order, archive member order, full `/VERBOSE` pass 1 and pass 2 |
+| named complete TPI | 30,927 shared unique records; 79,962,967 pair inversions (16.7208%); a 1,715-record contiguous run survives | named-type direct-module references, DBI grouping, then PCH/header evidence |
 | module source files | 1,679 of 2,331 paired scopes differ | module-local direct/PCH include graph and first differing adjacency |
 | module checksums and lines | 1,679 checksum, 1,308 line, and 1,192 C13-subsection scopes differ | actual source roster, checksum content, statement/function ownership |
-| public address map | 114,882,652 pair inversions (3.7909%) among 77,853 shared unique publics | extraction and final section/function placement |
+| public address map | 114,884,712 pair inversions (3.7909%) among 77,853 shared unique publics | extraction and final section/function placement |
 | FPO and frame data | 1,852,818 and 37,236,749 pair inversions among 10,440 and 19,364 stable shared identities | downstream extraction, placement, size, and frame-shape validation |
 | MSF allocation | 2,163 candidate stream slots versus 2,408 present retail slots | stream roster/size, clean/incremental mode, writer history |
 
@@ -562,11 +576,61 @@ entry-point linkage intact. This second clean link moved 76.29% to 76.24% and
 score cost because the candidate-only compiland is direct contrary evidence.
 
 Across both corrections, raw code match is up 0.64 points and 177 exact
-functions. Sound is now 54/54 modules with no one-sided row, but its 54 shared
-members still have 51 pair inversions, an LIS of 36, and only 18 preserved
-adjacencies. Neither export cleanup nor linkage-root removal changed those
-metrics. They fixed two false presences and identified the remaining archive
-order problem; they did not solve it.
+functions. Sound is now 54/54 modules with no one-sided row. Neither export
+cleanup nor linkage-root removal changed the 51 order inversions that remained
+at that point; the separate archive-order application below addresses them.
+
+## Fourth production application: sound archive-member order
+
+The remaining sound order was initially investigated alongside the `/GL` VFS
+rotation. That classification was wrong. `sound.vcproj` has
+`WholeProgramOptimization="0"` in Master Gold, and `sound_cl_1.rsp` contains
+`/Od /Zi` without `/GL`. Sound is the only large first-party library in this
+configuration; the other non-LTCG libraries are the vendor zlib variants.
+
+Three production observations identify the lever rather than merely correlate
+with it:
+
+1. the candidate DBI sequence for all 54 retained sound modules exactly matched
+   the generated `sound_lib.rsp` archive-member sequence;
+2. retail differed from that response by 51 inversions, while it differed from
+   the raw `.vcproj` file sequence by only 14 and shared the first 43 objects;
+3. the small non-LTCG archive probe had already shown that member order moves
+   DBI and named TPI even when pass-1 extraction and final placement stay fixed.
+
+The extra candidate movement came from generator traversal: `vcproj2ninja`
+emits child-filter files before files directly owned by their parent filter. The
+retained correction therefore normalizes the evidenced 54-member subset in
+`sound_lib.rsp` after generation. It activates only if every evidenced member
+is present, rejects duplicates, and leaves members absent from the retail PDB
+in their original generated slots. A regeneration dry run changes only
+`sound_lib.rsp`; no source compile order, library boundary, or symbol presence
+is invented.
+
+The focused relink produced exact sound DBI equality:
+
+| metric | before | after |
+|---|---:|---:|
+| shared modules | 54 | 54 |
+| pair inversions | 51 | 0 |
+| longest ordered subsequence | 36 | 54 |
+| preserved adjacent pairs | 18 / 53 | 53 / 53 |
+| increasing runs | 17 | 1 |
+| rank displacement sum | 86 | 0 |
+
+At whole-PDB scope, DBI inversions changed from 531,285 to 531,234 and named
+complete-TPI inversions from 79,969,353 to 79,962,967. Public-address
+inversions changed in the opposite direction, from 114,882,652 to 114,884,712.
+FPO, frame-data, and C13 differing-scope counts were unchanged. The
+authoritative full build was a compile/link no-op and reported no added,
+removed, improved, regressed, or fold-churn functions: code remained 76.24%
+with 37,103/44,600 exact functions.
+
+This result closes the sound DBI-order discrepancy and demonstrates that a
+target-supported input-order correction can be code-body neutral while moving
+several physical PDB channels in different directions. It does not make public
+order a source-edit target, solve the LTCG VFS rotation, or reduce the semantic
+stream-roster gap.
 
 ## Subsequent production applications
 
