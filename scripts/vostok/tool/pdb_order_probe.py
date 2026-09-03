@@ -52,6 +52,12 @@ CASES = (
     "post-pch-declaration-order",
     "pch-preinclude-order",
     "pch-boundary-include-order",
+    "pch-guard-boundary-order",
+    "zi-pch-guard-boundary-order",
+    "ltcg-pch-guard-boundary-order",
+    "ltcg-pch-batch-source-order",
+    "checksum-content-order",
+    "ltcg-checksum-content-order",
     "type-contributor-order",
     "type-use-order",
     "pch-composition",
@@ -1035,6 +1041,166 @@ class ProbeRunner:
                 *snapshots,
             )
         ]
+
+    def _pch_guard_boundary_order(self, *, zi: bool, ltcg: bool) -> list[dict]:
+        if ltcg:
+            case = "ltcg-pch-guard-boundary-order"
+        elif zi:
+            case = "zi-pch-guard-boundary-order"
+        else:
+            case = "pch-guard-boundary-order"
+        snapshots = []
+        for variant in ("after", "before"):
+            self.reset_work("pch_guard_boundary_order", variant)
+            compiler_pdb = f"/Fd{drive_path(self.work / 'vc90.pdb')}"
+            debug_options = ("/Zi", "/FD", compiler_pdb) if zi else ()
+            codegen_options = ("/O2", "/Ob2", "/Oy", "/GL") if ltcg else ()
+            pch = self.compile(
+                f"{case}-create-{variant}",
+                "pch.cpp",
+                "pch.obj",
+                (
+                    *debug_options,
+                    *codegen_options,
+                    "/Ycpch.h",
+                    f"/Fp{drive_path(self.work / 'probe.pch')}",
+                ),
+            )
+            probe = self.compile(
+                f"{case}-use-{variant}",
+                "probe.cpp",
+                "probe.obj",
+                (
+                    *debug_options,
+                    *codegen_options,
+                    "/Yupch.h",
+                    f"/Fp{drive_path(self.work / 'probe.pch')}",
+                ),
+            )
+            snapshots.append(
+                self.link_once(
+                    f"{case}-{variant}",
+                    [pch, probe],
+                    extra=("/LTCG",) if ltcg else (),
+                )
+            )
+        return [
+            self.compare(
+                case,
+                f"traditional include-guard header repeated after versus before "
+                f"the {'/Zi /GL ' if ltcg else '/Zi ' if zi else ''}PCH boundary",
+                *snapshots,
+            )
+        ]
+
+    def pch_guard_boundary_order(self) -> list[dict]:
+        return self._pch_guard_boundary_order(zi=False, ltcg=False)
+
+    def zi_pch_guard_boundary_order(self) -> list[dict]:
+        return self._pch_guard_boundary_order(zi=True, ltcg=False)
+
+    def ltcg_pch_guard_boundary_order(self) -> list[dict]:
+        return self._pch_guard_boundary_order(zi=True, ltcg=True)
+
+    def ltcg_pch_batch_source_order(self) -> list[dict]:
+        snapshots = []
+        for variant, order in (
+            ("probe-first", ("probe.cpp", "alpha.cpp", "beta.cpp")),
+            ("probe-last", ("alpha.cpp", "beta.cpp", "probe.cpp")),
+        ):
+            self.reset_work("pch_batch_source_order")
+            compiler_pdb = f"/Fd{drive_path(self.work / 'vc90.pdb')}"
+            compile_extra = (
+                "/Zi",
+                "/FD",
+                "/MP",
+                compiler_pdb,
+                "/O2",
+                "/Ob2",
+                "/Oy",
+                "/GL",
+            )
+            pch = self.compile(
+                f"ltcg-pch-batch-source-order-{variant}-create",
+                "pch.cpp",
+                "pch.obj",
+                (
+                    *compile_extra,
+                    "/Ycpch.h",
+                    f"/Fp{drive_path(self.work / 'probe.pch')}",
+                ),
+            )
+            objects = self.compile_batch(
+                f"ltcg-pch-batch-source-order-{variant}-batch",
+                order,
+                extra=(
+                    *compile_extra,
+                    "/Yupch.h",
+                    f"/Fp{drive_path(self.work / 'probe.pch')}",
+                ),
+            )
+            snapshots.append(
+                self.link_once(
+                    f"ltcg-pch-batch-source-order-{variant}",
+                    [
+                        pch,
+                        objects["probe.cpp"],
+                        objects["alpha.cpp"],
+                        objects["beta.cpp"],
+                    ],
+                    extra=("/LTCG",),
+                )
+            )
+        return [
+            self.compare(
+                "ltcg-pch-batch-source-order",
+                "source position inside one /MP /Zi /GL PCH-consuming batch "
+                "with fixed final object order",
+                *snapshots,
+            )
+        ]
+
+    def _checksum_content_order(self, *, ltcg: bool) -> list[dict]:
+        case = "ltcg-checksum-content-order" if ltcg else "checksum-content-order"
+        compile_extra = ("/O2", "/Oy", "/GL") if ltcg else ()
+        link_extra = ("/LTCG",) if ltcg else ()
+        snapshots = {}
+        for variant in ("baseline", "header-comment", "source-comment"):
+            self.reset_work(
+                "checksum_content_order",
+                None if variant == "baseline" else variant,
+            )
+            probe = self.compile(
+                f"{case}-{variant}-compile",
+                "probe.cpp",
+                "probe.obj",
+                compile_extra,
+            )
+            snapshots[variant] = self.link_once(
+                f"{case}-{variant}", [probe], extra=link_extra
+            )
+        return [
+            self.compare(
+                f"{case}-header",
+                f"harmless header-comment checksum change under "
+                f"{'/GL' if ltcg else 'ordinary compilation'}",
+                snapshots["baseline"],
+                snapshots["header-comment"],
+            ),
+            self.compare(
+                f"{case}-source",
+                f"harmless source-comment checksum change under "
+                f"{'/GL' if ltcg else 'ordinary compilation'}",
+                snapshots["baseline"],
+                snapshots["source-comment"],
+            ),
+        ]
+
+    def checksum_content_order(self) -> list[dict]:
+        return self._checksum_content_order(ltcg=False)
+
+    def ltcg_checksum_content_order(self) -> list[dict]:
+        return self._checksum_content_order(ltcg=True)
 
     def type_contributor_order(self) -> list[dict]:
         root, alpha, beta = self.basic_objects("type_contributor_order")

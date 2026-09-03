@@ -16,7 +16,7 @@ this causal campaign was limited to:
 - two moved `engine_world` definitions from the source-definition comparison;
 - two reordered `mesh_type_enum` entries from the complete-enum comparison.
 
-The work recorded here added a reproducible 32-case toy harness, corrected two
+The work recorded here added a reproducible 38-case toy harness, corrected two
 false comparison signals, established the cause of several PDB channels, and
 applied the first rule to the sound library. That production change corrected
 header presence/order in 39 measured sound compilands, brought two small
@@ -72,7 +72,7 @@ exact commands, linker logs, PDB/EXE hashes, copied artifacts, full
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
-The current matrix contains 32 cases and emits 39 comparisons because clean,
+The current matrix contains 38 cases and emits 47 comparisons because clean,
 incremental, and `/Z7`/`/Zi` control cases compare multiple states. Wine output
 goes directly to each command's log file: VS2008's persistent `mspdbsrv.exe`
 can inherit a pipe after `cl.exe` or `link.exe` has finished and otherwise make
@@ -178,7 +178,10 @@ possible.
 | two nested function-bearing headers included after a fixed PCH | checksum and line streams each have 9 inversions; named TPI/reference, public, and frame sequences each have 1 | the fixed PCH and DBI module order do not move |
 | declaration-only and function-bearing headers reordered after a fixed PCH | checksum streams have 14 inversions | named TPI, line, public, and frame sequences stay fixed because the reordered declarations do not contribute those records |
 | a header already reached late through the PCH is explicitly pre-included before its umbrella | surrounding checksum records have 8 inversions | the transitive header itself retains its relative position; TPI, line, public, and frame sequences stay fixed |
-| the same PCH-owned header is redundantly included immediately before versus after `pch.h` | no semantic sequence moves | only the edited source checksum changes; include-guard placement across the PCH boundary is not an order lever here |
+| the same `#pragma once` PCH-owned header is redundantly included immediately before versus after `pch.h` | no semantic sequence moves | only the edited source checksum changes; this result does not cover traditional macro guards |
+| the same traditionally guarded PCH-owned header is redundantly included after versus before `pch.h` | the post-PCH form retains the header before the source in the consumer checksum roster; the pre-PCH form omits it | the result is identical under `/Z7`, `/Zi`, and `/Zi /GL /O2`; DBI, TPI, line, public, and frame order stay fixed |
+| harmless same-line comment changes alter only a header or source checksum | one changed checksum value under ordinary and `/GL` compilation | no checksum-order, line, TPI, public, or frame movement; checksum bytes are not an order lever |
+| one PCH consumer moves from first to last in a fixed-link `/MP /Zi /GL` batch | no measured semantic or physical-order movement | batch argument position alone does not explain a consumer's local checksum sequence |
 | `shared.h` supplied by PCH vs included directly after the PCH | the direct variant retains `shared.h` in the consumer module's checksum roster; the PCH-provided variant does not | named and raw TPI order remain the same; this is a roster/attribution change, not a TPI-order change |
 
 These results make module-local C13 useful for include/PCH diagnosis. They do
@@ -194,6 +197,43 @@ that block: the disposable full link rose to 25 inversions and still placed the
 math/random contribution after the helper. The edit was reverted. In this
 case the checksum sequence reflects emitted inline/function contributions, not
 the apparent lexical include adjacency alone.
+
+### Why the smallest remaining C13 row is not yet a one-line edit
+
+The compact whole-PDB pass selected `core\threading_event.obj` because it has
+only one inversion among three shared first-party checksum rows. Retail records
+`threading_event.h` before `threading_event.cpp`; the candidate records the
+reverse. Both sides otherwise have the same 13 line records, the same C13
+subsection sequence, and the same sole retained procedure, whose body is already
+byte- and structure-exact.
+
+That pair is real, but the isolated controls exclude the obvious edits:
+
+- both retail and candidate core PCH compilands contain `threading_event.h`;
+- moving a traditionally guarded redundant include before `pch.h` removes the
+  header row instead of reversing it;
+- harmless source/header checksum changes do not move the row;
+- `/Zi`, `/GL`, optimization, and `/MP` batch position do not change the rule.
+
+The remaining upstream difference is not small. The core PCH checksum streams
+contain 663 retail and 685 candidate rows, with 613 shared unique paths and
+70,090 pair inversions. `threading_event.h` is at retail position 309 and
+candidate position 362. Therefore the one-inversion consumer row cannot safely
+be treated as an isolated include-order instruction: it is downstream of a
+substantially different PCH contribution history. The next source-level unit is
+the core PCH roster/order, not a speculative swap in an already exact
+`threading_event.cpp`.
+
+The first-party roster delta narrows that upstream task further. Retail has two
+unique Vostok paths in the core PCH (`logging_extensions.h` and
+`fs/device_file_system_proxy_impl.h`); the candidate has 24, consisting of the
+split/core logging topology, `list_inline.h`, and 16 optional math headers. This
+is not permission to replace one include mechanically. Retail procedures and
+types use the newer logging ABI even though the core PCH attributes its source
+to the flat header path, while the current flat header still contains an older
+API. The actionable reconstruction unit is therefore the logging/PCH header
+ownership boundary (plus the missing FS implementation header), with build
+errors and per-compiland target rosters used to restore direct dependencies.
 
 ## Production validation: public and frame/FPO placement
 

@@ -168,7 +168,8 @@ python3 -m vostok tool pdb-order-probe --case archive-member-order
 ```
 
 The harness compiles and links only tiny VS2008 fixtures without the CRT. Most
-use `/Z7`; the PCH-retention case also runs a `/Zi` control. It keeps source and
+use `/Z7`; PCH-retention and PCH-boundary cases also run `/Zi` and `/Zi /GL`
+controls. It keeps source and
 output paths fixed, changes one input per pair, and stores the exact commands,
 linker logs, file hashes, copied PDB/EXE artifacts, full
 `pdb_topology --order --json` reports, and channel summaries under
@@ -176,14 +177,15 @@ linker logs, file hashes, copied PDB/EXE artifacts, full
 each invocation replaces it, so preserve a result externally if it must outlive
 the next run.
 
-The 32-case matrix emits 39 comparisons and separates direct object order,
+The 38-case matrix emits 47 comparisons and separates direct object order,
 archive-member order, unresolved-root demand, and library order both with and
 without `/GL`/`/LTCG`. It also covers LTCG compilation chronology and
 cross-module code/data dependency direction, direct-header order, PCH-internal
-order and composition, headers and declarations after a PCH, redundant includes
-on either side of the PCH boundary, exported-inline PCH retention under `/Z7`
-and `/Zi`, type-contributor and within-TU type-use order, linker `/ORDER`, clean
-relinks, and replayed incremental relinks. A result
+order and composition, headers and declarations after a PCH, `#pragma once`
+versus traditional-guard behavior across the PCH boundary, checksum-content
+controls, `/MP /Zi /GL` PCH-consuming batch order, exported-inline PCH retention
+under `/Z7` and `/Zi`, type-contributor and within-TU type-use order, linker
+`/ORDER`, clean relinks, and replayed incremental relinks. A result
 establishes behavior for the small VS2008 fixture only. It is a causal model to
 test against the real link, not a license to reorder production inputs without
 target DBI/TPI/C13, section, and code evidence. The current conclusions and
