@@ -1,0 +1,175 @@
+diff --git a/src/bin/pdb_topology.rs b/src/bin/pdb_topology.rs
+index 0889624..dd6d146 100644
+--- a/src/bin/pdb_topology.rs
++++ b/src/bin/pdb_topology.rs
+@@ -76,6 +76,16 @@ struct Cli {
+     #[arg(long)]
+     module: Option<String>,
+-
++
++    /// Optional repeatable named-type identity substring. With --order,
++    /// emit only matching named TPI records and their direct module references.
++    #[arg(
++        long = "type",
++        value_name = "SUBSTRING",
++        requires = "order",
++        conflicts_with = "module"
++    )]
++    type_filters: Vec<String>,
++
+     /// Number of physical and top-level neighboring records to show.
+     #[arg(long, default_value_t = 8)]
+     context: usize,
+@@ -128,7 +134,19 @@ fn run(cli: &Cli) -> vostok_pdb_parser::Result<()> {
+     let output = if cli.order {
+         let target_pdb = cli.target_pdb.as_ref().expect("clap requires target PDB");
+         let base_pdb = cli.base_pdb.as_ref().expect("clap requires base PDB");
+-        if let Some(module) = &cli.module {
++        if !cli.type_filters.is_empty() {
++            let report = build_focused_type_order_report(target_pdb, base_pdb, &cli.type_filters)?;
++            if cli.json {
++                serde_json::to_string_pretty(&report).unwrap_or_else(|error| {
++                    format!(
++                        "{{\"error\":{}}}\n",
++                        serde_json::Value::String(error.to_string())
++                    )
++                })
++            } else {
++                render_focused_type_order_report(&report, cli.limit)
++            }
++        } else if let Some(module) = &cli.module {
+             let report = build_focused_module_order_report(target_pdb, base_pdb, module)?;
+             if cli.json {
+                 serde_json::to_string_pretty(&report).unwrap_or_else(|error| {
+@@ -699,6 +722,17 @@ struct ChangedOrderItem {
+     target_position: usize,
+ }
+-
++
++#[derive(serde::Serialize)]
++struct FocusedTypeOrderReport {
++    target_pdb: String,
++    base_pdb: String,
++    filters: Vec<String>,
++    target_sequence: Vec<OrderItem>,
++    base_sequence: Vec<OrderItem>,
++    named_types: SequenceComparison,
++    named_type_module_references: SequenceComparison,
++}
++
+ #[derive(serde::Serialize)]
+ struct FocusedModuleOrderReport {
+     target_pdb: String,
+@@ -720,6 +753,53 @@ struct FocusedModuleOrderSide {
+     module_subsections: Vec<ModuleOrderScope>,
+ }
+-
++
++fn build_focused_type_order_report(
++    target_pdb: &PathBuf,
++    base_pdb: &PathBuf,
++    filters: &[String],
++) -> vostok_pdb_parser::Result<FocusedTypeOrderReport> {
++    let mut target = load_order_side(target_pdb)?;
++    let mut base = load_order_side(base_pdb)?;
++    let needles: Vec<String> = filters.iter().map(|filter| filter.to_lowercase()).collect();
++    target
++        .named_types
++        .retain(|item| type_order_item_matches_filters(item, &needles));
++    target
++        .named_type_module_references
++        .retain(|item| type_order_item_matches_filters(item, &needles));
++    base.named_types
++        .retain(|item| type_order_item_matches_filters(item, &needles));
++    base.named_type_module_references
++        .retain(|item| type_order_item_matches_filters(item, &needles));
++
++    let named_types = compare_sequence(
++        "focused named complete TPI records",
++        "physical/linker-deduplicated; filtered by named-type identity",
++        &base.named_types,
++        &target.named_types,
++    );
++    let named_type_module_references = compare_sequence(
++        "focused named TPI direct module references",
++        "compiler/linker-emitted; earliest retained module reference is a contributor clue, not proof of original ownership",
++        &base.named_type_module_references,
++        &target.named_type_module_references,
++    );
++    Ok(FocusedTypeOrderReport {
++        target_pdb: target_pdb.display().to_string(),
++        base_pdb: base_pdb.display().to_string(),
++        filters: filters.to_vec(),
++        target_sequence: target.named_types,
++        base_sequence: base.named_types,
++        named_types,
++        named_type_module_references,
++    })
++}
++
++fn type_order_item_matches_filters(item: &OrderItem, needles: &[String]) -> bool {
++    let identity = item.key.to_lowercase();
++    needles.iter().any(|needle| identity.contains(needle))
++}
++
+ fn build_focused_module_order_report(
+     target_pdb: &PathBuf,
+     base_pdb: &PathBuf,
+@@ -4701,6 +4781,28 @@ fn sequence_differs(comparison: &SequenceComparison) -> bool {
+         || !comparison.moved.is_empty()
+ }
+-
++
++fn render_focused_type_order_report(report: &FocusedTypeOrderReport, limit: usize) -> String {
++    let mut out = String::new();
++    let _ = writeln!(out, "target PDB: {}", report.target_pdb);
++    let _ = writeln!(out, "base PDB:   {}", report.base_pdb);
++    let _ = writeln!(out, "named-type filters: {:?}", report.filters);
++    let _ = writeln!(
++        out,
++        "focused mode filters named-type identities only; direct modules are contributor clues, not ownership proof"
++    );
++    let _ = writeln!(out, "\n[target named TPI sequence]");
++    for (position, item) in report.target_sequence.iter().enumerate() {
++        let _ = writeln!(out, "  {position:>5}: {}", item.value);
++    }
++    let _ = writeln!(out, "\n[base named TPI sequence]");
++    for (position, item) in report.base_sequence.iter().enumerate() {
++        let _ = writeln!(out, "  {position:>5}: {}", item.value);
++    }
++    render_sequence_comparison(&mut out, &report.named_types, limit);
++    render_sequence_comparison(&mut out, &report.named_type_module_references, limit);
++    out
++}
++
+ fn render_focused_module_order_report(report: &FocusedModuleOrderReport, limit: usize) -> String {
+     let mut out = String::new();
+     let _ = writeln!(out, "target PDB: {}", report.target_pdb);
+@@ -7612,6 +7714,26 @@ mod tests {
+         ));
+     }
+-
++
++    #[test]
++    fn focused_type_filter_checks_only_named_type_identity() {
++        let collision = OrderItem {
++            key: "class|survarium::collision_result".to_owned(),
++            value: "type=0x1001 class survarium::collision_result size=0x10".to_owned(),
++            comparison_value: "class|survarium::collision_result|size=0x10".to_owned(),
++        };
++        let unrelated = OrderItem {
++            key: "class|survarium::unrelated".to_owned(),
++            value: "first-direct-module=collision_result.obj".to_owned(),
++            comparison_value: "class|survarium::unrelated".to_owned(),
++        };
++        let needles = ["collision_result".to_owned()];
++        assert!(type_order_item_matches_filters(&collision, &needles));
++        assert!(!type_order_item_matches_filters(&unrelated, &needles));
++
++        let multiple = ["missing".to_owned(), "SURVARIUM::COLLISION".to_lowercase()];
++        assert!(type_order_item_matches_filters(&collision, &multiple));
++    }
++
+     #[test]
+     fn sequence_order_excludes_duplicate_keys_from_order_claims() {
+         let base = [order_item("a"), order_item("a"), order_item("b")];

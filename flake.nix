@@ -137,6 +137,7 @@
         src = vostok-pdb-parser-src;
         # Keep the campaign-specific raw CodeView topology query beside this
         # repository while it is evaluated for upstreaming into the parser.
+        patches = [ ./patches/vostok-pdb-parser/focused-type-order.patch ];
         cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
       };
 

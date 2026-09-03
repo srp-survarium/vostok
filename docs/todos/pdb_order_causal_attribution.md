@@ -406,8 +406,9 @@ channels, and one indexing trap in the new ownership implementation:
    identities now key those records; unresolved or ambiguous RVAs still retain
    the weaker RVA key.
 3. Named TPI rows lacked compiland evidence. The new direct-module-reference
-   channel exposes reference sets, their earliest DBI-ordered module, and the
-   first retained typed symbol inside that module without inventing ownership.
+   channel exposes reference sets and their earliest DBI-ordered module without
+   inventing ownership. It does not identify the exact referring symbol; that
+   still requires the module-symbol stream and relevant procedure views.
 4. `pdb2` exposes a DBI section contribution's module index as zero-based. An
    initial ownership join subtracted one and attributed every address to the
    previous module. The deleting-destructor fixture made the error obvious by
@@ -447,21 +448,22 @@ earliest direct-reference module for both types in both PDBs, so module order
 alone cannot explain them. This is a triage reduction, not ten authorized source
 edits: the retained symbol sequence inside the module must also be checked.
 
-`pdb_topology --order --type <substring>` now performs that narrower query. It
-reports each selected type's physical TPI position, direct module sequence, and
-first retained typed symbol in the earliest module, including its containing
-procedure where available. Two production pairs establish the current limits:
+`pdb_topology --order --type <substring>` performs that narrower query. It
+reports each selected type's physical TPI position and direct module sequence.
+The full module-symbol stream and separate procedure views are still required
+to locate exact references. Two production pairs establish the current limits:
 
 - `survarium::triangle_orientation` precedes `survarium::collision_result` in
   retail TPI, while the candidate has the reverse. Both PDBs first reference
-  them in `bullet.obj`; more importantly, both retain the same direct-symbol
-  order: local `orientation` in `bullet::fix_collision_point_and_time`, then
-  local `result` in `bullet::check_collision`. The complete `survarium::bullet`
-  class, including method declaration order, is identical. Reordering these
-  uses or methods would contradict the stronger evidence. The causal boundary
-  lies earlier than the retained symbols, for example in dependency/PCH
-  contribution or type-server/link merging; direct declaration provenance must
-  be established before editing either type definition.
+  them in `bullet.obj`. Separate inspection of the full module-symbol stream
+  and the two procedure views retains the same direct-symbol order: local
+  `orientation` in `bullet::fix_collision_point_and_time`, then local `result`
+  in `bullet::check_collision`. The complete `survarium::bullet` class,
+  including method declaration order, is identical. Reordering these uses or
+  methods would contradict the stronger evidence. The causal boundary lies
+  earlier than the retained symbols, for example in dependency/PCH contribution
+  or type-server/link merging; direct declaration provenance must be established
+  before editing either type definition.
 - `survarium::vostok_scaleform_log` precedes
   `survarium::vostok_file_opener` in retail TPI and in the retail data-symbol
   sequence, while both orders are reversed in the candidate `factory.obj`.

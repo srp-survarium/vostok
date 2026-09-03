@@ -205,9 +205,8 @@ their open whole-game applications are tracked in
 [`pdb_order_causal_attribution.md`](../todos/pdb_order_causal_attribution.md).
 
 For a large real PDB, a focused query restricts the reported evidence to one
-module/library population. It decodes the DBI sequence, the matching modules'
-local symbol and C13 source-file/checksum/line/subsection sequences, and the
-public, legacy-FPO, and frame records owned by their section contributions:
+module/library population. It decodes the DBI sequence and the matching
+modules' DBI source-file and C13 checksum/line/subsection sequences:
 
 ```sh
 pdb_topology \
@@ -217,19 +216,15 @@ pdb_topology \
 ```
 
 The case-insensitive substring is matched against both module and object/library
-names. The report retains the raw filtered target and base DBI sequences; module
-symbols; DBI source files; C13 checksums, line programs, and subsections; and
-owned public/FPO/frame subsequences. The usual unique-key inversion metrics and
-scoped comparisons follow those raw sides. Ownership requires the whole DBI and
-address streams internally, so this mode now narrows output and interpretation,
-not parser I/O. Use the unfiltered `--order` command for TPI, hash, MSF, global
-coverage totals, and module/library ownership summaries.
+names. The report retains the raw filtered target and base DBI sequences, DBI
+source files, and C13 checksums, line programs, and subsections. The usual
+unique-key inversion metrics and scoped comparisons follow those raw sides.
+Use the unfiltered `--order` command for module-symbol, public/FPO/frame, TPI,
+hash, MSF, global coverage, and module/library ownership evidence.
 
 For a small set of named TPI records, repeat `--type` instead. The focused
 report preserves their physical TPI sequence and lists the DBI-ordered modules
-that directly reference each type. It also identifies the first retained typed
-symbol inside the earliest module, including the containing procedure when the
-reference is local:
+that directly reference each type:
 
 ```sh
 pdb_topology \
@@ -240,12 +235,13 @@ pdb_topology \
   --type 'survarium::triangle_orientation' --json
 ```
 
-This provenance distinguishes a direct within-compiland order difference from
-a type already admitted through a PCH, dependency, or earlier linker input. It
-does not claim that the first retained reference created or owns the TPI record.
-Filtering is against the named-type identity only, so a type name mentioned in
-another row's procedure provenance cannot pull that unrelated row into the
-comparison.
+The direct-module sequence narrows the contributor population but does not
+identify the exact referring symbol and does not prove which input created or
+owns the TPI record. Inspect the unfiltered module-symbol stream and the
+relevant `--function` procedure views before attributing a same-module inversion
+to source use order. Filtering is against the named-type identity only, so a
+type name mentioned in module-reference text cannot pull an unrelated row into
+the comparison. This mode narrows output, not parser I/O.
 
 The output is divided by evidentiary strength:
 
