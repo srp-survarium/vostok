@@ -381,13 +381,35 @@ def _relocation_signature(symbol: DataSymbol, image: PEImage,
                           sites: tuple[int, ...], resolver: AddressResolver
                           ) -> tuple[list[tuple[int, frozenset[str]]], bytes]:
     assert symbol.size is not None
+    name = symbol.display_name
+    if name.startswith("__imp_") and symbol.size == 4:
+        # PE import-address-table cells contain linker-layout-dependent hint/name
+        # addresses until the loader overwrites them. The public symbol itself
+        # supplies their stable import identity; the numeric cell never does.
+        return [(0, frozenset((f"IMPORT:{symbol.identity}",)))], bytes(4)
+
     begin = bisect.bisect_left(sites, symbol.rva)
     end = bisect.bisect_left(sites, symbol.rva + symbol.size)
     signature = []
     normalized = bytearray(image.read_rva(symbol.rva, symbol.size))
+    semantic_offsets = set()
+    if name.startswith("__DELAY_IMPORT_DESCRIPTOR_") and symbol.size == 32:
+        # An RVA-based ImgDelayDescr has six linker-owned RVA fields between
+        # its attributes and timestamp. Their locations vary with import-table
+        # ordering; the descriptor identity and field position are stable.
+        attributes = image.u32_rva(symbol.rva)
+        if attributes & 1:
+            for offset in range(4, 28, 4):
+                if image.u32_rva(symbol.rva + offset):
+                    signature.append((
+                        offset,
+                        frozenset((f"DELAY:{symbol.identity}:{offset:#x}",)),
+                    ))
+                    normalized[offset:offset + 4] = bytes(4)
+                    semantic_offsets.add(offset)
     for site in sites[begin:end]:
         offset = site - symbol.rva
-        if offset + 4 > symbol.size:
+        if offset + 4 > symbol.size or offset in semantic_offsets:
             continue
         value = image.u32_rva(site)
         destination = value - image.image_base if value >= image.image_base else value
@@ -397,6 +419,13 @@ def _relocation_signature(symbol: DataSymbol, image: PEImage,
             identities = resolver.resolve_all(destination, image)
         signature.append((offset, identities))
         normalized[offset:offset + 4] = bytes(4)
+    signature.sort(key=lambda row: row[0])
+    if name.startswith("??_R0"):
+        # The decorated name is meaningful through its NUL. DWORD alignment
+        # bytes after it are linker padding, not part of the RTTI identity.
+        terminator = normalized.find(b"\0", 8)
+        if terminator >= 0:
+            normalized[terminator + 1:] = bytes(len(normalized) - terminator - 1)
     return signature, bytes(normalized)
 
 
@@ -542,6 +571,7 @@ def _derived_target_extent(
     symbol: DataSymbol,
     image: PEImage,
     relocation_sites: frozenset[int],
+    next_symbol_rva: int | None = None,
 ) -> tuple[int, str] | None:
     """Recover extents encoded by compiler-owned public symbol classes."""
     name = symbol.display_name
@@ -576,6 +606,10 @@ def _derived_target_extent(
     ):
         # The public Boost.Asio placeholder symbols are empty boost::arg<N>
         # objects. Their linker allocation is a single byte.
+        return 1, "derived-boost-placeholder"
+    if name.startswith("?result@?1??get@?$placeholder@"):
+        # boost::asio::detail::placeholder<N>::get() returns this function-local
+        # empty boost::arg<N> singleton.
         return 1, "derived-boost-placeholder"
     if name.startswith("?current_id@") and name.endswith("@4GA"):
         return 2, "derived-u16-static"
@@ -620,7 +654,10 @@ def _derived_target_extent(
     if name.startswith("??_7"):
         text = image.section(".text")
         cursor = symbol.rva
-        while cursor in relocation_sites:
+        while (
+            cursor in relocation_sites
+            and (next_symbol_rva is None or cursor < next_symbol_rva)
+        ):
             value = image.u32_rva(cursor)
             destination = (
                 value - image.image_base if value >= image.image_base else value
@@ -641,6 +678,13 @@ def _apply_target_extents(
 
     extents = {row.rva: row.size for row in missing.load_pdb_extents()}
     relocation_sites = frozenset(image.base_relocations()) if image else frozenset()
+    starts_by_section: dict[str, list[int]] = defaultdict(list)
+    for symbol in symbols:
+        starts_by_section[symbol.section].append(symbol.rva)
+    starts_by_section = {
+        section: sorted(set(starts))
+        for section, starts in starts_by_section.items()
+    }
     result = []
     for symbol in symbols:
         if symbol.rva in extents:
@@ -648,11 +692,16 @@ def _apply_target_extents(
                 symbol, size=extents[symbol.rva], size_kind="reviewed-retail"
             ))
             continue
-        derived = (
-            _derived_target_extent(symbol, image, relocation_sites)
-            if image is not None and (symbol.size is None or symbol.size <= 0)
-            else None
-        )
+        derived = None
+        if image is not None and (symbol.size is None or symbol.size <= 0):
+            starts = starts_by_section.get(symbol.section, ())
+            next_index = bisect.bisect_right(starts, symbol.rva)
+            next_symbol_rva = (
+                starts[next_index] if next_index < len(starts) else None
+            )
+            derived = _derived_target_extent(
+                symbol, image, relocation_sites, next_symbol_rva
+            )
         result.append(
             dataclasses.replace(symbol, size=derived[0], size_kind=derived[1])
             if derived else symbol
@@ -947,7 +996,6 @@ def _infer_base_symbols_from_code_xrefs(
         if _has_identity_extent(symbol):
             target_by_rva[symbol.rva].append(symbol)
     base_keys = {_comparison_key(symbol) for symbol in base_symbols}
-    base_starts = {symbol.rva for symbol in base_symbols}
     strong_votes: dict[int, Counter] = defaultdict(Counter)
     sequence_votes: dict[int, Counter] = defaultdict(Counter)
     target_resolver = AddressResolver(target_symbols, [])
@@ -996,12 +1044,10 @@ def _infer_base_symbols_from_code_xrefs(
         base_rva = select(candidates)
         if base_rva is None:
             continue
-        # A relocation vote can name an otherwise anonymous candidate datum,
-        # but must never erase a conflicting identity already recorded by the
-        # candidate PDB.  Those conflicts are precisely the source/data bugs
-        # this audit is meant to expose.
-        if base_rva in base_starts:
-            continue
+        # A relocation vote supplies another valid name for the candidate
+        # allocation. Keep any PDB identity already present at this address:
+        # aliases are expected after LTCG/ICF, and the byte/relocation compare
+        # below still exposes a genuinely different candidate allocation.
         section = base_image.section_at(base_rva)
         if section is None or section.name not in {".rdata", ".data"}:
             continue
