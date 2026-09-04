@@ -665,8 +665,8 @@ HAL::BlendModeDescriptor HAL::BlendModeTable[Blend_Count] =
     { HAL::BlendOp_ADD,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_ONE,       HAL::BlendFactor_INVSRCALPHA  }, // Normal
     { HAL::BlendOp_ADD,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_ONE,       HAL::BlendFactor_INVSRCALPHA  }, // Layer      // UNSUPPORTED.
                                                                                  
-    { HAL::BlendOp_ADD,         HAL::BlendFactor_DESTCOLOR,     HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_SRCALPHA,  HAL::BlendFactor_INVSRCALPHA  }, // Multiply
-    { HAL::BlendOp_ADD,         HAL::BlendFactor_INVDESTCOLOR,  HAL::BlendFactor_ONE,         HAL::BlendFactor_ONE,       HAL::BlendFactor_INVSRCALPHA  }, // Screen
+    { HAL::BlendOp_ADD,         HAL::BlendFactor_DESTCOLOR,     HAL::BlendFactor_ZERO,        HAL::BlendFactor_DESTCOLOR, HAL::BlendFactor_ZERO         }, // Multiply
+    { HAL::BlendOp_ADD,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_ONE,       HAL::BlendFactor_INVSRCALPHA  }, // Screen
                                                                                  
     { HAL::BlendOp_MAX,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_ONE,         HAL::BlendFactor_SRCALPHA,  HAL::BlendFactor_ONE          }, // Lighten
     { HAL::BlendOp_MIN,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_ONE,         HAL::BlendFactor_SRCALPHA,  HAL::BlendFactor_ONE          }, // Darken
@@ -676,7 +676,7 @@ HAL::BlendModeDescriptor HAL::BlendModeTable[Blend_Count] =
     { HAL::BlendOp_ADD,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_ONE,         HAL::BlendFactor_ZERO,      HAL::BlendFactor_ONE          }, // Add
     { HAL::BlendOp_REVSUBTRACT, HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_ONE,         HAL::BlendFactor_ZERO,      HAL::BlendFactor_ONE          }, // Subtract
 
-    { HAL::BlendOp_ADD,         HAL::BlendFactor_INVDESTCOLOR,  HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_SRCALPHA,  HAL::BlendFactor_INVSRCALPHA  }, // Invert
+    { HAL::BlendOp_ADD,         HAL::BlendFactor_SRCALPHA,      HAL::BlendFactor_INVSRCALPHA, HAL::BlendFactor_ONE,       HAL::BlendFactor_INVSRCALPHA  }, // Invert
                                                                                  
     { HAL::BlendOp_ADD,         HAL::BlendFactor_ZERO,          HAL::BlendFactor_ZERO,        HAL::BlendFactor_ONE,       HAL::BlendFactor_ONE          }, // Alpha     // UNSUPPORTED.
     { HAL::BlendOp_ADD,         HAL::BlendFactor_ZERO,          HAL::BlendFactor_ZERO,        HAL::BlendFactor_ONE,       HAL::BlendFactor_ONE          }, // Erase     // UNSUPPORTED.
