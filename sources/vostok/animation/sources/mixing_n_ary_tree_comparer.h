@@ -135,7 +135,7 @@ private:
 
 			void	process_interpolators				( n_ary_tree const& from, n_ary_tree const& to );
 
-	inline	void	advance_buffer						( const u32 arg_0 ) { /* no source */ }
+	inline	void	advance_buffer						( const u32 size ) { m_needed_buffer_size += size; }
 private:
 	/* 0x0000 */	animated_object_holder*		m_animated_objects;
 	/* 0x0004 */	animated_object_holder*		m_animated_objects_end;

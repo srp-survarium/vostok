@@ -109,7 +109,7 @@ public:
 												subscribed_channel*&	channels_head,
 												bool&					callbacks_are_actual
 											);
-	inline	void							tick_to_nearest_event				( subscribed_channel*& arg_0, bool& arg_1 ) { /* no source */ }
+	inline	void							tick_to_nearest_event				( subscribed_channel*& arg_0, bool& arg_1 ) { /* no source */ } // STATE[UNMATCHABLE]
 			u32								nearest_event_time_in_ms			( ) const;
 
 
@@ -127,7 +127,7 @@ private:
 public:
 			float4x4						get_object_transform				( pcvoid animated_object ) const;
 
-	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ }
+	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ } // STATE[UNMATCHABLE]
 
 			void							compute_bones_matrices				(
 												pcvoid				animated_object,
@@ -150,6 +150,7 @@ public:
 												float4x4* const		end
 											) const;
 
+	// STATE[UNMATCHABLE]: the client emits no consistency or state-dump expansion.
 	inline	bool							is_consistent						( ) const {  return false; /* no source */ }
 	inline	void							dump_animation_states				( animation_states_dumper& arg_0 ) const { /* no source */ }
 	inline	bool							are_there_any_animations			( ) const { return m_animations_count > 0; }
@@ -168,15 +169,11 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 private:
-	enum process_event_result_enum {
-		process_event_result_animation_removed,
-		process_event_result_nothing_to_do,
-	}; // enum process_event_result_enum
-
-private:
 			void							initialize							( );
 			void							destroy								( );
 
+	// STATE[UNMATCHABLE]: these legacy bone and state-update helpers have no client
+	// procedure or separately identifiable expansion.
 	inline	float4x4						computed_local_bone_matrix			( skeleton_bone const& arg_0 ) const { /* no source */ }
 
 	inline	void							compute_skeleton_branch				( skeleton_bone const& arg_0, float4x4* const arg_1, float4x4 const& arg_2 ) const { /* no source */ }
@@ -220,11 +217,18 @@ private:
 			void							process_events						( u32 target_time_in_ms, u32 event_types );
 
 			void							update_event_iterators				( u32 target_time_in_ms );
+	static	bool							dispatch_callbacks					(
+											callback_generator_info const*		callback_generators_head,
+											subscribed_channel*&				channels_head,
+											u32								current_time_in_ms,
+											bool&								callbacks_are_actual
+										);
 			bool							update_event_iterators_and_dispatch_callbacks(
 												const u32				target_time_in_ms,
 												subscribed_channel*&	channels_head,
 												bool&					callbacks_are_actual
 											);
+	static	void							update_animation_time				( animation_state& animation_state );
 	inline	void							update_weight						( n_ary_tree_animation_node& arg_0, u32 arg_1, u32 arg_2 ) { /* no source */ }
 
 			float							computed_animation_time				(
@@ -246,15 +250,6 @@ private:
 
 
 			void							adjust_animation_events_times		( n_ary_tree const& other );
-
-	static	bool							dispatch_callbacks					(
-											callback_generator_info const*		callback_generators_head,
-											subscribed_channel*&				channels_head,
-											u32								current_time_in_ms,
-												bool&								callbacks_are_actual
-											);
-
-	static	void							update_animation_time				( animation_state& animation_state );
 
 	static	callback_generator_info*		generate_animation_lexeme_end_events(
 												n_ary_tree const&			previous_tree,

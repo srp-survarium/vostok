@@ -10,9 +10,14 @@ namespace ai {
 
 class fsm {
 public:
+typedef fsm_state_list states_type;
+
+public:
 	explicit						fsm					( );
 
 			void					add_state			( fsm_state* state );
+	// STATE[UNMATCHABLE]: the client emits neither procedures nor inline expansions
+	// for the two removal helpers.
 	inline	void					remove_state		( fsm_state* arg_0 ) { /* no source */ }
 
 			void					add_transition		( fsm_state* from, fsm_state* to, boost::function<bool()> const& transition_predicate );
@@ -33,12 +38,12 @@ public:
 	// the const overload stays inline (const call sites, e.g.
 	// weapon_user_animations_selector::serialize, show no states() call).
 	// Declared before the const overload to match the target record order.
-			fsm_state_list&			states				( );
-	inline	fsm_state_list const&	states				( ) const { return m_states; }
+			states_type&			states				( );
+	inline	states_type const&		states				( ) const { return m_states; }
 
 
 private:
-	/* 0x0000 */	fsm_state_list		m_states;
+	/* 0x0000 */	states_type			m_states;
 	/* 0x0010 */	fsm_state*			m_current_state;
 }; // class fsm
 

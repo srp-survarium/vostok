@@ -10,7 +10,7 @@
 
 namespace vostok {
 namespace ai {
-	struct fsm;
+	class fsm;
 }
 }
 
