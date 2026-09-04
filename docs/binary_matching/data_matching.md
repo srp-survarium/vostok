@@ -21,13 +21,17 @@ can emit the same COMDAT in several TUs and the linker folds it, while LTCG can
 move or clone the use. The unit is the existing objdiff function unit, not an
 invented source declaration. No `DATA` macro is required.
 
-Only allocations with a complete PDB type extent and the same stable PDB
-identity on target and base enter objdiff. A target-only identity remains in
-the generated closure and blocker tables; it is not emitted on one side,
-because that would shift later section ordinals and poison unrelated rows.
-Local PDB identities receive stable synthetic external names so the same
-allocation can be cloned into several comparison objects. Public mangled names
-are preserved verbatim.
+Only allocations with a complete PDB type extent enter objdiff. External and
+qualified local PDB identities pair directly. MSVC's ordinal-only `$S<n>`
+locals, and local allocations whose LTCG owner moved, pair only when their
+complete code-consumer fingerprints agree; equal initializer bytes alone are
+never sufficient. Repeated identities are compared as physical-allocation
+multisets, so folded aliases do not collapse distinct linked copies. An
+unpaired allocation remains in the generated closure and blocker tables; it is
+not emitted on one side, because that would shift later section ordinals and
+poison unrelated rows. Local PDB allocations receive stable synthetic external
+names derived from their retail RVA so the same allocation can be cloned into
+several comparison objects. Public mangled names are preserved verbatim.
 
 ## Artifacts and flow
 
@@ -172,6 +176,8 @@ python3 -m vostok data relocs PATTERN
 python3 -m vostok data symbol PATTERN
 python3 -m vostok data coverage
 python3 -m vostok data check
+python3 -m vostok data check --gate
+python3 -m vostok data check --all-zero
 ```
 
 `missing-next` prints the retail bytes, PDB neighbours, owners, callers, and
@@ -239,6 +245,14 @@ that the paired roots reach identical complete datum sets through decoded
 internal calls. A display-name match is never used as an edge: destinations
 come from the executable instruction bytes and must land on a rich-index
 function start. Any cone referent difference remains `OPEN`.
+
+`--all-zero` is the deliberately uncompromising completion oracle. In addition
+to the normal gate, it requires every linked-image allocation to be `EXACT`,
+all consumer copies and bytes to pair, every projected objdiff byte to match,
+every function datum-use row to be exact, and strict-referent debt to be zero.
+It is expected to fail while any source difference, unpaired allocation, or
+proved compiler/linker placement wall remains; unlike the ratchet gate, it does
+not accept reviewed exceptions.
 
 `REVIEWED_WALL` is the only manual terminal result. Record it only after the
 target PDB, assembly, complete allocation bytes, and source establish that the

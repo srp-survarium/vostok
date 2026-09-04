@@ -22,6 +22,7 @@ from vostok.data.inventory import DataSymbol, load
 from vostok.data.pe import PEImage
 from vostok.core.wine import pdb_path
 from vostok.core.log import logger
+from vostok.derive.aliases import dyn_canon_base
 
 
 LEDGER_COLUMNS = (
@@ -121,7 +122,7 @@ def _load_rich(side: str) -> list[dict]:
 class AddressResolver:
     def __init__(self, symbols: list[DataSymbol], functions: list[dict], *,
                  peer_identities: set[str] | None = None,
-                 function_canonical: dict[int, str] | None = None):
+                 peer_function_identities: set[str] | None = None):
         trusted = [symbol for symbol in symbols if symbol.size and symbol.size > 0]
         self.data_starts: dict[int, list[DataSymbol]] = defaultdict(list)
         for symbol in symbols:
@@ -132,13 +133,13 @@ class AddressResolver:
             for page in range(symbol.rva >> 12, ((symbol.end - 1) >> 12) + 1):
                 self.data_pages[page].append(symbol)
         self.peer_identities = peer_identities or set()
-        self.function_canonical = function_canonical or {}
+        self.peer_function_identities = peer_function_identities or set()
         self.function_starts: dict[int, set[str]] = defaultdict(set)
         for record in functions:
             rva, size = record.get("rva"), record.get("size")
-            mangled = record.get("mangled") or record.get("name")
-            if isinstance(rva, int) and isinstance(size, int) and size > 0 and mangled:
-                self.function_starts[rva].add(mangled)
+            if not isinstance(rva, int) or not isinstance(size, int) or size <= 0:
+                continue
+            self.function_starts[rva].update(_function_identity_tokens(record))
 
     def data_symbol_at(self, rva: int) -> DataSymbol | None:
         def rank(item: DataSymbol) -> tuple:
@@ -154,16 +155,32 @@ class AddressResolver:
         return min(candidates, key=rank, default=None)
 
     def resolve(self, rva: int, image: PEImage) -> str:
-        data = self.data_symbol_at(rva)
-        if data is not None:
-            return f"D:{data.identity}+{rva - data.rva:#x}"
-        functions = self.function_starts.get(rva)
-        if functions:
-            return "F:" + self.function_canonical.get(rva, min(functions))
+        return " | ".join(sorted(self.resolve_all(rva, image)))
+
+    def resolve_all(self, rva: int, image: PEImage) -> frozenset[str]:
+        data = list(self.data_starts.get(rva, ()))
+        data.extend(
+            symbol for symbol in self.data_pages.get(rva >> 12, ())
+            if symbol.rva <= rva and symbol.end is not None and rva < symbol.end
+        )
+        if data:
+            shared = [
+                symbol for symbol in data
+                if symbol.identity in self.peer_identities
+            ]
+            owners = shared or data
+            return frozenset(
+                f"D:{symbol.identity}+{rva - symbol.rva:#x}"
+                for symbol in owners
+            )
+        if functions := self.function_starts.get(rva):
+            shared = functions & self.peer_function_identities
+            identities = shared or functions
+            return frozenset(f"F:{identity}" for identity in identities)
         section = image.section_at(rva)
         if section is not None:
-            return f"S:{section.name}+{rva - section.rva:#x}"
-        return f"RVA:{rva:#x}"
+            return frozenset((f"S:{section.name}+{rva - section.rva:#x}",))
+        return frozenset((f"RVA:{rva:#x}",))
 
 
 def _trusted(symbol: DataSymbol, image: PEImage) -> bool:
@@ -175,9 +192,21 @@ def _trusted(symbol: DataSymbol, image: PEImage) -> bool:
         return False
 
 
+def _function_identity_tokens(record: dict) -> frozenset[str]:
+    """Preserve every PDB spelling plus the shared dynamic-thunk identity."""
+    identities = set()
+    if mangled := record.get("mangled"):
+        identities.add(f"M:{mangled}")
+        if dynamic := dyn_canon_base(mangled):
+            identities.add(f"C:{dynamic[0]}:{dynamic[1]}")
+    if name := record.get("name"):
+        identities.add(f"D:{name}")
+    return frozenset(identities)
+
+
 def _relocation_signature(symbol: DataSymbol, image: PEImage,
                           sites: tuple[int, ...], resolver: AddressResolver
-                          ) -> tuple[list[tuple[int, str]], bytes]:
+                          ) -> tuple[list[tuple[int, frozenset[str]]], bytes]:
     assert symbol.size is not None
     begin = bisect.bisect_left(sites, symbol.rva)
     end = bisect.bisect_left(sites, symbol.rva + symbol.size)
@@ -189,7 +218,11 @@ def _relocation_signature(symbol: DataSymbol, image: PEImage,
             continue
         value = image.u32_rva(site)
         destination = value - image.image_base if value >= image.image_base else value
-        signature.append((offset, resolver.resolve(destination, image)))
+        if symbol.rva <= destination <= symbol.rva + symbol.size:
+            identities = frozenset((f"SELF+{destination - symbol.rva:#x}",))
+        else:
+            identities = resolver.resolve_all(destination, image)
+        signature.append((offset, identities))
         normalized[offset:offset + 4] = bytes(4)
     return signature, bytes(normalized)
 
@@ -198,8 +231,19 @@ def _hash(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
-def _signature_hash(signature: list[tuple[int, str]]) -> str:
-    return _hash(json.dumps(signature, separators=(",", ":")).encode())
+def _signature_hash(signature: list[tuple[int, frozenset[str]]]) -> str:
+    serializable = [(offset, sorted(identities)) for offset, identities in signature]
+    return _hash(json.dumps(serializable, separators=(",", ":")).encode())
+
+
+def _relocation_signatures_match(
+    target: list[tuple[int, frozenset[str]]],
+    base: list[tuple[int, frozenset[str]]],
+) -> bool:
+    return (
+        [offset for offset, _ in target] == [offset for offset, _ in base]
+        and all(left & right for (_, left), (_, right) in zip(target, base))
+    )
 
 
 def _compare_pair(target: DataSymbol, base: DataSymbol,
@@ -246,17 +290,21 @@ def _compare_pair(target: DataSymbol, base: DataSymbol,
         row["status"] = "RELOC_TOPOLOGY"
         row["note"] = f"pointer offsets target={target_offsets} base={base_offsets}"
         return row
-    if target_signature != base_signature:
+    if not _relocation_signatures_match(target_signature, base_signature):
         row["status"] = "RELOCS"
         mismatch = next(
-            (index for index, values in enumerate(zip(target_signature, base_signature))
-             if values[0] != values[1]),
+            (
+                index
+                for index, ((_, left), (_, right))
+                in enumerate(zip(target_signature, base_signature))
+                if not left & right
+            ),
             0,
         )
         row["note"] = (
             f"pointer +{target_signature[mismatch][0]:#x}: "
-            f"target={target_signature[mismatch][1]} "
-            f"base={base_signature[mismatch][1]}"
+            f"target={' | '.join(sorted(target_signature[mismatch][1]))} "
+            f"base={' | '.join(sorted(base_signature[mismatch][1]))}"
         )
         return row
     row["status"] = EXACT
@@ -282,67 +330,253 @@ def _ledger_row(target: DataSymbol | None, base: DataSymbol | None) -> dict:
     }
 
 
+def _comparison_key(symbol: DataSymbol) -> tuple[str, bytes]:
+    """Disambiguate same-leaf PDB locals without changing their source identity."""
+    qualified = b"" if symbol.scope == "external" else (
+        symbol.public_name or symbol.name
+    )
+    return symbol.identity, qualified
+
+
+def _physical_allocations(symbols: list[DataSymbol]) -> list[DataSymbol]:
+    """Collapse duplicate PDB records, never distinct linked allocations."""
+    by_allocation: dict[tuple[int, str, str, int | None], list[DataSymbol]] = (
+        defaultdict(list)
+    )
+    for symbol in symbols:
+        by_allocation[(
+            symbol.rva, symbol.section, symbol.storage, symbol.size,
+        )].append(symbol)
+    return [
+        min(group, key=lambda row: (
+            row.display_name, row.type_index, row.size_kind,
+        ))
+        for _, group in sorted(by_allocation.items())
+    ]
+
+
+_PAIR_RANK = {
+    EXACT: 0,
+    "RELOCS": 1,
+    "BYTES": 2,
+    "RELOC_TOPOLOGY": 3,
+    "SIZE": 4,
+    "UNKNOWN_SIZE": 5,
+    "INVALID_EXTENT": 6,
+}
+
+
+def _pair_candidates(
+    target: list[DataSymbol], base: list[DataSymbol],
+    target_image: PEImage, base_image: PEImage,
+    target_sites: tuple[int, ...], base_sites: tuple[int, ...],
+    target_resolver: AddressResolver, base_resolver: AddressResolver,
+) -> tuple[list[dict], list[DataSymbol], list[DataSymbol]]:
+    """Compare a same-name allocation multiset without address-order guesses."""
+    candidates = []
+    for target_index, target_symbol in enumerate(target):
+        for base_index, base_symbol in enumerate(base):
+            row = _compare_pair(
+                target_symbol, base_symbol, target_image, base_image,
+                target_sites, base_sites, target_resolver, base_resolver,
+            )
+            size_delta = (
+                abs(target_symbol.size - base_symbol.size)
+                if target_symbol.size is not None and base_symbol.size is not None
+                else 1 << 30
+            )
+            candidates.append((
+                _PAIR_RANK[row["status"]], size_delta,
+                target_symbol.rva, base_symbol.rva,
+                target_index, base_index, row,
+            ))
+
+    paired_target = set()
+    paired_base = set()
+    rows = []
+    for *_, target_index, base_index, row in sorted(candidates):
+        if target_index in paired_target or base_index in paired_base:
+            continue
+        paired_target.add(target_index)
+        paired_base.add(base_index)
+        rows.append(row)
+    unpaired_target = [
+        symbol for index, symbol in enumerate(target)
+        if index not in paired_target
+    ]
+    unpaired_base = [
+        symbol for index, symbol in enumerate(base)
+        if index not in paired_base
+    ]
+    if len(target) != 1 or len(base) != 1:
+        context = f"PDB allocation multiset target={len(target)} base={len(base)}"
+        for row in rows:
+            row["note"] = (
+                context if row["note"] == "-" else f"{row['note']}; {context}"
+            )
+    return rows, unpaired_target, unpaired_base
+
+
+_ORDINAL_LOCAL = re.compile(rb"^\$S\d+$")
+
+
+def _ordinal_local(symbol: DataSymbol) -> bool:
+    """MSVC's $S<n> names are TU ordinals, not cross-build identities."""
+    return symbol.scope != "external" and bool(_ORDINAL_LOCAL.fullmatch(symbol.name))
+
+
+def _consumer_fingerprints(
+    side: str, symbols: list[DataSymbol], image: PEImage,
+) -> dict[int, tuple]:
+    """Describe each allocation by all code accesses which consume it.
+
+    This is the safe fallback for local symbols whose spelling or LTCG owner
+    moved.  Initializer equality alone is deliberately insufficient: many
+    unrelated guards and constants contain the same all-zero bytes.
+    """
+    physical = _physical_allocations([
+        symbol for symbol in symbols if _trusted(symbol, image)
+    ])
+    resolver = AddressResolver(physical, [])
+    accesses: dict[int, list[tuple]] = defaultdict(list)
+    path = access_path(side)
+    if not path.is_file():
+        return {}
+    with path.open(newline="", encoding="utf-8") as source:
+        for row in csv.DictReader(source, delimiter="\t"):
+            rva = int(row["target_rva"], 0)
+            symbol = resolver.data_symbol_at(rva)
+            if symbol is None:
+                continue
+            accesses[symbol.rva].append((
+                row["caller_mangled"], row["caller_file"],
+                row["access"], row["width"], row.get("form", "-"),
+                row.get("scale", "0"), rva - symbol.rva,
+            ))
+    return {
+        rva: tuple(sorted(rows))
+        for rva, rows in accesses.items()
+        if rows
+    }
+
+
+def _consumer_fallback_key(
+    symbol: DataSymbol, fingerprints: dict[int, tuple],
+) -> tuple | None:
+    if symbol.scope == "external" or symbol.rva not in fingerprints:
+        return None
+    return (
+        symbol.section, symbol.storage, symbol.size,
+        fingerprints[symbol.rva],
+    )
+
+
 def compare(target_symbols: list[DataSymbol], base_symbols: list[DataSymbol],
             target_image: PEImage, base_image: PEImage) -> list[dict]:
-    target_by_key: dict[str, list[DataSymbol]] = defaultdict(list)
-    base_by_key: dict[str, list[DataSymbol]] = defaultdict(list)
+    target_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
+    base_by_key: dict[tuple[str, bytes], list[DataSymbol]] = defaultdict(list)
+    ordinal_target = []
+    ordinal_base = []
     for symbol in target_symbols:
         if symbol.type_index != 0:  # public-only rows are address anchors
-            target_by_key[symbol.identity].append(symbol)
+            if _ordinal_local(symbol):
+                ordinal_target.append(symbol)
+            else:
+                target_by_key[_comparison_key(symbol)].append(symbol)
     for symbol in base_symbols:
         if symbol.type_index != 0:
-            base_by_key[symbol.identity].append(symbol)
+            if _ordinal_local(symbol):
+                ordinal_base.append(symbol)
+            else:
+                base_by_key[_comparison_key(symbol)].append(symbol)
 
     target_sites = target_image.base_relocations()
     base_sites = base_image.base_relocations()
     target_functions = _load_rich("target")
     base_functions = _load_rich("base")
     target_function_names = {
-        record["mangled"] for record in target_functions if record.get("mangled")
+        token for record in target_functions
+        for token in _function_identity_tokens(record)
     }
     base_function_names = {
-        record["mangled"] for record in base_functions if record.get("mangled")
+        token for record in base_functions
+        for token in _function_identity_tokens(record)
     }
-
-    def function_canonical(functions: list[dict], peer_names: set[str]) -> dict[int, str]:
-        groups: dict[int, set[str]] = defaultdict(set)
-        for record in functions:
-            if isinstance(record.get("rva"), int) and record.get("mangled"):
-                groups[record["rva"]].add(record["mangled"])
-        return {
-            rva: min((names & peer_names) or names)
-            for rva, names in groups.items()
-        }
 
     target_identities = {symbol.identity for symbol in target_symbols}
     base_identities = {symbol.identity for symbol in base_symbols}
     target_resolver = AddressResolver(
         target_symbols, target_functions,
         peer_identities=base_identities,
-        function_canonical=function_canonical(target_functions, base_function_names),
+        peer_function_identities=base_function_names,
     )
     base_resolver = AddressResolver(
         base_symbols, base_functions,
         peer_identities=target_identities,
-        function_canonical=function_canonical(base_functions, target_function_names),
+        peer_function_identities=target_function_names,
     )
     rows = []
+    unpaired_target = _physical_allocations(ordinal_target)
+    unpaired_base = _physical_allocations(ordinal_base)
     for identity in sorted(target_by_key.keys() | base_by_key.keys()):
-        target = target_by_key.get(identity, [])
-        base = base_by_key.get(identity, [])
-        if len(target) == len(base) == 1:
-            rows.append(_compare_pair(
-                target[0], base[0], target_image, base_image,
-                target_sites, base_sites, target_resolver, base_resolver,
-            ))
-            continue
-        if len(target) > 1 or len(base) > 1:
-            row = _ledger_row(target[0] if target else None, base[0] if base else None)
-            row["status"] = "AMBIGUOUS"
-            row["note"] = f"identity multiplicity target={len(target)} base={len(base)}"
-            rows.append(row)
-            continue
-        rows.append(_ledger_row(target[0] if target else None, base[0] if base else None))
+        target = _physical_allocations(target_by_key.get(identity, []))
+        base = _physical_allocations(base_by_key.get(identity, []))
+        paired, target_remainder, base_remainder = _pair_candidates(
+            target, base, target_image, base_image, target_sites, base_sites,
+            target_resolver, base_resolver,
+        )
+        rows.extend(paired)
+        unpaired_target.extend(target_remainder)
+        unpaired_base.extend(base_remainder)
+
+    target_fingerprints = _consumer_fingerprints(
+        "target", target_symbols, target_image
+    )
+    base_fingerprints = _consumer_fingerprints("base", base_symbols, base_image)
+    target_by_consumer: dict[tuple, list[DataSymbol]] = defaultdict(list)
+    base_by_consumer: dict[tuple, list[DataSymbol]] = defaultdict(list)
+    for symbol in unpaired_target:
+        key = _consumer_fallback_key(symbol, target_fingerprints)
+        if key is not None:
+            target_by_consumer[key].append(symbol)
+    for symbol in unpaired_base:
+        key = _consumer_fallback_key(symbol, base_fingerprints)
+        if key is not None:
+            base_by_consumer[key].append(symbol)
+
+    consumed_target = set()
+    consumed_base = set()
+    for key in sorted(target_by_consumer.keys() & base_by_consumer.keys()):
+        target = sorted(target_by_consumer[key], key=lambda row: row.rva)
+        base = sorted(base_by_consumer[key], key=lambda row: row.rva)
+        paired, target_remainder, base_remainder = _pair_candidates(
+            target, base, target_image, base_image, target_sites, base_sites,
+            target_resolver, base_resolver,
+        )
+        for row in paired:
+            row["note"] = (
+                "paired by complete consumer fingerprint"
+                if row["note"] == "-"
+                else f"{row['note']}; paired by complete consumer fingerprint"
+            )
+        rows.extend(paired)
+        target_left = {symbol.rva for symbol in target_remainder}
+        base_left = {symbol.rva for symbol in base_remainder}
+        consumed_target.update(
+            symbol.rva for symbol in target if symbol.rva not in target_left
+        )
+        consumed_base.update(
+            symbol.rva for symbol in base if symbol.rva not in base_left
+        )
+
+    rows.extend(
+        _ledger_row(symbol, None)
+        for symbol in unpaired_target if symbol.rva not in consumed_target
+    )
+    rows.extend(
+        _ledger_row(None, symbol)
+        for symbol in unpaired_base if symbol.rva not in consumed_base
+    )
     return rows
 
 
@@ -413,11 +647,12 @@ def coverage(rows: list[dict], symbols: list[DataSymbol], image: PEImage,
     gross = sum(section.virtual_size for section in sections)
     claimed = [(symbol.rva, symbol.rva + symbol.size)
                for symbol in symbols if _trusted(symbol, image)]
-    by_identity = {symbol.identity: symbol for symbol in symbols if _trusted(symbol, image)}
+    by_rva = {symbol.rva: symbol for symbol in symbols if _trusted(symbol, image)}
     exact = []
     compared = []
     for row in rows:
-        symbol = by_identity.get(row["identity"])
+        target_rva = row["target_rva"]
+        symbol = by_rva.get(int(target_rva, 0)) if target_rva != "-" else None
         if symbol is None or symbol.size is None:
             continue
         interval = (symbol.rva, symbol.rva + symbol.size)
