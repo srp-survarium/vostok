@@ -44,7 +44,6 @@ public:
 	}
 
 	float4x4 get_transform( pcvoid const animated_object ) const;
-	inline ~transform_getter( ) { }
 
 	animation_player const&							animation_player;
 	boost::function< float4x4 ( pcvoid ) > const&	functor;
@@ -77,9 +76,6 @@ private:
 	virtual	void	visit		( mixing::n_ary_tree_multiplication_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_weight_transition_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_time_scale_transition_node& node );
-
-public:
-	virtual			~n_ary_tree_time_inverter( ) { }
 
 private:
 	template < typename T >

@@ -22,7 +22,6 @@ private:
 	);
 
 public:
-	virtual ~static_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( static_model_instance_cook, 0x20 );
@@ -71,7 +70,6 @@ private:
 	void on_all_subresources_ready( skeleton_model_instance_cook_data* cook_data );
 
 public:
-	virtual ~skeleton_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( skeleton_model_instance_cook, 0x20 );

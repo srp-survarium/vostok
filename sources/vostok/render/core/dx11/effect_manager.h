@@ -32,8 +32,6 @@ public:
 	~effect_manager( );
 
 	struct effect_holder_struct {
-		effect_holder_struct( ) : descriptor( 0 ), effect( 0 ) { }
-
 		effect_descriptor* descriptor;
 		custom_config_ptr config;
 		res_effect* effect;

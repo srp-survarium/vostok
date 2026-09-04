@@ -23,10 +23,6 @@ struct sound_scene_statistic
 	sound_scene_statistic( );
 	void fill_text_tree( strings::text_tree_item* item ) const;
 
-	inline ~sound_scene_statistic( )
-	{
-	}
-
 	struct
 	{
 		u32 m_sound_types[4];

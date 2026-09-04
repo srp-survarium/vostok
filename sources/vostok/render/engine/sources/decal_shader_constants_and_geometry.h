@@ -35,9 +35,6 @@ public:
 private:
 	void create_decal_geometry( );
 
-public:
-	~decal_shader_constants_and_geometry( ) { }
-
 private:
 	shader_constant_host*	m_world_to_decal_parameter;
 	shader_constant_host*	m_eye_ray_corner_parameter;

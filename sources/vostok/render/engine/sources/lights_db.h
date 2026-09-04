@@ -32,8 +32,6 @@ struct light_data {
 		return id == other_id;
 	}
 
-	~light_data( ) { }
-
 	light_ptr	light;
 	u32			id;
 };

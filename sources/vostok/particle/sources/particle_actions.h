@@ -530,7 +530,6 @@ public:
 	virtual void		load					(configs::binary_config_value const& config);
 	virtual void		set_defaults			(bool mt_alloc = false);
 	virtual bool		is_update_modifier		() const {return true;};
-	virtual				~particle_action_gravity() {}
 
 #ifndef	MASTER_GOLD
 	virtual void		load					(configs::lua_config_value const& config);

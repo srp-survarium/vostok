@@ -63,11 +63,6 @@ private:
 
 	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ } // STATE[REMOVED]
 
-public:
-	// trivial RAII dtor (resolver-iterator/function/socket-ptr/handler_allocator members
-	// auto-destroy); the empty body is correct - this is the matched ??1async_connector form.
-	inline			~async_connector			( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	boost::asio::ip::tcp::resolver::iterator	m_host;
 	/* 0x0010 */	boost::function< void() >			m_on_connected;

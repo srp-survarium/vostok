@@ -32,9 +32,6 @@ public:
 		public ai::vertex_manager::fixed_count_hash::vertex_helper< vertex_id_type >::vertex_impl,
 		public ai::vertex_allocator::fixed_count::vertex_impl
 	{
-		inline vertex_type( )
-		{
-		}
 	};
 
 	struct look_up_cell_type :
@@ -56,9 +53,6 @@ public:
 		{
 		}
 
-		inline ~vertex_allocator_impl_type( )
-		{
-		}
 	};
 
 	struct vertex_manager_impl_type : public ai::vertex_manager::fixed_count_hash::impl< vertex_allocator_impl_type, look_up_cell_type >
@@ -74,9 +68,6 @@ public:
 		{
 		}
 
-		inline ~vertex_manager_impl_type( )
-		{
-		}
 	};
 
 	struct priority_queue_impl_type : public ai::priority_queue::binary_heap::impl< vertex_manager_impl_type >
@@ -88,9 +79,6 @@ public:
 		{
 		}
 
-		inline ~priority_queue_impl_type( )
-		{
-		}
 	};
 
 public:
@@ -110,9 +98,6 @@ public:
 		float const& max_distance,
 		vectora< fixed_vector< u32, max_portals_in_path > >& result_paths
 	);
-
-	inline ~search_service( )
-	{}
 
 public:
 	vertex_allocator_impl_type m_vertex_allocator;

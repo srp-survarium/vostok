@@ -74,7 +74,7 @@ public:
 											);
 
 
-	// inline									n_ary_tree_animation_node			( n_ary_tree_animation_node const& other  );
+	inline									n_ary_tree_animation_node			( n_ary_tree_animation_node const& other  );
 
 	virtual	void							accept								( n_ary_tree_visitor& visitor );
 	virtual void							accept								( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_base_node& node );

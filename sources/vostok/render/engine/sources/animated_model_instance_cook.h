@@ -33,7 +33,6 @@ private:
 	);
 
 public:
-	virtual ~animated_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( animated_model_instance_cook, 0x20 );

@@ -74,7 +74,6 @@ struct user_mesh_cook : public resources::unmanaged_cook {
 	);
 
 	virtual void destroy_resource( resources::unmanaged_resource* resource );
-	virtual ~user_mesh_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( user_mesh_cook, 0x20 );
@@ -90,7 +89,6 @@ private:
 	void on_sub_resources_loaded( resources::queries_result& data );
 
 public:
-	virtual ~static_render_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( static_render_model_instance_cook, 0x20 );
@@ -106,7 +104,6 @@ private:
 	void on_sub_resources_loaded( resources::queries_result& data );
 
 public:
-	virtual ~skeleton_render_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( skeleton_render_model_instance_cook, 0x20 );

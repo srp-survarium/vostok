@@ -10,8 +10,6 @@ namespace sound {
 
 struct propagator_info
 {
-	inline propagator_info	( ) {}
-
 	float3						in_graph_position;
 	float						distance_to_listener;
 	new_sound_propagator*		prop;

@@ -63,10 +63,6 @@ public:
 	adjacencies_type const&		get_adjacencies	( ) const { return m_adjacencies; }
 private:
 	void						sort_adjacencies( );
-public:
-	// explicit empty dtor pins the retail record position (between
-	// sort_adjacencies and the private statics)
-								~convex			( ) { }
 private:
 	typedef u64 vertex_flags;
 private:

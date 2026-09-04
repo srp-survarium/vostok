@@ -379,9 +379,6 @@ private:
 	void on_config_loaded( resources::queries_result& data );
 	void on_config_loaded2( resources::queries_result& data );
 
-public:
-	~options( ) { }
-
 private:
 	friend class render_cc;
 

@@ -95,9 +95,6 @@ private:
 
 			void								on_disconnect				( const disconnect_event_types_enum disconnect_type );
 
-public:
-	inline										~udp_match_client			( ) { /* no source */ } // STATE[REMOVED]
-
 	static	void								construct_packet			( udp_match_packets_orderer& packets_orderer, udp_match_packet& packet, u8 message_type ) { /* no source */ } // STATE[REMOVED]
 
 private:

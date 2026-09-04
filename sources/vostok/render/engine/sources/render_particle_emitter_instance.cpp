@@ -47,8 +47,6 @@ struct particle_sprite_vertex {
 		float3	old_position_value
 	);
 
-	particle_sprite_vertex( ) { }
-
 	float3	position;
 	float4	color;
 	float2	uv;
@@ -104,8 +102,6 @@ struct subuv_particle_sprite_vertex : public particle_sprite_vertex {
 		size_uv = size_uv_value;
 		blend_uv = blend_uv_value;
 	}
-
-	subuv_particle_sprite_vertex( ) { }
 
 	float2	size_uv;
 	float4	blend_uv;

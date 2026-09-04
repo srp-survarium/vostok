@@ -55,9 +55,6 @@ class capsule_light_effect : public effect_descriptor {
 		compiler.end_technique();
 	}
 
-public:
-	capsule_light_effect( ) { }
-	virtual ~capsule_light_effect( ) { }
 };
 
 STATIC_SIZE_ASSERT( capsule_light_effect, 0x4 );

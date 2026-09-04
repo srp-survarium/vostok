@@ -44,11 +44,6 @@ public:
 		vertex_id_type const& neighbour_vertex_id
 	) const;
 
-	// dtor before evaluate: retail's method list orders it here
-	inline ~graph_heuristics( )
-	{
-	}
-
 	template < typename vertex_type >
 	inline float evaluate(
 		vertex_type const& current_vertex,

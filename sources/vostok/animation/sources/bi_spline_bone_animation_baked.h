@@ -17,7 +17,6 @@ public:
 		return *m_channel_animations[channel];
 	}
 
-	inline		bi_spline_bone_animation_baked	( ) { }
 
 private:
 	/* 0x0000 */	platform_pointer_selector<

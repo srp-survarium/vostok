@@ -22,7 +22,6 @@ public:
 	{
 	}
 
-	inline				~udp_match_fixed_packets_allocator	( ) { /* no source */ }
 
 private:
 	char	m_buffer[ 300 * packets_count ];

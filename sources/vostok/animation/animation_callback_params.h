@@ -30,7 +30,6 @@ struct animation_callback_params : public boost::noncopyable {
 					 domain_data							( domain_data ),
 					 animation_interval_id					( animation_interval_id ),
 					 interrupt_animation_player_tick		( false ) { }
-	inline		~animation_callback_params	( ) { }
 
 public:
 	/* 0x0000 */	/* boost::noncopyable */

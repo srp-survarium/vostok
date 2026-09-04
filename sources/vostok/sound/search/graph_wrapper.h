@@ -56,10 +56,6 @@ public:
 		return *iterator;
 	}
 
-	inline ~graph_wrapper( )
-	{
-	}
-
 private:
 	render::culling::portal_sector_structure_ptr const& m_graph;
 }; // class graph_wrapper

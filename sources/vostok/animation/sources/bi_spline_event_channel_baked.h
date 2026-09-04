@@ -32,7 +32,6 @@ public:
 		return reinterpret_cast< pcstr >( domains() + domains_count() );
 	}
 
-	inline							bi_spline_event_channel_baked	( ) { }
 
 private:
 	/* 0x0000 */	platform_pointer_selector< float, platform_pointer_64bit >::helper	m_knots;

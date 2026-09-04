@@ -52,6 +52,10 @@ public:
 		animation_interval_id	( animation_interval_id )
 	{
 	}
+	inline callback_generator_info( callback_generator_info const& other );
+
+private:
+	callback_generator_info& operator=( callback_generator_info const& other );
 
 public:
 	/* 0x0000 */	const resources::managed_resource_ptr	animation;

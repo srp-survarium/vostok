@@ -19,7 +19,6 @@ public:
 public:
 	inline	explicit	functor_order	( functor_type const& functor ) : m_functor( functor ) { }
 	virtual	void		execute			( ) { m_functor( ); }
-	virtual				~functor_order	( ) { }
 
 private:
 	functor_type		m_functor;

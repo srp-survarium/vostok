@@ -69,8 +69,6 @@ struct singletons_on_preinitialize {
 }; // struct singletons_on_preinitialize
 
 struct singletons_on_initialize {
-	singletons_on_initialize( );
-
 	vostok::render::renderer_context						renderer_context;
 	vostok::render::material_manager						material_manager;
 	vostok::render::particle_shader_constants				particle_shader_constants;
@@ -190,10 +188,6 @@ singletons_on_preinitialize::singletons_on_preinitialize(
 ) :
 	resource_manager( config ),
 	device( is_editor )
-{
-}
-
-singletons_on_initialize::singletons_on_initialize( )
 {
 }
 

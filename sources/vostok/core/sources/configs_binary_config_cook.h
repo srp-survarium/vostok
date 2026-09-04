@@ -32,7 +32,6 @@ protected:
 			void				on_binary_config_loaded	(resources::queries_result& data, resources::query_result_for_cook* parent_query);
 
 public:
-	virtual					~binary_config_cook		() {}
 }; // class binary_config_cook
 
 } // namespace configs

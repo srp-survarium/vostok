@@ -59,9 +59,6 @@ class obb_light_effect : public effect_descriptor {
 		compiler.end_technique();
 	}
 
-public:
-	obb_light_effect( ) { }
-	virtual ~obb_light_effect( ) { }
 };
 
 typedef obb_light_effect< false > obb_light_effect_unshadowed;

@@ -29,10 +29,6 @@ struct proxy_statistic
 
 	void fill_text_tree( strings::text_tree_item* item, bool draw_propagators_stats ) const;
 
-	inline ~proxy_statistic( )
-	{
-	}
-
 	proxy_statistic* next;
 	float3 m_position;
 	float3 m_direction;

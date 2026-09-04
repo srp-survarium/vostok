@@ -70,10 +70,6 @@ public:
 			sent_order_id		= sequence_number< u16 >( 0 );
 		}
 
-		inline			~channel( )
-		{
-		}
-
 	public:
 		/* 0x0000 */	boost::intrusive::set< udp_match_packet, boost::intrusive::member_hook< udp_match_packet, boost::intrusive::set_member_hook< boost::intrusive::none, boost::intrusive::none, boost::intrusive::none, boost::intrusive::none >, &udp_match_packet::set_member_hook >, boost::intrusive::compare< udp_match_connection::comparer >, boost::intrusive::none, boost::intrusive::none >	packets;
 		/* 0x0014 */	sequence_number< u16 >		received_order_id;

@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_light_mask( ) { }
-	virtual ~effect_light_mask( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_light_mask, 0x4 );

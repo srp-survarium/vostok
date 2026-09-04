@@ -59,9 +59,6 @@ class spot_light_effect : public effect_descriptor {
 		compiler.end_technique();
 	}
 
-public:
-	spot_light_effect( ) { }
-	virtual ~spot_light_effect( ) { }
 };
 
 typedef spot_light_effect< false > spot_light_effect_unshadowed;

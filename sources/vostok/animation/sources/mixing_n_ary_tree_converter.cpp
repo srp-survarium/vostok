@@ -463,9 +463,6 @@ private:
 		node.right().accept( *this );
 	}
 
-public:
-	virtual ~binary_tree_weight_driving_animation_getter( ) { }
-
 private:
 	weight_driving_animations& m_animations;
 };

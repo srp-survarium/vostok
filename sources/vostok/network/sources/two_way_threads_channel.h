@@ -38,7 +38,6 @@ struct two_way_threads_channel : private boost::noncopyable {
 	{
 	}
 
-	inline ~two_way_threads_channel	( ) { }
 
 	responses_channel_type	responses;
 	orders_channel_type		orders;

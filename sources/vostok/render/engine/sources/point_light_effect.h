@@ -165,9 +165,6 @@ class point_light_effect : public effect_descriptor {
 		compiler.end_technique();
 	}
 
-public:
-	point_light_effect( ) { }
-	virtual ~point_light_effect( ) { }
 };
 
 typedef point_light_effect< false, false > point_light_effect_unshadowed;

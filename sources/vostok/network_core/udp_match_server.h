@@ -37,8 +37,6 @@ public:
 	struct destroy_predicate : private boost::noncopyable {
 		inline	explicit	destroy_predicate	( udp_match_server& server ) : server( server ) { /* no source */ }
 		inline	bool		operator()			( udp_match_client_session* session ) const { return false; }
-		inline				~destroy_predicate	( ) { /* no source */ }
-
 	public:
 		/* 0x0000 */	udp_match_server&		server;
 	}; // struct destroy_predicate

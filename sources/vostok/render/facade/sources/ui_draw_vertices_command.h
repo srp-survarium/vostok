@@ -34,7 +34,6 @@ public:
 
 	virtual void execute( );
 	virtual void defer_execution( );
-	virtual ~draw_vertices_command( ) { /* no source */ }
 
 private:
 	vectora< vertex > m_vertices;

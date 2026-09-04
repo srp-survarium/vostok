@@ -29,7 +29,6 @@ public:
 													 const_buffer						raw_file_data,
 													 mutable_buffer						in_out_unmanaged_resource_buffer);
 
-	virtual					~binary_config_cook_impl	() {}
 }; // class binary_config_cook_impl
 
 } // namespace configs

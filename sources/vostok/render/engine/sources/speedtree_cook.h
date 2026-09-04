@@ -38,7 +38,6 @@ private:
 	void finish_model_creation( speedtree_data* cook_data );
 
 public:
-	virtual ~speedtree_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( speedtree_cook, 0x20 );
@@ -56,7 +55,6 @@ private:
 	);
 
 public:
-	virtual ~speedtree_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( speedtree_instance_cook, 0x20 );

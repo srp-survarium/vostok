@@ -23,10 +23,6 @@ struct propagator_statistic
 
 	void fill_text_tree( strings::text_tree_item* item ) const;
 
-	inline ~propagator_statistic( )
-	{
-	}
-
 	propagator_statistic* next;
 	fixed_string< 260 > m_filename;
 	resources::managed_resource_ptr m_rms;

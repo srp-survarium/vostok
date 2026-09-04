@@ -73,9 +73,6 @@ private:
 		VOSTOK_DELETE_IMPL( m_packet_allocator, packet );
 	}
 
-public:
-	inline								~tcp_packet_socket		( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	boost::function< void( tcp_packet const& ) >								m_on_packet_received;
 	/* 0x0020 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;

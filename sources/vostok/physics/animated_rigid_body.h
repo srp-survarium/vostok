@@ -59,7 +59,6 @@ public:
 	math::aabb	get_aabb			( )				const;
 	float4x4	get_bone_transform	( const u32 index )	const;
 
-	virtual		~bt_animated_rigid_body	( ) {};
 
 private:
 	/* 0x0000 */ /* fields for physics::bt_rigid_body_base */

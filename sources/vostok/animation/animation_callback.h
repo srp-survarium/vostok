@@ -41,7 +41,6 @@ struct animation_callback : public boost::noncopyable {
 	{
 		R_ASSERT				( callback );
 	}
-	inline			~animation_callback	( ) { }
 
 	public:
 	/* 0x0000 */	new_callback_type			callback;

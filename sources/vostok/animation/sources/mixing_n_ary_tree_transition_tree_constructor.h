@@ -138,9 +138,6 @@ private:
 
 	inline	void							advance_buffer						( const u32 size ) { m_buffer += size; }
 
-public:
-	inline									~n_ary_tree_transition_tree_constructor( ) { }
-
 private:
 	/* 0x0000 */	transform_functor_type			m_get_transform_functor;
 	/* 0x0020 */	n_ary_tree_cloner				m_cloner;

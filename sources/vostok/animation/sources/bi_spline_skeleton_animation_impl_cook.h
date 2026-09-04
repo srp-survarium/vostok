@@ -16,9 +16,6 @@ private:
 	virtual	void	translate_query	( resources::query_result_for_cook& parent ) override;
 	virtual	void	delete_resource	( resources::resource_base* resource_to_delete ) override;
 
-public:
-	virtual			~bi_spline_skeleton_animation_impl_cook( ) { }
-
 private:
 	static	void	on_resources_ready(
 						resources::queries_result&				results,

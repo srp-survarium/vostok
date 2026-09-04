@@ -69,10 +69,6 @@ public:
 		return m_vertex_ids;
 	}
 
-	inline ~search_restrictor( )
-	{
-	}
-
 private:
 	fixed_vector< vertex_id_type, max_different_paths_count > m_vertex_ids;
 	render::culling::portal_sector_structure_ptr const& m_graph;

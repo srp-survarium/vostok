@@ -97,7 +97,6 @@ struct statistics_float : public statistics_value< double > {
 	}
 
 	virtual void print( fs_new::virtual_path_string& out_result ) override;
-	~statistics_float( ) { }
 };
 
 STATIC_SIZE_ASSERT( statistics_float, 0xD8 );
@@ -109,7 +108,6 @@ struct statistics_int : public statistics_value< int > {
 	}
 
 	virtual void print( fs_new::virtual_path_string& out_result ) override;
-	~statistics_int( ) { }
 };
 
 STATIC_SIZE_ASSERT( statistics_int, 0xBC );
@@ -124,7 +122,6 @@ struct statistics_cpu_gpu : public statistics_base {
 
 	virtual void start( ) override;
 	virtual void print( fs_new::virtual_path_string& out_result ) override;
-	~statistics_cpu_gpu( ) { }
 
 	statistics_float	cpu_time;
 	statistics_float	gpu_time;
@@ -174,7 +171,6 @@ STATIC_SIZE_ASSERT( timer_scope, 0x20 );
 
 struct gbuffer_statistics_group : public statistics_group {
 	explicit gbuffer_statistics_group( pcstr group_name );
-	~gbuffer_statistics_group( ) { }
 
 	statistics_cpu_gpu	pre_pass_execute_time;
 	statistics_cpu_gpu	material_pass_execute_time;
@@ -213,7 +209,6 @@ STATIC_SIZE_ASSERT( visibility_statistics_group, 0x1118 );
 
 struct lights_statistics_group : public statistics_group {
 	explicit lights_statistics_group( pcstr group_name );
-	~lights_statistics_group( ) { }
 
 	statistics_cpu_gpu	accumulate_lighting_time;
 	statistics_cpu_gpu	forward_lighting_time;
@@ -224,9 +219,6 @@ STATIC_SIZE_ASSERT( lights_statistics_group, 0x770 );
 
 struct particles_statistics_group : public statistics_group {
 	explicit particles_statistics_group( pcstr group_name );
-	~particles_statistics_group( )
-	{
-	}
 
 	statistics_cpu_gpu	execute_time;
 	statistics_cpu_gpu	sprites_execute_time;
@@ -257,7 +249,6 @@ STATIC_SIZE_ASSERT( cascaded_sun_shadow_statistics_group, 0xEE0 );
 
 struct postprocess_statistics_group : public statistics_group {
 	explicit postprocess_statistics_group( pcstr group_name );
-	~postprocess_statistics_group( ) { }
 
 	statistics_cpu_gpu	execute_time;
 };
@@ -266,7 +257,6 @@ STATIC_SIZE_ASSERT( postprocess_statistics_group, 0x2E0 );
 
 struct forward_stage_statistics_group : public statistics_group {
 	explicit forward_stage_statistics_group( pcstr group_name );
-	~forward_stage_statistics_group( ) { }
 
 	statistics_cpu_gpu	execute_time;
 };
@@ -288,7 +278,6 @@ STATIC_SIZE_ASSERT( general_statistics_group, 0x6C8 );
 
 struct speedtree_statistics_group : public statistics_group {
 	explicit speedtree_statistics_group( pcstr group_name );
-	~speedtree_statistics_group( ) { }
 
 	statistics_cpu_gpu	render_time;
 	statistics_float	culling_time;
@@ -299,7 +288,6 @@ STATIC_SIZE_ASSERT( speedtree_statistics_group, 0x478 );
 
 struct forward_decals_statistics_group : public statistics_group {
 	explicit forward_decals_statistics_group( pcstr group_name );
-	~forward_decals_statistics_group( ) { }
 
 	statistics_float	execute_time;
 	statistics_int		num_decals;
@@ -310,7 +298,6 @@ STATIC_SIZE_ASSERT( forward_decals_statistics_group, 0x2E8 );
 
 struct deferred_decals_statistics_group : public statistics_group {
 	explicit deferred_decals_statistics_group( pcstr group_name );
-	~deferred_decals_statistics_group( ) { }
 
 	statistics_float	execute_time;
 	statistics_int		num_decals;
@@ -321,7 +308,6 @@ STATIC_SIZE_ASSERT( deferred_decals_statistics_group, 0x2E8 );
 
 struct distortion_pass_statistics_group : public statistics_group {
 	explicit distortion_pass_statistics_group( pcstr group_name );
-	~distortion_pass_statistics_group( ) { }
 
 	statistics_cpu_gpu	accumulate_time;
 	statistics_cpu_gpu	apply_time;
@@ -331,7 +317,6 @@ STATIC_SIZE_ASSERT( distortion_pass_statistics_group, 0x528 );
 
 struct ssao_statistics_group : public statistics_group {
 	explicit ssao_statistics_group( pcstr group_name );
-	~ssao_statistics_group( ) { }
 
 	statistics_cpu_gpu	ssao_accumulate_time;
 	statistics_cpu_gpu	ssao_blurring_time;
@@ -341,7 +326,6 @@ STATIC_SIZE_ASSERT( ssao_statistics_group, 0x528 );
 
 struct sky_statistics_group : public statistics_group {
 	explicit sky_statistics_group( pcstr group_name );
-	~sky_statistics_group( ) { }
 
 	statistics_cpu_gpu	execute_time;
 };
@@ -368,7 +352,6 @@ STATIC_SIZE_ASSERT( lpv_statistics_group, 0x11F8 );
 
 struct grass_statistics_group : public statistics_group {
 	explicit grass_statistics_group( pcstr group_name );
-	~grass_statistics_group( ) { }
 
 	statistics_int	num_total_patches;
 	statistics_int	num_rendered_patches;

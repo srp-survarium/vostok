@@ -45,7 +45,6 @@ public:
 
 			void	operator()	( pcstr const format, pstr const args );
 
-	inline			~logger		( ) {}
 
 
 public:

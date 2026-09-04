@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_gstage_default_materials( ) { }
-	virtual ~effect_gstage_default_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_gstage_default_materials, 0x4 );

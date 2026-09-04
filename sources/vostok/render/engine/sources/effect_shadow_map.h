@@ -21,8 +21,6 @@ public:
 		custom_config_value const&	__formal
 	) override;
 
-	effect_shadow_map( ) { }
-	virtual ~effect_shadow_map( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_shadow_map, 0x4 );

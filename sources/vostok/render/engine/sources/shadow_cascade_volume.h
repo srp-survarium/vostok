@@ -14,10 +14,6 @@ public:
 	typedef fixed_vector<math::plane, 16> cascade_volume_planes;
 
 	struct polygon {
-		polygon( )
-		{
-		}
-
 		s32			points[4];
 		math::plane	plane;
 	};

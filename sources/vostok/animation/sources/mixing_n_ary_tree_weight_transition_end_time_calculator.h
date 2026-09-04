@@ -50,7 +50,6 @@ public:
 		VOSTOK_UNREFERENCED_PARAMETER		( node );
 	}
 
-	virtual	~n_ary_tree_weight_transition_end_time_calculator( ) { }
 
 private:
 	u32		m_weight_transition_end_time_in_ms;

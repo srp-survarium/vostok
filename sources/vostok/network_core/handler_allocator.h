@@ -44,11 +44,6 @@ public:
 		}
 	}
 
-	// trivial dtor (aligned_storage + bool members); empty body is correct. Inlined into
-	// every owner's dtor (async_connector/tcp_packet_socket/udp_match_connection/_client) -
-	// no standalone ??1 target symbol.
-	inline				~handler_allocator	( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	boost::aligned_storage< 1024, 4294967295 >	storage_;
 	/* 0x0400 */	bool	in_use_;

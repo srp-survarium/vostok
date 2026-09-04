@@ -19,9 +19,6 @@ namespace render {
 
 struct static_model_instance_user_data
 {
-	inline		static_model_instance_user_data	( ) { }
-	inline		~static_model_instance_user_data( ) { }
-
 	configs::binary_config_value const*	config;
 	sound::world*						sound_world;
 	resources::unmanaged_resource_ptr	sound_scene;

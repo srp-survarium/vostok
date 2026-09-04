@@ -10,10 +10,6 @@ struct fsm_state;
 
 struct fsm_state_transition {
 public:
-	inline	explicit	fsm_state_transition	( ) { }
-	inline				~fsm_state_transition	( ) { }
-
-public:
 	/* 0x0000 */	boost::function< bool() >	predicate;
 	/* 0x0020 */	fsm_state*					target_state;
 	/* 0x0024 */	fsm_state_transition*		next;

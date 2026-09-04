@@ -35,7 +35,6 @@ public:
 					);
 	virtual	void	destroy_resource		( resources::managed_resource* dying_resource ) ;
 
-	virtual			~cubic_spline_skeleton_animation_cook( ) { }
 }; // class cubic_spline_skeleton_animation_cook
 
 STATIC_SIZE_ASSERT(cubic_spline_skeleton_animation_cook, 0x20);
