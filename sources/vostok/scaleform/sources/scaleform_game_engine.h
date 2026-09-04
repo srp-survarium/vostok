@@ -8,7 +8,7 @@
 
 namespace survarium {
 
-class __declspec( novtable ) scaleform_game_engine {
+class VOSTOK_NOVTABLE scaleform_game_engine {
 public:
 	virtual	void	execute_scaleform_command	( scaleform_render_command arg_0 ) = 0;
 

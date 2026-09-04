@@ -15,8 +15,6 @@ public:
 	virtual			~response	( ) { }
 	virtual	void	execute		( ) = 0;
 
-	inline			response	( ) { }
-
 	// public per the type record - the channel's intrusive_spsc_queue typedefs
 	// take &response::next_for_responses without friendship
 	response*		next_for_responses;

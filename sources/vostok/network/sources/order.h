@@ -15,8 +15,6 @@ public:
 	virtual			~order	( ) { }
 	virtual	void	execute	( ) = 0;
 
-	inline			order	( ) { }
-
 	// public per the type record - the channel's intrusive_spsc_queue typedefs
 	// take &order::next_for_orders without friendship
 	order*			next_for_orders;

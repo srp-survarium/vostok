@@ -33,8 +33,6 @@ STATIC_SIZE_ASSERT(udp_match_message_type_info, 0x1);
 struct udp_match_packets_orderer {
 	virtual	udp_match_message_type_info	get_sending_message_info	( u8 message_type ) = 0;
 	virtual	udp_match_message_type_info	get_received_message_info	( u8 message_type ) = 0;
-
-	inline								udp_match_packets_orderer	( ) { /* no source */ } // STATE[REMOVED]
 }; // struct udp_match_packets_orderer
 
 STATIC_SIZE_ASSERT(udp_match_packets_orderer, 0x4);
