@@ -19,7 +19,8 @@ Commands:
   relocs PATTERN  inspect pointer cells and their resolved targets
   function PATTERN inspect per-function data-reference equality
   coverage        show retail coverage, objdiff enrollment, and generated gaps
-  check [--gate]  validate artifacts; optionally enforce the integrity ratchet
+  check [--gate|--all-zero]
+                   validate artifacts; enforce the ratchet or full zero target
 
 The image audit is not the objdiff data score. Its EXACT means
 relocation-normalized linked bytes and resolved pointer targets both agree;
@@ -181,7 +182,54 @@ def _ratchet_values() -> dict[str, float]:
         return {row["metric"]: float(row["maximum"]) for row in reader}
 
 
-def _check(gate: bool) -> int:
+def _all_zero_failures(report: dict) -> list[str]:
+    """Return every nonzero correctness debt in the complete data pipeline."""
+    failed = [
+        f"{status}={count:,}"
+        for status, count in sorted(report["counts"].items())
+        if status != "EXACT" and count
+    ]
+
+    consumer = report.get("consumer_projection", {})
+    for metric in (
+        "blockers", "wrong_referent_regions", "ordering_only_regions",
+        "multiplicity_only_regions", "access_shape_functions",
+        "base_missing_functions",
+    ):
+        if value := int(consumer.get(metric, 0)):
+            failed.append(f"{metric}={value:,}")
+    for status, count in sorted(consumer.get("functions", {}).items()):
+        if status != "EXACT" and count:
+            failed.append(f"functions.{status}={count:,}")
+
+    for paired, total in (
+        ("paired_copies", "allocation_copies"),
+        ("paired_copy_bytes", "allocation_copy_bytes"),
+        ("paired_unique_bytes", "unique_allocation_bytes"),
+    ):
+        paired_value = int(consumer.get(paired, 0))
+        total_value = int(consumer.get(total, 0))
+        if paired_value != total_value:
+            failed.append(
+                f"{paired}={paired_value:,}/{total_value:,} {total}"
+            )
+
+    coverage = report.get("coverage", {})
+    matched = int(coverage.get("objdiff_matched_bytes", 0))
+    projected = int(coverage.get("objdiff_projected_bytes", 0))
+    if matched != projected:
+        failed.append(
+            f"objdiff_matched_bytes={matched:,}/{projected:,} projected"
+        )
+
+    strict = report.get("strict_referents", {})
+    for metric in ("referent_debt_functions", "referent_debt_code_bytes"):
+        if value := int(strict.get(metric, 0)):
+            failed.append(f"{metric}={value:,}")
+    return failed
+
+
+def _check(gate: bool, all_zero: bool = False) -> int:
     required = (
         paths.DATA_TARGET_INDEX, paths.DATA_BASE_INDEX,
         paths.DATA_TARGET_ACCESS, paths.DATA_BASE_ACCESS,
@@ -212,7 +260,7 @@ def _check(gate: bool) -> int:
         return 1
     if data_reviews.check():
         return 1
-    if data_gate.check(require_zero=gate):
+    if data_gate.check(require_zero=gate or all_zero):
         return 1
     report = pipeline.load_report()
     if report.get("schema") != 2:
@@ -306,7 +354,7 @@ def _check(gate: bool) -> int:
     if not zlib or zlib.get("EXACT", 0) != sum(zlib.values()):
         print("zlib calibration is not fully exact", file=sys.stderr)
         return 1
-    if not gate:
+    if not gate and not all_zero:
         print("data artifacts valid (shadow mode; integrity ratchet not enforced)")
         return 0
     maxima = _ratchet_values()
@@ -326,6 +374,16 @@ def _check(gate: bool) -> int:
     if failed:
         print("data gate failed: " + "; ".join(failed), file=sys.stderr)
         return 1
+    if all_zero:
+        failed = _all_zero_failures(report)
+        if failed:
+            print(
+                "all-data zero gate failed: " + "; ".join(failed),
+                file=sys.stderr,
+            )
+            return 1
+        print("all-data zero gate passed")
+        return 0
     print("data gate passed")
     return 0
 
@@ -365,6 +423,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("coverage")
     check = sub.add_parser("check")
     check.add_argument("--gate", action="store_true")
+    check.add_argument("--all-zero", action="store_true")
     args = parser.parse_args(argv)
 
     try:
@@ -438,7 +497,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "coverage":
             _coverage()
         elif args.command == "check":
-            return _check(args.gate)
+            return _check(args.gate, args.all_zero)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         print(f"vostok data: {error}", file=sys.stderr)
         return 2

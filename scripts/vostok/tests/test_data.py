@@ -36,8 +36,16 @@ from vostok.data.pipeline import (
     _FunctionIndex,
     _access_form,
     _access_kind,
+    _comparison_key,
+    _consumer_fallback_key,
+    _function_identity_tokens,
     _interval_union,
+    _ordinal_local,
+    _physical_allocations,
+    _relocation_signatures_match,
+    compare,
 )
+from vostok.data.cli import _all_zero_failures
 from vostok.data.render_relocs import (
     Access,
     CallConeIndex,
@@ -310,6 +318,62 @@ class DataGateTests(unittest.TestCase):
             "base_relocation_sites": 30,
             "open_function_data": 2,
         })
+
+    def test_all_data_zero_gate_covers_raw_projection_and_referent_debt(self):
+        report = {
+            "counts": {"EXACT": 10, "BYTES": 2, "TARGET_ONLY": 1},
+            "coverage": {
+                "objdiff_matched_bytes": 80,
+                "objdiff_projected_bytes": 100,
+            },
+            "consumer_projection": {
+                "blockers": 3,
+                "allocation_copies": 8,
+                "paired_copies": 7,
+                "allocation_copy_bytes": 100,
+                "paired_copy_bytes": 90,
+                "unique_allocation_bytes": 60,
+                "paired_unique_bytes": 50,
+                "functions": {"EXACT": 4, "WRONG_REFERENT": 1},
+                "wrong_referent_regions": 1,
+            },
+            "strict_referents": {
+                "referent_debt_functions": 1,
+                "referent_debt_code_bytes": 20,
+            },
+        }
+        failures = _all_zero_failures(report)
+        self.assertIn("BYTES=2", failures)
+        self.assertIn("TARGET_ONLY=1", failures)
+        self.assertIn("blockers=3", failures)
+        self.assertIn("functions.WRONG_REFERENT=1", failures)
+        self.assertIn("paired_copies=7/8 allocation_copies", failures)
+        self.assertIn("objdiff_matched_bytes=80/100 projected", failures)
+        self.assertIn("referent_debt_functions=1", failures)
+
+    def test_all_data_zero_gate_accepts_complete_exact_state(self):
+        report = {
+            "counts": {"EXACT": 10},
+            "coverage": {
+                "objdiff_matched_bytes": 100,
+                "objdiff_projected_bytes": 100,
+            },
+            "consumer_projection": {
+                "blockers": 0,
+                "allocation_copies": 8,
+                "paired_copies": 8,
+                "allocation_copy_bytes": 100,
+                "paired_copy_bytes": 100,
+                "unique_allocation_bytes": 60,
+                "paired_unique_bytes": 60,
+                "functions": {"EXACT": 4},
+            },
+            "strict_referents": {
+                "referent_debt_functions": 0,
+                "referent_debt_code_bytes": 0,
+            },
+        }
+        self.assertEqual(_all_zero_failures(report), [])
 
 
 def _synthetic_pe(path: Path) -> None:
@@ -585,6 +649,130 @@ class NonPdbDataTests(unittest.TestCase):
 
 
 class DataPipelineTests(unittest.TestCase):
+    @staticmethod
+    def _symbol(
+        rva: int, name: bytes, public_name: bytes = b"",
+        identity: str = "L:module:unit.obj:value",
+    ) -> DataSymbol:
+        return DataSymbol(
+            rva=rva, section=".rdata", storage="rdata", size=4,
+            size_kind="type", type_index=1, scope="local",
+            module_path=b"unit.obj", archive_path=b"module.lib", name=name,
+            public_name=public_name, identity=identity,
+            owner_module="module",
+        )
+
+    def test_comparison_key_uses_qualified_pdb_name_for_same_leaf_locals(self):
+        first = self._symbol(0x2000, b"value", b"?value@first@@3HA")
+        second = self._symbol(0x2004, b"value", b"?value@second@@3HA")
+        self.assertNotEqual(_comparison_key(first), _comparison_key(second))
+
+    def test_physical_allocation_deduplicates_only_same_rva_and_extent(self):
+        duplicate = self._symbol(0x2000, b"value", b"?value@first@@3HA")
+        aliases = [duplicate, duplicate, self._symbol(
+            0x2004, b"value", b"?value@first@@3HA"
+        )]
+        self.assertEqual(
+            [symbol.rva for symbol in _physical_allocations(aliases)],
+            [0x2000, 0x2004],
+        )
+
+    def test_same_name_local_allocations_compare_as_a_multiset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target = [
+                self._symbol(0x2000, b"value"),
+                self._symbol(0x2004, b"value"),
+            ]
+            base = [
+                self._symbol(0x2008, b"value"),
+                self._symbol(0x200C, b"value"),
+            ]
+            with mock.patch(
+                "vostok.data.pipeline._load_rich", return_value=[]
+            ):
+                rows = compare(target, base, image, image)
+            self.assertEqual([row["status"] for row in rows], ["EXACT", "EXACT"])
+            self.assertTrue(all("allocation multiset" in row["note"] for row in rows))
+
+    def test_initializer_bytes_alone_do_not_pair_unrelated_locals(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target = [self._symbol(
+                0x2000, b"target", b"?target@owner_a@@3HB",
+                "L:module:owner_a.obj:target",
+            )]
+            base = [self._symbol(
+                0x2004, b"base", b"?base@owner_b@@3HB",
+                "L:module:owner_b.obj:base",
+            )]
+            with mock.patch("vostok.data.pipeline._load_rich", return_value=[]), \
+                 mock.patch(
+                     "vostok.data.pipeline._consumer_fingerprints",
+                     return_value={},
+                 ):
+                rows = compare(target, base, image, image)
+            self.assertEqual(
+                sorted(row["status"] for row in rows),
+                ["BASE_ONLY", "TARGET_ONLY"],
+            )
+
+    def test_complete_consumer_fingerprint_pairs_local_ownership_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            target = [self._symbol(
+                0x2000, b"target", b"?target@owner_a@@3HB",
+                "L:module_a:owner_a.obj:target",
+            )]
+            base = [self._symbol(
+                0x2004, b"base", b"?base@owner_b@@3HB",
+                "L:module:owner_b.obj:base",
+            )]
+            fingerprint = (("?owner@@YAXXZ", "owner.cpp", "read", "dword", "direct", "0", 0),)
+            with mock.patch("vostok.data.pipeline._load_rich", return_value=[]), \
+                 mock.patch(
+                     "vostok.data.pipeline._consumer_fingerprints",
+                     side_effect=[{0x2000: fingerprint}, {0x2004: fingerprint}],
+                 ):
+                rows = compare(target, base, image, image)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]["status"], "EXACT")
+            self.assertIn("consumer fingerprint", rows[0]["note"])
+
+    def test_ordinal_local_requires_consumer_pairing(self):
+        guard = self._symbol(
+            0x2000, b"$S3", identity="L:module:unit.obj:$S3"
+        )
+        self.assertTrue(_ordinal_local(guard))
+        self.assertIsNotNone(_consumer_fallback_key(guard, {0x2000: (("fn",),)}))
+
+    def test_relocation_alias_sets_match_on_any_shared_identity(self):
+        self.assertTrue(_relocation_signatures_match(
+            [(0, frozenset({"F:M:representative", "F:D:folded"}))],
+            [(0, frozenset({"F:M:other", "F:D:folded"}))],
+        ))
+        self.assertFalse(_relocation_signatures_match(
+            [(0, frozenset({"F:M:first"}))],
+            [(0, frozenset({"F:M:second"}))],
+        ))
+
+    def test_function_identities_bridge_dynamic_initializer_spellings(self):
+        target = _function_identity_tokens({
+            "mangled": "`dynamic initializer for 'owner::value''",
+            "name": "target display",
+        })
+        base = _function_identity_tokens({
+            "mangled": "??__Evalue@owner@@YAXXZ",
+            "name": "base display",
+        })
+        self.assertEqual(target & base, {"C:E:owner::value"})
+
     def test_interval_union_does_not_double_count_aliases(self):
         self.assertEqual(_interval_union([(10, 20), (10, 20), (15, 30), (40, 41)]), 21)
 
