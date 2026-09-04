@@ -53,7 +53,6 @@ inline custom_alloc_handler< Handler >::custom_alloc_handler( handler_allocator&
 	m_allocator	( &allocator ),
 	handler_	( handler )
 {
-	/* no source */
 }
 
 template < typename Handler >

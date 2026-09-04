@@ -11,10 +11,10 @@ inline packet< T >::packet( )
 {
 }
 
-// STATE[REMOVED]: no in-scope consumer calls packet<T>::clear (tcp_packet/udp_match_packet
+// STATE[UNMATCHABLE]: no in-scope consumer calls packet<T>::clear (tcp_packet/udp_match_packet
 // reset their buffer via reserve/append paths, not clear). Uninstantiated both sides.
 template < typename T >
-inline void packet< T >::clear( ) { /* no source */ } // STATE[REMOVED]
+inline void packet< T >::clear( ) { /* no source */ }
 
 template < typename T >
 inline void packet< T >::reserve( u32 size )

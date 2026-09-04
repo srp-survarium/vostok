@@ -6,11 +6,11 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[REMOVED] (the no-source members reset/operator+=/operator/=/dump below): no matched
+// STATE[UNMATCHABLE] (the no-source members reset/operator+=/operator/=/dump below): no matched
 // consumer accumulates/dumps stats - the connection cpp touches individual m_stats.* fields
 // directly and never calls these aggregate methods; the only consumers (server stats
 // aggregation / dump path) are dedicated-server code, absent from the shipped client EXE
-// (zero target symbols). Never instantiated, so the empty shams are correct (absent both sides).
+// (zero target symbols). The shams are code-neutral, not recovered source.
 struct udp_match_items_stats {
 	inline			udp_match_items_stats	( ) :
 		count	( 0 ),
@@ -18,10 +18,10 @@ struct udp_match_items_stats {
 	{
 	}
 
-	inline	void	operator+=				( udp_match_items_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=				( const u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator+=				( udp_match_items_stats const& other ) { /* no source */ }
+	inline	void	operator/=				( const u32 value ) { /* no source */ }
 
-	inline	void	reset					( ) { /* no source */ } // STATE[REMOVED]
+	inline	void	reset					( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	u32		count;
@@ -36,12 +36,12 @@ struct udp_match_stream_stats {
 	{
 	}
 
-	inline	void	dump					( pcstr const title, pcstr const prefix ) const { /* no source */ } // STATE[REMOVED]
+	inline	void	dump					( pcstr const title, pcstr const prefix ) const { /* no source */ }
 
-	inline	void	operator+=				( udp_match_stream_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=				( const u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator+=				( udp_match_stream_stats const& other ) { /* no source */ }
+	inline	void	operator/=				( const u32 value ) { /* no source */ }
 
-	inline	void	reset					( ) { /* no source */ } // STATE[REMOVED]
+	inline	void	reset					( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	udp_match_items_stats		packets;
@@ -58,12 +58,12 @@ struct udp_match_stats {
 	{
 	}
 
-	inline	void	dump			( pcstr const title ) const { /* no source */ } // STATE[REMOVED]
+	inline	void	dump			( pcstr const title ) const { /* no source */ }
 
-	inline	void	operator+=		( udp_match_stats const& other ) { /* no source */ } // STATE[REMOVED]
-	inline	void	operator/=		( const u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void	operator+=		( udp_match_stats const& other ) { /* no source */ }
+	inline	void	operator/=		( const u32 value ) { /* no source */ }
 
-	inline	void	reset			( ) { /* no source */ } // STATE[REMOVED]
+	inline	void	reset			( ) { /* no source */ }
 
 public:
 	/* 0x0000 */	udp_match_stream_stats		sent;
