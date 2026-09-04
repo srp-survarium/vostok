@@ -261,8 +261,12 @@ void player::apply_input_before_new_transform(
 	player_state.animation_player.set_object_transform( player_state.transform, this );
 }
 
+} // namespace survarium
+
 static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+
+namespace survarium {
 
 void player::smooth( const float time_delta )
 {

@@ -7,12 +7,13 @@
 
 namespace survarium {
 
+float s_camera_near_plane	= 0.05f;
 float s_camera_far_plane	= 500.0f;
 float default_vertical_fov	= 65.0f;
 
 game_camera::game_camera( base_game_scene& w ) :
 	m_game_scene( w ),
-	m_near_plane( 0.05f ),
+	m_near_plane( s_camera_near_plane ),
 	m_far_plane( s_camera_far_plane ),
 	m_fov_factor( 1.0f )
 {

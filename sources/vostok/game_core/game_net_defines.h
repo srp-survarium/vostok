@@ -22,12 +22,22 @@ namespace network_core {
 
 namespace survarium {
 
-// STATE[STUB]: `static u32 const player_templates_count = array_size( player_templates );`
-// The target's initializer is 15 bytes - `call array_size<unsigned short const [13],11>;
-// mov [player_templates_count], eax` - which pins player_templates as `u16 const [11][13]`
-// (one dynamic-initializer copy per includer, ~90 of them, all ICF-folded). BLOCKED on the
-// table CONTENT: it lives in .rdata and no index we have carries data, so writing the
-// declaration would mean fabricating 143 values.
+static u16 const player_templates[11][13] =
+{
+	{  0,  0, 29, 0, 28, 41, 36, 12, 51, 0, 13,  7, 0 },
+	{  0,  0, 31, 0, 45, 25, 37, 16, 22, 0,  0,  0, 0 },
+	{  0, 43, 34, 9, 46, 41, 38, 14, 52, 0,  0,  0, 0 },
+	{  0,  0, 48, 0, 47, 42, 39, 19, 53, 0,  0,  0, 0 },
+	{  0,  0, 29, 0, 28, 42, 24, 17, 22, 0,  0,  0, 0 },
+	{ 27,  0, 32, 0, 28, 25, 35, 55, 53, 0,  0,  0, 0 },
+	{  0, 43, 33, 9, 44, 40, 36, 13,  7, 0, 56, 20, 0 },
+	{  0,  0, 31, 0, 47, 25, 37, 15, 22, 0,  0,  0, 0 },
+	{  0,  0, 29, 0, 44, 42, 36, 56, 20, 0,  0,  0, 0 },
+	{  0,  0, 48, 0, 28, 40, 24, 17, 22, 0,  0,  0, 0 },
+	{  0,  0, 33, 0, 46, 41, 37, 64, 70, 0,  0,  0, 0 },
+};
+
+static u32 const player_templates_count = array_size( player_templates );
 
 // per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
 // (one copy per includer, like player_templates_count's dynamic initializer).

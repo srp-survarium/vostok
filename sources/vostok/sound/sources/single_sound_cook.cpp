@@ -16,9 +16,6 @@ namespace sound {
 
 using namespace resources;
 
-pcstr converted_local_path				= "resources.converted/sounds/";
-pcstr spl_extention						= ".single_sound_options";
-
 single_sound_cook::single_sound_cook	( ) :
 	super								( resources::single_sound_class, reuse_true, use_resource_manager_thread_id )
 {
