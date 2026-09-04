@@ -845,5 +845,10 @@ void light_props::load_light_props( configs::binary_config_value const& cfg )
 	load_props_impl	( *this, cfg );
 }
 
+math::uint2 scene_renderer::window_client_size( base_output_window_ptr const& output_window )
+{
+	return m_render_engine_world.window_client_size( output_window );
+}
+
 } // namespace render
 } // namespace vostok
