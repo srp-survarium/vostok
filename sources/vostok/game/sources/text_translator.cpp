@@ -24,7 +24,7 @@ namespace survarium {
 void text_translator::load_text_localization( )
 {
 	pstr path;
-	STR_JOINA							( path, "resources/localization/", s_localization_str, "" );
+	STR_JOINA							( path, "resources/localization/", s_localization_str, "/localization" );
 	resources::request requests[1]	= { { path, resources::binary_config_class } };
 
 	resources::query_resources(

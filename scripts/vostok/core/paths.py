@@ -126,6 +126,8 @@ BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 # delink manifests below actually enroll target COFF data.
 DATA_TARGET_INDEX = GEN_DIR / "target_data_index.tsv"
 DATA_BASE_INDEX = GEN_DIR / "base_data_index.tsv"
+DATA_TARGET_FUNCTION_INDEX = GEN_DIR / "target_function_index.tsv"
+DATA_BASE_FUNCTION_INDEX = GEN_DIR / "base_function_index.tsv"
 DATA_TARGET_ACCESS = GEN_DIR / "data_access_map.tsv"
 DATA_BASE_ACCESS = GEN_DIR / "base_data_access_map.tsv"
 DATA_TARGET_RELOCS = GEN_DIR / "target_data_relocations.tsv"

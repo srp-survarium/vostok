@@ -67,7 +67,7 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 	R_ASSERT											( models.value_exists( "damage_collision_object" ) );
 	pcstr damage_collision_path							= models["damage_collision_object"];
 	fs_new::virtual_path_string							damage_config_path;
-	damage_config_path.assignf							( "resources/animated_model_instances/collision_objects/%s.physics", damage_collision_path );
+	damage_config_path.assignf							( "resources/models/%s.skinned_model/hit_targets", damage_collision_path );
 
 	R_ASSERT											( parent );
 	resources::user_data_variant* user_data				= parent->user_data();
@@ -129,7 +129,7 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 	new_model_instance->m_animation_player			= player;
 
 	fs_new::virtual_path_string	hit_params_config_path;
-	hit_params_config_path.assignf					( "resources/gameplay/hit_params/%s", new_model_instance->m_render_model->m_hit_params.c_str( ) );
+	hit_params_config_path.assignf					( "resources/gameplay/hit_params/%s.options", new_model_instance->m_render_model->m_hit_params.c_str( ) );
 
 	resources::user_data_variant	ud;
 

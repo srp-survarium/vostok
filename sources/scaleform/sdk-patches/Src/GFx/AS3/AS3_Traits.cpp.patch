@@ -1,0 +1,11 @@
+--- a/Src/GFx/AS3/AS3_Traits.cpp
++++ b/Src/GFx/AS3/AS3_Traits.cpp
+@@ -1373,6 +1373,7 @@
+ 
+     return *pVTable;
+ }
+ 
++#line 1368
+ typedef ThunkFunc0<Class, __LINE__, Value> TFunc_prototypeGet;
+ typedef ThunkFunc0<Class, __LINE__, SInt32> TFunc_lengthGet;
+ typedef ThunkFunc0<Class, __LINE__, ASString> TFunc_toString;
