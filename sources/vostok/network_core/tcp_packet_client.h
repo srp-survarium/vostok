@@ -26,19 +26,23 @@ public:
 
 			void						send						( tcp_packet const& packet );
 
-	inline	bool						is_connected				( ) const { return false; }
-	inline	bool						has_connection_established	( ) const { return false; }
+	// STATE[UNMATCHABLE]: retained client API from the legacy implementation; no
+	// shipped caller expands these two forwards.
+	inline	bool						is_connected				( ) const { return m_async_connector.is_connected( ); }
+	inline	bool						has_connection_established	( ) const { return m_async_connector.has_connection_established( ); }
 
-	// STATE[INLINED]: bodies from network::tcp_packet_client::create_client, which
-	// calls m_client->set_on_*( ... ) and inline-folds the `m_x = value;` store; the
-	// sibling network::tcp_packet_client::set_on_connected is the matched out-of-line
-	// form of the same body (100%).
-	inline	void						set_on_connected			( boost::function< void() > const& value ) { m_on_connected = value; /* no source */ }
-	inline	void						set_on_disconnected			( boost::function< void() > const& value ) { m_on_disconnected = value; /* no source */ }
-	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { m_on_packet_received = value; /* no source */ }
+	typedef boost::function< void() >										on_connected_type;
+	typedef boost::function< void() >										on_disconnected_type;
+	typedef boost::function< void( tcp_packet const& ) >						on_packet_received_type;
+	typedef boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	on_error_type;
+
+	// STATE[INLINED]: recovered from network::tcp_packet_client::create_client.
+	inline	void						set_on_connected			( on_connected_type const& value ) { m_on_connected = value; }
+	inline	void						set_on_disconnected			( on_disconnected_type const& value ) { m_on_disconnected = value; }
+	inline	void						set_on_packet_received		( on_packet_received_type const& value ) { m_packet_socket.set_on_packet_received( value ); }
 	inline	void						set_on_error				(
-											boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	value
-										) { m_on_error = value; /* no source */ }
+											on_error_type const&	value
+										) { m_on_error = value; }
 
 	inline	boost::asio::io_service&	io_service					( ) { return m_io_service; }
 
@@ -49,13 +53,15 @@ private:
 			void						start_reading				( );
 
 private:
-	/* 0x0000 */	boost::asio::ip::tcp::socket								m_socket;
-	/* 0x0048 */	tcp_packet_socket< boost::asio::ip::tcp::socket >			m_packet_socket;
+	typedef boost::asio::ip::tcp::socket		socket_type;
+
+	/* 0x0000 */	socket_type												m_socket;
+	/* 0x0048 */	tcp_packet_socket< socket_type >							m_packet_socket;
 	/* 0x04a0 */	async_connector											m_async_connector;
-	/* 0x0900 */	boost::function< void() >									m_on_connected;
-	/* 0x0920 */	boost::function< void() >									m_on_disconnected;
-	/* 0x0940 */	boost::function< void( tcp_packet const& ) >				m_on_packet_received;
-	/* 0x0960 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	/* 0x0900 */	on_connected_type										m_on_connected;
+	/* 0x0920 */	on_disconnected_type									m_on_disconnected;
+	/* 0x0940 */	on_packet_received_type									m_on_packet_received;
+	/* 0x0960 */	on_error_type											m_on_error;
 	/* 0x0980 */	boost::asio::io_service&									m_io_service;
 	/* 0x0984 */	tcp_packet*												m_first_packet;
 }; // class tcp_packet_client

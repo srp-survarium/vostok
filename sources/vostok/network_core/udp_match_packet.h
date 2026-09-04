@@ -44,9 +44,9 @@ class udp_match_packet : public packet< udp_match_packet > {
 public:
 	class helper {
 	private:
-		// STATE[REMOVED]: never referenced - the factory new_udp_match_packet uses placement
+		// STATE[UNMATCHABLE]: never referenced - the factory new_udp_match_packet uses placement
 		// new directly, not call_constructor. Uninstantiated both sides.
-		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ } // STATE[REMOVED]
+		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
 	private:
 		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
@@ -79,7 +79,7 @@ private:
 	// trivial dtor (POD/aggregate members); the empty body is correct. Referenced via
 	// helper::call_destructor in delete_udp_match_packet but never emitted standalone
 	// (inlined into the destroying scope - no ??1 target symbol).
-	inline				~udp_match_packet	( ) { /* no source */ }
+	inline				~udp_match_packet	( ) { }
 
 public:
 	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }

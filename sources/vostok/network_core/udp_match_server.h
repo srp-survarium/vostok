@@ -21,11 +21,11 @@ class packet_reader;
 class udp_match_packet;
 class udp_network_flow_emulator;
 
-// STATE[REMOVED] (every `/* no source */` member below): udp_match_server is the
+// STATE[UNMATCHABLE] (every `/* no source */` member below): udp_match_server is the
 // dedicated-server class - it has ZERO symbols in the shipped client target binary
 // and no TU in scope instantiates it (only #included by network_core_entry_point.cpp,
-// never constructed). So all its inline members are uninstantiated in both binaries;
-// the empty shams are correct. Reconstruct only if a dedicated-server build is matched.
+// never constructed). Its shams are code-neutral, not recovered source; a dedicated-
+// server target is needed to body them.
 class udp_match_server : private boost::noncopyable {
 public:
 	struct comparer {
@@ -35,7 +35,7 @@ public:
 	}; // struct comparer
 
 	struct destroy_predicate : private boost::noncopyable {
-		inline	explicit	destroy_predicate	( udp_match_server& server ) : server( server ) { /* no source */ }
+		inline	explicit	destroy_predicate	( udp_match_server& server ) : server( server ) { }
 		inline	bool		operator()			( udp_match_client_session* session ) const { return false; }
 	public:
 		/* 0x0000 */	udp_match_server&		server;
