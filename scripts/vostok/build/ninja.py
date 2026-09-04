@@ -298,15 +298,14 @@ def _ninja_argv(
     return ["faketime", build_time, *command]
 
 
-def _ninja_env(build_time: str | None = None) -> dict[str, str] | None:
-    if build_time is None:
-        return None
-    return dict(
-        os.environ,
-        FAKETIME_DONT_FAKE_MONOTONIC="1",
-        FAKETIME_DONT_FAKE_STAT="1",
-        WINEDEBUG="-all",
-    )
+def _ninja_env(build_time: str | None = None) -> dict[str, str]:
+    env = dict(os.environ, WINEDEBUG="-all")
+    if build_time is not None:
+        env.update(
+            FAKETIME_DONT_FAKE_MONOTONIC="1",
+            FAKETIME_DONT_FAKE_STAT="1",
+        )
+    return env
 
 
 def _stop_wine_session(build_time: str | None = None) -> None:

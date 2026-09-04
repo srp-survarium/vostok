@@ -13,6 +13,7 @@ from vostok.build import gfx
 from vostok.build import gfx_mspdbsrv
 from vostok.build import ninja as build_ninja
 from vostok.build import ninja_regen
+from vostok.build import rebuild
 from vostok.tool import toolchain
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
@@ -49,6 +50,41 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    def test_build_output_condenses_verbose_compile_edge(self):
+        line = (
+            '[13/16] cmd /c cd /d "c:/survarium/sources/vostok/render/engine/sources" '
+            '&& cl @Z:\\work\\binaries\\ninja\\rsp\\render_engine_pc_dx11_cl_1.rsp '
+            '/nologo'
+        )
+        self.assertEqual(
+            rebuild._terminal_line(line),
+            "[13/16] compile render (render_engine_pc_dx11)",
+        )
+        self.assertEqual(rebuild._CL_MODULE_RE.search(line).group(1), "render")
+
+    def test_build_output_labels_hyphenated_final_link(self):
+        line = (
+            '[4/4] cmd /c cd "Z:/work/sources" && link '
+            '@Z:\\work\\binaries\\ninja\\rsp\\survarium_-_PC_-_DirectX_11_link.rsp'
+        )
+        self.assertEqual(
+            rebuild._terminal_line(line),
+            "[4/4] link survarium_-_PC_-_DirectX_11",
+        )
+
+    def test_build_output_keeps_errors_and_drops_warnings(self):
+        self.assertEqual(
+            rebuild._terminal_line(r".\world.cpp(42) : error C2065: 'x' : undeclared"),
+            r".\world.cpp(42) : error C2065: 'x' : undeclared",
+        )
+        self.assertIsNone(
+            rebuild._terminal_line(r".\world.cpp(42) : warning C4100: unused")
+        )
+        self.assertEqual(
+            rebuild._terminal_line("FAILED: a.obj b.obj c.obj"),
+            "[ninja] edge failed",
+        )
+
     @mock.patch.object(gfx_mspdbsrv.shutil, "which", return_value="/bin/faketime")
     def test_gfx_fixed_time_command_freezes_clock(self, _which):
         self.assertEqual(

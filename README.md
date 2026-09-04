@@ -72,6 +72,10 @@ nix develop                 # first entry realizes ~18 GiB into the store, sets 
 python3 -m vostok build     # build under Wine, regenerate the base-side inputs, refresh the ledger
 ```
 
+Build output is condensed to Ninja edge progress and actionable errors. The
+complete unfiltered transcript from the latest run is kept in
+`binaries/rebuild-output.log` for diagnostic review.
+
 Open the result in [objdiff](https://github.com/encounter/objdiff) with the
 config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
 `target` (the original game). Every build also refreshes the committed ledger
