@@ -8,6 +8,7 @@ namespace survarium {
 class base_game_scene;
 class camera_director;
 
+extern float s_camera_near_plane;
 extern float s_camera_far_plane;
 extern float default_vertical_fov;
 
