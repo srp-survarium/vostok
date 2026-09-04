@@ -12,6 +12,8 @@ namespace vostok {
 namespace physics {
 
 class bt_static_rigid_body : public bt_rigid_body_base {
+typedef bt_rigid_body_base super;
+
 public:
 
 	bt_static_rigid_body( bt_collision_shape_ptr shape, btRigidBody* body );
@@ -28,12 +30,11 @@ public:
 	virtual u16					get_collision_group			( ) const override;
 	virtual btCollisionObject*	get_bt_collision_obect		( ) override;
 
-	// STATE[REMOVED]: no out-of-line body, no caller in any shipped TU, no inline site in
-	// the matched bt_static_rigid_body functions; absent from both binaries. Empty stubs correct.
+	// STATE[UNMATCHABLE]: the client target emits no procedure or inline expansion for these helpers.
 	inline	bool								is_active					( ) const { /* no source */ }
-	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ } // STATE[REMOVED]
-	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { /* no source */ } // STATE[REMOVED]
-	inline	void								predict_integrated_transform( float arg_0, float4x4& arg_1 ) const { /* no source */ } // STATE[REMOVED]
+	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ }
+	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { return m_shape; }
+	inline	void								predict_integrated_transform( float arg_0, float4x4& arg_1 ) const { /* no source */ }
 
 private:
 	/* 0x0000 */	/* bt_rigid_body_base */
@@ -46,12 +47,6 @@ STATIC_SIZE_ASSERT(bt_static_rigid_body, 0x14);
 
 struct bt_rigid_body_construction_info  {
 public:
-	bt_rigid_body_construction_info( );
-
-	// STATE[REMOVED]: no caller (the shipped user game_core static_collision::insert builds
-	// the construction_info field-by-field, never calls load); absent from both binaries.
-	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ return true; }
-
 	/* 0x0000 */	float						m_mass;
 	/* 0x0004 */	bt_collision_shape_ptr		m_collisionShape;
 	/* 0x0008 */	float						m_linearDamping;
@@ -65,6 +60,11 @@ public:
 	/* 0x0028 */	float						m_additionalLinearDampingThresholdSqr;
 	/* 0x002c */	float						m_additionalAngularDampingThresholdSqr;
 	/* 0x0030 */	float						m_additionalAngularDampingFactor;
+
+	bt_rigid_body_construction_info( );
+
+	// STATE[UNMATCHABLE]: the client constructs this record field-by-field and never emits load.
+	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ return true; }
 }; // struct bt_rigid_body_construction_info
 
 STATIC_SIZE_ASSERT(bt_rigid_body_construction_info, 0x34);

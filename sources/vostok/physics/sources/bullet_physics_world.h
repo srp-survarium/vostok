@@ -82,11 +82,10 @@ public:
 	inline	memory::base_allocator&			allocator					( ) { return m_allocator; }
 	inline	btSoftRigidDynamicsWorld*		get_bt_internal				( ) { return m_dynamicsWorld; }
 
-	// STATE[REMOVED]: rope create/destroy are referenced only from editor object_wire_set.cpp,
-	// not compiled into survarium.exe; no free create/destroy_soft_body_rope nor these inlines
-	// appear in either binary. Empty stubs correct.
+	// STATE[UNMATCHABLE]: these editor-only helpers have no procedure or inline expansion
+	// in the client target; their older GSC implementations are recorded in the audit notes.
 	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& arg_0 ) { /* no source */ }
-	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* arg_0 ) { /* no source */ } // STATE[REMOVED]
+	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* arg_0 ) { /* no source */ }
 
 			void							contact_pair_test			( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object );
 			bool							adjust_foot_transform		(
@@ -101,10 +100,12 @@ public:
 private:
 			void							notify_about_contact		( );
 
+typedef callbacks_type callbacks_container_type;
+
 private:
 	/* 0x0000 */	/* world */
 	/* 0x0004 */	/* boost::noncopyable */
-	/* 0x0004 */	callbacks_type						m_contact_callbacks;
+	/* 0x0004 */	callbacks_container_type				m_contact_callbacks;
 	/* 0x001c */	memory::base_allocator&				m_allocator;
 	/* 0x0020 */	btCollisionConfiguration*			m_collisionConfiguration;
 	/* 0x0024 */	btCollisionDispatcher*				m_dispatcher;
