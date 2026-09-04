@@ -18,17 +18,17 @@ class bt_rigid_body_base;
 class bt_soft_body_rope;
 class bt_collision_shape;
 class base_physics_object;
+class bullet_physics_world;
 
 class bt_constraint {
+friend class bullet_physics_world;
+
 public:
 	bt_constraint		( ) {}
 	virtual void load	( configs::binary_config_value const& ) {}
 
-public:
-	// target has this protected too, but bullet_physics_world.cpp add/remove
-	// read it directly - kept public until that access path is understood
-	/* 0x0004 */	btTypedConstraint*		m_bt_typed_constraint;
 protected:
+	/* 0x0004 */	btTypedConstraint*		m_bt_typed_constraint;
 	/* 0x0008 */	bt_rigid_body_base*		m_body_a;
 	/* 0x000c */	bt_rigid_body_base*		m_body_b;
 };

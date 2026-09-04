@@ -4,6 +4,8 @@
   modifications, catalogued in [../bullet/README.md](../bullet/README.md)
   (structural delta) and [../bullet/functional_handoff.md](../bullet/functional_handoff.md).
 - Status lives in the ledger: `python3 -m vostok ledger report --module physics`.
+- Missing procedures, recovered access/friend seams, and the client-unobservable
+  remainder are catalogued in [inline_recovery.md](inline_recovery.md).
 
 ## Reading the assembly
 

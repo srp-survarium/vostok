@@ -11,12 +11,6 @@ namespace physics {
 class bt_collision_shape;
 
 class collision_shape_cook : public resources::translate_query_cook {
-public:
-								collision_shape_cook		( bool static_object );
-
-	virtual void				translate_query				( resources::query_result_for_cook& parent ) override;
-	virtual void				delete_resource				( resources::resource_base* resource ) override;
-
 private:
 	struct cook_data  {
 		/* 0x0000 */	resources::query_result_for_cook*	parent_query;
@@ -24,9 +18,16 @@ private:
 		/* 0x0118 */	float3								scale_;
 	};
 
-	// STATE[REMOVED]: no out-of-line body, not inlined into translate_query (which builds
-	// the request array and calls query_resources directly) nor on_collision_sources_loaded;
-	// no caller; absent from both binaries.
+typedef resources::translate_query_cook super;
+
+public:
+								collision_shape_cook		( bool static_object );
+
+	virtual void				translate_query				( resources::query_result_for_cook& parent ) override;
+	virtual void				delete_resource				( resources::resource_base* resource ) override;
+
+private:
+	// STATE[UNMATCHABLE]: the client emits neither a call nor an inline expansion of this helper.
 	inline	void				load_collision_resources	( collision_shape_cook::cook_data* arg_0 ) { /* no source */ }
 			void				on_collision_sources_loaded	( resources::queries_result& data, collision_shape_cook::cook_data* cd );
 			bt_collision_shape*	create_primitives_shape		( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd );

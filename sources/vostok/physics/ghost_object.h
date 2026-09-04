@@ -40,6 +40,7 @@ public:
 	bool		contact_test							( world* world );
 
 
+	// STATE[UNMATCHABLE]: these editor-only helpers have no client procedure or inline expansion.
 	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
 
 	u32			non_compound_shapes_count				( ) const /* no source */;
