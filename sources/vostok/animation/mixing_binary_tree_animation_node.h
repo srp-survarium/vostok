@@ -108,7 +108,6 @@ private:
 
 private:
 	// sushi@TODO
-	// virtual										~binary_tree_animation_node			( ) { /* no source */ }
 	// sushi@TODO: Moved before clone for whatever reason
 	static	u32									animation_intervals_count			( skeleton_animation_ptr const& animation );
 

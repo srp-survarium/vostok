@@ -11,9 +11,11 @@ namespace mixing {
 
 class n_ary_tree_null_weight_detector : public n_ary_tree_visitor {
 public:
+	// STATE[UNMATCHABLE]: the class is never instantiated in the shipped client.
 	inline	explicit	n_ary_tree_null_weight_detector	( n_ary_tree_animation_node& animation ) { /* no source */ }
 	inline	bool		result							( ) const { return m_result; }
 
+private:
 	virtual	void		visit							( n_ary_tree_animation_node& node ) override { /* no source */ }
 	virtual	void		visit							( n_ary_tree_weight_transition_node& node ) override { /* no source */ }
 	virtual	void		visit							( n_ary_tree_time_scale_transition_node& node ) override { /* no source */ }

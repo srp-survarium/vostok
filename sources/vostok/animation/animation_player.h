@@ -65,7 +65,10 @@ public:
 
 public:
 			void		serialize_state				( void* buffer, u32 buffer_size );
+	// STATE[UNMATCHABLE]: the client emits no empty-state helper or identifiable expansion.
+	static	void		serialize_empty_state		( void* arg_0, u32 arg_1 ) { /* no source */ }
 			void		deserialize_state			( void* buffer, u32 time_in_ms );
+	static	void		destroy_state				( void* buffer );
 
 			void		subscribe					(
 							pcstr									channel_id,
@@ -111,7 +114,7 @@ public:
 						) const;
 
 public:
-	inline	bool		has_object					( pcvoid const arg_0 ) const { /* no source */ }
+	inline	bool		has_object					( pcvoid const arg_0 ) const { /* no source */ } // STATE[UNMATCHABLE]
 	inline	void		enable_logging				( const bool value ) { m_is_logging_enabled = value; }
 	inline	bool		are_there_any_animations	( ) const { return m_mixing_tree.are_there_any_animations(); }
 
@@ -123,7 +126,7 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 			void		reset						( bool clear_callbacks );
-	inline	void		dump_animation_states		( animation_states_dumper& arg_0 ) const { /* no source */ }
+	inline	void		dump_animation_states		( animation_states_dumper& arg_0 ) const { /* no source */ } // STATE[UNMATCHABLE]
 
 private:
 			bool		set_target					(
@@ -133,16 +136,11 @@ private:
 						);
 			pvoid		get_next_buffer				( u32 buffer_size );
 			void		compact_callbacks			( );
+	static	void		destroy_subscriptions		( subscribed_channel const* channels_head );
 			bool		try_get_transform			( pcvoid animated_object, float4x4& result ) const;
 			void		skip_time_if_needed			( const u32 current_time_in_ms );
 
-
-public:
-	static	void		serialize_empty_state		( void* arg_0, u32 arg_1 ) { /* no source */ }
-	static	void		destroy_state				( void* buffer );
-
 private:
-	static	void		destroy_subscriptions		( subscribed_channel const* channels_head );
 	static	void		invert_times				(
 							mixing::n_ary_tree&		tree,
 							const u32				time_in_ms,
@@ -155,12 +153,13 @@ private:
 							mixing::n_ary_tree const&		arg_2,
 							const u32						arg_3,
 							subscribed_channel*&			arg_4
-						) { /* no source */ }
+						) { /* no source */ } // STATE[UNMATCHABLE]
 
 
 public:
 	enum {
 		stack_buffer_size		= 4096*sizeof( pvoid ),
+		estimated_channel_id_length = 12,
 		callbacks_buffer_size	= 320*sizeof( pvoid ),
 	};
 

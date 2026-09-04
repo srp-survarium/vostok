@@ -65,9 +65,11 @@ namespace animation {
 
 	STATIC_SIZE_ASSERT(editor_animations_event, 0x10);
 
-	struct fixed_joint_camera_effector : public camera_effector , private core::noncopyable {
+	class fixed_joint_camera_effector : public camera_effector , private core::noncopyable {
+	public:
 		inline	explicit	fixed_joint_camera_effector	( float4x4 const& joint_matrix ) : m_joint_matrix( joint_matrix ) { }
 
+		// STATE[UNMATCHABLE]: the client emits no editor-effector procedure or expansion.
 		virtual	void		process_camera				( float4x4& view_inverted ) override { /* no source */ }
 		virtual	void		on_attach					( ) override { /* no source */ }
 
