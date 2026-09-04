@@ -11,7 +11,6 @@
 #include <vostok/linkage_helper.h>
 #include <vostok/fs/native_path_string.h>
 
-VOSTOK_INCLUDE_TO_LINKAGE(resources_test);
 VOSTOK_INCLUDE_TO_LINKAGE(compressor_test);
 VOSTOK_INCLUDE_TO_LINKAGE(threading_test);
 VOSTOK_INCLUDE_TO_LINKAGE(math_tests);

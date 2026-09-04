@@ -38,6 +38,8 @@
 
 namespace survarium {
 
+pcstr resources_path = "resources/";
+
  project_cooker_simple::project_cooker_simple( bool editor_present ) :
 	translate_query_cook( resources::game_project_simple_class, reuse_true, use_any_thread_id ),
 	m_editor_present( editor_present )
@@ -50,7 +52,7 @@ void project_cooker_simple::translate_query( resources::query_result_for_cook& p
 	fs_new::virtual_path_string project_name( parent.get_requested_path( ) );
 
 	fs_new::virtual_path_string game_proj_path;
-	game_proj_path.assignf( "%sprojects/%s/client_project", "resources/", project_name.c_str( ) );
+	game_proj_path.assignf( "%sprojects/%s/client_project", resources_path, project_name.c_str( ) );
 
 	resources::query_resource(
 		game_proj_path.c_str( ),

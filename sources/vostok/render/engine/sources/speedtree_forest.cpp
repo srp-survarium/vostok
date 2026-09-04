@@ -19,7 +19,7 @@ namespace render {
 
 using namespace SpeedTree;
 
-static float const scale_speedtree_to_vostok = 1.0f;//0.3048f;
+float speedtree_forest::scale_speedtree_to_vostok = 1.0f;//0.3048f;
 
 speedtree_forest::speedtree_forest( )
 {
