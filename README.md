@@ -76,6 +76,9 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) with the
 config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
 `target` (the original game). Every build also refreshes the committed ledger
 `config/match_state.tsv` and the score block at the top of this README.
+The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
+holds Ninja after a completed link or a failed pre-link edge, it reaps that
+server and preserves Ninja's real success or failure result.
 
 ## Layout
 

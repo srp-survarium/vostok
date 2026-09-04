@@ -289,6 +289,30 @@ class CleanFinalPdbTests(unittest.TestCase):
 
         stop.assert_called_once_with(proc, {41, 42})
 
+    def test_failed_full_build_reaps_pdb_server_and_returns_ninja_error(self):
+        proc = mock.Mock(pid=123)
+        proc.poll.return_value = None
+        proc.wait.return_value = 1
+        with (mock.patch.object(
+                  build_ninja, "_prefix_process_ids",
+                  side_effect=(set(), {41, 42}, set()),
+              ),
+              mock.patch.object(build_ninja.subprocess, "Popen", return_value=proc),
+              mock.patch.object(build_ninja, "_wine_tree_jiffies", return_value=0),
+              mock.patch.object(build_ninja, "_outputs_refreshed", return_value=False),
+              mock.patch.object(build_ninja.time, "sleep"),
+              mock.patch.object(build_ninja.time, "time", side_effect=(100, 100, 106)),
+              mock.patch.object(build_ninja, "IDLE_LIMIT_SECONDS", 5),
+              mock.patch.object(build_ninja, "_kill_prefix_processes") as kill):
+            self.assertEqual(
+                build_ninja._run_with_watchdog(Path("ninja.exe"), ["game"]), 1
+            )
+
+        kill.assert_called_once_with(
+            ("mspdbsrv.exe",), exclude_pids=frozenset({41, 42})
+        )
+        proc.wait.assert_called_once_with(timeout=30)
+
     def test_existing_build_in_same_prefix_refuses_overlap(self):
         with (mock.patch.object(build_ninja, "_prefix_process_ids", return_value={42, 41}),
               mock.patch.object(build_ninja.subprocess, "Popen") as popen):

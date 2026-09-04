@@ -506,6 +506,7 @@ def _run_with_watchdog(
         )
 
         idle_seconds = 0.0
+        worker_idle_seconds = 0.0
         old_pids = frozenset(existing_pids)
         prev_jiffies = _wine_tree_jiffies(old_pids)
         prev_t = time.time()
@@ -525,7 +526,13 @@ def _run_with_watchdog(
                          if elapsed > 0 else 0.0)
                 prev_jiffies, prev_t = jiffies, now
 
-                if cores < IDLE_CPU_CORES and _outputs_refreshed(start):
+                outputs_refreshed = _outputs_refreshed(start)
+                workers = _prefix_process_ids(_MODULE_WORKER_COMMS) - existing_pids
+                worker_idle_seconds = (
+                    0.0 if workers else worker_idle_seconds + elapsed
+                )
+
+                if cores < IDLE_CPU_CORES and outputs_refreshed:
                     idle_seconds += elapsed
                 else:
                     idle_seconds = 0.0
@@ -539,6 +546,26 @@ def _run_with_watchdog(
                     )
                     reaped = True
                     break
+
+                if (worker_idle_seconds >= IDLE_LIMIT_SECONDS
+                        and not outputs_refreshed):
+                    print(
+                        "[ninja] watchdog: no compiler/archive/link worker has "
+                        f"run for ~{int(worker_idle_seconds)}s and the final "
+                        "EXE+PDB pair is incomplete; reaping this invocation's "
+                        "PDB server to recover Ninja's failure status.",
+                        flush=True,
+                    )
+                    _kill_prefix_processes(
+                        ("mspdbsrv.exe",),
+                        exclude_pids=frozenset(existing_pids),
+                    )
+                    try:
+                        rc = proc.wait(timeout=30)
+                    except subprocess.TimeoutExpired:
+                        _stop_interrupted_build(proc, existing_pids)
+                        return 1
+                    return rc if rc != 0 else 1
 
                 if now - start > HARD_TIMEOUT_SECONDS:
                     print(
