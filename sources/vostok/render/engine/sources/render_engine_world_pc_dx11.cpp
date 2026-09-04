@@ -124,6 +124,12 @@ void renderer_cook::create_resource(
 	in_out_query.finish_query				(result_success);
 }
 
+#line 131
+void renderer_cook::destroy_resource( resources::unmanaged_resource* resource )
+{
+	resource->~unmanaged_resource( );
+}
+#line 127
 static void register_cooks( )
 {
 	using resources::register_cook;
@@ -1608,6 +1614,176 @@ bool engine::world::is_playing( resources::unmanaged_resource_ptr const& instanc
 void engine::world::set_gamma_correction_factor( const float value )
 {
 	options::ref( ).current.m_gamma_correction_factor = value;
+}
+
+void engine::world::draw_text(
+	pcstr text,
+	float2 const& position,
+	vostok::ui::font* const in_font,
+	math::color const& in_color
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( text, &position, in_font, &in_font, &in_color );
+}
+
+math::uint2 engine::world::window_client_size( base_output_window_ptr const& render_output_window )
+{
+	return static_cast_checked< render::render_output_window* >( render_output_window.c_ptr( ) )->get_window_client_size( );
+}
+
+void engine::world::draw_debug_lines( colored_vertices_type const& vertices, colored_indices_type const& indices )
+{
+	system_renderer::ref( ).set_w( float4x4( ).identity( ) );
+	system_renderer::ref( ).draw_lines(
+		&*vertices.begin( ),
+		&*vertices.end( ),
+		&*indices.begin( ),
+		&*indices.end( ),
+		false
+	);
+}
+
+void engine::world::draw_debug_triangles( colored_vertices_type const& vertices, colored_indices_type const& indices )
+{
+	system_renderer::ref( ).set_w( float4x4( ).identity( ) );
+	system_renderer::ref( ).draw_triangles(
+		&*vertices.begin( ),
+		&*vertices.end( ),
+		&*indices.begin( ),
+		&*indices.end( ),
+		false
+	);
+}
+
+void engine::world::draw_editor_lines( colored_vertices_type const& vertices, colored_indices_type const& indices )
+{
+	system_renderer::ref( ).set_w( float4x4( ).identity( ) );
+	system_renderer::ref( ).draw_lines(
+		&*vertices.begin( ),
+		&*vertices.end( ),
+		&*indices.begin( ),
+		&*indices.end( ),
+		false
+	);
+}
+
+void engine::world::draw_editor_triangles( colored_vertices_type const& vertices, colored_indices_type const& indices )
+{
+	system_renderer::ref( ).set_w( float4x4( ).identity( ) );
+	system_renderer::ref( ).draw_triangles(
+		&*vertices.begin( ),
+		&*vertices.end( ),
+		&*indices.begin( ),
+		&*indices.end( ),
+		false
+	);
+}
+
+void engine::world::setup_grid_render_mode( u32 grid_density )
+{
+	VOSTOK_UNREFERENCED_PARAMETER( grid_density );
+	system_renderer::ref( ).setup_grid_render_mode( grid_density );
+}
+
+void engine::world::remove_grid_render_mode( )
+{
+	system_renderer::ref( ).remove_grid_render_mode( );
+}
+
+void engine::world::setup_rotation_control_modes( bool color_write )
+{
+	system_renderer::ref( ).setup_rotation_control_modes( color_write );
+}
+
+void engine::world::update_system_model( render_model_instance_ptr const& v, float4x4 const& transform )
+{
+	render_model_instance_impl_ptr model = static_cast_resource_ptr< render_model_instance_impl_ptr >( v );
+	model->set_transform( transform );
+}
+
+void engine::world::draw_terrain_debug( )
+{
+}
+
+void engine::world::set_selection_parameters( float4 const& selection_color, float selection_rate )
+{
+	system_renderer::ref( ).set_selection_parameters( selection_color, selection_rate );
+}
+
+void engine::world::update_model_index_buffer(
+	render_model_instance_ptr const& v,
+	vectora< buffer_fragment > const& fragments
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( v, fragments );
+}
+
+void engine::world::setup_view_and_output(
+	base_scene_view_ptr const& view,
+	base_output_window_ptr const& output_window,
+	math::rectangle< float2 > const& viewport
+)
+{
+	system_renderer::ref( ).setup_scene_view( view );
+	system_renderer::ref( ).setup_render_output_window( output_window, viewport );
+}
+
+void engine::world::clear_zbuffer( float z_value )
+{
+	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH, z_value, 0 );
+}
+
+void engine::world::draw_screen_lines(
+	base_scene_ptr const& scene,
+	float2 const* points,
+	u32 count,
+	math::color const& color,
+	float width,
+	u32 pattern
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETER( scene );
+
+	float3* const points_3d = pointer_cast< float3* >( ALLOCA( sizeof( vostok::math::float3 ) * count ) );
+	for ( u32 i = 0; i < count; ++i )
+		points_3d[i] = float3(
+			+points[i].elements[0] / (float)backend::ref( ).target_width( ) * 2.f - 1.f,
+			-( points[i].elements[1] / (float)backend::ref( ).target_height( ) * 2.f - 1.f ),
+			0.f
+		);
+
+	system_renderer::ref( ).draw_screen_lines( points_3d, count, color, width, pattern, false, true );
+}
+
+void engine::world::draw_3D_screen_lines(
+	base_scene_ptr const& scene,
+	float3 const* points,
+	u32 count,
+	math::color const& color,
+	float width,
+	u32 pattern,
+	bool use_depth
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETER( scene );
+	system_renderer::ref( ).draw_screen_lines( points, count, color, width, pattern, use_depth, false );
+}
+
+void engine::world::draw_3D_screen_point(
+	base_scene_ptr const& scene,
+	float3 const& position,
+	math::color color,
+	float width,
+	bool use_depth
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETER( scene );
+	system_renderer::ref( ).draw_3D_point( position, width, color, use_depth );
+}
+
+pcstr engine::world::type( )
+{
+	return ( "dx11" );
 }
 
 } // namespace render
