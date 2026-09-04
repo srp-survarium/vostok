@@ -9,6 +9,7 @@
 
 namespace vostok {
 
+extern pcstr g_delay_loading_libraries_prefix;
 extern pcstr g_delay_loading_libraries_reference_module;
 
 namespace platform {

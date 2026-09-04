@@ -675,6 +675,7 @@ namespace cylinder_solid {
 
 	const u32 face_count = 64; 
 	const u32 index_count = face_count*3; 
+	const u32 index_count_no_caps = 96;
 	const u16 faces[index_count] = {
 		0,		1,		2,
 		3,		1,		0,

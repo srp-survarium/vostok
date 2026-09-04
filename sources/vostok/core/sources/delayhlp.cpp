@@ -319,7 +319,7 @@ __delayLoadHelper2(
 			if (last_slash)
 				*(last_slash + 1) = 0;
 
-			strcat_s(path, sizeof(path), "");
+			strcat_s(path, sizeof(path), vostok::g_delay_loading_libraries_prefix);
 			strcat_s(path, sizeof(path), "../../binaries.prebuilt/" VOSTOK_PLATFORM_FOLDER "/" );
 			
 			#undef VOSTOK_PLATFORM_FOLDER
