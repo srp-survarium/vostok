@@ -19,12 +19,10 @@
 
 namespace survarium {
 
-extern float const agent_radius = 0.35f;
-
  animation_space_vertex::animation_space_vertex( resources::managed_resource_ptr const& animation_vertex, pcstr animation_caption ) :
 	animation		( animation_vertex ),
 	caption			( animation_caption ),
-	length			( animation::cubic_spline_skeleton_animation_pinned( animation_vertex )->length_in_frames( ) / 30.f ),
+	length			( animation::cubic_spline_skeleton_animation_pinned( animation_vertex )->length_in_frames( ) / animation::default_fps ),
 	group_id		( u32( -1 ) ),
 	intervals_count	( u32( -1 ) )
 {

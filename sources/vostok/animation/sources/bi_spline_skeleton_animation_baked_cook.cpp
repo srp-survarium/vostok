@@ -4,6 +4,9 @@
 #include "bi_spline_skeleton_animation_baked_cook.h"
 
 #include "bi_spline_skeleton_animation_baked.h"
+#include <vostok/linkage_helper.h>
+
+VOSTOK_DECLARE_LINKAGE_ID(animation_bi_spline_animation_baked_cook)
 
 namespace vostok {
 namespace animation {

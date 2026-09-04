@@ -7,6 +7,9 @@
 #include "pch.h"
 #include "skeleton_animation_cook.h"
 #include "bi_spline_skeleton_animation_baked.h"
+#include <vostok/linkage_helper.h>
+
+VOSTOK_DECLARE_LINKAGE_ID(animation_skeleton_animation_cook)
 
 using vostok::animation::skeleton_animation_cook;
 using vostok::animation::bi_spline_skeleton_animation_baked_ptr;
