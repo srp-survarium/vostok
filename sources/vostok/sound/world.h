@@ -18,7 +18,7 @@ enum calculation_type
 	openal
 }; // enum calculation_type
 
-struct /*VOSTOK_NOVTABLE*/ world
+struct world
 {
 public:
 	virtual	void				tick					( )							= 0;

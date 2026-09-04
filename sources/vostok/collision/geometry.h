@@ -38,7 +38,7 @@ class truncated_sphere_geometry;
 class triangle_mesh_base;
 class composite_geometry;
 
-class /*VOSTOK_NOVTABLE*/ geometry : public resources::unmanaged_resource
+class geometry : public resources::unmanaged_resource
 {
 public:
 //								geometry			( ) : m_matrix ( float4x4().identity() ){}
