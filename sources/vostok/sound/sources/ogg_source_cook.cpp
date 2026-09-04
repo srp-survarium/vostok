@@ -13,6 +13,7 @@
 namespace vostok {
 namespace sound {
 
+#ifndef MASTER_GOLD
 pcstr _converted_local_path		= "resources.converted/sounds/single/";
 pcstr _sound_sources_path		= "resources/sounds/single/";
 pcstr _high_quality				= ".high";
@@ -24,6 +25,7 @@ pcstr _low_quality_with_ext		= ".low.ogg";
 pcstr _wav_ext					= ".wav";
 pcstr _ogg_ext					= ".ogg";
 pcstr _options_ext				= ".raw_options";
+#endif // #ifndef MASTER_GOLD
 
 ogg_source_cook::ogg_source_cook( ) 
 :super( resources::ogg_raw_file, reuse_true, use_current_thread_id )

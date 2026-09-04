@@ -72,7 +72,7 @@ stage_sun::stage_sun(
 	for ( u32 z = 0; z < jitter_size; ++z )
 		for ( u32 y = 0; y < jitter_size; ++y )
 			for ( u32 x = 0; x < jitter_size; ++x ) {
-				float angle = random.random_f( SpeedTree::c_fTwoPi );
+				float angle = random.random_f( math::pi * 2.0f );
 				half2& value = temp_data[z * jitter_size * jitter_size + y * jitter_size + x];
 				value.x = math::half( cos( angle ) );
 				value.y = math::half( sinf( angle ) );
