@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "booby_trap_cook.h"
 #include "booby_trap.h"
 #include <vostok/particle/world.h>

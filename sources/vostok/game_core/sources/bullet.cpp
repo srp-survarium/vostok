@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/bullet.h>
 
 #include <vostok/game_core/bullet_manager.h>
@@ -9,6 +10,7 @@
 #include <vostok/game_core/material_pair.h>
 #include <vostok/game_core/weapon_ammunition.h>
 #include <vostok/game_core/hit_initiator.h>
+#include <vostok/game_core/hit_receiver.h>
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/physics/rigid_body_base.h>
 #include <vostok/physics/ray_result.h>
@@ -578,7 +580,7 @@ collision_result bullet::try_reflect(
 
 	float calculated_koeff	= 1.0f - angle_alpha / fin_ricochet_angle;
 
-	speed					*= math::linear_interpolation( calculated_koeff, 1.0f, m_collided_material->reflection_speed_down( ) ); // sushi@MATCH: <0x5910ae> `linear_interpolation` inlined in target.
+	speed					*= math::lerp( m_collided_material->reflection_speed_down( ), 1.0f, calculated_koeff );
 	if( speed < 0 )
 	{
 #ifndef MASTER_GOLD

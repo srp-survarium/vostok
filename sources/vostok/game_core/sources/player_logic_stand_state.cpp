@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_logic_stand_state.h"
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/weapon_core.h>
@@ -12,8 +13,6 @@
 #include <vostok/animation/instant_interpolator.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 // claude@NOTE: extern definition needed by weapon_user_animations_container::
 // get_stand_animation_caption (inlined into jump_logic::get_move_look_caption);
@@ -77,7 +76,7 @@ animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 
 	ASSERT( UNKNOWN_EXPRESSION_T( main_animation_index < 33 ) );
 
-	animation::linear_interpolator		interpolator( s_aim_transition_time );
+	animation::linear_interpolator		interpolator( 0.3f );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -142,7 +141,7 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 ) const
 {
 	animation::instant_interpolator		interpolator;
-	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
+	animation::linear_interpolator		l_interpolator( 0.3f );
 
 	animation_type_enum const			animation_type	= animation_type_enum( movement_animation_index + 2 );
 

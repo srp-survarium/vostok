@@ -26,4 +26,6 @@
 
 #include <boost/asio.hpp>
 
+using namespace vostok;
+
 #endif // #ifndef PCH_H_INCLUDED

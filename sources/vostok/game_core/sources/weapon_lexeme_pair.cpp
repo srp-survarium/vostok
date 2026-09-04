@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_lexeme_pair.h>
 
 #include <vostok/animation/mixing_animation_lexeme_parameters.h>
