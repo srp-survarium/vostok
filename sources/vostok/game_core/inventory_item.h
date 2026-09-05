@@ -5,6 +5,9 @@
 
 #include <vostok/game_core/interactive_object.h>
 #include <vostok/game_core/profile_slot_enum.h>
+#include <vostok/game_core/game_world_object.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
@@ -27,13 +30,11 @@ public:
 	inline	profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
 	inline	inventory_item::action_behaviour_type const&
 											get_action_behaviuor			( ) const { return m_action_behaviuor; }
-	// sushi@NOTE: Actual impl is at `player_logic_base_state.h`. Empty here and ICF-folded
-	// (no distinct symbol in either index), so unpairable as a standalone.
 	virtual	void								action							( bool key_down ) { VOSTOK_UNREFERENCED_PARAMETER( key_down ); }
-	virtual	void								remove							( ) { /* no source */ }
+	virtual	void								remove							( ) { }
 
-	virtual	void								holder_assigned					( ) { /* no source */ }
-	virtual	void								holder_removed					( ) { /* no source */ }
+	virtual	void								holder_assigned					( ) { }
+	virtual	void								holder_removed					( ) { }
 
 	inline	void								set_amount						( const u16 value ) { m_amount = value; }
 
@@ -50,8 +51,9 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
-	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { /* rva 0x869f0 */ }
-	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* rva 0x9b250 */ }
+	// sushi@TODO: verify direct by-value vararg copies and the clipped target epilogues in the deferred build.
+	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { vostok::detail::unreferenced_parameter_helper( object, packet ); }
+	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { vostok::detail::unreferenced_parameter_helper( reader ); }
 
 protected:
 	/* 0x0000 */	/* interactive_object */

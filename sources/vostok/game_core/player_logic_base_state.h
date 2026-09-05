@@ -23,9 +23,6 @@ struct base_player;
 class weapon_user_animations_selector;
 struct player_input;
 
-//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)
-//	inventory_item::action
-
 class player_logic_base_state : public ai::fsm_state {
 public:
 	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
@@ -41,20 +38,20 @@ public:
 											const bool							is_third_view
 										) const = 0;
 
-	// claude@NOTE: stub body must return a value or the abstract vtable fails LTCG
-	// codegen (C4716/LNK1257) once an obj carrying this vtable is kept. Not matched.
-	virtual	float4x4					get_attachment_transform	( ) const { return float4x4( ); }
+	// sushi@TODO: resolve the shared 0x112e20 trap/extent and vtable use; this return is not recovered.
+	virtual	float4x4					get_attachment_transform	( ) const { return float4x4( ); } // STATE[STUB]
 
-	virtual	void						serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
-	virtual	void						deserialize					( network_core::packet_reader& arg_0 ) { /* no source */ }
+	virtual	void						serialize					( network_core::udp_match_packet& arg_0 ) const { }
+	virtual	void						deserialize					( network_core::packet_reader& arg_0 ) { }
 
 	inline	weapon_user_state_enum		id							( ) const { return m_weapon_user_state_id; }
 	inline	bool						is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
 	virtual	bool						is_ready_for_transition		( ) const override { return true; }
 
-	inline	bool						is_weapon_visible			( ) const { /* no source */ }
-	inline	bool						is_smoothing_needed			( ) const { /* no source */ }
-	inline	bool						is_physics_transform_allowed( ) const { /* no source */ }
+	// sushi@TODO: verify these flag-getter models against a consuming target.
+	inline	bool						is_weapon_visible			( ) const { return m_is_weapon_weapon_visible; }
+	inline	bool						is_smoothing_needed			( ) const { return m_is_smoothing_needed; }
+	inline	bool						is_physics_transform_allowed( ) const { return m_is_physics_transform_allowed; }
 
 protected:
 	// claude@MATCH: protected static -> mangled `K` (target). private would be `C`,
