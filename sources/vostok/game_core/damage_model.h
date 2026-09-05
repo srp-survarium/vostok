@@ -65,6 +65,7 @@ public:
 	)> affect_event_callback_type;
 
 public:
+	// sushi@TODO: verify supplied-callback construction at a consumer; the default overload's null link is observed.
 	inline	explicit affect_subscriber	( affect_event_callback_type const& subscription_callback ) : subscription_callback( subscription_callback ), next( NULL ) { }
 	inline	         affect_subscriber	( ) : next( NULL ) { }
 
@@ -82,7 +83,7 @@ public:
 							m_absorb	( absorb )
 	{
 		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );
-		strings::copy( (pstr)&m_hit_type, 16, damage_type ); // sushi@TODO: damage_type can be less then 16, is this safe?
+		strings::copy( (pstr)&m_hit_type, 16, damage_type );
 	}
 
 	inline	float		reduce_damage				(
@@ -128,10 +129,17 @@ public:
 			void					tick							( const u32 time_delta_ms, const u32 current_time_in_ms );
 
 			void					fill_stats						( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
-	inline	void					fill_stats						( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
+	// sushi@TODO: verify whether the player-stats path adds the same heading as the retained NPC path.
+	inline	void					fill_stats						( damage_info_type& stats, const u32 current_time_in_ms ) const
+	{
+		statistics_item<46,16> new_stats_item;
+		new_stats_item.caption = "damage status: ";
+		stats.damage_info.push_back( new_stats_item );
+		m_body_parts.for_each( dump_player_body_part_state_predicate( stats, current_time_in_ms ) );
+	}
 			void					dump_stats						( boost::function<void( u32, float, float, pcstr )> callback );
 
-	inline	bool					is_healthy						( ) const { /* no source */ }
+	inline	bool					is_healthy						( ) const { return m_body_parts.find_if( check_health_predicate( ) ) == NULL; }
 
 			void					reset							( );
 
@@ -149,22 +157,42 @@ public:
 
 	inline	u8						broken_legs_count				( ) const { return m_broken_legs_count[0] + m_broken_legs_count[1]; }
 	inline	u8						broken_hands_count				( ) const { return m_broken_hands_count[0] + m_broken_hands_count[1]; }
-	inline	u32						get_parts_count					( ) const { /* no source */ }
-	inline	u8						get_last_aggressor_id			( ) const { /* no source */ }
+	inline	u32						get_parts_count					( ) const { return m_body_parts.size( ); }
+	inline	u8						get_last_aggressor_id			( ) const { return m_last_hit_initiator; }
 
 	inline	affects_applying_type_enum		get_affects_applying_type	( ) const { return m_affects_applying_type; }
 
 			body_part_parameters*	get_body_part					( pcstr part_name ) const;
-	inline	u8						get_body_part_index				( pcstr arg_0 )		const { /* no source */ }
-	inline	pcstr					get_body_part_name				( const u8 arg_0 )	const { /* no source */ }
+	// sushi@TODO: verify list-index identity, missing-name/index policy and u8 overflow from original consumers.
+	inline	u8						get_body_part_index				( pcstr name ) const
+	{
+		u32 index = 0;
+		for ( body_part_parameters const* part = m_body_parts.front( ); part; part = part->next, ++index )
+			if ( strings::equal( part->get_name( ), name ) )
+				return (u8)index;
+		return u8(-1);
+	}
+	inline	pcstr					get_body_part_name				( const u8 index ) const
+	{
+		u32 current_index = 0;
+		for ( body_part_parameters const* part = m_body_parts.front( ); part; part = part->next, ++current_index )
+			if ( current_index == index )
+				return part->get_name( );
+		return NULL;
+	}
 
 			body_part_parameters*	pop_body_part					( );
 
 			u8						get_total_health				( );
 
+	// sushi@TODO: establish raw versus normalized health, eligible parts and tie policy before selecting a minimum.
 	inline	body_part_parameters*	get_body_part_with_min_health	( ) const { /* no source */ }
 
-			void					serialize				( network_core::udp_match_packet&, s32 ) const { /* no source */ }
+	// sushi@TODO: verify producer framing; model mirrors the retained per-part deserialize traversal.
+			void					serialize				( network_core::udp_match_packet& packet, s32 client_offset ) const
+	{
+		m_body_parts.for_each( boost::bind( &body_part_parameters::serialize, _1, boost::ref( packet ), client_offset ) );
+	}
 			void					deserialize				( network_core::packet_reader& reader );
 
 public:
@@ -206,6 +234,7 @@ private:
 	/* 0x0338 */	u8								m_broken_legs_count[2];
 	/* 0x033a */	u8								m_broken_hands_count[2];
 
+	// sushi@TODO: target modifier traverses this private list; determine original friendship or an unretained helper.
 	friend struct player_parameters_modifyer;
 
 }; // class damage_model

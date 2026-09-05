@@ -8,6 +8,7 @@
 #include <vostok/game_core/hit_type_parameters.h>
 #include <vostok/game_core/affects_threshold.h>
 #include <vostok/game_core/damage_protector.h>
+#include <vostok/game_core/damage_info_type.h>
 
 namespace survarium {
 	class damage_model;
@@ -99,10 +100,20 @@ public:
 			void					regenerate				( const u32 time_delta_ms, const u32 current_time_in_ms );
 
 			void					dump_state				( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
-	inline	void					dump_state				( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
+	// sushi@TODO: verify the player-stats formatting model against its original consumer.
+	inline	void					dump_state				( damage_info_type& stats, const u32 current_time_in_ms ) const
+	{
+		typedef statistics_item<46,16> content_type;
+		content_type new_stats_item = content_type( );
+		fill_new_stats_item( new_stats_item, current_time_in_ms );
+		stats.damage_info.push_back( new_stats_item );
+	}
 			void					dump_state				( boost::function< void( u32, float, float, pcstr ) > callback, const u32 index ) const;
 
-	inline	void					remove_edges			( body_part_parameters* arg_0 ) { /* no source */ }
+	inline	void					remove_edges			( body_part_parameters* vertex )
+	{
+		m_hit_types.for_each( remove_vertex_from_hit_parameters_predicate( vertex ) );
+	}
 
 			void					reset					( );
 
@@ -118,7 +129,9 @@ public:
 
 	inline	pcstr					get_name				( ) const { return m_name.c_str( ); }
 
-	inline	bool					is_healthy				( ) const { return m_health == m_max_health; } // sushi@TODO: This is an assumption before we find actual usage
+	// sushi@TODO: verify exact equality versus threshold/affect checks in the original health predicate consumer.
+	inline	bool					is_healthy				( ) const { return m_health == m_max_health; }
+	// sushi@TODO: determine whether the original accessor returns raw health or a normalized fraction.
 	inline	float					relative_health			( ) const { return m_health; }
 	inline	float					get_max_health			( ) const { return m_max_health; }
 
@@ -129,6 +142,7 @@ public:
 			hit_type_parameters*	pop_hit_type			( );
 			affects_threshold*		pop_threshold			( );
 
+	// sushi@TODO: recover health-to-color thresholds, interpolation and zero-max-health handling from a consumer.
 	inline	math::color				get_health_level_color	( ) const { /* no source */ }
 
 			bool					is_affect_applied		( const hit_affects_type_enum affect );

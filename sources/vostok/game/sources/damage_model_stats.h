@@ -4,6 +4,7 @@
 #define DAMAGE_MODEL_STATS_H_INCLUDED
 
 #include <vostok/game_core/damage_model.h>	// damage_model_ptr (by-value param)
+#include <vostok/game_core/damage_info_type.h>
 #include <vostok/render/engine/base_classes.h>	// base_scene_view_ptr
 
 namespace vostok {
@@ -20,23 +21,6 @@ namespace ui {
 } // namespace vostok
 
 namespace survarium {
-
-template < int ItemSize, int ItemsCount >
-struct statistics_item {
-	typedef fixed_string< ItemSize > content_type;
-
-
-public:
-	/* 0x0000 */	fixed_string< 32 >						caption;
-	/* 0x002c */	fixed_vector< content_type, ItemsCount >	content;
-}; // struct statistics_item
-
-struct damage_info_type : private boost::noncopyable {
-
-public:
-	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	fixed_vector< statistics_item< 46, 16 >, 20 > damage_info;
-}; // struct damage_info_type
 
 class damage_model_stats : private boost::noncopyable {
 public:
