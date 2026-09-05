@@ -19,24 +19,24 @@ private:
 
 	virtual	void								activate					( base_player& user, engine& engine ) override;
 
-	virtual	void								deactivate					( ) override { /* no source */ }
+	virtual	void								deactivate					( ) override { }
 
 	virtual	float4x4							transform					( ) const override
 	{
 		return m_transform;
 	}
 
-	virtual	void								tick						( ) override { /* no source */ }
+	virtual	void								tick						( ) override { }
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override
 	{
-		return false;
+		return true;
 	}
 
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override;
 
-	virtual	void								on_player_model_added		( ) override { /* no source */ }
-	virtual	void								on_player_model_removed		( ) override { /* no source */ }
+	virtual	void								on_player_model_added		( ) override { }
+	virtual	void								on_player_model_removed		( ) override { }
 
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&			user_skeleton,
@@ -58,10 +58,7 @@ private:
 		vostok::detail::unreferenced_parameter_helper( &packet, client_offset );
 	}
 
-	// claude@NOTE: faithful empty body. Target is a bare `int3` (0x1 byte, 0 stmts):
-	// ICF maps the identical empty body elsewhere, so only the alignment trap survives
-	// at this RVA; our genuine `ret 4` is correct and
-	// the int3-vs-ret residual is a linker fold artifact, not source-steerable.
+	// sushi@TODO: resolve the one-byte retail trap span through vtable/xref evidence before claiming an empty body.
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override
 	{
 	}
