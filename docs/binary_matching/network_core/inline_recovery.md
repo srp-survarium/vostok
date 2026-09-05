@@ -1,138 +1,167 @@
-# Network inline-body audit
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 
-This audit distinguishes three cases that the old `STATE[REMOVED]` label had
-collapsed together. A declaration present in the retail PDB is not evidence that
-the original body was removed. It may have been expanded into a caller, or it may
-simply be uninstantiated in the shipped client executable.
+# Network-core no-source audit
 
-An inline recovery is not complete merely because equivalent field logic was
-written in the caller. The caller must retain the declared helper seam: the
-source boundary can affect statement topology and MSVC's inlining/codegen even
-when the final operation is semantically identical. Each classification below
-therefore comes from the target caller expansion as well as the symbol census.
+This is the exhaustive disposition of the 71 function bodies that PR 569 left
+as `/* no source */` or as fake `return false`, `return 0`, or `return NULL`
+implementations. Every one now has executable semantics. The table deliberately
+separates source evidence from semantic inference: an inline declaration in the
+PDB proves the seam and its access, but does not by itself prove the body.
 
-## Recovered from retail code
+Evidence labels used below:
 
-| Declaration | Retail evidence | Recovered source seam |
+- **retail expansion**: the operation is visible in a shipped client caller;
+- **live sibling**: a retained engine path performs the same operation;
+- **ancestor**: the parked `temp/network_legacy` implementation supplies the
+  corresponding Vostok design;
+- **ownership**: member types, access, inverse operations, or allocator ownership
+  constrain the implementation;
+- **server model**: the client PDB supplies the declaration and layout, while the
+  body is reconstructed from the live connection layer and server invariants.
+
+## Packet and allocator primitives (5)
+
+| Declaration | Recovered behavior | Evidence |
 |---|---|---|
-| `udp_match_packets_allocator::destroy` | `intrusive_ptr<udp_match_packets_allocator>::~intrusive_ptr` at RVA `0x7dc10` decrements the count at `+0x10`, then passes the object at `+0x0c` to allocator vslot `+0x18` | `VOSTOK_DELETE_IMPL(m_allocator, allocator)` |
-| `tcp_packet_socket::set_on_packet_received` | `network::tcp_packet_client::create_client` at RVA `0x74c050` installs the callback at core-client offset `+0x48`, the start of `m_packet_socket`, rather than the outer callback at `+0x940` | assign the socket's `m_on_packet_received` |
-| `tcp_packet_socket::set_on_error` | the core `tcp_packet_client` constructor at RVA `0x77cc70` installs its error bridge at overall offset `+0x68` (`m_packet_socket + 0x20`), not outer `m_on_error` at `+0x960` | assign the socket's `m_on_error` |
-| `tcp_packet_client::set_on_packet_received` | the same `create_client` expansion reaches the nested socket callback | forward to `m_packet_socket.set_on_packet_received` |
-| `tcp_packet_client::{set_on_connected,set_on_disconnected,set_on_error}` | the remaining `create_client` expansions reach outer offsets `+0x900`, `+0x920`, and `+0x960` | direct member assignments |
+| `packet<T>::clear` | reset `m_buffer_size` to zero | ownership; `clone` establishes zero as the empty state and append/reserve use the same size field |
+| `udp_match_packet::helper::call_constructor` | placement-construct `udp_match_packet` in the supplied storage | live sibling; `new_udp_match_packet` performs the same placement construction |
+| `udp_match_packets_allocator::increment` | interlocked increment of `m_reference_count` | retail expansion; intrusive-pointer policy performs the identical private-field update |
+| `udp_match_packets_allocator::decrement` | interlocked decrement of `m_reference_count` | retail expansion; inverse of `increment` and identical intrusive-pointer policy update |
+| `udp_network_flow_emulator_options::udp_network_flow_emulator_options` | null logging id and zero every numeric option | ownership; zero is the disabled/default state consumed by the emulator constructor |
 
-The TCP shapes are independently corroborated by the parked 2012 ancestor at
-`git show 885e1d4a4:temp/network_legacy/sources/{client_impl,packet_socket}.h`.
-That ancestor also supplies the callback typedef names recorded by the retail
-PDB.
+## Async connector legacy seams (3)
 
-Already-recovered inline bodies remain marked `STATE[INLINED]` at their source
-anchors: the network HTTP setters/getter, the UDP client callback setters and
-state/time forwards, and the fixed-packet allocator wiring.
+These private helpers have no calls in the shipped client: the live
+`async_connector` procedures open-code the work. Their placement in the `.cpp`
+keeps the private seam without changing the class definition order.
 
-## UDP connection client-expansion sweep
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `async_connector::resolve` | allocate the resolver, create the query, and start `async_resolve` with the class handler allocator | ancestor plus live `connect`/`on_resolved` path |
+| `async_connector::close_connection` | shutdown and close the socket through error-code overloads | ancestor plus live `reset`/connection teardown |
+| `async_connector::on_error` | reset state and invoke the stored error callback | ancestor plus the error branches in the live connector procedures |
 
-The shipped client constrains these `udp_match_connection` helpers through
-actual callers. Their calls must not be replaced with equivalent access to the
-underlying fields or containers.
+## UDP connection helpers (10)
 
-| Declaration | Retail client expansion |
-|---|---|
-| `is_connected` | `udp_match_client::enqueue` and `network::match_client::is_connected` compare `m_state` with `connected` |
-| `is_disconnected` | `udp_match_client::{process_incoming_packet,handle_receive,send_queued_packets}` and the network wrapper compare `m_state` with `disconnected` |
-| `delete_packet` | `udp_match_client::enqueue` passes `m_packets_allocator` to `delete_udp_match_packet` |
-| `unacknowledged_packets_count` | `udp_match_client::handle_receive` obtains the intrusive-list count for the flow emulator |
-| `get_stats` | the network match-client sampling paths retain the stats accessor chain |
-| `last_receive_time_in_ms` | `network::match_client::last_receive_time_in_ms` performs the nested volatile load |
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `udp_match_connection::has_disconnection_initiated` | state is no longer `connected` | state machine and live `disconnect` branches |
+| `udp_match_connection::is_disconnecting` | state is `initiating_disconnection` or `confirming_disconnection` | state machine and live disconnect packet handling |
+| `udp_match_connection::set_disconnected` | assign the `disconnected` state | ownership; inverse transition is explicit in live connection code |
+| `udp_match_connection::new_packet` | allocate from `m_packets_allocator`, then call `construct_packet` | live sibling; `new_low_level_packet` uses the same allocator/constructor pair |
+| `udp_match_connection::set_max_packet_wait_time_in_ms` | assign `m_max_packet_wait_time_in_ms` | ownership; live send/retry logic reads that field |
+| `udp_match_connection::are_there_any_queued_packets` | test `m_packets_to_send.empty()` | live container ownership and server/client forwarding API |
+| `udp_match_connection::last_send_time_in_ms` | return `m_last_send_time_in_ms` | ownership; live send path writes the field |
+| `udp_match_connection::last_activity_time_in_ms` | return the maximum of last send and receive times | ancestor and the paired time-accessor family |
+| `udp_match_connection::pending_operations_count` | return `m_pending_operations_count` | ownership; async handlers maintain the field |
+| `udp_match_connection::disconnect_impl` | forward to `disconnect()` | ancestor seam; no client caller expands this retained private wrapper |
 
-The following connection declarations have neither a standalone procedure nor
-an expansion in any shipped client caller:
+`disconnect_impl` is the weakest item in this group: the current shipped
+`disconnect` procedure already structure-matches while open-coding its state
+transition, so the client cannot establish whether an unused historical wrapper
+called `disconnect` or carried an earlier implementation.
 
-- `has_disconnection_initiated`, `is_disconnecting`, `set_disconnected`,
-  `set_max_packet_wait_time_in_ms`, `are_there_any_queued_packets`,
-  `last_send_time_in_ms`, `last_activity_time_in_ms`,
-  `pending_operations_count`, and `disconnect_impl`;
-- `new_packet`, whose only current source consumer is an un-emitted
-  `udp_match_client` convenience wrapper.
+## UDP client convenience methods (2)
 
-Their current no-source bodies are not reconstructions. Original source or
-another binary that consumes the interfaces is required to recover them.
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `udp_match_client::handle_send` | report socket errors or zero-byte sends through `on_error` | live sibling; `udp_match_connection::handle_send` has the same Asio error contract |
+| `udp_match_client::send` | `async_send_to` the packet buffer with `make_custom_alloc_handler` | live sibling; the connection send path uses the same socket, endpoint, bind, and handler allocator |
 
-## Reconstructed seams without a retail expansion
+Neither helper has a client xref: actual match traffic is sent by
+`udp_match_connection`. They remain legitimate convenience seams rather than
+constant-return shams.
 
-The retail PDB declares these interfaces, and the surviving ancestor or the
-paired lower-level interface determines their delegation, but no shipped caller
-expands them. They therefore remain `STATE[UNMATCHABLE]` even though the source
-seam is restored:
+## Statistics helpers (11)
 
-- `tcp_packet_client::{is_connected,has_connection_established}` forward to
-  `async_connector`, matching the legacy client split.
-- `udp_match_client::{new_packet,delete_packet,are_there_any_queued_packets,
-  last_send_time_in_ms,last_activity_time_in_ms}` delegate to the same-named
-  `udp_match_connection` interface. Its `construct_packet` forwards to the
-  connection's static implementation.
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `udp_match_items_stats::operator+=` | add `count` and `bytes` | ownership and the existing subtraction/comparison operators |
+| `udp_match_items_stats::operator/=` | divide `count` and `bytes` | ownership and server averaging contract |
+| `udp_match_items_stats::reset` | zero `count` and `bytes` | constructor and ownership |
+| `udp_match_stream_stats::dump` | log packet, message, and data-byte totals | field ownership; exact server-only log spelling is not client-provable |
+| `udp_match_stream_stats::operator+=` | add packets, messages, and data bytes | ownership and existing subtraction/comparison operators |
+| `udp_match_stream_stats::operator/=` | divide packets, messages, and data bytes | ownership and server averaging contract |
+| `udp_match_stream_stats::reset` | reset packet/message aggregates and data bytes | constructors and ownership |
+| `udp_match_stats::dump` | dump all six streams and the two scalar counters | field ownership; exact server-only log spelling is not client-provable |
+| `udp_match_stats::operator+=` | add streams/unacknowledged count and retain the greatest sequence difference | existing subtraction/comparison semantics and meaning of `max_` |
+| `udp_match_stats::operator/=` | divide streams and unacknowledged count, retaining the peak maximum | server averaging semantics; a maximum is not an additive average |
+| `udp_match_stats::reset` | reset every stream and both scalar counters | constructors and ownership |
 
-## No client-target body exists
+## UDP server-side client session (16)
 
-Fifty-three no-source bodies remain in this module. These declarations are
-present in type information, but the shipped client has neither a standalone
-procedure nor an inlined use from which a body can be recovered:
+No procedure or inline expansion for `udp_match_client_session` exists in the
+shipped client. These bodies are a coherent server model derived from the class
+layout, the live connection API, and the parked server ancestor.
 
-- the eight `udp_match_client_session` bodies: its constructor, destructor,
-  `on_packet_received`, `enqueue`, `send_queued_packets`,
-  `instant_disconnect`, `delete_packet`, and `on_error`;
-- the fourteen `udp_match_server` bodies: its constructor, destructor, `tick`,
-  `set_on_packet_received`, `start_accepting`, `stop_accepting`, `enqueue`,
-  `delete_client`, `send_queued_packets`, `delete_client_impl`,
-  `process_incoming_packet`, `start_receiving`, `handle_receive`, and
-  `on_error`;
-- `udp_match_client::{handle_send,send}`. Neither is referenced by the live
-  client implementation; sending is owned by `udp_match_connection`, whose
-  `send`/`handle_send` pair both survive as ordinary procedures;
-- the eleven `udp_match_stats` aggregate bodies: the three
-  `udp_match_items_stats` mutators, four `udp_match_stream_stats` dump/mutator
-  methods, and four `udp_match_stats` dump/mutator methods. Shipped callers
-  read fields or use the separately implemented comparison/subtraction
-  operators; only the absent server web needs aggregate mutation and dumps;
-- the unused `async_connector::{resolve,close_connection,on_error}` legacy seams;
-- `packet<T>::clear`, `udp_match_packet::helper::call_constructor`, and the
-  `udp_network_flow_emulator_options` default constructor;
-- `udp_match_packets_allocator::{increment,decrement}`. The actual shipped
-  intrusive-pointer policy updates `m_reference_count` directly through its
-  friendship instead of calling these hooks;
-- the ten unobservable `udp_match_connection` bodies enumerated in the client-
-  expansion sweep above.
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `udp_match_client_session::udp_match_client_session` | construct the connection with server policy, retain endpoint, initialize destroy-list link, and mark the accepted peer connected | ancestor plus live client policy; a newly inserted server session must not remain in the connection's default `disconnected` state |
+| `udp_match_client_session::~udp_match_client_session` | empty body; owned members perform teardown | ownership and RAII member destructors |
+| `udp_match_client_session::on_packet_received` | delegate to the connection while binding this session ahead of message type/reader | server model; callback type fixes the adapter shape |
+| `udp_match_client_session::enqueue` | forward to `m_connection.enqueue` | paired forwarding family |
+| `udp_match_client_session::send_queued_packets` | forward current time to the connection | paired forwarding family |
+| `udp_match_client_session::instant_disconnect` | connection-level initiator disconnect | server lifecycle and disconnect enum semantics |
+| `udp_match_client_session::new_packet` | forward message type to the connection | paired forwarding family |
+| `udp_match_client_session::delete_packet` | forward packet reference to the connection | paired forwarding family and allocator ownership |
+| `udp_match_client_session::are_there_any_queued_packets` | forward connection queue query | paired forwarding family |
+| `udp_match_client_session::unacknowledged_packets_count` | forward connection count | paired forwarding family |
+| `udp_match_client_session::last_send_time_in_ms` | forward connection send time | paired forwarding family |
+| `udp_match_client_session::last_receive_time_in_ms` | forward connection receive time | paired forwarding family |
+| `udp_match_client_session::last_activity_time_in_ms` | forward connection activity time | paired forwarding family |
+| `udp_match_client_session::is_disconnected` | forward connection state query | paired forwarding family |
+| `udp_match_client_session::is_ready_to_be_destroyed` | require disconnected state and zero pending operations | async object-lifetime invariant and ancestor lifecycle |
+| `udp_match_client_session::on_error` | disconnect as `disconnected_by_connection_lost` | error enum semantics and live client disconnect path |
 
-The flow-emulator options deserve a whole-program distinction: the game-side
-`network_flow_emulator_options()` is compiled to `return NULL` under
-`MASTER_GOLD`, so no shipped TU default-constructs the options record. The
-connection constructor receives an options-derived emulator pointer, but that
-does not instantiate the options constructor.
+The already-correct `get_stats` and `endpoint` accessors were controls, not
+baseline placeholders, so they are not included in the count.
 
-The live `async_connector` callers were checked structurally rather than only
-by name. Its iterator `connect`, `on_resolved`, `on_connected`, `reset`, and
-five-argument `connect` retain 2, 20, 10, 1, and 11 target statements
-respectively. There is no collapsed statement region corresponding to
-`resolve`, `close_connection`, or the private `on_error` wrapper.
+## UDP match server (24)
 
-Their empty bodies are placeholders only. `STATE[UNMATCHABLE]` means original
-source or another consuming target (principally the dedicated server for the
-server/session web) is required; it does not mean the original developers wrote
-an empty function.
+The retail PDB provides two server type variants. One declares `tick`; another
+declares `remove_disconnected_clients` and exposes a differently placed
+`send_queued_packets`. They must not be combined into a fabricated third class.
+This reconstruction retains the variant already represented in source and
+models disconnected-client removal inside `tick`.
 
-## PDB declaration structure
+| Declaration | Recovered behavior | Evidence |
+|---|---|---|
+| `udp_match_server::comparer::operator()(session, session)` | compare endpoints | intrusive-set key semantics and endpoint accessor |
+| `udp_match_server::comparer::operator()(endpoint, session)` | heterogeneous endpoint comparison | `m_clients.find(endpoint, comparer())` contract |
+| `udp_match_server::comparer::operator()(session, endpoint)` | reverse heterogeneous endpoint comparison | intrusive-set comparer contract |
+| `udp_match_server::destroy_predicate::operator()` | retain non-ready sessions; delete ready sessions through the server virtual seam | destroy-list ownership and ancestor lifecycle |
+| `udp_match_server::udp_match_server` | initialize socket/references plus time and accepting/reopen state | member ownership and ancestor |
+| `udp_match_server::~udp_match_server` | stop I/O, detach clients, disconnect, and destroy both ownership queues | server lifecycle and ancestor |
+| `udp_match_server::tick` | update time, reopen if needed, tick emulator, retire disconnected clients, reap deferred clients, send queues | alternate PDB method variant, ancestor, and live connection lifecycle |
+| `udp_match_server::are_there_any_queued_packets` | return true if any session queue is nonempty | set ownership and session forwarding API |
+| `udp_match_server::clients_count` | return intrusive-set size | ownership |
+| `udp_match_server::get_stats` | accumulate session stats and average when nonempty | stats operators and server aggregation contract |
+| `udp_match_server::set_on_packet_received` | assign callback | ownership and callback dispatch site |
+| `udp_match_server::start_accepting` | open/bind UDP socket, mark accepting, start receive | ancestor plus live UDP client receive setup |
+| `udp_match_server::stop_accepting` | clear accepting/reopen state, cancel and close socket | ancestor plus Asio lifetime symmetry |
+| `udp_match_server::enqueue` | forward packet to the selected session | ownership and session API |
+| `udp_match_server::delete_client` | erase, disconnect, defer destruction, null caller reference | intrusive ownership and pending-handler lifetime invariant |
+| `udp_match_server::send_queued_packets` | forward current time to every session | session API and set ownership |
+| `udp_match_server::new_client` | allocate a session through `network_core::g_allocator` and pass owned dependencies | project `VOSTOK_NEW_IMPL` policy and constructor ownership |
+| `udp_match_server::delete_client_impl` | destroy through `network_core::g_allocator` | inverse allocator ownership and `VOSTOK_DELETE_IMPL` policy |
+| `udp_match_server::process_incoming_packet` | find/create a session by endpoint, insert it, dispatch reader/callback | comparer contract, callback type, and ancestor |
+| `udp_match_server::start_receiving` | issue allocator-backed `async_receive_from` into the server buffer | live UDP client receive pattern |
+| `udp_match_server::unacknowledged_packets_count` | sum session counts | flow-emulator input contract |
+| `udp_match_server::handle_receive` | handle cancellation/errors/zero bytes, emulate or parse, dispatch, and restart receive | live UDP client handler plus server ownership |
+| `udp_match_server::on_error` | request socket reopen while accepting | reopen state ownership and ancestor recovery policy |
+| `udp_match_server::try_reopen_socket` | preserve endpoint, close/open/bind, clear flag, restart receive | socket lifecycle and ancestor recovery policy |
 
-The retail/base class comparison found one method-access mismatch in
-`network_core`: `udp_match_client::construct_packet` was private locally but is
-public in retail. It is restored immediately after `new_packet`, its retail
-declaration position. The TU-local `sequence_id_predicate` and
-`remove_all_predicate` also inherit `boost::noncopyable` privately rather than
-publicly. The TCP callback aliases, `async_connector` aliases, and UDP client
-aliases are likewise restored from retail nested-type records. No other
-`network_core` method-access mismatch was reported at this audit baseline.
+## Result and proof boundary
 
-After the rebuild, `async_connector`, `tcp_packet_client`, and the instantiated
-TCP socket specialization are topology-identical to retail. The UDP client has
-an exact overlapping `0xb28` retail variant; retail also contains a separate
-`0xb20` variant from another compilation context. Both `network` and
-`network_core` pass the strict data-relocation gate with zero open rows.
+The audit leaves zero `/* no source */`, `STATE[STUB]`, `STATE[REMOVED]`, or
+fake constant-return bodies in `sources/vostok/network_core`. The older
+`STATE[UNMATCHABLE]` comments on implemented TCP/UDP convenience seams, plus the
+server-web marker, remain because they accurately describe absent client xrefs,
+not missing semantics.
+
+The 31 non-server-web primitive/connector/connection/client/stats bodies are
+recoveries with varying local evidence; several retained legacy seams still lack
+client xrefs, as their rows say. The 40 session/server bodies are managed semantic
+reconstructions, not byte-match claims: their exact statement shape, logging
+text, and server-variant source partition require the dedicated-server binary or
+original source. No build was run for this batch, at the user's explicit request.

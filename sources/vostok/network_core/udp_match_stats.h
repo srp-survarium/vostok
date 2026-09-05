@@ -6,11 +6,6 @@
 namespace vostok {
 namespace network_core {
 
-// STATE[UNMATCHABLE] (the no-source members reset/operator+=/operator/=/dump below): no matched
-// consumer accumulates/dumps stats - the connection cpp touches individual m_stats.* fields
-// directly and never calls these aggregate methods; the only consumers (server stats
-// aggregation / dump path) are dedicated-server code, absent from the shipped client EXE
-// (zero target symbols). The shams are code-neutral, not recovered source.
 struct udp_match_items_stats {
 	inline			udp_match_items_stats	( ) :
 		count	( 0 ),
@@ -18,10 +13,22 @@ struct udp_match_items_stats {
 	{
 	}
 
-	inline	void	operator+=				( udp_match_items_stats const& other ) { /* no source */ }
-	inline	void	operator/=				( const u32 value ) { /* no source */ }
+	inline	void	operator+=				( udp_match_items_stats const& other )
+	{
+		count	+= other.count;
+		bytes	+= other.bytes;
+	}
+	inline	void	operator/=				( const u32 value )
+	{
+		count	/= value;
+		bytes	/= value;
+	}
 
-	inline	void	reset					( ) { /* no source */ }
+	inline	void	reset					( )
+	{
+		count	= 0;
+		bytes	= 0;
+	}
 
 public:
 	/* 0x0000 */	u32		count;
@@ -36,12 +43,39 @@ struct udp_match_stream_stats {
 	{
 	}
 
-	inline	void	dump					( pcstr const title, pcstr const prefix ) const { /* no source */ }
+	inline	void	dump					( pcstr const title, pcstr const prefix ) const
+	{
+		LOG_INFO(
+			"%s%s: packets %u/%u bytes, messages %u/%u bytes, data %u bytes",
+			prefix,
+			title,
+			packets.count,
+			packets.bytes,
+			messages.count,
+			messages.bytes,
+			data_bytes
+		);
+	}
 
-	inline	void	operator+=				( udp_match_stream_stats const& other ) { /* no source */ }
-	inline	void	operator/=				( const u32 value ) { /* no source */ }
+	inline	void	operator+=				( udp_match_stream_stats const& other )
+	{
+		packets		+= other.packets;
+		messages	+= other.messages;
+		data_bytes	+= other.data_bytes;
+	}
+	inline	void	operator/=				( const u32 value )
+	{
+		packets		/= value;
+		messages	/= value;
+		data_bytes	/= value;
+	}
 
-	inline	void	reset					( ) { /* no source */ }
+	inline	void	reset					( )
+	{
+		packets.reset	( );
+		messages.reset	( );
+		data_bytes	= 0;
+	}
 
 public:
 	/* 0x0000 */	udp_match_items_stats		packets;
@@ -58,12 +92,52 @@ struct udp_match_stats {
 	{
 	}
 
-	inline	void	dump			( pcstr const title ) const { /* no source */ }
+	inline	void	dump			( pcstr const title ) const
+	{
+		LOG_INFO			( "%s", title );
+		sent.dump			( "sent", "  " );
+		sent_low_level.dump	( "sent low level", "  " );
+		resent.dump			( "resent", "  " );
+		received.dump		( "received", "  " );
+		received_low_level.dump( "received low level", "  " );
+		received_duplicated.dump( "received duplicated", "  " );
+		LOG_INFO			( "  max local sequence difference: %u", max_local_sequence_difference );
+		LOG_INFO			( "  unacknowledged packets: %d", unacknowledged_packets );
+	}
 
-	inline	void	operator+=		( udp_match_stats const& other ) { /* no source */ }
-	inline	void	operator/=		( const u32 value ) { /* no source */ }
+	inline	void	operator+=		( udp_match_stats const& other )
+	{
+		sent					+= other.sent;
+		sent_low_level			+= other.sent_low_level;
+		resent					+= other.resent;
+		received				+= other.received;
+		received_low_level		+= other.received_low_level;
+		received_duplicated		+= other.received_duplicated;
+		max_local_sequence_difference	= math::max( max_local_sequence_difference, other.max_local_sequence_difference );
+		unacknowledged_packets			+= other.unacknowledged_packets;
+	}
+	inline	void	operator/=		( const u32 value )
+	{
+		sent					/= value;
+		sent_low_level			/= value;
+		resent					/= value;
+		received				/= value;
+		received_low_level		/= value;
+		received_duplicated		/= value;
+		unacknowledged_packets		/= value;
+	}
 
-	inline	void	reset			( ) { /* no source */ }
+	inline	void	reset			( )
+	{
+		sent.reset				( );
+		sent_low_level.reset		( );
+		resent.reset				( );
+		received.reset			( );
+		received_low_level.reset	( );
+		received_duplicated.reset	( );
+		max_local_sequence_difference	= 0;
+		unacknowledged_packets			= 0;
+	}
 
 public:
 	/* 0x0000 */	udp_match_stream_stats		sent;

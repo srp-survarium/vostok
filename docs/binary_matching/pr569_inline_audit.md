@@ -20,10 +20,11 @@ protected physics fields, one public UDP helper, and seven private
 | `ai` | 2 | 0 | [AI](ai/inline_recovery.md) |
 | `animation` | 30 | 0 | [animation](animation/inline_recovery.md) |
 | `game_core` | 1 | 0 | [game_core](game_core/inline_recovery.md) |
-| `network_core` | 53 | 0 | [network_core](network_core/inline_recovery.md) |
+| `network` | 0 | 0 | [network](network/inline_recovery.md) |
+| `network_core` | 0 | 0 | [network_core](network_core/inline_recovery.md) |
 | `physics` | 21 | 3 | [physics](physics/inline_recovery.md) |
 | `render` | 7 | 0 | [render](render/inline_recovery.md) |
-| **Total** | **114** | **3** | |
+| **Total** | **61** | **3** | |
 
 The review found one falsely classified placeholder:
 `bullet_character_controller::prevent_max_slope_moving_prestep`. Retail
@@ -32,8 +33,17 @@ statement, while the open-coded reconstruction split the same bytes across five
 statements. The implementation now lives in the declared inline helper and the
 caller retains that seam.
 
-The remaining 114 bodies divide into three evidence classes documented in the
-module reports:
+The network/network-core follow-up closed all 74 inert bodies in those modules:
+71 network-core bodies from the combined `/* no source */` and fake-return
+census, plus three `network::match_client` allocator stubs that carried explicit
+`STATE[STUB]` markers. Each now has executable semantics and an individual
+evidence disposition in the linked module reports. The dedicated-server web is
+explicitly classified as a semantic reconstruction because the client PDB has
+type declarations but no server procedures or inline expansions from which to
+prove exact source spelling.
+
+The remaining 61 bodies outside network divide into three evidence classes
+documented in the module reports:
 
 1. dedicated-server or editor-only code absent from `survarium.exe`;
 2. declarations with no source consumer and no retained procedure;
@@ -43,3 +53,5 @@ module reports:
 None is treated as an intentionally empty implementation. `STATE[UNMATCHABLE]`
 means this client cannot establish the body; original source or another binary
 that consumes the declaration is required.
+
+No build was run for the network follow-up, at the user's explicit request.

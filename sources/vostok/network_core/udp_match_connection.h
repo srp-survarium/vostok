@@ -105,20 +105,25 @@ public:
 	// STATE[INLINED]: expanded by udp_match_client::enqueue and the network wrapper.
 	inline	bool						is_connected					( ) const { return m_state == connected; }
 
-	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
+	inline	bool						has_disconnection_initiated		( ) const { return m_state != connected; }
 
-	inline	bool						is_disconnecting				( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
+	inline	bool						is_disconnecting				( ) const { return m_state == initiating_disconnection || m_state == confirming_disconnection; }
 	// STATE[INLINED]: expanded by three udp_match_client methods and the network wrapper.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
-	inline	void						set_disconnected				( ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void						set_disconnected				( ) { m_state = disconnected; }
 
-	inline	udp_match_packet*			new_packet						( const u8 message_type ) { return NULL; /* no source */ } // STATE[UNMATCHABLE]
+	inline	udp_match_packet*			new_packet						( const u8 message_type )
+	{
+		udp_match_packet* const packet	= new_udp_match_packet( m_packets_allocator );
+		construct_packet					( m_packets_orderer, *packet, message_type );
+		return							packet;
+	}
 	// STATE[INLINED]: udp_match_client::enqueue retains this allocator seam.
 	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
-	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { m_max_packet_wait_time_in_ms = value; }
 
-	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
+	inline	bool						are_there_any_queued_packets	( ) const { return !m_packets_to_send.empty( ); }
 
 	// STATE[INLINED]: udp_match_client::handle_receive retains this container seam.
 	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
@@ -127,13 +132,13 @@ public:
 	// STATE[INLINED]: sampled through the network match-client wrapper.
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
-	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
+	inline	u32							last_send_time_in_ms			( ) const { return m_last_send_time_in_ms; }
 	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
 	// (single volatile load of m_last_receive_time_in_ms @+0xfc)
 	inline	u32							last_receive_time_in_ms			( ) const { return m_last_receive_time_in_ms; }
-	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
+	inline	u32							last_activity_time_in_ms		( ) const { return math::max( last_send_time_in_ms( ), last_receive_time_in_ms( ) ); }
 
-	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
+	inline	u32							pending_operations_count		( ) const { return m_pending_operations_count; }
 
 private:
 			void						on_error						( client_error_codes_enum client_error_code, boost::system::error_code error_code );
@@ -168,7 +173,7 @@ private:
 
 			udp_match_packet*			new_low_level_packet			( u8 message_type );
 
-	inline	void						disconnect_impl					( ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void						disconnect_impl					( ) { disconnect( ); }
 			void						enqueue_impl					( udp_match_packet* packet );
 
 public:

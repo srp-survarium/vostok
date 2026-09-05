@@ -28,10 +28,8 @@ public:
 		VOSTOK_DELETE_IMPL	( m_allocator, allocator );
 	}
 
-	// STATE[UNMATCHABLE]: the shipped intrusive_ptr policy updates the private count
-	// directly; no target expansion or standalone body exposes these legacy hooks.
-	inline	void	increment					( ) { /* no source */ }
-	inline	void	decrement					( ) { /* no source */ }
+	inline	void	increment					( ) { threading::multi_threading_policy::increment( m_reference_count ); }
+	inline	void	decrement					( ) { threading::multi_threading_policy::decrement( m_reference_count ); }
 
 private:
 	// intrusive_ptr's threading policy reads m_reference_count directly
