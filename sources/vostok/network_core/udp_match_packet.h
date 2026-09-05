@@ -44,9 +44,10 @@ class udp_match_packet : public packet< udp_match_packet > {
 public:
 	class helper {
 	private:
-		// STATE[UNMATCHABLE]: never referenced - the factory new_udp_match_packet uses placement
-		// new directly, not call_constructor. Uninstantiated both sides.
-		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
+		static	inline	void	call_constructor	( udp_match_packet& packet )
+		{
+			new( &packet ) udp_match_packet( );
+		}
 	private:
 		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 

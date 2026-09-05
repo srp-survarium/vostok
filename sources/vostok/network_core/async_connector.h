@@ -48,15 +48,11 @@ private:
 						boost::asio::ip::tcp::resolver::iterator	iterator
 					);
 
-	// STATE[UNMATCHABLE]: the matched async_connector.cpp
-	// inlines the resolve/connect/error logic directly into connect()/on_resolved()/
-	// on_connected() and never calls these private helpers; no other TU can (they're
-	// private, no friends), so the shipped image exposes no bodies.
-	inline	void	resolve						( pcstr host, u32 port ) { /* no source */ }
+	inline	void	resolve						( pcstr host, u32 port );
 
-	inline	void	close_connection			( ) { /* no source */ }
+	inline	void	close_connection			( );
 
-	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
+	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code );
 
 private:
 	enum connection_state_enum

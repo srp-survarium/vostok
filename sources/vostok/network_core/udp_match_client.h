@@ -5,6 +5,7 @@
 
 #include <vostok/network_core/udp_match_connection.h>
 #include <vostok/network_core/handler_allocator.h>
+#include <vostok/network_core/custom_alloc_handler.h>
 #include <vostok/network_core/client_error_codes_enum.h>
 #include <vostok/network_core/disconnect_event_types_enum.h>
 #include <vostok/timing_timer.h>
@@ -88,13 +89,35 @@ private:
 			// const u32 here is load-bearing: __FUNCSIG__ in the LOG_ERROR sites renders from
 			// the FIRST declaration, and the target literal reads "...,const unsigned int)".
 			void								handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred );
-	inline	void								handle_send					( boost::system::error_code const& error_code, const u32 bytes_transferred ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void								handle_send					( boost::system::error_code const& error_code, const u32 bytes_transferred )
+	{
+		if ( error_code ) {
+			LOG_ERROR	( "error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
+			on_error	( unable_to_write_to_socket, error_code );
+			return;
+		}
+
+		if ( !bytes_transferred ) {
+			LOG_ERROR	( "unable to write to socket\r\n" );
+			on_error	( unable_to_write_to_socket, error_code );
+		}
+	}
 
 			void								on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code );
 
 			void								process_incoming_packet		( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint );
 
-	inline	void								send						( udp_match_packet const& packet ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void								send						( udp_match_packet const& packet )
+	{
+		m_socket.async_send_to	(
+			boost::asio::buffer( packet.buffer_to_send( ), packet.buffer_to_send_size( ) ),
+			m_server_endpoint,
+			make_custom_alloc_handler(
+				m_handler_allocator,
+				boost::bind( &udp_match_client::handle_send, this, _1, _2 )
+			)
+		);
+	}
 
 			void								on_disconnect				( const disconnect_event_types_enum disconnect_type );
 
