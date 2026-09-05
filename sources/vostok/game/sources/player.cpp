@@ -647,14 +647,16 @@ float player::fov_factor( const u32 current_time_in_ms ) const
 		* animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( time );
 }
 
-// claude@NOTE: inline-vs-store cap - the [controller+0x4C] store is game_camera::
-// set_near_plane( near_plane_factor * 0.05f ), inlined; game_camera::set_near_plane
-// is an empty stub in game_camera.h (render cone, another unit), so our base omits
-// the store. Re-score once game_camera::set_near_plane has a body.
+inline void player::set_near_plane( float near_plane )
+{
+	// sushi@TODO: verify the private setter seam; the factor wrapper supplies the controller guard.
+	m_local_input_controller->set_near_plane( near_plane );
+}
+
 void player::set_near_plane_factor( const float near_plane_factor )
 {
 	if ( m_local_input_controller )
-		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
+		set_near_plane( near_plane_factor * 0.05f );
 }
 
 void player::update_camera( )

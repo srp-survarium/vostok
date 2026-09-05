@@ -13,6 +13,7 @@ Append-only ledger (union-merged across branches, like `PROGRESS.md` / `unanswer
 
 | Status | Function | File:line | PR | TODO |
 |--------|----------|-----------|----|------|
+| open | `player::set_near_plane` caller boundary | `game/sources/player.cpp` | #571 | Private forwarding helper restored inside the factor wrapper's existing controller guard; verify the original guard boundary and retain the target's single-statement caller partition in the deferred build. |
 | open | `circular_buffer::{resize,insert,is_valid}` | `game_core/circular_buffer.h` | inline follow-up to #569 | Recover preservation/rebasing and insertion/eviction rules, and distinguish allocation membership from live-ring membership. See the per-function circular-buffer register; no consumer establishes these contracts yet. |
 | open | `fsm::{remove_state,remove_transition}` | `ai/fsm.h` | #569 | Models detach externally owned states and free transition records; verify current-state/incoming-edge cleanup and first-versus-all parallel-edge removal. Evidence F01–F02 in `pr569_semantic_reconstruction.md`. |
 | open | `fixed_joint_camera_effector::{process_camera,on_attach}` | `animation/i_editor_mixer.h` | #569 | Verify joint-to-camera coordinate conventions and attachment side effects against an editor consumer; current direct-matrix/empty-hook bodies are models. |
