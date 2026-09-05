@@ -1139,10 +1139,6 @@ void player::attach_controller(
 	m_force_animation_selection = true;
 }
 
-// claude@NOTE: 4-stmt structure matches. Byte residual is the intrusive_ptr operator-bool
-// inline (target folds the m_current_active_object null-check into the assign_game_ui
-// statement / prologue; our base emits a separate `if` line) - the same intrusive_ptr
-// accessor inline-vs-call wall as skeleton()/the quick-slot fns; not TU-steerable.
 void player::detach_controller( )
 {
 	if ( m_current_active_object )
@@ -1154,7 +1150,8 @@ void player::detach_controller( )
 	m_angular_speed_graph		= NULL;
 	static_cast< game_world& >( m_game_scene ).set_local_player_camera( NULL );
 
-	static_cast< game_world& >( m_game_scene ).switch_to_free_fly_camera( );
+	// sushi@TODO: Verify the public camera-mode boundary in the deferred caller comparison.
+	static_cast< game_world& >( m_game_scene ).switch_camera_mode( free_fly_mode );
 
 	m_force_animation_selection = true;
 }

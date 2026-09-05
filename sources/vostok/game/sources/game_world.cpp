@@ -99,7 +99,7 @@ game_world::game_world( game& game ) :
 
 	m_step_manager = VOSTOK_NEW_IMPL( *g_allocator, step_manager )( );
 
-	init_physics( );
+	initialize_physics( );
 
 	m_free_fly_camera = VOSTOK_NEW_IMPL( *g_allocator, free_fly_camera )( *this, get_camera_director( ) );
 	register_cooks( );
