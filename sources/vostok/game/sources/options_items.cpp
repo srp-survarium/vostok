@@ -425,7 +425,7 @@ void options_monitor_index_selector::revert( )
 void options_monitor_index_selector::refill_resolutions_data( )
 {
 	( ( options_resolution_selector* )m_parent_tab.option_by_id( 1 ) )->fill_resolutions( m_current_value );
-	m_parent_tab.get_game( ).get_game_options( ).refill_item_data( m_parent_tab.type( ), m_option_item_id );
+	m_parent_tab.get_game( ).get_game_options( ).refill_item_data( m_parent_tab.type( ), 1 );
 }
 
 // The PDB identifies this table but not its initializer strings.

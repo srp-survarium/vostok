@@ -38,7 +38,7 @@ public:
 
 	virtual	void						call				( flash_function_handler_params& arg_0 ) override = 0;
 
-	inline	option_item_type_enum		option_type			( ) { /* no source */ return m_type; }
+	inline	option_item_type_enum		option_type			( ) { return m_type; }
 
 
 protected:

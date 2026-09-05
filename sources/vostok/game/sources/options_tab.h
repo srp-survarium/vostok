@@ -24,10 +24,10 @@ public:
 
 	inline	options_item_base*				option_by_id	( u8 arg_0 ) { return m_options[ arg_0 ]; }
 
-	inline	options_enum					type			( ) { /* no source */ return m_type; }
+	inline	options_enum					type			( ) { return m_type; }
 
-	inline	game&							get_game		( ) { /* no source */ return m_game; }
-	inline	flash_movie_resource_ptr&		get_movie		( ) { /* no source */ return m_movie; }
+	inline	game&							get_game		( ) { return m_game; }
+	inline	flash_movie_resource_ptr&		get_movie		( ) { return m_movie; }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */
