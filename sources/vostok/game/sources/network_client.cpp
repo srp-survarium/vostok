@@ -382,7 +382,8 @@ void network_client::connect_to_login(
 		m_match_client.set_on_disconnect( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
 		m_match_client.connect( host, port, 0, m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
 
-		m_game.switch_to_scene( &m_game.get_game_world( ) );
+		// sushi@TODO: Verify this public-switch boundary in the deferred caller comparison.
+		m_game.switch_to_game_world( );
 	}
 	else
 		m_login_client.sign_in( host, port, account_name, account_password, boost::bind( &network_client::on_connected_to_login, this, _1, _2, _3, _4 ) );

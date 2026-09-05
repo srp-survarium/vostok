@@ -10,6 +10,7 @@
 #include <vostok/input/handler.h>
 #include <vostok/render/culling/portal_sector_structure.h>
 #include <vostok/render/facade/model.h>	// render_model_instance_ptr (parked tracer_model_instance)
+#include <vostok/render/facade/sources/scene_renderer.h>
 #include <vostok/resources_unmanaged_resource.h>
 #include <vostok/type_variant.h>	// variant< 32 > (load takes user datas)
 
@@ -254,7 +255,8 @@ public:
 
 			void								on_npc_attributes_received		( configs::binary_config_value const& attributes_config, human_npc_ptr owner );
 
-	inline	void								test_action_portal_system		( ) { /* no source */ }
+	// sushi@TODO: Scene-forwarding model; verify the original caller and scene-readiness policy.
+	inline	void								test_action_portal_system		( ) { scene_renderer( ).test_action_portal_system( render_scene( ) ); }
 
 			void								on_player_killed				( player_ptr& player, const u8 arg_1, const u8 arg_2 );
 
