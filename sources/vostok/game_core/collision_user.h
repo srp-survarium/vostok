@@ -44,7 +44,9 @@ public:
 	virtual	base_player*				cast_to_base_player			( ) { return NULL; }
 	virtual	base_player const*			cast_to_base_player			( ) const { return NULL; }
 
+	// sushi@TODO: Verify the original modifier/defuse accessor boundaries; their field operations are established, but the inline seams are inferred.
 	inline	void						set_artcontainer_time_factor( float factor )	{ m_usable_object_user_data.booster_artcont_time_factor = factor; }
+	// sushi@TODO: Find the original owner-getter consumer; artefact containers instead receive a user-data record directly.
 	inline	float						get_artcontainer_time_factor( ) const			{ return  m_usable_object_user_data.booster_artcont_time_factor; }
 
 	inline	void						set_engineer_use_time_factor( float factor )	{ m_usable_object_user_data.booster_engineer_use_time_factor = factor; }

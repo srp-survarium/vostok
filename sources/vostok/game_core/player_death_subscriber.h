@@ -8,8 +8,9 @@ namespace survarium {
 struct player_death_subscriber {
 	typedef boost::function< void( ) > player_death_callback_type;
 
-	inline	player_death_subscriber	( player_death_callback_type const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
-	inline	player_death_subscriber	( ) { /* no source */ }
+	inline	player_death_subscriber	( player_death_callback_type const& subscription_callback_ ) : subscription_callback( subscription_callback_ ), next( NULL ) { }
+	// sushi@TODO: Verify a default-construction consumer; empty callback plus null link is a model from the supplied-callback sibling.
+	inline	player_death_subscriber	( ) : subscription_callback( ), next( NULL ) { }
 
 	/* 0x0000 */	player_death_callback_type		subscription_callback;
 	/* 0x0020 */	player_death_subscriber*		next;

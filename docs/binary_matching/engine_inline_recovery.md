@@ -57,16 +57,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Anomaly core, state and group inlines | 12 | Restore declared state notification forwarder and caller; verify owner/getter/setter expansions and empty hook default; hit/explosion event models and hook/source-boundary questions remain explicit | [individual register](game_core/anomaly_inline_recovery.md) |
 | Collision sensor, geometry, subscriber and predicates | 19 | Real inverted removal-predicate fix; preserve live virtual notifications, null cast defaults and generated subscriber vptr stores; three getter/debug-forwarding models with explicit consumer/guard gaps | [individual register](game_core/collision_sensor_inline_recovery.md) |
 | Scheduler inlines and both frame consumers | 12 | Real per-frame mode-bit fix and const-local repair; recover unmarked status-transfer helper and guarded activation models; preserve verified registration/unregistration and callback-copy semantics, with transition timing explicitly open | [individual register](game_core/scheduler_inline_recovery.md) |
+| Collision user, usable-object cast, hit initiator and death subscribers | 20 | Real missing death-subscriber next initialization; propagate three existing factor seams and repair three const locals; preserve generated vptr stores and independently checked virtual defaults; default-constructor/source-boundary models remain open | [individual register](game_core/collision_user_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the scheduler batch: the registers account for 594
+Checkpoint after the collision-user/subscriber batch: the registers account for 614
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 447 marked lines: game 294, game_core 84,
+questions. The literal scan is now 446 marked lines: game 294, game_core 83,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 390 active marked lines, **not** a remaining-function
+mirror lines leaves 389 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 Next work includes the player/history consumers' own inline methods and the
