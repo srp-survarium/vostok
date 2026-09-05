@@ -108,8 +108,7 @@ public:
 		return m_messaging_client;
 	}
 
-	// the obvious source (m_match_client's options); a matcher confirms
-	virtual	struct match_options&			match_options						( ) override { /* no source */ return m_match_client.get_match_options( ); }
+	virtual	struct match_options&			match_options						( ) override { return m_match_client.get_match_options( ); }
 
 	virtual	void						on_player_hit_received				( hit_info const& info ) override
 	{
