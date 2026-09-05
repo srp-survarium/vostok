@@ -82,6 +82,7 @@ RETAIL_INCLUDE_SOURCE_PREFIX = r"C:\survarium\sources"
 BINARIES = REPO / "binaries"
 GEN_DIR = BINARIES / "gen"
 PREBUILT = REPO / "binaries.prebuilt"
+PREBUILT_STLPORT_WIN32 = PREBUILT / "stlport" / "libraries" / "win32"
 NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
@@ -100,6 +101,8 @@ CONFIGURATIONS = {
     "release": "Release|Win32",
     "debug": "Debug|Win32",
 }
+DLL_CONFIGURATIONS = frozenset(("Release|Win32", "Debug|Win32"))
+LINKAGES = frozenset(("dll", "static"))
 _NINJA_DIRS = {
     GOLD_CONFIGURATION: NINJA_DIR,
     "Release|Win32": BINARIES / "ninja-release",
@@ -115,13 +118,14 @@ def configuration(name: str) -> str:
 def ninja_dir(
     configuration_platform: str = GOLD_CONFIGURATION,
     lto: bool = True,
+    linkage: str = "dll",
 ) -> Path:
     """The generated ninja graph for one solution configuration.
 
-    `lto=False` selects the whole-program-optimization-off variant of a
-    non-gold configuration (its own dir, so the two never thrash each other).
-    Gold is always LTO - it reproduces retail's LTCG image - so lto=False is
-    refused there."""
+    `linkage` selects separate DLL/static graph directories. `lto=False`
+    rewrites the selected graph's response files in place; this deliberately
+    dirties its objects when switching modes. Gold is always LTO because it
+    reproduces retail's LTCG image."""
     try:
         base = _NINJA_DIRS[configuration_platform]
     except KeyError:
@@ -129,11 +133,15 @@ def ninja_dir(
             f"no ninja graph dir for {configuration_platform!r}; "
             f"known: {', '.join(sorted(_NINJA_DIRS))}"
         ) from None
-    if lto:
-        return base
     if configuration_platform == GOLD_CONFIGURATION:
-        raise ValueError("the gold configuration is always LTO (retail is LTCG)")
-    return base.with_name(base.name + "-nolto")
+        if not lto:
+            raise ValueError("the gold configuration is always LTO (retail is LTCG)")
+        return base
+    if linkage not in LINKAGES:
+        raise ValueError(f"unknown linkage {linkage!r}")
+    if linkage == "static":
+        return base.with_name(base.name + "-static")
+    return base
 
 # Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
 # regenerable from resources.db + fxc, so it lives with the other artifacts.

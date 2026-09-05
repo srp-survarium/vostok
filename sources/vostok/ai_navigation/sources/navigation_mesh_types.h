@@ -75,7 +75,7 @@ typedef buffer_vector< collision::triangle_result >		buffer_triangles_type;
 typedef debug::vector< math::float3 >					vertices_type;
 typedef debug::vector< edge >							edges_type;
 
-typedef debug::vector< math::float3 >					path_type;
+typedef vectora< math::float3 >						path_type;
 typedef debug::vector< u32 >							channel_type;
 
 #else // #ifndef MASTER_GOLD

@@ -187,7 +187,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;WM4_USE_PRECOMPILED_HEADERS"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="Wm4FoundationPCH.h"
 				ProgramDataBaseFileName="$(IntDir)\$(TargetName).pdb"

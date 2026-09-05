@@ -9,6 +9,11 @@
 #include "network_entry_point.h"
 #include <vostok/network/api.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
+#include <vostok/linkage_helper.h>
+
+#ifndef MASTER_GOLD
+VOSTOK_DECLARE_LINKAGE_ID(network_entry_point)
+#endif // #ifndef MASTER_GOLD
 
 // Temporary /include anchor: target /GL retains this without a visible caller.
 // Remove it when real callers keep the symbol alive.

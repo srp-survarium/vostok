@@ -30,7 +30,7 @@ bullet_manager::bullet_manager(
 	m_current_decal_id			( 0 ),
 	m_bullet_time_factor		( 1.0f ),
 	m_air_resistance_epsilon	( 0.1f )
-#ifndef MASTER_GOLD // sushi@NOTE: Fields are not implemented in bullet_manager. Copy them from the OG implementation.
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD) // sushi@NOTE: Fields are not implemented in bullet_manager. Copy them from the OG implementation.
 	,
 	m_is_draw_debug				( true ),
 	m_is_draw_trajectories		( true ),
@@ -106,7 +106,7 @@ void bullet_manager::tick( u32 current_time_in_ms )
 		while ( !m_functors.empty( ) )
 		{
 			bullet_manager::bullet_functor* functor = m_functors.try_pop( );
-			ASSERT( UNKNOWN_EXPRESSION( functor ) );
+			ASSERT( UNKNOWN_EXPRESSION_T( functor ) );
 			functor->functor( );
 			VOSTOK_DELETE_IMPL( m_mt_stack_allocator, functor );
 		}
@@ -424,7 +424,7 @@ void bullet_manager::emit_bullet(
 	m_bullets.push_back( new_bullet );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 	store_bullet_trajectory		( new_bullet );
 #endif // #ifndef MASTER_GOLD
 }

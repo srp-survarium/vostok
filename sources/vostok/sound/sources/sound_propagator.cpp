@@ -509,6 +509,13 @@ void sound_propagator::set_quality	( u32 quality )
 }
 #endif
 
+#ifndef MASTER_GOLD
+sound_rms_ptr const& sound_propagator::get_sound_rms	( ) const
+{
+	return m_emitter.get_sound_rms( );
+}
+#endif // #ifndef MASTER_GOLD
+
 new_sound_propagator::new_sound_propagator
 (
 	float3 const&						start_position,

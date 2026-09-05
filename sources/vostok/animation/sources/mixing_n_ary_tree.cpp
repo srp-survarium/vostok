@@ -38,6 +38,17 @@ struct event_iterator_predicate {
 	}
 };
 
+#ifndef MASTER_GOLD
+bool n_ary_tree::has_object( pcvoid const animated_object ) const
+{
+	return std::find(
+		m_animated_objects,
+		m_animated_objects + m_animated_objects_count,
+		animated_object
+	) != m_animated_objects + m_animated_objects_count;
+}
+#endif
+#line 41
  n_ary_tree::n_ary_tree(
 	n_ary_tree_animation_node* const	weight_root,
 	n_ary_tree_animation_node* const	time_root,

@@ -14,29 +14,29 @@ struct world;
 
 class bt_character_controller  {
 public:
-	bt_character_controller						( world* w );
-	~bt_character_controller					( );
+	VOSTOK_PHYSICS_API bt_character_controller		( world* w );
+	VOSTOK_PHYSICS_API ~bt_character_controller		( );
 
-	void					initialize			( );
-	void					activate			( float4x4 const& t );
-	void					update_action		( const u32 time_delta_in_ms );
+	VOSTOK_PHYSICS_API void	initialize			( );
+	VOSTOK_PHYSICS_API void	activate			( float4x4 const& t );
+	VOSTOK_PHYSICS_API void	update_action		( const u32 time_delta_in_ms );
 
-	void					deactivate			( );
+	VOSTOK_PHYSICS_API void	deactivate			( );
 
-	memory::base_allocator& allocator			( );
+	VOSTOK_PHYSICS_API memory::base_allocator& allocator( );
 
-	float4x4				get_transform		( );
-	void					set_transform		( float4x4 const& transform );
+	VOSTOK_PHYSICS_API float4x4 get_transform		( );
+	VOSTOK_PHYSICS_API void	set_transform		( float4x4 const& transform );
 
-	void					set_walk_direction	( float3 const& direction );
+	VOSTOK_PHYSICS_API void	set_walk_direction	( float3 const& direction );
 
-	bool					can_jump			( ) const;
-	bool					on_ground			( ) const;
-	void					jump				( );
-	void					end_jump			( );
-	bool					has_updates			( ) const;
+	VOSTOK_PHYSICS_API bool	can_jump			( ) const;
+	VOSTOK_PHYSICS_API bool	on_ground			( ) const;
+	VOSTOK_PHYSICS_API void	jump				( );
+	VOSTOK_PHYSICS_API void	end_jump			( );
+	VOSTOK_PHYSICS_API bool	has_updates			( ) const;
 
-			bool			adjust_foot_transform	(
+	VOSTOK_PHYSICS_API bool	adjust_foot_transform	(
 								float3 const&		half_size,
 								float3 const&		start,
 								float3 const&		finish,
@@ -54,11 +54,11 @@ public:
 								float3&				arg_4
 							) const { /* no source */ }
 
-	void					set_crouch			( bool crouch );
+	VOSTOK_PHYSICS_API void	set_crouch			( bool crouch );
 	// @todo Recover the implementation when a caller is restored.
 	bool					can_prone			( ) const /* no source */;
-	bool					can_crouch			( ) const;
-	bool					can_stand			( ) const;
+	VOSTOK_PHYSICS_API bool	can_crouch			( ) const;
+	VOSTOK_PHYSICS_API bool	can_stand			( ) const;
 
 private:
 	/* 0x0000 */	bullet_character_controller*	m_bt_controller;

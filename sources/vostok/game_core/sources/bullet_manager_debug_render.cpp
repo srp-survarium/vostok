@@ -7,7 +7,7 @@
 #include "pch.h"
 
 
-#ifndef MASTER_GOLD	
+#ifndef MASTER_GOLD
 
 
 #include "bullet_manager.h"
@@ -230,4 +230,4 @@ static void draw_decal_data( render::debug::renderer& renderer,
 } // namespace survarium
 
 
-#endif // #ifndef MASTER_GOLD
+#endif

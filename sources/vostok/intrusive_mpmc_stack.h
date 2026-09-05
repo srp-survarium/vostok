@@ -6,7 +6,7 @@
 namespace vostok {
 
 template < typename T, typename BaseWithMember, T* BaseWithMember::*MemberNext >
-class VOSTOK_CORE_API intrusive_mpmc_stack {
+class intrusive_mpmc_stack {
 public:
 	typedef T			value_type;
 	typedef value_type*	pointer_type;

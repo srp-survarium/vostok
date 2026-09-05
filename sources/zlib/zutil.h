@@ -15,6 +15,10 @@
 
 #define ZLIB_INTERNAL
 #include "zlib.h"
+#if defined(DEBUG) && defined(_MSC_VER)
+/* Keep the CRT declarations ahead of the vsnprintf compatibility macro. */
+#  include <stdio.h>
+#endif
 
 #ifdef STDC
 #  ifndef _WIN32_WCE

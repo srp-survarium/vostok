@@ -17,6 +17,9 @@ namespace vostok {
 namespace debug {
 	void			preinitialize		( );
 } // namespace debug
+namespace core {
+	VOSTOK_CORE_API void logging_preinitialize( );
+} // namespace core
 
 namespace command_line {
 
@@ -60,7 +63,7 @@ key::key (pcstr full_name, pcstr short_name, pcstr category, pcstr description, 
 {
 #ifndef VOSTOK_STATIC_LIBRARIES
 	debug::preinitialize						( );
-	logging::preinitialize						( );
+	core::logging_preinitialize				( );
 #endif // #ifndef VOSTOK_STATIC_LIBRARIES
 	debug::protected_call						( protected_key_construct, this );
 }

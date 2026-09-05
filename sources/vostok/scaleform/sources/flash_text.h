@@ -2,6 +2,7 @@
 
 #ifndef FLASH_TEXT_H_INCLUDED
 #define FLASH_TEXT_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 namespace Scaleform {
 namespace GFx {
@@ -24,20 +25,20 @@ struct flash_text {
 		align_justify	= 3
 	};
 
-			float		get_width		( );
-			float		get_height		( );
+	VOSTOK_SCALEFORM_API float	get_width		( );
+	VOSTOK_SCALEFORM_API float	get_height		( );
 
-			void		set_visible		( bool arg_0 );
-			void		set_font_size	( const float arg_0 );
-			void		set_position	( const float arg_0, const float arg_1 );
+	VOSTOK_SCALEFORM_API void	set_visible		( bool arg_0 );
+	VOSTOK_SCALEFORM_API void	set_font_size	( const float arg_0 );
+	VOSTOK_SCALEFORM_API void	set_position	( const float arg_0, const float arg_1 );
 	inline	void		set_alignment	( flash_text::alignment arg_0 ) { }
-			void		set_color		(
+	VOSTOK_SCALEFORM_API void	set_color		(
 							u8		arg_0,
 							u8		arg_1,
 							u8		arg_2,
 							u8		arg_3
 						);
-			void		set_text		( pcstr arg_0 );
+	VOSTOK_SCALEFORM_API void	set_text		( pcstr arg_0 );
 
 public:
 	/* 0x0000 */	Scaleform::GFx::DrawText*		text_impl;

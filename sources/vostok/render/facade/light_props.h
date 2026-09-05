@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_LIGHT_PROPS_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_LIGHT_PROPS_H_INCLUDED
+#include <vostok/render/api.h>
 #include <vostok/math_curve.h>
 #include <vostok/math_float4x4.h>
 
@@ -25,7 +26,7 @@ enum light_type {
 	num_light_types			= 0x7,
 };
 
-struct light_props {
+struct VOSTOK_RENDER_API light_props {
 	light_props( );
 
 	void load_light_props( configs::binary_config_value const& cfg );

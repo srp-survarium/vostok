@@ -62,7 +62,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="false"
 				AdditionalDependencies="xbdm.lib"
 				OutputFile="$(SolutionDir)../binaries/win32/xbox_debug_client.exe"
 				LinkIncremental="1"

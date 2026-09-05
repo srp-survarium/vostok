@@ -6,6 +6,7 @@
 
 #ifndef VOSTOK_PARTICLE_WORLD_H_INCLUDED
 #define VOSTOK_PARTICLE_WORLD_H_INCLUDED
+#include <vostok/particle/api.h>
 
 namespace vostok {
 namespace particle {
@@ -40,7 +41,7 @@ typedef	resources::resource_ptr <
 	resources::unmanaged_intrusive_base
 > particle_system_instance_ptr;
 
-bool is_playing( particle_system_instance_ptr const& instance );
+VOSTOK_PARTICLE_API bool is_playing( particle_system_instance_ptr const& instance );
 
 struct VOSTOK_NOVTABLE world : public resources::unmanaged_resource {
 	virtual	void	tick							( float time_delta, vostok::math::float4x4 const& view_matrix ) = 0;

@@ -28,8 +28,8 @@
 
 namespace vostok {
 namespace render {
-	extern int g_num_monitors;
-	extern math::int2 g_monitor_resolutions[ 6 ][ 512 ];
+	extern VOSTOK_RENDER_API int g_num_monitors;
+	extern VOSTOK_RENDER_API math::int2 g_monitor_resolutions[ 6 ][ 512 ];
 } // namespace render
 } // namespace vostok
 

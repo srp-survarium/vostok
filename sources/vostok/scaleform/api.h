@@ -4,7 +4,19 @@
 #define VOSTOK_SCALEFORM_API_H_INCLUDED
 
 #ifndef VOSTOK_SCALEFORM_API
-#	define VOSTOK_SCALEFORM_API
+#	ifdef VOSTOK_STATIC_LIBRARIES
+#		define VOSTOK_SCALEFORM_API
+#	else
+#		ifdef VOSTOK_SCALEFORM_BUILDING
+#			define VOSTOK_SCALEFORM_API VOSTOK_DLL_EXPORT
+#		else
+#			ifndef VOSTOK_ENGINE_BUILDING
+#				define VOSTOK_SCALEFORM_API VOSTOK_DLL_IMPORT
+#			else
+#				define VOSTOK_SCALEFORM_API VOSTOK_DLL_EXPORT
+#			endif
+#		endif
+#	endif
 #endif // #ifndef VOSTOK_SCALEFORM_API
 
 // no module entry points: the shipped vostok/scaleform module is pure glue

@@ -45,7 +45,13 @@ namespace boost
 {
 #ifdef BOOST_NO_EXCEPTIONS
 
+#if defined(VOSTOK_GAME_DLL) && defined(VOSTOK_ENGINE_BUILDING)
+BOOST_SYMBOL_EXPORT void throw_exception( std::exception const & e ); // user defined
+#elif defined(VOSTOK_GAME_DLL)
+BOOST_SYMBOL_IMPORT void throw_exception( std::exception const & e ); // user defined
+#else
 void throw_exception( std::exception const & e ); // user defined
+#endif
 
 #else
 

@@ -55,7 +55,7 @@ bool bullet_manager_input_handler::on_keyboard_action( vostok::input::world* inp
 		}
 		case vostok::input::key_g:
 		{
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 
 			m_bullet_manager.toggle_is_fixed( );
 			return			true;

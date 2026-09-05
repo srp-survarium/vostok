@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include <vostok/physics/character_controller.h>
+#include <vostok/linkage_helper.h>
 
 #include "bullet_character_controller.h"
 #include "bullet_include.h"
@@ -13,12 +14,20 @@ namespace survarium {
 	extern vostok::memory::doug_lea_allocator_type*	g_allocator;
 } // namespace survarium
 
+#ifndef MASTER_GOLD
+VOSTOK_DECLARE_LINKAGE_ID(physics_character_controller)
+#endif // #ifndef MASTER_GOLD
+
 namespace vostok {
 namespace physics {
 
 bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
+#ifndef MASTER_GOLD
+	return VOSTOK_NEW_IMPL( allocator, bt_character_controller )( w );
+#else
 	return VOSTOK_NEW_IMPL( static_cast<vostok::memory::base_allocator&>( *::survarium::g_allocator ), bt_character_controller )( w );
+#endif
 }
 
 bt_character_controller::bt_character_controller( world* w ) :
