@@ -25,12 +25,7 @@ pcstr const sprint_animations_captions[] = {
 	"run_fwd_look",
 };
 
-// claude@NOTE: structure matches (single body stmt); walled at inline-vs-call. The
-// target INLINES boost::function<void()>::operator=<bind_t<...>> as the partial-spec
-// body `self_type(f).swap(*this)` (function-ctor + assign_to + swap + clear), whereas
-// our base emits an out-of-line `call operator=<...>`. Per-call-site whole-program
-// inline-vs-call decision (patterns/boost-function-assign-inline.md); the `= boost::bind`
-// source is correct, so this stays at the inline-vs-call %.
+// sushi@TODO: recheck callback assignment expansion after restoring subscriber initialization.
 player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_sprint )
 {

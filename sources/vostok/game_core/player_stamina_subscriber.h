@@ -9,8 +9,9 @@ struct player_stamina_subscriber {
 public:
 	typedef boost::function< void( ) > stamina_event_callback_type;
 
-	inline	explicit	player_stamina_subscriber	( stamina_event_callback_type const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
-	inline	explicit	player_stamina_subscriber	( ) { }
+	// sushi@TODO: confirm the supplied-callback overload's link initializer against a consumer.
+	inline	explicit	player_stamina_subscriber	( stamina_event_callback_type const& subscription_callback_ ) : subscription_callback( subscription_callback_ ), next( NULL ) { }
+	inline	explicit	player_stamina_subscriber	( ) : subscription_callback( NULL ), next( NULL ) { }
 
 	/* 0x0000 */	stamina_event_callback_type		subscription_callback;
 	/* 0x0020 */	player_stamina_subscriber*		next;
