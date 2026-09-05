@@ -214,11 +214,6 @@ void network_client::process_affect_damage_model( network_core::packet_reader& p
 		player->apply_damage_model_affect( body_part_name, affect, event );
 }
 
-// claude@NOTE: line 257 is an out-of-line player virtual at vtable slot 25 ([player]+0x64)
-// that takes the network_client (push this), not the reader - no player override taking a
-// base_network_client is identifiable yet, so deserialize(packet) stands in as the
-// structurally-correct single-statement placeholder (right count/position, links). Replace
-// once the slot-25 override is named. Byte residual is the shared packet_reader::r<T> wall.
 void network_client::process_player_respawn( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
@@ -226,7 +221,7 @@ void network_client::process_player_respawn( network_core::packet_reader& packet
 
 	player->deserialize( packet );
 
-	if ( !m_net_players[ id ].is_connected )
+	if ( !is_player_connected( id ) )
 		m_net_players[ id ].is_connected = true;
 
 	if ( player->is_local && m_game_status == game_status_inprocess && m_is_time_synchronized_first_time )
