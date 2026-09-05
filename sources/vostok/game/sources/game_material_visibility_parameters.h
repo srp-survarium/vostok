@@ -5,12 +5,12 @@
 
 namespace survarium {
 
-// pulled ahead of batch 11 (a value member of this batch's human_npc)
 class game_material_visibility_parameters {
 public:
-	inline	explicit	game_material_visibility_parameters	( float arg_0 ) : m_transparency( arg_0 ) { /* no source */ }
+	inline	explicit	game_material_visibility_parameters	( float arg_0 ) : m_transparency( arg_0 ) { }
 
-	inline	float		get_transparency_value				( ) const { /* no source */ return m_transparency; }
+	// sushi@TODO: Legacy transparency getter model; bind an original material-query consumer.
+	inline	float		get_transparency_value				( ) const { return m_transparency; }
 
 private:
 	/* 0x0000 */	float		m_transparency;

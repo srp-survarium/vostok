@@ -3,18 +3,23 @@
 #ifndef GAME_WORLD_H_INCLUDED
 #define GAME_WORLD_H_INCLUDED
 
+#include <boost/bind.hpp>
 #include <vostok/ai/engine.h>
+#include <vostok/ai/world.h>
 #include <vostok/ai_navigation/engine.h>
+#include <vostok/configs_binary_config.h>
 #include <vostok/game_core/bullet_manager_engine.h>
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/input/handler.h>
 #include <vostok/render/culling/portal_sector_structure.h>
-#include <vostok/render/facade/model.h>	// render_model_instance_ptr (parked tracer_model_instance)
+#include <vostok/render/engine/sources/tracer_model_instance.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
 #include <vostok/resources_unmanaged_resource.h>
+#include <vostok/resources_queries_result.h>
 #include <vostok/type_variant.h>	// variant< 32 > (load takes user datas)
 
 #include "base_game_scene.h"
+#include "ai_collision_object.h"
 #include "game_world_ui.h"
 #include "game_project.h"
 #include "human_npc.h"
@@ -36,31 +41,6 @@ namespace resources {
 	class queries_result;
 	class request;
 } // namespace resources
-namespace render {
-	// vostok::render-pool type parked here (the server_connection_info
-	// pattern): bullet_tracer's inline dtor needs it COMPLETE, and the render
-	// carcass rebuild has not emitted it yet - identical blobs merge clean.
-	// Canonical: binaries/structure/target/headers/vostok/render/tracer_model_instance.h
-	struct tracer_model_instance : public resources::unmanaged_resource {
-		inline	void	set_color				( math::color const& arg_0 ) { /* no source */ }
-
-		inline			tracer_model_instance	( ) { /* no source */ }
-		virtual			~tracer_model_instance	( ) { /* no source */ }
-
-	public:
-		/* 0x0000 */	/* resources::unmanaged_resource */
-		/* 0x0108 */	float4x4						m_transform;
-		/* 0x0148 */	render_model_instance_ptr		m_model;
-		/* 0x014c */	math::color						m_color;
-	}; // struct tracer_model_instance
-
-	STATIC_SIZE_ASSERT(tracer_model_instance, 0x150);
-
-	typedef resources::resource_ptr<
-		tracer_model_instance,
-		resources::unmanaged_intrusive_base
-	> tracer_model_instance_ptr;
-} // namespace render
 } // namespace vostok
 
 namespace survarium {
@@ -89,17 +69,6 @@ typedef resources::resource_ptr<
 
 // the canonical game_world_1.h variant is byte-identical - no union needed
 class game_world : public base_game_scene , private ai::engine , private ai::navigation::engine , private bullet_manager_engine , public resources::unmanaged_resource , public input::handler {
-	// the network client's packet handlers forward HUD updates straight into the
-	// private game_ui (m_game.get_game_world().game_ui.set_*()); the original reaches
-	// it directly. Codegen-neutral - friendship is not recorded in the PDB.
-	friend class network_client;
-	// base_network_client::attach_to_player / detach_from_player reach the private
-	// game_ui the same way (on_attached_to_player / show_ammo_indicator / show_quick_slots);
-	// the original reaches it directly. Codegen-neutral - friendship is not in the PDB.
-	friend class base_network_client;
-	// player::detach_controller calls the private switch_to_free_fly_camera() directly
-	// (the original reaches it directly). Codegen-neutral - friendship is not in the PDB.
-	friend class player;
 public:
 	typedef base_game_scene super;
 
@@ -223,35 +192,88 @@ public:
 												);
 
 			sound::world&						get_sound_world					( ) const;
-	inline	ai::world&							get_ai_world					( ) const { /* no source */ return *m_ai_world; }
-	inline	ai::navigation::world&				get_ai_navigation_world			( ) const { /* no source */ return *m_ai_navigation_world; }
+	inline	ai::world&							get_ai_world					( ) const { return *m_ai_world; }
+	inline	ai::navigation::world&				get_ai_navigation_world			( ) const { return *m_ai_navigation_world; }
 
-	inline	bool								is_loading						( ) const { /* no source */ return m_is_loading; }
-	inline	bool								is_loading_or_unloading			( ) const { /* no source */ return m_is_loading; }
+	inline	bool								is_loading						( ) const { return m_is_loading; }
+	// sushi@TODO: Loading-flag model; recover the consumer and whether unloading adds another condition.
+	inline	bool								is_loading_or_unloading			( ) const { return m_is_loading; }
 
-	inline	human_npc_ptr const&				selected_npc					( ) const { /* no source */ return m_selected_npc; }
+	// sushi@TODO: Selected-member getter model; locate the original named consumer.
+	inline	human_npc_ptr const&				selected_npc					( ) const { return m_selected_npc; }
 
-	inline	input_mode_type_enum				get_current_input_mode			( ) const { /* no source */ return m_input_mode; }
-	inline	free_fly_camera*					get_free_fly_camera				( ) const { /* no source */ return m_free_fly_camera; }
+	inline	input_mode_type_enum				get_current_input_mode			( ) const { return m_input_mode; }
+	inline	free_fly_camera*					get_free_fly_camera				( ) const { return m_free_fly_camera; }
 			void								set_local_player_camera			( player_input_handler* camera );
 
 	virtual	u32									get_current_time_in_ms			( ) const override;
-	inline	const simple_game_project_ptr		get_project						( ) const { /* no source */ return m_game_project; }
+	inline	const simple_game_project_ptr		get_project						( ) const { return m_game_project; }
 
 	virtual	bullet_manager&						get_bullet_manager				( ) const override
 	{
 		return *m_bullet_manager;
 	}
 
-	inline	game_material_manager const&		get_game_material_manager		( ) const { /* no source */ return *m_game_material_manager; }
-	inline	step_manager const&					get_step_manager				( ) const { /* no source */ return *m_step_manager; }
+	inline	game_material_manager const&		get_game_material_manager		( ) const { return *m_game_material_manager; }
+	inline	step_manager const&					get_step_manager				( ) const { return *m_step_manager; }
 
-	inline	void								check_selected_npc				( ) { /* no source */ }
-	inline	void								rotate_selected_npc				( const float arg_0 ) { /* no source */ }
-	inline	void								move_selected_npc				( float3 const& arg_0 ) { /* no source */ }
-	inline	void								delete_selected_npc				( ) { /* no source */ }
+	// sushi@TODO: Legacy selection model; the physics picker and original invocation remain open.
+	inline	void								check_selected_npc				( )
+	{
+		m_active_npc_set = !m_active_npc_set;
+		if ( m_active_npc_set )
+			m_selected_npc = find_npc_in_camera_direction( );
+		else
+			m_selected_npc = NULL;
+		if ( m_selected_npc == NULL )
+			m_active_npc_set = false;
+	}
+	// sushi@TODO: Legacy degree/yaw model; verify the retail consumer and rotation composition.
+	inline	void								rotate_selected_npc				( const float y_angle )
+	{
+		if ( m_selected_npc )
+		{
+			float const y_angle_rad = math::deg2rad( y_angle );
+			float4x4 const& rotation = math::create_rotation( m_selected_npc->get_rotation_angles( ) );
+			float4x4 const& new_rotation = math::create_rotation( float3( 0.f, y_angle_rad, 0.f ) );
+			m_selected_npc->set_rotation( rotation * new_rotation );
+		}
+	}
+	// sushi@TODO: Relative-translation model; verify whether the original argument was a delta.
+	inline	void								move_selected_npc				( float3 const& offset )
+	{
+		if ( m_selected_npc )
+		{
+			float4x4 transform = m_selected_npc->get_transform( );
+			transform.c.xyz( ) += offset;
+			m_selected_npc->set_transform( transform );
+		}
+	}
+	// sushi@TODO: Legacy removal model; verify original notification and selection ownership.
+	inline	void								delete_selected_npc				( )
+	{
+		if ( m_selected_npc )
+		{
+			m_npcs.erase( m_selected_npc );
+			kill_npc( m_selected_npc );
+			m_selected_npc = NULL;
+			m_active_npc_set = false;
+		}
+	}
 
-	inline	void								assign_behaviour				( ) { /* no source */ }
+	// sushi@TODO: Legacy test-query model; recover the retail path, parameters and invocation.
+	inline	void								assign_behaviour				( )
+	{
+		if ( m_selected_npc )
+		{
+			ai::behaviour_cook_params behaviour_params;
+			resources::user_data_variant new_params;
+			new_params.set( behaviour_params );
+			resources::query_resource( "test", resources::behaviour_class,
+				boost::bind( &game_world::on_behaviour_created, this, _1 ),
+				g_allocator, &new_params, NULL );
+		}
+	}
 
 			void								on_npc_attributes_received		( configs::binary_config_value const& attributes_config, human_npc_ptr owner );
 
@@ -260,12 +282,14 @@ public:
 
 			void								on_player_killed				( player_ptr& player, const u8 arg_1, const u8 arg_2 );
 
+	// sushi@TODO: Resolve hit-info player lookup and local-apply versus network-send ownership.
 	inline	void								hit_player						( hit_info const& arg_0 ) { /* no source */ }
 
 			void								put_victory_item				( u8 item_id, float4x4 const& transform );
-	inline	void								take_victory_item				( u8 arg_0 ) { /* no source */ }
+	// sushi@TODO: Indexed take model; verify the original caller and outer insertion guard.
+	inline	void								take_victory_item				( u8 item_id ) { m_victory_items[item_id]->take( ); }
 
-	inline	vectora< victory_item_ptr >&		get_victory_items				( ) { /* no source */ return m_victory_items; }
+	inline	vectora< victory_item_ptr >&		get_victory_items				( ) { return m_victory_items; }
 
 protected:
 			void								on_project_loaded				(
@@ -280,7 +304,8 @@ protected:
 private:
 			void								register_cooks					( );
 
-	inline	void								initialize_physics				( ) { /* no source */ }
+	// sushi@TODO: Verify the original constructor's physics-initialization wrapper boundary.
+	inline	void								initialize_physics				( ) { init_physics( ); }
 			void								initialize_ai					( );
 			void								initialize_ai_navigation		( );
 
@@ -288,10 +313,16 @@ private:
 			void								switch_to_free_fly_camera		( );
 
 	inline	void								get_frustum_objects_callback	(
-													boost::function< void( ai::game_object const& ) > const*	arg_0,
-													collision::object const&	arg_1
-												) { /* no source */ }
+													boost::function< void( ai::game_object const& ) > const*	update_callback,
+													collision::object const&	frustum_object
+												)
+	{
+		// sushi@TODO: Legacy collision-to-AI forwarding model; the original query binding remains open.
+		ai_collision_object const& ai_object = static_cast_checked< ai_collision_object const& >( frustum_object );
+		( *update_callback )( ai_object.get_game_object( ) );
+	}
 
+	// sushi@TODO: Recover physics-result NPC identity, occlusion/order, masks and ray extent.
 	inline	human_npc*							find_npc_in_camera_direction	( ) const { /* no source */ return NULL; }
 
 			void								on_behaviour_created			( resources::queries_result& data );
@@ -300,7 +331,19 @@ private:
 
 			void								query_npc_dictionary			( );
 
-	inline	void								on_npc_dictionary_created		( resources::queries_result& arg_0 ) { /* no source */ }
+	// sushi@TODO: Legacy dictionary callback model; retail query_npc_dictionary emits no query.
+	inline	void								on_npc_dictionary_created		( resources::queries_result& data )
+	{
+		if ( !data.is_successful( ) )
+		{
+			R_ASSERT( data.is_successful( ), "couldn't retrieve npc dictionary options" );
+			return;
+		}
+		configs::binary_config_ptr config = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+		configs::binary_config_value const& dictionary = config->get_root( );
+		m_ai_world->fill_objects_dictionary( dictionary );
+		m_is_dictionary_created = true;
+	}
 
 			void								tick_npcs						( const u32 current_frame_id, const bool is_game_paused );
 
@@ -315,6 +358,7 @@ private:
 			void								add_enemy_position_for_team		( pcstr team_name );
 			void								clear_enemies_positions_for_team( pcstr team_name );
 
+	// sushi@TODO: Recover spawn/enemy debug primitives, colors, guards and the original draw site.
 	inline	void								draw_respawn_debug				( ) { /* no source */ }
 
 			void								clear_player_spawn_info			( );
@@ -350,7 +394,7 @@ private:
 	struct bullet_tracer {
 		inline		bullet_tracer	( class bullet* arg_0, render::tracer_model_instance_ptr arg_1 ) :
 			bullet( arg_0 ),
-			tracer( arg_1 ) { /* no source */ }
+			tracer( arg_1 ) { }
 
 	public:
 		/* 0x0000 */	class bullet*							bullet;

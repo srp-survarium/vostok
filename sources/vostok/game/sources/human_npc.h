@@ -276,9 +276,16 @@ public:
 			void								enable						( );
 
 			void								set_attributes				( npc_game_attributes& attributes );
-	inline	void								set_rotation				( float4x4 const& arg_0 ) { /* no source */ }
+	// sushi@TODO: Rotation-replacement model; verify composition order and the original consumer.
+	inline	void								set_rotation				( float4x4 const& new_rotation )
+	{
+		float4x4 new_transform = create_scale( m_transform.get_scale( ) ) *
+			new_rotation * create_translation( m_transform.c.xyz( ) );
+		set_transform( new_transform );
+	}
 
-	inline	float3								get_rotation_angles			( ) const { /* no source */ return float3( ); }
+	// sushi@TODO: Legacy angles getter; recover the retail named consumer boundary.
+	inline	float3								get_rotation_angles			( ) const { return m_transform.get_angles_xyz( ); }
 
 			void								on_animation_end			( );
 			void								on_movement_end				( );
@@ -292,7 +299,8 @@ public:
 
 	inline	void								set_sound_dbg_mode			( bool arg_0 ) { /* no source */ }
 	inline	bool								get_sound_dbg_mode			( ) const { /* no source */ return m_dbg_sound; }
-	inline	float4x4 const&						get_transform				( ) { /* no source */ return m_transform; }
+	// sushi@TODO: Transform-reference getter model; locate the original named consumer.
+	inline	float4x4 const&						get_transform				( ) { return m_transform; }
 			void								set_transform				( float4x4 const& transform );
 private:
 			void								set_brain_unit				( resources::unmanaged_resource_ptr const& brain_unit );

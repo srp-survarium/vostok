@@ -25,13 +25,22 @@
 namespace survarium {
 
 struct find_closest_collision_predicate {
+	// sushi@TODO: Null/unit-fraction initializer model; bind the original closest-hit traversal.
 	inline find_closest_collision_predicate( ) :
 		m_result			( NULL ),
 		m_closest_fraction	( 1.0f )
 	{
 	}
 
-	inline void operator()( physics::closest_ray_result const& result );
+	// sushi@TODO: Closest-fraction model; recover the consumer, tie rule and result lifetime.
+	inline void operator()( physics::closest_ray_result const& result )
+	{
+		if ( result.fraction < m_closest_fraction )
+		{
+			m_result = &result;
+			m_closest_fraction = result.fraction;
+		}
+	}
 
 public:
 	/* 0x0000 */ physics::closest_ray_result const*	m_result;
@@ -41,11 +50,13 @@ public:
 STATIC_SIZE_ASSERT(find_closest_collision_predicate, 0x8);
 
 struct test_objects_in_shape_predicate : public physics::contact_test_predicate {
+	// sushi@TODO: False-until-contact initializer model; recover the original query consumer.
 	inline test_objects_in_shape_predicate( ) :
 		m_in_shape( false )
 	{
 	}
 
+	// sushi@TODO: Any-contact model; verify filtering, float result and original query binding.
 	virtual float add_single_result(
 		void*,
 		physics::primitive_type,
@@ -54,7 +65,11 @@ struct test_objects_in_shape_predicate : public physics::contact_test_predicate 
 		physics::primitive_type,
 		float4x4 const&,
 		float3 const&
-	) override;
+	) override
+	{
+		m_in_shape = true;
+		return 0.f;
+	}
 
 public:
 	/* 0x0000 */ /* physics::contact_test_predicate */
@@ -84,13 +99,11 @@ void game_world::get_visible_objects(
 {
 }
 
-// TU-local (canonical headers/get_first_npc_in_camera_direction_predicate.h;
-// legacy lineage game_unused.cpp::get_first_npc_in_camera_direction - the new
-// shape operates on physics::closest_ray_result; consumer is game_world.h's
-// inline find_npc_in_camera_direction)
 struct get_first_npc_in_camera_direction_predicate : private boost::noncopyable {
-	inline			get_first_npc_in_camera_direction_predicate( ) { /* no source */ }
+	// sushi@TODO: Legacy null-result model; recover the physics-based selection consumer.
+	inline			get_first_npc_in_camera_direction_predicate( ) : first_npc( NULL ) { }
 
+	// sushi@TODO: Recover physics-object to human_npc identity; the old collision-object cast is not valid here.
 	inline	bool	operator()	( physics::closest_ray_result const& arg_0 ) { /* no source */ return false; }
 
 public:
@@ -100,9 +113,8 @@ public:
 
 STATIC_SIZE_ASSERT(get_first_npc_in_camera_direction_predicate, 0x4);
 
-// TU-local (canonical headers/ray_query_predicate.h; legacy lineage
-// game.cpp/game_unused.cpp::ray_query - this compiland carries that family)
 struct ray_query_predicate : private boost::noncopyable {
+	// sushi@TODO: Legacy visibility-query model; retail's retained physics ray_query does not consume it.
 	inline			ray_query_predicate	(
 						float&								arg_0,
 						collision::object const* const		arg_1,
@@ -112,9 +124,26 @@ struct ray_query_predicate : private boost::noncopyable {
 		visibility_value( arg_0 ),
 		requested_object( arg_1 ),
 		object_to_ignore( arg_2 ),
-		transparency_threshold( arg_3 ) { /* no source */ }
+		transparency_threshold( arg_3 ),
+		requested_object_was_found( false ) { }
 
-	inline	bool	predicate			( collision::ray_triangle_result const& arg_0 ) { /* no source */ return false; }
+	// sushi@TODO: Legacy attenuation model; verify material payload ownership and the original collision-query caller.
+	inline	bool	predicate			( collision::ray_triangle_result const& triangle )
+	{
+		if ( !triangle.object->user_data( ) )
+			return false;
+		if ( triangle.object == object_to_ignore )
+			return false;
+
+		game_material_visibility_parameters const* const parameters =
+			static_cast_checked< game_material_visibility_parameters const* >( triangle.object->user_data( ) );
+		float const transparency = parameters->get_transparency_value( );
+		requested_object_was_found = triangle.object == requested_object;
+		visibility_value -= ( 1.f - ( requested_object_was_found ? 1.f : transparency ) );
+		if ( requested_object_was_found || visibility_value <= transparency_threshold || transparency == 0 )
+			return true;
+		return false;
+	}
 
 public:
 	/* 0x0000 */	/* boost::noncopyable */
