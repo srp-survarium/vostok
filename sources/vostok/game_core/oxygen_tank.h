@@ -37,21 +37,29 @@ private:
 												);
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
-	// faithful idioms below. update_bones_matrices ICF-folds with the medkit and
-	// artefact_lifebone_core copies at rva 0xbc810.
-	virtual	void								activate					( base_player& user, engine& engine ) override { }
+	// sushi@TODO: recover the original activation assertion; preserve its shipping dummy use and reference-pointer arguments.
+	virtual	void								activate					( base_player& user, engine& engine ) override
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		vostok::detail::unreferenced_parameter_helper( &user, &engine );
+	}
 	virtual	void								deactivate					( ) override { }
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
-	virtual	void								tick						( ) override { /* no source */ }
+	virtual	void								tick						( ) override { }
 
-	virtual	bool								is_ready_to_be_deactivated	( ) const override { return false; /* no source */ }
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
+	// sushi@TODO: confirm unreachable forms for bool hooks and transform; retail never writes their result.
+	virtual	bool								is_ready_to_be_deactivated	( ) const override { UNREACHABLE_CODE( ); }
+	// sushi@TODO: recover the selection assertion and unreachable source form; retail consumes arguments but writes no result.
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		vostok::detail::unreferenced_parameter_helper( buffer, is_third_view );
+		UNREACHABLE_CODE( );
+	}
 
-	virtual	void								on_player_model_added		( ) override { /* no source */ }
-	virtual	void								on_player_model_removed		( ) override { /* no source */ }
+	virtual	void								on_player_model_added		( ) override { }
+	virtual	void								on_player_model_removed		( ) override { }
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 												float4x4* const						user_matrices,
@@ -74,7 +82,7 @@ private:
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { inventory_item::serialize( packet, client_offset ); }
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override { inventory_item::deserialize( reader ); }
 
-	virtual	bool								is_sprinting				( ) const override { return false; /* no source */ }
+	virtual	bool								is_sprinting				( ) const override { UNREACHABLE_CODE( ); }
 
 protected:
 	/* 0x0000 */	/* inventory_item */
