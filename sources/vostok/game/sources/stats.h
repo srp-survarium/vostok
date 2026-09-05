@@ -6,6 +6,8 @@
 // PDB spells the draw param vostok::render::base_scene_view_ptr - the same
 // resource_ptr type our render tree typedefs as scene_view_ptr
 #include <vostok/render/engine/base_classes.h>
+#include <vostok/ui/ui.h>
+#include <vostok/stdlib_extensions.h>
 
 namespace vostok {
 namespace ui {
@@ -30,17 +32,28 @@ public:
 			void		draw						( render::ui::renderer& w, render::scene_view_ptr const& scene_view );
 
 			void		set_fps_stats				( const float fps );
-	inline	void		set_active_scene			( pcstr arg_0 ) { /* no source */ }
+	// sushi@TODO: Older formatted-label model; verify the retail consumer, prefix and buffer contract.
+	inline	void		set_active_scene			( pcstr scene_name )
+	{
+		string64 buff;
+		vostok::sprintf( buff, "active scene: %s", scene_name );
+		m_active_scene_info->set_text( buff );
+	}
 			void		set_player_linear_speed		( const float speed );
 			void		set_player_angular_speed	( const float speed );
+	// sushi@TODO: Recover the stamina label's formatting, units and caller; sibling speed labels do not establish them.
 	inline	void		set_player_stamina			( const float arg_0 ) { /* no source */ }
 			void		set_camera_stats			( float3 const& pos, float3 const& dir );
 			void		set_resources_stats			( pcstr str );
 			void		set_crosshair_info			( const float dist );
+	// sushi@TODO: Recover true/false display text and original caller; an empty setter is not verified.
 	inline	void		set_can_use_value			( const bool arg_0 ) { /* no source */ }
-	inline	void		set_dispersion_components	( pcstr arg_0 ) { /* no source */ }
-	inline	void		set_player_logic_state		( pcstr arg_0 ) { /* no source */ }
-	inline	void		set_weapon_logic_state		( pcstr arg_0 ) { /* no source */ }
+	// sushi@TODO: Direct-text forwarding model; verify original formatting and visibility policy at a caller.
+	inline	void		set_dispersion_components	( pcstr text ) { m_dispersion_components->set_text( text ); }
+	// sushi@TODO: Direct-text forwarding model; recover original prefix/format and caller.
+	inline	void		set_player_logic_state		( pcstr text ) { m_player_logic_state->set_text( text ); }
+	// sushi@TODO: Direct-text forwarding model; recover original prefix/format and caller.
+	inline	void		set_weapon_logic_state		( pcstr text ) { m_weapon_logic_state->set_text( text ); }
 
 private:
 			void		create						( );

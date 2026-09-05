@@ -21,26 +21,6 @@
 
 namespace survarium {
 
-// claude@NOTE: every QUANTITY/SPLIT method here is STRUCTURE-FAITHFUL (statement
-// sequence + named locals verified against pdb_fetch --view structure for each fn:
-// set_mode's 9 locals, initialize's func/proxy, add_message's tabs, focus's argument
-// all match the target). The residual % is driven entirely by cross-module
-// inlining/LTCG, NOT source shape:
-//   - scaleform flash_value ctor/dtor/Set*/SetMember + flash_movie::Invoke/Create*
-//     (value.cpp/movie.cpp) body into Scaleform::GFx but DON'T whole-program-inline
-//     into these callers the way the shipped /LTCG build did, so each flash_value
-//     temp / Invoke stays an out-of-line CALL here (the BASE_ONLY rows in
-//     add_message/set_mode, the missing TRGT_ONLY GFx::Value inlines in initialize);
-//   - flash_movie::Advance/Restart/ForceCollectGarbage are EMPTY stubs, so tick()
-//     inlines its movie->Advance to nothing -> base body == ret;
-//   - base_network_client::has_bandwidth + messaging_client::on_message_typed and
-//     network_client::get_player_team/get_local_player do not inline the way the
-//     target did, so focus/callback/on_message_typed/add_message keep extra
-//     guard/call statements out-of-line;
-//   - key_binder::get_binded_action stub-folds on_keyboard_action's binded-action
-//     branches, flipping focus(false) from a shared CALL (target) to an inlined block.
-// Match lifts once those siblings/scaleform are matched - structure here is correct.
-
 chat_handler::chat_handler( game& game )
 	: m_focused( false )
 	, m_active( false )
@@ -133,7 +113,7 @@ bool chat_handler::on_gamepad_action(
 	input::enum_gamepad_action		action
 )
 {
-	return m_game_ui_mode;
+	return in_match( );
 }
 
 bool chat_handler::on_mouse_key_action(
@@ -142,7 +122,7 @@ bool chat_handler::on_mouse_key_action(
 	input::enum_mouse_key_action	action
 )
 {
-	return m_game_ui_mode;
+	return in_match( );
 }
 
 bool chat_handler::on_mouse_move(
@@ -152,7 +132,7 @@ bool chat_handler::on_mouse_move(
 	s32					z
 )
 {
-	return m_game_ui_mode;
+	return in_match( );
 }
 
 void chat_handler::on_message_typed( wchar_t const* text, messaging::message_channel_enum message_chanel )
@@ -182,7 +162,7 @@ void chat_handler::add_message(
 
 	wchar_t text_to_send[ 512 ];
 
-	if( m_game_ui_mode && channel == messaging::player_match_channel )
+	if( in_match( ) && channel == messaging::player_match_channel )
 	{
 		char sender_name[ 32 ];
 		size_t converted_chars_count = 0;
@@ -217,7 +197,7 @@ void chat_handler::add_message(
 
 void chat_handler::add_to_recent_list( wchar_t const* name )
 {
-	if( m_game_ui_mode )
+	if( in_match( ) )
 		return;
 
 	flash_value obj;
@@ -293,7 +273,7 @@ void chat_handler::set_mode( bool is_game_mode )
 	get_movie( )->movie->Invoke( "root.set_channels", NULL, &channels_array, 1 );
 
 	flash_value is_heavy_mode;
-	is_heavy_mode.SetBoolean( !m_game_ui_mode );
+	is_heavy_mode.SetBoolean( !in_match( ) );
 	get_movie( )->movie->Invoke( "root.set_heavy", NULL, &is_heavy_mode, 1 );
 }
 
@@ -315,7 +295,7 @@ void chat_handler::focus( bool b_focused )
 	if( m_focused == b_focused )
 		return;
 
-	if( m_game_ui_mode || b_focused )
+	if( in_match( ) || b_focused )
 	{
 		flash_value argument;
 		argument.SetBoolean( b_focused );
