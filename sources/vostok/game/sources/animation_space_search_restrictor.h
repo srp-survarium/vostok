@@ -20,12 +20,9 @@ public:
 						const u32							arg_4,
 						const u32							arg_5
 					) :
-		// the base refs/m_graph force the init-list; the arg mapping is the
-		// generic<> ctor's own (start, target, max_range, max_iterations,
-		// max_visited) - a matcher confirms at the inlining call site
 		super( arg_1, arg_2, arg_3, arg_4, arg_5 ),
 		m_graph( arg_0 )
-	{ /* no source */ }
+	{ }
 
 	template < typename VertexType >
 	inline	bool	accessible						(

@@ -19,10 +19,10 @@ struct animation_space_graph_wrapper : private boost::noncopyable {
 	inline									animation_space_graph_wrapper	( animation_space_graph_ptr const& arg_0, animation_space_vertex_id const& arg_1 ) :
 		m_graph( arg_0 ),
 		m_start_vertex_id( arg_1 )
-	{ /* no source */ }
+	{ }
 
-	inline	void							on_before_search				( ) { /* no source */ }
-	inline	void							on_after_search					( const bool arg_0 ) { /* no source */ }
+	inline	void							on_before_search				( ) { }
+	inline	void							on_after_search					( const bool arg_0 ) { }
 	template < typename VertexType >
 	inline	void							edge_iterators					( VertexType const& vertex, const_edge_iterator& begin, const_edge_iterator& end ) const
 	{
