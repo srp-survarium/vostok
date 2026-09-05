@@ -21,10 +21,18 @@ hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_phys
 {
 }
 
-// sushi@TODO: Think about this a bit more.
 bool hit_receiver_info::operator==( hit_receiver_info const& rhs ) const
 {
 	return m_receiver->m_pointer->m_pointer == rhs.m_receiver->m_pointer->m_pointer;
+}
+
+inline void damage_zone_core::remove_null_receivers( )
+{
+	erase_null_ptrs predicate;
+	m_receivers.erase(
+		std::remove_if( m_receivers.begin( ), m_receivers.end( ), boost::bind<bool>( boost::ref( predicate ), _1 ) ),
+		m_receivers.end( )
+	);
 }
 
 damage_zone_core::damage_zone_core( ) :
@@ -394,7 +402,7 @@ void damage_zone_core::hit_on_inside( const u32 frame_delta, const u32 current_t
 					float hit_coeff = m_hit_curve.evaluate( ub_it->second, 0.0f, math::range_time_type, 0.0f, 0.0f );
 					math::clamp( hit_coeff, 0.0f, 1.0f );
 					float const hit_value = math::lerp( m_min_hit, m_max_hit, hit_coeff );
-					float const armor_piercing_value = math::lerp( m_min_armor_piercing, m_max_armor_piercing, hit_coeff );
+					float const armor_piercing_value = calc_armor_piercing( hit_coeff );
 					it->m_receiver->hit( this, *ub_it->first, m_damage_type.c_str( ), hit_value, armor_piercing_value, NULL );
 					it->m_was_hit = true;
 				}
