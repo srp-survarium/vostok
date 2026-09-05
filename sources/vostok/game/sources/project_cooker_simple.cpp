@@ -78,10 +78,7 @@ void project_cooker_simple::on_object_loaded(
 {
 	++project->m_loaded.loaded_count;
 
-	if ( project->m_loaded.visuals_loaded &&
-		 project->m_loaded.collision_loaded &&
-		 project->m_loaded.loaded_count == project->m_objects.size( ) &&
-		 project->m_loaded.all_queried )
+	if ( project->all_loaded( ) )
 	{
 		project->resolve_links( );
 
@@ -323,10 +320,7 @@ void project_cooker_simple::create_game_objects(
 		project->m_loaded.all_queried = false;
 	}
 
-	if ( project->m_loaded.visuals_loaded &&
-		 project->m_loaded.collision_loaded &&
-		 project->m_loaded.loaded_count == project->m_objects.size( ) &&
-		 project->m_loaded.all_queried )
+	if ( project->all_loaded( ) )
 	{
 		project->resolve_links( );
 		parent_query->set_unmanaged_resource(
@@ -377,9 +371,7 @@ void project_cooker_simple::on_damage_zones_loaded( simple_game_project* project
 	}
 
 	project->m_loaded.all_queried = true;
-	if ( project->m_loaded.visuals_loaded &&
-		 project->m_loaded.collision_loaded &&
-		 project->m_loaded.loaded_count == project->m_objects.size( ) )
+	if ( project->all_loaded( ) )
 	{
 		project->resolve_links( );
 		data.get_parent_query( )->set_unmanaged_resource(
@@ -404,9 +396,7 @@ void project_cooker_simple::on_ladders_loaded( simple_game_project* project, res
 	}
 
 	project->m_loaded.all_queried = true;
-	if ( project->m_loaded.visuals_loaded &&
-		 project->m_loaded.collision_loaded &&
-		 project->m_loaded.loaded_count == project->m_objects.size( ) )
+	if ( project->all_loaded( ) )
 	{
 		project->resolve_links( );
 		data.get_parent_query( )->set_unmanaged_resource(
@@ -430,7 +420,7 @@ void project_cooker_simple::on_collision_and_visuals_loaded( resources::queries_
 
 	project->m_loaded.collision_loaded = true;
 	project->m_loaded.visuals_loaded = true;
-	if ( project->m_loaded.loaded_count == project->m_objects.size( ) && project->m_loaded.all_queried )
+	if ( project->all_loaded( ) )
 	{
 		project->resolve_links( );
 		data.get_parent_query( )->set_unmanaged_resource(
