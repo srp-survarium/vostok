@@ -39,15 +39,9 @@ struct hit_receiver;
 struct base_player;
 class bullet_manager;
 struct weapon_ammo_info;
-class weapon;	// game module; reads weapon_core members directly (see friend below)
 
 
 class weapon_core : public inventory_item {
-	// the game-module weapon reads m_ammo_in_magazine / m_is_round_chambered /
-	// m_fire_queue_type / m_weapon_fire_queue_types / m_ammo_slot INLINE (direct
-	// member loads in weapon::set_ui_ammo, set_next_*_type, on_chamber_a_round,
-	// on_after_fire); codegen-neutral friend, no layout/symbol impact
-	friend class weapon;
 public:
 	typedef weapon_recoil_params recoil_params;
 	typedef weapon_dispersion_params dispersion_params;
@@ -75,14 +69,14 @@ public:
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
 			u16									ammo_in_magazine				( ) const;
-	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
+	inline	u16									ammo_in_weapon					( ) const { return m_ammo_in_magazine + ( m_is_round_chambered != false ); }
 
 			u16									maximum_ammo_in_weapon			( ) const;
 
-	inline	bool								ready_to_fire					( ) const { /* no source */ }
+	inline	bool								ready_to_fire					( ) const { return m_ready_for_fire; }
 
 			bool								is_ready_to_shoot				( ) const;
-	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
+	inline	bool								is_firing						( ) const { return m_is_firing; }
 	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
 			bool								ready_to_reload					( ) const;
@@ -90,18 +84,19 @@ public:
 	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
 	inline	weapon_targets						get_target						( ) const { return m_target; }
 
-	inline	void								set_fire_queue_type				( const u8 arg_0 ) { /* no source */ }
-	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
+	inline	void								set_fire_queue_type				( const u8 value ) { m_fire_queue_type = value; }
+	inline	u8									get_fire_queue_type				( ) const { return m_fire_queue_type; }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
 			u16									fire_queue_length				( ) const;
 
 	inline	float4x4							get_transform					( ) const { return m_transform; }
-	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
-	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	float4x4							transform						( ) const override { return m_transform; }
+	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }
 
 	inline	hit_initiator const*				hit_initiator_holder			( ) const { return m_initiator_holder; }
-	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
+	// sushi@TODO: get_skeleton and user_animations use ownership-based models; verify an original consumer.
+	inline	animation::skeleton_ptr				get_skeleton					( ) const { return m_skeleton; }
 
 	virtual	void								set_next_fire_queue_type		( );
 	virtual	void								set_next_ammo_type				( );
@@ -119,7 +114,7 @@ public:
 			fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >
 												vertical_recoil_time_calculator		( );
 
-			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
+			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
 
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override;
@@ -148,7 +143,7 @@ public:
 	virtual	void								activate						( base_player& user, engine& engine ) override;
 	virtual	void								deactivate						( ) override;
 
-	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	bool								can_hold_breath					( ) const { return m_aimed; }
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const;
@@ -177,8 +172,8 @@ public:
 
 	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
-	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
-	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
+	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { m_user_animations_selector.set_animations( user_animations ); }
+	inline	weapon_user_animations_container const&	user_animations					( ) const { return m_user_animations_selector.animations( ); }
 
 	inline	base_player*						get_user						( ) const { return m_user; }
 			bool								is_double_handed				( ) const;
@@ -195,14 +190,14 @@ public:
 			void								remove_animation_callback		( pcstr channel_id, pcvoid callback_uid );
 			void								remove_animation_callback		( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid );
 
-	inline	bool								is_third_view					( ) const { /* no source */ }
-	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
+	inline	bool								is_third_view					( ) const { return m_is_third_view; }
+	inline	bool								has_chamber_a_round_state		( ) const { return m_is_there_chamber_a_round_state; }
 			bool								round_is_chambered				( ) const;
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
 	inline	bool								deserializing					( ) const { return m_deserializing; }
-	inline	bool								is_active						( ) const { /* no source */ }
+	inline	bool								is_active						( ) const { return m_logic->current_state( ) != NULL; }
 
 private:
 	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
@@ -249,13 +244,13 @@ private:
 	virtual	bool								is_sprinting					( ) const override;
 private:
 
-	virtual	void								on_before_fire					( ) { /* no source */ }
-	virtual	void								on_after_fire					( ) { /* no source */ }
-	virtual	void								on_reload						( ) { /* no source */ }
-	virtual	void								on_chamber_a_round				( ) { /* no source */ }
-	virtual	void								on_show							( ) { /* no source */ }
-	virtual	void								on_hide							( ) { /* no source */ }
-	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
+	virtual	void								on_before_fire					( ) { }
+	virtual	void								on_after_fire					( ) { }
+	virtual	void								on_reload						( ) { }
+	virtual	void								on_chamber_a_round				( ) { }
+	virtual	void								on_show							( ) { }
+	virtual	void								on_hide							( ) { }
+	virtual	void								on_unload_chambered_round		( ) { }
 
 private:
 	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
@@ -326,7 +321,7 @@ private:
 													const float		time_scale
 												);
 
-	inline	float								backward_recoil_value			( ) const { /* no source */ }
+	inline	float								backward_recoil_value			( ) const;
 			float								horizontal_recoil_value			( ) const;
 			float								vertical_recoil_value			( ) const;
 
