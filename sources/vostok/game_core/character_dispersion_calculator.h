@@ -25,10 +25,11 @@ public:
 							const u32							current_time_in_ms
 						);
 
+	// sushi@TODO: recover which values and clock reset, and whether configured idle dispersion is retained.
 	inline	void		reset							( ) { /* no source */ }
 
-	inline	float		get_value						( ) const { return m_value; }	// claude@MATCH: reads m_value (+0x0c); get_dispersion inlines it as [this+0x2C]
-	inline	void		set_aiming_speed				( const float aiming_speed ) { m_aiming_speed = aiming_speed; }	// claude@MATCH: inlined as [this+0x34] store in apply_aim_speed
+	inline	float		get_value						( ) const { return m_value; }
+	inline	void		set_aiming_speed				( const float aiming_speed ) { m_aiming_speed = aiming_speed; }
 
 private:
 			float		get_target_koef					( const weapon_user_state_enum character_state, const bool is_moving, const bool is_aiming ) const;

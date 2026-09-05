@@ -48,19 +48,20 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Trap set + individual trap inlines | 24 | Restore removal/configuration seams; remove invented matrix-access friendship; explicit count/filter and unreachable models; raw bytes resolve non-returning inventory-hook extents | [individual register](game_core/trap_inline_recovery.md) |
 | Missile/spore family + artefact-base constructor | 21 | Two simple models; every remaining method has a semantic hypothesis and specific ownership/configuration/timing evidence gap. No observed current construction path; not claimed server/editor-only | [individual register](game_core/missile_spore_inline_recovery.md) |
 | Player input + normal RNG + shotgun substates | 33 | Fix live RNG seed restore; recover single-input/zero-local caller seams; replace three private playback accesses with base finalization; walking and eight RNG contracts remain open | [individual register](game_core/input_random_reload_inline_recovery.md) |
+| Breath-state family and calculator inlines | 40 | Seven real 0-versus-1 float fixes including the live vibration multiplier; consolidate seven duplicate header bodies onto existing owners; recover empty lifecycle defaults; interpolation model and two reset/delay bodies remain open | [individual register](game_core/breath_recoil_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the input/RNG/reload batch: the registers account for 353
+Checkpoint after the breath/calculator batch: the registers account for 393
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 502 marked lines: game 294, game_core 139,
+questions. The literal scan is now 494 marked lines: game 294, game_core 131,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 445 active marked lines, **not** a remaining-function
+mirror lines leaves 437 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
-Next work includes the player/history consumers' own inline methods, the
-game-core weapon/object families, and Scaleform carcasses versus the pinned
-SDK source. Do not call a client-unemitted helper editor-only without checking
+Next work includes the player/history consumers' own inline methods and the
+remaining game-core object families. SDK mirror ownership is already recorded,
+not a remaining body-reconstruction queue. Do not call a client-unemitted helper editor-only without checking
 actual consumers. Do not edit the fenced SDK to resolve a project carcass.

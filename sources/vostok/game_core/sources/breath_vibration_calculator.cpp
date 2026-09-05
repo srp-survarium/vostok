@@ -16,12 +16,12 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	:	m_user						( 0 ),
 		m_params					( 0 ),
 		m_last_time_in_ms			( 0 ),
-		m_current_multiplier		( 0.0f ),
-		m_target_multiplier			( 0.0f ),
+		m_current_multiplier		( 1.0f ),
+		m_target_multiplier			( 1.0f ),
 		m_vertical_value			( 0.0f ),
 		m_horizontal_value			( 0.0f ),
-		m_character_multiplier		( 0.0f ),
-		m_breath_holding_reserve	( 0.0f ),
+		m_character_multiplier		( 1.0f ),
+		m_breath_holding_reserve	( 1.0f ),
 		m_is_breath_holded			( false )
 {
 	initialize_logic( );
@@ -62,10 +62,6 @@ bool true_predicate( )
 	return true;
 }
 
-// claude@NOTE: STRUCTURE MATCH (11/11). Residual is a 4-byte frame delta - the target
-// saves ESI (push esi / sub esp,128h) and uses it as `this` for the trailing
-// boost::function::clear() calls, shifting every [ebp-XX] slot by 8; base keeps ECX
-// (no esi, sub esp,130h). Whole-program LTCG register-budget choice, not source-steerable.
 void breath_vibration_calculator::initialize_logic( )
 {
 	breath_state* normal			= VOSTOK_NEW_IMPL( g_allocator, breath_state_normal )( m_breath_holding_reserve );
