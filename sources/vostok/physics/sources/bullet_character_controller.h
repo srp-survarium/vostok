@@ -50,9 +50,8 @@ public:
 			void							end_jump						( );
 			bool							can_jump						( ) const;
 
-	// STATE[UNMATCHABLE]: the client emits no call or inline expansion for these accessors.
-	inline	float							get_gravity						( ) const { /* no source */ }
-	inline	bool							is_inserted						( ) const { /* no source */ }
+	inline	float							get_gravity						( ) const { return m_gravity; }
+	inline	bool							is_inserted						( ) const { return m_collision_world != NULL; }
 
 private:
 	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }
@@ -85,15 +84,14 @@ private:
 												float				tangentMag = 0.0f,
 												float				normalMag = 1.0f
 											);
-	// STATE[UNMATCHABLE]: player_step does not expand these private helpers, and the client
-	// contains no other call site from which their bodies can be recovered.
 	inline	bool							in_crouch						( ) const { return m_in_crouch; }
+	// STATE[STUB]: smoothing and step/slide policies remain unresolved; see the PR 569 semantic register.
 	inline	void							prevent_step_bouncing			( ) { /* no source */ }
 	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ }
 	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ }
 	inline	void							updata_slide_vector				( btVector3 const& arg_0, const float arg_1 ) { /* no source */ }
 
-	inline	u32								get_contacts_count				( ) { /* no source */ }
+	inline	u32								get_contacts_count				( );
 
 			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );

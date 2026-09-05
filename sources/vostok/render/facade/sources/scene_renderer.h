@@ -217,12 +217,12 @@ public:
 	void set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 	void reset_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 
-	// STATE[UNMATCHABLE]: no retained procedure, caller, or historical body.
-	void set_fixed_lod( u32, base_scene& ) { /* no source */ }
-	u32 get_fixed_lod( base_scene const& ) { /* no source */ return 0; }
+	// sushi@TODO: verify the editor's fixed-LOD write primitive; retail only exposes the volatile field and reader.
+	void set_fixed_lod( u32 lod, base_scene& scene ) { threading::interlocked_exchange( scene.fixed_lod_value, lod ); }
+	u32 get_fixed_lod( base_scene const& scene ) { return scene.fixed_lod_value; }
 
 private:
-	void draw_present_impl( ) { /* no source */ } // STATE[UNMATCHABLE]
+	void draw_present_impl( ) { /* no source */ } // STATE[STUB]: presentation target unresolved.
 
 private:
 	engine::world& m_render_engine_world;

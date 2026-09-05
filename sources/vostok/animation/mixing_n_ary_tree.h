@@ -8,6 +8,7 @@
 #define VOSTOK_ANIMATION_MIXING_N_ARY_TREE_H_INCLUDED
 
 #include <vostok/animation/mixing_n_ary_tree_intrusive_base.h>
+#include <vostok/animation/mixing_animated_object_holder.h>
 
 #if 1//ndef DEBUG
 #	define VOSTOK_NORMALIZE_ANIMATIONS_WEIGHTS
@@ -109,7 +110,11 @@ public:
 												subscribed_channel*&	channels_head,
 												bool&					callbacks_are_actual
 											);
-	inline	void							tick_to_nearest_event				( subscribed_channel*& arg_0, bool& arg_1 ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void							tick_to_nearest_event				( subscribed_channel*& channels_head, bool& callbacks_are_actual )
+	{
+		if ( are_there_any_animations( ) )
+			tick( nearest_event_time_in_ms( ), channels_head, callbacks_are_actual );
+	}
 			u32								nearest_event_time_in_ms			( ) const;
 
 
@@ -127,7 +132,13 @@ private:
 public:
 			float4x4						get_object_transform				( pcvoid animated_object ) const;
 
-	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ } // STATE[UNMATCHABLE]
+	inline	bool							has_object							( pcvoid const animated_object ) const
+	{
+		for ( u32 i = 0; i < m_animated_objects_count; ++i )
+			if ( m_animated_objects[i].animated_object == animated_object )
+				return true;
+		return false;
+	}
 
 			void							compute_bones_matrices				(
 												pcvoid				animated_object,
@@ -150,7 +161,7 @@ public:
 												float4x4* const		end
 											) const;
 
-	// STATE[UNMATCHABLE]: the client emits no consistency or state-dump expansion.
+	// STATE[STUB]: invariant checks and the 19-argument dump mapping remain unresolved.
 	inline	bool							is_consistent						( ) const {  return false; /* no source */ }
 	inline	void							dump_animation_states				( animation_states_dumper& arg_0 ) const { /* no source */ }
 	inline	bool							are_there_any_animations			( ) const { return m_animations_count > 0; }
@@ -172,13 +183,12 @@ private:
 			void							initialize							( );
 			void							destroy								( );
 
-	// STATE[UNMATCHABLE]: these legacy bone and state-update helpers have no client
-	// procedure or separately identifiable expansion.
+	// STATE[STUB]: the legacy bone helpers do not identify an object in this multi-object tree.
 	inline	float4x4						computed_local_bone_matrix			( skeleton_bone const& arg_0 ) const { /* no source */ }
 
 	inline	void							compute_skeleton_branch				( skeleton_bone const& arg_0, float4x4* const arg_1, float4x4 const& arg_2 ) const { /* no source */ }
 
-	inline	void							update_animation_interval_time		( n_ary_tree_animation_node& arg_0, const u32 arg_1, const u32 arg_2 ) { /* no source */ }
+	inline	void							update_animation_interval_time		( n_ary_tree_animation_node& animation_node, const u32 start_time_in_ms, const u32 target_time_in_ms );
 
 			void							accumulate_object_movement			(
 												n_ary_tree_animation_node&		animation_node,
@@ -186,10 +196,10 @@ private:
 												const u32						time_in_ms
 											);
 	inline	void							accumulate_object_movement			(
-												n_ary_tree_animation_node&		arg_0,
-												u32								arg_1,
-												float							arg_2,
-												u32								arg_3
+												n_ary_tree_animation_node&		animation,
+												u32								start_time_in_ms,
+												float							start_animation_time,
+												u32								target_time_in_ms
 											) { /* no source */ }
 
 			void							update_animation_state				(
@@ -229,7 +239,7 @@ private:
 												bool&					callbacks_are_actual
 											);
 	static	void							update_animation_time				( animation_state& animation_state );
-	inline	void							update_weight						( n_ary_tree_animation_node& arg_0, u32 arg_1, u32 arg_2 ) { /* no source */ }
+	inline	void							update_weight						( n_ary_tree_animation_node& animation_node, u32 start_time_in_ms, u32 target_time_in_ms );
 
 			float							computed_animation_time				(
 												n_ary_tree_animation_node&		animation,

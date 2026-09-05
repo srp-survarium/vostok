@@ -759,6 +759,41 @@ void engine::world::end_frame( )
 	++m_frame_id;
 }
 
+void engine::world::pick_lighting_luminance( const u32 x, const u32 y )
+{
+	// sushi@TODO: recover the four editor renderer callees and verify the forwarding guards.
+	if ( m_renderer )
+		m_renderer->pick_lighting_luminance( x, y );
+}
+
+void engine::world::set_picking_lighting_luminance_mode( bool value )
+{
+	if ( m_renderer )
+		m_renderer->set_picking_lighting_luminance_mode( value );
+}
+
+void engine::world::generate_environment_probe(
+	base_scene_ptr const& scene,
+	base_scene_view_ptr const& view,
+	base_output_window_ptr const& output_window,
+	environment_probe_generate_parameters const& parameters
+)
+{
+	if ( m_renderer )
+		m_renderer->generate_environment_probe( scene, view, output_window, parameters );
+}
+
+void engine::world::generate_sky_ao_map(
+	base_scene_ptr const& scene,
+	base_scene_view_ptr const& view,
+	base_output_window_ptr const& output_window,
+	sky_ambient_occlusion_map_generate_parameters const& parameters
+)
+{
+	if ( m_renderer )
+		m_renderer->generate_sky_ao_map( scene, view, output_window, parameters );
+}
+
 u32 engine::world::frame_id( )
 {
 

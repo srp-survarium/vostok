@@ -4,9 +4,12 @@
 #define AI_FSM_H_INCLUDED
 
 #include <vostok/ai/fsm_state.h>
+#include <vostok/ai/api.h>
 
 namespace vostok {
 namespace ai {
+
+extern allocator_type* g_allocator;
 
 class fsm {
 public:
@@ -16,12 +19,21 @@ public:
 	explicit						fsm					( );
 
 			void					add_state			( fsm_state* state );
-	// STATE[UNMATCHABLE]: the client emits neither procedures nor inline expansions
-	// for the two removal helpers.
-	inline	void					remove_state		( fsm_state* arg_0 ) { /* no source */ }
+	// sushi@TODO: verify removal ownership and current-state/transition cleanup against a consuming target.
+	inline	void					remove_state		( fsm_state* state ) { m_states.erase( state ); }
 
 			void					add_transition		( fsm_state* from, fsm_state* to, boost::function<bool()> const& transition_predicate );
-	inline	void					remove_transition	( fsm_state* arg_0, fsm_state const* arg_1 ) { /* no source */ }
+	inline	void					remove_transition	( fsm_state* from, fsm_state const* to )
+	{
+		for ( fsm_state_transition* i = from->transitions.front( ); i; ) {
+			fsm_state_transition* const next = i->next;
+			if ( i->target_state == to ) {
+				from->transitions.erase( i );
+				VOSTOK_DELETE_IMPL( *g_allocator, i );
+			}
+			i = next;
+		}
+	}
 
 			void					set_initial_state	( fsm_state* initial_state );
 	inline	fsm_state*				current_state		( ) const { return m_current_state; }

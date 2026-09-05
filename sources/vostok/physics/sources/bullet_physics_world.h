@@ -82,10 +82,31 @@ public:
 	inline	memory::base_allocator&			allocator					( ) { return m_allocator; }
 	inline	btSoftRigidDynamicsWorld*		get_bt_internal				( ) { return m_dynamicsWorld; }
 
-	// STATE[UNMATCHABLE]: these editor-only helpers have no procedure or inline expansion
-	// in the client target; their older GSC implementations are recorded in the audit notes.
-	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& arg_0 ) { /* no source */ }
-	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* arg_0 ) { /* no source */ }
+	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& info )
+	{
+		btSoftBody* body = btSoftBodyHelpers::CreateRope(
+			*m_softBodyWorldInfo, from_vostok( info.p0 ), from_vostok( info.p1 ), info.fragments_count, 1 + 2
+		);
+		body->m_cfg.piterations = info.iterations;
+		body->m_cfg.viterations = info.iterations;
+		body->m_cfg.kVCF = info.kVCF;
+		body->m_cfg.kDP = info.kDP;
+		body->m_cfg.kDG = info.kDG;
+		body->m_cfg.kLF = info.kLF;
+		body->m_cfg.kPR = info.kPR;
+		body->m_cfg.kVC = info.kVC;
+		body->m_cfg.kDF = info.kDF;
+		body->m_cfg.kMT = info.kMT;
+		body->m_cfg.kCHR = info.kCHR;
+		body->m_cfg.kKHR = info.kKHR;
+		body->m_cfg.kSHR = info.kSHR;
+		body->m_cfg.kAHR = info.kAHR;
+		body->m_cfg.timescale = info.timescale;
+		body->getCollisionShape( )->setMargin( info.margin );
+		body->m_materials[0]->m_kLST = info.stiftness;
+		return VOSTOK_NEW_IMPL( m_allocator, bt_soft_body_rope )( body );
+	}
+	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* body ) { VOSTOK_DELETE_IMPL( m_allocator, body ); }
 
 			void							contact_pair_test			( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object );
 			bool							adjust_foot_transform		(

@@ -20,9 +20,9 @@ The method has no standalone target procedure. Its body and all four caller
 seams are reconstructed together from the private method declaration, the
 friend graph, and the repeated target field update.
 
-## Not observable in the client
+## Earlier baseline and source-only follow-up
 
-Thirty declarations remain `STATE[UNMATCHABLE]`:
+The earlier audit left thirty declarations unfilled:
 
 - editor-only `fixed_joint_camera_effector::{process_camera,on_attach}`;
 - `bone_matrices_computer::overweighting_detected`;
@@ -41,11 +41,13 @@ Thirty declarations remain `STATE[UNMATCHABLE]`:
 None has a target or base rich-index procedure. No current client source calls
 the public convenience methods or instantiates either editor helper. The large
 `n_ary_tree` consumers contain related bone, weight, interval, and serialization
-logic, but their target partitions veto moving that logic into the declarations:
+logic. Their target partitions constrain, but do not alone veto, a helper seam:
 
 - `update_animation_state` has the same 13-statement partition on both sides,
   with only a two-byte statement-size residual. Its weight calculation is not a
-  collapsed `update_weight` or `update_animation_interval_time` call site;
+  collapsed call site in the old reconstruction. The source-only follow-up
+  extracts both declared helpers; whether this reproduces the partition is
+  deferred to the batched build;
 - `compute_bones_matrices` and `convert_to_object_matrices` each have one target
   statement, and `compute_bones_local_matrices` has two. All delegate to
   `bone_matrices_computer`; they do not expand the legacy `n_ary_tree` bone
@@ -55,16 +57,26 @@ logic, but their target partitions veto moving that logic into the declarations:
   `tick_to_nearest_event`;
 - `serialize_state` retains separate target statements for the cookie, tree
   size, buffer setup, placement branch, event adjustment, and inversion. It is
-  not one collapsed `serialize_state_impl` call site.
+  not one collapsed call in the old source. The follow-up extracts only the
+  copying region compatible with the helper's const tree parameter, leaving
+  event adjustment and inversion in the caller.
 
 The four-argument `accumulate_object_movement` overload has no call site; live
-animation update code calls the retained three-argument procedure. Those bodies
-stay unfilled until original source or another target provides a boundary.
+animation update code calls the retained three-argument procedure. Historical
+parameter names identify the extra integer as start time, not an interval ID.
 
 `bone_matrices_computer::overweighting_detected` has no client consumer, and the
 public 2011 X-Ray source predates both the accessor and its backing field. A
-direct field return is plausible, but the client cannot distinguish it from
-another implementation, so the placeholder remains.
+direct field return is now supplied as a semantic model, not a verified body.
+
+The follow-up fills **25 of the 30 bodies**. The five remaining declarations
+are `n_ary_tree::{is_consistent,dump_animation_states,computed_local_bone_matrix,
+compute_skeleton_branch}` and the four-argument `accumulate_object_movement`.
+Every one of the thirty has its own evidence/disposition row in the
+[individual register](../pr569_semantic_reconstruction.md). In particular, the
+null-weight detector's conservative operator rules and the editor hook defaults
+are hypotheses, not source recovered from a client expansion. No follow-up
+build or score refresh has been run.
 
 Editor-only gaps are tracked centrally in the
 [editor decomp handoff](../../todos/editor_decomp.md).

@@ -166,23 +166,22 @@ public:
 									vostok::ui::font const*				default_font
 								);
 
-	// STATE[UNMATCHABLE]: no retained procedure, caller, or historical body.
-	inline	void				pick_lighting_luminance				( const u32 arg_0, const u32 arg_1 ) { /* no source */ }
+			void				pick_lighting_luminance				( const u32 x, const u32 y );
 
-	inline	void				set_picking_lighting_luminance_mode	( bool arg_0 ) { /* no source */ }
+			void				set_picking_lighting_luminance_mode	( bool value );
 
-	inline	void				generate_environment_probe			(
-									base_scene_ptr const&				arg_0,
-									base_scene_view_ptr const&			arg_1,
-									base_output_window_ptr const&		arg_2,
-									environment_probe_generate_parameters const&	arg_3
-								) { /* no source */ }
-	inline	void				generate_sky_ao_map					(
-									base_scene_ptr const&				arg_0,
-									base_scene_view_ptr const&			arg_1,
-									base_output_window_ptr const&		arg_2,
-									sky_ambient_occlusion_map_generate_parameters const&	arg_3
-								) { /* no source */ }
+			void				generate_environment_probe			(
+									base_scene_ptr const& scene,
+									base_scene_view_ptr const& view,
+									base_output_window_ptr const& output_window,
+									environment_probe_generate_parameters const& parameters
+								);
+			void				generate_sky_ao_map					(
+									base_scene_ptr const& scene,
+									base_scene_view_ptr const& view,
+									base_output_window_ptr const& output_window,
+									sky_ambient_occlusion_map_generate_parameters const& parameters
+								);
 
 			void				end_frame							( );
 
