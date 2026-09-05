@@ -27,7 +27,7 @@ void messaging_client::sign_in_on_packet_received( network_core::packet_reader& 
 
 	LOG_INFO	( "Messaging client: signed in!" );
 
-	m_chat_handler.set_local_player_name	( m_local_name );
+	m_chat_handler.set_local_player_name	( local_user_name( ) );
 	m_chat_handler.add_message	( messaging::player_system_channel, L"Connected to messaging server.", L"System" );
 
 	update_channel_subscriptions	( );
@@ -37,7 +37,7 @@ void messaging_client::sign_in_on_packet_received( network_core::packet_reader& 
 
 void messaging_client::update_channel_subscriptions( )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	u32 channel_subscriptions[ messaging::max_channel_num ] = {
