@@ -13,6 +13,8 @@ Append-only ledger (union-merged across branches, like `PROGRESS.md` / `unanswer
 
 | Status | Function | File:line | PR | TODO |
 |--------|----------|-----------|----|------|
+| open | `service_prices::serialize` | `game/sources/service_prices.h` | #571 | Three-u32 inverse-wire model from the retained price reader; recover original writer, guards and append granularity. No artificial sender or message prefix added. See game/lobby_record_inline_recovery.md. |
+| open | `service_prices::deserialize` | `game/sources/service_prices.h` | #571 | Restore retail's sequential u32 operations and call helper in read_service_prices; original named inline boundary and deferred line projection remain open. Frozen caller has two extra assignment statements. |
 | open | `stats::set_active_scene` | `game/sources/stats.h` | #571 | Restore older string64/active-scene formatter as a legacy model. Recover retail consumer, prefix and buffer contract; searched retail ASCII has no matching label. See game/stats_chat_inline_recovery.md. |
 | open | `stats::set_player_stamina` | `game/sources/stats.h` | #571 | Formatted stamina-display hypothesis; recover units, precision, prefix and caller. Allocated widget and sibling speed setters do not establish this output contract. |
 | open | `stats::set_can_use_value` | `game/sources/stats.h` | #571 | Boolean-status display hypothesis; recover true/false text versus visibility policy and original caller. Empty setter is not a verified retail no-op. |
