@@ -471,9 +471,7 @@ bool lobby_client::read_account_money( network_core::packet_reader& reader )
 
 bool lobby_client::read_service_prices( network_core::packet_reader& reader )
 {
-	m_service_prices.reroll_cost		= reader.r< u32 >( );
-	m_service_prices.add_profile_cost	= reader.r< u32 >( );
-	m_service_prices.rename_account_cost	= reader.r< u32 >( );
+	m_service_prices.deserialize	( reader );
 	return true;
 }
 
