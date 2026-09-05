@@ -7,7 +7,6 @@
 
 namespace survarium {
 
-// sushi@TODO: Resolve raw-header public versus source private base access; topology currently reports identical.
 struct client_player_history_item : private boost::noncopyable {
 		client_player_history_item	( );
 		~client_player_history_item	( );

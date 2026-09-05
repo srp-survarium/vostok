@@ -11,7 +11,6 @@ namespace animation {
 
 namespace survarium {
 
-// sushi@TODO: resolve public-base carcass projection versus identical topology for this private base.
 class ik_processor : private core::noncopyable {
 protected:
 			explicit	ik_processor	( );
