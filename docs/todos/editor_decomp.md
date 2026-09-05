@@ -22,6 +22,22 @@ The current per-function evidence and open alternatives are maintained in the
 - The null-weight detector has conservative structural-zero rules. Transition
   and compound-operator semantics are explicitly unproven.
 
+## Animation analysis follow-up (not proven editor-only)
+
+`game_core/animation_analyzer` has eight unbodied algorithms, individually
+tracked with hypotheses and evidence gaps in the
+[animation-analysis register](../binary_matching/game_core/animation_analysis_inline_recovery.md).
+Retail registers its result cook, constructs an analyzer, allocates result
+storage and finishes the query, but performs no sampling or timing analysis.
+The cook's user data even carries an animation resource that this retained
+path does not evaluate. Do not infer from that interface that the algorithms
+were inlined into this cook, or add an analysis call to the retail-matching path.
+
+An original active producer is needed to resolve sample layout/rate, stance
+selection and contact/swing thresholds. An editor/debug source or binary is a
+candidate evidence source, **not established ownership**. Keep this work open;
+do not fabricate seven timing outputs or label the existing cook fully useful.
+
 ## Physics
 
 - `bt_soft_body_rope::{is_active,get_fragments_count,get_fragment,

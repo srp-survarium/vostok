@@ -15,6 +15,7 @@ public:
 	virtual		~animation_analysis_result	( );
 
 public:
+	// sushi@TODO: field-reference model; the retained cook does not consume the timing buffer through this getter.
 	inline	leg_key_times_buffer_type&
 				key_times	( ) { return m_leg_key_times; }
 
