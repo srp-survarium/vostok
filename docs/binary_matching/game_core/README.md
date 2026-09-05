@@ -16,6 +16,9 @@
 Shared types, recurring gotchas, and asm quirks that span functions - add as you
 find them.
 
+The [inline-body audit](inline_recovery.md) records the `jump_logic` no-source
+declaration reviewed with the PR 569 animation/AI batch.
+
 ### Foundational gap: `vostok::ai::fsm_state::~fsm_state` has no body in our sources
 The whole game_core state hierarchy (weapon_core_*_state, jump_logic_state_*,
 player_logic_*_state, ...) derives from `vostok::ai::fsm_state`, whose destructor

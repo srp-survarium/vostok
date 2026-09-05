@@ -74,19 +74,46 @@ seam is restored:
 
 ## No client-target body exists
 
-These declarations are present in type information, but the shipped client has
-neither a standalone procedure nor an inlined use from which a body can be
-recovered:
+Fifty-three no-source bodies remain in this module. These declarations are
+present in type information, but the shipped client has neither a standalone
+procedure nor an inlined use from which a body can be recovered:
 
-- the dedicated-server web: `udp_match_server` and
-  `udp_match_client_session`;
-- `udp_match_stats` aggregate mutators and dump methods;
+- the eight `udp_match_client_session` bodies: its constructor, destructor,
+  `on_packet_received`, `enqueue`, `send_queued_packets`,
+  `instant_disconnect`, `delete_packet`, and `on_error`;
+- the fourteen `udp_match_server` bodies: its constructor, destructor, `tick`,
+  `set_on_packet_received`, `start_accepting`, `stop_accepting`, `enqueue`,
+  `delete_client`, `send_queued_packets`, `delete_client_impl`,
+  `process_incoming_packet`, `start_receiving`, `handle_receive`, and
+  `on_error`;
+- `udp_match_client::{handle_send,send}`. Neither is referenced by the live
+  client implementation; sending is owned by `udp_match_connection`, whose
+  `send`/`handle_send` pair both survive as ordinary procedures;
+- the eleven `udp_match_stats` aggregate bodies: the three
+  `udp_match_items_stats` mutators, four `udp_match_stream_stats` dump/mutator
+  methods, and four `udp_match_stats` dump/mutator methods. Shipped callers
+  read fields or use the separately implemented comparison/subtraction
+  operators; only the absent server web needs aggregate mutation and dumps;
 - the unused `async_connector::{resolve,close_connection,on_error}` legacy seams;
 - `packet<T>::clear`, `udp_match_packet::helper::call_constructor`, and the
   `udp_network_flow_emulator_options` default constructor;
 - `udp_match_packets_allocator::{increment,decrement}`. The actual shipped
   intrusive-pointer policy updates `m_reference_count` directly through its
-  friendship instead of calling these hooks.
+  friendship instead of calling these hooks;
+- the ten unobservable `udp_match_connection` bodies enumerated in the client-
+  expansion sweep above.
+
+The flow-emulator options deserve a whole-program distinction: the game-side
+`network_flow_emulator_options()` is compiled to `return NULL` under
+`MASTER_GOLD`, so no shipped TU default-constructs the options record. The
+connection constructor receives an options-derived emulator pointer, but that
+does not instantiate the options constructor.
+
+The live `async_connector` callers were checked structurally rather than only
+by name. Its iterator `connect`, `on_resolved`, `on_connected`, `reset`, and
+five-argument `connect` retain 2, 20, 10, 1, and 11 target statements
+respectively. There is no collapsed statement region corresponding to
+`resolve`, `close_connection`, or the private `on_error` wrapper.
 
 Their empty bodies are placeholders only. `STATE[UNMATCHABLE]` means original
 source or another consuming target (principally the dedicated server for the
@@ -98,9 +125,11 @@ an empty function.
 The retail/base class comparison found one method-access mismatch in
 `network_core`: `udp_match_client::construct_packet` was private locally but is
 public in retail. It is restored immediately after `new_packet`, its retail
-declaration position. The TCP callback aliases, `async_connector` aliases, and
-UDP client aliases are likewise restored from retail nested-type records. No
-other `network_core` method-access mismatch was reported at this audit baseline.
+declaration position. The TU-local `sequence_id_predicate` and
+`remove_all_predicate` also inherit `boost::noncopyable` privately rather than
+publicly. The TCP callback aliases, `async_connector` aliases, and UDP client
+aliases are likewise restored from retail nested-type records. No other
+`network_core` method-access mismatch was reported at this audit baseline.
 
 After the rebuild, `async_connector`, `tcp_packet_client`, and the instantiated
 TCP socket specialization are topology-identical to retail. The UDP client has

@@ -200,13 +200,7 @@ void bullet_character_controller::player_step( float dt )
 	m_has_updates = true;
 	m_was_on_ground = on_ground( );
 
-	if ( m_jumping )
-		m_vertical_velocity = m_walk_vector.y( ) / dt;
-	else
-	{
-		float fall_speed = m_vertical_velocity - m_gravity * dt;
-		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
-	}
+	prevent_max_slope_moving_prestep( dt );
 
 	btVector3 step_up_correction;
 	step_up_correction.setZero( );
