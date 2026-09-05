@@ -4,6 +4,7 @@
 #define COLLISION_SENSOR_H_INCLUDED
 
 #include <vostok/game_core/collision_geometry_subscriber.h>
+#include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/link_resolver.h>
 
 namespace vostok {
@@ -17,8 +18,6 @@ namespace physics {
 namespace survarium {
 
 class base_project;
-class collision_geometry;
-// sushi@NOTE: They forgot to implement cast for collision_sensor?
 class collision_sensor : public collision_geometry_subscriber , public link_resolver {
 public:
 									collision_sensor				( );
@@ -30,12 +29,18 @@ public:
 	virtual	void					tick							( const u32 time_delta_ms, const u32 current_time_ms );
 	virtual	void					load							( configs::binary_config_value const& cfg );
 
-	inline	bool					is_active						( ) const { /* no source */ }
+	// sushi@TODO: Verify the active-flag getter's original consumer; lifecycle stores establish the field, not extra getter policy.
+	inline	bool					is_active						( ) const { return m_is_active; }
 
 			void					contact_test					( physics::base_physics_object* object, physics::contact_test_predicate& predicate );
 			bool					contact_test					( physics::base_physics_object* __formal );
 
-	inline	void					dbg_render						( math::color const& arg_0 ) const { /* no source */ }
+	inline	void					dbg_render						( math::color const& color ) const
+	{
+		// sushi@TODO: Verify this geometry-forwarding model and any active-state guard in an original debug-draw consumer.
+		for ( u32 i = 0; i < m_collision_geometries_count; ++i )
+			m_collision_geometries[i]->dbg_render( color );
+	}
 
 			void					insert							( physics::world* world );
 			void					remove							( );
@@ -48,7 +53,7 @@ public:
 	typedef vector< base_physics_object_ptr > objects_container;
 	typedef vector< collision_geometry* > collision_geometries;
 
-protected:	// claude@MATCH: target mangles these four overrides `MAE` (protected), not `UAE` - must be protected: to pair.
+protected:
 	virtual	void					on_inside						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_leave						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_enter						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
