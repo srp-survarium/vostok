@@ -29,7 +29,8 @@ public:
 				profile_name[ 0 ] = 0; memory::zero( boosters );
 			}
 
-	inline	void		serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
+	// sushi@TODO: inverse reader model in game_net_defines.h; verify sender and sparse-selection policy.
+	inline	void		serialize		( network_core::udp_match_packet& packet ) const;
 			void		deserialize		( network_core::packet_reader& reader );
 }; // struct player_profile
 

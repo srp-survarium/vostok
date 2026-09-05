@@ -5,6 +5,7 @@
 
 #include <vostok/game_core/slot_serialize_mode_enum.h>
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/network_core/udp_match_packet.h>
 
 namespace vostok {
 namespace network_core {
@@ -24,16 +25,27 @@ public:
 		dict_id				( 0 )
 	{}
 
-	inline	void		serialize				( network_core::udp_match_packet& arg_0, slot_serialize_mode_enum arg_1 ) const { /* no source */ }
+	// sushi@TODO: inverse of the retained profile reader; verify the original writer and narrowing policy.
+	inline	void		serialize				( network_core::udp_match_packet& packet, slot_serialize_mode_enum mode ) const
+	{
+		packet.append	( dict_id );
+		packet.append	( id );
+
+		if ( mode == serialize_both_values || mode == serialize_just_condition_stack_values )
+			packet.append	( static_cast< u16 >( condition_or_stack ) );
+
+		if ( mode == serialize_both_values || mode == serialize_just_amount_values )
+			packet.append	( amount_in_inventory );
+	}
 	inline	void		deserialize				( network_core::packet_reader& reader, slot_serialize_mode_enum mode )
 	{
 		dict_id	= reader.r< u16 >( );
 		id		= reader.r< u32 >( );
 
-		if ( mode != serialize_just_amount_values )
+		if ( mode == serialize_both_values || mode == serialize_just_condition_stack_values )
 			condition_or_stack	= reader.r< u16 >( );
 
-		if ( mode != serialize_just_condition_stack_values )
+		if ( mode == serialize_both_values || mode == serialize_just_amount_values )
 			amount_in_inventory	= reader.r< u32 >( );
 	}
 
