@@ -106,7 +106,7 @@ void player_parameters_modifyer::apply( base_player* player )
 	bodypart_health_regen_scale_predicate hr_predicate( 1.0f + this->health_regen_correction_perc / 100.0f );
 	damage_model->m_body_parts.for_each( hr_predicate );
 
-	player->usable_object_user_data( )->booster_artcont_time_factor = 1.0f + this->artcontainer_time_corr_perc / 100.0f;
+	player->set_artcontainer_time_factor( 1.0f + this->artcontainer_time_corr_perc / 100.0f );
 
 	if ( this->anomaly_damage_corr_perc != 0.0f )
 	{
@@ -127,7 +127,7 @@ void player_parameters_modifyer::apply( base_player* player )
 		}
 	}
 
-	player->usable_object_user_data( )->booster_engineer_use_time_factor = 1.0f + this->engineer_use_time_corr_perc / 100.0f;
+	player->set_engineer_use_time_factor( 1.0f + this->engineer_use_time_corr_perc / 100.0f );
 }
 
 float get_booster_value( boosters_enum booster_id, player_profile const& profile )
