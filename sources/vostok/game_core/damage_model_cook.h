@@ -16,7 +16,7 @@ public:
 	virtual	void	delete_resource				( resources::resource_base* resource ) override;
 
 public:
-	static	pcstr	get_current_hit_type		( ) { /* no source */ }
+	static	pcstr	get_current_hit_type		( );
 
 private:
 			void	on_hit_params_received		( resources::queries_result& data );

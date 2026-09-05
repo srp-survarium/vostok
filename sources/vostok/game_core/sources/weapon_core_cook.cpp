@@ -103,7 +103,7 @@ void weapon_core_cook::process_loading_weapon_core( resources::query_result_for_
 
 void weapon_core_cook::on_core_subresources_ready( resources::queries_result& data, configs::binary_config_ptr config_ptr, weapon_core* object_to_cook )
 {
-	resources::query_result_for_cook* parent = data.get_parent_query( );
+	resources::query_result_for_cook* const parent = data.get_parent_query( );
 	ASSERT( UNKNOWN_EXPRESSION_T( parent ) );
 	ASSERT( UNKNOWN_EXPRESSION_T( data.is_successful( ) ) );
 

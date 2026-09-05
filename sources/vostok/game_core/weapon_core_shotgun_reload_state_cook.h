@@ -14,9 +14,12 @@ class weapon_core_shotgun_reload_state_cook : public resources::unmanaged_cook {
 public:
 	typedef resources::unmanaged_cook super;
 
-	// sushi@TODO
+	// sushi@TODO: Verify core ctor expansion; non-reuse/self-registration follows sibling state cooks, not an observed core caller.
 	inline	explicit	weapon_core_shotgun_reload_state_cook	( ) :
-							resources::unmanaged_cook	( resources::weapon_shotgun_reload_state_class, reuse_true, use_current_thread_id ){ /* no source */ }
+							resources::unmanaged_cook	( resources::weapon_shotgun_reload_state_class, reuse_false, use_current_thread_id, use_current_thread_id )
+	{
+		resources::register_cook( this );
+	}
 
 	virtual				~weapon_core_shotgun_reload_state_cook	( );
 
