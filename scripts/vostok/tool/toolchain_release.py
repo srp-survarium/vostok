@@ -4,7 +4,7 @@
 vostok.tool.toolchain_release
 
 Produces a self-contained vostok-toolchain tarball with VS2008 SP1 correctly
-applied, ready to publish as a GitHub release. Once published, update
+applied, ready to publish as a GitHub release in srp-survarium/vostok. Once published, update
 flake.nix sha256 to fetch that release instead of building from ISOs.
 
 Entry point:
@@ -558,7 +558,7 @@ def step5_package(work: Path, stage: Path, output: Path) -> None:
     print(f"  SHA256: {digest}")
     print()
     print("Next steps:")
-    print(f"  1. gh release upload v0.100b {output} --repo srp-survarium/vostok-build-env")
+    print(f"  1. gh release upload v0.100b {output} --repo srp-survarium/vostok")
     print( "  2. In flake.nix, replace the vostok-toolchain sha256 with:")
     print(f'       sha256 = "{digest}";')
 

@@ -242,13 +242,13 @@
       # Produced by: nix-shell scripts/create-toolchain-release.nix  (reproducible -
       # a fresh rebuild yields a byte-identical tarball).
       # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz \
-      #                --repo srp-survarium/vostok-build-env --clobber
-      # Replace sha256 with the value printed by create-toolchain-release.py.
+      #                --repo srp-survarium/vostok --clobber
+      # Replace sha256 with the value printed by vostok.tool.toolchain_release.
       # ---------------------------------------------------------------------------
       vostok-toolchain = pkgs.runCommand "vostok-toolchain" {
         src = pkgs.fetchurl {
           name = "vostok-toolchain-v0.100b.tar.xz";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
+          url = "https://github.com/srp-survarium/vostok/releases/download/v0.100b/vostok-toolchain-v0.100b.tar.xz";
           sha256 = "c9c5c17a51739472e11e9071b0274c3278930ddda0a8478858d81612bf895d99";
         };
         nativeBuildInputs = [ pkgs.gnutar pkgs.xz ];
@@ -290,7 +290,7 @@
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
-      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx422.zip --repo srp-survarium/vostok-build-env
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx421r2.zip --repo srp-survarium/vostok
       # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
       # (built per the shipped PDB recipe; see docs + vostok/build/gfx.py).
       # ---------------------------------------------------------------------------
@@ -303,7 +303,7 @@
         # neutral prefix (paths.GFX_RELEASE_PREFIX). Same machine code as r1.
         src = pkgs.fetchurl {
           name = "vostok-libs-v0.100b-gfx421r2.zip";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx421r2.zip";
+          url = "https://github.com/srp-survarium/vostok/releases/download/v0.100b/vostok-libs-v0.100b-gfx421r2.zip";
           sha256 = "3cd445a2c04518c14cbee924b597c672a747582646d76430abe878b94ccb4df2";
         };
         nativeBuildInputs = [ pkgs.unzip ];
@@ -496,6 +496,7 @@
           pkgs.python3
           pkgs.ruff
           pkgs.ripgrep
+          pkgs.gh
           pkgs.libfaketime
           pkgs.file
           pkgs.xxd

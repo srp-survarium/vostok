@@ -9,7 +9,7 @@ that package this repo BUILDS is the Scaleform GFx static-lib suite:
 recipe the shipped PDB records, into binaries.prebuilt/Win32/libraries/shipping/.
 
 A release is the previous package with those GFx libs replaced by a fresh build,
-zipped deterministically, published on the vostok-build-env GitHub release and
+zipped deterministically, published on the vostok GitHub release and
 pinned in flake.nix - the same flow as vostok.tool.toolchain_release for the
 toolchain. Run inside `nix develop` (the GFx build needs the pristine SDK:
 `nix develop .#with-scaleform-sdk`, or $SCALEFORM_SDK).
@@ -32,7 +32,7 @@ from vostok.core.log import logger
 from vostok.core import log as _log
 
 RELEASE_TAG = "v0.100b"
-RELEASE_REPO = "srp-survarium/vostok-build-env"
+RELEASE_REPO = "srp-survarium/vostok"
 # zip entries carry a fixed timestamp so the archive is reproducible
 RELEASE_DATE = (2026, 1, 1, 0, 0, 0)
 

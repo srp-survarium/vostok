@@ -10,8 +10,14 @@ nix-shell scripts/create-toolchain-release.nix
 This fetches the VS2008 Professional ISO, the VS2008 SP1 ISO, and the DXSDK
 installer, then runs `vostok.tool.toolchain_release`, which does a Wine
 `msiexec` administrative install and stages the files into
-`binaries/vostok-toolchain-v0.100b.tar.xz`. To publish: `gh release upload` the
-tarball and update the `vostok-toolchain` `sha256` in `flake.nix`.
+`binaries/vostok-toolchain-v0.100b.tar.xz`. Publish it to this repo's
+build-environment release:
+
+```sh
+gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz --repo srp-survarium/vostok --clobber
+```
+
+Then update the `vostok-toolchain` `sha256` in `flake.nix`.
 
 ## What goes into the tarball (and what doesn't)
 
