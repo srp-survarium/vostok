@@ -13,6 +13,7 @@ struct weapon_state_creation_params;
 class weapon_core_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
 	typedef resources::translate_query_cook super;
+	// sushi@TODO: Recover the core registration list; the retained weapon_cook list belongs to game, not this helper.
 	static	void	register_cooks_for_logic_states( ) { /* no source */ }
 
 	explicit		weapon_core_cook			( );
@@ -30,6 +31,7 @@ protected:
 
 private:
 			void	on_core_subresources_ready	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
+	// sushi@TODO: Recover this callback's query/continuation; the live pipeline loads skeleton resources, not skeleton config.
 	inline	void	on_skeleton_config_loaded	( resources::queries_result& data,			configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook ) { /* no source */ }
 			void	query_weapon_states			( resources::query_result_for_cook* const parent, configs::binary_config_ptr config_ptr,		weapon_core* object_to_cook );
 			void	on_weapon_states_ready		( resources::queries_result& data,			weapon_state_creation_params const* params, weapon_core* object_to_cook );
