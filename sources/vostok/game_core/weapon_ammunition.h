@@ -36,13 +36,11 @@ public:
 			void		load						( configs::binary_config_value const& cfg );
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones;
-	// the idiomatic bodies below are the faithful shapes.
 	// claude@MATCH: the target's eater call is UNGUARDED (no identity(false) round-trip) and
 	// pushes the two reference POINTERS, so the source called the helper directly rather than
 	// through VOSTOK_UNREFERENCED_PARAMETERS - the macro's never-taken block would copy
 	// base_player by value (0x11C rep movsd). See patterns/unreferenced-params-eater.md.
+	// sushi@TODO: recover the original activation assert; shipping retains only its dummy-use shape.
 	virtual	void		activate					( base_player& user, engine& engine ) override
 	{
 		ASSERT( UNKNOWN_EXPRESSION );
@@ -51,15 +49,16 @@ private:
 	virtual	void		deactivate					( ) override { }
 	virtual	float4x4	transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
-	virtual	void		tick						( ) override { /* no source */ }
+	virtual	void		tick						( ) override { }
 
-	virtual	bool		is_ready_to_be_deactivated	( ) const override { return true; /* sushi@TODO no source */ }
+	// sushi@TODO: confirm unreachable macro spelling for the two bool hooks; retail does not assign a return value.
+	virtual	bool		is_ready_to_be_deactivated	( ) const override { UNREACHABLE_CODE( ); }
 
 	virtual	animation::mixing::expression
 						selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
-	virtual	void		on_player_model_added		( ) override { /* no source */ }
-	virtual	void		on_player_model_removed		( ) override { /* no source */ }
+	virtual	void		on_player_model_added		( ) override { }
+	virtual	void		on_player_model_removed		( ) override { }
 
 private:
 	virtual	void		update_bones_matrices		(
@@ -75,7 +74,7 @@ private:
 	virtual	void		serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { inventory_item::serialize( packet, client_offset ); }
 	virtual	void		deserialize					( network_core::packet_reader& reader ) override { inventory_item::deserialize( reader ); }
 
-	virtual	bool		is_sprinting				( ) const override { return false; /* sushi@TODO no source */ }
+	virtual	bool		is_sprinting				( ) const override { UNREACHABLE_CODE( ); }
 
 private:
 	/* 0x0000 */	/* inventory_item */
