@@ -8,8 +8,6 @@
 
 #include "game_action_id.h"
 #include "game_camera.h"
-// the canonical dump re-prints input_mode_type_enum here; batch 1 already
-// rebuilt it standalone
 #include "input_mode_type_enum.h"
 
 namespace survarium {
@@ -21,7 +19,7 @@ class game_world;
 class player_input_handler : public input::handler , public game_camera {
 public:
 			explicit				player_input_handler		( game_world& world );
-	virtual							~player_input_handler		( ) { /* no source */ }
+	virtual							~player_input_handler		( ) { }
 
 			void					set_yaw_pitch_distance		( const float yaw, const float arg_1, const float arg_2 );
 			void					set_input_mode				(
@@ -31,9 +29,9 @@ public:
 
 			void					update_inverted_view		( float4x4 const& player_head_transform );
 
-	inline	player_input const&		get_input					( ) const { /* no source */ return m_input; }
+	inline	player_input const&		get_input					( ) const { return m_input; }
 
-	inline	input_mode_type_enum	input_mode					( ) const { /* no source */ return m_input_mode; }
+	inline	input_mode_type_enum	input_mode					( ) const { return m_input_mode; }
 
 			bool					alt_is_held					( ) const;
 
@@ -60,7 +58,8 @@ private:
 										s32					z
 									) override;
 
-	virtual	s32						input_priority				( ) override { /* no source */ return 0; }
+	// sushi@TODO: make two-sided pdb_fetch prefer this candidate body over an unrelated ICF alias.
+	virtual	s32						input_priority				( ) override { return 10; }
 
 	// target mangling: ?on_before_processing@...@@EAEXPAUworld@input@vostok@@I@Z -
 	// the shipped input::handler interface passes (world*, u32); our legacy
