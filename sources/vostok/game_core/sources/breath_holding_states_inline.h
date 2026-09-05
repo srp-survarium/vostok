@@ -14,6 +14,14 @@ inline void breath_state::initialize( )
 {
 }
 
+inline void breath_state::execute( )
+{
+}
+
+inline void breath_state::finalize( )
+{
+}
+
 inline breath_state::breath_state( float& breath_holding_reserve )
 	:	m_breath_holding_reserve( breath_holding_reserve )
 {
