@@ -2,7 +2,7 @@
 
 #ifndef FLASH_TEXT_MANAGER_H_INCLUDED
 #define FLASH_TEXT_MANAGER_H_INCLUDED
-
+#include <vostok/scaleform/api.h>
 // create_text/create_text_w return flash_text by value
 #include "flash_text.h"
 
@@ -15,9 +15,9 @@ namespace GFx {
 
 namespace survarium {
 
-struct flash_text_manager {
+struct VOSTOK_SCALEFORM_API flash_text_manager {
 			explicit		flash_text_manager	( Scaleform::GFx::Loader* arg_0 );
-	inline					~flash_text_manager	( ) { /* no source */ }
+	inline					~flash_text_manager	( ) { }
 
 			void			set_viewport		( u32 arg_0, u32 arg_1 );
 
@@ -26,7 +26,7 @@ struct flash_text_manager {
 
 			void			destroy_text		( flash_text& arg_0 );
 
-	inline	void			capture				( ) { /* no source */ }
+	inline	void			capture				( ) { }
 
 			void			tick				( );
 
