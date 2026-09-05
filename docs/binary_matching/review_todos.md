@@ -13,6 +13,8 @@ Append-only ledger (union-merged across branches, like `PROGRESS.md` / `unanswer
 
 | Status | Function | File:line | PR | TODO |
 |--------|----------|-----------|----|------|
+| open | `ai_sound_player::serialize` | `game/sources/ai_sound_player.cpp` | #571 | Legacy emitter/proxy capture model restored in existing cpp; recover original private invocation, active-sound preconditions and bound-player/asynchronous writer lifetime. See game/ai_weapon_sound_inline_recovery.md. |
+| open | `ai_sound_player::deserialize` | `game/sources/ai_sound_player.cpp` | #571 | Legacy debug-file/emitter replay model restored; retail sound-level decoder returns null and completion callback does no cleanup. Recover original activation/format and reader-buffer ownership without silently enabling decoder or inventing cleanup. |
 | open | `human_npc::set_filter` | `game/sources/human_npc.h` | #571 | Legacy AI-world forwarding model restored; recover original NPC caller and brain-readiness guards. Shipping ignorable_game_object alias matches retail raw pair. See game/human_npc_inline_recovery.md. |
 | open | `human_npc::clear_filter` | `game/sources/human_npc.h` | #571 | Legacy clear-ignore-filter forwarding model; recover original reset invocation and surrounding conditions. |
 | open | `human_npc::add_weapon` | `game/sources/human_npc.h` | #571 | Legacy contains_object guard then push_back; original inventory caller and surrounding synchronization remain unbound. |
