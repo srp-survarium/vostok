@@ -34,7 +34,7 @@
 #include <vostok/sound/sound_scene_creation_params.h>	// sound::sound_scene_creation_params (load)
 #include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
 #include <vostok/buffer_vector.h>	// buffer_vector (load)
-#include "lobby_menu.h"				// m_match_making_ui abort path (on_project_loaded)
+#include "lobby_menu.h"
 #include "match_client.h"			// match_client::get_match_options (on_project_loaded)
 #include "lobby_client.h"			// lobby_client::status (on_project_loaded)
 #include "game_project.h"			// simple_game_project::insert/m_config (on_project_loaded)
@@ -99,7 +99,7 @@ game_world::game_world( game& game ) :
 
 	m_step_manager = VOSTOK_NEW_IMPL( *g_allocator, step_manager )( );
 
-	init_physics( );
+	initialize_physics( );
 
 	m_free_fly_camera = VOSTOK_NEW_IMPL( *g_allocator, free_fly_camera )( *this, get_camera_director( ) );
 	register_cooks( );

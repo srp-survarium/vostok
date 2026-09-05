@@ -570,7 +570,7 @@ bool game_options::on_keyboard_action(
 	input::enum_keyboard_action		action
 )
 {
-	if ( m_waiting_for_bind_action != kLASTACTION && action == input::kb_key_down )
+	if ( is_waiting_for_bind_key( ) && action == input::kb_key_down )
 	{
 		if ( process_key_input( key ) )
 			finish_binding( );
@@ -596,7 +596,7 @@ bool game_options::on_mouse_key_action(
 	input::enum_mouse_key_action	action
 )
 {
-	if ( m_waiting_for_bind_action != kLASTACTION && action == input::ms_key_down )
+	if ( is_waiting_for_bind_key( ) && action == input::ms_key_down )
 	{
 		if ( process_key_input( button ) )
 		{
@@ -632,7 +632,7 @@ bool game_options::on_mouse_move(
 	s32					z
 )
 {
-	if ( m_waiting_for_bind_action == kLASTACTION )
+	if ( !is_waiting_for_bind_key( ) )
 	{
 		m_mouse_pos.x += x;
 		m_mouse_pos.y += y;
@@ -696,7 +696,7 @@ void game_options::reset_bindings( bool is_default )
 {
 	for ( u32 i = 0; i < 33; ++i )
 	{
-		pcstr key_name = m_game.get_key_binder( ).dik_to_keyname( m_game.get_key_binder( ).get_action_dik( key_bind_descriptions[i].action_id, 0 ) );
+		pcstr key_name = m_game.get_key_binder( ).dik_to_keyname( m_game.get_key_binder( ).get_action_dik( key_bind_descriptions[i].action_id, -1 ) );
 
 		flash_value bind_value[3];
 		bind_value[1].SetUInt( key_bind_descriptions[i].action_id );

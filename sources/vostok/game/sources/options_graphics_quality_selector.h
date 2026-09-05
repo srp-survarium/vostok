@@ -15,7 +15,7 @@ public:
 
 	virtual	void		call								( flash_function_handler_params& params ) override;
 
-	inline	u8			value								( ) { /* no source */ return m_current_value; }
+	inline	u8			value								( ) { return m_current_value; }
 
 }; // class options_graphics_quality_selector
 

@@ -61,7 +61,6 @@ struct find_hit_parameters_by_type_predicate : private boost::noncopyable {
 public:
 	explicit		find_hit_parameters_by_type_predicate	( pcstr hit_t ) : hit_type( hit_t ) {  }
 
-	// sushi@TODO: This method seems to be inlined into `find_if`, so we need to match that instead
 	inline	bool	operator()								( hit_type_parameters* const hit_type_params ) const {
 		return strings::equal( hit_type, hit_type_params->get_type( ) );
 	}
@@ -206,7 +205,7 @@ void body_part_parameters::regenerate( const u32 time_delta_ms, const u32 curren
 	const float amount = regenerate_delta * m_regeneration_speed / 1000.0f;
 	increase_health( amount );
 
-	if ( m_damage_model.get_affects_applying_type( ) == type_apply_directly ) // sushi@TODO: Needs getter
+	if ( m_damage_model.get_affects_applying_type( ) == type_apply_directly )
 		update_affects( current_time_in_ms );
 }
 
@@ -335,6 +334,9 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 template void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(
 	vostok::ai::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
 
+template void body_part_parameters::fill_new_stats_item<survarium::statistics_item<46,16> >(
+	survarium::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
+
 void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, const u32 current_time_in_ms ) const
 {
 	typedef vostok::ai::statistics_item<46,16> content_type;
@@ -416,7 +418,7 @@ void body_part_parameters::serialize( network_core::udp_match_packet& packet, s3
 {
 	packet.append( m_health );
 	packet.append( m_last_hit_time ? m_last_hit_time - client_offset : 0 );
-	packet.append( (u32)m_affects.size( ) );
+	packet.append( (u8)m_affects.size( ) );
 
 	std::for_each(
 		m_affects.begin( ),
@@ -429,7 +431,7 @@ void body_part_parameters::deserialize( network_core::packet_reader& reader )
 {
 	m_health		= reader.r< float >( );
 	m_last_hit_time	= reader.r< u32 >( );
-	u8 affects_count = reader.r< bool >( );
+	u8 affects_count = reader.r< u8 >( );
 
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );

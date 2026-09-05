@@ -12,6 +12,7 @@
 
 #include <vostok/game_core/weapon_user_state_enum.h>
 #include <vostok/game_core/weapon_lexeme_pair.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace vostok {
 namespace animation {
@@ -65,7 +66,8 @@ public:
 
 
 protected:
-	inline	bool	deserializing						( ) const { /* no source */ }
+	// sushi@TODO: verify the deserializing and base-finalize caller boundaries in the deferred build.
+	inline	bool	deserializing						( ) const { return m_weapon.deserializing( ); }
 
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	/* resources::unmanaged_resource */
@@ -75,10 +77,6 @@ protected:
 private:
 			weapon_lexeme_pair
 					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const;
-
-	friend class weapon_core_shotgun_reload_start_substate;
-	friend class weapon_core_shotgun_reload_one_round_substate;
-	friend class weapon_core_shotgun_reload_finish_substate;
 
 	/* 0x0128 */	resources::managed_resource_ptr			m_weapon_animations[views_count][user_states_count];
 	/* 0x0138 */	resources::managed_resource_ptr			m_user_animations[views_count][user_states_count];

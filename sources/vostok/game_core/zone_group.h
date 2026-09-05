@@ -13,7 +13,6 @@ struct anomaly_state;
 
 struct zone_group {
 public:
-	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
 	inline	explicit					zone_group	( anomaly_state* owner ) : owner( owner ) { }
 
 	/* 0x0000 */	bool								enabled;

@@ -30,9 +30,6 @@ class match_client : private boost::noncopyable {
 	typedef boost::function< void( u8, network_core::packet_reader& ) > on_packet_received_callback_type;
 	typedef boost::function< void( network_core::disconnect_event_types_enum ) > on_disconnect_callback_type;
 
-	// network_client::on_connected_to_match drives the private send-queue flag
-	// directly (codegen-neutral friendship; PDB does not record it)
-	friend class network_client;
 public:
 			explicit							match_client						( network::world& world );
 												~match_client						( );
@@ -51,12 +48,13 @@ public:
 
 			void								send_queued_packets					( const u32 current_time_in_ms );
 
-	inline	bool								are_there_any_packets_to_send		( ) const { /* no source */ return m_are_there_any_packets_to_send; }
+	inline	bool								are_there_any_packets_to_send		( ) const { return m_are_there_any_packets_to_send; }
 
-	inline	u32									last_send_queed_packets_time_in_ms	( ) const { /* no source */ return m_last_send_queed_packets_time_in_ms; }
+	inline	u32									last_send_queed_packets_time_in_ms	( ) const { return m_last_send_queed_packets_time_in_ms; }
 
 	inline	network_core::udp_match_packet*		new_packet							( match_client_message_types_enum arg_0 ) { return m_client.new_packet( ( u8 )arg_0 ); }
-	inline	void								delete_packet						( network_core::udp_match_packet*& arg_0 ) { /* no source */ }
+	// sushi@TODO: Verify the original outer delete consumer; forwarding preserves the underlying order-packet allocator.
+	inline	void								delete_packet						( network_core::udp_match_packet*& arg_0 ) { m_client.delete_packet( arg_0 ); }
 
 	inline	void								set_on_packet_received				( on_packet_received_callback_type const& arg_0 ) { m_client.set_on_packet_received( arg_0 ); }
 	inline	void								set_on_disconnect					(
@@ -70,9 +68,10 @@ public:
 
 	inline	u32									last_receive_time_in_ms				( ) const { return m_client.last_receive_time_in_ms( ); }
 
-	inline	match_options&						get_match_options					( ) { /* no source */ return m_match_options; }
+	inline	match_options&						get_match_options					( ) { return m_match_options; }
 
 private:
+	// sushi@TODO: Recover this hook's binding/state effects; connect currently forwards the caller callback directly to m_client.
 	inline	void								on_connected						(
 													const connection_error_types_enum		arg_0,
 													const handshaking_error_types_enum		arg_1,

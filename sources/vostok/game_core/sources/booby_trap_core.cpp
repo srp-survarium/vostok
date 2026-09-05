@@ -31,7 +31,7 @@ booby_trap_core::~booby_trap_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 }
 
-void booby_trap_core::load( configs::binary_config_value const& config )
+inline void booby_trap_core::load_collision( configs::binary_config_value const& config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -51,6 +51,11 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	{
 		hittable_object::load( config["hittable_object"] );
 	}
+}
+
+void booby_trap_core::load( configs::binary_config_value const& config )
+{
+	load_collision( config );
 }
 
 void booby_trap_core::load_aabb( configs::binary_config_value const& __formal )
@@ -181,10 +186,10 @@ bool booby_trap_core::use_execute( usable_object_user_data* user )
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	u32 passed_ms = user->current_time_ms - user->start_using_time_ms;
-	float engineer_factor = user->owner->usable_object_user_data( )->booster_engineer_use_time_factor;
+	u32 const passed_ms = user->current_time_ms - user->start_using_time_ms;
+	float const engineer_factor = user->owner->get_engineer_use_time_factor( );
 	u32 config_defuse_time = m_owner->config( ).defuse_time;
-	u32 defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
+	u32 const defuse_time_ms = math::floor( config_defuse_time * engineer_factor );
 
 	user->current_progress = defuse_time_ms ? math::min( 100 * passed_ms / defuse_time_ms, u32(100) ) : 100;
 

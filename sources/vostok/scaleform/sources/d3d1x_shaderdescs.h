@@ -5,11 +5,8 @@
 #ifndef D3D1X_SHADERDESCS_H_INCLUDED
 #define D3D1X_SHADERDESCS_H_INCLUDED
 
-// survarium's fork of the Scaleform 4.x generated D3D1x_ShaderDescs.h - the
-// shipped binary tracks a NEWER SDK than the vendored 4.0.15 (which has no
-// generated shader descs at all), so this skeleton is rebuilt from the
-// canonical PDB type dumps (headers/others/Scaleform__Render__D3D1x__*.h).
-// Enum bodies below are verbatim PDB ground truth.
+// Reference-only PDB mirror; the active generated implementation includes the SDK header.
+// Function ownership: docs/binary_matching/scaleform/inline_reference_ownership.md.
 
 #include "Kernel/SF_Types.h"
 

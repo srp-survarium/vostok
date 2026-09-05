@@ -3,6 +3,8 @@
 #ifndef ANOMALY_STATE_H_INCLUDED
 #define ANOMALY_STATE_H_INCLUDED
 
+#include <vostok/game_core/generic_anomaly_core.h>
+
 namespace survarium {
 
 class generic_anomaly_core;
@@ -11,7 +13,6 @@ struct zone_group;
 
 struct anomaly_state {
 public:
-	// sushi@NOTE: Inlined in `generic_anomaly_core::load`
 	inline	explicit	anomaly_state	( generic_anomaly_core* owner ) : owner	( owner ) { }
 
 	/* 0x0000 */	bool						enabled;
@@ -26,7 +27,8 @@ public:
 	/* 0x0028 */	generic_anomaly_core*		owner;
 	/* 0x002c */	u32							m_finish_time_ms;
 
-	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
+	// sushi@TODO: verify the forwarding boundary; retained group notification reaches this same core owner.
+	inline	void		on_zone_act		( damage_zone_core* zone, hit_receiver* receiver ) { owner->on_zone_act( zone, receiver ); }
 
 			void		initialize		( );
 			void		execute			( const u32 time_delta_ms, const u32 current_time_ms );

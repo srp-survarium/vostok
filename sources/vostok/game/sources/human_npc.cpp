@@ -108,7 +108,7 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 	m_current_target( NULL ),
 	m_current_weapon( NULL ),
 	m_is_patrolling( false ),
-	m_affects_subscription( boost::bind( &human_npc::on_affect_event, this, _1, _2, _3 ) ),
+	m_affects_subscription( boost::bind( &human_npc::on_affect_event, return_this( ), _1, _2, _3 ) ),
 	m_sound_perceived( false ),
 	m_sound_produced( false ),
 	m_dbg_sound( false ),

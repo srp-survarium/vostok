@@ -48,9 +48,10 @@ public:
 
 	virtual	hit_receiver*		cast_to_hit_receiver		( ) override { return this; }
 
-	virtual	void				subscribe_on_actions		( player_actions_subscriber* arg_0 ) { /* no source */ } // sushi@TODO
-	virtual	void				unsubscribe_from_actions	( player_actions_subscriber* arg_0 ) { /* no source */ } // sushi@TODO
+	virtual	void				subscribe_on_actions		( player_actions_subscriber* arg_0 ) { }
+	virtual	void				unsubscribe_from_actions	( player_actions_subscriber* arg_0 ) { }
 
+	// sushi@TODO: recover these helpers' notification and zone-lifetime rules; retained callbacks dispatch from the zone itself.
 	inline	void				on_enter_damage_zone		( damage_zone_core_ptr const& arg_0 ) { /* no source */ }
 	inline	void				on_leave_damage_zone		( damage_zone_core_ptr const& arg_0 ) { /* no source */ }
 }; // struct hit_receiver
@@ -63,7 +64,8 @@ struct hit_receiver_info {
 				hit_receiver_info	( hit_receiver* receiver, physics::base_physics_object* rigid_body );
 
 		bool	operator==			( hit_receiver_info const& rhs ) const;
-		bool	operator==			( hit_receiver const* const rhs ) const { /* no source */ }
+	// sushi@TODO: verify raw-pointer versus loose-payload equality and null handling for this overload's consumers.
+		bool	operator==			( hit_receiver const* const rhs ) const { return m_receiver == rhs; }
 
 public:
 	/* 0x0000 */	hit_receiver*						m_receiver;
@@ -86,6 +88,7 @@ struct erase_old_receivers : public boost::noncopyable {
 	{
 	}
 
+	// sushi@TODO: recover age/contact and leave-notification policy; the retained bool contact_test ignores its object argument.
 	inline bool operator()( hit_receiver_info const& info ) const;
 
 private:
@@ -100,7 +103,11 @@ struct remove_left_receivers_predicate {
 	{
 	}
 
-	inline bool operator()( hit_receiver_info const& info ) const;
+	// sushi@TODO: verify missing-membership polarity and whether removal also notifies a receiver.
+	inline bool operator()( hit_receiver_info const& info ) const
+	{
+		return std::find( m_receivers->begin( ), m_receivers->end( ), info ) == m_receivers->end( );
+	}
 
 private:
 	/* 0x0000 */ buffer_vector< hit_receiver_info > const*	m_receivers;

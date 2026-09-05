@@ -4,7 +4,7 @@
 #define GAME_PROJECT_H_INCLUDED
 
 #include <vostok/resources_unmanaged_resource.h>
-#include <vostok/configs.h>	// configs::binary_config_ptr (value member)
+#include <vostok/configs_binary_config.h>
 #include <vostok/game_core/base_project.h>
 
 namespace vostok {
@@ -28,8 +28,6 @@ class victory_items_container_core;
 struct render_visual;
 struct respawn_point_core;
 
-// canonical UDT aliases - damage_zone/ladder themselves are batch-11/game_core
-// types, only the resource_ptr is held by value here
 typedef resources::resource_ptr<
 	damage_zone,
 	resources::unmanaged_intrusive_base
@@ -47,29 +45,19 @@ public:
 			void							insert				( scheduler& scheduler );
 			void							remove				( );
 
-	inline	bool							is_inserted			( ) { /* no source */ return m_is_inserted; }
+	inline	bool							is_inserted			( ) { return m_is_inserted; }
 
 			void							on_npc_loaded		( resources::queries_result& data );
 
-	inline	pcstr							project_name		( ) { /* no source */ return NULL; }
+	// sushi@TODO: Minimap's retained lookup uses one project-handle temporary; verify this original inline boundary.
+	inline	pcstr							project_name		( )
+	{
+		return m_config->get_root( ).value_exists( "project_name" )
+			? m_config->get_root( )[ "project_name" ]
+			: "";
+	}
 
 			victory_items_container_core*	get_items_container	( u8 id );
-
-private:
-	// game_world walks m_respawn_points directly (clear_player_spawn_info);
-	// PDB does not record friendship, codegen-neutral
-	friend class game_world;
-	// game_world_ui reads m_config directly (initialize_minimap project_name lookup);
-	// PDB does not record friendship, codegen-neutral
-	friend class game_world_ui;
-	// project_cooker_simple reads m_loaded / m_objects directly (on_object_loaded);
-	// PDB does not record friendship, codegen-neutral
-	friend class project_cooker_simple;
-	// network_client walks m_victory_items_containers directly (on_world_sync_request);
-	// PDB does not record friendship, codegen-neutral
-	friend class network_client;
-	// lobby_menu inserts the lobby project's objects, visuals, and collisions directly.
-	friend class lobby_menu;
 
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */
@@ -108,6 +96,7 @@ public:
 	/* 0x01b8 */	simple_game_project::loading			m_loaded;
 
 public:
+	// sushi@TODO: Five cook predicates now share the retained helper; verify original named call/inline boundaries.
 			bool							all_loaded			( );
 }; // class simple_game_project
 

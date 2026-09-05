@@ -32,7 +32,14 @@ public:
 	inline	u32			get_bdb_coeffs_count( ) const { return m_bdb_count; }
 
 			void		apply_damage		( const float delta, const u32 time_in_ms );
-	inline	void		remove_vertex		( body_part_parameters* arg_0 ) { /* no source */ }
+	// sushi@TODO: verify whether removal also clears the pointer; the fixed-size edge model disables its coefficient.
+	inline	void		remove_vertex		( body_part_parameters* vertex )
+	{
+		bdb_coeff* const coefficients = get_bdb_coefficients( );
+		for ( u32 i = 0; i < m_bdb_count; ++i )
+			if ( coefficients[i].first == vertex )
+				coefficients[i].second = 0.0f;
+	}
 			void		set_parameters		( float armor, float reduce, float absorbtion );
 
 	/* 0x0000 */	hit_type_parameters*	next;

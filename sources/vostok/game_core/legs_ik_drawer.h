@@ -4,6 +4,7 @@
 #define LEGS_IK_DRAWER_H_INCLUDED
 
 #include <vostok/render/engine/base_classes.h>
+#include <vostok/render/facade/debug_renderer.h>
 
 namespace vostok {
 namespace render {
@@ -19,6 +20,7 @@ namespace survarium {
 
 class legs_ik_drawer : private core::noncopyable {
 public:
+	// sushi@TODO: field-copy constructor model; identify the original drawer construction site.
 	inline	explicit	legs_ik_drawer		( render::debug::renderer& renderer, render::scene_ptr scene ) : m_renderer( renderer ), m_scene( scene ) { }
 
 			void		draw_leg			(
@@ -56,12 +58,13 @@ public:
 							bool					use_depth
 						);
 
+	// sushi@TODO: renderer forwarding is verified in draw_leg; confirm the original inline boundary.
 	inline	void		draw_line			(
-							float3 const&			arg_0,
-							float3 const&			arg_1,
-							math::color const&		arg_2,
-							bool					arg_3
-						) { /* no source */ }
+							float3 const&			start,
+							float3 const&			end,
+							math::color const&		color,
+							bool					use_depth
+						) { m_renderer.draw_line( m_scene, start, end, color, use_depth ); }
 
 private:
 	/* 0x0000 */	render::debug::renderer&		m_renderer;

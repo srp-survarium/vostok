@@ -12,11 +12,6 @@
 
 namespace survarium {
 
-// owned by key_binder.cpp (cc_float/cc_bool console-command init); the mouse-input
-// consumers here read them at namespace scope.
-extern float	g_mouse_sensitivity;
-extern bool		g_mouse_invert;
-
  player_input_handler::player_input_handler( game_world& world ) :
 	game_camera( world ),		// base needs base_game_scene& (game_world derives from it)
 	m_game_world( world ),		// ref member - the owner
@@ -127,9 +122,9 @@ bool player_input_handler::on_mouse_move(
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
-	const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+	const float horizontal_sensitivity	= m_fov_factor * m_game_world.get_game( ).get_key_binder( ).mouse_sensitivity( ) * 0.1f;
 	float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
-	if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+	if ( m_game_world.get_game( ).get_key_binder( ).mouse_invertion( ) )	vertical_sensitivity	= -vertical_sensitivity;
 
 	m_rotation_delta.x	-= ( ( float( x ) / 180.0f ) * math::pi ) * horizontal_sensitivity;
 	m_rotation_delta.y	-= ( ( float( y ) / 180.0f ) * math::pi ) * vertical_sensitivity;
@@ -176,19 +171,14 @@ bool player_input_handler::alt_is_held( ) const
 		   keyboard.is_key_down( input::key_lmenu );
 }
 
-// TU-local primary template (canonical "headers/first_predicate_enum
-// survarium__game_action_id_.h" - the PDB only records the <game_action_id>
-// monomorphisation; its consumer is process_first_person_mode's __find_if over
-// m_game_actions, per the rich index)
 template < typename T >
 struct first_predicate {
 	inline	explicit	first_predicate	( T const& arg_0 ) :
-		parameter( arg_0 ) { /* no source */ }
+		parameter( arg_0 ) { }
 
-	// inlined away in the __find_if COMDAT (no PDB record); pair.first shape
-	// per the instantiation's argument types
+	// sushi@TODO: Verify the original operator template signature; only the enum/pair instantiation survives.
 	template < typename P >
-	inline	bool	operator()	( P const& arg_0 ) const { /* no source */ return arg_0.first == parameter; }
+	inline	bool	operator()	( P const& arg_0 ) const { return arg_0.first == parameter; }
 
 	/* 0x0000 */	T		parameter;
 }; // struct first_predicate
@@ -225,9 +215,9 @@ void player_input_handler::process_first_person_mode( const bool use_mouse_move 
 
 	if ( use_mouse_move )
 	{
-		const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+		const float horizontal_sensitivity	= m_fov_factor * m_game_world.get_game( ).get_key_binder( ).mouse_sensitivity( ) * 0.1f;
 		float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
-		if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+		if ( m_game_world.get_game( ).get_key_binder( ).mouse_invertion( ) )	vertical_sensitivity	= -vertical_sensitivity;
 
 		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kUP ) ) != m_game_actions.end( ) )
 			m_rotation_delta.x	+= vertical_sensitivity * 0.0174532924f;

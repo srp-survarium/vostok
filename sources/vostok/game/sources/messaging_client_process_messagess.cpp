@@ -123,11 +123,11 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 	if ( message_chanel != messaging::player_private_channel )
 		swprintf_s		( w_receiver_name, L"" );
 
-	if ( m_connection_state == messaging::client_connected )
+	if ( connected( ) )
 	{
 		wchar_t w_sender_name[32];
 		size_t converted_chars_count = 0;
-		mbstowcs_s		( &converted_chars_count, w_sender_name, m_local_name, _TRUNCATE );
+		mbstowcs_s		( &converted_chars_count, w_sender_name, local_user_name( ), _TRUNCATE );
 
 		m_chat_handler.add_message		( message_chanel, input_text, w_sender_name );
 		if ( message_chanel == messaging::player_private_channel )
@@ -187,7 +187,7 @@ void messaging_client::on_message_typed( wchar_t const* input_text, messaging::m
 
 void messaging_client::query_for_friend_list( )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -198,7 +198,7 @@ void messaging_client::query_for_friend_list( )
 
 void messaging_client::query_for_friends_status( )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -209,7 +209,7 @@ void messaging_client::query_for_friends_status( )
 
 void messaging_client::add_to_friend_list( const u32 account_id )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -221,7 +221,7 @@ void messaging_client::add_to_friend_list( const u32 account_id )
 
 void messaging_client::remove_from_friend_list( const u32 account_id )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -233,7 +233,7 @@ void messaging_client::remove_from_friend_list( const u32 account_id )
 
 void messaging_client::query_for_ignore_list( )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -244,7 +244,7 @@ void messaging_client::query_for_ignore_list( )
 
 void messaging_client::add_to_ignore_list( const u32 account_id )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -256,7 +256,7 @@ void messaging_client::add_to_ignore_list( const u32 account_id )
 
 void messaging_client::remove_from_ignore_list( const u32 account_id )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
@@ -268,7 +268,7 @@ void messaging_client::remove_from_ignore_list( const u32 account_id )
 
 void messaging_client::find_players_by_name( pcstr player_name )
 {
-	if ( m_connection_state != messaging::client_connected )
+	if ( !connected( ) )
 		return;
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );

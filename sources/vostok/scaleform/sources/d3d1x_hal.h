@@ -5,17 +5,8 @@
 #ifndef D3D1X_HAL_H_INCLUDED
 #define D3D1X_HAL_H_INCLUDED
 
-// claude@NOTE: nothing #includes this header - it is a PDB-derived reference skeleton,
-// listed in scaleform.vcproj but never compiled. Every symbol it describes is emitted
-// (and already byte-exact) from the vendored SDK header it mirrors under
-// scaleform/src/render/d3d1x/, so its STATE[STUB] bodies are documentation, not a
-// matching gap - check the vendored header before treating one as work.
-// survarium's fork of the Scaleform 4.x D3D1x_HAL.h - the shipped binary
-// tracks a NEWER SDK than the vendored 4.0.15 (ShaderHAL base, filters,
-// render events, MatrixState, ...); skeleton rebuilt from the canonical PDB
-// type dumps. Per the rich index this fork header also CARRIED definitions of
-// several base-SDK members (Render::HAL::~HAL and friends, at the bottom) -
-// the fork backported the newer D3D11 backend onto an older core.
+// Reference-only PDB mirror; translation units include Render/D3D1x SDK headers.
+// Function ownership: docs/binary_matching/scaleform/inline_reference_ownership.md.
 
 #include "Render/Render_ShaderHAL.h"
 #include "d3d1x_meshcache.h"

@@ -15,6 +15,12 @@ console_commands::cc_token*							damage_model_cook::m_hit_types_commands;
 fixed_vector< fixed_string<24>, 12 >				damage_model_cook::m_hit_types_strings;
 static u32 g_current_hit_type;
 
+// sushi@TODO: Verify getter consumer/placement and pre-initialization policy; this models the console token selection.
+pcstr damage_model_cook::get_current_hit_type( )
+{
+	return m_hit_types_strings[g_current_hit_type].c_str( );
+}
+
 damage_model_cook::damage_model_cook( ) :
 	resources::translate_query_cook( resources::damage_model_class, reuse_false, use_current_thread_id )
 {

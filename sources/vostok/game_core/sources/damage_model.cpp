@@ -105,7 +105,6 @@ struct find_by_damage_type_predicate {
 		strings::copy( m_damage_type, 16, damage_type );
 	}
 
-	// sushi@TODO: m_hit_type is getter
 	inline	bool	operator()						( booster_damage_protector * protector ) const {
 		return strings::equal( protector->m_hit_type, m_damage_type );
 	}
@@ -174,23 +173,20 @@ void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time
 	typedef ai::statistics_item<46, 16> content_type;
 	content_type new_stats_item;
 	new_stats_item.caption = "damage status: ";
-	stats.selectors_state.push_back( new_stats_item );	// sushi@TODO: This is wrong, npc_statistics has changed, this should be `body_state`.
+	stats.body_state.push_back( new_stats_item );
 
 	dump_npc_body_part_state_predicate dump_predicate( stats, current_time_in_ms );
 	m_body_parts.for_each( dump_predicate );
 }
 
-// sushi@TODO: target PDB records the body_part local as body_part_parameters const* (pointee-const), but
-// intrusive_list::get_next_of_object takes PointerType const (= body_part_parameters* const) so the
-// const* spelling cannot compile against our list header - kept non-const.
 void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )> callback )
 {
-	body_part_parameters*		body_part = m_body_parts.front( );
+	body_part_parameters const*	body_part = m_body_parts.front( );
 	u32							body_part_index = 0;
 	while ( body_part )
 	{
-		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target
-		body_part = m_body_parts.get_next_of_object( body_part );
+		body_part->dump_state( callback, body_part_index++ );
+		body_part = body_part->next;
 	}
 }
 

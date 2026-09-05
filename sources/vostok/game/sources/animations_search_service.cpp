@@ -7,6 +7,7 @@
 
 namespace survarium {
 
+// sushi@TODO: retail keeps the best ID on both fallback paths; verify the original manager/queue seam and statement projection.
 bool animations_search_service::search(
 	animation_space_graph_ptr const&	graph,
 	vector< u32 >*						path,
@@ -39,9 +40,9 @@ bool animations_search_service::search(
 		return true;
 
 	path_constructor.construct_path(
-		m_vertex_manager.vertex(
-			m_vertex_manager.visited( path_heuristics.best_vertex_id( ) ) ? path_heuristics.best_vertex_id( ) : arg_2
-		)
+		m_vertex_manager.visited( path_heuristics.best_vertex_id( ) )
+			? m_vertex_manager.vertex( path_heuristics.best_vertex_id( ) )
+			: m_priority_queue.vertex( path_heuristics.best_vertex_id( ) )
 	);
 
 	return true;

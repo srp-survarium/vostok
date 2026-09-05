@@ -59,12 +59,6 @@ typedef resources::resource_ptr<
 // void* game::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x8da10]: 8, <0x8d9a6>|0x006|+0x00f:'100' ...
 
 class game : public engine_user::world , private input::engine , private ui::engine , private physics::engine , private scaleform_game_engine , private boost::noncopyable {
-	// game_world reaches game's private hide_game_stats directly (game_world::
-	// update_npc_stats writes it) - the original befriends its game_world scene.
-	friend class game_world;
-	// network_client::connect_to_login inlines game's private switch_to_scene
-	// (codegen-neutral friendship; PDB does not record it)
-	friend class network_client;
 public:
 											game							(
 														engine_user::engine&	engine,
@@ -87,10 +81,11 @@ public:
 	virtual	void								execute_scaleform_command		( scaleform_render_command command ) override;
 
 	inline	u32									game_time_ms					( ) const { return m_current_time_in_ms; }
-	inline	u32									game_permanent_time_ms			( ) const { /* no source */ return m_permanent_time_in_ms; }
-	inline	float								game_time_sec					( ) { /* no source */ return 0.f; }
+	inline	u32									game_permanent_time_ms			( ) const { return m_permanent_time_in_ms; }
+	// sushi@TODO: Cached-clock seconds model; verify the original clock and conversion boundary.
+	inline	float								game_time_sec					( ) { return float( game_time_ms( ) ) * math::epsilon_3; }
 
-	inline	float								last_frame_time					( ) const { /* no source */ return m_last_frame_time; }
+	inline	float								last_frame_time					( ) const { return m_last_frame_time; }
 
 	virtual	void								load							( pcstr project_resource_name ) override;
 			void								load							(
@@ -112,44 +107,44 @@ public:
 
 			void								load_cc_script					( resources::managed_resource_ptr cfg, bool create_renderer );
 
-	inline	swf_input_translator&				input_translator				( ) { /* no source */ return m_swf_input_translator; }
+	inline	swf_input_translator&				input_translator				( ) { return m_swf_input_translator; }
 
-	inline	game_world const&					get_game_world					( ) const { /* no source */ return m_game_world; }
-	inline	game_world&							get_game_world					( ) { /* no source */ return m_game_world; }
-	inline	game_options&						get_game_options				( ) { /* no source */ return m_game_options; }
-	inline	sound::world&						get_sound_world					( ) const { /* no source */ return m_sound_world; }
-	inline	network::world&						get_network_world				( ) const { /* no source */ return m_network_world; }
-	inline	key_binder&							get_key_binder					( ) const { /* no source */ return *m_key_binder; }
-	inline	chat_handler&						get_chat_handler				( ) const { /* no source */ return *m_chat_handler; }
+	inline	game_world const&					get_game_world					( ) const { return m_game_world; }
+	inline	game_world&							get_game_world					( ) { return m_game_world; }
+	inline	game_options&						get_game_options				( ) { return m_game_options; }
+	inline	sound::world&						get_sound_world					( ) const { return m_sound_world; }
+	inline	network::world&						get_network_world				( ) const { return m_network_world; }
+	inline	key_binder&							get_key_binder					( ) const { return *m_key_binder; }
+	inline	chat_handler&						get_chat_handler				( ) const { return *m_chat_handler; }
 
-	inline	engine_user::engine&				engine							( ) const { /* no source */ return m_engine; }
+	inline	engine_user::engine&				engine							( ) const { return m_engine; }
 
-	inline	render::world&						render_world					( ) { /* no source */ return m_render_world; }
+	inline	render::world&						render_world					( ) { return m_render_world; }
 
 			flash_factory&						get_flash_factory				( );
-	inline	stats&								get_stats						( ) { /* no source */ return *m_stats; }
+	inline	stats&								get_stats						( ) { return *m_stats; }
 
-	inline	render::game::renderer&				renderer						( ) { /* no source */ return m_renderer; }
+	inline	render::game::renderer&				renderer						( ) { return m_renderer; }
 
 	// PDB spells the return type vostok::render::base_output_window_ptr - the
 	// same resource_ptr type our render tree typedefs as render_output_window_ptr
-	inline	render::render_output_window_ptr	render_output_window			( ) { /* no source */ return m_render_output_window; }
+	inline	render::render_output_window_ptr	render_output_window			( ) { return m_render_output_window; }
 
-	inline	math::rectangle< float2 > const&	viewport						( ) const { /* no source */ return m_viewport; }
+	inline	math::rectangle< float2 > const&	viewport						( ) const { return m_viewport; }
 
 	// method names hide the same-named class names from here on - the member
 	// declarations below use class-elaborated spellings (mangling-neutral)
-	inline	class main_menu&					main_menu						( ) { /* no source */ return *m_main_menu; }
-	inline	class lobby_menu&					lobby_menu						( ) { /* no source */ return *m_lobby_menu; }
-	inline	class login_menu&					login_menu						( ) { /* no source */ return *m_login_menu; }
+	inline	class main_menu&					main_menu						( ) { return *m_main_menu; }
+	inline	class lobby_menu&					lobby_menu						( ) { return *m_lobby_menu; }
+	inline	class login_menu&					login_menu						( ) { return *m_login_menu; }
 
-	inline	class text_translator&				text_translator					( ) { /* no source */ return m_text_translator; }
+	inline	class text_translator&				text_translator					( ) { return m_text_translator; }
 
-	inline	class items_dictionary&				items_dictionary				( ) const { /* no source */ return *m_items_dictionary; }
+	inline	class items_dictionary&				items_dictionary				( ) const { return *m_items_dictionary; }
 
-	inline	base_game_scene*					active_scene					( ) const { /* no source */ return m_active_scene; }
+	inline	base_game_scene*					active_scene					( ) const { return m_active_scene; }
 
-	inline	class scheduler&					scheduler						( ) { /* no source */ return m_scheduler; }
+	inline	class scheduler&					scheduler						( ) { return m_scheduler; }
 
 			void								create_network_client			( const bool is_spectator );
 			void								create_lobby_menu				( );
@@ -168,11 +163,12 @@ public:
 
 			void								exit							( pcstr str );
 
-	inline	u32									current_frame_id				( ) const { /* no source */ return m_current_frame_id; }
+	inline	u32									current_frame_id				( ) const { return m_current_frame_id; }
 
-	inline	timing::timer const&				permanent_timer					( ) const { /* no source */ return m_permanent_timer; }
+	inline	timing::timer const&				permanent_timer					( ) const { return m_permanent_timer; }
 
-	inline	void								test_action_portal_system		( ) { /* no source */ }
+	// sushi@TODO: Verify the portal-test caller, selected scene and any loading guard.
+	inline	void								test_action_portal_system		( ) { m_game_world.test_action_portal_system( ); }
 
 			void								toggle_pause					( );
 
@@ -193,9 +189,9 @@ public:
 
 	/* 0x000b */	bool								hide_game_stats;
 
-	inline	base_network_client*				get_network_client				( ) { /* no source */ return m_network_client; }
+	inline	base_network_client*				get_network_client				( ) { return m_network_client; }
 
-	inline	pcstr								project_resource_name			( ) { /* no source */ return m_project_resource_name.c_str( ); }
+	inline	pcstr								project_resource_name			( ) { return m_project_resource_name.c_str( ); }
 
 private:
 			void								set_network_client				(
@@ -226,6 +222,7 @@ private:
 	virtual	void								on_fullscreen_alttab			( bool first ) override;
 
 			void								query_base_resources			( );
+	// sushi@TODO: Recover this query's bool contract; startup locals belong to on_configs_loaded.
 	inline	void								query_render_window				( bool arg_0 ) { /* no source */ }
 
 			void								on_configs_loaded				( resources::queries_result& result );
@@ -302,7 +299,16 @@ private:
 			void								create_debug_window				( );
 			void								destroy_debug_window			( );
 			void								draw_debug_window				( );
-	inline	void								toggle_debug_window				( ) { /* no source */ }
+	// sushi@TODO: Legacy toggle body; recover its retail binding before claiming a verified expansion.
+	inline	void								toggle_debug_window				( )
+	{
+		if ( m_debug_window_type == debug_window_none )
+			m_debug_window_type = debug_window_resources;
+		else if ( m_debug_window_type == debug_window_resources )
+			m_debug_window_type = debug_window_tasks;
+		else
+			m_debug_window_type = debug_window_none;
+	}
 }; // class game
 
 STATIC_SIZE_ASSERT(game, 0x878);

@@ -38,6 +38,7 @@ public:
 			void								add_landing_point		( landing_point* const new_point );
 			landing_point*						pop_landing_point		( );
 
+	// sushi@TODO: recover selection direction, distance metric and tie policy; retain the use-ladder trap question.
 	inline	landing_point const*				select_landing_point	( float3 const& arg_0, const bool arg_1 ) const { /* no source */ }
 	inline	landing_point const*				select_attachment_point	( float3 const& arg_0 ) const { /* no source */ }
 

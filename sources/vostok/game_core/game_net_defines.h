@@ -6,6 +6,7 @@
 // the inline serialize bodies / value members below need the complete types
 // (gained its first real includer with game's match_client.h)
 #include <vostok/network_core/tcp_packet.h>
+#include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/c_array_functions.h>
@@ -54,6 +55,38 @@ static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
 	serialize_both_values,					// quick_slot6
 };
 
+inline void player_profile::serialize( network_core::udp_match_packet& packet ) const
+{
+	packet.append	( static_cast< u8 >( team ) );
+	packet.append	( is_local );
+	packet.append	( static_cast< pcstr >( profile_name ) );
+
+	u16 boosters_mask = 0;
+	for ( u8 i = 0; i < array_size( boosters ); ++i )
+	{
+		if ( boosters[ i ].id )
+			boosters_mask |= 1 << i;
+	}
+	packet.append	( boosters_mask );
+	for ( u8 i = 0; i < array_size( boosters ); ++i )
+	{
+		if ( boosters_mask & ( 1 << i ) )
+		{
+			packet.append	( boosters[ i ].id );
+			packet.append	( boosters[ i ].value );
+		}
+	}
+
+	for ( u8 i = 0; i < array_size( slots ); ++i )
+	{
+		if ( !slots[ i ].item.id )
+			continue;
+
+		packet.append	( i );
+		slots[ i ].serialize( packet, slot_serialize_mode[ i ] );
+	}
+}
+
 inline void player_profile::deserialize( network_core::packet_reader& reader )
 {
 	team		= (game_team_id)reader.r< u8 >( );
@@ -100,7 +133,16 @@ public:
 				packet.append( target_slot_id );
 				packet.append( amount );
 			}
-	inline	void	deserialize	( network_core::packet_reader& arg_0 ) { /* no source */ }
+	// sushi@TODO: inverse of the retained writer; verify the original receiving consumer.
+	inline	void	deserialize	( network_core::packet_reader& packet )
+	{
+		profile_id		= packet.r< u32 >( );
+		item_id			= packet.r< u32 >( );
+		item_dict_id		= packet.r< u32 >( );
+		source_slot_id	= packet.r< u32 >( );
+		target_slot_id	= packet.r< u32 >( );
+		amount			= packet.r< u16 >( );
+	}
 }; // struct relocate_item_descr
 
 STATIC_SIZE_ASSERT(relocate_item_descr, 0x18);
@@ -139,7 +181,17 @@ public:
 				map_name[ 0 ] = 0;
 			}
 
-	inline	void		serialize		( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
+	// sushi@TODO: inverse of the retained reader; verify the original sending consumer.
+	inline	void		serialize		( network_core::udp_match_packet& packet ) const
+	{
+		packet.append	( map_id );
+		packet.append	( static_cast< pcstr >( map_name ) );
+		packet.append	( static_cast< u8 >( match_mode_ ) );
+		packet.append	( players_count );
+		packet.append	( victory_items_count );
+		packet.append	( respawn_time );
+		packet.append	( match_time );
+	}
 			void		deserialize		( network_core::packet_reader& reader )
 			{
 				map_id				= reader.r< u8 >( );

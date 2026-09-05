@@ -48,7 +48,7 @@ public:
 						)
 			:	sounds_emitters		( arg_0, arg_1, arg_1 ),
 				sounds_instances	( arg_2, arg_3 )
-		{ /* no source */ }
+		{ }
 
 		inline	void	clear_instances	( ) { sounds_instances.clear( ); }
 

@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+diff --git a/src/gen_headers.rs b/src/gen_headers.rs
+--- a/src/gen_headers.rs
++++ b/src/gen_headers.rs
+@@ -251,6 +251,7 @@
+ struct BaseClass {
+     type_name: Type,
+     offset: u32,
++    access: u8,
+ }
+ 
+ struct Field<'p> {
+@@ -689,6 +690,7 @@
+                     &self.namespace,
+                 )?,
+                 offset: data.offset,
++                access: data.attributes.access(),
+             }),
+ 
+             pdb::TypeData::VirtualBaseClass(ref data) => self.base_classes.push(BaseClass {
+@@ -700,6 +702,7 @@
+                     &self.namespace,
+                 )?,
+                 offset: data.base_pointer_offset,
++                access: data.attributes.access(),
+             }),
+ 
+             _ => {
+@@ -1179,7 +1182,11 @@
+                     0 => ":",
+                     _ => ",",
+                 };
+-                write!(f, " {prefix} public {}", base.type_name)?;
++                let access = access_keyword(base.access)
++                    .unwrap_or_else(|| {
++                        access_keyword(default_access(self.kind)).expect("class default access")
++                    });
++                write!(f, " {prefix} {access} {}", base.type_name)?;
+             }
+         }
+ 

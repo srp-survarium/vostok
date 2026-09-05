@@ -18,8 +18,6 @@ namespace survarium {
 class bullet_manager;
 class game;
 
-// void* main_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x91bf0]: <0x427c0>|0x000|      :'43'	{
-
 class main_menu : public base_game_scene , public input::handler {
 	typedef base_game_scene super;
 
@@ -70,8 +68,7 @@ public:
 		return 100;
 	}
 
-	// buildability return; the real body reaches the manager through m_game
-	virtual	bullet_manager&		get_bullet_manager	( ) const override { /* no source */ return *( bullet_manager* )NULL; }
+	virtual	bullet_manager&		get_bullet_manager	( ) const override { return *( bullet_manager* )NULL; }
 
 private:
 			void				query_resources		( );

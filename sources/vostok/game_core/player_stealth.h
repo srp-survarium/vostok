@@ -16,13 +16,15 @@ public:
 			player_stealth&		operator=					( player_stealth const& other );
 
 			void				load						( configs::binary_config_value const& config );
+	// sushi@TODO: recover observer/subject roles, stance/sound composition and the distance argument's units.
 	inline	bool				can_be_detected				( player_stealth const& arg_0, player_input const& arg_1, const float arg_2 ) const { /* no source */ }
 
-	inline	float				get_armor_value				( ) const { /* no source */ }
+	// sushi@TODO: confirm these field-based getter models and distinguish optics from detection level.
+	inline	float				get_armor_value				( ) const { return m_default_value; }
 	inline	float				get_optics_value			( ) const { /* no source */ }
-	inline	float				get_armor_sound_value		( ) const { /* no source */ }
-	inline	float				get_detection_level			( ) const { /* no source */ }
-	inline	float				get_always_visible_distance	( ) const { /* no source */ }
+	inline	float				get_armor_sound_value		( ) const { return m_default_sound_value; }
+	inline	float				get_detection_level			( ) const { return m_detection_level; }
+	inline	float				get_always_visible_distance	( ) const { return m_always_visible_distance; }
 
 
 private:

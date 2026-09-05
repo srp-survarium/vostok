@@ -27,10 +27,6 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 {
 }
 
-// claude@NOTE: the deserializing/chamber_a_round/round_is_chambered/unload guard chain is
-// structure-correct; residual is boost::function's assign_to - target inlines this
-// instantiation, /Od out-of-lines it (per-instantiation inliner decision; one_round::initialize,
-// the same boost::bind without the guard, is 100%). Non-steerable from source.
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
 	m_animation_ended = false;
@@ -40,7 +36,7 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 		boost::bind( &weapon_core_shotgun_reload_start_substate::on_animation_end, this, _1 )
 	);
 
-	if ( !m_weapon.deserializing( ) )
+	if ( !deserializing( ) )
 	{
 		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
 			m_weapon.unload_chambered_round( );
@@ -49,7 +45,7 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	super::finalize( );
 	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
 }
 

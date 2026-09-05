@@ -9,6 +9,7 @@
 // static_model_instance_ptr / base_scene_ptr - the same resource_ptr types our
 // render tree typedefs as skeleton_model_ptr / static_model_ptr / scene_ptr
 #include <vostok/render/facade/model.h>
+#include <vostok/render/facade/scene_renderer.h>
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/resources_managed_resource.h>
 
@@ -29,25 +30,59 @@ class player_profile;
 
 class profile_character : private boost::noncopyable {
 public:
+	// sushi@TODO: constructor model; verify transform/visibility defaults and animation-query timing.
 	inline			profile_character			(
-						items_dictionary&			arg_0,
-						render::scene_renderer&		arg_1,
-						render::scene_ptr const&	arg_2
+						items_dictionary&			items,
+						render::scene_renderer&		scene_renderer,
+						render::scene_ptr const&	scene
 					) :
-						m_scene_renderer	( arg_1 ),
-						m_scene				( arg_2 ),
-						m_items_dictionary	( arg_0 )
-					{ /* no source */ }
+						m_scene_renderer	( scene_renderer ),
+						m_scene				( scene ),
+						m_items_dictionary	( items )
+					{
+						m_initial_matrix.identity( );
+						for ( u32 i = 0; i < 2; ++i )
+							m_preview_weapon[ i ].m_visible = false;
+					}
+	// sushi@TODO: recover explicit destructor body; member cleanup does not prove scene removal.
 	inline			~profile_character			( ) { /* no source */ }
 
 			void	update						( const u32 current_time_in_ms );
 
-	inline	void	clear_resources				( ) { /* no source */ }
+	// sushi@TODO: callback-derived cleanup model; verify reset policy, ordering and async lifetime.
+	inline	void	clear_resources				( )
+	{
+		m_animation_player.reset( true );
+		if ( m_character_model )
+			m_scene_renderer.remove_model( m_scene, m_character_model->m_render_model );
+		m_character_model = NULL;
 
-	inline	void	profile_changed				( player_profile const* arg_0 ) { /* no source */ }
+		for ( u32 i = 0; i < 2; ++i )
+		{
+			if ( m_preview_weapon[ i ].m_visible )
+			{
+				if ( m_preview_weapon[ i ].m_model )
+					m_scene_renderer.remove_model( m_scene, m_preview_weapon[ i ].m_model->m_render_model );
+				if ( m_preview_weapon[ i ].m_addon )
+					m_scene_renderer.remove_model( m_scene, m_preview_weapon[ i ].m_addon->m_render_model );
+			}
+			m_preview_weapon[ i ].m_model = NULL;
+			m_preview_weapon[ i ].m_addon = NULL;
+			m_preview_weapon[ i ].m_animation = NULL;
+			m_preview_weapon[ i ].m_visible = false;
+		}
+		m_character_animation[ 0 ] = NULL;
+		m_character_animation[ 1 ] = NULL;
+		m_skeleton = NULL;
+	}
+
+	// sushi@TODO: sibling forwarding model; recover original consumer, null and reset policy.
+	inline	void	profile_changed				( player_profile const* profile ) { query_profile_contents( profile ); }
 
 private:
-	inline	void	query_profile_contents		( player_profile const* arg_0 ) { /* no source */ }
+	// sushi@TODO: recover skin/weapon request paths, optional-slot handling and profile lifetime.
+	inline	void	query_profile_contents		( player_profile const* profile ) { /* no source */ }
+	// sushi@TODO: recover the two clip requests and the original scheduling consumer.
 	inline	void	query_character_animations	( ) { /* no source */ }
 
 			void	character_model_ready		( resources::queries_result& data );

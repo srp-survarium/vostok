@@ -19,7 +19,8 @@ public:
 			explicit	weapon_recoil_calculator		( );
 
 			void		set_weapon							( weapon_core* weapon );
-	inline	void		set_interpolation_time				( const float arg_0 ) { /* no source */ }
+	// sushi@TODO: verify interpolator replacement and timer policy from an original consumer.
+	inline	void		set_interpolation_time				( const float time ) { m_interpolator = animation::linear_interpolator( time ); }
 	inline	void		set_character_multiplier			( const float character_multiplier ) { m_player_recoil_multiplier = character_multiplier; }
 	inline	void		set_player_compensation_multiplier	( const float player_compensation_multiplier ) { m_player_compensation_multiplier = player_compensation_multiplier; }
 

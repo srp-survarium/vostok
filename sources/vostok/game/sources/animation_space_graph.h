@@ -43,8 +43,9 @@ public:
 	inline	std::pair< animation_space_vertex const*, animation_space_vertex const* > const*	get_mixes				( ) const { return reinterpret_cast< std::pair< animation_space_vertex const*, animation_space_vertex const* > const* >( get_animations( ) + m_animations_count ); }
 	inline	animation_space_edge const*			get_edges				( ) const { return reinterpret_cast< animation_space_edge const* >( get_mixes( ) + m_mixes_count ); }
 
-	inline	float								agent_radius			( ) const { /* no source */ return m_agent_radius; }
+	inline	float								agent_radius			( ) const { return m_agent_radius; }
 
+	// sushi@TODO: recover movement/radius policy and caller; the live A* restrictor performs no passability test.
 	inline	bool								is_passable				( animation_space_vertex_id const& arg_0, animation_space_vertex_id const& arg_1 ) const { /* no source */ return false; }
 
 			animation_space_vertex const*		get_animation_by_path	( pcstr animation_path ) const;

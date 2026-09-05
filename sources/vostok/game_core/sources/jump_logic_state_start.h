@@ -15,8 +15,6 @@ public:
 	explicit			jump_logic_state_start	( jump_logic& owner );
 
 private:
-	// claude@MATCH: target mangles every override below private (EAE/AAE/EBE); only the
-	// ctor and execute (which folds to a public empty rep) stay public.
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations		(
 							mutable_buffer&						buffer,

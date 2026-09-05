@@ -40,7 +40,8 @@ protected:
 	virtual									~booby_trap_core			( );
 
 	virtual	void							load						( configs::binary_config_value const& config ) override;
-	inline	void							load_collision				( configs::binary_config_value const& config ) { /* no source */ }
+	// sushi@TODO: validate load_collision's extracted caller boundary in the deferred build.
+	inline	void							load_collision				( configs::binary_config_value const& config );
 			void							load_aabb					( configs::binary_config_value const& config );
 
 public:
@@ -77,7 +78,6 @@ private:
 												bullet*	const							bullet
 											) override;
 
-	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`fldz;ret`); /Od always frames -> unpairable. fldz correct. Private virtual `EBE`.
 	virtual	float							get_speed					( ) const override { return 0.0f; }
 	virtual	void							on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void							tick						( const u32 time_delta_ms, const u32 current_time_ms ) override;
@@ -112,10 +112,6 @@ private:
 	/* 0x0174 */	float4x4					m_transform;
 	/* 0x01b4 */	u32							m_state_timer;
 private:
-	// the game-module runtime booby_trap reads inherited state (m_trap_state /
-	// m_transform / m_owner) directly in switch_to_state / on_new_state; friendship
-	// is codegen-neutral (emits no bytes, not recorded in the PDB).
-	friend class booby_trap;
 	friend class booby_trap_core_cook;
 }; // class booby_trap_core
 

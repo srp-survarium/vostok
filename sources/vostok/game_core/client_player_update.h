@@ -5,11 +5,18 @@
 
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/player_state.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
 struct client_player_update {
-	inline	void	deserialize			( network_core::packet_reader& arg_0 ) { /* no source */ }
+	// sushi@TODO: inverse of the retained writer; verify the original receiving consumer.
+	inline	void	deserialize			( network_core::packet_reader& packet )
+	{
+		input.deserialize	( packet );
+		state.deserialize	( packet );
+		time_in_ms			= packet.r< u32 >( );
+	}
 			void	serialize			( network_core::udp_match_packet& packet ) const;
 
 public:

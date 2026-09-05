@@ -4,6 +4,7 @@
 #define PLAYER_STAMINA_H_INCLUDED
 
 #include <vostok/game_core/player_stamina_subscriber.h>
+#include <vostok/network_core/udp_match_packet.h>
 
 namespace vostok {
 namespace network_core {
@@ -21,7 +22,14 @@ public:
 			player_stamina&		operator=						( player_stamina const& other );
 
 			void				deserialize						( network_core::packet_reader& packet );
-	inline	void				serialize						( network_core::udp_match_packet& arg_0, s32 arg_1 ) const { /* no source */ }
+	// sushi@TODO: verify both clock zero-sentinels; the client-offset policy follows body-part serialization.
+	inline	void				serialize						( network_core::udp_match_packet& packet, s32 client_offset ) const
+	{
+		packet.append( m_value );
+		packet.append( m_last_spending_time_in_ms ? m_last_spending_time_in_ms - client_offset : 0 );
+		packet.append( m_last_tick_time_in_ms ? m_last_tick_time_in_ms - client_offset : 0 );
+		packet.append( m_lower_threshold_was_reached );
+	}
 
 			void				load							( configs::binary_config_value const& config );
 			void				reset							( );

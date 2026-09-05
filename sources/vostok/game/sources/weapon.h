@@ -4,12 +4,19 @@
 #define WEAPON_H_INCLUDED
 
 #include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/hit_initiator.h>
 
 #include <vostok/animation/animation_callback.h>
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/model.h>
 #include <vostok/resources_unmanaged_resource.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
 
+#include "base_game_scene.h"
+#include "base_network_client.h"
+#include "game.h"
+#include "player.h"
 #include "fingers_to_weapon_corrector.h"
 #include "rifle_scope.h"
 
@@ -36,11 +43,8 @@ class weapon : public weapon_core {
 	typedef weapon_core super;
 	typedef render::skeleton_model_ptr weapon_model_ptr_type;
 
-	// the cook constructs/tears down weapon directly, touching private pfx/animation
-	// members; codegen-neutral
 	friend	class	weapon_cook;
-	// weapon_sound_effect::on_sound_event reads m_game_scene directly (inlined) and
-	// resolves the first/third-view branch through weapon-private members; codegen-neutral
+	// Sound callbacks use the private current-player predicate.
 	friend	class	weapon_sound_effect;
 public:
 								weapon								(
@@ -82,8 +86,18 @@ private:
 
 	inline	bool				is_in_scene							( ) const { return m_is_in_scene; }
 
-	inline	void				set_fire_pfx						( resources::queries_result& arg_0 ) { /* no source */ }
-	inline	void				set_shells_pfx						( resources::queries_result& arg_0 ) { /* no source */ }
+	// sushi@TODO: dedicated-result/preallocated-array model; recover caller and result/count contract.
+	inline	void				set_fire_pfx						( resources::queries_result& data )
+	{
+		for ( u32 i = 0; i < m_fire_pfx_count; ++i )
+			m_fire_pfx_list[ i ] = data[ i ].get_unmanaged_resource( );
+	}
+	// sushi@TODO: dedicated-result/preallocated-array model; recover caller and result/count contract.
+	inline	void				set_shells_pfx						( resources::queries_result& data )
+	{
+		for ( u32 i = 0; i < m_shells_pfx_count; ++i )
+			m_shells_pfx_list[ i ] = data[ i ].get_unmanaged_resource( );
+	}
 
 			void				update_pfx_transform				( );
 
@@ -139,10 +153,13 @@ private:
 								);
 	virtual	void				on_user_sprint						( bool user_is_sprinting ) override;
 
-	inline	bool				is_player_current					( ) const { /* no source */ return false; }
+	// sushi@TODO: sound-consumer loads support this private helper/friend seam; verify the original boundary.
+	inline	bool				is_player_current					( ) const
+	{
+		return m_game_scene->get_game( ).get_network_client( )->is_player_current( hit_initiator_holder( )->id );
+	}
 
-	// buildability cast through the incomplete player (weapon_core stores base_player*)
-	inline	player&				user								( ) const { return *( player* )get_user( ); }
+	inline	player&				user								( ) const { return static_cast< player& >( *get_user( ) ); }
 
 	typedef fixed_vector< resources::unmanaged_resource_ptr, 10 > bullet_shells;
 

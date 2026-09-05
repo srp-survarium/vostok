@@ -33,3 +33,14 @@ is passed by ADDRESS - `helper( map_name, &director )` - so it pushes the refere
 Evidence: weapon_core_shotgun_reload_state_cook::allocate_resource 41.38->87.45 (the 0x3d row
 byte-for-byte; ASSERT(UNKNOWN_EXPRESSION) had produced only the 0xc half); network_client::load
 (unguarded direct helper call, &director pointer-push, structure-exact - VOSTOK_UNREFERENCED_PARAMETERS collapsed to bare `ret 8`).
+
+Check the bytes after the helper call and stack cleanup before assuming a
+normal return. `inventory_item::{serialize_game_world_object_header,
+deserialize_game_world_object}` and `booby_trap_set_core::{activate,
+selected_animations}` end immediately in `cc` padding in the raw target PE;
+the missing epilogue is not just a rich-index extent cutoff. Their source
+model is direct argument use followed by the shipping unreachable macro
+(`__assume(0)`), not an ordinary returning no-op. The exact original macro
+spelling still requires evidence. A parameterless one-byte trap alias is
+weaker evidence: inspect vtable uses and section contributions before drawing
+the same original-source conclusion for every method sharing that address.

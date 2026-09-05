@@ -27,7 +27,8 @@ public:
 
 			void		activate				( animation::skeleton const& skeleton );
 
-	inline	void		set_drawer				( legs_ik_drawer* drawer ) { /* no source */ }
+	// sushi@TODO: pointer-install model; original drawer creation/replacement policy is unidentified.
+	inline	void		set_drawer				( legs_ik_drawer* drawer ) { m_drawer = drawer; }
 	inline	void		set_character_controller( physics::bt_character_controller* controller ) { m_character_controller = controller; }
 
 			void		process					( float4x4* matrices, float4x4 const& transform );
@@ -39,7 +40,8 @@ public:
 
 			void		tick					( const u32 current_time_in_ms );
 
-	inline	bool		is_right_supporting_leg	( ) const { /* no source */ }
+	// sushi@TODO: right-versus-left forwarding model; verify the original consumer and tie policy.
+	inline	bool		is_right_supporting_leg	( ) const { return m_right_leg_params.is_more_supporting_then( m_left_leg_params ); }
 
 public:
 	struct leg_params {
@@ -51,7 +53,8 @@ public:
 
 				void	set_heel_transition_time( float tr_time );
 				void	set_toe_transition_time	( float tr_time );
-		inline	void	set_rotation_axis		( float3 const& arg_0 ) const { /* no source */ }
+		// sushi@TODO: retain PDB const; verify const_cast versus mutable storage and the original setter seam.
+		inline	void	set_rotation_axis		( float3 const& axis ) const { const_cast< leg_params* >( this )->rotation_axis = axis; }
 				void	set_heel_on_ground		( const bool value );
 				void	set_toe_on_ground		( const bool value );
 
@@ -60,7 +63,8 @@ public:
 		inline	bool	is_on_ground			( ) const { return is_heel_on_ground( ) || is_toe_on_ground( ); }
 		inline	bool	is_full_on_ground		( ) const { return is_heel_on_ground( ) && is_toe_on_ground( ); }
 
-		inline	bool	is_more_supporting_then	( legs_ik_processor::leg_params const& arg_0 ) const { /* no source */ }
+		// sushi@TODO: recent-full-stance model; ordering direction, contact priority and ties are unverified.
+		inline	bool	is_more_supporting_then	( legs_ik_processor::leg_params const& other ) const { return m_time_since_stance < other.m_time_since_stance; }
 
 
 	public:
@@ -81,7 +85,7 @@ public:
 private:
 	class transition_time_calculator {
 	public:
-		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
+		inline	explicit	transition_time_calculator	( ) : m_value( 0.0f ) { }
 
 		inline	void		reset						( ) { m_value = 0.0f; }
 		inline	void		tick						( float arg_0 ) { m_value += arg_0; }

@@ -57,7 +57,7 @@ public:
 		typedef ai::vertex_allocator::fixed_count::impl< vertex_type >	super;
 		inline		vertex_allocator_impl_type	( memory::base_allocator& arg_0, const u32 arg_1 ) :
 			super( &arg_0, arg_1 )
-		{ /* no source */ }
+		{ }
 	}; // struct vertex_allocator_impl_type
 
 	struct vertex_manager_impl_type : public ai::vertex_manager::fixed_count_hash::impl< vertex_allocator_impl_type, look_up_cell_type > {
@@ -68,14 +68,14 @@ public:
 						const u32		arg_2
 					) :
 			super( arg_0, arg_1, arg_2 )
-		{ /* no source */ }
+		{ }
 	}; // struct vertex_manager_impl_type
 
 	struct priority_queue_impl_type : public ai::priority_queue::binary_heap::impl< vertex_manager_impl_type > {
 		typedef ai::priority_queue::binary_heap::impl< vertex_manager_impl_type >	super;
 		inline		priority_queue_impl_type	( vertex_manager_impl_type& arg_0, const u32 arg_1 ) :
 			super( arg_0, arg_1 )
-		{ /* no source */ }
+		{ }
 	}; // struct priority_queue_impl_type
 
 	typedef vector< u32 > path_type;

@@ -11,10 +11,7 @@ namespace survarium {
 
 class base_game_scene;
 
-// survarium's own render_visual - a name collision with
-// vostok::render::render_visual (render/engine/visual.h), NOT the same type
-// (triage CHECK resolved in batch 7); insert/remove bodies live in the
-// game_project.cpp compiland (still queued)
+// Distinct from vostok::render::render_visual in render/engine/visual.h.
 struct render_visual {
 			void	insert			( base_game_scene& w );
 			void	remove			( base_game_scene& w );

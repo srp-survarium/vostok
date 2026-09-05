@@ -54,7 +54,7 @@ public:
 
 			u32										session_id							( ) const;
 
-	inline	bool									net_connected						( ) const { /* no source */ return m_net_client_connected; }
+	inline	bool									net_connected						( ) const { return m_net_client_connected; }
 
 			void									set_status_ready_for_match			(
 														const u32		arg_0 /* u32 profile_id */
@@ -71,31 +71,31 @@ public:
 			void									discard_playing_order				( );
 			void									discard_playing_order_on_connected	( );
 
-	inline	lobby::client_state_enum				status								( ) const { /* no source */ return m_status; }
+	inline	lobby::client_state_enum				status								( ) const { return m_status; }
 			lobby::client_state_enum				status								( fixed_string< 128 >& dest ) const;
-	inline	lobby::client_state_enum&				status								( ) { /* no source */ return m_status; }
+	inline	lobby::client_state_enum&				status								( ) { return m_status; }
 
-	inline	u32										match_id							( ) const { /* no source */ return m_match_id; }
-	inline	u32&									match_id							( ) { /* no source */ return m_match_id; }
-	inline	game_team_id							team_id								( ) const { /* no source */ return m_team_id; }
-	inline	game_team_id&							team_id								( ) { /* no source */ return m_team_id; }
-	inline	u32										match_order_id						( ) const { /* no source */ return m_match_order_id; }
+	inline	u32										match_id							( ) const { return m_match_id; }
+	inline	u32&									match_id							( ) { return m_match_id; }
+	inline	game_team_id							team_id								( ) const { return m_team_id; }
+	inline	game_team_id&							team_id								( ) { return m_team_id; }
+	inline	u32										match_order_id						( ) const { return m_match_order_id; }
 
-	inline	u8										profiles_count						( ) const { /* no source */ return m_profiles_count; }
+	inline	u8										profiles_count						( ) const { return m_profiles_count; }
 
-	inline	player_profile const&					profile								( u8 arg_0 ) const { /* no source */ return m_profiles[ arg_0 ]; }
+	inline	player_profile const&					profile								( u8 arg_0 ) const { return m_profiles[ arg_0 ]; }
 
-	inline	u8										player_skills_count					( ) const { /* no source */ return m_player_skills_count; }
-	inline	player_skill const&						player_skill						( u8 arg_0 ) const { /* no source */ return m_player_skills[ arg_0 ]; }
-	inline	u8										player_perks_count					( ) const { /* no source */ return m_player_perks_count; }
-	inline	u8										player_perk							( u8 arg_0 ) const { /* no source */ return m_player_perks[ arg_0 ]; }
+	inline	u8										player_skills_count					( ) const { return m_player_skills_count; }
+	inline	player_skill const&						player_skill						( u8 arg_0 ) const { return m_player_skills[ arg_0 ]; }
+	inline	u8										player_perks_count					( ) const { return m_player_perks_count; }
+	inline	u8										player_perk							( u8 arg_0 ) const { return m_player_perks[ arg_0 ]; }
 
-	inline	u32										slot_restrictions_count				( ) const { /* no source */ return m_profile_slot_restrictions_count; }
-	inline	profile_slot_restriction const&			slot_restriction					( u32 arg_0 ) const { /* no source */ return m_profile_slot_restrictions[ arg_0 ]; }
+	inline	u32										slot_restrictions_count				( ) const { return m_profile_slot_restrictions_count; }
+	inline	profile_slot_restriction const&			slot_restriction					( u32 arg_0 ) const { return m_profile_slot_restrictions[ arg_0 ]; }
 
-	inline	u32										item_compatibilities_count			( ) const { /* no source */ return m_items_compatibilities_count; }
+	inline	u32										item_compatibilities_count			( ) const { return m_items_compatibilities_count; }
 
-	inline	items_compatibility const&				get_items_compatibility				( u32 arg_0 ) const { /* no source */ return m_items_compatibility[ arg_0 ]; }
+	inline	items_compatibility const&				get_items_compatibility				( u32 arg_0 ) const { return m_items_compatibility[ arg_0 ]; }
 			bool									check_compatibility					( const u32 first_item_id, const u32 second_item_id );
 
 			bool									can_move_item						( const u32 item_category_id, const u32 target_slot_id );
@@ -117,9 +117,9 @@ public:
 			void									set_player_skills					( vectora< survarium::player_skill >& skills, vectora< u8 >& perks );
 			void									reroll_player_skills				( );
 
-	inline	vectora< inventory_item_instance >&		inventory_item_instances			( ) { /* no source */ return m_inventory_item_instances; }
+	inline	vectora< inventory_item_instance >&		inventory_item_instances			( ) { return m_inventory_item_instances; }
 
-	inline	void									add_inventory_item					( inventory_item_instance arg_0 ) { /* no source */ }
+	inline	void									add_inventory_item					( inventory_item_instance arg_0 ) { m_inventory_item_instances.push_back( arg_0 ); }
 
 			bool									read_status_info					( network_core::packet_reader& reader );
 			bool									read_enumerate_profiles_info		( network_core::packet_reader& reader );
@@ -135,23 +135,29 @@ public:
 			bool									read_service_prices					( network_core::packet_reader& reader );
 			bool									read_ping_server_answer				( network_core::packet_reader& reader );
 
-	inline	server_connection_info&					connection_info						( ) { /* no source */ return m_connection_info; }
+	inline	server_connection_info&					connection_info						( ) { return m_connection_info; }
 
-	inline	account_money const&					get_account_money					( ) { /* no source */ return m_account_money; }
-	inline	player_leveling_info const&				get_player_leveling					( ) { /* no source */ return m_player_leveling_info; }
-	inline	service_prices const&					get_service_prices					( ) { /* no source */ return m_service_prices; }
+	inline	account_money const&					get_account_money					( ) { return m_account_money; }
+	inline	player_leveling_info const&				get_player_leveling					( ) { return m_player_leveling_info; }
+	inline	service_prices const&					get_service_prices					( ) { return m_service_prices; }
 
-	inline	configs::binary_config_ptr&				skills_tree_config					( ) { /* no source */ return m_skills_tree_config; }
+	inline	configs::binary_config_ptr&				skills_tree_config					( ) { return m_skills_tree_config; }
 
-	inline	u32										get_player_faction_reputation		( u8 arg_0 ) { /* no source */ return 0; }
-	inline	player_reputation const&				get_player_reputation				( u8 arg_0 ) { /* no source */ return m_player_reputations[ arg_0 ]; }
-	inline	u8										get_player_reputations_count		( ) { /* no source */ return m_player_reputations_count; }
-	inline	fixed_string< 32 > const&				get_player_name						( ) const { /* no source */ return m_player_name; }
+	// sushi@TODO: Verify the original faction-key lookup, duplicate and missing-key policy; this is a first-match/zero model.
+	inline	u32										get_player_faction_reputation		( u8 arg_0 )
+	{
+		for ( u8 i = 0; i < get_player_reputations_count( ); ++i )
+			if ( get_player_reputation( i ).faction_id == arg_0 )
+				return get_player_reputation( i ).reputation_points;
+		return 0;
+	}
+	inline	player_reputation const&				get_player_reputation				( u8 arg_0 ) { return m_player_reputations[ arg_0 ]; }
+	inline	u8										get_player_reputations_count		( ) { return m_player_reputations_count; }
+	// sushi@TODO: The stored name comes from profile zero; recover a consumer of this separate fixed-string reference getter.
+	inline	fixed_string< 32 > const&				get_player_name						( ) const { return m_player_name; }
 
 			void									ping_server							( );
 
-	// claude@MATCH: private from here - the on_*/sign_in_on_packet_received/
-	// clear_* symbols mangle AAE (the dump prints them public)
 private:
 			void									on_connected						( );
 			void									on_disconnected						( );

@@ -25,7 +25,8 @@ typedef resources::resource_ptr<
 class profile_player_character : private boost::noncopyable {
 public:
 			explicit	profile_player_character	( lobby_menu& lobby_menu );
-	inline				~profile_player_character	( ) { /* no source */ }
+	// Member destruction releases the player; scene removal belongs to clear_resources.
+	inline				~profile_player_character	( ) { }
 
 			void		update						( const u32 current_time_in_ms );
 

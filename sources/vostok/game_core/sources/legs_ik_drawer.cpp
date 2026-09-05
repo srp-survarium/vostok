@@ -24,10 +24,10 @@ void legs_ik_drawer::draw_leg(
 	m_renderer.draw_origin( m_scene, leg, cross_half_size, false );
 	m_renderer.draw_origin( m_scene, foot, cross_half_size, false );
 
-	m_renderer.draw_line( m_scene, up_leg.c.xyz( ), knee.c.xyz( ), up_leg_color, false );
-	m_renderer.draw_line( m_scene, knee.c.xyz( ), leg.c.xyz( ), knee_color, false );
-	m_renderer.draw_line( m_scene, leg.c.xyz( ), foot.c.xyz( ), leg_color, false );
-	m_renderer.draw_line( m_scene, up_leg.c.xyz( ), foot.c.xyz( ), foot_color, false );
+	draw_line( up_leg.c.xyz( ), knee.c.xyz( ), up_leg_color, false );
+	draw_line( knee.c.xyz( ), leg.c.xyz( ), knee_color, false );
+	draw_line( leg.c.xyz( ), foot.c.xyz( ), leg_color, false );
+	draw_line( up_leg.c.xyz( ), foot.c.xyz( ), foot_color, false );
 }
 
 void legs_ik_drawer::draw_cross(

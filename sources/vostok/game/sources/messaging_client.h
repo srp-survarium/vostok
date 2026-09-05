@@ -8,6 +8,7 @@
 #include <vostok/network_core/client_error_codes_enum.h>
 #include <vostok/game_core/game_team_id.h>
 #include <vostok/game_core/scheduler.h>	// scheduler::identifier value member
+#include <vostok/strings_functions.h>
 
 #include "account_list_item.h"
 #include "messaging_enums.h"
@@ -35,7 +36,8 @@ public:
 
 			void									on_message_typed				( wchar_t const* input_text, messaging::message_channel_enum message_chanel );
 
-	inline	void									set_local_name					( pcstr arg_0 ) { /* no source */ }
+	// sushi@TODO: Copy-only model; recover the original copy policy and whether this setter also notified chat.
+	inline	void									set_local_name					( pcstr arg_0 ) { strings::copy( m_local_name, arg_0 ); }
 
 			void									assign_match_channel_order		(
 														const u32				match_id,
@@ -52,21 +54,19 @@ public:
 
 			void									find_players_by_name			( pcstr player_name );
 
-	inline	server_connection_info&					connection_info					( ) { /* no source */ return m_connection_info; }
+	inline	server_connection_info&					connection_info					( ) { return m_connection_info; }
 
-	inline	vectora< account_list_item > const&		get_friend_list					( ) { /* no source */ return m_friend_list; }
-	inline	vectora< account_list_item > const&		get_ignore_list					( ) { /* no source */ return m_ignore_list; }
-	inline	vectora< account_list_item > const&		get_found_players_list			( ) { /* no source */ return m_found_players_list; }
+	inline	vectora< account_list_item > const&		get_friend_list					( ) { return m_friend_list; }
+	inline	vectora< account_list_item > const&		get_ignore_list					( ) { return m_ignore_list; }
+	inline	vectora< account_list_item > const&		get_found_players_list			( ) { return m_found_players_list; }
 
-	inline	bool									connected						( ) const { /* no source */ return false; }
+	// sushi@TODO: Verify the named inline boundary; live send/query guards test completed messaging sign-in, not TCP state.
+	inline	bool									connected						( ) const { return m_connection_state == messaging::client_connected; }
 
-	inline	pcstr									local_user_name					( ) { /* no source */ return m_local_name; }
-	inline	game_team_id							local_player_team				( ) { /* no source */ return m_game_team_id; }
+	// sushi@TODO: The name-buffer address is verified; confirm its original getter boundary at the chat consumers.
+	inline	pcstr									local_user_name					( ) { return m_local_name; }
+	inline	game_team_id							local_player_team				( ) { return m_game_team_id; }
 
-	// claude@MATCH: private from here - the sign_in_on_packet_received/on_*/
-	// read_*/accept_message_from/process_incoming_text_message/
-	// update_channel_subscriptions/parse_receiver_channel symbols mangle AAE
-	// (the dump prints them public)
 private:
 			void									sign_in_on_packet_received		( network_core::packet_reader& reader );
 			void									on_packet_received				( network_core::packet_reader& reader );
