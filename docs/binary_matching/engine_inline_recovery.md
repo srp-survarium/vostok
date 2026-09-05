@@ -75,16 +75,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Game inline interface and world portal forwarding | 35 | Verify getters and resource return ownership; restore public spectator scene-switch seam, remove two invented friends, recover legacy debug toggle and clock/portal models; window-query bool/async contract remains individually open | [individual register](game/game_inline_recovery.md) |
 | World inline interface, tracer ownership and NPC predicates | 50 | Consolidate duplicate tracer onto generated-method owner; remove three invented friends and restore public camera/physics seams; recover legacy NPC/visibility and predicate models, verify getter/resource-copy operations, and keep selection/hit/debug/query-producer gaps explicit | [individual register](game/game_world_inline_recovery.md) |
 | Human NPC inline interface and AI collision wrapper | 54 | Verify 21 retained NPC inline bodies through installed vtables and independent frozen streams; restore filter/list/debug and all 17 legacy collision-wrapper models, preserve generated ownership and real cook friendship; original consumers/allocator transfer and callback boundaries remain explicit | [individual register](game/human_npc_inline_recovery.md) |
+| AI weapon objects and sound-player inline/ownership operations | 33 | Verify all 11 weapon leaves and public list-link access, remove invented friend, preserve real spatial traps; restore two legacy sound capture/replay models, verify trailing-array/generated cleanup and retain retail null decoder/empty callback and borrowed scene-handle hazard | [individual register](game/ai_weapon_sound_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the complete NPC/collision-wrapper inline audit: the registers account for 1025
+Checkpoint after the AI weapon/sound-player audit: the registers account for 1058
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 268 marked lines: game 147, game_core 52,
+questions. The literal scan is now 256 marked lines: game 135, game_core 52,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 211 active marked lines, **not** a remaining-function
+mirror lines leaves 199 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 The [raw-base access audit](pdb_base_access_rendering.md) closes the six-class

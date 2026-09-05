@@ -6,6 +6,10 @@
 #include <vostok/sound/sound_instance_proxy.h>
 #include <vostok/sound/world_user.h>
 #include <vostok/memory_writer.h>
+#include <vostok/memory_reader.h>
+#include <vostok/resources_fs.h>
+#include <vostok/fs/synchronous_device_interface.h>
+#include "game_memory.h"
 
 namespace survarium {
 
@@ -124,10 +128,6 @@ void ai_sound_player::clear_resources( )
 	m_active_sound			= 0;
 }
 
-// claude@NOTE: 3-stmt STRUCTURE MATCH (the braceless if merges save_to+LOG_ERROR into one
-// statement, matching the target). Byte residual: target LOG_ERROR bakes __LINE__ 407
-// (push 197h) vs our shorter file, and the LOG callback's boost::function is constructed
-// inline in target vs a call here (the repo-wide logging-not-gold-stubbed wall).
 void ai_sound_player::on_active_sound_serialized( memory::writer* sound_thread_writer, memory::writer* current_thread_writer )
 {
 	current_thread_writer->write		( sound_thread_writer->pointer(), sound_thread_writer->size() );
@@ -143,5 +143,57 @@ void ai_sound_player::on_active_sound_deserialized( memory::reader* reader, void
 	VOSTOK_UNREFERENCED_PARAMETERS		( reader, buf );
 }
 
+// sushi@TODO: Legacy capture model; recover original invocation and asynchronous writer lifetime.
+inline void ai_sound_player::serialize( )
+{
+	memory::writer* w = VOSTOK_NEW_IMPL( g_allocator, memory::writer )( g_allocator );
+	sounds_collection_type const* const begin = sounds( );
+	sounds_collection_type const* const end = begin + m_sounds_count;
+	for ( sounds_collection_type const* i = begin; i != end; ++i )
+	{
+		i->emitter->serialize( *w );
+	}
+
+	boost::function< void( memory::writer*, memory::writer* ) > fn =
+		boost::bind( &ai_sound_player::on_active_sound_serialized, this, _1, _2 );
+	m_active_sound->serialize( fn, w );
+}
+
+// sushi@TODO: Legacy replay model; verify original activation, reader/buffer ownership and disabled decoder.
+inline void ai_sound_player::deserialize( )
+{
+	using namespace fs_new;
+	synchronous_device_interface const& device = resources::get_synchronous_device( );
+	file_type* f;
+	if ( !device->open( &f, "Z:/test.sound_player", file_mode::open_existing, file_access::read ) )
+		LOG_ERROR( "unable to open file [Z:/test.sound_player]" );
+	else
+	{
+		device->seek( f, 0, seek_file_end );
+		u32 read_data_size = (u32)device->tell( f );
+		device->seek( f, 0, seek_file_begin );
+
+		pvoid buff = VOSTOK_MALLOC_IMPL( g_allocator, read_data_size, "deserialize ai_sound_player" );
+		device->read( f, buff, read_data_size );
+		device->close( f );
+		memory::reader* r = VOSTOK_NEW_IMPL( g_allocator, memory::reader )( (u8 const*)buff, read_data_size );
+
+		sounds_collection_type const* const begin = sounds( );
+		sounds_collection_type const* const end = begin + m_sounds_count;
+		for ( sounds_collection_type const* i = begin; i != end; ++i )
+		{
+			i->emitter->deserialize( *r );
+		}
+
+		sounds_collection_type const* type = find( ai::sound_collection_type_npc_pain );
+		R_ASSERT( type, "such a type is absent in sound collections" );
+		boost::function< void() > func =
+			boost::bind( &ai_sound_player::on_active_sound_deserialized, this, r, buff );
+		m_active_sound = sound::sound_instance_proxy::deserialize(
+			func, r, m_scene, m_user, *type->emitter.c_ptr( ),
+			boost::bind( &ai_sound_player::on_finish_playing, this )
+		);
+	}
+}
 
 } // namespace survarium
