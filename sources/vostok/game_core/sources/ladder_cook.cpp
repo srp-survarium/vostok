@@ -80,13 +80,6 @@ void ladder_cook::translate_query( resources::query_result_for_cook& parent )
 		&parent
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (33 stmts in order). Residuals are inline-vs-call walls plus a
-// 4-byte frame-slot cascade (base sub esp,4D0h vs target 4CCh shifts every [ebp-N]): target
-// INLINES survarium::landing_point::landing_point (its inline-defined ctor is emitted
-// out-of-line + CALLed in OUR base - 1 symbol, ZERO in target), and the new_ladder VOSTOK_NEW
-// tracks two destructible temporaries in the EH state var (or [ebp-260h],1 / or ...,2) where
-// our build tracks one ("missing or 2"). begin/size/c_ptr and operator[] also fold
-// inline-vs-call. Decided by global template/inline emission - not steerable from this caller.
 void ladder_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_value const& config )
 {
 	resources::query_result_for_cook* const	parent = data.get_parent_query();
@@ -101,7 +94,7 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	u32					resource_index		= 0;
 	float4x4 const&		ladder_transform	= math::create_rotation( config["rotation"] ) * math::create_translation( config["position"] );
 	math::plane const& 	ladder_plane		= math::create_plane_normalized( ladder_transform.k.xyz( ), ladder_transform.c.xyz( ) );
-	ladder*				new_ladder			= VOSTOK_NEW_IMPL( g_allocator, ladder )( data[resource_index++].get_managed_resource( ), ladder_plane ); // Missing `or 2` from target
+	ladder* const		new_ladder			= VOSTOK_NEW_IMPL( g_allocator, ladder )( data[resource_index++].get_managed_resource( ), ladder_plane );
 	new_ladder->load( config );
 	configs::binary_config_value const&	points			= config["landing_points"];
 	configs::binary_config_value const* it_point		= points.begin( );
@@ -111,17 +104,18 @@ void ladder_cook::on_animations_loaded( resources::queries_result& data, configs
 	{
 		configs::binary_config_value const& point = *it_point;
 		float4x4 const&	point_tansform = math::create_rotation( point["rotation"] ) * math::create_translation( point["position"] ) * ladder_transform;
-		landing_point* new_point = VOSTOK_NEW_IMPL( g_allocator, landing_point )( point_tansform.c.xyz( ), point_tansform.get_angles_xyz( ) ); // `landing_point` constructor inlined in target
+		landing_point* new_point = VOSTOK_NEW_IMPL( g_allocator, landing_point )( point_tansform.c.xyz( ), point_tansform.get_angles_xyz( ) );
 
-		pcstr start_animation = point["start_animation"];
+		pcstr const start_animation = point["start_animation"];
 		if ( !strings::equal( start_animation, "" ) )
 			new_point->set_start_animation( data[resource_index++].get_managed_resource( ) );
 
-		pcstr end_animation = point["end_animation"];
+		pcstr const end_animation = point["end_animation"];
 		if ( !strings::equal( end_animation, "" ) )
 			new_point->set_end_animation( data[resource_index++].get_managed_resource( ) );
 
-		if ( !new_point->get_start_animation( ).c_ptr( ) && !new_point->get_end_animation( ).c_ptr( ) )
+		// sushi@TODO: verify predicate expansion and resource-temporary lifetimes in the deferred build.
+		if ( !new_point->use_for_attachment( ) && !new_point->use_for_landing( ) )
 		{
 			LOG_WARNING( "landing point has no start/end animation, it's useless, hence won't be created" );
 			DEBUG_BREAK( );
