@@ -9,6 +9,7 @@
 #include <vostok/network/http_client.h>
 #include <vostok/network/login_client.h>
 #include <vostok/network_core/disconnect_event_types_enum.h>
+#include <vostok/network_core/packet_reader.h>
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/game_core/client_player_update.h>
 
@@ -39,8 +40,6 @@ struct hit_info;
 struct match_options;
 class player_input;
 
-// void* network_client::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x921e0]: <0x921d0>|0x000|      :'74'	{
-
 class network_client : public base_network_client {
 public:
 										network_client						( game& g, const bool is_spectator );
@@ -48,11 +47,9 @@ public:
 
 	virtual	void						load								( pcstr map_name, camera_director const& director ) override
 	{
-		// target emits an UNguarded eater call (push director-ref; push map_name;
-		// call <folded-empty>; add esp,8) - the VOSTOK_UNREFERENCED_PARAMETERS guard
-		// (if(identity(false))) would DCE-collapse the whole block to a bare ret. The
-		// direct helper call survives. &director keeps camera_director incomplete-OK.
+		// sushi@TODO: Verify original argument-use/assertion spelling; retail has no returning epilogue.
 		vostok::detail::unreferenced_parameter_helper( map_name, &director );
+		UNREACHABLE_CODE( );
 	}
 
 	virtual	void						connect_to_login					(
@@ -124,7 +121,8 @@ public:
 
 			game_team_id				get_player_team						( pcstr player_profile_name );
 
-	inline	bool						is_player_connected					( u32 arg_0 ) { /* no source */ return false; }
+	// sushi@TODO: Verify the original inline boundary; respawn reads this per-slot flag, not resource-pointer presence.
+	inline	bool						is_player_connected					( u32 arg_0 ) { return m_net_players[arg_0].is_connected; }
 
 	// claude@MATCH: private from here - the process_*/on_*/draw_stats/query_players/
 	// send_*/setup_camera_for_warmup/http_* symbols mangle AAE, and
@@ -133,6 +131,7 @@ public:
 private:
 	virtual	void						apply_use_physics_controller_for_current( ) override;
 
+	// sushi@TODO: Recover this handler's wire schema/binding; the live kill path uses process_player_kill.
 	inline	void						on_player_death						( network_core::packet_reader& arg_0 ) { /* no source */ }
 
 			void						draw_stats							( u32 current_time_in_ms );
@@ -145,8 +144,10 @@ private:
 
 			void						query_players						( );
 
+	// sushi@TODO: Recover the per-player payload and async continuation; the live path queries the complete profile set.
 	inline	void						create_new_player					( network_core::packet_reader& arg_0 ) { /* no source */ }
-	inline	void						destroy_player						( network_core::packet_reader& arg_0 ) { /* no source */ }
+	// sushi@TODO: Byte-ID deletion model; verify the original message binding and any separate connection-flag update.
+	inline	void						destroy_player						( network_core::packet_reader& arg_0 ) { destroy_player_impl( arg_0.r< u8 >( ) ); }
 			void						destroy_player_impl					( const u8 id );
 
 			void						process_player_action				( network_core::packet_reader& packet, const u32 time_in_ms );
@@ -201,6 +202,7 @@ private:
 
 			void						send_sync_request					( );
 
+	// sushi@TODO: Resolve the no-argument class variant; the retained procedure and dispatcher use a reader.
 			void						process_sync_response				( network_core::packet_reader& packet );
 
 			void						send_player_inputs					( );
