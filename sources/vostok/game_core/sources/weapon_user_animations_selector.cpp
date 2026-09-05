@@ -80,9 +80,9 @@ weapon_user_animations_selector::~weapon_user_animations_selector( )
 void weapon_user_animations_selector::tick( )
 {
 	if ( !m_user->input( ).is_trying_to_sprint( ) )
-		m_forced_not_to_sprint = false;
+		set_forced_not_to_sprint( false );
 	else if ( !( m_user->input( ).is_sprinting( ) && is_weapon_in_idle( ) ) && current_state( ).id( ) == type_sprint )
-		m_forced_not_to_sprint = true;
+		set_forced_not_to_sprint( true );
 
 	m_logic.tick( );
 }

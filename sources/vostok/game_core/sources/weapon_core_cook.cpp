@@ -111,7 +111,7 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 	animation::skeleton_ptr weapon_skeleton					= static_cast_resource_ptr< animation::skeleton_ptr >( data[resource_index++].get_unmanaged_resource( ) );
 	weapon_user_animations_container_ptr user_animations	= static_cast_resource_ptr< weapon_user_animations_container_ptr >( data[resource_index++].get_unmanaged_resource( ) );
 	object_to_cook->set_skeleton( weapon_skeleton );
-	object_to_cook->user_animations_selector( ).set_animations( user_animations );
+	object_to_cook->set_user_animations( user_animations );
 
 	query_weapon_states( data.get_parent_query( ), config_ptr, object_to_cook );
 }

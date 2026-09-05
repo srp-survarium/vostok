@@ -43,6 +43,7 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Scaleform reference mirrors | 71 marked declarations | All have existing SDK/generated-source owners; not active missing bodies. Includes 57 literal markers and 14 other distinct STUB declarations | [ownership register](scaleform/inline_reference_ownership.md) |
 | `player_input_handler` + `game_camera` inlines | 14 | Real input-priority fix (0 → 10); 10 stale markers; 3 existing setters; no missing bodies remain in these classes | [individual register](game/camera_input_inline_recovery.md) |
 | `weapon_ammunition` + `empty_hands` inlines | 31 | Real empty-hands deactivation fix; remove two unsupported ammunition bool results; seven stale literal markers; explicit unreachable/boundary questions | [individual register](game_core/ammunition_empty_hands_inline_recovery.md) |
+| `weapon_core` + animation-selector inlines | 65 | Replace unmarked zero ammo total; restore/propagate getter and predicate seams; remove invented derived-class friend; classify all 19 literal markers; retain two getter-model and caller-boundary questions | [individual register](game_core/weapon_core_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up

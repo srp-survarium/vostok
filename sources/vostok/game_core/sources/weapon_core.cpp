@@ -106,7 +106,7 @@ void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 
 u16 weapon_core::fire_queue_length( ) const
 {
-	return m_weapon_fire_queue_types[m_fire_queue_type];
+	return m_weapon_fire_queue_types[get_fire_queue_type( )];
 }
 
 profile_slot_enum weapon_core::ammo_slot( )
@@ -304,6 +304,12 @@ static float		epsilon			= math::epsilon_7;
 static float const	clear_value		= 1.0f;
 static float const	offset			= c_anim_center;
 
+// sushi@TODO: validate the restored inline-helper boundaries in the deferred caller build.
+inline float weapon_core::backward_recoil_value( ) const
+{
+	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon );
+}
+
 float weapon_core::horizontal_recoil_value( ) const
 {
 	float const total_horizontal_coeff	= is_aimed( ) ? m_breath_vibration_calculator.get_horizontal_value( ) + m_recoil_calculator.get_horizontal_coeff( ) : m_recoil_calculator.get_horizontal_coeff( );
@@ -331,7 +337,7 @@ animation::mixing::expression weapon_core::selected_animations( mutable_buffer& 
 		weapon_animation_parameters(
 			s_recoil_enable_value && s_recoil_horizontal_enable_value	? horizontal_recoil_value( )	: offset,
 			s_recoil_enable_value && s_recoil_vertical_enable_value		? vertical_recoil_value( )		: offset,
-			s_recoil_enable_value && s_recoil_back_enable_value			? math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) : offset,
+			s_recoil_enable_value && s_recoil_back_enable_value			? backward_recoil_value( ) : offset,
 			get_body_part_mask_for_user( ),
 			is_aimed( ),
 			m_is_firing
@@ -372,7 +378,7 @@ void weapon_core::tick( )
 
 	user_animations_selector( ).tick( );
 
-	if ( m_logic->current_state( ) && is_idle( ) && !( input.actions_mask & 0x20 ) )
+	if ( is_active( ) && is_idle( ) && !( input.actions_mask & 0x20 ) )
 	{
 		if ( input.actions_mask & 0x400 )
 			set_next_fire_queue_type( );
@@ -995,7 +1001,7 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 	if ( m_is_there_chamber_a_round_state )
 		packet.append( m_is_round_chambered );
 
-	if ( m_logic->current_state( ) )
+	if ( is_active( ) )
 	{
 		packet.append( m_is_shown );
 		m_hand_ik_processor.serialize( packet, client_offset );
@@ -1032,7 +1038,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	m_old_actions_mask	= reader.r< u32 >( );
 	m_ammo_in_magazine	= reader.r< u16 >( );
 	m_bullets_in_queue	= reader.r< u16 >( );
-	m_fire_queue_type	= reader.r< bool >( );
+	set_fire_queue_type( reader.r< bool >( ) );
 	m_ammo_slot			= (profile_slot_enum)reader.r< bool >( );
 
 	if ( m_ammo_slot != invalid_slot )
@@ -1043,7 +1049,7 @@ void weapon_core::deserialize( network_core::packet_reader& reader )
 	if ( m_is_there_chamber_a_round_state )
 		m_is_round_chambered	= reader.r< bool >( );
 
-	if ( m_logic->current_state( ) )
+	if ( is_active( ) )
 	{
 		m_is_shown	= reader.r< bool >( );
 		m_hand_ik_processor.deserialize( reader );
@@ -1111,7 +1117,7 @@ float weapon_core::computed_backward_recoil_time(
 	player_input const& input = m_user->input( );
 	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
 
-	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) * animation_length;
+	return backward_recoil_value( ) * animation_length;
 }
 
 float weapon_core::computed_horizontal_recoil_time(
@@ -1226,7 +1232,7 @@ bool weapon_core::must_chamber_a_round_aimed_and_animation_ended_predicate( ) co
 
 bool weapon_core::is_ready_to_shoot( ) const
 {
-	return ( m_is_there_chamber_a_round_state ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && m_ready_for_fire;
+	return ( has_chamber_a_round_state( ) ? m_is_round_chambered : m_ammo_in_magazine > 0 ) && m_bullets_in_queue != 0 && ready_to_fire( );
 }
 
 bool weapon_core::is_trying_to_aim( ) const
@@ -1253,7 +1259,7 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 // call = an inc/dec copy); the && chain short-circuits to a common false sink.
 bool weapon_core::ready_to_reload( ) const
 {
-	u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false );
+	u16 const current_ammo = ammo_in_weapon( );
 	return current_ammo != maximum_ammo_in_weapon( )
 		&& ammunition( )
 		&& ammunition( )->amount( ) != 0

@@ -95,7 +95,7 @@ public:
 	inline	void			set_player_logic_initial_state	( player_logic_base_state* value ) { m_player_logic_initial_state = value; }
 
 private:
-	inline	void			set_forced_not_to_sprint		( const bool arg_0 ) { /* no source */ }
+	inline	void			set_forced_not_to_sprint		( const bool value ) { m_forced_not_to_sprint = value; }
 
 	// claude@MATCH: target mangling `ABE` -> private const.
 			player_logic_base_state&		current_state	( ) const;
