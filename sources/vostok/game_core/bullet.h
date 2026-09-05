@@ -4,6 +4,7 @@
 #define BULLET_H_INCLUDED
 
 #include <vostok/game_core/weapon_ammunition.h>
+#include <vostok/game_core/hit_initiator.h>
 
 namespace vostok {
 namespace physics {
@@ -52,6 +53,7 @@ public:
 			void						tick						( u32 current_time_in_ms );
 			bool						is_finish_flying			( ) const;
 
+	// sushi@TODO: Recover consumers for the start-position/current-position/current-velocity/initiator getters; keep these existing field models separate from verified expansions.
 	inline	float3 const&				get_start_position			( ) const { return m_start_position;	}
 	inline	float3 const&				get_start_velocity			( ) const { return m_start_velocity;	}
 	inline	float3 const&				get_position				( ) const { return m_position;			}
