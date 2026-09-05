@@ -7,7 +7,11 @@
 #ifndef WAV_UTILS_H_INCLUDED
 #define WAV_UTILS_H_INCLUDED
 
+#include <vostok/sound/api.h>
 #include <vostok/fs/synchronous_device_interface.h>
+#ifndef MASTER_GOLD
+#	include <vostok/configs_lua_config.h>
+#endif
 
 namespace vostok {
 namespace sound {

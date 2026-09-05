@@ -16,7 +16,7 @@ namespace navigation {
 class path_finder_modified_funnel : boost::noncopyable {
 public:
 	typedef debug::vector< u32 >		channel_type;
-	typedef debug::vector< float3 >		path_type;
+	typedef navigation::path_type		path_type;
 
 public:
 					path_finder_modified_funnel ( 

@@ -693,18 +693,18 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 			i->weight_driving_animation()->n_ary_animation() :
 			0;
 
-		if ( driving_animation_tester && (driving_animation_tester->time_synchronization_group_id() != -1) ) { // sushi@TODO
+		if ( driving_animation_tester && (driving_animation_tester->weight_synchronization_group_id() != -1) ) {
 			if ( !driving_animation )
 				R_ASSERT		(
-					driving_animation_tester->synchronization_group_id() != i->synchronization_group_id(),
+					driving_animation_tester->weight_synchronization_group_id() != i->weight_synchronization_group_id(),
 					"several driving animations for synchronization group with id %d has been found",
-					i->synchronization_group_id()
+					i->weight_synchronization_group_id()
 				);
 			else if ( driving_animation_tester != driving_animation )
 				R_ASSERT_CMP	(
-					driving_animation_tester->synchronization_group_id(), !=, driving_animation->synchronization_group_id(),
+					driving_animation_tester->weight_synchronization_group_id(), !=, driving_animation->weight_synchronization_group_id(),
 					"several driving animations for synchronization group with id %d has been found",
-					i->synchronization_group_id()
+					i->weight_synchronization_group_id()
 				);
 		}
 
@@ -844,7 +844,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 
 #ifndef MASTER_GOLD
 				if ( !animation->additivity_priority() ) {
-					n_ary_tree_weight_calculator	weight_calculator( 0 );
+					n_ary_tree_weight_calculator	weight_calculator( 0, animation );
 					(*weight).accept				( weight_calculator );
 					float const weight_value		= weight_calculator.weight( );
 					animation_weight				*= weight_value;

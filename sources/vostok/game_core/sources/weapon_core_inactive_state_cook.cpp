@@ -21,7 +21,7 @@ weapon_core_inactive_state_cook::~weapon_core_inactive_state_cook( )
 
 mutable_buffer weapon_core_inactive_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	ASSERT_T_U( in_query, raw_file_data, file_exist );
+	VOSTOK_UNREFERENCED_PARAMETERS( &in_query, &raw_file_data, file_exist );
 	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( weapon_core_inactive_state ), "weapon_core_inactive_state" ), sizeof( weapon_core_inactive_state ) );
 }
 

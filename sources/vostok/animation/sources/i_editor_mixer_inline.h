@@ -15,7 +15,7 @@ using vostok::animation::editor_animations_event;
 
 inline void i_editor_mixer::call_user_callback(editor_animations_event::event_type t, u32 time, n_ary_tree_animation_node* n, u32 ad)
 {
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 	if(callback)
 	{
 		editor_animations_event e(t, time, n->user_data, ad);
@@ -30,7 +30,7 @@ inline void i_editor_mixer::call_user_callback(editor_animations_event::event_ty
 	}
 #else // #ifndef MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETERS(t, time, n, ad);
-#endif // #ifndef MASTER_GOLD
+#endif // #if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 };
 
 #endif // #ifndef I_EDITOR_MIXER_INLINE_H_INCLUDED

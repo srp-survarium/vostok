@@ -14,6 +14,18 @@ namespace resources {
 static out_of_memory_callback	s_out_of_memory_callback;
 static resource_freed_callback	s_resource_freed_callback;
 
+#if !defined(MASTER_GOLD) && defined(VOSTOK_STATIC_LIBRARIES)
+static cook_base*				s_pending_cooks[last_resource_class * 2];
+static u32					s_pending_cook_count;
+
+static void register_pending_cooks( )
+{
+	for ( u32 i = 0; i < s_pending_cook_count; ++i )
+		g_resources_manager->register_cook( s_pending_cooks[i] );
+	s_pending_cook_count = 0;
+}
+#endif
+
 query_resource_params::query_resource_params	(request const 				requests[],
 												 creation_request const 	requests_create[],
 												 u32						count,
@@ -59,6 +71,10 @@ void   initialize (fs_new::asynchronous_device_interface & hdd,
 				   enable_fs_watcher_bool				   enable_fs_watcher)
 {
 	VOSTOK_CONSTRUCT_REFERENCE				(g_resources_manager, resources_manager) (hdd, dvd, enable_fs_watcher);
+
+#if !defined(MASTER_GOLD) && defined(VOSTOK_STATIC_LIBRARIES)
+	register_pending_cooks					( );
+#endif
 
 	threading::yield						(10);
 }
@@ -323,6 +339,12 @@ void   cooker_thread_yield				(u32 thread_sleep_period)
 
 void   register_cook (cook_base * const cook)
 {
+#if !defined(MASTER_GOLD) && defined(VOSTOK_STATIC_LIBRARIES)
+	if ( !g_resources_manager.initialized() ) {
+		s_pending_cooks[s_pending_cook_count++] = cook;
+		return;
+	}
+#endif
 	g_resources_manager->register_cook(cook);
 }
 

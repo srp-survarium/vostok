@@ -34,7 +34,7 @@ private:
 													const bool							arg_1,
 													const weapon_user_state_enum			arg_2,
 													animation::mixing::animation_lexeme&	arg_3
-												) const override { VOSTOK_UNREFERENCED_PARAMETERS( arg_0, arg_1, arg_2, arg_3 ); VOSTOK_UNREACHABLE_CODE( ); }
+											) const override { VOSTOK_UNREFERENCED_PARAMETERS( arg_0, arg_1, arg_2, arg_3 ); VOSTOK_UNREACHABLE_CODE( ); return animation::mixing::expression( ); }
 }; // class weapon_core_inactive_state
 
 STATIC_SIZE_ASSERT(weapon_core_inactive_state, 0x138);

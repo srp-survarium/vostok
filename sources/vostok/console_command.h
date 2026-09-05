@@ -122,7 +122,7 @@ protected:
 };// cc_string
 
 template<class T>
-class VOSTOK_CORE_API cc_value : public console_command
+class cc_value : public console_command
 {
 	typedef console_command		super;
 public:

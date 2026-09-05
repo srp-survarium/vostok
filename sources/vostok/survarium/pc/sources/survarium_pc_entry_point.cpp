@@ -9,7 +9,7 @@
 
 #pragma comment( lib, "delayimp.lib" )
 
-namespace vostok { namespace debug { void set_support_email( pcstr support_email ); } }
+namespace vostok { namespace debug { VOSTOK_DEBUG_API void set_support_email( pcstr support_email ); } }
 
 static vostok::uninitialized_reference<survarium::application>	s_application;
 

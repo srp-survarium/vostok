@@ -15,8 +15,10 @@
 
 #ifndef MASTER_GOLD
 #	include "animation_world.h"
+#if !defined(VOSTOK_GAME_BUILD)
 #	include "editor_animation.h"
 #	include "editor_mixer.h"
+#endif // #if !defined(VOSTOK_GAME_BUILD)
 #endif // #ifndef MASTER_GOLD
 
 VOSTOK_DECLARE_LINKAGE_ID(animation_entry_point)
@@ -100,7 +102,7 @@ vostok::math::float4x4 vostok::animation::calculated_head_matrix( vostok::math::
 	return result;
 }
 
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 vostok::animation::i_editor_animation* vostok::animation::create_editor_animation( allocator_type& allocator, skeleton_animation_ptr const& anim )
 {
 	return VOSTOK_NEW_IMPL( allocator, editor_animation )( anim );
@@ -158,4 +160,4 @@ void vostok::animation::destroy_binary_tree_writer( allocator_type& allocator, v
 	wr = 0;
 }
 
-#endif // #ifndef MASTER_GOLD
+#endif // #if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)

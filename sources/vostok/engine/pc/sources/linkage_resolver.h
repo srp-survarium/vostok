@@ -32,7 +32,9 @@ VOSTOK_INCLUDE_TO_LINKAGE(animation_player_linkage_id)
 VOSTOK_INCLUDE_TO_LINKAGE(animation_anim_track)
 VOSTOK_INCLUDE_TO_LINKAGE(animation_anim_track_io)
 
+#ifndef VOSTOK_GAME_BUILD
 VOSTOK_INCLUDE_TO_LINKAGE(maya_animation_entry_point)
+#endif
 
 VOSTOK_INCLUDE_TO_LINKAGE(input_entry_point)
 

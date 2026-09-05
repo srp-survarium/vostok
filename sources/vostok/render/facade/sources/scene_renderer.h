@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_FACADE_SOURCES_SCENE_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SOURCES_SCENE_RENDERER_H_INCLUDED
+#include <vostok/render/api.h>
 #include <vostok/detail_noncopyable.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/math_frustum.h>
@@ -69,7 +70,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > tracer_model_instance_ptr;
 
-class scene_renderer : private core::noncopyable {
+class VOSTOK_RENDER_API scene_renderer : private core::noncopyable {
 private:
 	friend class game::renderer;
 

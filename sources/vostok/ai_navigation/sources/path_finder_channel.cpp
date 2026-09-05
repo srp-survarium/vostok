@@ -338,7 +338,7 @@ public:
 	{
 		typedef vertex_allocator_type::impl< vertex_type >	super;
 		inline vertex_allocator_impl_type	( u32 const max_vertex_count ) :
-			super							( max_vertex_count )
+			super							( ::vostok::ai::navigation::g_allocator, max_vertex_count )
 		{
 		}
 	};
@@ -511,7 +511,7 @@ public:
 			channel_type& channel = m_path_constructor.path();
 			channel[0] = m_start_vertex_id;
 
-			path_type path;
+			path_type path( ::vostok::ai::navigation::g_allocator );
 			path_finder_modified_funnel			( m_graph, channel, m_start_position, m_target_position, m_agent_radius, path );
 			R_ASSERT					( !path.empty() );
 			float distance				= 0;
@@ -558,7 +558,7 @@ public:
 			channel_type& channel = m_path_constructor.path();
 			channel[0] = m_start_vertex_id;
 
-			path_type path;
+			path_type path( ::vostok::ai::navigation::g_allocator );
 			path_finder_modified_funnel			( m_graph, channel, m_start_position, m_target_position, m_agent_radius, path );
 			R_ASSERT					( !path.empty() );
 			float distance				= 0;
