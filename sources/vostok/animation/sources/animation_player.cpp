@@ -31,7 +31,7 @@ VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
 using namespace vostok;
 using namespace vostok::animation;
 
-struct transform_getter : public boost::noncopyable
+struct transform_getter : private boost::noncopyable
 {
 public:
 	transform_getter(
@@ -59,7 +59,7 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 }
 class n_ary_tree_time_inverter :
 	public mixing::n_ary_tree_visitor,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	explicit		n_ary_tree_time_inverter	( const u32 current_time_in_ms ) :

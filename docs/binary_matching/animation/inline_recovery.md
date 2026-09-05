@@ -41,12 +41,25 @@ Thirty declarations remain `STATE[UNMATCHABLE]`:
 None has a target or base rich-index procedure. No current client source calls
 the public convenience methods or instantiates either editor helper. The large
 `n_ary_tree` consumers contain related bone, weight, interval, and serialization
-logic, but the client provides no boundary that assigns an exact subset to one
-of these declarations. For example, `update_animation_state` already has a
-13-statement target/base partition with only a two-byte size residual; that
-does not prove how its logic was divided between the two declared inline
-helpers. Those bodies stay unfilled until an original source or another target
-provides the boundary.
+logic, but their target partitions veto moving that logic into the declarations:
+
+- `update_animation_state` has the same 13-statement partition on both sides,
+  with only a two-byte statement-size residual. Its weight calculation is not a
+  collapsed `update_weight` or `update_animation_interval_time` call site;
+- `compute_bones_matrices` and `convert_to_object_matrices` each have one target
+  statement, and `compute_bones_local_matrices` has two. All delegate to
+  `bone_matrices_computer`; they do not expand the legacy `n_ary_tree` bone
+  helpers;
+- `tick_to_nearest_user_handled_callback` is a five-statement structure match
+  around `nearest_event_time_in_ms` and `tick`, rather than an expansion of
+  `tick_to_nearest_event`;
+- `serialize_state` retains separate target statements for the cookie, tree
+  size, buffer setup, placement branch, event adjustment, and inversion. It is
+  not one collapsed `serialize_state_impl` call site.
+
+The four-argument `accumulate_object_movement` overload has no call site; live
+animation update code calls the retained three-argument procedure. Those bodies
+stay unfilled until original source or another target provides a boundary.
 
 `bone_matrices_computer::overweighting_detected` has no client consumer, and the
 public 2011 X-Ray source predates both the accessor and its backing field. A
@@ -65,6 +78,10 @@ and was removed from the inventory.
 - `animation_states_dumper` privately inherits `core::noncopyable`; its explicit
   default constructor and `m_current_time_in_ms` are protected.
 - all `n_ary_tree_null_weight_detector::visit` overrides are private.
+- `animation_callback`, `animation_callback_params`, `transform_getter`,
+  `n_ary_tree_time_inverter`, and
+  `binary_tree_weight_driving_animation_getter` inherit
+  `boost::noncopyable` privately, as recorded by retail.
 - `animation_player::serialize_empty_state`, `destroy_state`, and
   `destroy_subscriptions` now occupy their retail declaration positions, and
   its anonymous enum includes `estimated_channel_id_length = 12`.

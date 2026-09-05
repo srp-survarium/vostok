@@ -60,8 +60,17 @@ private:
 			void							player_step						( float dt );
 			void							pre_step						( float dt );
 
-	// STATE[UNMATCHABLE]: the client emits no call or inline expansion of this helper.
-	inline	void							prevent_max_slope_moving_prestep( const float dt ) { /* no source */ }
+	// STATE[INLINED]: expanded by player_step.
+	inline	void							prevent_max_slope_moving_prestep( const float dt )
+	{
+		if ( m_jumping )
+			m_vertical_velocity = m_walk_vector.y( ) / dt;
+		else
+		{
+			float fall_speed = m_vertical_velocity - m_gravity * dt;
+			m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
+		}
+	}
 
 			float							recover_from_penetration		( );
 

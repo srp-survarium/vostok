@@ -414,7 +414,7 @@ void n_ary_tree_converter::simplify_weights		( )
 
 class binary_tree_weight_driving_animation_getter :
 	public vostok::animation::mixing::binary_tree_visitor,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	explicit binary_tree_weight_driving_animation_getter( weight_driving_animations& animations ) :

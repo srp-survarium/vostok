@@ -11,6 +11,12 @@ no caller proves only that the client does not emit the method.
 
 - `bullet_character_controller::debugDraw` is a real empty virtual override. Its
   `ret 4` body is present through the vtable and ICF-folded in both binaries.
+- `bullet_character_controller::prevent_max_slope_moving_prestep` is expanded
+  by `player_step`. Retail attributes the complete 0x5b-byte vertical-velocity
+  update to one statement at the call site, while the open-coded reconstruction
+  split the same byte-identical region across five statements. The branch now
+  lives in the declared helper and `player_step` calls it, preserving both the
+  state update and the original source seam.
 
 The un-emitted accessors are not filled merely from their names. In particular,
 `bullet_character_controller::{get_gravity,is_inserted}` and
@@ -42,8 +48,10 @@ These are source-structure results, independent of fuzzy byte percentage.
 
 ## Not observable in the client
 
-The following declarations have no procedure, caller, or recoverable expansion
-in `survarium.exe` and remain `STATE[UNMATCHABLE]`:
+Twenty-four no-source declarations remain in this module: twenty-one inline
+bodies and three out-of-line declarations (`can_prone` and the two ghost-object
+methods). They have no procedure, caller, or recoverable expansion in
+`survarium.exe` and remain `STATE[UNMATCHABLE]`:
 
 - `bt_static_rigid_body::{is_active,set_ccd_motion_thresholds,
   get_collision_shape,predict_integrated_transform}` and
@@ -54,10 +62,24 @@ in `survarium.exe` and remain `STATE[UNMATCHABLE]`:
 - the five `bt_soft_body_rope` accessors;
 - `bullet_physics_world::{create_soft_body_rope,destroy_soft_body_rope}`;
 - `collision_shape_cook::load_collision_resources`;
-- `bullet_character_controller::{prevent_max_slope_moving_prestep,
-  prevent_step_bouncing,can_overstep_obstacle,
+- `bullet_character_controller::{prevent_step_bouncing,can_overstep_obstacle,
   has_support_to_overstep_obstacle,updata_slide_vector,get_contacts_count,
   get_gravity,is_inserted}`.
+
+The controller verdict is caller-based. `pre_step` and
+`step_forward_and_strafe` are already `STRUCTURE MATCH`; `step_down` exposes
+each retained operation as its own target statement. The unused helpers do not
+account for any collapsed target region in those callers. `player_step` was the
+exception, and its single collapsed vertical-velocity region is now recovered
+through `prevent_max_slope_moving_prestep`.
+
+The remaining families were also checked at their actual ownership boundary.
+The five-argument foot-transform overload, `can_prone`, both ghost-object
+methods, and every static-rigid-body helper have no source consumer. The rope
+accessors and world create/destroy helpers are consumed only by
+`editor/world/sources/object_wire_set.cpp`, which is absent from the shipped
+client. The live six-argument foot-transform call resolves to the retained
+out-of-line overload, not the five-argument placeholder.
 
 For `collision_shape_cook::load_collision_resources`, the retail line program
 assigns every emitted statement in `translate_query`'s five-request setup to
