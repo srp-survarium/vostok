@@ -3,6 +3,8 @@
 #ifndef WEAPON_STATE_H_INCLUDED
 #define WEAPON_STATE_H_INCLUDED
 
+#include <vostok/network_core/udp_match_packet.h>
+
 namespace vostok {
 namespace network_core {
 	class packet_reader;
@@ -14,12 +16,18 @@ namespace survarium {
 
 struct weapon_state {
 			explicit			weapon_state( );
-							weapon_state( weapon_state const& other );
+	// sushi@TODO: retain implicit copying; the old undefined copy declaration has no target record.
 
 			weapon_state&		operator=	( weapon_state const& other );
 
 			void				deserialize	( network_core::packet_reader& packet );
-	inline	void				serialize	( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
+	// sushi@TODO: inverse of the retained reader; verify the original sending consumer.
+	inline	void				serialize	( network_core::udp_match_packet& packet ) const
+	{
+		packet.append	( slot_id );
+		packet.append	( ammo_slot_id );
+		packet.append	( state );
+	}
 
 
 public:

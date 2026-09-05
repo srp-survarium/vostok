@@ -3,6 +3,8 @@
 #ifndef HIT_INFO_H_INCLUDED
 #define HIT_INFO_H_INCLUDED
 
+#include <vostok/network_core/udp_match_packet.h>
+
 namespace vostok {
 namespace network_core {
 	class packet_reader;
@@ -28,7 +30,16 @@ struct hit_info {
 					);
 
 			void	deserialize	( network_core::packet_reader& packet );
-			void	serialize	( network_core::udp_match_packet& packet ) const { /* no source */ }
+	// sushi@TODO: inverse of the retained reader; verify the original sending consumer.
+			void	serialize	( network_core::udp_match_packet& packet ) const
+	{
+		packet.append	( hit_initiator );
+		packet.append	( being_hit );
+		packet.append	( body_part_name.c_str( ) );
+		packet.append	( damage_type.c_str( ) );
+		packet.append	( amount );
+		packet.append	( armor_piercing );
+	}
 
 public:
 	/* 0x0000 */	fixed_string<16>	body_part_name;
