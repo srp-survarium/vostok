@@ -165,15 +165,7 @@ void network_client::on_disconnected_from_lobby( )
 	if ( menu.m_is_connected_to_lobby ) { menu.m_is_connected_to_lobby = false; menu.show_disconnected_message( true ); }
 }
 
-// claude@NOTE: structure recovered + faithful (reads dict_id u16 / id u32 /
-// condition_or_stack u32, amount_in_inventory=0 folds into the find-begin stmt as
-// in the target). Banked residuals (network_core/STL inline cap, not source shape):
-//  - packet_reader::r<T>() emits a call (+ the r() ASSERT's log_format ctor) where
-//    the target whole-program-inlines the byte/word reads to direct mov.
-//  - std::find emits a call to stlp __find<inventory_item_instance*,u32>; the target
-//    inlines that loop in place (its 4 stmts 296/297/299/301 vs our 1 call), so our
-//    statement count reads 12 vs 14 over the SAME source. The comparison is the free
-//    inventory_item_instance/u32 overload; retail has no member operator record.
+// sushi@TODO: Resolve the original search/loop partition; retail's explicit begin/end walk is not proven to be std::find.
 void network_client::process_shop_action( network_core::packet_reader& packet )
 {
 	if ( packet.r< u8 >( ) )
@@ -193,7 +185,7 @@ void network_client::process_shop_action( network_core::packet_reader& packet )
 	if ( found != lobby_client( ).inventory_item_instances( ).end( ) )
 		found->condition_or_stack	+= new_item.condition_or_stack;
 	else
-		lobby_client( ).inventory_item_instances( ).push_back( new_item );
+		lobby_client( ).add_inventory_item( new_item );
 
 	m_game.lobby_menu( ).fill_inventory_contents( );
 	lobby_client( ).query_client_status	( ( lobby::query_info_types )7 );

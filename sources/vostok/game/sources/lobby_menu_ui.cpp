@@ -811,6 +811,7 @@ void lobby_menu::fill_inventory_contents( )
 	m_lobby_menu_ui->movie->Invoke		( "root.inventory_list.setupInventoryData", NULL, &inventory_array, 1 );
 }
 
+// sushi@TODO: Resolve the element-reference/construction boundary; retail captures the element before CreateObject.
 void lobby_menu::on_items_compatibility_arrived( )
 {
 	class lobby_client& client			= lobby_client( );
@@ -818,10 +819,8 @@ void lobby_menu::on_items_compatibility_arrived( )
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	u8 const item_compatibilities_count	= client.item_compatibilities_count( );
 	flash_value items_compatibility_item_property;
-	u8 i = 0;
-	for ( ; i < item_compatibilities_count; ++i )
+	for ( u8 i = 0; i < client.item_compatibilities_count( ); ++i )
 	{
 		flash_value items_compatibility_item;
 		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
@@ -838,6 +837,7 @@ void lobby_menu::on_items_compatibility_arrived( )
 	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.profileItems.setItemsCompatibility", NULL, &slot_restrictions_array, 1 );
 }
 
+// sushi@TODO: Resolve the element-reference/construction boundary; retail captures the element before CreateObject.
 void lobby_menu::on_slot_restrictions_arrived( )
 {
 	class lobby_client& client			= lobby_client( );
@@ -845,10 +845,8 @@ void lobby_menu::on_slot_restrictions_arrived( )
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	u8 const slot_restrictions_count	= client.slot_restrictions_count( );
 	flash_value slot_restriction_item_property;
-	u8 i = 0;
-	for ( ; i < slot_restrictions_count; ++i )
+	for ( u8 i = 0; i < client.slot_restrictions_count( ); ++i )
 	{
 		flash_value slot_restriction_item;
 		m_lobby_menu_ui->movie->CreateObject( &slot_restriction_item );
