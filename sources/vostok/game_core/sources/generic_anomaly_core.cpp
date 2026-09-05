@@ -219,7 +219,7 @@ void zone_group::recharge( )
 
 void zone_group::on_zone_act( damage_zone_core* zone, hit_receiver* receiver )
 {
-	core( )->on_zone_act( zone, receiver );
+	owner->on_zone_act( zone, receiver );
 
 	for ( u32 z = 0 ; z < zones.size( ) ; ++z )
 	{
