@@ -8,6 +8,7 @@
 #include <vostok/memory_single_size_buffer_allocator.h>
 
 #include <vostok/game_core/bullet.h>
+#include <vostok/game_core/bullet_manager_engine.h>
 #include <vostok/game_core/weapon_ammunition.h>
 
 namespace vostok {
@@ -85,7 +86,14 @@ public:
 
 			bool							is_inside_collision_db		( float3 const& position ) const;
 
-	inline	void							clear_decals				( ) { /* no source */ }
+	inline	void							clear_decals				( )
+	{
+		// sushi@TODO: Verify the full-ring removal model, engine guard and whether clearing resets the next decal ID.
+		if ( !m_engine )
+			return;
+		for ( u32 i = 0; i < m_max_bullets_decals_count; ++i )
+			m_engine->remove_decal( i );
+	}
 
 	inline	game_material_manager const&	get_material_manager		( ) const { return *m_game_material_manager; }
 	inline	physics::world&					get_physics_world			( ) const { return *m_physics_world; }
@@ -123,8 +131,9 @@ private:
 												float3 const&								direction,
 												float3 const&								normal
 											);
-	inline	bool							attach_tracer_impl			( bullet* bullet ) { /* no source */ }
-	inline	bool							detach_tracer_impl			( bullet* bullet ) { /* no source */ }
+	// sushi@TODO: Verify the original tracer-forwarder boundaries; retained emit/free callers establish the dispatch and own its guards.
+	inline	bool							attach_tracer_impl			( bullet* bullet ) { return m_engine->attach_tracer( bullet ); }
+	inline	bool							detach_tracer_impl			( bullet* bullet ) { return m_engine->detach_tracer( bullet ); }
 			void							update_tracer_impl			(
 												u16	const			tracer_idx,
 												float3 const&		position,
@@ -150,7 +159,7 @@ private:
 											);
 
 			void							destroy_bullet				( buffer_vector<bullet*>::iterator const& destroying_bullet_iterator );
-	inline	void							destroy_redundant_bullets	( ) { /* no source */ }
+	inline	void							destroy_redundant_bullets	( );
 			void							destroy_one_bullet			( );
 
 private:
@@ -167,6 +176,7 @@ private:
 		&bullet_manager::bullet_functor::next >				bullet_functors_type;
 
 private:
+	// sushi@TODO: Resolve public boost base in the carcass versus private source; frozen target/base records compare identical.
 	class bullet_functor_mt_allocator : private boost::noncopyable {
 	public:
 		typedef bullet_manager::bullet_functor bullet_functor;
@@ -175,19 +185,21 @@ private:
 		{
 			ASSERT( UNKNOWN_EXPRESSION );
 			for ( bullet_functor *i = static_cast<bullet_functor*>( buffer ), *e = i + buffer_size / sizeof( bullet_functor ) ; i != e ; ++i )
-				free_impl( i );
+				m_bullet_functors.push( i );
 		}
-		// claude@NOTE: target retains the 64-bit interlocked helper call; base expands the intrinsic.
+		// sushi@TODO: Find the original buffer-getter consumer; retain the existing non-owning pointer contract.
 		inline	void*			buffer						( ) const { return m_buffer; }
 
 		inline	bullet_functor*	allocate					( ) {
-			return static_cast<bullet_functor*>( malloc_impl( 0 ) );
+			// sushi@TODO: Verify the original allocation assertion and inline boundary; malloc_impl retains this post-pop assertion use.
+			bullet_functor* result = m_bullet_functors.try_pop( );
+			ASSERT( UNKNOWN_EXPRESSION_T( result ) );
+			return result;
 		}
 
-		// claude@NOTE: target emits this through the real delete helper; base inlines it.
 				void			deallocate					( bullet_functor*& functor )
 		{
-			free_impl( static_cast<void*>( functor ) );
+			m_bullet_functors.push( functor );
 			functor = NULL;
 		}
 
@@ -197,16 +209,16 @@ private:
 			std::swap( m_buffer, other.m_buffer );
 		}
 
-		// claude@NOTE: target emits this through the real new helper; base inlines it.
 				void*			malloc_impl					( u32 size )
 		{
 			ASSERT_CMP_U			( size, <=, sizeof( bullet_functor ) );
-			return					m_bullet_functors.try_pop( );
+			return					allocate( );
 		}
 
 		inline	void			free_impl					( void* pointer )
 		{
-			m_bullet_functors.push( static_cast<bullet_functor*>( pointer ) );
+			bullet_functor* functor = static_cast<bullet_functor*>( pointer );
+			deallocate( functor );
 		}
 
 	private:
