@@ -644,25 +644,32 @@ void animation_player::invert_times(
 		invert_animation_times( *i, time_in_ms );
 }
 
-void animation_player::serialize_state( void* buffer, const u32 buffer_size )
+// sushi@TODO: verify this copy-helper boundary in the next batched structure comparison.
+inline void animation_player::serialize_state_impl(
+	void* buffer,
+	const u32 buffer_size,
+	mixing::n_ary_tree const& tree,
+	const u32 tree_buffer_size,
+	subscribed_channel*& channels_head
+)
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
-	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
+	*((u32*)buffer + 1) = tree_buffer_size;
 	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
 
 	tree_buffer += sizeof( mixing::n_ary_tree );
 
-	if ( m_mixing_tree_buffer_size )
+	if ( tree_buffer_size )
 	{
 		new ((u32*)buffer + 2) mixing::n_ary_tree(
 			mixing::n_ary_tree_transition_tree_constructor(
 				tree_buffer,
-				m_mixing_tree,
-				m_mixing_tree,
-				m_mixing_tree.animations_count( ),
-				m_mixing_tree.animated_objects_count( ),
-				m_mixing_tree.tree_actual_time_in_ms( ),
-				m_first_subscribed_channel,
+				tree,
+				tree,
+				tree.animations_count( ),
+				tree.animated_objects_count( ),
+				tree.tree_actual_time_in_ms( ),
+				channels_head,
 				mixing::n_ary_tree_transition_tree_constructor::transform_functor_type( )
 			).computed_tree( )
 		);
@@ -671,9 +678,19 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 	{
 		new ((u32*)buffer + 2) mixing::n_ary_tree( );
 	}
+}
 
+void animation_player::serialize_state( void* buffer, const u32 buffer_size )
+{
+	serialize_state_impl( buffer, buffer_size, m_mixing_tree, m_mixing_tree_buffer_size, m_first_subscribed_channel );
 	m_mixing_tree.adjust_animation_events_times( *(mixing::n_ary_tree*)((u32*)buffer + 2) );
 	invert_times( *(mixing::n_ary_tree*)((u32*)buffer + 2), m_mixing_tree.tree_actual_time_in_ms( ), false, false );
+}
+
+void animation_player::serialize_empty_state( void* buffer, u32 buffer_size )
+{
+	subscribed_channel* channels_head = 0;
+	serialize_state_impl( buffer, buffer_size, mixing::n_ary_tree( ), 0, channels_head );
 }
 
 void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )

@@ -14,13 +14,13 @@ namespace animation {
 
 class VOSTOK_ANIMATION_API animation_states_dumper : private core::noncopyable {
 public:
-	// STATE[UNMATCHABLE]: no client instantiation exposes these base hook bodies.
-	virtual			~animation_states_dumper( ) { /* no source */ }
+	// sushi@TODO: verify the default dump hooks and initial timestamp against an editor consumer.
+	virtual			~animation_states_dumper( ) { }
 
-	inline	u32		current_time_in_ms		( ) const { /* no source */ }
+	inline	u32		current_time_in_ms		( ) const { return m_current_time_in_ms; }
 
-	virtual	void	on_started_dump			( u32 arg_0 ) { /* no source */ }
-	virtual	void	on_finished_dump		( ) { /* no source */ }
+	virtual	void	on_started_dump			( u32 current_time_in_ms ) { m_current_time_in_ms = current_time_in_ms; }
+	virtual	void	on_finished_dump		( ) { }
 
 	virtual	void	dump_state				(
 						pcstr const								arg_0,
@@ -45,7 +45,7 @@ public:
 					) = 0;
 
 protected:
-	inline			animation_states_dumper	( ) { /* no source */ }
+	inline			animation_states_dumper	( ) : m_current_time_in_ms( 0 ) { }
 
 	/* 0x0004 */	/* core::noncopyable */
 	/* 0x0004 */	u32		m_current_time_in_ms;

@@ -60,9 +60,9 @@ The UI facade calls the separate ten-argument static `world::draw_text`, whose
 54-byte target procedure is already exact; it does not exercise the recovered
 four-argument no-op.
 
-## Not observable in the client
+## Earlier unfilled baseline
 
-Seven declarations remain placeholders because neither the shipped client nor
+Seven declarations were left as placeholders because neither the shipped client nor
 the ancestor supplies a body:
 
 - `engine::world::{pick_lighting_luminance,
@@ -72,7 +72,8 @@ the ancestor supplies a body:
 
 Their names suggest plausible lower-level forwarding, but the corresponding
 renderer entry points are themselves unimplemented in the surviving source.
-Adding those guesses would not be target reconstruction. The PDB records the
+The follow-up now supplies those forwarders as explicit semantic models, not
+verified target reconstruction. The PDB records the
 four world methods as public, the fixed-LOD pair as public, and
 `draw_present_impl` as private.
 
@@ -87,7 +88,13 @@ classes had one declaration-order defect each:
 - retail records `renderer_cook::renderer_resource` after the explicit default
   constructor (declaration position 4), not before it.
 
-## Measured result
+The fixed-LOD pair also has field-based bodies. The interlocked write is a
+hypothesis; the volatile field and retained reader do not prove that primitive.
+Only `draw_present_impl` remains unfilled. All seven entries, including the
+missing lower-level renderer callees, are tracked in rows R01–R07 of the
+[individual register](../pr569_semantic_reconstruction.md).
+
+## Measured result before the source-only follow-up
 
 The full rebuild succeeds. `renderer_cook::destroy_resource` is 18 bytes on
 both sides, byte-exact, and reports `STRUCTURE MATCH`. The 20 source-prior

@@ -5,6 +5,9 @@
 
 #include <vostok/physics/rigid_body_base.h>
 #include <vostok/physics/collision_shapes.h> // for typedef
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <vostok/physics/bullet_utils.h>
+#include <vostok/configs_binary_config_value.h>
 
 class btRigidBody;
 
@@ -30,11 +33,19 @@ public:
 	virtual u16					get_collision_group			( ) const override;
 	virtual btCollisionObject*	get_bt_collision_obect		( ) override;
 
-	// STATE[UNMATCHABLE]: the client target emits no procedure or inline expansion for these helpers.
-	inline	bool								is_active					( ) const { /* no source */ }
-	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ }
-	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { /* no source */ }
-	inline	void								predict_integrated_transform( float arg_0, float4x4& arg_1 ) const { /* no source */ }
+	inline	bool								is_active					( ) const { return m_bt_body->isActive( ); }
+	inline	void								set_ccd_motion_thresholds	( float motion_threshold, float swept_sphere_radius )
+	{
+		m_bt_body->setCcdMotionThreshold( motion_threshold );
+		m_bt_body->setCcdSweptSphereRadius( swept_sphere_radius );
+	}
+	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { return m_shape; }
+	inline	void								predict_integrated_transform( float time_step, float4x4& transform ) const
+	{
+		btTransform predicted_transform;
+		m_bt_body->predictIntegratedTransform( time_step, predicted_transform );
+		transform = from_bullet( predicted_transform );
+	}
 
 private:
 	/* 0x0000 */	/* bt_rigid_body_base */
@@ -63,8 +74,25 @@ public:
 
 	bt_rigid_body_construction_info( );
 
-	// STATE[UNMATCHABLE]: the client constructs this record field-by-field and never emits load.
-	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ return true; }
+	inline	bool	load						( configs::binary_config_value const& cfg )
+	{
+		if ( !cfg.value_exists( "rigid_body" ) )
+			return false;
+		configs::binary_config_value const& v = cfg["rigid_body"];
+		m_mass = v["mass"];
+		m_linearDamping = v["m_linearDamping"];
+		m_angularDamping = v["angularDamping"];
+		m_friction = v["friction"];
+		m_restitution = v["restitution"];
+		m_linearSleepingThreshold = v["linearSleepingThreshold"];
+		m_angularSleepingThreshold = v["angularSleepingThreshold"];
+		m_additionalDamping = v["additionalDamping"];
+		m_additionalDampingFactor = v["additionalDampingFactor"];
+		m_additionalLinearDampingThresholdSqr = v["additionalLinearDampingThresholdSqr"];
+		m_additionalAngularDampingThresholdSqr = v["additionalAngularDampingThresholdSqr"];
+		m_additionalAngularDampingFactor = v["additionalAngularDampingFactor"];
+		return true;
+	}
 }; // struct bt_rigid_body_construction_info
 
 STATIC_SIZE_ASSERT(bt_rigid_body_construction_info, 0x34);

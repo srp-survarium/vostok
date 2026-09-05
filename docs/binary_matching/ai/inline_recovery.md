@@ -4,11 +4,14 @@
 
 The client PDB declares `fsm::remove_state` and `fsm::remove_transition` as
 public inline methods, immediately after their corresponding add methods. It
-does not emit either procedure. No target or reconstructed client function
-uses either name, and no body exists in repository history. Their list-erasure
-semantics are plausible from the surrounding API, but are not recoverable from
-this target; both declarations remain `STATE[UNMATCHABLE]` rather than gaining
-invented bodies.
+does not emit either procedure. No reconstructed client function uses either
+name, and no body was found in repository history. Both now have explicit
+semantic models based on `add_state`, `add_transition`, `pop_state` and
+`clear_transitions`: detach externally owned states; unlink and free transition
+records with the allocator that created them. Additional removal cleanup and
+parallel-edge behavior remain open. See rows F01–F02 in the
+[individual register](../pr569_semantic_reconstruction.md). These are not claims
+of byte-verified retail bodies, and no build was run for this follow-up.
 
 The same retail class record starts with the nested name
 `fsm::states_type : fsm_state_list`. Restoring that typedef at declaration

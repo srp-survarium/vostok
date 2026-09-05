@@ -221,6 +221,23 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
+inline u32 bullet_character_controller::get_contacts_count( )
+{
+	// sushi@TODO: verify whether the original counted all cached contacts or only penetrating contacts.
+	u32 result = 0;
+	btManifoldArray manifolds;
+	btBroadphasePairArray& pairs = m_ghost_object->getOverlappingPairCache( )->getOverlappingPairArray( );
+	for ( s32 i = 0; i < pairs.size( ); ++i ) {
+		if ( !pairs[i].m_algorithm )
+			continue;
+		manifolds.resize( 0 );
+		pairs[i].m_algorithm->getAllContactManifolds( manifolds );
+		for ( s32 j = 0; j < manifolds.size( ); ++j )
+			result += manifolds[j]->getNumContacts( );
+	}
+	return result;
+}
+
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration");

@@ -63,7 +63,7 @@ public:
 			pcstr								get_move_look_caption	( ) const;
 			bool								does_need_land_and_run	( ) const;
 
-	inline	pcvoid								get_animated_object		( ) const { /* no source */ }
+	inline	pcvoid								get_animated_object		( ) const { return m_animated_object; }
 
 			void								activate				( );
 			void								deactivate				( );

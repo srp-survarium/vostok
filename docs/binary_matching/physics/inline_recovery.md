@@ -18,10 +18,11 @@ no caller proves only that the client does not emit the method.
   lives in the declared helper and `player_step` calls it, preserving both the
   state update and the original source seam.
 
-The un-emitted accessors are not filled merely from their names. In particular,
-`bullet_character_controller::{get_gravity,is_inserted}` and
-`bt_static_rigid_body::get_collision_shape` have plausible direct-field bodies,
-but the client has no call site and the older source does not prove them.
+The source-only follow-up supplies direct-field accessors as semantic models,
+not as measured retail bodies. It also recovers the seven rope methods and the
+construction-info loader from authentic GSC source, adapted only where the
+retail layout differs. All 24 original entries are individually accounted for
+in the [reconstruction register](../pr569_semantic_reconstruction.md).
 
 ## Recovered class seams
 
@@ -46,12 +47,12 @@ but the client has no call site and the older source does not prove them.
 
 These are source-structure results, independent of fuzzy byte percentage.
 
-## Not observable in the client
+## Earlier unfilled baseline
 
-Twenty-four no-source declarations remain in this module: twenty-one inline
+The earlier audit left twenty-four no-source declarations: twenty-one inline
 bodies and three out-of-line declarations (`can_prone` and the two ghost-object
 methods). They have no procedure, caller, or recoverable expansion in
-`survarium.exe` and remain `STATE[UNMATCHABLE]`:
+`survarium.exe` in that audit:
 
 - `bt_static_rigid_body::{is_active,set_ccd_motion_thresholds,
   get_collision_shape,predict_integrated_transform}` and
@@ -86,7 +87,9 @@ assigns every emitted statement in `translate_query`'s five-request setup to
 `collision_shape_cook.cpp`; it contains no expansion attributed to the header
 helper. The public 2011 X-Ray source uses an earlier cook design and has no
 `cook_data` or `load_collision_resources`, so it supplies no implementation.
-This proves that the body is unobservable in the client, not that it was empty.
+This does not prove the absence of an inline expansion. The follow-up extracts
+the same request sequence into the declared private helper and propagates the
+call in `translate_query`; its source partition still needs batch validation.
 
 GSC commit `47633d6472d17c88d3e286082a171c1920dfc81c` supplies older out-of-line
 implementations for the rope accessors and world create/destroy helpers. It is
@@ -97,3 +100,13 @@ oracle for closing them.
 
 The editor-facing subset and its source leads are maintained in the
 [editor decomp handoff](../../todos/editor_decomp.md).
+
+## Current source-only state
+
+Sixteen of the twenty-one inline bodies and both ghost-object declarations now
+have bodies. Five inline bodies remain: the five-argument foot-transform
+overload and the controller's bounce/overstep/support/slide helpers. The
+out-of-line `can_prone` declaration is also still open. Rows P08–P09 and P20–P23
+record the plausible semantics and the specific evidence still missing; they
+are not accepted no-ops. Contact counting and ghost traversal reuse are models,
+not proven original implementation choices. No build was run for this batch.

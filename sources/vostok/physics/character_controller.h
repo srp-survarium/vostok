@@ -45,7 +45,7 @@ public:
 								float4x4&			transform
 							);
 
-	// STATE[UNMATCHABLE]: the client calls only the six-argument overload below.
+	// STATE[STUB]: the live six-argument overload does not establish both output-vector roles here.
 	inline	bool			adjust_foot_transform	(
 								float3 const&		arg_0,
 								float3 const&		arg_1,
@@ -55,7 +55,7 @@ public:
 							) const { /* no source */ }
 
 	void					set_crouch			( bool crouch );
-	// STATE[UNMATCHABLE]: can_prone has no client procedure, caller, or inline expansion.
+	// STATE[STUB]: the stance predicate is not established by the crouch/stand helpers.
 	bool					can_prone			( ) const /* no source */;
 	bool					can_crouch			( ) const;
 	bool					can_stand			( ) const;

@@ -127,6 +127,19 @@ void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
 }
 
+void bt_ghost_object::dbg_render( world* world, math::color const& color ) const
+{
+	world->draw_object( m_shape->get_bt_shape( ), m_bt_object->getWorldTransform( ), from_vostok( color.rgb( ) ) );
+}
+
+u32 bt_ghost_object::non_compound_shapes_count( ) const
+{
+	// sushi@TODO: verify whether the editor counted leaves directly or reused the centres traversal.
+	vectora<float3> centres( g_ph_allocator );
+	non_compound_shapes_centers( centres );
+	return centres.size( );
+}
+
 void bt_ghost_object::remove( world* w )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->removeCollisionObject( m_bt_object );
