@@ -238,7 +238,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 
 bool weapon_user_dead_state::is_ready_for_transition( ) const
 {
-	return false;
+	return true;
 }
 
 void weapon::load_weapon(
@@ -262,6 +262,7 @@ void weapon::load_weapon(
 		user_animations_selector( ).logic( ).add_transition( dead, i, boost::bind( &is_alive, boost::ref( m_user ) ) );
 	}
 
+	// sushi@TODO: Recover the preview argument/allocation statement split; target loads the two death counts on a preceding statement.
 	player_logic_base_state* const preview = VOSTOK_NEW_IMPL( g_allocator, player_logic_preview_state )(
 		( resources::managed_resource_ptr* )( this + 1 ) + m_first_view_death_animations_count + m_third_view_death_animations_count,
 		m_preview_animations_count,
