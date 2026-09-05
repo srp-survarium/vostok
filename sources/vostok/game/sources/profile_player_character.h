@@ -22,10 +22,12 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > player_ptr;
 
+// sushi@TODO: Resolve raw-header public versus source private base access; topology currently reports identical.
 class profile_player_character : private boost::noncopyable {
 public:
 			explicit	profile_player_character	( lobby_menu& lobby_menu );
-	inline				~profile_player_character	( ) { /* no source */ }
+	// Member destruction releases the player; scene removal belongs to clear_resources.
+	inline				~profile_player_character	( ) { }
 
 			void		update						( const u32 current_time_in_ms );
 
