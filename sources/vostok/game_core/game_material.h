@@ -19,6 +19,7 @@ public:
 	inline	float		reflection_speed_down	( ) const { return m_bullet_reflection_speed_down; }
 	inline	float		ricochet_koef			( ) const { return m_ricochet_koef; }
 
+	// sushi@TODO: Find the original width-getter consumer; load/layout establish the field but not a retained getter expansion.
 	inline	float		width					( ) const { return m_width; }
 	inline	pcstr		name					( ) const { return m_name.c_str( ); }
 
