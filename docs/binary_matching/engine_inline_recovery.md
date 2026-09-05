@@ -83,16 +83,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Menu inlines, external handlers and network notification consumers | 62 | Fix login priority 0→100; restore three client getters and thirteen callback seams; route network notifications through public lobby methods and remove two invented friends; verify constructors/generated cleanup and real null defaults, keeping carry/callback bodies and original boundary models open | [individual register](game/menu_inline_recovery.md) |
 | Stats, graph, damage-panel and chat inline/owner operations | 63 | Restore four stats setter and three damage-panel models; verify graph totals/chat flags and propagate seven mode reads; preserve generated ownership and explicit formatting/layout/producer-boundary gaps, including two open setters | [individual register](game/stats_chat_inline_recovery.md) |
 | Account-money and service-price inline records | 3 | Restore three-u32 reader and its live caller seam plus explicit inverse-wire writer model; verify money initialization/padding and raw field-first declaration order, keeping original writer/boundary questions open | [individual register](game/lobby_record_inline_recovery.md) |
+| Profile-character inlines, callbacks and generated ownership | 18 | Restore three explicit initialization/cleanup/forwarding models; verify callback result/ownership contracts, raw private base and generated nested operations, preserving distinct live player-wrapper ownership; two query producers, explicit destructor and partial update stay open | [individual register](game/profile_character_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the lobby-record audit: the registers account for 1356
+Checkpoint after the profile-character audit: the registers account for 1374
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 197 marked lines: game 76, game_core 52,
+questions. The literal scan is now 194 marked lines: game 73, game_core 52,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 140 active marked lines, **not** a remaining-function
+mirror lines leaves 137 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 The [raw-base access audit](pdb_base_access_rendering.md) closes the six-class

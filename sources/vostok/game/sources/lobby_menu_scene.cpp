@@ -2,7 +2,6 @@
 
 #include "pch.h"
 #include "lobby_menu.h"
-// this compiland also holds the out-of-line bodies of these two (batch 6) types
 #include "profile_player_character.h"
 #include "profile_character.h"
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
@@ -148,6 +147,7 @@ void profile_player_character::on_player_ready( resources::queries_result& data,
 	m_player->insert( true );
 }
 
+// sushi@TODO: recover update's guards, tick, matrix publication and weapon visibility beyond this expression model.
 void profile_character::update( const u32 current_time_in_ms )
 {
 	mutable_buffer					buffer(
@@ -231,12 +231,7 @@ void profile_character::weapon_resources_ready( resources::queries_result& data 
 	}
 }
 
-// claude@NOTE: structure matches (for / if(!is_successful) LOG_ERROR / two array
-// assigns). Byte residual is a cross-module layout shift: our resources::queries_result
-// header is 8 bytes larger than the target's, so m_size reads [esi+40h] vs target
-// [esi+38h] and m_queries[i] is at +0x154 vs +0x14C; that 8-byte offset cascades into
-// the loop base-register choice (ebx vs edi) and the get_managed_resource ref-count
-// temp count. Fixing it would mean editing core resources_query_result.h - out of scope.
+#line 298
 void profile_character::character_animation_ready( resources::queries_result& data )
 {
 	for ( u32 i = 0; i < data.size( ); ++i )
