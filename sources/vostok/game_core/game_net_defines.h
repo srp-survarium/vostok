@@ -55,6 +55,38 @@ static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
 	serialize_both_values,					// quick_slot6
 };
 
+inline void player_profile::serialize( network_core::udp_match_packet& packet ) const
+{
+	packet.append	( static_cast< u8 >( team ) );
+	packet.append	( is_local );
+	packet.append	( static_cast< pcstr >( profile_name ) );
+
+	u16 boosters_mask = 0;
+	for ( u8 i = 0; i < array_size( boosters ); ++i )
+	{
+		if ( boosters[ i ].id )
+			boosters_mask |= 1 << i;
+	}
+	packet.append	( boosters_mask );
+	for ( u8 i = 0; i < array_size( boosters ); ++i )
+	{
+		if ( boosters_mask & ( 1 << i ) )
+		{
+			packet.append	( boosters[ i ].id );
+			packet.append	( boosters[ i ].value );
+		}
+	}
+
+	for ( u8 i = 0; i < array_size( slots ); ++i )
+	{
+		if ( !slots[ i ].item.id )
+			continue;
+
+		packet.append	( i );
+		slots[ i ].serialize( packet, slot_serialize_mode[ i ] );
+	}
+}
+
 inline void player_profile::deserialize( network_core::packet_reader& reader )
 {
 	team		= (game_team_id)reader.r< u8 >( );
