@@ -78,16 +78,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | AI weapon objects and sound-player inline/ownership operations | 33 | Verify all 11 weapon leaves and public list-link access, remove invented friend, preserve real spatial traps; restore two legacy sound capture/replay models, verify trailing-array/generated cleanup and retain retail null decoder/empty callback and borrowed scene-handle hazard | [individual register](game/ai_weapon_sound_inline_recovery.md) |
 | Scene, director, free-fly and level-map camera operations | 45 | Fix live free-fly input priority 0→10; verify getter/default/vtable and generated ownership operations; recover alternate-scene and three level-map models without null-reference construction, keeping seven level-map bodies and original consumer/boundary questions open | [individual register](game/scene_camera_inline_recovery.md) |
 | Project-loading helpers, nested records and ownership | 34 | Restore project-name seam and one-handle minimap lookup; propagate retained completion helper at five cook predicates; remove eight invented friends over public fields; verify loading/registration/generated operations, retaining original boundary, assertion and line-record questions | [individual register](game/project_inline_recovery.md) |
+| Key-binder inlines and input/UI consumers | 28 | Restore sensitivity/inversion getter seams and two private legacy models; recover indexed/fallback selection with both retail consumers selecting fallback, remove unnecessary friend, verify generated/data ownership; combined-output formatting and original boundary/precondition questions stay open | [individual register](game/key_binder_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the project-loading audit: the registers account for 1137
+Checkpoint after the key-binder audit: the registers account for 1165
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 237 marked lines: game 116, game_core 52,
+questions. The literal scan is now 233 marked lines: game 112, game_core 52,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 180 active marked lines, **not** a remaining-function
+mirror lines leaves 176 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 The [raw-base access audit](pdb_base_access_rendering.md) closes the six-class

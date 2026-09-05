@@ -12,11 +12,6 @@
 
 namespace survarium {
 
-// owned by key_binder.cpp (cc_float/cc_bool console-command init); the mouse-input
-// consumers here read them at namespace scope.
-extern float	g_mouse_sensitivity;
-extern bool		g_mouse_invert;
-
  player_input_handler::player_input_handler( game_world& world ) :
 	game_camera( world ),		// base needs base_game_scene& (game_world derives from it)
 	m_game_world( world ),		// ref member - the owner
@@ -127,9 +122,9 @@ bool player_input_handler::on_mouse_move(
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
-	const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+	const float horizontal_sensitivity	= m_fov_factor * m_game_world.get_game( ).get_key_binder( ).mouse_sensitivity( ) * 0.1f;
 	float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
-	if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+	if ( m_game_world.get_game( ).get_key_binder( ).mouse_invertion( ) )	vertical_sensitivity	= -vertical_sensitivity;
 
 	m_rotation_delta.x	-= ( ( float( x ) / 180.0f ) * math::pi ) * horizontal_sensitivity;
 	m_rotation_delta.y	-= ( ( float( y ) / 180.0f ) * math::pi ) * vertical_sensitivity;
@@ -220,9 +215,9 @@ void player_input_handler::process_first_person_mode( const bool use_mouse_move 
 
 	if ( use_mouse_move )
 	{
-		const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+		const float horizontal_sensitivity	= m_fov_factor * m_game_world.get_game( ).get_key_binder( ).mouse_sensitivity( ) * 0.1f;
 		float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
-		if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+		if ( m_game_world.get_game( ).get_key_binder( ).mouse_invertion( ) )	vertical_sensitivity	= -vertical_sensitivity;
 
 		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kUP ) ) != m_game_actions.end( ) )
 			m_rotation_delta.x	+= vertical_sensitivity * 0.0174532924f;

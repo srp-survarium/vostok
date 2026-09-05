@@ -330,14 +330,17 @@ keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 
 s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( idx );
 	key_binding* pbinding = &m_key_bindings[_action_id];
 
-	if ( pbinding->m_keyboard[0] )
-		return pbinding->m_keyboard[0]->dik;
-
-	if ( pbinding->m_keyboard[1] )
-		return pbinding->m_keyboard[1]->dik;
+	if ( idx == -1 )
+	{
+		if ( pbinding->m_keyboard[0] )
+			return pbinding->m_keyboard[0]->dik;
+		if ( pbinding->m_keyboard[1] )
+			return pbinding->m_keyboard[1]->dik;
+	}
+	else if ( pbinding->m_keyboard[idx] )
+		return pbinding->m_keyboard[idx]->dik;
 
 	return 0;
 }

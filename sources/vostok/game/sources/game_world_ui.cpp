@@ -819,7 +819,7 @@ void game_world_ui::create_slot_value(
 
 	if ( action != game_action_id( -1 ) )
 	{
-		keyboard_key_descr const* const key = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( action, 0 ), false );
+		keyboard_key_descr const* const key = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( action, -1 ), false );
 		hotkey = key ? key->key_name : 0;
 	}
 

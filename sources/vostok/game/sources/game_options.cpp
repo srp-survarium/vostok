@@ -696,7 +696,7 @@ void game_options::reset_bindings( bool is_default )
 {
 	for ( u32 i = 0; i < 33; ++i )
 	{
-		pcstr key_name = m_game.get_key_binder( ).dik_to_keyname( m_game.get_key_binder( ).get_action_dik( key_bind_descriptions[i].action_id, 0 ) );
+		pcstr key_name = m_game.get_key_binder( ).dik_to_keyname( m_game.get_key_binder( ).get_action_dik( key_bind_descriptions[i].action_id, -1 ) );
 
 		flash_value bind_value[3];
 		bind_value[1].SetUInt( key_bind_descriptions[i].action_id );
