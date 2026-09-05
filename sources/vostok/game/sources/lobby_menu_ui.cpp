@@ -150,15 +150,15 @@ void lobby_menu_external_handler::callback(
 {
 	if ( strings::equal( methodName, "leave_queue" ) )
 	{
-		m_game.get_network_client( )->lobby_client( ).discard_playing_order( );
+		lobby_client( ).discard_playing_order( );
 	}
 	else if ( strings::equal( methodName, "play_button_clicked" ) )
 	{
-		if ( m_game.get_network_client( )->lobby_client( ).profiles_count( ) )
+		if ( lobby_client( ).profiles_count( ) )
 		{
 			u8 faction_id = m_game.lobby_menu( ).selected_profile( );
-			m_game.get_network_client( )->lobby_client( ).set_status_ready_for_match(
-				m_game.get_network_client( )->lobby_client( ).profile( faction_id ).profile_id );
+			lobby_client( ).set_status_ready_for_match(
+				lobby_client( ).profile( faction_id ).profile_id );
 		}
 	}
 	else if ( strings::equal( methodName, "profile_changed" ) )
@@ -184,7 +184,7 @@ void lobby_menu_external_handler::callback(
 		{
 			for ( u8 i = 1; i <= 4; ++i )
 			{
-				faction_price const& price = m_game.get_network_client( )->lobby_client( ).price( i );
+				faction_price const& price = lobby_client( ).price( i );
 				for ( u8 j = 0; j < price.count; ++j )
 				{
 					if ( price.items[ j ].item_dict_id == item_dict_id )
@@ -199,7 +199,7 @@ void lobby_menu_external_handler::callback(
 			}
 		}
 
-		m_game.get_network_client( )->lobby_client( ).buy_item( item_dict_id, items_count, faction_id, false );
+		lobby_client( ).buy_item( item_dict_id, items_count, faction_id, false );
 	}
 	else if ( strings::equal( methodName, "unlock_perks" ) )
 	{
@@ -236,36 +236,36 @@ void lobby_menu_external_handler::callback(
 			perks.push_back					( perk );
 		}
 
-		m_game.get_network_client( )->lobby_client( ).set_player_skills( skills, perks );
+		lobby_client( ).set_player_skills( skills, perks );
 	}
 	else if ( strings::equal( methodName, "reroll_ok_clicked" ) )
 	{
-		m_game.get_network_client( )->lobby_client( ).reroll_player_skills( );
+		lobby_client( ).reroll_player_skills( );
 	}
 	else if ( strings::equal( methodName, "find_players" ) )
 	{
 		pcstr player_name = args[ 0 ].GetString( );
 		enum { c_min_name_len_to_search = 3 };
 		if ( strlen( player_name ) >= c_min_name_len_to_search )
-			m_game.get_network_client( )->messaging_client( ).find_players_by_name( player_name );
+			messaging_client( ).find_players_by_name( player_name );
 	}
 	else if ( strings::equal( methodName, "add_friend" ) )
 	{
 		const u32 account_id = args[ 0 ].GetUInt( );
-		m_game.get_network_client( )->messaging_client( ).add_to_friend_list( account_id );
+		messaging_client( ).add_to_friend_list( account_id );
 	}
 	else if ( strings::equal( methodName, "remove_friend" ) )
 	{
-		m_game.get_network_client( )->messaging_client( ).remove_from_friend_list( args[ 0 ].GetUInt( ) );
+		messaging_client( ).remove_from_friend_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "add_ignore" ) )
 	{
 		const u32 account_id = args[ 0 ].GetUInt( );
-		m_game.get_network_client( )->messaging_client( ).add_to_ignore_list( account_id );
+		messaging_client( ).add_to_ignore_list( account_id );
 	}
 	else if ( strings::equal( methodName, "remove_ignored" ) )
 	{
-		m_game.get_network_client( )->messaging_client( ).remove_from_ignore_list( args[ 0 ].GetUInt( ) );
+		messaging_client( ).remove_from_ignore_list( args[ 0 ].GetUInt( ) );
 	}
 	else if ( strings::equal( methodName, "start_friend_message" ) )
 	{

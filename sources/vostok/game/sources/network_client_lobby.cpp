@@ -8,7 +8,7 @@
 #include "player.h"
 
 #include "game.h"			// m_game.lobby_menu()
-#include "lobby_menu.h"		// query_lobby_info / show_disconnected_message + m_is_connected_to_lobby
+#include "lobby_menu.h"
 
 #include <vostok/network_core/packet_reader.h>	// reader.r<T>() / r_string in the lobby dispatch
 
@@ -134,35 +134,16 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 	}
 }
 
-// claude@NOTE: the target CSEs m_game.lobby_menu() into one held pointer across the
-// body, so the faithful source caches the lobby_menu& once (the reference enregisters
-// with 0 named locals - matches the target's recorded local set). Residual is the
-// cross-TU LTCG inline of show_disconnected_message: in the base its scaleform Set*/
-// Invoke calls are still empty stubs so it is tiny and the LTCG inliner folds its
-// constant-pruned branch in here, whereas the target (real GFx ops) keeps it a call.
-// Lifts once scaleform value.cpp/movie.cpp are matched.
+// sushi@TODO: Retail retains the lobby method's expansion; verify its original boundary and elided caller line records.
 void network_client::on_connected_to_lobby( )
 {
-	lobby_menu& menu = m_game.lobby_menu( );
-	menu.query_lobby_info( );
-	if ( !menu.m_is_connected_to_lobby )
-	{
-		menu.m_is_connected_to_lobby = true;
-		menu.show_disconnected_message( false );
-	}
+	m_game.lobby_menu( ).on_connected_to_lobby( );
 }
 
-// claude@NOTE: caching the lobby_menu& once is faithful (the target loads
-// m_game.lobby_menu() ONCE and reuses it - inlining the accessor at each use
-// reloads it 3x and regresses to ~20%). Residual is register/FPO scheduling: the
-// target keeps the cached pointer in scratch eax with a `push ecx` FPO frame and
-// no save, where our base enregisters it in callee-saved esi (`push esi`). Same
-// single-load source shape; the optimizer's register/frame choice is not steerable.
+// sushi@TODO: Retail's single statement covers this lobby-method expansion; verify the original named boundary.
 void network_client::on_disconnected_from_lobby( )
 {
-	lobby_menu& menu = m_game.lobby_menu( );
-	// target folds the guarded body onto one source line (single line-table entry)
-	if ( menu.m_is_connected_to_lobby ) { menu.m_is_connected_to_lobby = false; menu.show_disconnected_message( true ); }
+	m_game.lobby_menu( ).on_disconnected_from_lobby( );
 }
 
 // sushi@TODO: Resolve the original search/loop partition; retail's explicit begin/end walk is not proven to be std::find.

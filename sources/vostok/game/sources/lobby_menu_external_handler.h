@@ -4,6 +4,8 @@
 #define LOBBY_MENU_EXTERNAL_HANDLER_H_INCLUDED
 
 #include <vostok/scaleform/sources/flash_external_handler.h>
+#include "game.h"
+#include "base_network_client.h"
 
 namespace vostok {
 namespace network {
@@ -26,11 +28,13 @@ private:
 	/* 0x0008 */	game&		m_game;
 
 public:
-	inline	explicit					lobby_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { /* no source */ }
-	// buildability returns; the real bodies reach the clients through m_game
-	inline	lobby_client&				lobby_client				( ) { /* no source */ return *( survarium::lobby_client* )NULL; }
-	inline	network::login_client&		login_client				( ) { /* no source */ return *( network::login_client* )NULL; }
-	inline	messaging_client&			messaging_client			( ) { /* no source */ return *( survarium::messaging_client* )NULL; }
+	inline	explicit					lobby_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { }
+	// sushi@TODO: Retail callback uses this client path; verify the original named getter boundary.
+	inline	lobby_client&				lobby_client				( ) { return m_game.get_network_client( )->lobby_client( ); }
+	// sushi@TODO: Sibling-owner forwarding model; bind a consumer selecting this handler's login getter.
+	inline	network::login_client&		login_client				( ) { return m_game.get_network_client( )->login_client( ); }
+	// sushi@TODO: Retail callback uses this client path; verify the original named getter boundary.
+	inline	messaging_client&			messaging_client			( ) { return m_game.get_network_client( )->messaging_client( ); }
 
 	virtual	void						callback					(
 											flash_movie*			pmovieView,
