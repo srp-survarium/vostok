@@ -50,7 +50,7 @@ public:
 			void						contact_test					( physics::base_physics_object* object, physics::contact_test_predicate& predicate );
 			bool						contact_test					( );
 
-	inline	void						dbg_render						( math::color const& arg_0 ) const { /* no source */ }
+	inline	void						dbg_render						( math::color const& color ) const;
 
 			void						get_shapes_centers				( vectora<float3>& centers_results ) const;
 
