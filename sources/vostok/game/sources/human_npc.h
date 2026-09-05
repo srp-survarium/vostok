@@ -6,6 +6,7 @@
 #include <vostok/ai/npc.h>
 #include <vostok/ai/game_object.h>
 #include <vostok/ai/filter_types.h>
+#include <vostok/ai/world.h>
 #include <vostok/sound/sound_producer.h>
 #include <vostok/sound/sound_receiver.h>
 #include <vostok/game_core/hit_receiver.h>
@@ -69,8 +70,6 @@ typedef resources::resource_ptr<
 	human_npc,
 	resources::unmanaged_intrusive_base
 > human_npc_ptr;
-
-// void* human_npc::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xabb50]: <0xabb40>|0x000|      :'235'	{
 
 class human_npc : public ai::npc , public ai::game_object , public sound::sound_producer , public sound::sound_receiver , public hit_receiver , public game_object_ {
 public:
@@ -166,12 +165,9 @@ public:
 		return false;
 	}
 	virtual	bool								is_safe						( ) const override;
-	virtual	bool								is_invisible				( ) const override { /* no source */ return false; }
+	virtual	bool								is_invisible				( ) const override { return false; }
 	virtual	bool								is_target_in_melee_range	( ai::npc const* const target ) const override;
 	virtual	bool								is_at_node					( ai::game_object const* const node ) const override;
-
-	// inline ai::npc / ai::game_object pure-virtual overrides absent from the
-	// canonical dump (no out-of-line symbol; inlined at the call sites)
 
 	virtual	void								prepare_to_attack			( ai::npc const* const target, ai::weapon const* const gun ) override;
 
@@ -210,9 +206,9 @@ public:
 	{
 		return this;
 	}
-	virtual	ai::npc const*						cast_npc					( ) const override { /* no source */ return this; }
-	virtual	ai::weapon*							cast_weapon					( ) override { /* no source */ return NULL; }
-	virtual	ai::weapon const*					cast_weapon					( ) const override { /* no source */ return NULL; }
+	virtual	ai::npc const*						cast_npc					( ) const override { return this; }
+	virtual	ai::weapon*							cast_weapon					( ) override { return NULL; }
+	virtual	ai::weapon const*					cast_weapon					( ) const override { return NULL; }
 
 	virtual	float								get_velocity				( ) const override
 	{
@@ -257,18 +253,26 @@ public:
 													bullet* const					bullet
 												) override;
 
+	// sushi@TODO: Legacy filter forwarder; recover the original caller and brain-readiness policy.
 	inline	void								set_filter					(
-													std::pair< ai::game_object const*, enum ai::ignorance_types_enum > const*	arg_0,
-													std::pair< ai::game_object const*, enum ai::ignorance_types_enum > const*	arg_1
-												) { /* no source */ }
-	inline	void								clear_filter				( ) { /* no source */ }
+													ai::ignorable_game_object const*	begin,
+													ai::ignorable_game_object const*	end
+												) { m_ai_world.set_ignore_filter( m_brain_unit, begin, end ); }
+	// sushi@TODO: Legacy clear-filter forwarder; bind the original reset invocation.
+	inline	void								clear_filter				( ) { m_ai_world.clear_ignore_filter( m_brain_unit ); }
 
 			void								fill_stats					( ai::npc_statistics& stats ) const;
 
 			void								tick						( const u32 current_time_in_ms, const bool is_game_paused );
 
-	inline	void								add_weapon					( object_weapon* arg_0 ) { /* no source */ }
-	inline	void								remove_weapon				( object_weapon* arg_0 ) { /* no source */ }
+	// sushi@TODO: Legacy unique-list insertion model; recover the original inventory caller.
+	inline	void								add_weapon					( object_weapon* weapon )
+	{
+		if ( !m_game_attributes.weapons.contains_object( weapon ) )
+			m_game_attributes.weapons.push_back( weapon );
+	}
+	// sushi@TODO: Legacy unlink-only model; verify destruction policy at the original caller.
+	inline	void								remove_weapon				( object_weapon* weapon ) { m_game_attributes.weapons.erase( weapon ); }
 			object_weapon*						pop_weapon					( );
 
 			void								get_available_weapons		( vectora< ai::weapon* >& list_to_be_filled ) const;
@@ -276,10 +280,10 @@ public:
 			void								enable						( );
 
 			void								set_attributes				( npc_game_attributes& attributes );
-	// sushi@TODO: Rotation-replacement model; verify composition order and the original consumer.
+	// sushi@TODO: Legacy rotation-replacement model; verify the retail consumer and composition.
 	inline	void								set_rotation				( float4x4 const& new_rotation )
 	{
-		float4x4 new_transform = create_scale( m_transform.get_scale( ) ) *
+		float4x4 const new_transform = create_scale( m_transform.get_scale( ) ) *
 			new_rotation * create_translation( m_transform.c.xyz( ) );
 		set_transform( new_transform );
 	}
@@ -294,11 +298,15 @@ public:
 
 			void								select_new_goal				( );
 
-	inline	render::game::renderer&				get_dbg_render				( ) const { /* no source */ return m_renderer; }
-	inline	render::scene_ptr const&			get_dbg_scene				( ) const { /* no source */ return m_scene; }
+	// sushi@TODO: Legacy debug-renderer getter; bind its original retail consumer.
+	inline	render::game::renderer&				get_dbg_render				( ) const { return m_renderer; }
+	// sushi@TODO: Legacy debug-scene reference getter; bind its original retail consumer.
+	inline	render::scene_ptr const&			get_dbg_scene				( ) const { return m_scene; }
 
-	inline	void								set_sound_dbg_mode			( bool arg_0 ) { /* no source */ }
-	inline	bool								get_sound_dbg_mode			( ) const { /* no source */ return m_dbg_sound; }
+	// sushi@TODO: Legacy debug-flag setter; recover original control and build guards.
+	inline	void								set_sound_dbg_mode			( bool value ) { m_dbg_sound = value; }
+	// sushi@TODO: Legacy debug-flag getter; the older sound-player consumer does not prove retail use.
+	inline	bool								get_sound_dbg_mode			( ) const { return m_dbg_sound; }
 	// sushi@TODO: Transform-reference getter model; locate the original named consumer.
 	inline	float4x4 const&						get_transform				( ) { return m_transform; }
 			void								set_transform				( float4x4 const& transform );
@@ -329,7 +337,8 @@ private:
 
 	virtual	float								get_speed					( ) const override { return 1.0f; }
 
-	inline	human_npc*							return_this					( ) { /* no source */ return this; }
+	// sushi@TODO: Verify the original return_this boundary in the constructor's affect-callback bind.
+	inline	human_npc*							return_this					( ) { return this; }
 
 	friend class human_npc_cook;
 

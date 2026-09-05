@@ -11,7 +11,8 @@ operations, five operations of its existing render-owned resource, ten local
 NPC predicate operations, three human-NPC transform callees and two visibility
 parameter methods. The world portal forwarder was already counted in
 [the game register](game_inline_recovery.md), and is not counted again.
-The rest of `human_npc` and `ai_collision_object` still need their own audits.
+The remaining `human_npc` and `ai_collision_object` operations are registered
+in [the subsequent NPC audit](human_npc_inline_recovery.md).
 
 `verified operation` means a retained procedure or consumer establishes the
 operation, not necessarily the original inlined helper's spelling. `model`
@@ -67,7 +68,7 @@ body. An absent standalone procedure does not establish absence of use.
 | 43 | Its `operator()(physics::closest_ray_result const&)` | **Open.** The physics result owns `base_physics_object*`, whose game-object interface does not expose an NPC cast. Old `ai_collision_object` triangle cast is not type-compatible evidence. |
 | 44 | `ray_query_predicate(...)` | Restore legacy `requested_object_was_found(false)` alongside existing reference/pointer/threshold initializers. Original collision-query producer is open. |
 | 45 | `ray_query_predicate::predicate(...)` | Restore legacy material-payload check, ignored-object check, transparency lookup, requested-object flag, subtractive attenuation and stopping tests. Payload type/binding remains a model; do not turn it into multiplicative attenuation or wire it into retail's unrelated physics-result query. |
-| 46 | `human_npc::set_rotation(float4x4 const&)` | Scale × supplied rotation × current translation model, delegated to existing `set_transform`, mirroring retained `set_translation`. Original composition/source boundary remains open. |
+| 46 | `human_npc::set_rotation(float4x4 const&)` | Legacy scale × supplied rotation × current translation model, delegated to existing `set_transform`. The subsequent audit found the older `.cpp` body and restored its const temporary. Retail composition/source boundary remains open. |
 | 47 | `human_npc::get_rotation_angles() const` | Legacy `m_transform.get_angles_xyz()` model. Retained translation setter also extracts those angles; original named getter consumer remains unproven. |
 | 48 | `human_npc::get_transform()` | Existing const-reference return model for matrix `+0x230`. Method itself is non-const in the PDB; do not change it. Added model consumer is not proof of original invocation. |
 | 49 | `game_material_visibility_parameters(float)` | Constructor operation corroborated at `human_npc` constructor `+0x126`: zero float stored at NPC `+0x160`, this value member. Preserve argument-copy form; do not hardcode zero for other callers. |
@@ -154,5 +155,6 @@ belong to the existing later path; no new immediate physics move is invented.
 Static review checked the query API's argument defaults, the existing behaviour
 parameter type, complete config/query/collision declarations, public callee
 access and unchanged method signatures. This does not replace compilation.
-Next: the complete `human_npc`/collision-object families and the open selection,
-hit, debug, visibility and query-producer contracts above.
+The [subsequent NPC audit](human_npc_inline_recovery.md) covers the complete
+NPC/collision-wrapper inline families. Selection, hit, debug, visibility and
+query-producer contracts above remain open.
