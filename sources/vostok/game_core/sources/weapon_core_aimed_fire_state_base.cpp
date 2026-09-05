@@ -12,15 +12,9 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 {
 }
 
-// claude@NOTE: paired (@@MAE), structure matches (6/6 stmts after folding ASSERT +
-// *m_is_firing_ptr into one statement). Residual is a boost::function inlining divergence
-// on the SECOND set_animation_callback: the target inlines function1<>::assign_to (exposing
-// basic_vtable1::assign_to + the conditional flag path, like the first bind) but MSVC here
-// emits an out-of-line function1<>::assign_to for the second, shifting the frame by 8 bytes.
-// /Od inline-heuristic ceiling on the shared boost::function machinery, not steerable.
 void weapon_core_aimed_fire_state_base::initialize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
+	set_is_firing( true );
 
 	weapon_core_animation_end_aware_state::initialize( );
 
@@ -41,10 +35,6 @@ void weapon_core_aimed_fire_state_base::initialize( )
 	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
 }
 
-// claude@NOTE: paired (@@MAE), walled by a cross-unit inline-vs-call boundary. The target
-// emits a `call weapon_core_base_state::execute` (out-of-line 0x16-byte function there); here
-// that base method is an inline `{}` in weapon_core_base_state.h, so MSVC inlines it away and
-// drops the call statement. Out-lining it belongs to weapon_core_base_state.cpp's match.
 void weapon_core_aimed_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
@@ -61,7 +51,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 
 	m_weapon.remove_animation_callback( "aiming", this );
 
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
+	set_is_firing( false );
 }
 
 // claude@NOTE: paired (@@MAE), structure matches (10/10 stmts); sole residual is a 3-byte
