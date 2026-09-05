@@ -51,14 +51,11 @@ public:
 	virtual	void								insert_trap						( booby_trap_core& trap, float4x4 const& transform );
 	virtual	void								remove_trap						( booby_trap_core& trap );
 
-	virtual	void								on_trap_fired					( booby_trap_core& trap ) { /* no source */ }
-	virtual	void								on_trap_disarmed				( booby_trap_core& trap ) { /* no source */ }
+	virtual	void								on_trap_fired					( booby_trap_core& trap ) { }
+	virtual	void								on_trap_disarmed				( booby_trap_core& trap ) { }
 
 	inline damage_parameters_type const& damage_parameters				( ) const { return m_damage_parameters; }
 
-	// claude@NOTE: config()/traps() carry the correct one-line bodies and pair in this TU,
-	// but the target compiled them /Ox (frameless, this in eax/ecx, no ebp frame) while
-	// our base is /Od; the residual is the optimization-level wall, not source-steerable.
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
 
@@ -76,24 +73,22 @@ public:
 												) const;
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold to shared targets (no distinct symbol in either index), so they
-	// are unpairable as standalones; the idiomatic bodies below are the faithful shapes.
-	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
+	// sushi@TODO: verify the original unreachable macro spelling and vtable use of these defaults.
+	virtual	void								activate						( base_player& user, engine& engine ) override { vostok::detail::unreferenced_parameter_helper( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate						( ) override { VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
-	virtual	void								tick							( ) override { /* no source */ }
-	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
+	virtual	void								tick							( ) override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	bool								is_ready_to_be_deactivated		( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override
 	{
-		VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view );
+		vostok::detail::unreferenced_parameter_helper( buffer, is_third_view );
 		VOSTOK_UNREACHABLE_CODE( );
 	}
 
-	virtual	void								on_player_model_added			( ) override { /* no source */ }
-	virtual	void								on_player_model_removed			( ) override { /* no source */ }
+	virtual	void								on_player_model_added			( ) override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	void								on_player_model_removed			( ) override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
@@ -105,7 +100,7 @@ private:
 													animation::animation_player const&	animation_player
 												) override;
 
-	virtual	bool								is_sprinting					( ) const override { return true; /* sushi@TODO no source */ }
+	virtual	bool								is_sprinting					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 
 protected:
@@ -121,7 +116,7 @@ protected:
 			bool								get_visible_place_transform		( float4x4& result );
 
 			booby_trap_core_ptr*				try_place_trap					( );
-	inline	void								remove_traps					( ) { /* no source */ }
+	inline	void								remove_traps					( );
 
 			booby_traps_type&						traps					( )			{ return m_traps; }
 	inline	booby_traps_type const&					traps					( ) const	{ return m_traps; }
@@ -131,12 +126,13 @@ protected:
 	typedef inventory_item super;
 
 private:
-	inline	u8									count_active_traps				( ) const { /* no source */ }
+	// sushi@TODO: verify the count/filter models and their original packet consumer.
+	inline	u8									count_active_traps				( ) const;
 
 	inline	void								append_inactive_trap_index_to_packet(
-													booby_trap_core_ptr const&			arg_0,
-													network_core::udp_match_packet&		arg_1
-												) const { /* no source */ }
+													booby_trap_core_ptr const&			trap,
+													network_core::udp_match_packet&		packet
+												) const;
 
 private:
 			void								remove_trap_impl				( booby_trap_core& trap );

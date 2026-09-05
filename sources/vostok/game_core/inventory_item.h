@@ -51,9 +51,9 @@ public:
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
-	// sushi@TODO: verify direct by-value vararg copies and the clipped target epilogues in the deferred build.
-	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { vostok::detail::unreferenced_parameter_helper( object, packet ); }
-	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { vostok::detail::unreferenced_parameter_helper( reader ); }
+	// sushi@TODO: verify the variadic-copy/unreachable source form; retail has no returning epilogue.
+	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { vostok::detail::unreferenced_parameter_helper( object, packet ); VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { vostok::detail::unreferenced_parameter_helper( reader ); VOSTOK_UNREACHABLE_CODE( ); }
 
 protected:
 	/* 0x0000 */	/* interactive_object */

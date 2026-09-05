@@ -149,13 +149,18 @@ void booby_trap_set_core::remove_trap_if_active( booby_trap_core_ptr& trap )
 		remove_trap_impl( *trap );
 }
 
-void booby_trap_set_core::remove( )
+inline void booby_trap_set_core::remove_traps( )
 {
 	std::for_each(
 		m_traps.begin( ),
 		m_traps.end( ),
 		boost::bind( &booby_trap_set_core::remove_trap_if_active, this, _1 )
 	);
+}
+
+void booby_trap_set_core::remove( )
+{
+	remove_traps( );
 }
 
 // sushi@TODO: Understand what it does exactly
@@ -300,6 +305,17 @@ void booby_trap_set_core::update_bones_matrices(
 static bool trap_is_active( booby_trap_core_ptr const& trap )
 {
 	return trap->is_active( );
+}
+
+inline u8 booby_trap_set_core::count_active_traps( ) const
+{
+	return static_cast< u8 >( std::count_if( m_traps.begin( ), m_traps.end( ), trap_is_active ) );
+}
+
+inline void booby_trap_set_core::append_inactive_trap_index_to_packet( booby_trap_core_ptr const& trap, network_core::udp_match_packet& packet ) const
+{
+	if ( !trap->is_active( ) )
+		packet.append( trap_index( *trap ) );
 }
 
 void booby_trap_set_core::serialize_game_world_object_header( booby_trap_core const& trap, network_core::udp_match_packet& packet ) const

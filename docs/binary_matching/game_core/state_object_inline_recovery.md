@@ -48,9 +48,16 @@ pass `&object`/`&packet`/`&reader`: that would copy pointers rather than the
 observed objects. Do not use the guarded plural macro: it adds a condition
 which is absent here and can remove the body entirely. This is the existing
 [direct unused-parameter idiom](../patterns/unreferenced-params-eater.md), not a
-new serialization format. The reported target spans end after stack cleanup,
-before a complete epilogue; exact extents and MSVC variadic-copy codegen remain
-deferred verification questions.
+new serialization format.
+
+Follow-up raw-PE inspection resolved the apparent clipped epilogues: the code
+at RVA 0x869f0 ends after stack cleanup at +0x36 and the code at 0x9b250 ends at
++0x13, both immediately followed by `cc` padding. There are **no** saved-register
+restores or return instructions hidden beyond the reported spans. The source
+now follows each helper call with the existing unreachable macro, a shipping
+`__assume(0)` representation. Normal return was not supported. Original macro
+spelling and MSVC variadic-copy codegen remain verification questions; the raw
+extent itself is no longer an unresolved question. See the trap-family register.
 
 These virtuals have real usage paths: `base_player::deserialize_game_world_object`
 dispatches through an inventory item, and `booby_trap_core::serialize` dispatches
@@ -147,5 +154,5 @@ open instead of adding invented uses to make them appear in the binary.
 
 Verification so far is source/evidence review and patch checks only. Deferred
 build checks must preserve the firing consumers' statement boundaries and
-confirm MSVC's direct variadic-copy operations. This register accounts for all
+confirm MSVC's direct variadic-copy/unreachable operations. This register accounts for all
 39 methods without treating the remaining model/extent questions as closed.

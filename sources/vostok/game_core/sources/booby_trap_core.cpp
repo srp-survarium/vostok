@@ -31,7 +31,7 @@ booby_trap_core::~booby_trap_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
 }
 
-void booby_trap_core::load( configs::binary_config_value const& config )
+inline void booby_trap_core::load_collision( configs::binary_config_value const& config )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -51,6 +51,11 @@ void booby_trap_core::load( configs::binary_config_value const& config )
 	{
 		hittable_object::load( config["hittable_object"] );
 	}
+}
+
+void booby_trap_core::load( configs::binary_config_value const& config )
+{
+	load_collision( config );
 }
 
 void booby_trap_core::load_aabb( configs::binary_config_value const& __formal )
