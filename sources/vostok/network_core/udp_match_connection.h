@@ -102,38 +102,38 @@ public:
 			void						instant_disconnect				( disconnect_event_types_enum type );
 	inline	void						set_on_disconnect				( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
-	// STATE[UNMATCHABLE] (the `/* no source */` shams below): consumed only by the
-	// udp_match_server tick/delete_client path, which is dedicated-server code -
-	// zero target symbols, never instantiated (server is absent from the shipped
-	// client EXE), and no matched consumer in our scope ODR-uses them. The shams
-	// are code-neutral, not recovered source; a server target is needed to body them.
+	// STATE[INLINED]: expanded by udp_match_client::enqueue and the network wrapper.
 	inline	bool						is_connected					( ) const { return m_state == connected; }
 
-	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ }
+	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
 
-	inline	bool						is_disconnecting				( ) const { return false; /* no source */ }
+	inline	bool						is_disconnecting				( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
+	// STATE[INLINED]: expanded by three udp_match_client methods and the network wrapper.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
-	inline	void						set_disconnected				( ) { /* no source */ }
+	inline	void						set_disconnected				( ) { /* no source */ } // STATE[UNMATCHABLE]
 
-	inline	udp_match_packet*			new_packet						( const u8 message_type ) { return NULL; /* no source */ }
+	inline	udp_match_packet*			new_packet						( const u8 message_type ) { return NULL; /* no source */ } // STATE[UNMATCHABLE]
+	// STATE[INLINED]: udp_match_client::enqueue retains this allocator seam.
 	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
-	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { /* no source */ }
+	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { /* no source */ } // STATE[UNMATCHABLE]
 
-	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ }
+	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ } // STATE[UNMATCHABLE]
 
+	// STATE[INLINED]: udp_match_client::handle_receive retains this container seam.
 	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
 			u32							packets_count					( ) const;
 
+	// STATE[INLINED]: sampled through the network match-client wrapper.
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
-	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ }
+	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
 	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
 	// (single volatile load of m_last_receive_time_in_ms @+0xfc)
 	inline	u32							last_receive_time_in_ms			( ) const { return m_last_receive_time_in_ms; }
-	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ }
+	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
 
-	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ }
+	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ } // STATE[UNMATCHABLE]
 
 private:
 			void						on_error						( client_error_codes_enum client_error_code, boost::system::error_code error_code );
@@ -168,7 +168,7 @@ private:
 
 			udp_match_packet*			new_low_level_packet			( u8 message_type );
 
-	inline	void						disconnect_impl					( ) { /* no source */ }
+	inline	void						disconnect_impl					( ) { /* no source */ } // STATE[UNMATCHABLE]
 			void						enqueue_impl					( udp_match_packet* packet );
 
 public:

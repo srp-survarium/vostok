@@ -5,6 +5,12 @@ collapsed together. A declaration present in the retail PDB is not evidence that
 the original body was removed. It may have been expanded into a caller, or it may
 simply be uninstantiated in the shipped client executable.
 
+An inline recovery is not complete merely because equivalent field logic was
+written in the caller. The caller must retain the declared helper seam: the
+source boundary can affect statement topology and MSVC's inlining/codegen even
+when the final operation is semantically identical. Each classification below
+therefore comes from the target caller expansion as well as the symbol census.
+
 ## Recovered from retail code
 
 | Declaration | Retail evidence | Recovered source seam |
@@ -24,6 +30,34 @@ Already-recovered inline bodies remain marked `STATE[INLINED]` at their source
 anchors: the network HTTP setters/getter, the UDP client callback setters and
 state/time forwards, and the fixed-packet allocator wiring.
 
+## UDP connection client-expansion sweep
+
+The shipped client constrains these `udp_match_connection` helpers through
+actual callers. Their calls must not be replaced with equivalent access to the
+underlying fields or containers.
+
+| Declaration | Retail client expansion |
+|---|---|
+| `is_connected` | `udp_match_client::enqueue` and `network::match_client::is_connected` compare `m_state` with `connected` |
+| `is_disconnected` | `udp_match_client::{process_incoming_packet,handle_receive,send_queued_packets}` and the network wrapper compare `m_state` with `disconnected` |
+| `delete_packet` | `udp_match_client::enqueue` passes `m_packets_allocator` to `delete_udp_match_packet` |
+| `unacknowledged_packets_count` | `udp_match_client::handle_receive` obtains the intrusive-list count for the flow emulator |
+| `get_stats` | the network match-client sampling paths retain the stats accessor chain |
+| `last_receive_time_in_ms` | `network::match_client::last_receive_time_in_ms` performs the nested volatile load |
+
+The following connection declarations have neither a standalone procedure nor
+an expansion in any shipped client caller:
+
+- `has_disconnection_initiated`, `is_disconnecting`, `set_disconnected`,
+  `set_max_packet_wait_time_in_ms`, `are_there_any_queued_packets`,
+  `last_send_time_in_ms`, `last_activity_time_in_ms`,
+  `pending_operations_count`, and `disconnect_impl`;
+- `new_packet`, whose only current source consumer is an un-emitted
+  `udp_match_client` convenience wrapper.
+
+Their current no-source bodies are not reconstructions. Original source or
+another binary that consumes the interfaces is required to recover them.
+
 ## Reconstructed seams without a retail expansion
 
 The retail PDB declares these interfaces, and the surviving ancestor or the
@@ -33,9 +67,10 @@ seam is restored:
 
 - `tcp_packet_client::{is_connected,has_connection_established}` forward to
   `async_connector`, matching the legacy client split.
-- `udp_match_client::{new_packet,construct_packet,delete_packet,
-  are_there_any_queued_packets,last_send_time_in_ms,last_activity_time_in_ms}`
-  delegate to the same-named `udp_match_connection` interface.
+- `udp_match_client::{new_packet,delete_packet,are_there_any_queued_packets,
+  last_send_time_in_ms,last_activity_time_in_ms}` delegate to the same-named
+  `udp_match_connection` interface. Its `construct_packet` forwards to the
+  connection's static implementation.
 
 ## No client-target body exists
 
@@ -43,8 +78,8 @@ These declarations are present in type information, but the shipped client has
 neither a standalone procedure nor an inlined use from which a body can be
 recovered:
 
-- the dedicated-server web: `udp_match_server`, `udp_match_client_session`, and
-  the server-only `udp_match_connection` convenience methods;
+- the dedicated-server web: `udp_match_server` and
+  `udp_match_client_session`;
 - `udp_match_stats` aggregate mutators and dump methods;
 - the unused `async_connector::{resolve,close_connection,on_error}` legacy seams;
 - `packet<T>::clear`, `udp_match_packet::helper::call_constructor`, and the
@@ -53,9 +88,10 @@ recovered:
   intrusive-pointer policy updates `m_reference_count` directly through its
   friendship instead of calling these hooks.
 
-Their empty bodies are placeholders only. `STATE[UNMATCHABLE]` means a different
-target (principally the dedicated server) or original source is required; it does
-not mean the original developers wrote an empty function.
+Their empty bodies are placeholders only. `STATE[UNMATCHABLE]` means original
+source or another consuming target (principally the dedicated server for the
+server/session web) is required; it does not mean the original developers wrote
+an empty function.
 
 ## PDB declaration structure
 

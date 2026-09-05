@@ -39,7 +39,7 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 			float4x4			get_object_transform			( ) const;
-	inline	bool				overweighting_detected			( ) const { return m_overweighting_detected; }
+	inline	bool				overweighting_detected			( ) const { /* no source */ } // STATE[UNMATCHABLE]
 
 private:
 			bone_transform		computed_local_bone_transform	( skeleton_bone const& bone, u32 bone_mask, u32 animation_layer_id ) const;

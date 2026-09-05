@@ -7,31 +7,30 @@ records. A method is therefore recoverable only when the client emits a
 procedure or when one consumer contains an attributable expansion. Names and
 plausible behavior are not sufficient on their own.
 
-## Recovered field and hook bodies
+## Recovered inline seam
 
-- `animation_states_dumper::current_time_in_ms` returns
-  `m_current_time_in_ms`, and `on_started_dump` stores its argument there.
-  Its explicit destructor and `on_finished_dump` are empty base hooks. The
-  protected default constructor remains unobservable.
 - `n_ary_tree_comparer::advance_buffer` increments
-  `m_needed_buffer_size`. The same operation is used throughout the comparer
-  and by `n_ary_tree_size_calculator::advance_buffer` when it is given a
-  comparer.
-- `bone_matrices_computer::overweighting_detected` returns
-  `m_overweighting_detected`.
+  `m_needed_buffer_size`. `n_ary_tree_size_calculator::advance_buffer` and the
+  three `interpolator_size_calculator::visit` overloads now call that named
+  helper when given a comparer. Reaching through the friendship and performing
+  the same field update would erase a retail source seam and could change the
+  callers after inlining.
 
-These methods do not have standalone target procedures. Their bodies restore
-direct field/interface semantics, but remain outside the byte denominator for
-this client.
+The method has no standalone target procedure. Its body and all four caller
+seams are reconstructed together from the private method declaration, the
+friend graph, and the repeated target field update.
 
 ## Not observable in the client
 
-Twenty-five declarations remain `STATE[UNMATCHABLE]`:
+Thirty declarations remain `STATE[UNMATCHABLE]`:
 
 - editor-only `fixed_joint_camera_effector::{process_camera,on_attach}`;
+- `bone_matrices_computer::overweighting_detected`;
+- `animation_states_dumper::{animation_states_dumper,
+  ~animation_states_dumper,current_time_in_ms,on_started_dump,
+  on_finished_dump}`;
 - `animation_player::{has_object,dump_animation_states,
   serialize_empty_state,serialize_state_impl}`;
-- the protected `animation_states_dumper` default constructor;
 - `n_ary_tree::{tick_to_nearest_event,has_object,is_consistent,
   dump_animation_states,computed_local_bone_matrix,compute_skeleton_branch,
   update_animation_interval_time,accumulate_object_movement}` (the four-argument
@@ -49,6 +48,14 @@ does not prove how its logic was divided between the two declared inline
 helpers. Those bodies stay unfilled until an original source or another target
 provides the boundary.
 
+`bone_matrices_computer::overweighting_detected` has no client consumer, and the
+public 2011 X-Ray source predates both the accessor and its backing field. A
+direct field return is plausible, but the client cannot distinguish it from
+another implementation, so the placeholder remains.
+
+Editor-only gaps are tracked centrally in the
+[editor decomp handoff](../../todos/editor_decomp.md).
+
 The commented-out `binary_tree_animation_node` destructor was not a declaration
 and was removed from the inventory.
 
@@ -65,5 +72,5 @@ and was removed from the inventory.
   `process_event_result_enum`; `dispatch_callbacks` and
   `update_animation_time` now occupy retail positions 43 and 45.
 
-`n_ary_tree_comparer` and `bone_matrices_computer` were already
-topology-identical before their direct getters were filled.
+`n_ary_tree_comparer` and `bone_matrices_computer` are topology-identical to
+retail independently of whether their un-emitted inline bodies are filled.

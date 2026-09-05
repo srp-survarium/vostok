@@ -50,8 +50,9 @@ public:
 			void							end_jump						( );
 			bool							can_jump						( ) const;
 
-	inline	float							get_gravity						( ) const { return m_gravity; }
-	inline	bool							is_inserted						( ) const { return m_collision_world != NULL; }
+	// STATE[UNMATCHABLE]: the client emits no call or inline expansion for these accessors.
+	inline	float							get_gravity						( ) const { /* no source */ }
+	inline	bool							is_inserted						( ) const { /* no source */ }
 
 private:
 	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }

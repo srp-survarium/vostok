@@ -33,7 +33,7 @@ public:
 	// STATE[UNMATCHABLE]: the client target emits no procedure or inline expansion for these helpers.
 	inline	bool								is_active					( ) const { /* no source */ }
 	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ }
-	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { return m_shape; }
+	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { /* no source */ }
 	inline	void								predict_integrated_transform( float arg_0, float4x4& arg_1 ) const { /* no source */ }
 
 private:
