@@ -424,5 +424,13 @@ void cc_help::execute(pcstr args)
 
 static cc_help	s_help_cmd("help");
 
+#ifndef VOSTOK_STATIC_LIBRARIES
+template class cc_value<bool>;
+template class cc_value<float>;
+template class cc_value<u32>;
+template class cc_value<math::float2>;
+template class cc_value<math::float3>;
+#endif // #ifndef VOSTOK_STATIC_LIBRARIES
+
 } // namespace vostok
 } // namespace console_commands

@@ -145,5 +145,38 @@ bool bt_character_controller::can_stand( ) const
 	return m_bt_controller->can_stand( );
 }
 
+inline bool bt_character_controller::adjust_foot_transform(
+	float3 const&		half_size,
+	float3 const&		start,
+	float3 const&		finish,
+	float3&				position,
+	float3&				normal
+) const
+{
+	btCapsuleShape collision_shape( half_size.x, half_size.y );
+	btVector3 bt_start = from_vostok( start );
+	btVector3 bt_finish = from_vostok( finish );
+
+	btCollisionWorld::ClosestConvexResultCallback callback( bt_start, bt_finish );
+	callback.m_collisionFilterGroup = 0x24;
+	callback.m_collisionFilterMask = 0x2;
+	m_bt_physics_world->get_bt_internal( )->convexSweepTest(
+		&collision_shape,
+		btTransform( btQuaternion::getIdentity( ), bt_start ),
+		btTransform( btQuaternion::getIdentity( ), bt_finish ),
+		callback
+	);
+
+	if ( callback.hasHit( ) )
+	{
+		btVector3 result;
+		result.setInterpolate3( bt_start, bt_finish, callback.m_closestHitFraction );
+		position = from_bullet( result );
+		normal = from_bullet( callback.m_hitNormalWorld );
+	}
+
+	return callback.hasHit( );
+}
+
 } // namespace physics
 } // namespace vostok
