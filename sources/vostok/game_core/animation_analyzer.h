@@ -14,11 +14,13 @@ namespace survarium {
 struct leg_info;
 struct leg_key_times;
 
+// sushi@TODO: resolve public-base carcass projection versus identical topology for this private base.
 class animation_analyzer : private core::noncopyable {
 public:
 						animation_analyzer		( leg_info const* legs_info, const u32 legs_count, animation::skeleton const& skeleton );
 						~animation_analyzer		( );
 
+	// sushi@TODO: sampling/analysis pipeline is absent from the retained cook; recover an original active consumer.
 	inline	void		analyze					( pcstr arg_0, resources::managed_resource_ptr arg_1, leg_key_times* arg_2 ) { /* no source */ }
 
 private:
@@ -31,18 +33,24 @@ private:
 
 	typedef buffer_vector< leg_cycle_sample > leg_cycle_samples_type;
 
+	// sushi@TODO: recover sample rate, animation evaluation API, frame/leg stride and foot-base construction.
 	inline	void		prepare_samples			( pcstr arg_0, resources::managed_resource_ptr arg_1, leg_cycle_samples_type& arg_2 ) { /* no source */ }
+	// sushi@TODO: recover the integer argument's role and seven-event thresholds/order from an active analyzer.
 	inline	void		analyse_samples			( leg_cycle_samples_type const& arg_0, const u32 arg_1, leg_key_times* arg_2 ) { /* no source */ }
 
+	// sushi@TODO: extrema model unresolved: scalar axis versus spatial range and integer bounds/stride roles.
 	inline	float		get_max_range			( leg_cycle_samples_type const& arg_0, const u32 arg_1, const u32 arg_2 ) const { /* no source */ }
+	// sushi@TODO: recover stance selection, threshold meaning, sample bounds and tie/wrap policy.
 	inline	u32			get_stance_index		(
 							leg_cycle_samples_type const&	arg_0,
 							const u32							arg_1,
 							const u32							arg_2,
 							const float							arg_3
 						) const { /* no source */ }
+	// sushi@TODO: recover midpoint/mean/stance-center choice, coordinate space and sample bounds.
 	inline	float3		get_cycle_center		( leg_cycle_samples_type const& arg_0, const u32 arg_1, const u32 arg_2 ) const { /* no source */ }
 
+	// sushi@TODO: recover directional contact search, heel/toe selector, thresholds and time interpolation.
 	inline	float		find_contact_time		(
 							leg_cycle_samples_type const&	arg_0,
 							const u32							arg_1,
@@ -53,6 +61,7 @@ private:
 							float								arg_6,
 							float								arg_7
 						) { /* no source */ }
+	// sushi@TODO: recover signed search/wrap rules and swing-direction crossing/time convention.
 	inline	float		find_swing_change_time	(
 							leg_cycle_samples_type const&	arg_0,
 							const u32							arg_1,
