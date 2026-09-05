@@ -45,9 +45,9 @@ public:
 
 			void		stop_rendering		( );
 
-	inline	u32			cumulative_count	( ) const { /* no source */ return m_count; }
+	inline	u32			cumulative_count	( ) const { return m_count; }
 			float		cumulative_time		( ) const;
-	inline	float		cumulative_value	( ) const { /* no source */ return m_cumulative_value; }
+	inline	float		cumulative_value	( ) const { return m_cumulative_value; }
 			float		average_value		( ) const;
 
 private:
