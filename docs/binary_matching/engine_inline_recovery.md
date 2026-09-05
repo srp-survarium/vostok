@@ -67,16 +67,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Animation analyzer, result buffer and retained producer | 14 | All eight missing algorithms have individual hypotheses/gaps; source/xrefs/full retained cook prove no sampling there; preserve unfilled retail result path, borrowed analyzer inputs and buffer cleanup; original active producer and getter questions remain open; raw base access subsequently verified | [individual register](game_core/animation_analysis_inline_recovery.md) |
 | Cook helpers, registration owners and generated cleanup | 11 | Selected hit-type getter and core-shotgun constructor models; repair callback parent constness; keep core registration/skeleton-config seams open and distinct from retained game/resource pipelines | [individual register](game_core/cook_inline_recovery.md) |
 | Player-owned history/state/profile records and input predicate | 13 | Verify implicit member construction/destruction and profile deletion through its owner; remove three stale markers; preserve timestamp/scene-removal ownership, with generic predicate spelling open and raw base access subsequently verified | [individual register](game/player_owned_inline_recovery.md) |
+| Dead/preview state construction, hooks and FSM consumers | 15 | Real dead-state readiness false→true fix; six stale markers removed through live constructors and installed vtables; verify IDs/seeds/borrowed cleanup, retaining const-RNG spelling and preview partition questions | [individual register](game/dead_preview_state_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the player-owned record audit: the registers account for 782
+Checkpoint after the dead/preview state audit: the registers account for 797
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 412 marked lines: game 291, game_core 52,
+questions. The literal scan is now 406 marked lines: game 285, game_core 52,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 355 active marked lines, **not** a remaining-function
+mirror lines leaves 349 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 The [raw-base access audit](pdb_base_access_rendering.md) closes the six-class

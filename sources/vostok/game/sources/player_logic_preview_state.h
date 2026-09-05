@@ -25,11 +25,10 @@ public:
 	typedef buffer_vector< resources::managed_resource_ptr > animations_type;
 
 private:
-	// PDB mangles these overrides E* (private virtual), unlike the public ctor/dtor.
 	virtual	void	initialize					( ) override { }
-	virtual	void	finalize					( ) override { /* no source */ }
+	virtual	void	finalize					( ) override { }
 
-	virtual	void	execute						( ) override { /* no source */ }
+	virtual	void	execute						( ) override { }
 
 	virtual	std::pair< expression, animation::mixing::animation_lexeme >	selected_animations			(
 						mutable_buffer&							buffer,
@@ -43,8 +42,7 @@ private:
 	/* 0x0000 */	/* player_logic_base_state */
 	/* 0x0028 */	resources::managed_resource_ptr* const	m_animations;
 	/* 0x002c */	const u32			m_animations_count;
-	// selected_animations() is const but advances the generator (the random
-	// animation pick), so the seed member is mutable.
+	// sushi@TODO: Const selection advances the seed; verify mutable versus an original const_cast.
 	/* 0x0030 */	mutable math::random32	m_random;
 }; // class player_logic_preview_state
 
