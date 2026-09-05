@@ -20,17 +20,19 @@ struct player_input {
 			void	deserialize			( network_core::packet_reader& reader );
 
 			bool	is_empty			( ) const;
-	inline	bool	is_moving			( ) const { /* no source */ }
+	// Retail compares masked values, not normalized opposing-button booleans.
+	inline	bool	is_moving			( ) const { return ( actions_mask & 0x1 ) != ( actions_mask & 0x2 ) || ( actions_mask & 0x8 ) != ( actions_mask & 0x4 ); }
 	// Target callers materialize the bool result before consuming it.
 	__forceinline bool is_trying_to_sprint	( ) const { return ( actions_mask & 0x200 ) != 0; }
 	__declspec(noinline) inline bool is_sprinting	( ) const;
-	inline	bool	is_walking			( ) const { /* no source */ }
+	// sushi@TODO: verify whether walking excludes effective sprint or the sprint request itself.
+	inline	bool	is_walking			( ) const { return is_moving( ) && !is_sprinting( ); }
 	inline	bool	is_crouching		( ) const { return ( actions_mask & 0x100 ) != 0; }
 	inline	bool	is_jumping			( ) const { return ( actions_mask & 0x10 ) != 0; }
 	inline	bool	is_using			( ) const { return ( actions_mask & 0x10000000 ) != 0; }
-	inline	bool	is_aiming			( ) const { /* no source */ }
-	inline	bool	is_shooting			( ) const { /* no source */ }
-	inline	bool	is_holding_breath	( ) const { /* no source */ }
+	inline	bool	is_aiming			( ) const { return ( actions_mask & 0x80 ) != 0; }
+	inline	bool	is_shooting			( ) const { return ( actions_mask & 0x20 ) != 0; }
+	inline	bool	is_holding_breath	( ) const { return is_aiming( ) && ( actions_mask & 0x8000000 ) != 0; }
 
 	typedef u32 actions_mask_type;
 
