@@ -18,8 +18,10 @@ private:
 	/* 0x0008 */	game&		m_game;
 
 public:
-	inline	explicit	main_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { /* no source */ }
+	// sushi@TODO: Game-reference binding model; recover this handler's original construction/registration consumer.
+	inline	explicit	main_menu_external_handler	( game& arg_0 ) : m_game( arg_0 ) { }
 
+	// sushi@TODO: Recover the UI method/argument dispatch; sibling menu callbacks do not establish this contract.
 	virtual	void		callback					(
 							flash_movie*			arg_0,
 							pcstr					arg_1,

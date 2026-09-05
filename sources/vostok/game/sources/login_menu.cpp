@@ -20,13 +20,6 @@
 
 namespace survarium {
 
-// claude@NOTE: structures match; the byte residual on on_activate/on_deactivate/tick/
-// clear_resources/enable_button is a cross-module cap - base_game_scene::on_activate/
-// on_deactivate/tick/hide_movie are still STUBs (so the inherited calls inline to nothing
-// here instead of staying real calls), scaleform flash_movie::Advance/SetVariable +
-// flash_value ctor/dtor are still STUBs (so the inlined movie ops differ), and the game
-// vtable layout shifts input_world()'s slot. They lift when those siblings match.
-
  login_menu::login_menu( game& g )
 	: base_game_scene( g )
 	, m_block_btn_time( 0 )

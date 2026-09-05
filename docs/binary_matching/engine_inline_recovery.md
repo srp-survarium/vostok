@@ -80,16 +80,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Project-loading helpers, nested records and ownership | 34 | Restore project-name seam and one-handle minimap lookup; propagate retained completion helper at five cook predicates; remove eight invented friends over public fields; verify loading/registration/generated operations, retaining original boundary, assertion and line-record questions | [individual register](game/project_inline_recovery.md) |
 | Key-binder inlines and input/UI consumers | 28 | Restore sensitivity/inversion getter seams and two private legacy models; recover indexed/fallback selection with both retail consumers selecting fallback, remove unnecessary friend, verify generated/data ownership; combined-output formatting and original boundary/precondition questions stay open | [individual register](game/key_binder_inline_recovery.md) |
 | Options inlines, selector family and UI/ownership consumers | 63 | Fix input priority 0→5 and monitor refresh target 0→1; restore null lookup and private waiting predicate; verify getters/generated operations and preserve nonvirtual cleanup, keeping two explicit-destructor models and original guard/boundary questions open | [individual register](game/options_inline_recovery.md) |
+| Menu inlines, external handlers and network notification consumers | 62 | Fix login priority 0→100; restore three client getters and thirteen callback seams; route network notifications through public lobby methods and remove two invented friends; verify constructors/generated cleanup and real null defaults, keeping carry/callback bodies and original boundary models open | [individual register](game/menu_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the options audit: the registers account for 1228
+Checkpoint after the menu audit: the registers account for 1290
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 221 marked lines: game 100, game_core 52,
+questions. The literal scan is now 212 marked lines: game 91, game_core 52,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 164 active marked lines, **not** a remaining-function
+mirror lines leaves 155 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 The [raw-base access audit](pdb_base_access_rendering.md) closes the six-class
