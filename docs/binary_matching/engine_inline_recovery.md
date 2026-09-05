@@ -50,16 +50,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Player input + normal RNG + shotgun substates | 33 | Fix live RNG seed restore; recover single-input/zero-local caller seams; replace three private playback accesses with base finalization; walking and eight RNG contracts remain open | [individual register](game_core/input_random_reload_inline_recovery.md) |
 | Breath-state family and calculator inlines | 40 | Seven real 0-versus-1 float fixes including the live vibration multiplier; consolidate seven duplicate header bodies onto existing owners; recover empty lifecycle defaults; interpolation model and two reset/delay bodies remain open | [individual register](game_core/breath_recoil_inline_recovery.md) |
 | Stealth + ladder/landing-point inlines | 23 | Restore null link/resource initialization and direct-pointer predicates in their existing cook; restore three const locals; four stealth getter models and four explicit detection/selection gaps | [individual register](game_core/stealth_ladder_inline_recovery.md) |
+| Stamina + subscriber/dispatch inlines | 15 | Restore live subscriber null initialization; review jump/medkit/weight getter expansions; implement four-field writer model with explicit clock-sentinel uncertainty | [individual register](game_core/stamina_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the stealth/ladder batch: the registers account for 416
+Checkpoint after the stamina batch: the registers account for 431
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 488 marked lines: game 294, game_core 125,
+questions. The literal scan is now 487 marked lines: game 294, game_core 124,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 431 active marked lines, **not** a remaining-function
+mirror lines leaves 430 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 Next work includes the player/history consumers' own inline methods and the
