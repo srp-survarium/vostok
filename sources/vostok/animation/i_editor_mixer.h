@@ -65,11 +65,13 @@ namespace animation {
 
 	STATIC_SIZE_ASSERT(editor_animations_event, 0x10);
 
-	struct fixed_joint_camera_effector : public camera_effector , private core::noncopyable {
+	class fixed_joint_camera_effector : public camera_effector , private core::noncopyable {
+	public:
 		inline	explicit	fixed_joint_camera_effector	( float4x4 const& joint_matrix ) : m_joint_matrix( joint_matrix ) { }
 
-		virtual	void		process_camera				( float4x4& view_inverted ) override { /* no source */ }
-		virtual	void		on_attach					( ) override { /* no source */ }
+		// sushi@TODO: verify the editor's joint-to-camera convention and attachment hook.
+		virtual	void		process_camera				( float4x4& view_inverted ) override { view_inverted = m_joint_matrix; }
+		virtual	void		on_attach					( ) override { }
 
 	private:
 		/* 0x0000 */	/* camera_effector */

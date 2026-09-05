@@ -200,13 +200,7 @@ void bullet_character_controller::player_step( float dt )
 	m_has_updates = true;
 	m_was_on_ground = on_ground( );
 
-	if ( m_jumping )
-		m_vertical_velocity = m_walk_vector.y( ) / dt;
-	else
-	{
-		float fall_speed = m_vertical_velocity - m_gravity * dt;
-		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
-	}
+	prevent_max_slope_moving_prestep( dt );
 
 	btVector3 step_up_correction;
 	step_up_correction.setZero( );
@@ -225,6 +219,23 @@ void bullet_character_controller::player_step( float dt )
 	btTransform new_transform = m_ghost_object->getWorldTransform( );
 	new_transform.setOrigin( m_current_pos );
 	m_ghost_object->setWorldTransform( new_transform );
+}
+
+inline u32 bullet_character_controller::get_contacts_count( )
+{
+	// sushi@TODO: verify whether the original counted all cached contacts or only penetrating contacts.
+	u32 result = 0;
+	btManifoldArray manifolds;
+	btBroadphasePairArray& pairs = m_ghost_object->getOverlappingPairCache( )->getOverlappingPairArray( );
+	for ( s32 i = 0; i < pairs.size( ); ++i ) {
+		if ( !pairs[i].m_algorithm )
+			continue;
+		manifolds.resize( 0 );
+		pairs[i].m_algorithm->getAllContactManifolds( manifolds );
+		for ( s32 j = 0; j < manifolds.size( ); ++j )
+			result += manifolds[j]->getNumContacts( );
+	}
+	return result;
 }
 
 float bullet_character_controller::recover_from_penetration( )

@@ -23,6 +23,10 @@ binaries/pdb_fetch.log):
 where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
 
+The terminal stream is intentionally concise: one line per Ninja edge plus
+errors and the final result. The complete unfiltered compiler transcript from
+the latest run is kept in binaries/rebuild-output.log.
+
 Any extra args are forwarded to vostok.build.ninja:
   python3 -m vostok build            # build the game, then refresh base diff inputs
   python3 -m vostok build logging    # build just one project first
@@ -46,6 +50,7 @@ from vostok.build import ninja_regen
 
 from vostok.core import paths
 from vostok.core.paths import REBUILD_LOG as LOG_PATH
+from vostok.core.paths import REBUILD_OUTPUT_LOG as OUTPUT_LOG_PATH
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import REPORT_HEAD
 from vostok.core.log import logger
@@ -58,7 +63,24 @@ from vostok.core import log as _log
 # The "...\vostok\<module>\sources && cl" shape is unique to a recompile (link/lib
 # edges run `link`/`lib`, not `cl`), so it counts TUs without double-counting the
 # per-project link step. Path separators are backslashes under Wine.
-_CL_MODULE_RE = re.compile(r"vostok[\\/]([A-Za-z0-9_]+)[\\/]sources\b[^\n]*?&&\s*cl\b")
+_CL_MODULE_RE = re.compile(
+    r"vostok[\\/]([A-Za-z0-9_]+)[\\/]"
+    r"(?:[A-Za-z0-9_]+[\\/])*sources\b[^\n]*?&&\s*cl\b"
+)
+_ANSI_RE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
+_PROGRESS_RE = re.compile(r"^\[(\d+)/(\d+)\]\s+(.*)$")
+_SOURCE_MODULE_RE = re.compile(
+    r"sources[\\/]vostok[\\/]([A-Za-z0-9_]+)[\\/]", re.IGNORECASE,
+)
+_RSP_ACTION_RE = re.compile(
+    r"[\\/]rsp[\\/]([A-Za-z0-9_.-]+?)_(cl_[01]|lib|link)\.rsp\b",
+    re.IGNORECASE,
+)
+_ERROR_RE = re.compile(
+    r"(?:\bfatal error\b|\berror (?:C|LNK)\d+\b|:\s*error:|"
+    r"unresolved external symbol|undefined reference)",
+    re.IGNORECASE,
+)
 
 
 log = logger("rebuild")
@@ -117,10 +139,61 @@ def _append_log(elapsed: float, modules: set[str]) -> None:
 DRAIN_GRACE_SECONDS = 2.0
 
 
+def _terminal_line(raw: bytes | str) -> str | None:
+    """Condense one Ninja/MSVC output line for the live terminal.
+
+    The caller writes ``raw`` to the full transcript before calling this. Keep
+    primary compiler/linker errors, but discard source-file banners, warnings,
+    and Wine/graphics chatter that otherwise bury those errors.
+    """
+    if isinstance(raw, bytes):
+        line = raw.decode("utf-8", "replace")
+    else:
+        line = raw
+    line = _ANSI_RE.sub("", line).replace("\r", "").strip()
+    if not line:
+        return None
+
+    progress = _PROGRESS_RE.match(line)
+    if progress:
+        current, total, command = progress.groups()
+        rsp = _RSP_ACTION_RE.search(command)
+        if rsp:
+            project, raw_action = rsp.groups()
+            action = {
+                "cl_0": "compile PCH",
+                "cl_1": "compile",
+                "lib": "archive",
+                "link": "link",
+            }[raw_action.lower()]
+            source_module = _SOURCE_MODULE_RE.search(command)
+            owner = source_module.group(1) if source_module else project
+            detail = f" ({project})" if owner.casefold() != project.casefold() else ""
+            return f"[{current}/{total}] {action} {owner}{detail}"
+        if command.startswith("cmd "):
+            return f"[{current}/{total}] build edge"
+        return f"[{current}/{total}] {command[:160]}"
+
+    if line.startswith("FAILED:"):
+        return "[ninja] edge failed"
+    if _ERROR_RE.search(line):
+        return line
+    if line.startswith("[ninja]"):
+        return line
+    if line.startswith("ninja:"):
+        return line
+    return None
+
+
 def run_ninja() -> set[str]:
     """Run vostok.build.ninja, streaming its output, and return the set of modules
-    whose TUs were recompiled (parsed from the verbose cl command lines)."""
+    whose TUs were recompiled (parsed from the verbose cl command lines).
+
+    The full child stream is retained in ``OUTPUT_LOG_PATH`` while the terminal
+    receives only compact progress and actionable diagnostics.
+    """
     modules: set[str] = set()
+    OUTPUT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
         [sys.executable, "-u", "-m", "vostok.build.ninja", *sys.argv[1:]],
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=paths.child_env(),
@@ -134,26 +207,35 @@ def run_ninja() -> set[str]:
         if m:
             modules.add(m.group(1))
 
-    while True:
-        ready, _, _ = select.select([fd], [], [], 0.5)
-        if ready:
-            chunk = os.read(fd, 1 << 16)
-            if not chunk:
-                break                       # true EOF: every write end closed
-            sys.stdout.buffer.write(chunk)  # keep the live build log intact
-            sys.stdout.buffer.flush()
-            lines = (tail + chunk).split(b"\n")
-            tail = lines.pop()
-            for ln in lines:
-                scan(ln)
-        if proc.poll() is not None:
-            if exited_at is None:
-                exited_at = time.monotonic()
-            elif not ready and time.monotonic() - exited_at >= DRAIN_GRACE_SECONDS:
-                break                       # child gone, pipe silent: let go
-    scan(tail)
+    def show(data: bytes) -> None:
+        line = _terminal_line(data)
+        if line is not None:
+            print(line, flush=True)
+
+    with open(OUTPUT_LOG_PATH, "wb") as transcript:
+        while True:
+            ready, _, _ = select.select([fd], [], [], 0.5)
+            if ready:
+                chunk = os.read(fd, 1 << 16)
+                if not chunk:
+                    break                   # true EOF: every write end closed
+                transcript.write(chunk)
+                transcript.flush()
+                lines = (tail + chunk).split(b"\n")
+                tail = lines.pop()
+                for ln in lines:
+                    scan(ln)
+                    show(ln)
+            if proc.poll() is not None:
+                if exited_at is None:
+                    exited_at = time.monotonic()
+                elif not ready and time.monotonic() - exited_at >= DRAIN_GRACE_SECONDS:
+                    break                   # child gone, pipe silent: let go
+        scan(tail)
+        show(tail)
     rc = proc.wait()
     if rc != 0:
+        log(f"full compiler output: {OUTPUT_LOG_PATH}")
         # mirror vostok.build.ninja's exit code so callers/watchdog see the failure,
         # but the audit line is still written by main()'s finally guard.
         raise subprocess.CalledProcessError(rc, "vostok.build.ninja")

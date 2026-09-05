@@ -278,6 +278,7 @@ PDB_ORDER_PROBE_FIXTURES = SCRIPTS / "vostok" / "tool" / "data" / "pdb_order_pro
 PDB_ORDER_PROBE_OUTPUT = GEN_DIR / "pdb-order-probes"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
+REBUILD_OUTPUT_LOG = BINARIES / "rebuild-output.log"
 
 
 def _main_worktree() -> Path:

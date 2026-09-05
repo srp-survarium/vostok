@@ -17,14 +17,12 @@ template < typename T >
 inline sequence_number< T >::sequence_number( sequence_number const& other ) :
 	m_number	( other.m_number )
 {
-	/* no source */
 }
 
 template < typename T >
 inline sequence_number< T >::sequence_number( const sequence_number_type number ) :
 	m_number	( number )
 {
-	/* no source */
 }
 
 template < typename T >

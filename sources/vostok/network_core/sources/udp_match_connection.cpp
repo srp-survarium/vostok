@@ -438,7 +438,7 @@ void udp_match_connection::enqueue( udp_match_packet* packet )
 
 // the acknowledgement purge helper of update_acknowledgements - GLOBAL scope per the
 // target mangling (intrusive_list<..>::remove_if<sequence_id_predicate>).
-class sequence_id_predicate : public boost::noncopyable {
+class sequence_id_predicate : private boost::noncopyable {
 public:
 	inline			sequence_id_predicate	(
 						vostok::memory::single_size_buffer_allocator< 300, vostok::threading::single_threading_policy >&	packets_allocator,
@@ -569,7 +569,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 
 // the disconnect purge helper of instant_disconnect/disconnect - GLOBAL scope per the
 // target mangling (intrusive_list<..>::remove_if<remove_all_predicate>).
-class remove_all_predicate : public boost::noncopyable {
+class remove_all_predicate : private boost::noncopyable {
 public:
 	inline			remove_all_predicate	(
 						vostok::memory::single_size_buffer_allocator< 300, vostok::threading::single_threading_policy >&	packets_allocator,

@@ -12,7 +12,11 @@ class btPairCachingGhostObject;
 namespace vostok {
 namespace physics {
 
+class bt_character_controller;
+
 class bullet_character_controller : public btActionInterface, boost::noncopyable {
+	friend class bt_character_controller;
+
 public:
 											bullet_character_controller		(
 												btPairCachingGhostObject*	ghost_object,
@@ -26,7 +30,7 @@ public:
 	virtual	void							updateAction					( btCollisionWorld* collisionWorld, float deltaTime ) override;
 	// Empty virtual override; IS instantiated (vtable slot, body = `ret 4`, ICF-folded
 	// in both binaries). The empty body is faithful — not a missing reconstruction.
-	virtual	void							debugDraw						( btIDebugDraw* arg_0 ) override { /* no source */ }
+	virtual	void							debugDraw						( btIDebugDraw* __formal ) override { }
 
 			void							set_desired_walk_vector			( btVector3 const& walk_vector );
 
@@ -46,10 +50,8 @@ public:
 			void							end_jump						( );
 			bool							can_jump						( ) const;
 
-	// STATE[REMOVED]: no caller (the get_gravity/is_inserted grep hits are on unrelated
-	// classes game_core::bullet_manager / victory_item_core); absent from both binaries.
-	inline	float							get_gravity						( ) const { /* no source */ }
-	inline	bool							is_inserted						( ) const { /* no source */ } // STATE[REMOVED]
+	inline	float							get_gravity						( ) const { return m_gravity; }
+	inline	bool							is_inserted						( ) const { return m_collision_world != NULL; }
 
 private:
 	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }
@@ -57,9 +59,17 @@ private:
 			void							player_step						( float dt );
 			void							pre_step						( float dt );
 
-	// STATE[REMOVED]: not inlined into pre_step (verified: pre_step only loops
-	// recover_from_penetration); no caller; absent from both binaries.
-	inline	void							prevent_max_slope_moving_prestep( const float dt ) { /* no source */ }
+	// STATE[INLINED]: expanded by player_step.
+	inline	void							prevent_max_slope_moving_prestep( const float dt )
+	{
+		if ( m_jumping )
+			m_vertical_velocity = m_walk_vector.y( ) / dt;
+		else
+		{
+			float fall_speed = m_vertical_velocity - m_gravity * dt;
+			m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
+		}
+	}
 
 			float							recover_from_penetration		( );
 
@@ -74,30 +84,23 @@ private:
 												float				tangentMag = 0.0f,
 												float				normalMag = 1.0f
 											);
-	// STATE[REMOVED]: the "most likely used in player_step" hypothesis is DISPROVEN — the
-	// target player_step (0x576220) calls only step_up/step_forward_and_strafe/step_down/
-	// setWorldTransform, none of these. These private inlines have no out-of-line body and no
-	// inline site in any shipped function; absent from both binaries. Empty stubs correct.
 	inline	bool							in_crouch						( ) const { return m_in_crouch; }
-	inline	void							prevent_step_bouncing			( ) { /* no source */ } // STATE[REMOVED]
-	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ } // STATE[REMOVED]
-	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ } // STATE[REMOVED]
-	inline	void							updata_slide_vector				( btVector3 const& arg_0, const float arg_1 ) { /* no source */ } // STATE[REMOVED]
+	// STATE[STUB]: smoothing and step/slide policies remain unresolved; see the PR 569 semantic register.
+	inline	void							prevent_step_bouncing			( ) { /* no source */ }
+	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ }
+	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ }
+	inline	void							updata_slide_vector				( btVector3 const& arg_0, const float arg_1 ) { /* no source */ }
 
-	inline	u32								get_contacts_count				( ) { /* no source */ } // STATE[REMOVED]
+	inline	u32								get_contacts_count				( );
 
 			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );
 
 
-	static const	btVector3							m_up_vector;
-
-public:
 	/* 0x0000 */	/* btActionInterface */
 	/* 0x0004 */	/* boost::noncopyable */
-	// target has this private too, but character_controller.cpp activate/deactivate read it directly
 	/* 0x0004 */	btDynamicsWorld*					m_collision_world;
-private:
+	static const	btVector3							m_up_vector;
 	/* 0x0010 */	btVector3							m_walk_vector;
 	/* 0x0020 */	btVector3							m_normalizedDirection;
 	/* 0x0030 */	btVector3							m_current_pos;

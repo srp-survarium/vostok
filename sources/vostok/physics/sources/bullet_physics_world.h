@@ -82,11 +82,31 @@ public:
 	inline	memory::base_allocator&			allocator					( ) { return m_allocator; }
 	inline	btSoftRigidDynamicsWorld*		get_bt_internal				( ) { return m_dynamicsWorld; }
 
-	// STATE[REMOVED]: rope create/destroy are referenced only from editor object_wire_set.cpp,
-	// not compiled into survarium.exe; no free create/destroy_soft_body_rope nor these inlines
-	// appear in either binary. Empty stubs correct.
-	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& arg_0 ) { /* no source */ }
-	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* arg_0 ) { /* no source */ } // STATE[REMOVED]
+	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& info )
+	{
+		btSoftBody* body = btSoftBodyHelpers::CreateRope(
+			*m_softBodyWorldInfo, from_vostok( info.p0 ), from_vostok( info.p1 ), info.fragments_count, 1 + 2
+		);
+		body->m_cfg.piterations = info.iterations;
+		body->m_cfg.viterations = info.iterations;
+		body->m_cfg.kVCF = info.kVCF;
+		body->m_cfg.kDP = info.kDP;
+		body->m_cfg.kDG = info.kDG;
+		body->m_cfg.kLF = info.kLF;
+		body->m_cfg.kPR = info.kPR;
+		body->m_cfg.kVC = info.kVC;
+		body->m_cfg.kDF = info.kDF;
+		body->m_cfg.kMT = info.kMT;
+		body->m_cfg.kCHR = info.kCHR;
+		body->m_cfg.kKHR = info.kKHR;
+		body->m_cfg.kSHR = info.kSHR;
+		body->m_cfg.kAHR = info.kAHR;
+		body->m_cfg.timescale = info.timescale;
+		body->getCollisionShape( )->setMargin( info.margin );
+		body->m_materials[0]->m_kLST = info.stiftness;
+		return VOSTOK_NEW_IMPL( m_allocator, bt_soft_body_rope )( body );
+	}
+	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* body ) { VOSTOK_DELETE_IMPL( m_allocator, body ); }
 
 			void							contact_pair_test			( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object );
 			bool							adjust_foot_transform		(
@@ -101,10 +121,12 @@ public:
 private:
 			void							notify_about_contact		( );
 
+typedef callbacks_type callbacks_container_type;
+
 private:
 	/* 0x0000 */	/* world */
 	/* 0x0004 */	/* boost::noncopyable */
-	/* 0x0004 */	callbacks_type						m_contact_callbacks;
+	/* 0x0004 */	callbacks_container_type				m_contact_callbacks;
 	/* 0x001c */	memory::base_allocator&				m_allocator;
 	/* 0x0020 */	btCollisionConfiguration*			m_collisionConfiguration;
 	/* 0x0024 */	btCollisionDispatcher*				m_dispatcher;

@@ -49,10 +49,9 @@ public:
 
 			network_core::udp_match_packet*	new_packet				( u8 message_type );
 
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_packet						( network_core::udp_match_packet*& packet )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( packet );
+		network_core::delete_udp_match_packet	( *m_order_packets_allocator, packet );
 	}
 
 	inline	void				set_on_packet_received				( boost::function< void ( u8, network_core::packet_reader& ) > const& on_packet_received )
@@ -77,16 +76,14 @@ public:
 // the target manglings are AAE (private) for the whole create_*/on_* surface;
 // the type record puts the response-packet stubs at the head of that block
 private:
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	network_core::udp_match_packet*	new_response_packet		( )
 	{
-		return NULL;
+		return network_core::new_udp_match_packet( *m_response_packets_allocator );
 	}
 
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_response_packet				( network_core::udp_match_packet*& packet )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( packet );
+		network_core::delete_udp_match_packet	( *m_response_packets_allocator, packet );
 	}
 
 			void				create_client						( network_core::udp_network_flow_emulator_options const* options );
