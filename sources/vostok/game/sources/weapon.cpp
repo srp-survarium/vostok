@@ -670,11 +670,6 @@ void weapon::on_skeleton_matrices_changed(
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 }
 
-// claude@NOTE: faithful body (finger_corrector_enable guard + tail-call to
-// fingers_to_weapon_corrector::process). Walled: process() is an empty STUB in
-// fingers_to_weapon_corrector.cpp (a separate TU), so LTCG inlines its empty body and DCE
-// drops the whole guarded statement, leaving our base a bare `ret 8`. Recovers once that
-// process() lands a real body; do NOT collapse the guard to hold a % - structure is correct.
 void weapon::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
 {
 	if ( s_enable_finger_corrector_value )

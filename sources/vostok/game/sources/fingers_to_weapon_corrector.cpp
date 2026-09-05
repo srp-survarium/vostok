@@ -42,14 +42,9 @@ static u32 s_index_of_parent[16] =
 	15, 0, 1, 15, 3, 4, 15, 6, 7, 15, 9, 10, 15, 12, 13, u32( -1 ),
 };
 
-// claude@NOTE: init-list ctor, 0 body statements - structurally correct. Residual is an
-// inline-vs-call wall on linear_interpolator::linear_interpolator(float): the target inlines
-// it (writes the vtable + m_total_transition_time directly), our base emits a call. The
-// decision is LTCG-driven and flips per call site (the sibling hand_to_weapon_ik_processor
-// ctor shows the opposite: target calls, base inlines). Not source-steerable without
-// __forceinline on the shared interpolator header (off-limits - other units' call sites).
  fingers_to_weapon_corrector::fingers_to_weapon_corrector( ) :
-	m_interpolator( 0.1f )
+	m_interpolator( 0.1f ),
+	m_first_person_view( false )
 {
 }
 
@@ -63,10 +58,6 @@ void fingers_to_weapon_corrector::activate(
 	initialize_locators									( *weapon_model, first_person_view );
 }
 
-// claude@NOTE: structure matches (3 stmts, nested for + get_bone_index-get_root_bones_count).
-// Residual is register allocation: the target keeps character_skeleton in a callee-saved
-// reg (ebp, surviving the inlined __find_if call) and the bone-index / root-count divides
-// are scheduled in the opposite order to our base. Not source-steerable.
 void fingers_to_weapon_corrector::initialize_bones_indices( animation::skeleton const& character_skeleton )
 {
 	for ( u32 hand = 0; hand < hands_count; ++hand )
@@ -74,15 +65,11 @@ void fingers_to_weapon_corrector::initialize_bones_indices( animation::skeleton 
 			m_hands[hand].phalanges_bones_indices[i] = character_skeleton.get_bone_index( s_arm_fingers_phalanges[hand][i] ) - character_skeleton.get_root_bones_count( );
 }
 
-// claude@NOTE: structure matches (10 stmts). Residual is stack-slot coloring: the target
-// places the mul4x3 return temporary at the lowest local slot (pushing current_item +0x40
-// up), while our base colors current_item lowest and the temp high. Same locals, same
-// statements - the slot assignment order is a compiler choice, not source-steerable.
 void fingers_to_weapon_corrector::initialize_locators( render::render_model_instance const& weapon_model, const bool first_person_view )
 {
 	typedef fixed_string< 256 >		locator_name_string_type;
 
-	m_first_person_view									= first_person_view;
+	set_first_person_view								( first_person_view );
 
 	float4x4							matrices[16];
 	float4x4							inverted_matrices[16];
@@ -118,10 +105,6 @@ void interpolate_hand_matrices(
 		result_matrices[bone_indices[i]] = mix_transformations( result_matrices[bone_indices[i]], locator_matrices[i], iterpolation_coeff );
 }
 
-// claude@NOTE: structure matches (7 stmts, if/else over the per-hand transition). Residual
-// is the is_active fast-path copy loop: our base unrolls it 5x (15 = 5*3) while the target
-// keeps it rolled (15 iterations, one rep movsd each). The unroll factor is an optimizer
-// heuristic on the constant trip count, not source-steerable.
 void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x4* matrices ) const
 {
 	for ( hand const* current_hand = m_hands; current_hand != m_hands + hands_count; ++current_hand )

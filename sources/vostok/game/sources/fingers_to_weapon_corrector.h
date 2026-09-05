@@ -64,7 +64,8 @@ private:
 	}; // struct hand
 
 public:
-	inline	void		set_first_person_view		( const bool arg_0 ) { /* no source */ }
+	// sushi@TODO: retained locator setup proves this store; verify the original named setter boundary.
+	inline	void		set_first_person_view		( const bool first_person_view ) { m_first_person_view = first_person_view; }
 
 private:
 	/* 0x0000 */	/* core::noncopyable */
