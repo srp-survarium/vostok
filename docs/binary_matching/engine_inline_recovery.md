@@ -62,16 +62,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Bullet manager, callback pool, predicates and bullet getters | 28 | Real particle-normal destination fix; restore allocator assertion and typed/raw forwarding, tracer and cleanup seams; three const-pointer repairs; explicit decal-clear/accessor models and preserved retail loop hazards | [individual register](game_core/bullet_inline_recovery.md) |
 | Update/hit/relocation/options packets and update-queue consumer | 22 | Six bounded inverse-wire models; repair byte-ID read types, remove undefined extra copy declaration, preserve generated memberwise operations, and fix queue construction/assignment order; original missing-direction consumers remain open | [individual register](game_core/update_packet_inline_recovery.md) |
 | Profile, item, slot and booster inlines | 11 | Three inverse-wire/forwarding models; fix positive mode checks in the live reader expansion; verify constructors, raw slot-mode table and id-only equality; preserve distinct compact-profile/shop/raw-lobby formats, with sender/sparse/narrowing policy open | [individual register](game_core/profile_packet_inline_recovery.md) |
+| Leg-IK predicates/timers/drawer and consumer anchors | 21 | Real elapsed-timer initializer fix (two 0.1f → 0.0f stores); recover rotation/line wrapper seams and five placeholder bodies; retain verified ground/timer operations and generated cleanup, with support/ownership/const/access questions open | [individual register](game_core/legs_ik_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the profile-packet batch: the registers account for 698
+Checkpoint after the leg-IK batch: the registers account for 719
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 430 marked lines: game 294, game_core 67,
+questions. The literal scan is now 425 marked lines: game 294, game_core 62,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 373 active marked lines, **not** a remaining-function
+mirror lines leaves 368 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 Next work includes the player/history consumers' own inline methods and the
