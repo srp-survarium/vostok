@@ -51,16 +51,17 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 | Breath-state family and calculator inlines | 40 | Seven real 0-versus-1 float fixes including the live vibration multiplier; consolidate seven duplicate header bodies onto existing owners; recover empty lifecycle defaults; interpolation model and two reset/delay bodies remain open | [individual register](game_core/breath_recoil_inline_recovery.md) |
 | Stealth + ladder/landing-point inlines | 23 | Restore null link/resource initialization and direct-pointer predicates in their existing cook; restore three const locals; four stealth getter models and four explicit detection/selection gaps | [individual register](game_core/stealth_ladder_inline_recovery.md) |
 | Stamina + subscriber/dispatch inlines | 15 | Restore live subscriber null initialization; review jump/medkit/weight getter expansions; implement four-field writer model with explicit clock-sentinel uncertainty | [individual register](game_core/stamina_inline_recovery.md) |
+| Damage model, body parts, hit parameters, protectors and thresholds | 59 | Two real data fixes (stats destination and one-byte affect count); const-local repair; ten literal placeholders reconstructed as bounded models; all 17 implementation-file predicates checked in retained consumers; health/color/minimum and producer details remain open | [individual register](game_core/damage_inline_recovery.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
 does not erase or relabel them as completed.
 
-Checkpoint after the stamina batch: the registers account for 431
+Checkpoint after the damage batch: the registers account for 490
 declarations, including existing bodies and explicitly open models/extent
-questions. The literal scan is now 487 marked lines: game 294, game_core 124,
+questions. The literal scan is now 477 marked lines: game 294, game_core 114,
 Scaleform 57, physics 6, animation 5, render 1. Excluding the 57 inactive SDK
-mirror lines leaves 430 active marked lines, **not** a remaining-function
+mirror lines leaves 420 active marked lines, **not** a remaining-function
 count. Unmarked placeholders and nonliteral STUB markers remain in scope.
 
 Next work includes the player/history consumers' own inline methods and the
