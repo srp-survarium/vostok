@@ -19,11 +19,12 @@ namespace survarium {
 
 struct weapon_animation_parameters;
 
+// Retail installs this abstract base's vptr during construction and destruction.
 class jump_logic_base_state : public ai::fsm_state {
 public:
 	typedef std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > selected_animations_result_type;
 
-	virtual				~jump_logic_base_state	( ) { /* no source */ }
+	virtual				~jump_logic_base_state	( ) { }
 
 	virtual	void		set_user				( base_player& user ) { m_user = &user; }
 
@@ -39,7 +40,6 @@ public:
 	inline	bool		is_jump_finished		( ) const { return m_is_jump_finished; }
 
 protected:
-	// claude@MATCH: target mangles the ctor ?...@@IAE (protected).
 	explicit			jump_logic_base_state	( jump_logic& owner )
 							:	m_jump_logic( owner ),
 								m_user( 0 ),
@@ -48,9 +48,6 @@ protected:
 						{}
 
 protected:
-	// claude@MATCH: derived state overrides read m_jump_logic / m_animation /
-	// m_interval_id_to_wait_for directly (no accessor in the target asm), so the data
-	// members are protected. Access specifier changes no codegen, only visibility.
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	jump_logic&							m_jump_logic;
 	/* 0x001c */	base_player*						m_user;

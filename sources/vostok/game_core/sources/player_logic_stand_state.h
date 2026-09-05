@@ -7,8 +7,6 @@
 
 namespace survarium {
 
-// void* survarium::player_logic_stand_state::`scalar deleting destructor'(unsigned int)
-
 class player_logic_stand_state : public player_logic_base_state {
 public:
 	explicit			player_logic_stand_state	( weapon_user_animations_selector& owner );
@@ -18,9 +16,9 @@ public:
 	typedef animation::mixing::animation_lexeme animation_lexeme;
 
 private:
-	virtual	void		initialize					( ) override { /* no source */ }
-	virtual	void		finalize					( ) override { /* no source */ }
-	virtual	void		execute						( ) override { /* no source */ }
+	virtual	void		initialize					( ) override { }
+	virtual	void		finalize					( ) override { }
+	virtual	void		execute						( ) override { }
 
 
 	virtual	selected_animations_result_type

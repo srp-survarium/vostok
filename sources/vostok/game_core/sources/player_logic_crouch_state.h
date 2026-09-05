@@ -7,8 +7,6 @@
 
 namespace survarium {
 
-// player_logic_crouch_state::`scalar deleting destructor'( )
-
 class player_logic_crouch_state : public player_logic_base_state {
 public:
 											player_logic_crouch_state	( weapon_user_animations_selector& owner );
@@ -20,7 +18,7 @@ public:
 private:
 	virtual	void								initialize					( ) override;
 	virtual	void								finalize					( ) override;
-	virtual	void								execute						( ) override { /* no source */ }
+	virtual	void								execute						( ) override { }
 
 	virtual	selected_animations_result_type
 												selected_animations			(

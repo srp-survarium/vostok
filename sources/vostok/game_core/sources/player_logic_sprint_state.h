@@ -21,13 +21,9 @@ public:
 	typedef animation::mixing::expression expression;
 
 private:
-	// claude@MATCH: every virtual override mangles `E` (private); ctor/set_callbacks
-	// stay public (`QAE`); on_stamina_depleted is private (`AAE`).
 	virtual	void		initialize					( ) override;
 	virtual	void		finalize					( ) override;
-	// claude@MATCH: empty body; emitted bytes are 7/7 equal to target, but ICF folds
-	// the empty stub so objdiff pairs it to a different fold-rep (reads None).
-	virtual	void		execute						( ) override { /* no source */ }
+	virtual	void		execute						( ) override { }
 
 	virtual	selected_animations_result_type
 						selected_animations			(
