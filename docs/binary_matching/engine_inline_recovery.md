@@ -40,6 +40,7 @@ from verified retail expansions. Explicitly retain any unresolved alternative.
 |---|---:|---|---|
 | `circular_buffer<T>` | 22 | 13 stale markers; 3 new models; 3 open bodies; 3 existing unmarked methods reviewed | [individual register](game_core/circular_buffer_inline_recovery.md) |
 | `player` inlines | 33 | 13 stale markers; 1 forwarding seam; 1 stamina getter model; 8 open bodies; 10 existing unmarked overrides reviewed | [individual register](game/player_inline_recovery.md) |
+| Scaleform reference mirrors | 71 marked declarations | All have existing SDK/generated-source owners; not active missing bodies. Includes 57 literal markers and 14 other distinct STUB declarations | [ownership register](scaleform/inline_reference_ownership.md) |
 
 The eleven inline bodies and `can_prone` still open in PR 569 retain their
 [individual evidence gaps](pr569_semantic_reconstruction.md); this follow-up
