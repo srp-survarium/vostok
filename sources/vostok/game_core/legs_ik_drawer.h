@@ -18,7 +18,6 @@ namespace debug {
 
 namespace survarium {
 
-// sushi@TODO: resolve public-base carcass projection versus identical topology for this private base.
 class legs_ik_drawer : private core::noncopyable {
 public:
 	// sushi@TODO: field-copy constructor model; identify the original drawer construction site.

@@ -73,12 +73,10 @@ both nested types, drawer and base. The base's two fields really are protected,
 so derived accesses do not require invented getter methods. Remove stale
 comments justifying protected access solely by its byte effect.
 
-The raw generated base/drawer headers print public `core::noncopyable` bases,
-while source uses private and topology reports identical. This is the same
-unresolved base-access projection discrepancy noted in the bullet pool audit.
-Do not quietly call it 100% verified visibility or change inheritance on this
-inconsistent evidence. Both source anchors and the review table retain the
-question; raw base-access encoding/parser handling still needs resolution.
+The later [raw-base audit](../pdb_base_access_rendering.md) verifies private
+`core::noncopyable` inheritance for both base and drawer in both PDBs. The
+generator hardcodes public; topology/source are correct for these rows. Their
+obsolete access TODOs are closed without changing inheritance.
 
 `set_drawer` and drawer construction have no identified current creation site.
 The processor owns deletion of its current drawer, while the drawer retains

@@ -129,11 +129,10 @@ access; do not depend on a lucky PCH include order or invent a new id field.
   reallocation preconditions left open, not classified as a candidate-only
   bug or “fixed” by inventing an erase.
 
-Frozen raw topology reports identical manager, allocator, bullet and
-predicate records. The generated allocator carcass nevertheless prints a
-public boost base while current source says private. Do not silently change
-source access from that projection alone; record the raw base-access/parser
-question separately. This is not a claim of fully verified source spelling.
+Frozen raw topology reports identical manager, allocator, bullet and predicate
+records. The later [raw-base audit](../pdb_base_access_rendering.md) resolves
+the allocator's apparent public/private discrepancy: both actual PDBs encode
+private inheritance. The generator hardcodes public; keep the private source.
 
 ## Every declaration
 

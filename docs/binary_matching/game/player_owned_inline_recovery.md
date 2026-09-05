@@ -54,11 +54,10 @@ of the observed instantiation, not proof of its original generic spelling.
 Keep that specific question instead of a misleading no-source body marker.
 
 Frozen topology reports one identical semantic variant for history item,
-client state and profile wrapper. The raw generated history/profile headers
-print public Boost inheritance while source uses private and topology reports
-identical; this joins the existing base-access projection question. Both source
-anchors and review-table rows retain it. Do not guess an inheritance change or
-claim 100% raw visibility coverage from this comparison.
+client state and profile wrapper. The later
+[raw-base audit](../pdb_base_access_rendering.md) confirms private inheritance
+for history/profile in both actual PDBs. Their generated public spelling is a
+renderer defect; those source questions are closed without access changes.
 
 No new scalar initialization, resource owner, virtual function, friend, explicit
 client-state special member or copy operation is introduced. Post-edit codegen

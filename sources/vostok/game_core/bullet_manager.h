@@ -176,7 +176,6 @@ private:
 		&bullet_manager::bullet_functor::next >				bullet_functors_type;
 
 private:
-	// sushi@TODO: Resolve public boost base in the carcass versus private source; frozen target/base records compare identical.
 	class bullet_functor_mt_allocator : private boost::noncopyable {
 	public:
 		typedef bullet_manager::bullet_functor bullet_functor;

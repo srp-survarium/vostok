@@ -14,7 +14,6 @@ namespace survarium {
 struct leg_info;
 struct leg_key_times;
 
-// sushi@TODO: resolve public-base carcass projection versus identical topology for this private base.
 class animation_analyzer : private core::noncopyable {
 public:
 						animation_analyzer		( leg_info const* legs_info, const u32 legs_count, animation::skeleton const& skeleton );

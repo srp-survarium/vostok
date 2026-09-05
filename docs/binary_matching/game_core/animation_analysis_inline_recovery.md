@@ -82,11 +82,10 @@ getter is public and its buffer members private. Keep the missing sampling
 and reduction seams inside the analyzer rather than inventing a cook friendship
 or accessing private sample fields externally.
 
-The generated analyzer header prints public noncopyable inheritance while the
-current source is private and topology says identical: the existing raw
-base-access projection question applies here too. Preserve it as an explicit
-question instead of claiming whole-class access verification or guessing a
-change. No class layout, const member or method order is changed in this pass.
+The later [raw-base audit](../pdb_base_access_rendering.md) verifies private
+noncopyable inheritance in both actual PDBs. The generated public spelling
+comes from a hardcoded renderer keyword, not retail. This source question is
+closed without changing inheritance; algorithm and producer gaps remain open.
 
 ## Next evidence and verification
 
