@@ -52,7 +52,7 @@ private:
 	inline	void	advance_buffer	( const u32 size )
 	{
 		if ( m_comparer )
-			m_comparer->m_needed_buffer_size += size;
+			m_comparer->advance_buffer( size );
 		else
 			m_size += size;
 	}

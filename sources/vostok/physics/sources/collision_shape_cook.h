@@ -27,7 +27,8 @@ public:
 	virtual void				delete_resource				( resources::resource_base* resource ) override;
 
 private:
-	// STATE[UNMATCHABLE]: the client emits neither a call nor an inline expansion of this helper.
+	// STATE[UNMATCHABLE]: translate_query's retail line program keeps its request
+	// construction in the .cpp, and no other client caller expands this helper.
 	inline	void				load_collision_resources	( collision_shape_cook::cook_data* arg_0 ) { /* no source */ }
 			void				on_collision_sources_loaded	( resources::queries_result& data, collision_shape_cook::cook_data* cd );
 			bt_collision_shape*	create_primitives_shape		( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd );

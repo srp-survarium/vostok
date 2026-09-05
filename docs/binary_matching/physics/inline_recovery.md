@@ -9,15 +9,13 @@ no caller proves only that the client does not emit the method.
 
 ## Recovered source
 
-- `bullet_character_controller::get_gravity` returns `m_gravity`.
-- `bullet_character_controller::is_inserted` tests `m_collision_world`.
-- `bt_static_rigid_body::get_collision_shape` returns `m_shape`.
 - `bullet_character_controller::debugDraw` is a real empty virtual override. Its
   `ret 4` body is present through the vtable and ICF-folded in both binaries.
 
-The three accessors have direct, type-preserving field semantics and introduce no
-new object or allocation behavior. The client has no call site for them, so their
-spelling cannot receive a byte-match verdict from this target.
+The un-emitted accessors are not filled merely from their names. In particular,
+`bullet_character_controller::{get_gravity,is_inserted}` and
+`bt_static_rigid_body::get_collision_shape` have plausible direct-field bodies,
+but the client has no call site and the older source does not prove them.
 
 ## Recovered class seams
 
@@ -48,7 +46,7 @@ The following declarations have no procedure, caller, or recoverable expansion
 in `survarium.exe` and remain `STATE[UNMATCHABLE]`:
 
 - `bt_static_rigid_body::{is_active,set_ccd_motion_thresholds,
-  predict_integrated_transform}` and
+  get_collision_shape,predict_integrated_transform}` and
   `bt_rigid_body_construction_info::load`;
 - `bt_ghost_object::{dbg_render,non_compound_shapes_count}`;
 - the five-argument `bt_character_controller::adjust_foot_transform` overload and
@@ -58,7 +56,15 @@ in `survarium.exe` and remain `STATE[UNMATCHABLE]`:
 - `collision_shape_cook::load_collision_resources`;
 - `bullet_character_controller::{prevent_max_slope_moving_prestep,
   prevent_step_bouncing,can_overstep_obstacle,
-  has_support_to_overstep_obstacle,updata_slide_vector,get_contacts_count}`.
+  has_support_to_overstep_obstacle,updata_slide_vector,get_contacts_count,
+  get_gravity,is_inserted}`.
+
+For `collision_shape_cook::load_collision_resources`, the retail line program
+assigns every emitted statement in `translate_query`'s five-request setup to
+`collision_shape_cook.cpp`; it contains no expansion attributed to the header
+helper. The public 2011 X-Ray source uses an earlier cook design and has no
+`cook_data` or `load_collision_resources`, so it supplies no implementation.
+This proves that the body is unobservable in the client, not that it was empty.
 
 GSC commit `47633d6472d17c88d3e286082a171c1920dfc81c` supplies older out-of-line
 implementations for the rope accessors and world create/destroy helpers. It is
@@ -66,3 +72,6 @@ useful source-prior evidence, but it predates the retail client by years and doe
 not prove that those bodies or their inline/out-of-line placement survived
 unchanged. An editor PDB/executable from the retail revision is the appropriate
 oracle for closing them.
+
+The editor-facing subset and its source leads are maintained in the
+[editor decomp handoff](../../todos/editor_decomp.md).
