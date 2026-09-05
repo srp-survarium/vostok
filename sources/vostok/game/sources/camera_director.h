@@ -18,17 +18,17 @@ class camera_director : private boost::noncopyable {
 public:
 			explicit			camera_director			( base_game_scene& w );
 
-	virtual	void				load					( configs::binary_config_value const& __formal ) { /* no source */ }
+	virtual	void				load					( configs::binary_config_value const& __formal ) { }
 
 			void				switch_to_camera		( game_camera* c, pcstr camera_name );
-	inline	game_camera const*	get_active_camera		( ) const { /* no source */ return m_active_camera; }
+	inline	game_camera const*	get_active_camera		( ) const { return m_active_camera; }
 
 			void				tick					( );
 
 			void				apply					( );
 
-	inline	float4x4 const&		get_inverted_view_matrix( ) const { /* no source */ return m_inverted_view; }
-	inline	float4x4 const&		get_projection_matrix	( ) const { /* no source */ return m_projection; }
+	inline	float4x4 const&		get_inverted_view_matrix( ) const { return m_inverted_view; }
+	inline	float4x4 const&		get_projection_matrix	( ) const { return m_projection; }
 
 			void				set_position_direction	( float3 const& p, float3 const& d );
 
