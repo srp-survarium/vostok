@@ -9,6 +9,7 @@
 #include <vostok/scaleform/sources/flash_external_handler.h>
 #include <vostok/scaleform/sources/flash_movie_resource.h>
 #include "game_action_id.h"	// the canonical dump inlines the enum here; it lives in its own header
+#include "options_tab.h"
 
 namespace vostok {
 namespace resources {
@@ -23,7 +24,6 @@ class game;
 class options_item_base;
 class options_tab;
 
-// the canonical game_options_1.h variant is byte-identical - no union needed
 class game_options : public input::handler , public flash_external_handler , private boost::noncopyable {
 public:
 			explicit				game_options				( game& g );
@@ -57,7 +57,7 @@ public:
 										s32					z
 									) override;
 
-	virtual	s32						input_priority				( ) override { /* no source */ return 0; }
+	virtual	s32						input_priority				( ) override { return 5; }
 
 	virtual	void					callback					(
 										flash_movie*			pmovieView,
@@ -82,11 +82,15 @@ public:
 
 			void					deactivate					( );
 
-	inline	bool					is_active					( ) { /* no source */ return m_is_active; }
+	inline	bool					is_active					( ) { return m_is_active; }
 
 			void					refill_item_data			( u8 options_tab_id, u8 options_item_id );
 
-	inline	options_item_base*		get_options_item			( u8 arg_0, u8 arg_1 ) { /* no source */ return NULL; }
+	// sushi@TODO: Retail retains the video/resolution lookup; verify the original general-index guards and inline boundary.
+	inline	options_item_base*		get_options_item			( u8 tab_id, u8 item_id )
+	{
+		return m_options[tab_id]->option_by_id( item_id );
+	}
 
 private:
 			void					on_resources_ready			( resources::queries_result& data );
@@ -101,7 +105,8 @@ private:
 			void					reset_bindings				( bool is_default );
 			void					reset_bindings_to_defaults	( );
 
-	inline	bool					is_waiting_for_bind_key		( ) { /* no source */ return false; }
+	// sushi@TODO: Retail tests the kLASTACTION sentinel in three input handlers; verify this original predicate boundary.
+	inline	bool					is_waiting_for_bind_key		( ) { return m_waiting_for_bind_action != kLASTACTION; }
 
 private:
 	/* 0x0000 */	/* input::handler */
