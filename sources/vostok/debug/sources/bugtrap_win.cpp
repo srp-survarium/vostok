@@ -16,7 +16,7 @@
 
 using vostok::debug::bugtrap_usage;
 using vostok::debug::error_mode;
-namespace vostok { namespace debug { void set_support_email( pcstr support_email ); } }
+namespace vostok { namespace debug { VOSTOK_DEBUG_API void set_support_email( pcstr support_email ); } }
 static HMODULE			s_bugtrap_handle			= 0;
 #if VOSTOK_PLATFORM_WINDOWS_64
 	static pcstr		s_bugtrap_native_id			= "BugTrap-x64.dll";
@@ -132,7 +132,7 @@ static pcstr convert_to_unicode_if_needed			( pcstr const message, WCHAR (&outpu
 	return							convert_to_unicode_if_needed( message, &output[0], count );
 }
 
-void vostok::debug::set_support_email				( pcstr support_email )
+VOSTOK_DEBUG_API void vostok::debug::set_support_email	( pcstr support_email )
 {
 	WCHAR unicode_message[64];
 

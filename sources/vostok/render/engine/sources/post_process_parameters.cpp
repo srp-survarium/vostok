@@ -5,7 +5,11 @@
 
 namespace survarium {
 
+#if defined(VOSTOK_GAME_DLL)
+float s_camera_far_plane = 500.0f;
+#else
 extern float s_camera_far_plane;
+#endif
 
 } // namespace survarium
 

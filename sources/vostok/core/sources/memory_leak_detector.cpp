@@ -204,26 +204,10 @@ static pcstr s_call_stack_line_format		= "%-60s       : %-70s : 0x%08x\n";
 
 struct leak_logger 
 {
-	fs_new::file_type * m_file;
-	leak_logger() : m_file(NULL)
-	{
-		if ( vostok::logging::g_log_file_name.length() )
-		{
-			using namespace vostok::fs_new;
-			synchronous_device_interface const &	device	=	core::get_core_synchronous_device( );
-			if ( !device->open(& m_file, vostok::logging::g_log_file_name.c_str(), file_mode::append_or_create, file_access::write, assert_on_fail_false) )
-			{
-				;
-			}
-		}
-	}
+	logging::log_file * m_file;
+	leak_logger() : m_file(logging::get_log_file()) { }
 
-	~leak_logger()
-	{
-		vostok::fs_new::synchronous_device_interface const &	device	=	core::get_core_synchronous_device( );
-		if ( m_file )
-			device->close					(m_file);
-	}
+	~leak_logger() { }
 
 	bool	predicate	(	u32		call_stack_id,
 							u32		num_call_stack_lines,
@@ -253,13 +237,11 @@ struct leak_logger
 	{
 		vostok::debug::output			(string.c_str());
 
-		if ( logging::use_console_for_logging() )
-			logging::write_to_stdstream(logging::stdstream_out, "%s", string.c_str());
-
-		vostok::fs_new::synchronous_device_interface const &	device	=	core::get_core_synchronous_device( );
+		if ( core::use_console_for_logging() )
+			core::write_to_stdstream(core::stdstream_out, "%s", string.c_str());
 
 		if ( m_file )
-			device->write			(m_file, string.c_str(), string.length());
+			m_file->append			(string.c_str(), string.length());
 	}
 }; // struct helper
 
@@ -270,7 +252,7 @@ void leak_detector_dump_leaks	()
 
 void   leak_detector::dump_leaks ()
 {
-	if ( !vostok::logging::g_log_file_name.length() && !vostok::debug::is_debugger_present() )
+	if ( !vostok::logging::get_log_file() && !vostok::debug::is_debugger_present() )
 		return;
 
 	m_mutex.lock		( );

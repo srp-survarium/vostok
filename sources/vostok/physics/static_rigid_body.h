@@ -46,7 +46,7 @@ STATIC_SIZE_ASSERT(bt_static_rigid_body, 0x14);
 
 struct bt_rigid_body_construction_info  {
 public:
-	bt_rigid_body_construction_info( );
+	VOSTOK_PHYSICS_API bt_rigid_body_construction_info( );
 
 	// STATE[REMOVED]: no caller (the shipped user game_core static_collision::insert builds
 	// the construction_info field-by-field, never calls load); absent from both binaries.

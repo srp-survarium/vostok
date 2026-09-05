@@ -271,6 +271,11 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	n_ary_tree_animation_node* const result	= static_cast< n_ary_tree_animation_node* >( m_buffer.c_ptr( ) );
 	if ( !weight_driving_animation )
 		new ( result ) n_ary_tree_animation_node(
+#ifndef MASTER_GOLD
+#line 274
+			from.identifier( ),
+#endif // #ifndef MASTER_GOLD
+#line 274
 			cloned_intervals_begin,
 			cloned_intervals_begin + from.animation_intervals_count( ),
 			from.unique_animation_id( ),
@@ -291,6 +296,11 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 		);
 	else
 		new ( result ) n_ary_tree_animation_node(
+#ifndef MASTER_GOLD
+#line 294
+			from.identifier( ),
+#endif // #ifndef MASTER_GOLD
+#line 294
 			*weight_driving_animation,
 			cloned_intervals_begin,
 			cloned_intervals_begin + from.animation_intervals_count( ),

@@ -2,6 +2,7 @@
 
 #ifndef FLASH_FUNCTION_HANDLER_H_INCLUDED
 #define FLASH_FUNCTION_HANDLER_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 namespace survarium {
 
@@ -9,7 +10,7 @@ struct flash_function_handler_impl;
 struct flash_function_handler_params;
 
 // PDB: dtor is NON-virtual (only `call` populates the vtable after the ctor)
-struct flash_function_handler {
+struct VOSTOK_SCALEFORM_API flash_function_handler {
 					flash_function_handler	( );
 					~flash_function_handler	( );
 

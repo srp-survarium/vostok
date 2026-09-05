@@ -12,7 +12,10 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	__formal3
 )
 {
+	typedef std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> result_type;
+	VOSTOK_UNREFERENCED_PARAMETERS( buffer, __formal1, &__formal2, &__formal3 );
 	UNREACHABLE_CODE( );
+	return *static_cast<result_type*>( 0 );
 }
 
 } // namespace survarium

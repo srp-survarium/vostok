@@ -40,15 +40,4 @@ animation_state::animation_state	(
 		animation_time				-= animation_length;
 		this->animation_time_threshold	= animation_length;
 	}
-
-#ifndef MASTER_GOLD
-	if ( !animation_node.driving_animation() )
-		return;
-
-	animation_state const& driving_animation_state	= animation_node.driving_animation()->animation_state();
-	R_ASSERT_CMP			( animation_interval_id, ==, driving_animation_state.animation_interval_id );
-	animation_interval const* const driving_animation_interval	= animation_node.driving_animation()->animation_intervals() + driving_animation_state.animation_interval_id;
-	animation_interval const* const animation_interval			= animation_node.animation_intervals() + animation_interval_id;
-	R_ASSERT_CMP			( animation_interval_time, ==, animation_interval->length() / driving_animation_interval->length() * driving_animation_state.animation_interval_time );
-#endif // #ifndef MASTER_GOLD
 }

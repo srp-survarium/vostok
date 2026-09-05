@@ -127,7 +127,13 @@ private:
 public:
 			float4x4						get_object_transform				( pcvoid animated_object ) const;
 
+#ifndef MASTER_GOLD
+			bool							has_object							( pcvoid animated_object ) const;
+#else
+#line 126
 	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ }
+#endif
+#line 127
 
 			void							compute_bones_matrices				(
 												pcvoid				animated_object,
@@ -177,7 +183,13 @@ private:
 			void							initialize							( );
 			void							destroy								( );
 
+#ifndef MASTER_GOLD
+	inline	float4x4						computed_local_bone_matrix			( skeleton_bone const& ) const { return float4x4( ).identity( ); }
+#else
+#line 176
 	inline	float4x4						computed_local_bone_matrix			( skeleton_bone const& arg_0 ) const { /* no source */ }
+#endif
+#line 177
 
 	inline	void							compute_skeleton_branch				( skeleton_bone const& arg_0, float4x4* const arg_1, float4x4 const& arg_2 ) const { /* no source */ }
 

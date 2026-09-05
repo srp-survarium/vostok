@@ -105,7 +105,7 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 //
 // error check:
 //
-#if defined(__MSVC_RUNTIME_CHECKS) && !defined(_DEBUG)
+#if defined(__MSVC_RUNTIME_CHECKS) && !defined(_DEBUG) && !defined(VOSTOK_GAME_BUILD)
 #  pragma message("Using the /RTC option without specifying a debug runtime will lead to linker errors")
 #  pragma message("Hint: go to the code generation options and switch to one of the debugging runtimes")
 #  error "Incompatible build options"
@@ -414,4 +414,3 @@ BOOST_LIB_VERSION:    The Boost version, in the form x_y, for Boost version x.y.
 #if defined(BOOST_DYN_LINK)
 #  undef BOOST_DYN_LINK
 #endif
-

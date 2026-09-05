@@ -7,7 +7,11 @@
 #ifndef SPL_UTILS_H_INCLUDED
 #define SPL_UTILS_H_INCLUDED
 
+#include <vostok/sound/api.h>
 #include <vostok/math_curve.h>
+#ifndef MASTER_GOLD
+#	include <vostok/configs_lua_config.h>
+#endif
 
 namespace vostok {
 namespace sound {

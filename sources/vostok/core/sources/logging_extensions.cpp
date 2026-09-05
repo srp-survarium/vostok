@@ -20,8 +20,6 @@ extern "C" FILE* __iob_func(void);
 namespace vostok {
 namespace core {
 
-enum stdstream_enum { stdstream_out, stdstream_error };
-
 		void		logging_preinitialize	( );
 static	bool		initialize_console		( );
 static	void		finalize_console		( );
@@ -171,8 +169,15 @@ void debug_log_callback(
 	pcstr		message
 )
 {
+#ifndef MASTER_GOLD
+	core::log_flags_enum const log_flags = command_line::initialized() && s_write_errors_to_stderr.is_set( ) ?
+									core::log_to_stderr : core::log_flags_enum(0);
+#else
+#line 174
 	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
 									core::log_to_stderr : core::log_flags_enum(0);
+#endif
+#line 176
 	pstr debug_log = NULL;
 	STR_JOINA( debug_log, initiator, ":" );
 	if ( log_only_user_string )	__LOG_FORCED( is_error_verbosity ? logging::error : logging::info,

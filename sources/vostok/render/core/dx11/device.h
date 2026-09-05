@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef VOSTOK_RENDER_CORE_DX11_DEVICE_H_INCLUDED
 #define VOSTOK_RENDER_CORE_DX11_DEVICE_H_INCLUDED
+#include <vostok/render/api.h>
 #include <vostok/render/core/quasi_singleton.h>
 #include <vostok/render/core/render_include.h>
 
@@ -59,8 +60,8 @@ public:
 STATIC_SIZE_ASSERT( device, 0x154 );
 
 // Filled during adapter-output enumeration and read by the video options page.
-extern int g_num_monitors;
-extern math::int2 g_monitor_resolutions[6][512];
+extern VOSTOK_RENDER_API int g_num_monitors;
+extern VOSTOK_RENDER_API math::int2 g_monitor_resolutions[6][512];
 
 } // namespace render
 } // namespace vostok

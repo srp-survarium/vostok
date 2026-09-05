@@ -2,6 +2,7 @@
 
 #ifndef FLASH_MOVIE_H_INCLUDED
 #define FLASH_MOVIE_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 namespace Scaleform {
 namespace Render {
@@ -23,7 +24,7 @@ struct flash_external_handler;
 struct flash_function_handler;
 struct flash_value;
 
-struct flash_movie {
+struct VOSTOK_SCALEFORM_API flash_movie {
 	enum AlignType {
 		Align_Center,
 		Align_TopCenter,

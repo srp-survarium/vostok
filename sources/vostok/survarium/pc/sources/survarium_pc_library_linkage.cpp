@@ -15,9 +15,11 @@
 #include <vostok/game/library_linkage.h>
 #include <vostok/game_core/library_linkage.h>
 
+#if !defined(VOSTOK_GAME_DLL)
 #include <vostok/network_core/library_linkage.h>
 
 #include <vostok/physics/library_linkage.h>
+#endif
 
 #ifdef VOSTOK_STATIC_LIBRARIES
 #	include <vostok/engine/library_linkage.h>

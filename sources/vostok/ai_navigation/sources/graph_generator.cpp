@@ -725,4 +725,3 @@ void graph_generator::clear_restricted_areas		( )
 }
 
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
-

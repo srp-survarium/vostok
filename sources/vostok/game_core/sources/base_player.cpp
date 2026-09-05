@@ -132,6 +132,7 @@ bool query_animation_playback_state( pcvoid const object, u32 const mask, animat
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result );
 	VOSTOK_UNREACHABLE_CODE( );
+	return false;
 }
 
 } // namespace survarium

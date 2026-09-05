@@ -3,12 +3,13 @@
 #ifndef AI_FSM_H_INCLUDED
 #define AI_FSM_H_INCLUDED
 
+#include <vostok/ai/api.h>
 #include <vostok/ai/fsm_state.h>
 
 namespace vostok {
 namespace ai {
 
-class fsm {
+class VOSTOK_AI_API fsm {
 public:
 	explicit						fsm					( );
 

@@ -581,7 +581,7 @@ collision_result bullet::try_reflect(
 	speed					*= math::linear_interpolation( calculated_koeff, 1.0f, m_collided_material->reflection_speed_down( ) ); // sushi@MATCH: <0x5910ae> `linear_interpolation` inlined in target.
 	if( speed < 0 )
 	{
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 		bullet_manager.add_collision_point	( collide_point, math::color( 255, 0, 0, 128 ) );
 #endif // #ifndef MASTER_GOLD
 		return collision_result_collide;
@@ -590,7 +590,7 @@ collision_result bullet::try_reflect(
 	direction				= 2 * triangle_normal * -cos_alpha + direction;
 	change_trajectory		( collide_point, direction * speed, collision_time );
 
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 	bullet_manager.store_bullet_trajectory	( this );
 	bullet_manager.add_collision_point		( collide_point, math::color( 0, 255, 0, 128 ) );
 #endif // #ifndef MASTER_GOLD

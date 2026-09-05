@@ -319,7 +319,8 @@ animation::callback_return_type_enum weapon_user_animations_selector::on_interva
 
 void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, const hit_affects_type_enum affect, const affect_event_type_enum type )
 {
-	ASSERT_T_U( bodypart, type );
+	ASSERT( UNKNOWN_EXPRESSION_T( bodypart ) );
+	VOSTOK_UNREFERENCED_PARAMETER( type );
 	ASSERT_CMP_U( affect, ==, 4 );
 	m_user->force_animation_selection( );
 }

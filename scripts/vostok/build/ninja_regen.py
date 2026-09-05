@@ -19,22 +19,30 @@ Usage:
   python3 -m vostok.build.ninja_regen            # regen + merge (minimal rebuild)
   python3 -m vostok.build.ninja_regen --dry-run  # report the delta, write nothing
   python3 -m vostok.build.ninja_regen --compdb   # also force the clangd inputs
+  python3 -m vostok.build.ninja_regen --configuration release
+
+`--configuration` picks the solution configuration. `gold` (the default) is the
+matching build and the only one that owns binaries/ninja, the retail-source-root
+and LTCG-order corrections, and the clangd inputs; `release`/`debug` generate
+plain graphs into their own dirs (binaries/ninja-{release,debug}).
 """
 
 import argparse
 import os
+import posixpath
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 from vostok.core import paths
-from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
 from vostok.core.wine import drive_path
 from vostok.core.log import logger
 from vostok.core import log as _log
+from vostok.build.solution import build_solution
 
 # clangd inputs at the repo root (gitignored, so absent on fresh clones and
 # worktrees). They only depend on flags and file sets, never on #includes.
@@ -141,6 +149,41 @@ RETAIL_ARCHIVE_MEMBER_ORDERS = {
     ),
 }
 
+# VC9 does not inspect unreferenced archive members for their /EXPORT
+# directives. The non-gold engine DLL is an aggregate of these static module
+# projects, so feed their members to link.exe directly; otherwise only objects
+# reached by linkage anchors are exported and the game EXE cannot use the rest
+# of the declared DLL API. Third-party and SDK-only archives stay archived.
+_DLL_ENGINE_MODULES = (
+        "ai",
+        "ai_navigation",
+        "animation",
+        "collision",
+        "core",
+        "debug",
+        "engine",
+        "fs",
+        "input",
+        "logging",
+        "network",
+        "network_core",
+        "particle",
+        "physics",
+        "render_core_pc_dx11",
+        "render_engine_pc_dx11",
+        "render_facade",
+        "rtp",
+        "scaleform",
+        "sound",
+        "ui",
+        "vfs",
+)
+DLL_ENGINE_ARCHIVES = {
+    archive: module
+    for module in _DLL_ENGINE_MODULES
+    for archive in (f"vostok_{module}.lib", f"vostok_{module}-debug.lib")
+}
+
 
 log = logger("regen-ninja")
 
@@ -160,6 +203,89 @@ def _normalize_link_rsp_paths(
     source = "Z:" + str(solution_dir)
     root = "Z:" + str(repo_dir) + "/"
     return text.replace(source + r"\../", root).replace(source + r"\/../", root)
+
+
+def _normalize_game_dll_link_flags(name: str, text: str) -> str:
+    """Remove static-link exclusions leaked into the non-gold DLL EXE graph."""
+    if name != "survarium_-_PC_-_DirectX_11_link.rsp":
+        return text
+    for library in ("ws2_32.lib", "msvcrt.lib"):
+        text = text.replace(f' /NODEFAULTLIB:"{library}"', "")
+    # These are already linked into vostok_engine_pc_dx11.dll. The solution's
+    # recursive project walk adds the leaf archives again to the EXE, which
+    # duplicates engine COMDATs and bypasses the DLL import boundary.
+    leaf_archives = r"(?:vostok_network_core|vostok_scaleform|vostok_LibFoundation)(?:-debug)?\.lib"
+    text = re.sub(rf" Z:/\S*/{leaf_archives}(?=\s|$)", "", text, flags=re.IGNORECASE)
+    return text
+
+
+def _dll_archive_members(out_dir: Path, module: str) -> list[str]:
+    """Return one generated module archive's object inputs as absolute paths."""
+    ninja = (out_dir / f"{module}.ninja").read_text()
+    project_dir = next(
+        line.removeprefix("proj_dir = ").strip()
+        for line in ninja.splitlines()
+        if line.startswith("proj_dir = ")
+    )
+    response = (out_dir / "rsp" / f"{module}_lib.rsp").read_text()
+    members: list[str] = []
+    for line in response.splitlines():
+        value = line.strip().strip('"').replace("\\", "/")
+        if not value.casefold().endswith(".obj"):
+            continue
+        if not re.match(r"^[A-Za-z]:/", value):
+            value = posixpath.normpath(f"{project_dir}/{value}")
+        members.append(f'"{value}"')
+    if not members:
+        raise ValueError(f"no object members found for DLL module {module}")
+    return members
+
+
+def _flatten_dll_engine_archives(out_dir: Path, name: str, text: str) -> str:
+    """Expose all engine module objects to the aggregate DLL linker."""
+    if name != "engine_pc_dx11_link.rsp":
+        return text
+    for archive, module in DLL_ENGINE_ARCHIVES.items():
+        pattern = rf'(?<!\S)"?\S*[\\/]{re.escape(archive)}"?(?=\s|$)'
+        if not re.search(pattern, text, flags=re.IGNORECASE):
+            continue
+        members = "\n".join(_dll_archive_members(out_dir, module))
+        text = re.sub(pattern, members, text, flags=re.IGNORECASE)
+    return text
+
+
+def _suppress_dll_engine_archive_defaults(name: str, text: str) -> str:
+    """Ignore module autolink directives after their objects were expanded."""
+    if name != "engine_pc_dx11_link.rsp":
+        return text
+    archives = sorted(
+        (*DLL_ENGINE_ARCHIVES, "vostok_engine_pc.lib", "vostok_engine_pc-debug.lib")
+    )
+    flags = "\n".join(f'/NODEFAULTLIB:"{archive}"' for archive in archives)
+    return f"{text.rstrip()}\n{flags}\n"
+
+
+def _suppress_static_compatibility_defaults(name: str, text: str) -> str:
+    """Ignore legacy autolink names with no corresponding VC9 project output.
+
+    The static graph already passes the ordinary Ogg archive and the platform
+    engine archive explicitly. Their headers nevertheless request synthesized
+    ``-static`` aliases which the recovered solution never produced.
+    """
+    if name != "survarium_-_PC_-_DirectX_11_link.rsp":
+        return text
+    aliases = (
+        "vostok_engine_pc-static.lib",
+        "vostok_engine_pc-static-debug.lib",
+        "vostok_ogg-static.lib",
+        "vostok_ogg-static-debug.lib",
+        "vostok_vorbis-static.lib",
+        "vostok_vorbis-static-debug.lib",
+        "vostok_vorbisfile-static.lib",
+        "vostok_vorbisfile-static-debug.lib",
+    )
+    flags = "\n".join(f'/NODEFAULTLIB:"{archive}"' for archive in aliases)
+    return f"{text.rstrip()}\n{flags}\n"
 
 
 def _normalize_compile_rsp_source_root(
@@ -273,7 +399,12 @@ def _normalize_archive_member_order(text: str, order: tuple[str, ...]) -> str:
     return "".join(lines)
 
 
-def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
+def gen_fresh(
+    out_dir: Path,
+    target: str = "ninja",
+    configuration: str = paths.GOLD_CONFIGURATION,
+    linkage: str = "dll",
+) -> None:
     exe = os.environ.get("VCPROJ2NINJA_EXE")
     if not exe:
         sys.exit("[regen-ninja] VCPROJ2NINJA_EXE not set - run from `nix develop`")
@@ -282,35 +413,123 @@ def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     # vcproj2ninja sometimes exits non-zero under wine even on success; trust the
     # produced output over the return code (same as vostok.tool.toolchain).
-    subprocess.run(
-        ["wine", exe, "--wine", "--target", target, "--sln-path", str(SLN_PATH),
-         "--configuration-platform", "Master Gold|Win32",
-         "--output-dir", str(out_dir),
-         "--project-name", "survarium - PC - DirectX 11"],
-        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
+    with build_solution(configuration, linkage) as (solution, selected):
+        result = subprocess.run(
+            ["wine", exe, "--wine", "--target", target,
+             "--sln-path", str(solution),
+             "--configuration-platform", selected,
+             "--output-dir", str(out_dir),
+             "--project-name", "survarium - PC - DirectX 11"],
+            check=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        )
     probe = "build.ninja" if target == "ninja" else "compile_commands.json"
     if not (out_dir / probe).is_file():
-        sys.exit(f"[regen-ninja] vcproj2ninja did not produce {probe}")
+        detail = (result.stdout or b"").decode(errors="replace").strip()
+        suffix = f"\n{detail}" if detail else ""
+        sys.exit(f"[regen-ninja] vcproj2ninja did not produce {probe}{suffix}")
 
 
-def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
+_LTO_FLAG = {
+    "_cl_": re.compile(r" /GL(?=\s|$)"),
+    "_lib": re.compile(r" /LTCG(?=\s|$)"),
+    "_link": re.compile(r" /LTCG(?=\s|$)"),
+}
+
+
+def _strip_lto(name: str, text: str) -> str:
+    """Drop whole-program optimization from one response file.
+
+    vcproj2ninja renders `WholeProgramOptimization="1"` as `/GL` on every
+    compile and `/LTCG` on the library and link steps. Removing both turns the
+    configuration into an ordinary (per-TU) optimized build. The flag and its
+    leading space go together, and the match ends on whitespace or end-of-file,
+    so `/GLOBAL`-like flags are untouched and a trailing `/LTCG` (the lib rsps
+    end on it, no newline) is caught too."""
+    if "_cl_" in name:
+        return _LTO_FLAG["_cl_"].sub("", text)
+    if name.endswith("_lib.rsp"):
+        return _LTO_FLAG["_lib"].sub("", text)
+    if name.endswith("_link.rsp"):
+        return _LTO_FLAG["_link"].sub("", text)
+    return text
+
+
+def _normalize_no_lto_link_flags(name: str, text: str) -> str:
+    """Keep live STLPort data imports out of the delay-load table."""
+    if name != "engine_pc_dx11_link.rsp":
+        return text
+    return re.sub(
+        r"(?i)(?<!\S)/delayload:stlport\.5\.2\.dll(?=\s|$)", "", text
+    )
+
+
+def _add_game_build_define(name: str, text: str, linkage: str) -> str:
+    """Mark compiler response files produced for the game-only graph.
+
+    Release and Debug project configurations also contain SDK authoring and
+    verification paths. The game graph leaves those paths for later SDK
+    recovery instead of treating their missing implementation as runtime code.
+    The define is graph-local so the authoritative project configurations stay
+    available to a future SDK build.
+    """
+    if "_cl_" not in name or not name.endswith(".rsp"):
+        return text
+    markers = ['/D "VOSTOK_GAME_BUILD"']
+    if linkage == "dll":
+        markers.append('/D "VOSTOK_GAME_DLL"')
+    if name.startswith("scaleform_cl_"):
+        # The pinned GFx suite is the game's shipping build. Keep the engine
+        # glue on the same API surface even in our Debug/Release game graphs.
+        markers.append('/D "SF_BUILD_SHIPPING"')
+    if name.startswith("zlib_cl_"):
+        markers.append('/D "ZLIB_DLL"')
+    lines = text.splitlines(keepends=True)
+    if not lines:
+        return text
+    missing = [marker for marker in markers if marker not in lines[0]]
+    if not missing:
+        return text
+    first = lines[0]
+    ending = "\r\n" if first.endswith("\r\n") else "\n" if first.endswith("\n") else ""
+    if ending:
+        first = first[: -len(ending)]
+    lines[0] = f"{first} {' '.join(missing)}{ending}"
+    return "".join(lines)
+
+
+def regenerate(
+    dry_run: bool = False,
+    compdb: bool = False,
+    configuration: str = paths.GOLD_CONFIGURATION,
+    lto: bool = True,
+    linkage: str = "dll",
+) -> list[str]:
     """Regenerate and merge; return the relative paths that changed.
 
     The clangd inputs (COMPDB_FILES) are include-invariant, so they are only
     regenerated when something they DO depend on may have moved: a generated
     file appeared or went stale (TU/module added or removed), or they are
     missing entirely (fresh clone/worktree). Pass compdb=True to force them
-    (e.g. after a flags-only .vcproj edit, which this trigger can't see)."""
+    (e.g. after a flags-only .vcproj edit, which this trigger can't see).
+
+    Everything below the retail-reproduction line - the C:\\survarium source
+    root, the LTCG library order, the clangd inputs - belongs to the matching
+    build alone. A non-gold configuration gets vcproj2ninja's plain output in
+    its own graph dir (paths.ninja_dir), so building Release or Debug can never
+    move the graph the ledger is measured against."""
+    gold = configuration == paths.GOLD_CONFIGURATION
+    if gold and not lto:
+        sys.exit("[regen-ninja] the gold configuration is always LTO (retail is LTCG)")
+    build_dir = paths.ninja_dir(configuration, lto=lto, linkage=linkage)
     changed: list[str] = []
     tu_set_changed = False
     with tempfile.TemporaryDirectory(prefix="ninja_regen_") as tmp:
         tmp_dir = Path(tmp)
-        gen_fresh(tmp_dir)
+        gen_fresh(tmp_dir, configuration=configuration, linkage=linkage)
 
         # The temp path appears in two spellings: raw in `flags = @...` lines,
         # ninja-escaped (`:` -> `$:`) in the rsp implicit-input dep lines.
-        raw_t, raw_b = drive_path(tmp_dir), drive_path(BUILD_DIR)
+        raw_t, raw_b = drive_path(tmp_dir), drive_path(build_dir)
         esc_t, esc_b = raw_t.replace(":", "$:"), raw_b.replace(":", "$:")
 
         fresh = sorted(p for p in tmp_dir.rglob("*") if p.is_file())
@@ -318,17 +537,31 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             rel = fp.relative_to(tmp_dir)
             text = fp.read_text().replace(raw_t, raw_b).replace(esc_t, esc_b)
             if fp.name.endswith("_link.rsp"):
+                # A Wine `cmd` defect, not a retail detail: every configuration
+                # needs it.
                 text = _normalize_link_rsp_paths(text)
-                text = _normalize_link_rsp_library_order(text)
-            elif fp.name in RETAIL_ARCHIVE_MEMBER_ORDERS:
+                if gold:
+                    text = _normalize_link_rsp_library_order(text)
+                elif linkage == "dll" and configuration in paths.DLL_CONFIGURATIONS:
+                    text = _normalize_game_dll_link_flags(fp.name, text)
+                    text = _flatten_dll_engine_archives(tmp_dir, fp.name, text)
+                    text = _suppress_dll_engine_archive_defaults(fp.name, text)
+                elif linkage == "static":
+                    text = _suppress_static_compatibility_defaults(fp.name, text)
+            elif gold and fp.name in RETAIL_ARCHIVE_MEMBER_ORDERS:
                 text = _normalize_archive_member_order(
                     text, RETAIL_ARCHIVE_MEMBER_ORDERS[fp.name]
                 )
-            elif fp.suffix == ".rsp" and "_cl_" in fp.name:
+            elif gold and fp.suffix == ".rsp" and "_cl_" in fp.name:
                 text = _normalize_compile_rsp_source_root(text)
-            elif fp.suffix == ".ninja":
+            elif gold and fp.suffix == ".ninja":
                 text = _normalize_compile_working_source_root(text)
-            dst = BUILD_DIR / rel
+            if not gold and fp.suffix == ".rsp":
+                text = _add_game_build_define(fp.name, text, linkage)
+            if not lto and fp.suffix == ".rsp":
+                text = _strip_lto(fp.name, text)
+                text = _normalize_no_lto_link_flags(fp.name, text)
+            dst = build_dir / rel
             if dst.is_file() and dst.read_text() == text:
                 continue
             if not dst.is_file():
@@ -342,12 +575,13 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
                 dst.write_text(text)
 
         # Generated files no longer produced (module removed/renamed). Report
-        # only: BUILD_DIR also holds ninja state (.ninja_log) we must not touch.
+        # only: the graph dir also holds ninja state (.ninja_log) we must not
+        # touch.
         fresh_set = {str(p.relative_to(tmp_dir)) for p in fresh}
-        for p in sorted(BUILD_DIR.rglob("*")):
+        for p in sorted(build_dir.rglob("*")):
             if not p.is_file() or p.suffix not in (".ninja", ".rsp"):
                 continue
-            rel = str(p.relative_to(BUILD_DIR))
+            rel = str(p.relative_to(build_dir))
             if rel not in fresh_set:
                 log(f"STALE (delete manually): {rel}")
                 tu_set_changed = True
@@ -358,6 +592,8 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
     for rel in changed:
         log(f"  {rel}")
 
+    if not gold:
+        return changed
     compdb_missing = not all((VOSTOK_DIR / n).is_file() for n in COMPDB_FILES)
     if compdb or tu_set_changed or compdb_missing:
         reason = ("forced" if compdb
@@ -413,8 +649,19 @@ def main() -> None:
                     help="force compile_commands.json + clangd-vfs.yaml regen "
                          "(they auto-regen when missing or the TU set changes; "
                          "force after a flags-only .vcproj edit)")
+    ap.add_argument("--configuration", default="gold",
+                    choices=sorted(paths.CONFIGURATIONS),
+                    help="solution configuration to generate (default: gold, "
+                         "the matching build)")
+    ap.add_argument("--no-lto", dest="lto", action="store_false",
+                    help="strip /GL and /LTCG (whole-program optimization) from "
+                         "a non-gold graph")
+    ap.add_argument("--linkage", choices=sorted(paths.LINKAGES), default="dll",
+                    help="build the aggregate engine as a DLL or static game")
     args = ap.parse_args()
-    regenerate(dry_run=args.dry_run, compdb=args.compdb)
+    regenerate(dry_run=args.dry_run, compdb=args.compdb,
+               configuration=paths.configuration(args.configuration),
+               lto=args.lto, linkage=args.linkage)
 
 
 if __name__ == "__main__":

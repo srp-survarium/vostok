@@ -202,12 +202,19 @@ private:
 		{
 			ASSERT_CMP_U			( size, <=, sizeof( bullet_functor ) );
 			return					m_bullet_functors.try_pop( );
-		}
+				}
+
+#ifdef DEBUG
+		inline	void*			malloc_impl					( u32 size, pcstr, pcstr, pcstr, u32 ) { return malloc_impl( size ); }
+#endif
 
 		inline	void			free_impl					( void* pointer )
 		{
 			m_bullet_functors.push( static_cast<bullet_functor*>( pointer ) );
 		}
+#ifdef DEBUG
+		inline	void			free_impl					( void* pointer, pcstr, pcstr, u32 ) { free_impl( pointer ); }
+#endif
 
 	private:
 		/* 0x0000 */	/* boost::noncopyable */

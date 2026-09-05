@@ -74,6 +74,9 @@ private:
 	u32 m_diff_range_start;
 	u32 m_diff_range_end;
 	shader_constant_table_const_ptr m_current;
+#ifdef DEBUG
+	render::vector<shader_constant_host*> m_unset_constants;
+#endif
 };
 
 template < enum_shader_type shader_type >
@@ -135,7 +138,11 @@ private:
 	res_xs_hw< shader_data > const* const& m_shader;
 };
 
+#ifdef DEBUG
+STATIC_SIZE_ASSERT( constants_handler< enum_shader_type_vertex >, 0x18 );
+#else
 STATIC_SIZE_ASSERT( constants_handler< enum_shader_type_vertex >, 0xC );
+#endif
 STATIC_SIZE_ASSERT( textures_handler< enum_shader_type_vertex >, 0x224 );
 STATIC_SIZE_ASSERT( samplers_handler< enum_shader_type_vertex >, 0x50 );
 

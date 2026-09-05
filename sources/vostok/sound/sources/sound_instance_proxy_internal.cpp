@@ -557,7 +557,11 @@ void sound_instance_proxy_internal::dump_debug_snapshot	( configs::lua_config_va
 	while ( prop )
 	{
 		configs::lua_config_value prop_val	= val["propagators"][i++];
+#ifndef VOSTOK_GAME_BUILD
 		prop->dump_debug_snapshot			( prop_val );
+#else
+		VOSTOK_UNREFERENCED_PARAMETER		( prop_val );
+#endif
 		prop								= m_propagators.get_next_of_object( prop );
 	}
 }

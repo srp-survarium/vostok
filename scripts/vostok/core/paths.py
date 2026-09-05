@@ -82,10 +82,66 @@ RETAIL_INCLUDE_SOURCE_PREFIX = r"C:\survarium\sources"
 BINARIES = REPO / "binaries"
 GEN_DIR = BINARIES / "gen"
 PREBUILT = REPO / "binaries.prebuilt"
+PREBUILT_STLPORT_WIN32 = PREBUILT / "stlport" / "libraries" / "win32"
 NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
+
+# --- build configurations --------------------------------------------------
+# The matching campaign only ever builds `Master Gold|Win32`, and its graph
+# stays at binaries/ninja - no other configuration may write there, or a stray
+# regen would silently retarget the build we measure. The other solution
+# configurations get their own graph dir; their .vcproj output paths already
+# carry $(ConfigurationName) and distinct library/exe suffixes, so the build
+# trees under binaries/Win32/ never collide either.
+GOLD_CONFIGURATION = "Master Gold|Win32"
+CONFIGURATIONS = {
+    "gold": GOLD_CONFIGURATION,
+    "release": "Release|Win32",
+    "debug": "Debug|Win32",
+}
+DLL_CONFIGURATIONS = frozenset(("Release|Win32", "Debug|Win32"))
+LINKAGES = frozenset(("dll", "static"))
+_NINJA_DIRS = {
+    GOLD_CONFIGURATION: NINJA_DIR,
+    "Release|Win32": BINARIES / "ninja-release",
+    "Debug|Win32": BINARIES / "ninja-debug",
+}
+
+
+def configuration(name: str) -> str:
+    """`gold`/`release`/`debug` (or a full "Cfg|Platform") -> the .sln name."""
+    return CONFIGURATIONS.get(name, name)
+
+
+def ninja_dir(
+    configuration_platform: str = GOLD_CONFIGURATION,
+    lto: bool = True,
+    linkage: str = "dll",
+) -> Path:
+    """The generated ninja graph for one solution configuration.
+
+    `linkage` selects separate DLL/static graph directories. `lto=False`
+    rewrites the selected graph's response files in place; this deliberately
+    dirties its objects when switching modes. Gold is always LTO because it
+    reproduces retail's LTCG image."""
+    try:
+        base = _NINJA_DIRS[configuration_platform]
+    except KeyError:
+        raise KeyError(
+            f"no ninja graph dir for {configuration_platform!r}; "
+            f"known: {', '.join(sorted(_NINJA_DIRS))}"
+        ) from None
+    if configuration_platform == GOLD_CONFIGURATION:
+        if not lto:
+            raise ValueError("the gold configuration is always LTO (retail is LTCG)")
+        return base
+    if linkage not in LINKAGES:
+        raise ValueError(f"unknown linkage {linkage!r}")
+    if linkage == "static":
+        return base.with_name(base.name + "-static")
+    return base
 
 # Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
 # regenerable from resources.db + fxc, so it lives with the other artifacts.

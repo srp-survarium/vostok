@@ -84,7 +84,11 @@ private:
 
 namespace {
 	typedef char size_assert[
+#ifdef DEBUG
+		sizeof(truncated_sphere_geometry_instance) == 0x98 ? 1 : -1
+#else
 		sizeof(truncated_sphere_geometry_instance) == 0x94 ? 1 : -1
+#endif
 	];
 }
 

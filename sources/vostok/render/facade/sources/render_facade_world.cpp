@@ -27,7 +27,7 @@ world::world(
 
 	m_engine_renderer			= NEW( engine::renderer )( *m_render_engine_world );
 	m_game_renderer				= NEW( game::renderer )( *this, *m_render_engine_world );
-#ifndef VOSTOK_STATIC_LIBRARIES
+#if !defined(VOSTOK_STATIC_LIBRARIES) && !defined(VOSTOK_GAME_BUILD)
 	if ( is_editor )
 		m_editor_renderer		= NEW( editor::renderer )( *this, *m_render_engine_world );
 #endif
@@ -35,7 +35,7 @@ world::world(
 
 world::~world( )
 {
-#ifndef VOSTOK_STATIC_LIBRARIES
+#if !defined(VOSTOK_STATIC_LIBRARIES) && !defined(VOSTOK_GAME_BUILD)
 	DELETE						( m_editor_renderer );
 #endif
 	DELETE						( m_game_renderer );

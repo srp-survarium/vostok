@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include <vostok/physics/character_controller.h>
+#include <vostok/linkage_helper.h>
 
 #include "bullet_character_controller.h"
 #include "bullet_include.h"
@@ -13,12 +14,20 @@ namespace survarium {
 	extern vostok::memory::doug_lea_allocator_type*	g_allocator;
 } // namespace survarium
 
+#ifndef MASTER_GOLD
+VOSTOK_DECLARE_LINKAGE_ID(physics_character_controller)
+#endif // #ifndef MASTER_GOLD
+
 namespace vostok {
 namespace physics {
 
 bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
+#ifndef MASTER_GOLD
+	return VOSTOK_NEW_IMPL( allocator, bt_character_controller )( w );
+#else
 	return VOSTOK_NEW_IMPL( static_cast<vostok::memory::base_allocator&>( *::survarium::g_allocator ), bt_character_controller )( w );
+#endif
 }
 
 bt_character_controller::bt_character_controller( world* w ) :
@@ -134,6 +143,39 @@ bool bt_character_controller::can_crouch( ) const
 bool bt_character_controller::can_stand( ) const
 {
 	return m_bt_controller->can_stand( );
+}
+
+inline bool bt_character_controller::adjust_foot_transform(
+	float3 const&		half_size,
+	float3 const&		start,
+	float3 const&		finish,
+	float3&				position,
+	float3&				normal
+) const
+{
+	btCapsuleShape collision_shape( half_size.x, half_size.y );
+	btVector3 bt_start = from_vostok( start );
+	btVector3 bt_finish = from_vostok( finish );
+
+	btCollisionWorld::ClosestConvexResultCallback callback( bt_start, bt_finish );
+	callback.m_collisionFilterGroup = 0x24;
+	callback.m_collisionFilterMask = 0x2;
+	m_bt_physics_world->get_bt_internal( )->convexSweepTest(
+		&collision_shape,
+		btTransform( btQuaternion::getIdentity( ), bt_start ),
+		btTransform( btQuaternion::getIdentity( ), bt_finish ),
+		callback
+	);
+
+	if ( callback.hasHit( ) )
+	{
+		btVector3 result;
+		result.setInterpolate3( bt_start, bt_finish, callback.m_closestHitFraction );
+		position = from_bullet( result );
+		normal = from_bullet( callback.m_hitNormalWorld );
+	}
+
+	return callback.hasHit( );
 }
 
 } // namespace physics

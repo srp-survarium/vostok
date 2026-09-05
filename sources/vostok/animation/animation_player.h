@@ -111,7 +111,13 @@ public:
 						) const;
 
 public:
+#ifndef MASTER_GOLD
+	inline	bool		has_object					( pcvoid const animated_object ) const { return m_mixing_tree.has_object( animated_object ); }
+#else
+#line 114
 	inline	bool		has_object					( pcvoid const arg_0 ) const { /* no source */ }
+#endif
+#line 115
 	inline	void		enable_logging				( const bool value ) { m_is_logging_enabled = value; }
 	inline	bool		are_there_any_animations	( ) const { return m_mixing_tree.are_there_any_animations(); }
 
@@ -120,9 +126,9 @@ public:
 			void		set_controller_callback		( boost::function<void (mixing::expression const&, u32)> const& callback );
 			void		reset						( bool clear_callbacks = false );
 			void		fill_animation_states		( vectora< editor_animation_state >& result );
-#endif // #ifndef MASTER_GOLD
-
+#else
 			void		reset						( bool clear_callbacks );
+#endif
 	inline	void		dump_animation_states		( animation_states_dumper& arg_0 ) const { /* no source */ }
 
 private:

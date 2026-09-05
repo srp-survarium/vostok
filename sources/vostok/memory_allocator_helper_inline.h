@@ -250,6 +250,13 @@ inline void delete_array_helper	( A& allocator, T*& pointer VOSTOK_CORE_DEBUG_PA
 	{
 		detail::delete_helper_impl	( allocator, pointer VOSTOK_CORE_DEBUG_PARAMETERS, delete_predicate );
 	}
+#ifdef DEBUG
+	template < typename A, typename T >
+	inline void delete_helper		( A& allocator, T*& pointer )
+	{
+		delete_helper				( allocator, pointer, "", "", 0 );
+	}
+#endif
 #endif // #ifdef _MANAGED
 
 template <typename A>
