@@ -3,14 +3,6 @@
 #ifndef SCHEDULER_H_INCLUDED
 #define SCHEDULER_H_INCLUDED
 
-/* sushi@NOTE:
- * - `m_max_update_count` seems useless. It doesn't specify how many times the callback should run,
- *	instead it specifies maximum bound in case of "overshoot".
- * - `scheduler::on_frame(u32, u32)` is consufing, since it iterates over `active_objects` with inactive objects size.
- * - `scheduler::activate` and `scheduler::deactivate` seems to be inlined at usage sites.
- * - Matching anything completely failed. Though the logic seems to be trivial enough.
- */
-
 namespace survarium {
 
 class scheduler : private boost::noncopyable {
@@ -38,7 +30,7 @@ public:
 		u32		m_update_delta	: 31;	/// periodic interval
 		u32		m_type			: 1;	/// 0/1: per-frame/periodic
 		u32		m_max_update_count;		/// upper bound in case of overshoot
-		u32		m_last_update_time;		/// misnomer, next time the task should be fired
+		u32		m_last_update_time;
 	};
 
 	struct record : public scheduler::callback_record, public scheduler::scheduler_record { };
@@ -75,8 +67,8 @@ public:
 										);
 			void						unregister			( scheduler::id_type* identifier );
 
-	inline	void						activate			( scheduler::id_type* identifier ) { /* no source */ }
-	inline	void						deactivate			( scheduler::id_type* identifier ) { /* no source */ }
+	inline	void						activate			( scheduler::id_type* identifier );
+	inline	void						deactivate			( scheduler::id_type* identifier );
 }; // class scheduler
 
 STATIC_SIZE_ASSERT(scheduler, 0x2C);
