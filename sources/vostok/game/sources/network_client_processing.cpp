@@ -475,12 +475,12 @@ void network_client::send_local_player_input(
 	if ( m_player_inputs.size( ) == m_player_inputs.max_size( ) )
 		m_player_inputs.erase( m_player_inputs.begin( ) );
 
-	client_player_update update;
+	m_player_inputs.push_back( client_player_update( ) );
+	client_player_update& update = m_player_inputs.back( );
 	update.input				= input;
 	update.state.transform		= transform;
 	update.state.look_pitch		= look_pitch;
 	update.time_in_ms			= time_in_ms;
-	m_player_inputs.push_back( update );
 }
 
 // claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is the cross-TU inline
