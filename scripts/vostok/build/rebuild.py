@@ -24,13 +24,19 @@ where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
 
 Any extra args are forwarded to vostok.build.ninja:
-  python3 -m vostok build            # build the game, then refresh base diff inputs
+  python3 -m vostok build            # notify on completion when CODEX_THREAD_ID is set
   python3 -m vostok build logging    # build just one project first
 
   python3 -m vostok build --background
       Run in a host systemd user service; notify CODEX_THREAD_ID on completion.
       Overrides: --notify-thread THREAD, --codex-bin /path/to/codex.
       Remaining arguments are forwarded to the normal build.
+
+  python3 -m vostok build --foreground
+      Explicit synchronous mode for CI or a supervising process. Without a
+      Codex thread or an explicit notification request, this is the default.
+      Foreground exit status covers the whole build; background launch success
+      only means the service started. Wait for its notification before review.
 """
 
 import datetime
@@ -214,6 +220,29 @@ def _acquire_build_lock():
     return lock
 
 
+def _background_dispatch() -> bool:
+    """All canonical CLI consumers inherit notification mode inside Codex."""
+    arguments = sys.argv[1:]
+    foreground = "--foreground" in arguments
+    explicit = any(argument == "--background" or
+                   argument.split("=", 1)[0] in ("--notify-thread", "--codex-bin")
+                   for argument in arguments)
+    if foreground:
+        if explicit:
+            die("--foreground cannot be combined with notification options")
+        sys.argv = [sys.argv[0], *(argument for argument in arguments
+                                   if argument != "--foreground")]
+        return False
+    if explicit or os.environ.get("CODEX_THREAD_ID"):
+        from vostok.build import background
+        if "--background" not in arguments:
+            arguments = ["--background", *arguments]
+        # A launch failure is an error, never a silent foreground/poll fallback.
+        background.launch(arguments)
+        return True
+    return False
+
+
 def main() -> None:
     # `vostok build --help` must NOT reach ninja. Everything else here is
     # forwarded verbatim, and ninja's own `--help` exits 1 - which used to
@@ -224,9 +253,7 @@ def main() -> None:
         print(__doc__.strip())
         return
 
-    if "--background" in sys.argv[1:]:
-        from vostok.build import background
-        background.launch(sys.argv[1:])
+    if _background_dispatch():
         return
 
     lock = _acquire_build_lock()

@@ -34,7 +34,8 @@ class BackgroundBuildTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         command = calls[0].args[0]
         self.assertEqual(command[:4], ["nix", "develop", str(background.paths.REPO), "--command"])
-        self.assertEqual(command[4:], ["python3", "-u", "-m", "vostok", "build", "logging", "-j2"])
+        self.assertEqual(command[4:], ["python3", "-u", "-m", "vostok", "build",
+                                      "--foreground", "logging", "-j2"])
         self.assertEqual(calls[1].args[0][:5], ["codex", "queue", "--thread", "thread-123", "--message"])
         self.assertIn("SUCCEEDED: exit 0", log)
         self.assertIn(str(background.paths.REPO), calls[1].args[0][-1])
@@ -122,6 +123,58 @@ class BackgroundBuildTests(unittest.TestCase):
                 mock.patch.object(rebuild, "_acquire_build_lock") as lock:
             rebuild.main()
         launch.assert_called_once_with(["--background"])
+        lock.assert_not_called()
+
+    def test_codex_defaults_to_notification_for_all_build_arguments(self):
+        with mock.patch.dict(os.environ, {"CODEX_THREAD_ID": "thread-123"}), \
+                mock.patch.object(rebuild.sys, "argv", ["build", "-j2"]), \
+                mock.patch.object(background, "launch") as launch, \
+                mock.patch.object(rebuild, "_acquire_build_lock") as lock:
+            rebuild.main()
+        launch.assert_called_once_with(["--background", "-j2"])
+        lock.assert_not_called()
+
+    def test_non_codex_retains_synchronous_mode(self):
+        with mock.patch.dict(os.environ, {}, clear=True), \
+                mock.patch.object(rebuild.sys, "argv", ["build", "-j2"]), \
+                mock.patch.object(background, "launch") as launch:
+            self.assertFalse(rebuild._background_dispatch())
+        launch.assert_not_called()
+
+    def test_explicit_thread_enables_notifications_without_codex_environment(self):
+        with mock.patch.dict(os.environ, {}, clear=True), \
+                mock.patch.object(rebuild.sys, "argv", ["build", "--notify-thread=t"]), \
+                mock.patch.object(background, "launch") as launch:
+            self.assertTrue(rebuild._background_dispatch())
+        launch.assert_called_once_with(["--background", "--notify-thread=t"])
+
+    def test_foreground_supervisor_cannot_recursively_launch(self):
+        with mock.patch.dict(os.environ, {"CODEX_THREAD_ID": "thread-123"}), \
+                mock.patch.object(rebuild.sys, "argv", ["build", "--foreground", "-j2"]), \
+                mock.patch.object(background, "launch") as launch:
+            self.assertFalse(rebuild._background_dispatch())
+            self.assertEqual(rebuild.sys.argv, ["build", "-j2"])
+        launch.assert_not_called()
+
+    def test_conflicting_modes_fail_before_build_or_service(self):
+        for option in ("--background", "--notify-thread=t", "--codex-bin=codex"):
+            with self.subTest(option=option), \
+                    mock.patch.object(rebuild.sys, "argv", ["build", "--foreground", option]), \
+                    mock.patch.object(background, "launch") as launch, \
+                    mock.patch.object(rebuild, "_acquire_build_lock") as lock, \
+                    contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    rebuild.main()
+                launch.assert_not_called()
+                lock.assert_not_called()
+
+    def test_notification_failure_never_falls_back_to_foreground(self):
+        with mock.patch.dict(os.environ, {"CODEX_THREAD_ID": "thread-123"}), \
+                mock.patch.object(rebuild.sys, "argv", ["build"]), \
+                mock.patch.object(background, "launch", side_effect=SystemExit(2)), \
+                mock.patch.object(rebuild, "_acquire_build_lock") as lock:
+            with self.assertRaises(SystemExit):
+                rebuild.main()
         lock.assert_not_called()
 
 

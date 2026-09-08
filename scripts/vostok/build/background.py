@@ -90,7 +90,7 @@ def supervise(thread: str, codex: str, nix: str, log_file: Path,
     """
     start = time.monotonic()
     command = [nix, "develop", str(paths.REPO), "--command",
-               "python3", "-u", "-m", "vostok", "build", *build_args]
+               "python3", "-u", "-m", "vostok", "build", "--foreground", *build_args]
     with log_file.open("a", encoding="utf-8", buffering=1) as output:
         output.write(f"Worktree: {paths.REPO}\nBuild arguments: {build_args!r}\n")
         try:

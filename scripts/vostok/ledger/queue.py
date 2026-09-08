@@ -458,8 +458,17 @@ def main():
     )
     ap.add_argument("--write-queue", action="store_true",
                     help="reconcile binaries/gen/structure_mismatch_queue.md")
+    ap.add_argument("--all-engine", action="store_true",
+                    help="full engine campaign, including locals and unpaired leaves; max=100 last")
     ap.add_argument("--queue-file", type=Path, default=QUEUE_FILE)
     args = ap.parse_args()
+
+    if args.all_engine:
+        from vostok.core import paths
+        from vostok.ledger import campaign_queue
+        destination = (paths.STRUCTURE_CAMPAIGN_QUEUE if args.queue_file == QUEUE_FILE
+                       else args.queue_file)
+        return campaign_queue.run(write=args.write_queue, destination=destination)
 
     if args.write_queue:
         n_p, n_s, n_t, n_b = write_queue(args.queue_file)

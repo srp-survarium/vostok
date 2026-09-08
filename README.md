@@ -87,18 +87,22 @@ The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
 
-For unattended Codex builds on Linux with a systemd user manager:
+Codex builds on Linux with a systemd user manager are notification-driven by
+default whenever `CODEX_THREAD_ID` is set:
 
 ```sh
-python3 -m vostok build --background
+python3 -m vostok build
 # Or select the destination and the installed CLI explicitly:
 python3 -m vostok build --background --notify-thread THREAD --codex-bin /path/to/codex
+# Explicit synchronous mode for CI or a supervising process:
+python3 -m vostok build --foreground
 ```
 
 The default destination is `CODEX_THREAD_ID`. The CLI is selected from
 `--codex-bin`, `VOSTOK_CODEX_BIN`, a usable `CODEX_EXECUTABLE_PATH`, then `PATH`;
-it must support `codex queue --thread --message`. This is opt-in: normal builds
-do not send notifications. The launcher needs host user-bus access (request
+it must support `codex queue --thread --message`. Outside Codex, builds remain
+synchronous unless notification mode is requested. The supervisor explicitly
+uses `--foreground` to avoid recursive service launches. The launcher needs host user-bus access (request
 execution approval when running in a sandbox). It starts a transient
 `vostok-build-*.service`, prints its name and its unique log under
 `binaries/build-jobs/`, and returns immediately. The service enters this
@@ -107,6 +111,10 @@ queues its exit status and log path into that existing thread, including on
 setup or build failure. No timer or model polling is involved. Existing
 per-worktree build locking still serializes the build itself.
 
+Launcher success means only that the service started. Wait for the completion
+notification; do not repeatedly inspect the session, process, service, or log.
+A delivery/setup failure never silently falls back to a foreground build.
+
 Check the log for nonfatal ledger/README refresh warnings even after exit 0.
 Notification failure is recorded in that log without changing the build exit
 status; delivery is attempted once with a 30-second timeout. Host shutdown or
@@ -114,6 +122,22 @@ force-stopping the service can prevent notification. To stop a job, use
 `systemctl --user stop UNIT.service`; service startup diagnostics remain in
 `journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
 until the job finishes.
+
+The full-engine structural/byte campaign queue includes `game`, `game_core`,
+`render`, named-local differences and unpaired frameless procedures:
+
+```sh
+python3 -m vostok ledger mismatch-queue --all-engine --write-queue
+```
+
+It writes `binaries/gen/structure_campaign_queue.md` and the uncapped machine-readable
+`structure_campaign_queue.json` alongside it, using a completed build's report,
+rich indexes and ledger. Report/ledger-only compiler functions lacking a PDB
+procedure record remain explicit coverage rows. Functions whose current-source `max` is 100% are listed
+last; approximate statement classes, local-record differences and missing pairs
+remain triage evidence requiring target inspection. Whole-PDB class variants,
+enum and definition order are separate checks described in
+[`divergence_queue.md`](docs/binary_matching/divergence_queue.md).
 
 ## Layout
 

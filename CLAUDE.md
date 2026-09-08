@@ -8,13 +8,24 @@ tools, assets) comes from the flake inside `nix develop`; never from sibling rep
 
 ## The loop
 
-    python3 -m vostok build          # ninja under Wine (~10 min, run it in the background),
-                                     # then regenerate the base diff inputs and refresh the ledger
+    python3 -m vostok build          # notification-driven in Codex; full Wine build + refresh
     python3 -m vostok derive refresh # re-derive the ledger from an existing report only - no rebuild
 
 The objdiff config is `binaries/objdiff/objdiff.json`; each build writes
 `binaries/objdiff/report.json` and `report-changes.json`. Header edits
 recompile their dependents automatically.
+
+Long builds are notification-driven, not polled. With `CODEX_THREAD_ID` set,
+the canonical build command starts a host service and queues one completion
+notification after compilation and all measurement refreshes. Request host
+user-bus execution approval if sandboxed. Keep the build worktree and branch
+unchanged until notification; then inspect the result and warnings once. A
+successful launcher exit is not a successful build. Do not repeatedly check a
+session, log, process, or service to watch progress. If notification launch fails,
+resolve the delivery problem rather than falling back to polling. Use
+`--foreground` only for CI or an actual supervising process that waits for exit;
+outside Codex, use `--background --notify-thread THREAD` for agent-driven work.
+This applies to every matcher, reviewer, skill and build caller.
 
 ## The ledger (`config/match_state.tsv`)
 
