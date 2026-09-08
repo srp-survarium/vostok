@@ -12,11 +12,12 @@ namespace survarium {
 booby_trap::booby_trap( game_world& gw ) :
 	m_game_world( gw )
 {
+	std::fill( m_models, m_models + array_size( m_models ), render::static_model_ptr( ) );
 }
 
 booby_trap::~booby_trap( )
 {
-	if ( m_particle_fired )
+	if ( m_game_world.render_scene( ) )
 		m_game_world.scene_renderer( ).remove_particle_system_instance(
 			m_game_world.render_scene( ),
 			m_particle_fired );
@@ -43,13 +44,6 @@ void booby_trap::switch_to_state( booby_trap_state new_state )
 		on_new_state( old_state );
 }
 
-// claude@NOTE: 13/13 statements, this-in-esi convention matched. Residual is the
-// booby_trap_set_core::config() inliner wall - our base emits `call config` where the
-// target inlines the trivial accessor to a direct m_config.defuse_by_hit load
-// ([m_owner+0x140]); same wall family as inventory::holder() / traps(), not steerable
-// here (would force config() inline in game_core/booby_trap_set_core.h, another unit).
-// The new-state model slot is captured as a reference so /Ox hoists &m_models[m_trap_state]
-// into the prologue exactly as the target (reading m_models[m_trap_state] twice did not).
 void booby_trap::on_new_state( booby_trap_state old_state )
 {
 	render::static_model_ptr& new_model = m_models[ m_trap_state ];
