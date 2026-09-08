@@ -3,29 +3,38 @@
 #ifndef VOSTOK_PHYSICS_SOFT_BODY_H_INCLUDED
 #define VOSTOK_PHYSICS_SOFT_BODY_H_INCLUDED
 
-class btSoftBody;
+#include <BulletSoftBody/btSoftBody.h>
+#include <vostok/physics/bullet_utils.h>
 
 namespace vostok {
 namespace physics {
 
-// sushi@NOTE: OG soft_body has more info
+class bullet_physics_world;
+
 class bt_soft_body_rope {
+	friend class bullet_physics_world;
+
 public:
 	explicit		bt_soft_body_rope	( btSoftBody* bt_body ) : m_bt_body( bt_body ) { }
 
-	// STATE[REMOVED]: bt_soft_body_rope accessors are referenced only from editor
-	// object_wire_set.cpp, which is not compiled into survarium.exe. The shipped rope
-	// users (bullet_physics_world::add/remove(bt_soft_body_rope*)) touch m_bt_body
-	// directly and never call these. Absent from both binaries; empty stubs correct.
-	inline	bool	is_active			( ) const { /* no source */ }
+	inline	bool	is_active			( ) const { return m_bt_body->isActive( ); }
 
-	inline	u32		get_fragments_count	( ) const { /* no source */ } // STATE[REMOVED]
-	inline	void	get_fragment		( u32 arg_0, float3& arg_1, float3& arg_2 ) const { /* no source */ } // STATE[REMOVED]
-	inline	u32		get_nodes_count		( ) const { /* no source */ } // STATE[REMOVED]
-	inline	void	get_node			( u32 arg_0, float3& arg_1 ) const { /* no source */ } // STATE[REMOVED]
+	inline	u32		get_fragments_count	( ) const { return m_bt_body->m_links.size( ); }
+	inline	void	get_fragment		( u32 idx, float3& pt0, float3& pt1 ) const
+	{
+		btSoftBody::Link const& link = m_bt_body->m_links[idx];
+		pt0 = from_bullet( link.m_n[0]->m_x );
+		pt1 = from_bullet( link.m_n[1]->m_x );
+	}
+	inline	u32		get_nodes_count		( ) const { return m_bt_body->m_nodes.size( ); }
+	inline	void	get_node			( u32 idx, float3& pt ) const
+	{
+		btSoftBody::Node const& node = m_bt_body->m_nodes[idx];
+		pt = from_bullet( node.m_x );
+	}
 
 
-public:
+private:
 	/* 0x0000 */	btSoftBody*		m_bt_body;
 }; // class bt_soft_body_rope
 

@@ -284,6 +284,7 @@ PDB_ORDER_PROBE_OUTPUT = GEN_DIR / "pdb-order-probes"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
 BUILD_JOBS = BINARIES / "build-jobs"
+REBUILD_OUTPUT_LOG = BINARIES / "rebuild-output.log"
 
 
 def _main_worktree() -> Path:

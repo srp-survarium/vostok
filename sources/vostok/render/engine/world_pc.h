@@ -121,27 +121,41 @@ public:
 									vectora< vertex_colored > const&	vertices,
 									vectora< u16 > const&				indices
 								);
-	inline	void				draw_text							(
-									pcstr					arg_0,
-									float2 const&			arg_1,
-									vostok::ui::font* const	arg_2,
-									math::color const&		arg_3
-								) { /* no source */ }
+	static	void				draw_text							(
+									vectora< ui::vertex >&		output,
+									pcstr const&				text,
+									vostok::ui::font const&	font,
+									float2 const&				position,
+									math::color const&			text_color,
+									math::color const&			selection_color,
+									u32							max_line_width,
+									bool						is_multiline,
+									u32							start_selection,
+									u32							end_selection
+								);
+
+	// STATE[UNMATCHABLE]: legacy body restored; the shipped client has no caller.
+			void				draw_text							(
+									pcstr					text,
+									float2 const&			position,
+									vostok::ui::font* const	in_font,
+									math::color const&		in_color
+								);
 
 			void				set_view_matrix						( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix );
 			void				set_projection_matrix				( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix );
 
-	inline	math::uint2			window_client_size					( base_output_window_ptr const& arg_0 ) { return math::uint2( 0, 0 ); }
+			math::uint2			window_client_size					( base_output_window_ptr const& render_output_window );
 
-	inline	void				draw_debug_lines					( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
-	inline	void				draw_debug_triangles				( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
-	inline	void				draw_editor_lines					( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
-	inline	void				draw_editor_triangles				( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
+			void				draw_debug_lines					( vector< vertex_colored > const& vertices, vector< u16 > const& indices );
+			void				draw_debug_triangles				( vector< vertex_colored > const& vertices, vector< u16 > const& indices );
+			void				draw_editor_lines					( vector< vertex_colored > const& vertices, vector< u16 > const& indices );
+			void				draw_editor_triangles				( vector< vertex_colored > const& vertices, vector< u16 > const& indices );
 
-	inline	void				setup_grid_render_mode				( u32 arg_0 ) { /* no source */ }
-	inline	void				remove_grid_render_mode				( ) { /* no source */ }
+			void				setup_grid_render_mode				( u32 grid_density );
+			void				remove_grid_render_mode				( );
 
-	inline	void				setup_rotation_control_modes		( bool arg_0 ) { /* no source */ }
+			void				setup_rotation_control_modes		( bool color_write );
 
 			void				draw_scene							(
 									base_scene_ptr const&				scene,
@@ -152,22 +166,22 @@ public:
 									vostok::ui::font const*				default_font
 								);
 
-	inline	void				pick_lighting_luminance				( const u32 arg_0, const u32 arg_1 ) { /* no source */ }
+			void				pick_lighting_luminance				( const u32 x, const u32 y );
 
-	inline	void				set_picking_lighting_luminance_mode	( bool arg_0 ) { /* no source */ }
+			void				set_picking_lighting_luminance_mode	( bool value );
 
-	inline	void				generate_environment_probe			(
-									base_scene_ptr const&				arg_0,
-									base_scene_view_ptr const&			arg_1,
-									base_output_window_ptr const&		arg_2,
-									environment_probe_generate_parameters const&	arg_3
-								) { /* no source */ }
-	inline	void				generate_sky_ao_map					(
-									base_scene_ptr const&				arg_0,
-									base_scene_view_ptr const&			arg_1,
-									base_output_window_ptr const&		arg_2,
-									sky_ambient_occlusion_map_generate_parameters const&	arg_3
-								) { /* no source */ }
+			void				generate_environment_probe			(
+									base_scene_ptr const& scene,
+									base_scene_view_ptr const& view,
+									base_output_window_ptr const& output_window,
+									environment_probe_generate_parameters const& parameters
+								);
+			void				generate_sky_ao_map					(
+									base_scene_ptr const& scene,
+									base_scene_view_ptr const& view,
+									base_output_window_ptr const& output_window,
+									sky_ambient_occlusion_map_generate_parameters const& parameters
+								);
 
 			void				end_frame							( );
 
@@ -239,16 +253,16 @@ public:
 									float								p2
 								);
 
-	inline	void				update_system_model					( render_model_instance_ptr const& arg_0, float4x4 const& arg_1 ) { /* no source */ }
+			void				update_system_model					( render_model_instance_ptr const& v, float4x4 const& transform );
 
 			void				set_model_ghost_mode				( render_model_instance_ptr const& v, bool value );
 
-	inline	void				draw_terrain_debug					( ) { /* no source */ }
+			void				draw_terrain_debug					( );
 
-	inline	void				set_selection_parameters			( float4 const& arg_0, float arg_1 ) { /* no source */ }
+			void				set_selection_parameters			( float4 const& selection_color, float selection_rate );
 
 			void				update_model_vertex_buffer			( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments );
-	inline	void				update_model_index_buffer			( render_model_instance_ptr const& arg_0, vectora< buffer_fragment > const& arg_1 ) { /* no source */ }
+			void				update_model_index_buffer			( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments );
 
 			void				add_light							( base_scene_ptr const& in_scene, u32 id, light_props* props );
 			void				update_light						( base_scene_ptr const& in_scene, u32 id, light_props* props );
@@ -323,11 +337,11 @@ public:
 
 			void				update_skeleton						( render_model_instance_ptr const& v, float4x4* matrices, u32 count );
 
-	inline	void				setup_view_and_output				(
-									base_scene_view_ptr const&			arg_0,
-									base_output_window_ptr const&		arg_1,
-									math::rectangle< float2 > const&	arg_2
-								) { /* no source */ }
+			void				setup_view_and_output				(
+									base_scene_view_ptr const&			view,
+									base_output_window_ptr const&		output_window,
+									math::rectangle< float2 > const&	viewport
+								);
 
 			void				draw_ui_vertices					(
 									ui::vertex const*		vertices,
@@ -336,32 +350,32 @@ public:
 									s32						point_type
 								);
 
-	inline	void				clear_zbuffer						( float arg_0 ) { /* no source */ }
+			void				clear_zbuffer						( float z_value );
 
-	inline	void				draw_screen_lines					(
-									base_scene_ptr const&		arg_0,
-									float2 const*				arg_1,
-									u32							arg_2,
-									math::color const&			arg_3,
-									float						arg_4,
-									u32							arg_5
-								) { /* no source */ }
-	inline	void				draw_3D_screen_lines				(
-									base_scene_ptr const&		arg_0,
-									float3 const*				arg_1,
-									u32							arg_2,
-									math::color const&			arg_3,
-									float						arg_4,
-									u32							arg_5,
-									bool						arg_6
-								) { /* no source */ }
-	inline	void				draw_3D_screen_point				(
-									base_scene_ptr const&		arg_0,
-									float3 const&				arg_1,
-									math::color					arg_2,
-									float						arg_3,
-									bool						arg_4
-								) { /* no source */ }
+			void				draw_screen_lines					(
+									base_scene_ptr const&		scene,
+									float2 const*				points,
+									u32							count,
+									math::color const&			color,
+									float						width,
+									u32							pattern
+								);
+			void				draw_3D_screen_lines				(
+									base_scene_ptr const&		scene,
+									float3 const*				points,
+									u32							count,
+									math::color const&			color,
+									float						width,
+									u32							pattern,
+									bool						use_depth
+								);
+			void				draw_3D_screen_point				(
+									base_scene_ptr const&		scene,
+									float3 const&				position,
+									math::color					color,
+									float						width,
+									bool						use_depth
+								);
 
 			void				play_particle_system				(
 									base_scene_ptr const&					in_scene,
@@ -430,20 +444,7 @@ public:
 			void				set_grass							( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s );
 			void				reset_grass							( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s );
 
-	inline	pcstr				type								( ) { return NULL; }
-
-	static	void				draw_text							(
-									vectora< ui::vertex >&		output,
-									pcstr const&				text,
-									vostok::ui::font const&		font,
-									float2 const&				position,
-									math::color const&			text_color,
-									math::color const&			selection_color,
-									u32							max_line_width,
-									bool						is_multiline,
-									u32							start_selection,
-									u32							end_selection
-								);
+			pcstr				type								( );
 
 private:
 	/* 0x0004 */	u32				m_frame_id;

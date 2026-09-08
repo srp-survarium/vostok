@@ -20,7 +20,7 @@ void interpolator_size_calculator::visit	( instant_interpolator const& interpola
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( interpolator );
 
-	if ( m_comparer )		m_comparer->m_needed_buffer_size	+= sizeof( instant_interpolator );
+	if ( m_comparer )		m_comparer->advance_buffer		( sizeof( instant_interpolator ) );
 	else
 		m_size							+= sizeof( instant_interpolator );
 }
@@ -29,7 +29,7 @@ void interpolator_size_calculator::visit	( linear_interpolator const& interpolat
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( interpolator );
 
-	if ( m_comparer )		m_comparer->m_needed_buffer_size	+= sizeof( linear_interpolator );
+	if ( m_comparer )		m_comparer->advance_buffer		( sizeof( linear_interpolator ) );
 	else
 		m_size							+= sizeof( linear_interpolator );
 }
@@ -38,7 +38,7 @@ void interpolator_size_calculator::visit	( fermi_interpolator const& interpolato
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( interpolator );
 
-	if ( m_comparer )		m_comparer->m_needed_buffer_size	+= sizeof( fermi_interpolator );
+	if ( m_comparer )		m_comparer->advance_buffer		( sizeof( fermi_interpolator ) );
 	else
 		m_size							+= sizeof( fermi_interpolator );
 }

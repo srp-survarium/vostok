@@ -392,18 +392,26 @@ void n_ary_tree::update_animation_time( animation_state& animation_state )
 	);
 }
 
-void n_ary_tree::update_animation_state(
+// sushi@TODO: verify both update-helper boundaries in the next batched structure comparison.
+inline void n_ary_tree::update_weight(
 	n_ary_tree_animation_node&		animation_node,
-	const u32						start_time_in_ms,
-	const u32						target_time_in_ms
+	u32							/* start_time_in_ms */,
+	u32							target_time_in_ms
 )
 {
 	animation_state& state		= animation_node.animation_state( );
 	n_ary_tree_weight_calculator weight_calculator( target_time_in_ms, &animation_node );
 	weight_calculator.visit		( animation_node );
 	state.weight				= weight_calculator.weight( );
+}
 
-
+inline void n_ary_tree::update_animation_interval_time(
+	n_ary_tree_animation_node& animation_node,
+	const u32 start_time_in_ms,
+	const u32 target_time_in_ms
+)
+{
+	animation_state& state = animation_node.animation_state( );
 	if ( state.is_freezed ) return;
 
 
@@ -425,6 +433,16 @@ void n_ary_tree::update_animation_state(
 	}
 
 	update_animation_time		( state );
+}
+
+void n_ary_tree::update_animation_state(
+	n_ary_tree_animation_node& animation_node,
+	const u32 start_time_in_ms,
+	const u32 target_time_in_ms
+)
+{
+	update_weight( animation_node, start_time_in_ms, target_time_in_ms );
+	update_animation_interval_time( animation_node, start_time_in_ms, target_time_in_ms );
 }
 
 void n_ary_tree::update_time_synchronization_group(

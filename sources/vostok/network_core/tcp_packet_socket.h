@@ -28,7 +28,6 @@ public:
 		m_socket			( socket ),
 		m_header_buffer		( 0 )
 	{
-		/* no source */
 	}
 
 			void						send					( tcp_packet const& packet );
@@ -39,13 +38,14 @@ public:
 			void						start_receiving			( );
 			void						stop_receiving			( );
 
-	// STATE[REMOVED]: network_core::tcp_packet_client (the only tcp_packet_socket holder
-	// in scope) drives the socket via start_receiving/stop_receiving/send and never wires
-	// these callback setters; no other in-scope consumer instantiates the socket. Both sides.
-	inline	void						set_on_packet_received	( boost::function< void( tcp_packet const& ) > const& value ) { /* no source */ } // STATE[REMOVED]
+	typedef boost::function< void( tcp_packet const& ) >							on_packet_received_type;
+	typedef boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	on_error_type;
+
+	// STATE[INLINED]: both stores are visible in the retail TCP client wiring.
+	inline	void						set_on_packet_received	( on_packet_received_type const& value ) { m_on_packet_received = value; }
 	inline	void						set_on_error			(
-											boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	value
-										) { /* no source */ } // STATE[REMOVED]
+											on_error_type const&	value
+										) { m_on_error = value; }
 
 // claude@MATCH: target mangling is AAE (private) for the four members below -
 // QAE (public) left them unpairable in objdiff (the unit's 0% block).
@@ -74,8 +74,8 @@ private:
 	}
 
 private:
-	/* 0x0000 */	boost::function< void( tcp_packet const& ) >								m_on_packet_received;
-	/* 0x0020 */	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	/* 0x0000 */	on_packet_received_type											m_on_packet_received;
+	/* 0x0020 */	on_error_type													m_on_error;
 	/* 0x0040 */	handler_allocator											m_allocator;
 	/* 0x0448 */	memory::base_allocator&										m_packet_allocator;
 	/* 0x044c */	Socket&														m_socket;

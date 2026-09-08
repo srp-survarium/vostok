@@ -43,6 +43,12 @@ void collision_shape_cook::translate_query( resources::query_result_for_cook& pa
 		cd->scale_.set( 1.0f, 1.0f, 1.0f );
 	}
 
+	load_collision_resources( cd );
+}
+
+// sushi@TODO: verify the request-helper boundary in the next batched structure comparison.
+inline void collision_shape_cook::load_collision_resources( collision_shape_cook::cook_data* cd )
+{
 	pcstr exported_primitives_path = 0;
 	STR_JOINA( exported_primitives_path, cd->model_path.c_str(), "/exported_primitives" );
 
@@ -73,7 +79,7 @@ void collision_shape_cook::translate_query( resources::query_result_for_cook& pa
 		boost::bind( &collision_shape_cook::on_collision_sources_loaded, this, _1, cd ),
 		g_ph_allocator,
 		0,
-		&parent
+		cd->parent_query
 	);
 }
 

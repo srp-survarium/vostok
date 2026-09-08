@@ -45,7 +45,7 @@ public:
 								float4x4&			transform
 							);
 
-	// @todo Recover this overload if a caller requiring it is restored.
+	// STATE[STUB]: the live six-argument overload does not establish both output-vector roles here.
 	inline	bool			adjust_foot_transform	(
 								float3 const&		arg_0,
 								float3 const&		arg_1,
@@ -55,7 +55,7 @@ public:
 							) const { /* no source */ }
 
 	void					set_crouch			( bool crouch );
-	// @todo Recover the implementation when a caller is restored.
+	// STATE[STUB]: the stance predicate is not established by the crouch/stand helpers.
 	bool					can_prone			( ) const /* no source */;
 	bool					can_crouch			( ) const;
 	bool					can_stand			( ) const;

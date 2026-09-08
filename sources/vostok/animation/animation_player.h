@@ -65,7 +65,9 @@ public:
 
 public:
 			void		serialize_state				( void* buffer, u32 buffer_size );
+	static	void		serialize_empty_state		( void* buffer, u32 buffer_size );
 			void		deserialize_state			( void* buffer, u32 time_in_ms );
+	static	void		destroy_state				( void* buffer );
 
 			void		subscribe					(
 							pcstr									channel_id,
@@ -111,7 +113,7 @@ public:
 						) const;
 
 public:
-	inline	bool		has_object					( pcvoid const arg_0 ) const { /* no source */ }
+	inline	bool		has_object					( pcvoid const animated_object ) const { return m_mixing_tree.has_object( animated_object ); }
 	inline	void		enable_logging				( const bool value ) { m_is_logging_enabled = value; }
 	inline	bool		are_there_any_animations	( ) const { return m_mixing_tree.are_there_any_animations(); }
 
@@ -123,7 +125,7 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 			void		reset						( bool clear_callbacks );
-	inline	void		dump_animation_states		( animation_states_dumper& arg_0 ) const { /* no source */ }
+	inline	void		dump_animation_states		( animation_states_dumper& dumper ) const { m_mixing_tree.dump_animation_states( dumper ); }
 
 private:
 			bool		set_target					(
@@ -133,16 +135,11 @@ private:
 						);
 			pvoid		get_next_buffer				( u32 buffer_size );
 			void		compact_callbacks			( );
+	static	void		destroy_subscriptions		( subscribed_channel const* channels_head );
 			bool		try_get_transform			( pcvoid animated_object, float4x4& result ) const;
 			void		skip_time_if_needed			( const u32 current_time_in_ms );
 
-
-public:
-	static	void		serialize_empty_state		( void* arg_0, u32 arg_1 ) { /* no source */ }
-	static	void		destroy_state				( void* buffer );
-
 private:
-	static	void		destroy_subscriptions		( subscribed_channel const* channels_head );
 	static	void		invert_times				(
 							mixing::n_ary_tree&		tree,
 							const u32				time_in_ms,
@@ -150,17 +147,18 @@ private:
 							const bool				check_after
 						);
 	static	void		serialize_state_impl		(
-							void*							arg_0,
-							const u32						arg_1,
-							mixing::n_ary_tree const&		arg_2,
-							const u32						arg_3,
-							subscribed_channel*&			arg_4
-						) { /* no source */ }
+							void*							buffer,
+							const u32						buffer_size,
+							mixing::n_ary_tree const&		tree,
+							const u32						tree_buffer_size,
+							subscribed_channel*&			channels_head
+						);
 
 
 public:
 	enum {
 		stack_buffer_size		= 4096*sizeof( pvoid ),
+		estimated_channel_id_length = 12,
 		callbacks_buffer_size	= 320*sizeof( pvoid ),
 	};
 

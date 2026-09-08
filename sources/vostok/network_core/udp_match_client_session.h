@@ -5,6 +5,7 @@
 
 #include <vostok/network_core/udp_match_connection.h>
 #include <vostok/network_core/client_error_codes_enum.h>
+#include <vostok/network_core/udp_network_flow_emulator.h>
 #include <boost/function.hpp>
 #include <boost/intrusive/set_hook.hpp>
 
@@ -15,12 +16,6 @@ namespace network_core {
 
 class packet_reader;
 class udp_match_packet;
-class udp_network_flow_emulator;
-
-// STATE[REMOVED] (every `/* no source */` member below): udp_match_client_session is
-// consumed only by udp_match_server - dedicated-server code with ZERO target
-// symbols, never instantiated in scope. So all its inline members are uninstantiated in
-// both binaries; the empty shams are correct. Reconstruct only if the server is matched.
 class udp_match_client_session : private boost::noncopyable {
 public:
 	inline								udp_match_client_session	(
@@ -30,46 +25,64 @@ public:
 											udp_match_packets_orderer&			packets_orderer,
 											udp_network_flow_emulator*			flow_emulator
 										) :
-		// m_connection is non-default-constructible; the timeout/wait/idle/id args are
-		// buildability placeholders (a matcher fills the real values).
-		m_connection		( socket, endpoint, packets_allocator, packets_orderer, 0, 0, 0, NULL ),
-		m_client_endpoint	( endpoint )
+		m_connection		(
+			socket,
+			endpoint,
+			packets_allocator,
+			packets_orderer,
+			120000,
+			flow_emulator ? math::max( 250u, flow_emulator->max_ping_time_in_ms( ) * 6 ) : 500,
+			33,
+			"server"
+		),
+		m_client_endpoint		( endpoint ),
+		next_in_destroy_list	( NULL )
 	{
-		/* no source */
+		m_connection.connect	( NULL );
 	}
-	virtual								~udp_match_client_session	( ) { /* no source */ }
+	virtual								~udp_match_client_session	( ) { }
 
 	virtual	void						on_packet_received			(
 											packet_reader&		reader,
 											boost::function< void( udp_match_client_session&, u8, packet_reader& ) > const&	callback
-										) { /* no source */ }
+										)
+	{
+		m_connection.process_incoming_packet(
+			reader,
+			boost::bind( callback, boost::ref( *this ), _1, _2 )
+		);
+	}
 
-	inline	void						enqueue						( udp_match_packet* packet ) { /* no source */ }
+	inline	void						enqueue						( udp_match_packet* packet ) { m_connection.enqueue( packet ); }
 
-	inline	void						send_queued_packets			( u32 current_time_in_ms ) { /* no source */ }
+	inline	void						send_queued_packets			( u32 current_time_in_ms ) { m_connection.send_queued_packets( current_time_in_ms ); }
 
-	inline	void						instant_disconnect			( ) { /* no source */ }
+	inline	void						instant_disconnect			( ) { m_connection.instant_disconnect( disconnected_by_initiator ); }
 
-	inline	udp_match_packet*			new_packet					( const u8 message_type ) { return NULL; }
-	inline	void						delete_packet				( udp_match_packet*& packet ) { /* no source */ }
+	inline	udp_match_packet*			new_packet					( const u8 message_type ) { return m_connection.new_packet( message_type ); }
+	inline	void						delete_packet				( udp_match_packet*& packet ) { m_connection.delete_packet( packet ); }
 
-	inline	bool						are_there_any_queued_packets( ) const { return false; }
+	inline	bool						are_there_any_queued_packets( ) const { return m_connection.are_there_any_queued_packets( ); }
 
 	inline	udp_match_stats const&		get_stats					( ) const { return m_connection.get_stats(); }
 
-	inline	u32							unacknowledged_packets_count( ) const { return 0; }
+	inline	u32							unacknowledged_packets_count( ) const { return m_connection.unacknowledged_packets_count( ); }
 
 	inline	boost::asio::ip::udp::endpoint const&	endpoint			( ) const { return m_client_endpoint; }
 
-	inline	u32							last_send_time_in_ms		( ) const { return 0; }
-	inline	u32							last_receive_time_in_ms		( ) const { return 0; }
-	inline	u32							last_activity_time_in_ms	( ) const { return 0; }
+	inline	u32							last_send_time_in_ms		( ) const { return m_connection.last_send_time_in_ms( ); }
+	inline	u32							last_receive_time_in_ms		( ) const { return m_connection.last_receive_time_in_ms( ); }
+	inline	u32							last_activity_time_in_ms	( ) const { return m_connection.last_activity_time_in_ms( ); }
 
-	inline	bool						is_disconnected				( ) const { return false; }
-	inline	bool						is_ready_to_be_destroyed	( ) const { return false; }
+	inline	bool						is_disconnected				( ) const { return m_connection.is_disconnected( ); }
+	inline	bool						is_ready_to_be_destroyed	( ) const { return is_disconnected( ) && !m_connection.pending_operations_count( ); }
 
 private:
-	inline	void						on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code ) { /* no source */ }
+	inline	void						on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code )
+	{
+		VOSTOK_UNREFERENCED_PARAMETERS	( client_error_code, error_code );
+		m_connection.instant_disconnect	( disconnected_by_connection_lost );
+	}
 
 protected:
 	/* 0x0008 */	udp_match_connection				m_connection;

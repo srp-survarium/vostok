@@ -84,11 +84,8 @@ public:
 	void reload_shaders( );
 	void reload_modified_textures( );
 
-	math::uint2 window_client_size( base_output_window_ptr const& )
-	{
-		// no source
-		return math::uint2( 0, 0 );
-	}
+	// STATE[UNMATCHABLE]: legacy body restored; the shipped client has no caller.
+	math::uint2 window_client_size( base_output_window_ptr const& output_window );
 
 	void set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix );
 	void set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection );
@@ -220,11 +217,12 @@ public:
 	void set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 	void reset_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& scene );
 
-	void set_fixed_lod( u32, base_scene& ) { /* no source */ }
-	u32 get_fixed_lod( base_scene const& ) { /* no source */ return 0; }
+	// sushi@TODO: verify the editor's fixed-LOD write primitive; retail only exposes the volatile field and reader.
+	void set_fixed_lod( u32 lod, base_scene& scene ) { threading::interlocked_exchange( scene.fixed_lod_value, lod ); }
+	u32 get_fixed_lod( base_scene const& scene ) { return scene.fixed_lod_value; }
 
 private:
-	void draw_present_impl( ) { /* no source */ }
+	void draw_present_impl( ) { /* no source */ } // STATE[STUB]: presentation target unresolved.
 
 private:
 	engine::world& m_render_engine_world;
