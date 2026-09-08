@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Keep the imported source's original encodings and line endings.
+sources/** -text

@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+/binaries/
+/binaries.prebuilt/
+*.obj
+*.pdb
+*.pch
+*.idb
+*.ilk
+*.ncb
+*.suo
+*.user
+*.cache
+Thumbs.db
+/sources/xray/vfs_pack/sources/vfs_pack_default_output.db
