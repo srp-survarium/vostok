@@ -50,7 +50,7 @@ void animation_lexeme_parameters::create_animation_intervals( skeleton_animation
 	}
 
 
-	u32 const animation_interval_id = knots_count - 1;
+	u32 const animation_interval_id = channel->knots_count() - 1;
 	animation_interval* const interval = animation_intervals + animation_interval_id;
 	float const volatile tail		= (channel->knot(0) - previous_knot)/default_fps;
 	new ( interval ) animation_interval( animation, previous_knot/default_fps, animation_length + tail );
@@ -105,8 +105,9 @@ vostok::animation::mixing::animation_interval animation_lexeme_parameters::creat
 
 
 	float const start_time			= channel->knot( interval_id )/default_fps;
-	return							animation_interval( animation, start_time, ( interval_id + 1 < channel->knots_count() ) ?
-		channel->knot( interval_id + 1 )/default_fps - start_time :
-		animation_length - start_time );
+	float const end_time = ( interval_id + 1 < channel->knots_count() ) ?
+		channel->knot( interval_id + 1 )/default_fps :
+		animation_length + channel->knot( 0 )/default_fps;
+	return							animation_interval( animation, start_time, end_time - start_time );
 
 }
