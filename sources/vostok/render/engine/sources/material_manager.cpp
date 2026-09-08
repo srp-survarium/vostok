@@ -40,7 +40,7 @@ class material_shader_base: public effect_material_base
 
 material_manager::material_manager()
 {
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 	m_watcher_materials_subscribe_id	=	vostok::resources::subscribe_watcher(get_materials_path(),
 										boost::bind(&material_manager::on_material_source_changed, this, _1));
 
@@ -52,7 +52,7 @@ material_manager::material_manager()
 
 material_manager::~material_manager()
 {
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 	vostok::resources::unsubscribe_watcher	(m_watcher_materials_subscribe_id);
 	vostok::resources::unsubscribe_watcher	(m_watcher_material_instanced_subscribe_id);
 #endif // #ifndef MASTER_GOLD

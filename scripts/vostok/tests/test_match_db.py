@@ -5,6 +5,7 @@ import pathlib
 import json
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -13,6 +14,7 @@ from vostok.build import gfx
 from vostok.build import gfx_mspdbsrv
 from vostok.build import ninja as build_ninja
 from vostok.build import ninja_regen
+from vostok.build import solution
 from vostok.tool import toolchain
 from vostok.build.generate_objdiff_cross_unit import (_defined_owners,
                                                        _identical_units,
@@ -170,6 +172,95 @@ class CleanFinalPdbTests(unittest.TestCase):
             text,
         )
 
+    def test_game_build_define_is_added_only_to_compile_response(self):
+        compile_rsp = '/O2 /D "WIN32"\r\n"sample.cpp"\r\n'
+        expected = (
+            '/O2 /D "WIN32" /D "VOSTOK_GAME_BUILD" /D "VOSTOK_GAME_DLL"\r\n'
+            '"sample.cpp"\r\n'
+        )
+        self.assertEqual(
+            ninja_regen._add_game_build_define(
+                "engine_cl_0.rsp", compile_rsp, "dll"
+            ),
+            expected,
+        )
+        self.assertEqual(
+            ninja_regen._add_game_build_define(
+                "engine_link.rsp", compile_rsp, "dll"
+            ),
+            compile_rsp,
+        )
+
+    def test_game_build_define_is_idempotent(self):
+        text = '/O2 /D "VOSTOK_GAME_BUILD"\n"sample.cpp"\n'
+        self.assertEqual(
+            ninja_regen._add_game_build_define("engine_cl_0.rsp", text, "static"),
+            text,
+        )
+
+    def test_static_game_response_does_not_define_dll_abi(self):
+        text = ninja_regen._add_game_build_define(
+            "engine_cl_0.rsp", '/O2 /D "WIN32"\n', "static"
+        )
+        self.assertIn('/D "VOSTOK_GAME_BUILD"', text)
+        self.assertNotIn('/D "VOSTOK_GAME_DLL"', text)
+
+    def test_scaleform_game_response_uses_shipping_gfx_surface(self):
+        text = '/O2 /D "WIN32"\n"factory.cpp"\n'
+        first_line = ninja_regen._add_game_build_define(
+            "scaleform_cl_1.rsp", text, "dll"
+        ).splitlines()[0]
+        self.assertIn('/D "VOSTOK_GAME_BUILD"', first_line)
+        self.assertIn('/D "VOSTOK_GAME_DLL"', first_line)
+        self.assertIn('/D "SF_BUILD_SHIPPING"', first_line)
+
+    def test_zlib_game_response_builds_its_import_library(self):
+        text = ninja_regen._add_game_build_define(
+            "zlib_cl_0.rsp", '/O2 /D "WIN32"\n', "dll"
+        )
+        self.assertIn('/D "ZLIB_DLL"', text)
+
+    def test_no_lto_engine_link_does_not_delay_load_stlport(self):
+        text = "/delayload:stlport.5.2.dll\n/delayload:user32.dll\n"
+        self.assertEqual(
+            ninja_regen._normalize_no_lto_link_flags(
+                "engine_pc_dx11_link.rsp", text
+            ),
+            "\n/delayload:user32.dll\n",
+        )
+
+    def test_static_debug_configuration_uses_static_runtime_and_output(self):
+        tree = ET.ElementTree(
+            ET.fromstring(
+                "<VisualStudioProject><Configurations>"
+                '<Configuration Name="Debug|Win32">'
+                '<Tool Name="VCCLCompilerTool" RuntimeLibrary="2" />'
+                '<Tool Name="VCLibrarianTool" OutputFile="debug.lib" />'
+                "</Configuration></Configurations><Files><File>"
+                '<FileConfiguration Name="Debug|Win32">'
+                '<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />'
+                "</FileConfiguration></File></Files></VisualStudioProject>"
+            )
+        )
+        solution._add_static_debug_configuration(tree, Path("foundation.vcproj"))
+        configurations = tree.getroot().find("Configurations")
+        self.assertIsNotNone(configurations)
+        derived = next(
+            item
+            for item in configurations
+            if item.attrib["Name"] == "Debug(static)|Win32"
+        )
+        compiler = next(item for item in derived if item.attrib["Name"] == "VCCLCompilerTool")
+        librarian = next(item for item in derived if item.attrib["Name"] == "VCLibrarianTool")
+        self.assertEqual(compiler.attrib["RuntimeLibrary"], "0")
+        self.assertTrue(librarian.attrib["OutputFile"].endswith("-static-debug.lib"))
+        self.assertTrue(
+            any(
+                item.attrib.get("Name") == "Debug(static)|Win32"
+                for item in tree.iter("FileConfiguration")
+            )
+        )
+
     def test_link_rsp_paths_crossing_solution_parent_are_normalized(self):
         text = (
             '/OUT:"Z:/work/vostok/sources\\../binaries/base.exe" '
@@ -187,6 +278,54 @@ class CleanFinalPdbTests(unittest.TestCase):
             '/IMPLIB:"Z:/work/vostok/binaries/base.lib" '
             '"Z:/work/vostok/sources\\/render.lib"',
         )
+
+    def test_dll_game_link_keeps_dynamic_crt_and_winsock_defaults(self):
+        text = (
+            '/NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"ws2_32.lib" '
+            '/NODEFAULTLIB:"msvcrt.lib" /DEBUG '
+            'Z:/build/libraries/vostok_network_core.lib '
+            'Z:/build/libraries/vostok_scaleform-debug.lib '
+            'Z:/build/libraries/vostok_LibFoundation.lib '
+            'Z:/build/libraries/vostok_game_core.lib'
+        )
+        self.assertEqual(
+            ninja_regen._normalize_game_dll_link_flags(
+                "survarium_-_PC_-_DirectX_11_link.rsp", text
+            ),
+            '/NODEFAULTLIB:"libcmt" /DEBUG '
+            'Z:/build/libraries/vostok_game_core.lib',
+        )
+        self.assertEqual(
+            ninja_regen._normalize_game_dll_link_flags("engine_link.rsp", text),
+            text,
+        )
+
+    def test_dll_engine_link_expands_module_archive_members(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            (out / "rsp").mkdir()
+            (out / "core.ninja").write_text("proj_dir = Z:/work/sources/core\n")
+            (out / "rsp" / "core_lib.rsp").write_text(
+                '/OUT:"Z:/work/libraries/vostok_core.lib"\n'
+                '"..\\..\\binaries\\core\\alpha.obj"\n'
+                '"..\\..\\binaries\\core\\beta.obj"\n'
+            )
+            text = "keep.lib Z:/work/libraries/vostok_core.lib tail.lib\n"
+            self.assertEqual(
+                ninja_regen._flatten_dll_engine_archives(
+                    out, "engine_pc_dx11_link.rsp", text
+                ),
+                'keep.lib "Z:/work/binaries/core/alpha.obj"\n'
+                '"Z:/work/binaries/core/beta.obj" tail.lib\n',
+            )
+
+    def test_dll_engine_link_suppresses_expanded_archive_autolinks(self):
+        text = ninja_regen._suppress_dll_engine_archive_defaults(
+            "engine_pc_dx11_link.rsp", "objects\n"
+        )
+        self.assertIn('/NODEFAULTLIB:"vostok_core.lib"\n', text)
+        self.assertIn('/NODEFAULTLIB:"vostok_core-debug.lib"\n', text)
+        self.assertIn('/NODEFAULTLIB:"vostok_engine_pc.lib"\n', text)
 
     def test_compile_rsp_uses_retail_source_include_root_only(self):
         text = (

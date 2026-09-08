@@ -34,6 +34,9 @@ public:
 			pvoid	malloc_impl			( size_t size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			pvoid	realloc_impl		( pvoid pointer, size_t new_size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			void	free_impl			( pvoid pointer VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
+#ifdef DEBUG
+	inline	void	free_impl			( pvoid pointer ) { free_impl( pointer, "", "", 0 ); }
+#endif
 	inline	size_t	usable_size			( pvoid pointer ) const { return m_use_guards ? base_allocator::usable_size(pointer) : doug_lea_allocator::usable_size_impl(pointer);}
 
 private:

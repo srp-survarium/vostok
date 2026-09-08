@@ -681,7 +681,12 @@ bool System::InsertDirectory (const char* acDirectory)
         Initialize();
     }
 
+#if defined(VOSTOK_GAME_DLL)
+    std::string kDirectory(acDirectory);
+    kDirectory += "/";
+#else
     std::string kDirectory = std::string(acDirectory) + std::string("/");
+#endif
     for (int i = 0; i < (int)ms_pkDirectories->size(); i++)
     {
         if (kDirectory == (*ms_pkDirectories)[i])
@@ -700,7 +705,12 @@ bool System::RemoveDirectory (const char* acDirectory)
         Initialize();
     }
 
+#if defined(VOSTOK_GAME_DLL)
+    std::string kDirectory(acDirectory);
+    kDirectory += "/";
+#else
     std::string kDirectory = std::string(acDirectory) + std::string("/");
+#endif
     std::vector<std::string>::iterator pkIter = ms_pkDirectories->begin();
     for (/**/; pkIter != ms_pkDirectories->end(); pkIter++)
     {

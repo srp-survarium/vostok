@@ -207,7 +207,6 @@
 				PrecompiledHeaderThrough="pch.h"
 				WarningLevel="4"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings=" "
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

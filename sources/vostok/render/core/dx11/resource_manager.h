@@ -111,9 +111,9 @@ public:
 			  time( 0 ),
 			  includes( memory::g_mt_allocator )
 #else // #ifdef MASTER_GOLD
-			: data( debug::g_mt_allocator ),
+			: data( memory::g_mt_allocator ),
 			  time( 0 ),
-			  includes( debug::g_mt_allocator )
+			  includes( memory::g_mt_allocator )
 #endif // #ifdef MASTER_GOLD
 		{
 		}

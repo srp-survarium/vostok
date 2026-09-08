@@ -269,7 +269,7 @@ void effect_manager::on_effects_recompiled(
 			// TODO: add some special copy function
 			it->effect->m_techniques		= created_temp_effect->m_techniques;
 			it->effect->m_cur_technique		= created_temp_effect->m_cur_technique;
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 			threading::simple_lock_raii raii(it->effect->used_shaders_lock);
 			it->effect->used_shaders		= created_temp_effect->used_shaders;
 #endif // #ifndef MASTER_GOLD

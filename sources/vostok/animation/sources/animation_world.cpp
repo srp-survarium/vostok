@@ -44,7 +44,7 @@ animation_world::animation_world(
 	m_debug_renderer			( debug_renderer )
 //	m_test_scene				( test_scene )
 {
-#if VOSTOK_USE_MAYA_ANIMATION
+#if VOSTOK_USE_MAYA_ANIMATION && !defined(VOSTOK_GAME_BUILD)
 	if ( check_animation_b_spline_approximation )
 		vostok::maya_animation::set_memory_allocator( *vostok::animation::g_allocator );
 #endif // #if VOSTOK_USE_MAYA_ANIMATION

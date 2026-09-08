@@ -135,7 +135,7 @@ void effect_cook::create_resource(
 																	it != cached_shaders_info.end(); 
 																	++it)
 	{
-#ifndef MASTER_GOLD
+#if !defined(MASTER_GOLD) && !defined(VOSTOK_GAME_BUILD)
 
 		effect_resource->used_shaders_lock.lock();
 		if (it->vertex_shader_name.length())	effect_resource->used_shaders.push_back(it->vertex_shader_name);

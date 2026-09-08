@@ -46,7 +46,7 @@ bool artefact_container_core::use_initialize( usable_object_user_data* user )
 
 bool artefact_container_core::use_execute( usable_object_user_data* user )
 {
-	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users[0] == user ) );
+	ASSERT( UNKNOWN_EXPRESSION_T( m_usable_object_users.front() == user ) );
 	ASSERT( UNKNOWN_EXPRESSION_T( user ) );															// sushi@NOTE: Stupid assert. Instead we should verify that the state at the point of "execution" is correct. Something like m_owner and m_artefact exist, since they should! Though ifs down there don't make sense any longer.
 	u32 left_ms					= user->current_time_ms - user->start_using_time_ms;				// sushi@NOTE: Misnomer! elapsed_ms would be a better name.
 

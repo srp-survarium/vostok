@@ -234,4 +234,10 @@ void flash_movie::ForceCollectGarbage( )
 	m_movie->ForceCollectGarbage( );
 }
 
+inline void flash_text::set_alignment( flash_text::alignment alignment )
+{
+	text_impl->SetAlignment( static_cast<Scaleform::GFx::DrawText::Alignment>( alignment ) );
+	owner->need_capture = true;
+}
+
 } // namespace survarium

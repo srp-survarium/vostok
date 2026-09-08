@@ -13,6 +13,20 @@ Usage:
   python3 -m vostok.build.ninja logging          # build just the logging project
   python3 -m vostok.build.ninja -t clean         # ninja flag (clean tool)
   python3 -m vostok.build.ninja -k 1             # stop at first failure
+  python3 -m vostok.build.ninja --configuration release   # non-matching build
+
+`--configuration {gold,release,debug}` selects the solution configuration.
+`gold` is the matching build (`Master Gold|Win32`) and the default; everything
+that reproduces the retail image - the two shipped __DATE__s, the clean final
+PDB, the post-link watchdog - belongs to it alone. `release`/`debug` build the
+same sources plainly from their own graph (binaries/ninja-{release,debug},
+generated on demand) into their own .vcproj output paths, so they cannot move
+what the ledger measures.
+
+`--linkage {dll,static}` selects the aggregate engine DLL or a fully static game.
+`--no-lto` (non-gold only) strips /GL and /LTCG from the selected graph. Switching
+that flag rewrites its response files and causes the affected objects to rebuild;
+Gold is always LTO because retail is LTCG.
 
 Required env vars (set by flake.nix devShell):
   NINJA_DIR  - directory containing ninja.exe
@@ -60,6 +74,8 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+from vostok.build import ninja_regen
+from vostok.core import paths
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
@@ -331,6 +347,7 @@ def _run_plain(
     ninja_exe: Path,
     args: list[str],
     build_time: str | None = None,
+    build_dir: Path = BUILD_DIR,
 ) -> int:
     """Run a module build and reap the post-PDB-server Ninja wait.
 
@@ -345,7 +362,7 @@ def _run_plain(
     with _termination_cleanup_scope():
         proc = subprocess.Popen(
             _ninja_argv(ninja_exe, args, build_time),
-            cwd=str(BUILD_DIR),
+            cwd=str(build_dir),
             env=_ninja_env(build_time),
             start_new_session=True,
         )
@@ -585,6 +602,67 @@ def _run_with_watchdog(
         return 0 if reaped else 1
 
 
+def _take_configuration(args: list[str]) -> tuple[str, str, bool, list[str]]:
+    """Pull our own flags out of the args ninja itself will see.
+
+    Returns (configuration name, linkage, lto, remaining ninja args)."""
+    args = list(args)
+    linkage = "dll"
+    lto = True
+    if "--no-lto" in args:
+        lto = False
+        args.remove("--no-lto")
+    if "--configuration" not in args:
+        name = "gold"
+    else:
+        i = args.index("--configuration")
+        if i + 1 >= len(args):
+            die("--configuration needs a value "
+                f"({', '.join(sorted(paths.CONFIGURATIONS))})")
+        name = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    if "--linkage" in args:
+        i = args.index("--linkage")
+        if i + 1 >= len(args):
+            die(f"--linkage needs a value ({', '.join(sorted(paths.LINKAGES))})")
+        linkage = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    return name, linkage, lto, args
+
+
+def _stage_dll_runtime() -> None:
+    """Stage flake-pinned DLL runtimes beside a successful game DLL build."""
+    msvc_dir = os.environ.get("MSVC_DIR")
+    if not msvc_dir:
+        die("MSVC_DIR not set - run from `nix develop`")
+    redist = (
+        Path(msvc_dir)
+        / "VC"
+        / "redist"
+        / "x86"
+        / "Microsoft.VC90.CRT"
+    )
+    # The recovered Debug projects intentionally use the release STLPort ABI
+    # (/MD plus engine DEBUG checks), not STLPort's separate _STLP_DEBUG ABI.
+    stlport_name = "stlport.5.2.dll"
+    sources = [
+        *(redist / name for name in ("msvcr90.dll", "msvcp90.dll", "msvcm90.dll")),
+        paths.PREBUILT_STLPORT_WIN32 / stlport_name,
+    ]
+    paths.WIN32_DIR.mkdir(parents=True, exist_ok=True)
+    staged: list[str] = []
+    for source in sources:
+        if not source.is_file():
+            die(f"runtime DLL not found: {source}")
+        target = paths.WIN32_DIR / source.name
+        if target.is_file() and target.read_bytes() == source.read_bytes():
+            continue
+        shutil.copyfile(source, target)
+        staged.append(source.name)
+    if staged:
+        print(f"[ninja] staged DLL runtime: {', '.join(staged)}", flush=True)
+
+
 def main() -> None:
     ninja_dir = os.environ.get("NINJA_DIR")
     if not ninja_dir:
@@ -593,10 +671,38 @@ def main() -> None:
     ninja_exe = Path(ninja_dir) / "ninja.exe"
     if not ninja_exe.exists():
         die(f"ninja.exe not found at {ninja_exe}")
-    if not (BUILD_DIR / "build.ninja").is_file():
-        die(
-            f"{BUILD_DIR}/build.ninja missing",
-            "Run: python3 -m vostok tool toolchain",
+
+    argv = sys.argv[1:]
+    name, linkage, lto, argv = _take_configuration(argv)
+    if name not in paths.CONFIGURATIONS:
+        die(f"unknown configuration {name!r} "
+            f"({', '.join(sorted(paths.CONFIGURATIONS))})")
+    configuration = paths.configuration(name)
+    gold = configuration == paths.GOLD_CONFIGURATION
+    if linkage not in paths.LINKAGES:
+        die(f"unknown linkage {linkage!r} ({', '.join(sorted(paths.LINKAGES))})")
+    if gold and linkage != "dll":
+        die("--linkage is only valid for non-gold game configurations")
+    if gold and not lto:
+        die("--no-lto is not valid for the gold configuration (retail is LTCG)")
+    build_dir = paths.ninja_dir(configuration, lto=lto, linkage=linkage)
+
+    if gold:
+        # `vostok build` owns the matching graph and regenerates it itself.
+        if not (build_dir / "build.ninja").is_file():
+            die(
+                f"{build_dir}/build.ninja missing",
+                "Run: python3 -m vostok tool toolchain",
+            )
+    else:
+        # No `vostok build` wrapper for these, so regenerate here. It is
+        # write-if-changed, so an up-to-date graph costs one vcproj2ninja run
+        # and dirties nothing.
+        variant = f"{configuration} ({linkage}{'' if lto else ', no LTO'})"
+        print(f"[ninja] refreshing the {variant} graph in {build_dir}",
+              flush=True)
+        ninja_regen.regenerate(
+            configuration=configuration, lto=lto, linkage=linkage
         )
 
     # THIS worktree's prefix, always - an inherited WINEPREFIX from a sibling
@@ -624,14 +730,26 @@ def main() -> None:
     #           failures in one pass instead of stopping at the first
     # Both come before the user's args, so a later -k/-j on the command line
     # still wins (ninja takes the last occurrence).
-    args = sys.argv[1:] or [DEFAULT_TARGET]
+    args = argv or [DEFAULT_TARGET]
+
+    targets = _explicit_targets(args)
+    full_build = (not targets) or (DEFAULT_TARGET in targets)
+
+    # Everything below reproduces the retail image: the two shipped __DATE__s,
+    # the clean final PDB, the post-LTCG-link zombie watchdog. Release and Debug
+    # are ordinary builds of the same sources, so they take the plain path
+    # against their own graph.
+    if not gold:
+        rc = _run_plain(ninja_exe, args, build_dir=build_dir)
+        _kill_prefix_processes(("mspdbsrv.exe",))
+        if rc == 0 and full_build and linkage == "dll":
+            _stage_dll_runtime()
+        sys.exit(rc)
 
     # The stall watchdog only makes sense for the full-game build (the one that
     # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only
     # build (`vostok.build.ninja game_core`) doesn't relink and finishes fast, so run
     # it plainly.
-    targets = _explicit_targets(args)
-    full_build = (not targets) or (DEFAULT_TARGET in targets)
     date_sensitive = "-t" not in args
     if date_sensitive and (full_build or "core" in targets):
         _stop_wine_session()

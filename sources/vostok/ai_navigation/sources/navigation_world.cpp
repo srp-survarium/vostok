@@ -32,7 +32,7 @@ navigation_world::navigation_world			( vostok::ai::navigation::engine& engine, v
 {
 //	float4x4 const transform	= math::create_translation( float3( 0.f, 0.f, 10.f ) );
 	float4x4 const transform	= math::create_translation( float3( 0.f, 0.f, 0.f ) );
-#if VOSTOK_DEBUG_ALLOCATOR
+#if VOSTOK_DEBUG_ALLOCATOR && !defined(VOSTOK_GAME_BUILD)
 	m_graph_generator	= NEW( graph_generator) ( engine, transform, scene, renderer, m_navigation_mesh );
 #else // #if VOSTOK_DEBUG_ALLOCATOR
 	VOSTOK_UNREFERENCED_PARAMETER	( scene );
@@ -41,14 +41,14 @@ navigation_world::navigation_world			( vostok::ai::navigation::engine& engine, v
 
 navigation_world::~navigation_world			( )
 {
-#if VOSTOK_DEBUG_ALLOCATOR
+#if VOSTOK_DEBUG_ALLOCATOR && !defined(VOSTOK_GAME_BUILD)
 	DELETE				( m_graph_generator );
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
 }
 
 void navigation_world::clear_resources		( )
 {
-#if VOSTOK_DEBUG_ALLOCATOR
+#if VOSTOK_DEBUG_ALLOCATOR && !defined(VOSTOK_GAME_BUILD)
 	if ( m_graph_generator )
 		m_graph_generator->clear_resources	( );
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
@@ -56,7 +56,7 @@ void navigation_world::clear_resources		( )
 
 void navigation_world::tick					( )
 {
-#if VOSTOK_DEBUG_ALLOCATOR
+#if VOSTOK_DEBUG_ALLOCATOR && !defined(VOSTOK_GAME_BUILD)
 	if ( m_graph_generator )
 		m_graph_generator->tick				( );
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
@@ -70,6 +70,7 @@ void navigation_world::debug_render			(
 		vostok::math::frustum const& frustum
 	)
 {
+#ifndef VOSTOK_GAME_BUILD
 	m_graph_generator->set_frustum( frustum );
 
 	if ( !s_navigation_debug_controls.is_set() ) {
@@ -167,6 +168,9 @@ void navigation_world::debug_render			(
 #endif
 
 
+#else
+	VOSTOK_UNREFERENCED_PARAMETERS	( input, &position, &direction, &frustum );
+#endif
 }
 
 #endif

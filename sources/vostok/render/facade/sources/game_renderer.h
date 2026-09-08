@@ -25,7 +25,7 @@ namespace ui { class renderer; }
 
 namespace game {
 
-class renderer : private core::noncopyable {
+class VOSTOK_RENDER_API renderer : private core::noncopyable {
 private:
 	friend class render::world;
 	renderer( render::world& world, engine::world& engine_world );

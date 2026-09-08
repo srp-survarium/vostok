@@ -2,7 +2,7 @@
 
 #ifndef FLASH_TEXT_H_INCLUDED
 #define FLASH_TEXT_H_INCLUDED
-
+#include <vostok/scaleform/api.h>
 namespace Scaleform {
 namespace GFx {
 	class DrawText;
@@ -13,7 +13,7 @@ namespace survarium {
 
 struct flash_text_manager;
 
-struct flash_text {
+struct VOSTOK_SCALEFORM_API flash_text {
 	inline				flash_text		( ) : text_impl( NULL ), owner( NULL ), visible( false ) { }
 
 	enum alignment {
@@ -30,7 +30,7 @@ struct flash_text {
 			void		set_visible		( bool arg_0 );
 			void		set_font_size	( const float arg_0 );
 			void		set_position	( const float arg_0, const float arg_1 );
-	inline	void		set_alignment	( flash_text::alignment arg_0 ) { /* no source */ }
+	inline	void		set_alignment	( flash_text::alignment arg_0 );
 			void		set_color		(
 							u8		arg_0,
 							u8		arg_1,

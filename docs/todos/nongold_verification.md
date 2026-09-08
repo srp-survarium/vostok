@@ -1,7 +1,7 @@
 # Non-gold verification & content-pipeline self-checks (deferred port)
 
-Status: **excluded from all builds** so gold / Release / Debug / dynamic compile
-without pulling in the authoring stack these checks depend on. Port later.
+Status: **excluded from game builds** so Gold, Release, and Debug compile without
+pulling in the authoring stack these checks depend on. Port later.
 
 ## What it is
 

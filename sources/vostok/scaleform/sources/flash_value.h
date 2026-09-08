@@ -2,12 +2,13 @@
 
 #ifndef FLASH_VALUE_H_INCLUDED
 #define FLASH_VALUE_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 namespace survarium {
 
 // opaque storage for a Scaleform::GFx::Value (0x18 bytes), keeping the SDK
 // type out of the public header
-struct flash_value {
+struct VOSTOK_SCALEFORM_API flash_value {
 								flash_value			( );
 								~flash_value		( );
 

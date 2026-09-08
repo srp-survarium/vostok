@@ -2,6 +2,7 @@
 
 #ifndef FLASH_EXTERNAL_HANDLER_H_INCLUDED
 #define FLASH_EXTERNAL_HANDLER_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 namespace survarium {
 
@@ -9,7 +10,7 @@ struct flash_external_handler_impl;
 struct flash_movie;
 struct flash_value;
 
-struct flash_external_handler {
+struct VOSTOK_SCALEFORM_API flash_external_handler {
 					flash_external_handler	( );
 	virtual			~flash_external_handler	( );
 

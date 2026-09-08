@@ -81,7 +81,7 @@ private:
 	// are unpairable as standalones; the idiomatic bodies below are the faithful shapes.
 	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate						( ) override { VOSTOK_UNREACHABLE_CODE( ); }
-	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); return float4x4( ).identity( ); }
 
 	virtual	void								tick							( ) override { /* no source */ }
 	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
@@ -90,6 +90,7 @@ private:
 	{
 		VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view );
 		VOSTOK_UNREACHABLE_CODE( );
+		return animation::mixing::expression( );
 	}
 
 	virtual	void								on_player_model_added			( ) override { /* no source */ }

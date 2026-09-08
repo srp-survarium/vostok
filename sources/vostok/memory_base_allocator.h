@@ -35,6 +35,9 @@ public:
 			pvoid	malloc_impl			( size_t size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			pvoid	realloc_impl		( pvoid pointer, size_t new_size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			void	free_impl			( pvoid pointer VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
+#ifdef DEBUG
+	inline	void	free_impl			( pvoid pointer ) { free_impl( pointer, "", "", 0 ); }
+#endif
 
 	inline	bool	initialized			( ) const { return !!m_arena_start; }
 	inline	pcstr	arena_id			( ) const { return m_arena_id; }

@@ -2,6 +2,7 @@
 
 #ifndef FLASH_FACTORY_H_INCLUDED
 #define FLASH_FACTORY_H_INCLUDED
+#include <vostok/scaleform/api.h>
 
 // the legacy header defined flash_movie inline, so render's consumers
 // (flash_renderer.cpp) expect the complete type from this include
@@ -19,7 +20,7 @@ struct flash_text_manager;
 class scaleform_game_engine;
 class scaleform_render_command_queue;
 
-class flash_factory {
+class VOSTOK_SCALEFORM_API flash_factory {
 	friend class game_world;
 
 public:

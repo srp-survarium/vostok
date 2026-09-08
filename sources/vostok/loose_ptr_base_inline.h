@@ -8,6 +8,11 @@
 #define VOSTOK_LOOSE_PTR_BASE_INLINE_H_INCLUDED
 
 #include <vostok/debug/call_stack.h>
+#ifndef MASTER_GOLD
+#	include <vostok/logging/extensions.h>
+#	include <vostok/core/logging_extensions.h>
+#endif // #ifndef MASTER_GOLD
+#line 10
 
 inline vostok::loose_ptr_base::loose_ptr_base		( )
 {
