@@ -11,6 +11,7 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
+// sushi@TODO: Recover the original conditions of the range constructor's three erased assertions.
 inline animation_lexeme_parameters::animation_lexeme_parameters	(
 		mutable_buffer& buffer,
 		pcstr identifier,
@@ -25,7 +26,6 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
-	m_user_data							( memory::uninitialized_value<u32>() ),
 	m_animation_intervals				( static_cast<animation_interval const*>( buffer.c_ptr() ) ),
 	m_animation_intervals_count			( u32(animation_intervals_end - animation_intervals_begin) ),
 	m_weight_interpolator				( 0 ),
@@ -45,19 +45,20 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 	m_is_positive_event_direction		( true ),
 	m_can_generate_events				( true )
 {
-	animation_interval* const animation_intervals = static_cast<animation_interval*>( buffer.c_ptr() );
-	buffer								+= m_animation_intervals_count * sizeof(animation_interval);
-	animation_interval* j				= animation_intervals;
+	animation_interval* const animation_intervals = static_cast<animation_interval*>( m_buffer.c_ptr() );
+	R_ASSERT							( UNKNOWN_EXPRESSION_T( animation_intervals == m_animation_intervals ) );
+	m_buffer							+= m_animation_intervals_count * sizeof(animation_interval);
 
-	for ( animation_interval const* i = animation_intervals_begin;
-		i != animation_intervals_end; ++i, ++j )
+	animation_interval* j				= animation_intervals;
+	for ( animation_interval const* i = animation_intervals_begin; i != animation_intervals_end; ++i, ++j )
 		new ( j ) animation_interval	( (*i).animation(), (*i).start_time(), (*i).length() );
 
 
 #ifdef MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETERS		( identifier );
 #endif
-
+	R_ASSERT							( UNKNOWN_EXPRESSION_T( !time_driving_animation || m_time_synchronization_group_id != u32(-1) ) );
+	R_ASSERT							( UNKNOWN_EXPRESSION_T( !weight_driving_animation || m_weight_synchronization_group_id != u32(-1) ) );
 }
 
 template < int AnimationIntervalsCount >
@@ -155,7 +156,6 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
-	m_user_data							( memory::uninitialized_value<u32>() ),
 	m_animation_intervals				( static_cast<animation_interval const*>( buffer.c_ptr() ) ),
 	m_animation_intervals_count			( animation_intervals_count(animation) ),
 	m_weight_interpolator				( 0 ),

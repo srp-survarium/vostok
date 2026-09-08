@@ -71,7 +71,7 @@ animation_space_vertex_id animation_space_graph::get_movement(
 
 	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
 
-	// sushi@TODO: Resolve the parameter header's user-data initialization and synchronization-setter inlining against retail.
+	// sushi@TODO: Resolve the parameter header's synchronization-setter inlining against retail.
 	animation::mixing::animation_lexeme right_lexeme(
 		animation::mixing::animation_lexeme_parameters( buffer, "", left_animation->animation, NULL, NULL )
 			.time_synchronization_group_id( 0 ).weight_synchronization_group_id( 0 )
