@@ -11,7 +11,7 @@ on stderr. Unchanged; the whole tree already speaks it.
 **Usage log** - `run(prog, main)` wraps a CLI entry point and appends ONE line
 per process to `binaries/vostok_usage.log` (see `paths.USAGE_LOG`):
 
-    [2026-09-02 12:03:34.96][xray-2.0-prog-v0.100b][0][86ms]: python3 -m vostok ledger report --module render
+    [2026-09-02 12:03:34.96][v0.10b][0][86ms]: python3 -m vostok ledger report --module render
 
 Metadata in brackets, the command after the `: ` and shell-quoted, so a line
 pastes straight back into a shell. On a nonzero exit the reason follows behind

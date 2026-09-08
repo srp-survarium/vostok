@@ -26,6 +26,11 @@ ninja actually recompiled this run (a no-op rebuild = 0 modules).
 Any extra args are forwarded to vostok.build.ninja:
   python3 -m vostok build            # build the game, then refresh base diff inputs
   python3 -m vostok build logging    # build just one project first
+
+  python3 -m vostok build --background
+      Run in a host systemd user service; notify CODEX_THREAD_ID on completion.
+      Overrides: --notify-thread THREAD, --codex-bin /path/to/codex.
+      Remaining arguments are forwarded to the normal build.
 """
 
 import datetime
@@ -217,6 +222,11 @@ def main() -> None:
     # concurrently in the same WINEPREFIX.
     if any(a in ("-h", "--help") for a in sys.argv[1:]):
         print(__doc__.strip())
+        return
+
+    if "--background" in sys.argv[1:]:
+        from vostok.build import background
+        background.launch(sys.argv[1:])
         return
 
     lock = _acquire_build_lock()

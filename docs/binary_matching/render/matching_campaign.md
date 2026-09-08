@@ -7,7 +7,7 @@ on disjoint file scopes; the orchestrator integrates each finished batch onto a
 single linear stack, rebuilds, and commits a measured ledger snapshot per
 batch.
 
-Branch: `campaign/render-matching`, stacked on `xray-2.0-prog-v0.100b` at the
+Branch: `campaign/render-matching`, stacked on the version branch now named `v0.10b` at the
 closeout of the three-lane cherry-pick integration.
 
 ## Lane split (never overlapping)

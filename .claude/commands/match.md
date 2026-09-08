@@ -17,7 +17,7 @@ Full rules: `.claude/agents/orchestrator.md`. In short:
    worst first). Order leaf/small-first. (`vostok build` keeps the README
    score block current on its own - no manual refresh step.)
 2. **Stacked PRs:** track the **stack tip** (the latest match branch, or the current tip
-   of `xray-2.0-prog-v0.100b` to root a fresh stack). Matchers branch off the TOP so
+   of the selected version branch (`v0.10b` for this target) to root a fresh stack). Matchers branch off the TOP so
    percentages compound; you review the stack BOTTOM-UP and merge one PR at a time.
 3. **Dispatch up to $2 matchers in PARALLEL** (`run_in_background: true`), each in a sibling
    `vostok_<N>` worktree YOU prepared (`git reset --hard <tip>`, `vostok.build.ninja_regen`,

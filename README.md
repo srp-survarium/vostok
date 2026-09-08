@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-09-06 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-09-08 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -54,7 +54,7 @@ _The projection has 14,639 paired copies across 1,695 units and 31,402 unresolve
 
 _The linked-image audit is 3.99% exact and covers 98.57% by PDB type extent, with 86.38% paired-only fidelity (10659 / 12180 definitions). Integrity ratchet: armed._
 
-_Updated 2026-09-06._
+_Updated 2026-09-08._
 <!-- data-match:end -->
 
 ## Requirements
@@ -65,6 +65,13 @@ compiler, the Windows and DirectX SDKs, Wine, ninja, the Rust tools, the game
 binaries and the third-party libs - comes from the flake.
 
 ## Quickstart
+
+Target branches use version-only names: `v0.10b` for the Survarium v0.100b
+reconstruction and `v0.20e` for v0.20e. Use the same `v<version>` naming pattern
+for future target branches. Root matching stacks in the selected target branch
+and land them back there; do not assume one fixed default branch for all targets.
+Branch names are labels, not replacements for retail version identifiers,
+release tags, asset URLs, or measured history.
 
 ```sh
 nix develop                 # first entry realizes ~18 GiB into the store, sets up Wine + ninja,
@@ -79,6 +86,34 @@ config at `binaries/objdiff/objdiff.json` and compare `base` (your build) agains
 The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
+
+For unattended Codex builds on Linux with a systemd user manager:
+
+```sh
+python3 -m vostok build --background
+# Or select the destination and the installed CLI explicitly:
+python3 -m vostok build --background --notify-thread THREAD --codex-bin /path/to/codex
+```
+
+The default destination is `CODEX_THREAD_ID`. The CLI is selected from
+`--codex-bin`, `VOSTOK_CODEX_BIN`, a usable `CODEX_EXECUTABLE_PATH`, then `PATH`;
+it must support `codex queue --thread --message`. This is opt-in: normal builds
+do not send notifications. The launcher needs host user-bus access (request
+execution approval when running in a sandbox). It starts a transient
+`vostok-build-*.service`, prints its name and its unique log under
+`binaries/build-jobs/`, and returns immediately. The service enters this
+worktree's `nix develop`, waits for the complete build/refresh process, and
+queues its exit status and log path into that existing thread, including on
+setup or build failure. No timer or model polling is involved. Existing
+per-worktree build locking still serializes the build itself.
+
+Check the log for nonfatal ledger/README refresh warnings even after exit 0.
+Notification failure is recorded in that log without changing the build exit
+status; delivery is attempted once with a 30-second timeout. Host shutdown or
+force-stopping the service can prevent notification. To stop a job, use
+`systemctl --user stop UNIT.service`; service startup diagnostics remain in
+`journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
+until the job finishes.
 
 ## Layout
 

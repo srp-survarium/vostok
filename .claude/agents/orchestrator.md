@@ -215,7 +215,7 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    predecessor and rebuild each at its real position). Each worker branches off the current
    **stack tip** (the newest match branch), so it inherits all prior matched source and
    notes - percentages **compound**. Track the tip (start: the latest match branch, or the
-   current tip of `xray-2.0-prog-v0.100b` to root a fresh stack); `git checkout <tip>`
+   current tip of the selected version branch (`v0.10b` for this target) to root a fresh stack); `git checkout <tip>`
    before each dispatch.
    - **Matchers never open PRs.** The worker only commits (its prompt says do NOT
      branch/push/PR). Integrating, building, and PR-ing is YOUR meta job.
@@ -223,7 +223,7 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      ledger it carries is current; step 4). `gh pr create --base <the-unit-below>` with a
      **minimal description: just the functions and their %s, no prose**.
    - **The human reviews the stack bottom-up.** When the whole stack is approved it lands
-     into `xray-2.0-prog-v0.100b` by a single fast-forward of the linear chain
+     into the selected version branch by a single fast-forward of the linear chain
      (all commits preserved, no squash) - see "Landing the stack" below. The per-PR
      pr-verifier landing dance is retired.
 3. **For each unit (a TU), filling the 3 worktree slots:**
@@ -348,7 +348,7 @@ Per worker:
 
 ## Landing the stack - fast-forward into the integration branch (no pr-verifier)
 The human reviews the stack **bottom-up**, one PR at a time. When the stack is approved it
-lands into `xray-2.0-prog-v0.100b` by a single **fast-forward merge** of the
+lands into the selected version branch by a single **fast-forward merge** of the
 stack tip (`git merge --ff-only <tip>`): because the stack is ONE linear chain rooted on
 the integration branch, this is a clean fast-forward that **preserves every commit** - no
 squash, no merge commit, no rebase. Then close the stack PRs (their code is now on feature)
