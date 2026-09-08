@@ -80,12 +80,13 @@ private:
 	// the sounds array trails the object (m_sounds_count entries)
 	inline	sounds_collection_type const*	sounds						( ) const { return reinterpret_cast< sounds_collection_type const* >( this + 1 ); }
 
-	inline	void							serialize					( ) { /* no source */ }
-	inline	void							deserialize					( ) { /* no source */ }
+	inline	void							serialize					( );
+	inline	void							deserialize					( );
 
 	/* 0x0000 */	/* ai::sound_player */
 	/* 0x0190 */	/* boost::noncopyable */
 	/* 0x0190 */	sound::sound_instance_proxy_ptr			m_active_sound;
+	// Retail stores the cook's scene-handle reference, not an owning copy.
 	/* 0x0194 */	resources::unmanaged_resource_ptr&		m_scene;
 	/* 0x0198 */	sound::world_user&						m_user;
 	/* 0x019c */	sound::sound_producer const*			m_sound_producer;

@@ -197,7 +197,7 @@ void legs_ik_processor::process_leg(
 		float3 const&			target_up_leg_dir				= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
 
 		if ( !math::is_similar( target_up_leg_dir, original_up_leg_dir, math::epsilon_3 ) )
-			params.rotation_axis	= math::normalize( target_up_leg_dir ^ original_up_leg_dir );
+			params.set_rotation_axis( math::normalize( target_up_leg_dir ^ original_up_leg_dir ) );
 
 		float4x4 const&			alpha_rotation_matrix			= math::create_rotation( params.rotation_axis, up_leg_alpha_angle );
 		float3 const&			rotated_dir						= alpha_rotation_matrix.transform_direction( target_up_leg_to_foot_dir );

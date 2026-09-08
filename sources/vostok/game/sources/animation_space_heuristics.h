@@ -15,9 +15,9 @@ public:
 													const float							max_speed
 												);
 
-	inline	void								on_before_search			( ) { /* no source */ }
-	inline	void								on_after_search				( const bool arg_0 ) { /* no source */ }
-	inline	void								on_start_iteration			( const animation_space_vertex_id arg_0 ) { /* no source */ }
+	inline	void								on_before_search			( ) { }
+	inline	void								on_after_search				( const bool arg_0 ) { }
+	inline	void								on_start_iteration			( const animation_space_vertex_id arg_0 ) { }
 
 			float								estimate					(
 													animation_space_vertex_id const* const	current_vertex_id_ptr,
@@ -34,7 +34,7 @@ public:
 	}
 
 	static	inline	bool						metric_euclidian			( ) { return true; }
-	inline	animation_space_vertex_id const&	best_vertex_id				( ) const { /* no source */ return m_best_vertex_id; }
+	inline	animation_space_vertex_id const&	best_vertex_id				( ) const { return m_best_vertex_id; }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

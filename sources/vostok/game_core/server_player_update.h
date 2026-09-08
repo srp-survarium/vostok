@@ -18,7 +18,13 @@ namespace survarium {
 
 struct server_player_update {
 			void	deserialize			( network_core::packet_reader& packet );
-	inline	void	serialize			( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
+	// sushi@TODO: inverse of the retained reader; verify the original sending consumer.
+	inline	void	serialize			( network_core::udp_match_packet& packet ) const
+	{
+		input.serialize			( packet );
+		state.serialize			( packet );
+		weapon_state.serialize	( packet );
+	}
 
 public:
 	/* 0x0000 */	player_input	input;

@@ -17,7 +17,9 @@ public:
 
 	inline	game_material const*						first_material	( ) const { return m_first_material; }
 	inline	game_material const*						second_material	( ) const { return m_second_material; }
+	// sushi@TODO: Find original consumers for sound/decal2/decal2_size; their field contracts are known, not their getter expansions.
 	inline	resources::unmanaged_resource_ptr const&	sound			( ) const { return m_sound_emitter; }
+	// sushi@TODO: Verify these three existing noinline annotations; surviving standalone calls do not prove original source attributes.
 	__declspec(noinline)
 	inline	resources::unmanaged_resource_ptr const&	decal1			( ) const { return m_decal1; }
 	__declspec(noinline)

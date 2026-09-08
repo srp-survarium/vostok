@@ -12,7 +12,7 @@ class options_gamma_selector : public options_item_float {
 
 public:
 	inline	explicit	options_gamma_selector	( options_tab& arg_0 )
-		: options_item_float( arg_0, "r_gamma_correction_factor", 6, 0.01f ) { /* no source */ }
+		: options_item_float( arg_0, "r_gamma_correction_factor", 6, 0.01f ) { }
 
 	virtual	void		call					( flash_function_handler_params& params ) override;
 

@@ -22,16 +22,6 @@ public:
 
 	virtual	void					resolve_links				( );
 
-private:
-	// simple_game_project::insert/remove walk m_static_collision_objects directly;
-	// PDB does not record friendship, codegen-neutral
-	friend class simple_game_project;
-	// project_cooker_simple constructs the static-collision array from the project config;
-	// PDB does not record friendship, codegen-neutral
-	friend class project_cooker_simple;
-	// lobby_menu inserts the lobby project's static collisions directly.
-	friend class lobby_menu;
-
 public:
 	/* 0x0004 */	map< fixed_string<260>, base_game_object* >	m_objects_registry;
 
@@ -56,6 +46,7 @@ inline void base_project::register_named_object( pcstr name, base_game_object* o
 
 inline void base_project::register_object_to_resolve( link_resolver* obj, configs::binary_config_value cfg )
 {
+	// sushi@TODO: Operations agree; recover the inline partition (retail has no line records, candidate has three).
 	m_objects_to_resolve.push_back( resolve_link_object( obj, cfg ) );
 }
 

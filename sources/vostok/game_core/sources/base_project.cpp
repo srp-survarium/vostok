@@ -24,6 +24,7 @@ base_project::~base_project( )
 
 base_game_object* base_project::get_object_by_name( pcstr name )
 {
+	// sushi@TODO: Retail elides the assertion predicate; recover its original condition before replacing UNKNOWN_EXPRESSION_T.
 	ASSERT( UNKNOWN_EXPRESSION_T( m_objects_registry.find( name ) != m_objects_registry.end( )  ) );
 	return m_objects_registry[name];
 }

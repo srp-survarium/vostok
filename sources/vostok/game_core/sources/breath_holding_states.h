@@ -4,8 +4,11 @@
 #define BREATH_HOLDING_STATES_H_INCLUDED
 
 #include <vostok/ai/fsm_state.h>
+#include <vostok/detail_noncopyable.h>
 
 namespace survarium {
+
+struct breath_holding_params;
 
 class breath_state : public ai::fsm_state , private core::noncopyable {
 public:
@@ -15,8 +18,8 @@ public:
 	virtual	void		tick						( const float arg_0 ) = 0;
 
 	virtual	void		initialize					( ) override;
-	virtual	void		execute						( ) override { /* no source */ }
-	virtual	void		finalize					( ) override { /* no source */ }
+	virtual	void		execute						( ) override;
+	virtual	void		finalize					( ) override;
 
 protected:
 			explicit	breath_state				( float& breath_holding_reserve );
@@ -37,7 +40,6 @@ public:
 	inline	explicit	breath_state_holding		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { }
 
 private:
-	// folds with breath_state_normal::is_ready_for_transition (same `return true` body)
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;
 	virtual	void		tick						( const float dt ) override;
@@ -48,7 +50,7 @@ STATIC_SIZE_ASSERT(breath_state_holding, 0x28);
 class breath_state_normal : public breath_state {
 public:
 	typedef breath_state super;
-	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { m_multiplier = 0.0f; }
+	inline	explicit	breath_state_normal		( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ) { m_multiplier = 1.0f; }
 
 private:
 	virtual	bool		is_ready_for_transition	( ) const override;
@@ -60,7 +62,7 @@ STATIC_SIZE_ASSERT(breath_state_normal, 0x28);
 class breath_state_shortbreathing : public breath_state {
 public:
 	typedef breath_state super;
-	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ), m_restoring_speed( 0.0f ) { }
+	inline	explicit	breath_state_shortbreathing	( float& breath_holding_reserve ) : breath_state( breath_holding_reserve ), m_restoring_speed( 1.0f ) { }
 
 private:
 	virtual	void		set_breath_holding_params	( breath_holding_params const* params ) override;

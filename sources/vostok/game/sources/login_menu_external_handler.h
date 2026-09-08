@@ -21,7 +21,7 @@ private:
 
 public:
 	inline			login_menu_external_handler	( game& arg_0, login_menu& arg_1 )
-		: m_game( arg_0 ), m_login_menu( arg_1 ) { /* no source */ }
+		: m_game( arg_0 ), m_login_menu( arg_1 ) { }
 
 	virtual	void	callback					(
 						flash_movie*			pmovieView,

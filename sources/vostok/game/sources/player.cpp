@@ -647,14 +647,16 @@ float player::fov_factor( const u32 current_time_in_ms ) const
 		* animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( time );
 }
 
-// claude@NOTE: inline-vs-store cap - the [controller+0x4C] store is game_camera::
-// set_near_plane( near_plane_factor * 0.05f ), inlined; game_camera::set_near_plane
-// is an empty stub in game_camera.h (render cone, another unit), so our base omits
-// the store. Re-score once game_camera::set_near_plane has a body.
+inline void player::set_near_plane( float near_plane )
+{
+	// sushi@TODO: verify the private setter seam; the factor wrapper supplies the controller guard.
+	m_local_input_controller->set_near_plane( near_plane );
+}
+
 void player::set_near_plane_factor( const float near_plane_factor )
 {
 	if ( m_local_input_controller )
-		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
+		set_near_plane( near_plane_factor * 0.05f );
 }
 
 void player::update_camera( )
@@ -1137,10 +1139,6 @@ void player::attach_controller(
 	m_force_animation_selection = true;
 }
 
-// claude@NOTE: 4-stmt structure matches. Byte residual is the intrusive_ptr operator-bool
-// inline (target folds the m_current_active_object null-check into the assign_game_ui
-// statement / prologue; our base emits a separate `if` line) - the same intrusive_ptr
-// accessor inline-vs-call wall as skeleton()/the quick-slot fns; not TU-steerable.
 void player::detach_controller( )
 {
 	if ( m_current_active_object )
@@ -1152,7 +1150,8 @@ void player::detach_controller( )
 	m_angular_speed_graph		= NULL;
 	static_cast< game_world& >( m_game_scene ).set_local_player_camera( NULL );
 
-	static_cast< game_world& >( m_game_scene ).switch_to_free_fly_camera( );
+	// sushi@TODO: Verify the public camera-mode boundary in the deferred caller comparison.
+	static_cast< game_world& >( m_game_scene ).switch_camera_mode( free_fly_mode );
 
 	m_force_animation_selection = true;
 }

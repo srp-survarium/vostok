@@ -68,7 +68,7 @@ public:
 
 			void							tick					( u32 delta );
 
-	inline	bool							is_active				( ) { /* no source */ return m_active; }
+	inline	bool							is_active				( ) { return m_active; }
 
 			void							set_mode				( bool is_game_mode );
 
@@ -81,11 +81,12 @@ public:
 											);
 			void							add_to_recent_list		( wchar_t const* name );
 
-	inline	bool							in_match				( ) const { /* no source */ return m_game_ui_mode; }
+	// sushi@TODO: Retail reads the mode flag in these consumers; verify the original named getter boundaries.
+	inline	bool							in_match				( ) const { return m_game_ui_mode; }
 
 			void							initialize				( resources::unmanaged_resource_ptr const& ui );
 
-	inline	flash_movie_resource_ptr&		get_movie				( ) { /* no source */ return m_chat_ui; }
+	inline	flash_movie_resource_ptr&		get_movie				( ) { return m_chat_ui; }
 
 			void							set_local_player_name	( pcstr account_name );
 

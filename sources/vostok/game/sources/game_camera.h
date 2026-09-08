@@ -11,31 +11,29 @@ class camera_director;
 extern float s_camera_far_plane;
 extern float default_vertical_fov;
 
-// pulled ahead by batch 6 (a base of its player_input_handler); out-of-line
-// bodies in the game_camera.cpp compiland (batch 9)
 class game_camera : private boost::noncopyable {
 public:
 			explicit			game_camera				( base_game_scene& w );
 
 	virtual	float4x4			get_projection_matrix	( float2 const& window_size ) const;
-	inline	float4x4 const&		get_inverted_view_matrix( ) const { /* no source */ return m_inverted_view_matrix; }
+	inline	float4x4 const&		get_inverted_view_matrix( ) const { return m_inverted_view_matrix; }
 
 			void				set_position_direction	( float3 const& p, float3 const& d );
 	inline	void				set_fov_factor			( const float arg_0 ) { m_fov_factor = arg_0; }
-	inline	float				get_fov_factor			( ) const { /* no source */ return m_fov_factor; }
+	inline	float				get_fov_factor			( ) const { return m_fov_factor; }
 
 	inline	void				set_near_plane			( const float arg_0 ) { m_near_plane = arg_0; }
-	inline	float				get_near_plane			( ) const { /* no source */ return m_near_plane; }
-	inline	float				get_far_plane			( ) const { /* no source */ return m_far_plane; }
+	inline	float				get_near_plane			( ) const { return m_near_plane; }
+	inline	float				get_far_plane			( ) const { return m_far_plane; }
 
 	virtual	void				on_activate				( camera_director* cd );
 
-	virtual	void				on_deactivate			( ) { /* no source */ }
-	virtual	void				on_focus				( bool __formal ) { /* no source */ }
+	virtual	void				on_deactivate			( ) { }
+	virtual	void				on_focus				( bool __formal ) { }
 
 	virtual	void				tick					( );
 
-	inline	base_game_scene&	get_game_scene			( ) { /* no source */ return m_game_scene; }
+	inline	base_game_scene&	get_game_scene			( ) { return m_game_scene; }
 			float				get_vertical_fov		( ) const;
 
 protected:

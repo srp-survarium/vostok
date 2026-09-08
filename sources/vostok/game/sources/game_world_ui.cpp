@@ -4,13 +4,12 @@
 #include "game_world_ui.h"
 #include "game_world.h"	// m_game_world.get_game()
 #include "game.h"		// game::text_translator() / get_network_client()
-#include "game_project.h"	// complete simple_game_project for get_project()->m_config
+#include "game_project.h"	// simple_game_project::project_name
 #include "camera_director.h"	// get_camera_director().get_inverted_view_matrix()
 #include "chat_handler.h"	// get_chat_handler().get_movie() (update_ui minimap advance)
 #include "base_network_client.h"	// match_options() / get_player() / current_player_team()
 #include "network_client.h"
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
-#include <vostok/configs_binary_config.h>	// binary_config::get_root() (project_name lookup)
 #include <vostok/network_core/packet_reader.h>	// packet.r<u32>() (initialize_base_points)
 #include <vostok/game_core/game_net_defines.h>	// complete match_options / player_profile
 #include <vostok/game_core/weapon_core.h>		// get_ammo_info() / cast_weapon_core()
@@ -677,9 +676,7 @@ void game_world_ui::update_minimap_objects( )
 
 void game_world_ui::initialize_minimap( )
 {
-	pcstr const project_name = m_game_world.get_project( )->m_config->get_root( ).value_exists( "project_name" )
-		? m_game_world.get_project( )->m_config->get_root( )[ "project_name" ]
-		: "";
+	pcstr const project_name = m_game_world.get_project( )->project_name( );
 
 	flash_value minimap_props_value;
 	get_ui( )->movie->CreateObject( &minimap_props_value );
@@ -822,7 +819,7 @@ void game_world_ui::create_slot_value(
 
 	if ( action != game_action_id( -1 ) )
 	{
-		keyboard_key_descr const* const key = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( action, 0 ), false );
+		keyboard_key_descr const* const key = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( action, -1 ), false );
 		hotkey = key ? key->key_name : 0;
 	}
 

@@ -4,14 +4,13 @@
 #include "lobby_camera.h"
 #include "base_game_scene.h"
 #include "game.h"
+#include "key_binder.h"
 #include <vostok/input/mouse.h>
 #include <vostok/input/world.h>
 #include <vostok/physics/world.h>
 #include <vostok/physics/ray_result.h>
 
 namespace survarium {
-
-extern float	g_mouse_sensitivity;
 
  lobby_camera::lobby_camera( base_game_scene& w ) :
 	game_camera( w ),
@@ -81,7 +80,7 @@ bool lobby_camera::on_mouse_move(
 
 	float2 render_window_size = get_game_scene( ).get_game( ).engine( ).get_render_window_size( );
 
-	const float horizontal_sensitivity	= g_mouse_sensitivity * 0.1f;
+	const float horizontal_sensitivity	= get_game_scene( ).get_game( ).get_key_binder( ).mouse_sensitivity( ) * 0.1f;
 	float vertical_sensitivity			= ( render_window_size.y / render_window_size.x ) * horizontal_sensitivity * 0.95492965f;
 
 	m_rotation_delta.x	-= ( ( float( x ) / 180.0f ) * math::pi ) * horizontal_sensitivity;

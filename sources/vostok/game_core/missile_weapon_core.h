@@ -3,6 +3,8 @@
 #ifndef MISSILE_WEAPON_CORE_H_INCLUDED
 #define MISSILE_WEAPON_CORE_H_INCLUDED
 
+#include <vostok/physics/static_rigid_body.h>
+
 namespace vostok {
 namespace physics {
 	class bt_static_rigid_body;
@@ -20,6 +22,7 @@ public:
 		delayed		= 0x0001,
 	};
 
+	// sushi@TODO: verify the transform model and recover constructor/lifetime/configuration contracts; see missile/spore register.
 	inline	explicit		missile_weapon_core		( physics::world* physics_world, physics::bt_static_rigid_body* rigid_body ) : m_physics_world( physics_world ), m_rigid_body( rigid_body ) { }
 	virtual					~missile_weapon_core	( ) { /* no source */ }
 
@@ -34,7 +37,7 @@ public:
 	inline	activation_type	get_activation_type		( ) const { return m_type; }
 
 public:
-	inline	void			get_transform			( float4x4& arg_0 ) const { /* no source */ }
+	inline	void			get_transform			( float4x4& result ) const { result = m_rigid_body->get_transform( ); }
 
 protected:
 	inline	void			remove_physics_object	( ) { /* no source */ }

@@ -5,8 +5,11 @@
 
 #include <vostok/math_aabb.h>
 #include <vostok/input/handler.h>
+#include <vostok/input/world.h>
 
 #include "game_camera.h"
+#include "game_world.h"
+#include "game.h"
 
 namespace survarium {
 
@@ -18,34 +21,36 @@ class levelmap_camera : public game_camera , public input::handler {
 typedef game_camera super;
 
 public:
-	// game_world IS-A base_game_scene (batch 11) but is only forward-declared
-	// here - the game_camera base init is a buildability placeholder until a
-	// matcher fills the body (math::aabb's default ctor is private, hence the
-	// create_invalid_aabb init)
-	inline				levelmap_camera			( game_world& arg_0, camera_director& arg_1 ) :
-							game_camera			( *( base_game_scene* )NULL ),
+	// sushi@TODO: World-binding model; recover original bounds initialization and construction consumer.
+	inline				levelmap_camera			( game_world& world, camera_director& director ) :
+							game_camera			( world ),
 							levelmap_bbox		( math::create_invalid_aabb( ) ),
-							m_game_world		( arg_0 ),
-							m_camera_director	( arg_1 )
-						{ /* no source */ }
+							m_game_world		( world ),
+							m_camera_director	( director )
+						{ }
 
+	// sushi@TODO: Recover bounds producer, projected axes, aspect policy and clipping before choosing the projection.
 	virtual	float4x4	get_projection_matrix	( float2 const& arg_0 ) const override { /* no source */ return float4x4(); }
 
+	// sushi@TODO: Recover key/context and focus-switch bindings; this class has no free-fly event queues.
 	virtual	bool		on_keyboard_action		(
 							input::world*					arg_0,
 							input::enum_keyboard			arg_1,
 							input::enum_keyboard_action		arg_2
 						) override { /* no source */ return false; }
+	// sushi@TODO: Recover whether pad actions are consumed or ignored; sibling camera policies disagree.
 	virtual	bool		on_gamepad_action		(
 							input::world*					arg_0,
 							input::gamepad_button			arg_1,
 							input::enum_gamepad_action		arg_2
 						) override { /* no source */ return false; }
+	// sushi@TODO: Recover selection/capture policy; do not invent the lobby camera's missing capture member.
 	virtual	bool		on_mouse_key_action		(
 							input::world*					arg_0,
 							input::mouse_button				arg_1,
 							input::enum_mouse_key_action	arg_2
 						) override { /* no source */ return false; }
+	// sushi@TODO: Recover immediate pan/zoom versus ignored motion and its bounds/axis conventions.
 	virtual	bool		on_mouse_move			(
 							input::world*		arg_0,
 							s32					arg_1,
@@ -53,12 +58,22 @@ public:
 							s32					arg_3
 						) override { /* no source */ return false; }
 
-	virtual	s32			input_priority			( ) override { /* no source */ return 0; }
+	// sushi@TODO: Sibling camera priority model; level-map's own value and registration remain unverified.
+	virtual	s32			input_priority			( ) override { return 10; }
 
+	// sushi@TODO: Recover static bounds-to-view update versus per-frame input polling; no timer field is declared.
 	virtual	void		tick					( ) override { /* no source */ }
 
+	// sushi@TODO: Recover initial top-down pose and bounds ownership before copying or replacing director state.
 	virtual	void		on_activate				( camera_director* arg_0 ) override { /* no source */ }
-	virtual	void		on_focus				( bool arg_0 ) override { /* no source */ }
+	// sushi@TODO: Sibling input-registration model; verify original focus consumer and base-hook delegation.
+	virtual	void		on_focus				( bool focus_enter ) override
+	{
+		if ( focus_enter )
+			m_game_world.get_game( ).input_world( ).add_handler( *this );
+		else
+			m_game_world.get_game( ).input_world( ).remove_handler( *this );
+	}
 
 	/* 0x0000 */	/* game_camera */
 	/* 0x0054 */	/* input::handler */

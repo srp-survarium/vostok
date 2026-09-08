@@ -22,6 +22,7 @@ public:
 
 			void		hold_breath					( bool value );
 
+	// sushi@TODO: distinguish reserve reset from a maximum-duration policy; m_params is const.
 	inline	void		set_max_breath_delay_time	( const float arg_0 ) { /* no source */ }
 
 	inline	void		set_user					( base_player const* const arg_0 ) { m_user = arg_0; }

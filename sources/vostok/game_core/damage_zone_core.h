@@ -53,23 +53,28 @@ public:
 
 	virtual	void			on_player_action			( hit_receiver const* receiver, player_actions_subscriber::action action, float param ) override;
 
+	// sushi@TODO: establish query ordering, the u32 argument and geometry ownership; current cook uses load/resolve_links instead.
 	inline	void			set_resources				( resources::queries_result& arg_0, u32 arg_1 ) { /* no source */ }
 
 	inline	void			set_standalone				( bool standalone ) { m_standalone = standalone; }
 	inline	bool			is_standalone				( ) const { return m_standalone; }
 
-	inline	zone_group*		owner						( ) { /* no source */ }
+	inline	zone_group*		owner						( ) { return m_owner; }
 
 private:
 	virtual	void			on_inside					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void			on_leave					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void			on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 
-	inline	void			remove_null_receivers		( ) { /* no source */ }
+	// sushi@TODO: verify raw-null versus expired loose-payload cleanup; model uses the existing erase_null_ptrs predicate.
+	inline	void			remove_null_receivers		( );
+	// sushi@TODO: determine whether input is the current or departed set, plus notification and duplicate policies.
 	inline	void			remove_left_receivers		( buffer_vector<physics::base_physics_object *> const& arg_0 ) { /* no source */ }
 
-	inline	float			calc_armor_piercing			( float arg_0 ) const { /* no source */ }
+	// sushi@TODO: verify the helper's input contract; retained inside-hit arithmetic consumes the clamped hit-curve coefficient.
+	inline	float			calc_armor_piercing			( float hit_coeff ) const { return math::lerp( m_min_armor_piercing, m_max_armor_piercing, hit_coeff ); }
 
+	// sushi@TODO: establish whether the argument scales damage, time or curve position, and which receivers/bones the helper visits.
 	inline	void			hit							( float arg_0 ) { /* no source */ }
 			void			hit_on_enter				( const u32 frame_delta, const u32 current_time );
 			void			hit_on_inside				( const u32 frame_delta, const u32 current_time );

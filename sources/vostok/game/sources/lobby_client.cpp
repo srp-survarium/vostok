@@ -471,9 +471,7 @@ bool lobby_client::read_account_money( network_core::packet_reader& reader )
 
 bool lobby_client::read_service_prices( network_core::packet_reader& reader )
 {
-	m_service_prices.reroll_cost		= reader.r< u32 >( );
-	m_service_prices.add_profile_cost	= reader.r< u32 >( );
-	m_service_prices.rename_account_cost	= reader.r< u32 >( );
+	m_service_prices.deserialize	( reader );
 	return true;
 }
 
@@ -499,13 +497,13 @@ void lobby_client::discard_playing_order( )
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::discard_playing_order );
-	packet.append	( m_match_order_id );
+	packet.append	( match_order_id( ) );
 	m_packet_client.send	( packet );
 }
 
 void lobby_client::ping_server( )
 {
-	if ( !m_net_client_connected )
+	if ( !net_connected( ) )
 		return;
 
 	network_core::tcp_packet packet( memory::g_mt_allocator );

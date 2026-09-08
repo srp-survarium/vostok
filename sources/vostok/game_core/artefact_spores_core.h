@@ -19,6 +19,7 @@ struct hit_initiator;
 
 class artefact_spores_core : public missile_weapon_core , public artefact_base {
 public:
+	// sushi@TODO: verify the owner setter and recover cloud lifetime/filtering/configuration contracts; see missile/spore register.
 	inline explicit	artefact_spores_core	( physics::world* world, physics::bt_static_rigid_body* rigid_body ) :
 		missile_weapon_core( world, rigid_body )
 	{
@@ -26,7 +27,7 @@ public:
 	virtual			~artefact_spores_core	( ) { /* no source */ }
 
 	inline	void	load					( configs::binary_config_value const& arg_0 ) { /* no source */ }
-	inline	void	set_owner				( hit_initiator* arg_0 ) { /* no source */ }
+	inline	void	set_owner				( hit_initiator* owner ) { m_owner = owner; }
 
 	virtual	void	tick					( u32 arg_0, float4x4 const& arg_1 ) override { /* no source */ }
 	virtual	void	activate				( u32 arg_0, float4x4 const& arg_1 ) override { /* no source */ }

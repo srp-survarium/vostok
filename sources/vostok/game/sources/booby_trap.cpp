@@ -58,7 +58,7 @@ void booby_trap::on_new_state( booby_trap_state old_state )
 		m_game_world.scene_renderer( ).remove_model( m_game_world.render_scene( ), m_models[ old_state ]->m_render_model );
 
 	if ( new_model )
-		m_game_world.scene_renderer( ).add_model( m_game_world.render_scene( ), new_model->m_render_model, m_transform );
+		m_game_world.scene_renderer( ).add_model( m_game_world.render_scene( ), new_model->m_render_model, transform( ) );
 
 	if ( old_state == booby_trap_state_armed )
 	{
@@ -107,8 +107,8 @@ void booby_trap::unregister_tick( scheduler& scheduler )
 
 void booby_trap::play_fired_effects( ) const
 {
-	m_game_world.scene_renderer( ).play_particle_system( m_game_world.render_scene( ), m_particle_fired, m_transform );
-	m_game_world.play_sound( m_sound_fired, m_transform.c.xyz( ) );
+	m_game_world.scene_renderer( ).play_particle_system( m_game_world.render_scene( ), m_particle_fired, transform( ) );
+	m_game_world.play_sound( m_sound_fired, transform( ).c.xyz( ) );
 }
 
 

@@ -79,10 +79,19 @@ public:
 	/* 0x0000 */	survarium::bullet_manager*		bullet_manager;
 }; // struct redundant_bullet_predicate
 
+inline void bullet_manager::destroy_redundant_bullets( )
+{
+	// sushi@TODO: Verify the original cleanup-helper boundary; tick retains this complete remove/erase operation after callbacks.
+	m_bullets.erase(
+		std::remove_if( m_bullets.begin( ), m_bullets.end( ), redundant_bullet_predicate( *this ) ),
+		m_bullets.end( )
+	);
+}
+
 void bullet_manager::free_bullet( bullet* bullet )
 {
 	if ( m_engine && bullet->m_tracer_idx != u16(-1) )
-		m_engine->detach_tracer( bullet );
+		detach_tracer_impl( bullet );
 
 	VOSTOK_DELETE_IMPL( *m_bullets_allocator_ref, bullet );
 }
@@ -111,14 +120,7 @@ void bullet_manager::tick( u32 current_time_in_ms )
 			VOSTOK_DELETE_IMPL( m_mt_stack_allocator, functor );
 		}
 
-		m_bullets.erase			(
-			std::remove_if(
-				m_bullets.begin( ),
-				m_bullets.end( ),
-				redundant_bullet_predicate( *this )
-			),
-			m_bullets.end( )
-		);
+		destroy_redundant_bullets( );
 	}
 }
 
@@ -148,7 +150,7 @@ void bullet_manager::add_decal(
 {
 	if ( m_engine && decal.c_ptr( ) )
 	{
-		bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
+		bullet_manager::bullet_functor* const functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
 
 		functor->resource		= decal;
 		functor->position		= position;
@@ -225,13 +227,13 @@ void bullet_manager::play_particle(
 {
 	if ( m_engine )
 	{
-		bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
+		bullet_manager::bullet_functor* const functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
 
 		functor->resource	= sound;
 		functor->position	= position;
 		functor->direction	= direction;
 		functor->direction.normalize( );
-		functor->direction	= normal;
+		functor->normal		= normal;
 		functor->normal.normalize( );
 
 		functor->functor = boost::bind(
@@ -265,7 +267,7 @@ void bullet_manager::update_tracer(
 {
 	if ( m_engine )
 	{
-		bullet_manager::bullet_functor* functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
+		bullet_manager::bullet_functor* const functor = VOSTOK_NEW_IMPL( m_mt_stack_allocator, bullet_manager::bullet_functor );
 		functor->position = position;
 		functor->direction = direction;
 		functor->functor = boost::bind(
@@ -351,7 +353,7 @@ void bullet_manager::allocate_bullets_memory( u32 new_max_bullets_count )
 // sushi@NOTE:
 //	* static_cast_resource_ptr for casting unmanaged resources. Also see what IDA generated to match similar cases in the future.
 void bullet_manager::bullets_memory_allocated( resources::queries_result& queries )
-{   // sushi@TODO: Note that not all memory is currently being used. Specifically, yes: particle, decal, update_tracer ; me: sound ; no: attach_tracer, detach_tracer
+{
 
 	R_ASSERT								( queries[0].is_successful( ) );
 	unmanaged_allocation_resource_ptr new_bullets_memory_ptr = static_cast_resource_ptr<unmanaged_allocation_resource_ptr>( queries[0].get_unmanaged_resource() );
@@ -369,6 +371,7 @@ void bullet_manager::bullets_memory_allocated( resources::queries_result& querie
 			pointer							+= m_max_bullets_count * sizeof( bullet );	// sushi@NOTE: Memory for bullets and then the vector pointing to bullets
 			bullets_type new_bullets_list	( pointer, m_max_bullets_count );
 
+			// sushi@TODO: Retail repeats element zero without erasing it here; identify the supported live-reallocation contract before changing this loop.
 			while ( !m_bullets.empty( ) )
 			{
 				bullet*  old_bullet			= m_bullets[0];
@@ -419,7 +422,7 @@ void bullet_manager::emit_bullet(
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	if ( tracer && m_engine )
-		m_engine->attach_tracer( new_bullet );
+		attach_tracer_impl( new_bullet );
 
 	m_bullets.push_back( new_bullet );
 	ASSERT( UNKNOWN_EXPRESSION );

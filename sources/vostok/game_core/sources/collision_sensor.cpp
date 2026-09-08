@@ -49,7 +49,7 @@ void collision_sensor::resolve_links( base_project* p, binary_config_value cfg )
 
 struct objects_filter_predicate {
 	inline	explicit	objects_filter_predicate( collision_sensor const* sensor ) : m_sensor( sensor ) { }
-	inline	bool		operator()				( base_physics_object* obj ) const { return m_sensor->is_filter_passed( obj ); }
+	inline	bool		operator()				( base_physics_object* obj ) const { return !m_sensor->is_filter_passed( obj ); }
 
 private:
 	/* 0x0000 */	collision_sensor const*		m_sensor;
@@ -182,7 +182,7 @@ void collision_sensor::notify_objects_inside( )
 {
 	buffer_vector<base_physics_object *> objects_inside(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object* ) ), m_old_objects.size( ) );
 	objects_inside.assign( m_old_objects.begin( ), m_old_objects.end( ) );
-	on_inside( objects_inside ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
+	on_inside( objects_inside );
 }
 
 void collision_sensor::filter_sensed_objects( buffer_vector<base_physics_object *>& sensed_objects )
@@ -258,7 +258,7 @@ void collision_sensor::remove( )
 
 	buffer_vector<base_physics_object *> leaved(  ALLOCA( m_old_objects.size( ) * sizeof( base_physics_object * ) ), m_old_objects.size( ) );
 	leaved.assign( m_old_objects.begin( ), m_old_objects.end( ) );
-	on_leave( leaved ); // sushi@TODO: Check where debugger jumps to. In our case this is empty function.
+	on_leave( leaved );
 	m_old_objects.clear( );
 }
 

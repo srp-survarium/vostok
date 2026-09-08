@@ -63,7 +63,7 @@ public:
 									s32					z
 								) override;
 
-	virtual	s32					input_priority		( ) override { /* no source */ return 0; }
+	virtual	s32					input_priority		( ) override { return 100; }
 
 			void				fill_labels			( );
 

@@ -39,16 +39,9 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > simple_game_project_ptr;
 
-// void* lobby_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x92eb0]: <0x92ea0>|0x000|      :'63'	{
-
 class lobby_menu : public base_game_scene , public input::handler {
 	typedef base_game_scene super;
 
-	// on_project_loaded aborts the load through m_match_making_ui / m_is_in_match_making
-	// (codegen-neutral friendship; PDB does not record it)
-	friend class game_world;
-	// network_client toggles m_is_connected_to_lobby directly on (dis)connect
-	friend class network_client;
 public:
 			explicit					lobby_menu							( game& g );
 	virtual								~lobby_menu							( );
@@ -70,7 +63,6 @@ public:
 		return *this;
 	}
 
-	// buildability return; the real body reaches the manager through m_game
 	virtual	bullet_manager&				get_bullet_manager					( ) const override
 	{
 		return *( bullet_manager* )NULL;
@@ -153,7 +145,7 @@ public:
 
 			void						on_profile_changed					( u8 profile_id );
 
-	inline	u8							selected_profile					( ) { /* no source */ return m_selected_profile; }
+	inline	u8							selected_profile					( ) { return m_selected_profile; }
 
 			void						fill_items_dictionary				( );
 			void						fill_inventory_labels				( );
@@ -170,6 +162,7 @@ public:
 
 			void						switch_to_level_loading				( );
 
+	// sushi@TODO: Recover the three integer arguments and slot-aware weight delta/limit policy in the original consumer.
 	inline	bool						can_player_carry					(
 											u32			arg_0,
 											u32			arg_1,

@@ -4,6 +4,7 @@
 #define OPTIONS_RESOLUTION_SELECTOR_H_INCLUDED
 
 #include "options_item_int.h"
+#include "game_memory.h"
 
 namespace survarium {
 
@@ -12,7 +13,12 @@ class options_resolution_selector : public options_item_int {
 
 public:
 			explicit	options_resolution_selector	( options_tab& parent_tab );
-	inline				~options_resolution_selector( ) { /* no source */ }
+	// sushi@TODO: Reuse refill's pointer-array cleanup model; recover direct typed destruction and original guard.
+	inline				~options_resolution_selector( )
+	{
+		if ( m_values )
+			VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, m_values );
+	}
 
 	virtual	void		initialize					( ) override;
 

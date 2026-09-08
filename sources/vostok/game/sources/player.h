@@ -91,22 +91,22 @@ public:
 													);
 			void									detach_controller					( );
 
-	inline	float4x4 const&							transform							( ) const { /* no source */ return m_root_transform; }
+	inline	float4x4 const&							transform							( ) const { return m_root_transform; }
 
-	inline	client_player_state&					get_target							( ) { /* no source */ return m_target; }
-	inline	client_player_state const&				get_current							( ) const { /* no source */ return m_current; }
+	inline	client_player_state&					get_target							( ) { return m_target; }
+	inline	client_player_state const&				get_current							( ) const { return m_current; }
 
-	inline	bool									is_visible							( ) const { /* no source */ return m_is_visible; }
+	inline	bool									is_visible							( ) const { return m_is_visible; }
 
 	virtual	game_team_id							team								( ) const override			{ return m_team_id; }
 
-	inline	wchar_t const*							get_profile_name					( ) const { /* no source */ return profile_name; }
+	inline	wchar_t const*							get_profile_name					( ) const { return profile_name; }
 
 	virtual	damage_model_ptr const&					damage_model						( ) const override			{ return base_player::damage_model( ); }
 
 	virtual	void									deserialize							( network_core::packet_reader& reader ) override;
 
-	inline	player_input_handler&					get_input_handler					( ) { /* no source */ return *m_local_input_controller; }
+	inline	player_input_handler&					get_input_handler					( ) { return *m_local_input_controller; }
 	virtual	physics::world*							get_physics_world					( ) override;
 
 			void									reset_fov_factor					( );
@@ -116,16 +116,16 @@ private:
 	inline	void									set_target_fov_factor				( float arg_0 ) { /* no source */ }
 public:
 			float									fov_factor							( const u32 current_time_in_ms ) const;
-	inline	float									target_fov_factor					( ) const { /* no source */ return m_target_fov_factor; }
+	inline	float									target_fov_factor					( ) const { return m_target_fov_factor; }
 
 	typedef circular_buffer< client_player_history_item > history_type;
 	typedef vector< player_actions_subscriber* > player_actions_subscribers;
 
-	inline	history_type const&							history				( ) const { /* no source */ return m_history; }
+	inline	history_type const&							history				( ) const { return m_history; }
 
-	inline	float4x4 const&							get_target_character_transform		( ) const { /* no source */ return m_target.transform; }
+	inline	float4x4 const&							get_target_character_transform		( ) const { return m_target.transform; }
 private:
-	inline	float									get_player_max_carried_weight		( ) const { /* no source */ return 0.0f; }
+	inline	float									get_player_max_carried_weight		( ) const { return m_stamina.get_max_carried_weight( ); }
 
 	virtual	float4x4 const&							get_transform						( ) const override			{ return m_current.transform; }
 
@@ -285,7 +285,7 @@ private:
 	inline	void									on_weapon_aim_started				( ) { /* no source */ }
 	inline	void									on_weapon_aim_ended					( ) { /* no source */ }
 
-	inline	void									set_near_plane						( float arg_0 ) { /* no source */ }
+	inline	void									set_near_plane						( float near_plane );
 
 	inline	void									update_recoil						( const u32 arg_0, const u32 arg_1 ) { /* no source */ }
 	inline	void									update_dispersion					( const u32 arg_0, const u32 arg_1 ) { /* no source */ }
@@ -304,8 +304,8 @@ private:
 			void									insert_alive						( );
 			void									remove_alive						( );
 
-	virtual	animation::animation_player&			animation_player					( ) override { /* no source */ return m_current.animation_player; }
-	virtual	animation::animation_player const&		animation_player					( ) const override { /* no source */ return m_current.animation_player; }
+	virtual	animation::animation_player&			animation_player					( ) override { return m_current.animation_player; }
+	virtual	animation::animation_player const&		animation_player					( ) const override { return m_current.animation_player; }
 
 			void									apply_input_before_new_transform	(
 														client_player_state&	player_state,
@@ -345,9 +345,9 @@ private:
 	/* 0x10f28 */	u32								m_start_fov_factor_change_time_in_ms;
 	/* 0x10f2c */	game_team_id					m_team_id;
 public:
-	inline	bool									is_demo_player						( ) const { /* no source */ return m_is_demo_player; }
+	inline	bool									is_demo_player						( ) const { return m_is_demo_player; }
 
-	inline	game_world_ui*							game_ui								( ) { /* no source */ return m_game_ui; }
+	inline	game_world_ui*							game_ui								( ) { return m_game_ui; }
 
 	/* 0x10f30 */	u8								foot_3rd_view_game_material_id;
 	/* 0x10f31 */	u8								foot_1st_view_game_material_id;

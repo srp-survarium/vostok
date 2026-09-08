@@ -39,8 +39,14 @@ public:
 
 	virtual	void				on_player_action			( hit_receiver const* receiver, player_actions_subscriber::action action, float param ) override;
 
-	inline	void				on_hit_anomaly				( ) { /* no source */ }
-	inline	void				on_explosion_in_anomaly		( ) { /* no source */ }
+	// sushi@TODO: verify hit-anomaly energy/trigger policy; this model follows the retained shoot event, not character damage.
+	inline	void				on_hit_anomaly				( )
+	{
+		inc_energy( (float)energy_on_shoot );
+		m_was_shoot_trigger_event = true;
+	}
+	// sushi@TODO: verify whether an explosion also changes a trigger flag; model only adds its configured energy.
+	inline	void				on_explosion_in_anomaly		( ) { inc_energy( (float)energy_on_explosion ); }
 			void				on_zone_act					( damage_zone_core* zone, hit_receiver* receiver );
 			void				on_hit_receiver_enter		( hit_receiver* receiver, damage_zone_core* zone );
 			void				on_hit_receiver_leave		( hit_receiver* receiver, damage_zone_core* zone );
@@ -51,7 +57,8 @@ public:
 	inline	void				set_current_energy			( float energy ) { m_energy_current = energy; }
 
 protected:
-	virtual	void				state_changed				( ) { /* no source */ }
+	// sushi@TODO: recover hook invocation timing from a derived consumer; the retained default itself is empty.
+	virtual	void				state_changed				( ) { }
 	/* 0x0009 */	/* base_game_object */
 	/* 0x0000 */	/* link_resolver */
 	/* 0x0004 */	/* player_actions_subscriber */

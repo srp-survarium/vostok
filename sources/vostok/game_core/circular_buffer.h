@@ -5,9 +5,6 @@
 
 namespace survarium {
 
-// pdb-parser printed the monomorphised name `circular_buffer<T>`; invalid as the
-// primary-template declaration (C2988). First real includer is
-// game/sources/player.h (m_history member).
 template < typename T >
 class circular_buffer : private boost::noncopyable {
 public:
@@ -22,32 +19,33 @@ public:
 	inline				~circular_buffer	( );
 
 public:
+	// sushi@TODO: recover resize/insert preservation rules and whether is_valid means allocated or live storage.
 	inline	void		resize				( const u32 arg_0 ) { /* no source */ }
-	inline	u32			size				( ) const { /* no source */ }
+	inline	u32			size				( ) const { return ( m_head + m_max_count - m_tail ) % m_max_count; }
 
 	inline	T&			new_item			( );
 	inline	T&			insert				( const u32 arg_0 ) { /* no source */ }
-	inline	void		pop_tail			( ) { /* no source */ m_tail = next( m_tail ); }
+	inline	void		pop_tail			( ) { m_tail = next( m_tail ); }
 
-	inline	T&			oldest				( ) { /* no source */ return m_history[ m_tail ]; }
-	inline	T const&	oldest				( ) const { /* no source */ return m_history[ m_tail ]; }
+	inline	T&			oldest				( ) { return m_history[ m_tail ]; }
+	inline	T const&	oldest				( ) const { return m_history[ m_tail ]; }
 
-	inline	T&			newest				( ) { /* no source */ return m_history[ previous( m_head ) ]; }
-	inline	T const&	newest				( ) const { /* no source */ return m_history[ previous( m_head ) ]; }
+	inline	T&			newest				( ) { return m_history[ previous( m_head ) ]; }
+	inline	T const&	newest				( ) const { return m_history[ previous( m_head ) ]; }
 
-	inline	bool		empty				( ) const { /* no source */ return m_head == m_tail; }
-	inline	bool		full				( ) const { /* no source */ }
+	inline	bool		empty				( ) const { return m_head == m_tail; }
+	inline	bool		full				( ) const { return next( m_head ) == m_tail; }
 
-	inline	u32			next				( u32 arg_0 ) const { /* no source */ return ( arg_0 + 1 ) % m_max_count; }
-	inline	u32			previous			( u32 arg_0 ) const { /* no source */ return ( arg_0 + m_max_count - 1 ) % m_max_count; }
+	inline	u32			next				( u32 arg_0 ) const { return ( arg_0 + 1 ) % m_max_count; }
+	inline	u32			previous			( u32 arg_0 ) const { return ( arg_0 + m_max_count - 1 ) % m_max_count; }
 
-	inline	T&			operator[]			( const u32 arg_0 ) { /* no source */ return m_history[ arg_0 ]; }
-	inline	T const&	operator[]			( const u32 arg_0 ) const { /* no source */ return m_history[ arg_0 ]; }
+	inline	T&			operator[]			( const u32 arg_0 ) { return m_history[ arg_0 ]; }
+	inline	T const&	operator[]			( const u32 arg_0 ) const { return m_history[ arg_0 ]; }
 
-	inline	u32			head				( ) const { /* no source */ return m_head; }
-	inline	u32			tail				( ) const { /* no source */ return m_tail; }
-	inline	u32			max_count			( ) const { /* no source */ return m_max_count; }
-	inline	u32			index				( T const& arg_0 ) const { /* no source */ }
+	inline	u32			head				( ) const { return m_head; }
+	inline	u32			tail				( ) const { return m_tail; }
+	inline	u32			max_count			( ) const { return m_max_count; }
+	inline	u32			index				( T const& item ) const { return u32( &item - m_history ); }
 	inline	bool		is_valid			( T const& arg_0 ) const { /* no source */ }
 
 

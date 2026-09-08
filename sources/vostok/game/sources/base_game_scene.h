@@ -9,6 +9,8 @@
 #include <vostok/resources_unmanaged_resource.h>
 
 #include <vostok/scaleform/sources/flash_movie_resource.h>
+#include "camera_director.h"
+#include "game_memory.h"
 
 namespace vostok {
 namespace physics {
@@ -28,18 +30,28 @@ class scheduler;
 class swf_input_translator;
 struct flash_text_manager;
 
-// pulled ahead by batch 5 (a base of its menu scenes); out-of-line bodies in
-// the base_game_scene.cpp compiland (batch 9)
 class base_game_scene : public game_scene , public engine , private physics::engine , private boost::noncopyable {
 public:
 			explicit								base_game_scene		( game& g );
 	// PDB spells the params vostok::render::base_scene_ptr / base_scene_view_ptr -
 	// the same resource_ptr type our render tree typedefs as scene_ptr / scene_view_ptr
+	// sushi@TODO: Sibling initialization plus supplied scenes; recover original caller and construction order.
 	inline											base_game_scene		(
-														game&								arg_0,
-														render::scene_ptr const&			arg_1,
-														render::scene_view_ptr const&		arg_2
-													) : m_game( arg_0 ) { /* no source */ }
+														game&								g,
+														render::scene_ptr const&			scene,
+														render::scene_view_ptr const&		scene_view
+													) :
+		m_mouse_pos( 0, 0 ),
+		m_text_manager( NULL ),
+		m_game( g ),
+		m_is_ui_shown( false ),
+		m_physics_world( NULL ),
+		m_is_active( false )
+	{
+		m_render_scene = scene;
+		m_render_scene_view = scene_view;
+		m_camera_director = VOSTOK_NEW_IMPL( *g_allocator, camera_director )( *this );
+	}
 	virtual											~base_game_scene	( );
 
 	virtual	void									on_activate			( ) override;
@@ -57,18 +69,19 @@ public:
 			void									init_physics		( );
 			void									destroy_physics		( );
 
-	inline	bool									is_active			( ) const { /* no source */ return m_is_active; }
+	inline	bool									is_active			( ) const { return m_is_active; }
 
 			void									apply_camera		( camera_director& cd );
 
-	inline	game&									get_game			( ) const { /* no source */ return m_game; }
+	inline	game&									get_game			( ) const { return m_game; }
 
 			render::game::renderer&					renderer			( ) const;
 
 			render::scene_renderer&					scene_renderer		( ) const;
 
-	inline	physics::world*							get_physics_world	( ) { /* no source */ return m_physics_world; }
-	inline	physics::world*							get_physics_world	( ) const { /* no source */ return m_physics_world; }
+	inline	physics::world*							get_physics_world	( ) { return m_physics_world; }
+	// sushi@TODO: Same-field const getter model; bind a consumer selecting this overload.
+	inline	physics::world*							get_physics_world	( ) const { return m_physics_world; }
 
 			swf_input_translator&					input_translator	( );
 
@@ -76,16 +89,16 @@ public:
 
 			math::uint2 const&						output_window_size	( ) const;
 
-	inline	resources::unmanaged_resource_ptr&		get_sound_scene		( ) { /* no source */ return m_sound_scene; }
-	inline	camera_director&						get_camera_director	( ) { /* no source */ return *m_camera_director; }
+	inline	resources::unmanaged_resource_ptr&		get_sound_scene		( ) { return m_sound_scene; }
+	inline	camera_director&						get_camera_director	( ) { return *m_camera_director; }
 
 			scheduler&								scheduler			( );
 
 			void									show_movie			( flash_movie_resource_ptr& movie );
 			void									hide_movie			( flash_movie_resource_ptr& movie );
 
-	inline	flash_text_manager*						get_text_manager	( ) const { /* no source */ return m_text_manager; }
-	inline	flash_text_manager&						text_manager		( ) { /* no source */ return *m_text_manager; }
+	inline	flash_text_manager*						get_text_manager	( ) const { return m_text_manager; }
+	inline	flash_text_manager&						text_manager		( ) { return *m_text_manager; }
 			void									show_text_manager	( flash_text_manager* tm );
 			void									hide_text_manager	( flash_text_manager* tm );
 

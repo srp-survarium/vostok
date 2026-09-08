@@ -12,6 +12,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	weapon_animation_parameters const&	__formal3
 )
 {
+	// sushi@TODO: retail leaves the result storage untouched; original unreachable assertion spelling is unknown.
 	UNREACHABLE_CODE( );
 }
 
