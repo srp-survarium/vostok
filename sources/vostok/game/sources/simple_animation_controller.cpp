@@ -2,9 +2,7 @@
 
 #include "pch.h"
 #include "simple_animation_controller.h"
-// mixing::expression returned by value -> needs the complete type at the definition
 #include <vostok/animation/mixing_expression.h>
-// m_owner.on_animation_end() needs the complete human_npc
 #include "human_npc.h"
 
 namespace survarium {
@@ -31,10 +29,6 @@ void simple_animation_controller::set_target( animation_controller_parameters co
 void simple_animation_controller::query_new_target_if_needed( )
 {
 	if ( m_last_animation_emitted ) {
-		// claude@NOTE: target emits a real `call human_npc::on_animation_end`; our base
-		// inlines it to nothing because human_npc::on_animation_end is still an empty STUB
-		// (human_npc.cpp - a different unit). The call statement is correct; the missing
-		// instruction is the empty-stub callee, recovered when human_npc.cpp is matched.
 		m_owner.on_animation_end( );
 		m_current_parameters.reset( );
 		m_target_parameters.reset( );
@@ -44,8 +38,8 @@ void simple_animation_controller::query_new_target_if_needed( )
 animation::mixing::expression simple_animation_controller::selected_animations( mutable_buffer& buffer )
 {
 	if ( m_current_parameters.emitter != m_target_parameters.emitter ) {
-		m_current_parameters								= m_target_parameters;
 		m_last_animation_emitted							= false;
+		m_current_parameters								= m_target_parameters;
 	}
 
 	if ( m_last_animation_emitted )
