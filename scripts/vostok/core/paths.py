@@ -87,11 +87,11 @@ CONSOLE_LIBRARY_ROOTS = (
     Path("cs/libraries/PS3"),
     Path("cs/libraries/Xbox 360"),
 )
-PREBUILT_STLPORT_WIN32 = PREBUILT / "stlport" / "libraries" / "win32"
 NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
+PREBUILT_STLPORT_WIN32 = PREBUILT / "stlport" / "libraries" / "win32"
 
 # --- build configurations --------------------------------------------------
 # The matching campaign only ever builds `Master Gold|Win32`, and its graph
