@@ -158,21 +158,20 @@ struct update_visibility_predicate : private boost::noncopyable
 		if ( !identity( ray_query_succeeded ) )
 		{
 			visual_object->visibility_value		-= parameters.decrease_factor;
+			return;
 		}
-		else
-		{
-			float const calculated_luminosity		= exp( visual_object->object->get_luminosity() * parameters.luminosity_factor );
-			float const visibility_delta			= time_delta / parameters.time_quant * calculated_luminosity *
-													( 1.f + parameters.velocity_factor * visual_object->object->get_velocity() ) *
-													( parameters.far_plane_distance - visual_object->distance ) / ( parameters.far_plane_distance - parameters.near_plane_distance );
-			float visibility_value					= visual_object->visibility_value + visibility_delta * ray_energy;
 
-			if ( visibility_value > parameters.max_visibility_value )
-				visibility_value					= parameters.max_visibility_value;
+		float const calculated_luminosity		= exp( visual_object->object->get_luminosity() * parameters.luminosity_factor );
+		float const visibility_delta			= time_delta / parameters.time_quant * calculated_luminosity *
+												( 1.f + parameters.velocity_factor * visual_object->object->get_velocity() ) *
+												( parameters.far_plane_distance - visual_object->distance ) / ( parameters.far_plane_distance - parameters.near_plane_distance );
+		float visibility_value					= visual_object->visibility_value + visibility_delta * ray_energy;
 
-			visual_object->was_updated				= visual_object->visibility_value != visibility_value;
-			visual_object->visibility_value			= visual_object->newly_added_to_frustum ? parameters.visibility_threshold : visibility_value;
-		}
+		if ( visibility_value > parameters.max_visibility_value )
+			visibility_value					= parameters.max_visibility_value;
+
+		visual_object->was_updated				= visual_object->visibility_value != visibility_value;
+		visual_object->visibility_value			= visual_object->newly_added_to_frustum ? parameters.visibility_threshold : visibility_value;
 		visual_object->newly_added_to_frustum	= false;
 	}
 
