@@ -183,7 +183,7 @@ n_ary_tree_time_in_ms_calculator::n_ary_tree_time_in_ms_calculator	(
 {
 	n_ary_tree_base_node* const operand = animation.operands_count( ) ? *animation.operands( sizeof(n_ary_tree_animation_node) ) : 0;
 	if ( !operand || !operand->is_time_scale( ) )
-		m_time_in_ms = m_start_time_in_ms + math::floor( (m_target_animation_time - m_start_animation_time)*1000.f );
+		m_time_in_ms = m_start_time_in_ms + math::floor( (target_animation_time - start_animation_time)*1000.f );
 	else {
 
 
