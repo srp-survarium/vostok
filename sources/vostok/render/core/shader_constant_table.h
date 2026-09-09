@@ -52,6 +52,10 @@ public:
 
 	shader_constant* get( shared_string const& name );
 
+private:
+	shader_constant* get( pcstr const name );
+
+public:
 	bool equal( shader_constant_table const& other ) const
 	{
 		if ( m_table.size( ) != other.m_table.size( ) )
@@ -75,7 +79,6 @@ public:
 	bool is_registered( ) const { return m_is_registered; }
 
 private:
-	shader_constant* get( pcstr const name );
 	void fatal( pcstr msg )
 	{
 		VOSTOK_UNREFERENCED_PARAMETER( msg );
