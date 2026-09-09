@@ -34,6 +34,8 @@ public:
 
 
 private:
+	typedef platform_pointer_selector< float, platform_pointer_64bit >::helper float_ptr;
+
 	/* 0x0000 */	platform_pointer_selector< float, platform_pointer_64bit >::helper	m_knots;
 	/* 0x0008 */	u16		m_knots_count;
 	/* 0x000a */	u8		m_domains_count;

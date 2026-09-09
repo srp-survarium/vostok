@@ -7,6 +7,8 @@ namespace vostok {
 namespace animation {
 
 class bi_spline_channel_animation_baked {
+	typedef std::pair< float, float > data_type;
+
 public:
 	inline	u32									knots_count		( ) const { return m_knots_count; }
 

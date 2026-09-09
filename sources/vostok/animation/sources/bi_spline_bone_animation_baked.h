@@ -19,6 +19,11 @@ public:
 
 
 private:
+	typedef platform_pointer_selector<
+		bi_spline_channel_animation_baked,
+		platform_pointer_64bit
+	>::helper bi_spline_channel_animation_baked_ptr;
+
 	/* 0x0000 */	platform_pointer_selector<
 						bi_spline_channel_animation_baked,
 						platform_pointer_64bit
