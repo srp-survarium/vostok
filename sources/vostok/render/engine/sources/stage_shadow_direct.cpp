@@ -147,13 +147,14 @@ void stage_shadow_direct::execute( )
 		return;
 
 	static math::float3 const s_prev_sun_direction = sun->direction;
+	u32 first_cascade = u32(sun_cascade::num_max_sun_shadow_cascades) - options::ref( ).current.m_num_shadow_cascades;
+
 	m_t_shadow_map = m_context->m_t_shadow_cascade;
 
 	backend::ref( ).set_render_targets( 0, 0, 0, 0 );
 	backend::ref( ).set_depth_stencil_target( &*m_rt_shadow_map );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
 
-	u32 first_cascade = u32(sun_cascade::num_max_sun_shadow_cascades) - options::ref( ).current.m_num_shadow_cascades;
 	for ( u32 cascade_id = first_cascade, cascade_index = 0; cascade_id < sun_cascade::num_max_sun_shadow_cascades; ++cascade_id, ++cascade_index )
 		execute_cascade( cascade_id, cascade_index, m_cascade_shadow_map_size );
 
@@ -285,12 +286,12 @@ void stage_shadow_direct::render_models(
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
 	struct int4 {
-		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w )
+		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w ) :
+			x( in_x ),
+			y( in_y ),
+			z( in_z ),
+			w( in_w )
 		{
-			x = in_x;
-			y = in_y;
-			z = in_z;
-			w = in_w;
 		}
 
 		s32 x;
@@ -370,7 +371,7 @@ void stage_shadow_direct::render_models(
 			);
 			backend::ref( ).set_vs_constant( m_wind_info_parameters, wind_info_parameters );
 		}
-		backend::ref( ).set_vs_constant( m_shadow_cascade_index, cascade_index );
+		backend::ref( ).set_ps_constant( m_shadow_cascade_index, cascade_index );
 
 		m_context->set_w( *instance.m_transform );
 		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0 );
