@@ -14,17 +14,22 @@ namespace animation {
 namespace mixing {
 
 
-inline expression::expression					( ) :
-	m_lexeme	( 0 )
-{
-}
-
 template < typename T >
 inline expression::expression					( T& lexeme )
 {
 	T* const cloned_lexeme = lexeme.cloned_in_buffer( );
 	m_node		= cloned_lexeme;
 	m_lexeme	= cloned_lexeme;
+}
+
+inline expression::expression					( ) :
+	m_lexeme	( 0 )
+{
+}
+
+inline bool expression::is_empty				( ) const
+{
+	return		!m_node || !m_lexeme;
 }
 
 inline mutable_buffer& expression::buffer		( ) const
