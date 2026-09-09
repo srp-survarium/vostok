@@ -150,38 +150,45 @@ private:
 
 STATIC_SIZE_ASSERT(n_ary_tree_comparer, 0x24);
 
+// sushi@TODO: Recover the predicate constructor defaults; true/true is inferred.
 class animation_comparer_predicate {
 public:
-	inline			animation_comparer_predicate( const bool use_synchronized_animations, const bool use_overriding_animations ) :
+	inline			animation_comparer_predicate( const bool use_synchronized_animations = true, const bool use_overriding_animations = true ) :
 						m_use_synchronized_animations	( use_synchronized_animations ),
 						m_use_overriding_animations		( use_overriding_animations )  { }
 
 			comparison_result_enum	operator()			( n_ary_tree_animation_node const& left, n_ary_tree_animation_node const& right ) const;
 private:
+	animation_comparer_predicate& operator=			( animation_comparer_predicate const& );
+
 	/* 0x0000 */	const bool		m_use_synchronized_animations;
 	/* 0x0001 */	const bool		m_use_overriding_animations;
 }; // class animation_comparer_predicate
 
 class animation_comparer_less_predicate {
 public:
-	inline			animation_comparer_less_predicate	( const bool use_synchronized_animations, const bool use_overriding_animations ) :
+	inline			animation_comparer_less_predicate	( const bool use_synchronized_animations = true, const bool use_overriding_animations = true ) :
 						m_predicate( use_synchronized_animations, use_overriding_animations ) { }
 
 	inline	bool	operator()							( n_ary_tree_animation_node const& left, n_ary_tree_animation_node const& right ) const { return m_predicate( left, right ) == less; }
 	inline	bool	operator()							( n_ary_tree_animation_node const* const left, n_ary_tree_animation_node const* const right ) const { return (*this)( *left, *right ); }
 
 private:
+	animation_comparer_less_predicate& operator=		( animation_comparer_less_predicate const& );
+
 	/* 0x0000 */	animation_comparer_predicate	m_predicate;
 }; // class animation_comparer_less_predicate
 
 class animation_comparer_equal_predicate {
 public:
-	inline			animation_comparer_equal_predicate	( const bool use_synchronized_animations, const bool use_overriding_animations ) :
+	inline			animation_comparer_equal_predicate	( const bool use_synchronized_animations = true, const bool use_overriding_animations = true ) :
 						m_predicate( use_synchronized_animations, use_overriding_animations ) { }
 
 	inline	bool	operator()							( n_ary_tree_animation_node const& left, n_ary_tree_animation_node const& right ) const { return m_predicate( left, right ) == equal; }
 
 private:
+	animation_comparer_equal_predicate& operator=		( animation_comparer_equal_predicate const& );
+
 	/* 0x0000 */	animation_comparer_predicate	m_predicate;
 }; // class animation_comparer_equal_predicate
 

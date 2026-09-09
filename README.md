@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,461 / 13,014 functions exact (80.38%) &middot; 11,052 / 13,014 functions exact-max (84.92%) &middot; 93.40% fuzzy &middot; 94.98% fuzzy-max.**
+**Overall: 10,470 / 13,014 functions exact (80.45%) &middot; 11,061 / 13,014 functions exact-max (84.99%) &middot; 93.42% fuzzy &middot; 95.00% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -21,7 +21,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.2% |     98.6% |
 | `vostok`        |   112 | 1,097 / 1,250 (87.8%) | 1,114 / 1,250 (89.1%) |  97.1% |     97.8% |
 | `game_core`     |   189 |   826 / 1,181 (69.9%) |   857 / 1,181 (72.6%) |  93.5% |     95.7% |
-| `animation`     |   102 |     581 / 727 (79.9%) |     603 / 727 (82.9%) |  92.0% |     92.8% |
+| `animation`     |   102 |     590 / 727 (81.2%) |     612 / 727 (84.2%) |  92.6% |     93.2% |
 | `ai`            |   124 |     645 / 691 (93.3%) |     658 / 691 (95.2%) |  99.3% |     99.6% |
 | `sound`         |    69 |     491 / 510 (96.3%) |     493 / 510 (96.7%) |  99.8% |     99.9% |
 | `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) |  98.4% |     98.7% |
@@ -50,7 +50,7 @@ _Auto-generated from the consumer-owned objdiff projection plus the independent 
 
 **Function-reachable retail data: 98.13% (70,200,521 / 71,536,291 unique bytes) &middot; paired for comparison: 4.31% (3,085,081 / 71,536,291) &middot; matched projected copies: 66.00% (17,412,081 / 26,380,577).**
 
-_The projection has 14,395 paired copies across 1,695 units and 31,646 unresolved blockers. Strict relocation comparison exposes 1,454 otherwise-exact functions (563,655 code bytes) with referent debt._
+_The projection has 14,395 paired copies across 1,695 units and 31,646 unresolved blockers. Strict relocation comparison exposes 1,457 otherwise-exact functions (564,749 code bytes) with referent debt._
 
 _The linked-image audit is 3.99% exact and covers 98.57% by PDB type extent, with 86.38% paired-only fidelity (10659 / 12180 definitions). Integrity ratchet: armed._
 
