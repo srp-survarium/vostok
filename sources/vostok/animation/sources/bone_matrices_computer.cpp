@@ -98,7 +98,7 @@ bone_matrices_computer::bone_matrices_computer(
 	m_layers_count				( 0 ),
 	m_overweighting_detected	( false )
 {
-	for ( mixing::animation_state* i = animations, * const e = animations + animations_count; i != e; ++i ) {
+	for ( mixing::animation_state* i = animations, * e = animations + animations_count; i != e; ++i ) {
 		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation();
 		if ( animation_node.animated_object() != m_animated_object )
 			continue;
@@ -158,7 +158,7 @@ static math::quaternion mix_rotations(
 
 		float				angle;
 		float3				direction;
-		rotations.front( ).first.get_axis_and_angle	( direction, angle );
+		quaternion( rotations.front( ).first ).get_axis_and_angle	( direction, angle );
 		return				quaternion( direction, angle * rotations.front( ).second );
 	}
 
@@ -206,8 +206,7 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 	buffer_vector< weighted_transform > rotations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 	buffer_vector< weighted_transform > scales( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 
-	mixing::animation_state* const e	= m_animations + m_animations_count;
-	for ( mixing::animation_state* i = m_animations; i != e; ++i ) {
+	for ( mixing::animation_state* i = m_animations, * e = m_animations + m_animations_count; i != e; ++i ) {
 		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation( );
 		if ( animation_node.animated_object( ) != m_animated_object )
 			continue;
@@ -219,8 +218,7 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 			continue;
 
 		current_frame_position frame_position;
-		cubic_spline_skeleton_animation const& animation	= *i->bone_matrices_computer.pinned_animation;
-		frame const& animation_frame	= animation.get_bone_names( ).bone_index( bone.id( ) ) != u32(-1) ? animation.bone( animation.get_bone_names( ).bone_index( bone.id( ) ) ).bone_frame( i->animation_time * default_fps, frame_position ) : identity_frame( );
+		frame const& animation_frame	= i->bone_matrices_computer.pinned_animation->get_bone_names( ).bone_index( bone.id( ) ) != u32(-1) ? i->bone_matrices_computer.pinned_animation->bone( i->bone_matrices_computer.pinned_animation->get_bone_names( ).bone_index( bone.id( ) ) ).bone_frame( i->animation_time * default_fps, frame_position ) : identity_frame( );
 
 		translations.push_back	( std::make_pair( animation_frame.translation, i->weight ) );
 		rotations.push_back		( std::make_pair( animation_frame.rotation, i->weight ) );
@@ -229,15 +227,16 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 
 	if ( animation_layer_id == 0 ) {
 		float total_weight	= 0.f;
-		for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
+		weighted_transform const* i = translations.begin( ), * const end = translations.end( );
+		for ( ; i != end; ++i )
 			total_weight	+= i->second;
 
-		if ( math::abs( total_weight - 1.f ) >= math::epsilon_5 ) {
-			for ( weighted_transform* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
-				i->second	*= 1.f / total_weight;
+		if ( !math::is_similar( total_weight, 1.f ) ) {
+			for ( weighted_transform* i = translations.begin( ), * const end = translations.end( ); i != end; ++i )
+				i->second	= ( 1.f / total_weight ) * i->second;
 
 			float normalized_total_weight	= 0.f;
-			for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
+			for ( weighted_transform const* i = translations.begin( ), * const end = translations.end( ); i != end; ++i )
 				normalized_total_weight	+= i->second;
 
 			if ( !m_overweighting_detected && math::abs( 1.f - normalized_total_weight ) >= .5f )
@@ -245,11 +244,12 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 		}
 	}
 
-	return bone_transform(
+	bone_transform const result(
 		mix_translations( translations ),
 		mix_rotations( rotations, animation_layer_id < 2 ),
 		mix_scales( scales )
 	);
+	return result;
 }
 
 float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const& bone, const u32 bone_mask ) const
@@ -261,14 +261,15 @@ float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const
 
 
 	bone_transform	result	= bone_transforms.front( );
-	for ( bone_transform const* i = bone_transforms.begin( ) + 1; i != bone_transforms.end( ); ++i )
+	bone_transform const* i = bone_transforms.begin( ) + 1;
+
+	for ( ; i != bone_transforms.end( ); ++i )
 		result.apply			( *i );
-	return					mul4x3(
-		mul4x3(
-			create_scale( result.scale ), create_rotation( result.rotation )
-		),
-		create_translation( result.translation )
-	);
+	float4x4 const matrix =
+		create_scale( result.scale ) *
+		create_rotation( result.rotation ) *
+		create_translation( result.translation );
+	return matrix;
 }
 
 void bone_matrices_computer::compute_skeleton_branch(
@@ -282,8 +283,8 @@ void bone_matrices_computer::compute_skeleton_branch(
 	*result	= mul4x3( computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() ), parent );
 
 
-	skeleton_bone const* const e	= bone.children_end();
-	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+	skeleton_bone const* const e	= bone.children_end(), * i = bone.children_begin();
+	for ( ; i != e; ++i )
 		compute_skeleton_branch(
 			*i,
 			result + ( i - &bone ),
@@ -379,18 +380,16 @@ void bone_matrices_computer::convert_to_object_matrices( float4x4* const begin, 
 float4x4 bone_matrices_computer::get_object_transform( ) const
 {
 	typedef std::pair< float3, float > weighted_transform;
-	buffer_vector< weighted_transform > rotations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 	buffer_vector< weighted_transform > translations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+	buffer_vector< weighted_transform > rotations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 	buffer_vector< weighted_transform > scales( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 
-	mixing::animation_state* const e	= m_animations + m_animations_count;
-	for ( mixing::animation_state* i = m_animations; i != e; ++i ) {
-		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation( );
-		if ( animation_node.animated_object( ) != m_animated_object )
+	for ( mixing::animation_state* i = m_animations, * e = m_animations + m_animations_count; i != e; ++i ) {
+		if ( i->event_iterator.animation( ).animated_object( ) != m_animated_object )
 			continue;
 		if ( i->bone_matrices_computer.pinned_animation->animation_type( ) != animation_type_full )
 			continue;
-		if ( !animation_node.can_generate_events( ) )
+		if ( !( i->event_iterator.animation( ).bones_mask( ) & 1 ) )
 			continue;
 
 		mixing::object_movement const& accumulated_movement	=
@@ -404,14 +403,13 @@ float4x4 bone_matrices_computer::get_object_transform( ) const
 			translations.push_back			( std::make_pair( accumulated_movement.translation, i->weight ) );
 		}
 		else {
-			frame animation_frame;
 			current_frame_position frame_position;
-			i->bone_matrices_computer.pinned_animation->bone( u32( 0 ) ).get_frame(
-				i->animation_time * default_fps,
-				animation_frame,
-				frame_position
+			bone_transform const& movement = bone_transform(
+				i->bone_matrices_computer.pinned_animation->bone( u32( 0 ) ).bone_frame(
+					i->animation_time * default_fps,
+					frame_position
+				)
 			);
-			bone_transform const movement	( animation_frame );
 			math::quaternion const& conjugate_rotation	= math::conjugate( accumulated_movement.rotation );
 			scales.push_back				( std::make_pair(
 				movement.scale / accumulated_movement.scale,
@@ -440,13 +438,10 @@ float4x4 bone_matrices_computer::get_object_transform( ) const
 		}
 	}
 
-	return mul4x3(
-		mul4x3(
-			create_scale( mix_scales( scales ) ),
-			create_rotation( mix_rotations( rotations, true ) )
-		),
-		create_translation( mix_translations( translations ) )
-	);
+	return
+		create_scale( mix_scales( scales ) ) *
+		create_rotation( mix_rotations( rotations, true ) ) *
+		create_translation( mix_translations( translations ) );
 }
 
 } // namespace animation
