@@ -30,10 +30,7 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 	m_swap_chain_desc.BufferCount = 1;
 	m_swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 
-	if ( m_window )
-		select_resolution( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, m_windowed, m_window );
-	else
-		GetLastError();
+	select_resolution( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height, m_windowed, m_window );
 
 	if ( m_windowed )
 	{
@@ -142,7 +139,7 @@ DXGI_RATIONAL res_render_output::select_refresh( u32 width, u32 height, DXGI_FOR
 void res_render_output::select_resolution( u32& width, u32& height, bool windowed, HWND window ) const
 {
 	RECT rect;
-	if ( windowed ? GetClientRect( window, &rect ) : GetWindowRect( window, &rect ) )
+	if ( window && ( windowed ? GetClientRect( window, &rect ) : GetWindowRect( window, &rect ) ) )
 	{
 		width = rect.right - rect.left;
 		height = rect.bottom - rect.top;
@@ -205,10 +202,7 @@ void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_
 	math::uint2 new_size = math::uint2( size_x, size_y );
 
 	if ( !new_size.x || !new_size.y )
-		if ( m_window )
-			select_resolution( new_size.x, new_size.y, windowed, m_window );
-		else
-			GetLastError();
+		select_resolution( new_size.x, new_size.y, windowed, m_window );
 
 	if ( !force_resize && buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y && m_windowed == windowed )
 		return;
