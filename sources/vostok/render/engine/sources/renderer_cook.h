@@ -25,7 +25,7 @@ public:
 									const_buffer							raw_file_data,
 									mutable_buffer							in_out_unmanaged_resource_buffer
 								) override;
-	virtual	void				destroy_resource	( resources::unmanaged_resource* arg_0 ) override { /* no source */ }
+	virtual	void				destroy_resource	( resources::unmanaged_resource* resource ) override;
 }; // class renderer_cook
 
 STATIC_SIZE_ASSERT(renderer_cook, 0x20);

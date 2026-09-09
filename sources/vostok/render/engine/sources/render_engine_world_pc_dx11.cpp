@@ -124,6 +124,11 @@ void renderer_cook::create_resource(
 	in_out_query.finish_query				(result_success);
 }
 
+void renderer_cook::destroy_resource( resources::unmanaged_resource* resource )
+{
+	resource->~unmanaged_resource( );
+}
+
 static void register_cooks( )
 {
 	using resources::register_cook;
