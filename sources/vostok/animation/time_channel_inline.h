@@ -82,7 +82,7 @@ u32	time_channel< DomainType >::domain( float t, u32& current_domain  ) const
 	CURE_ASSERT					( t <= knots()[m_knots_count-1], t = knots()[m_knots_count-1] );
 
 	for ( u32 i= 0; i < m_knots_count - 1 ; ++i ) {
-		u32 const j				= ( i + current_domain ) %(m_knots_count-1);
+		u32 const j				= ( i + current_domain ) % m_knots_count;
 		if ( (knots()[j] <= t) && (knots()[j+1] >= t) ) {
 			current_domain		= j;
 			return				j;
