@@ -9,18 +9,20 @@ namespace vostok {
 namespace animation {
 
 class bi_spline_skeleton_animation_impl_cook : public resources::translate_query_cook {
+	typedef resources::translate_query_cook super;
+
 public:
 					bi_spline_skeleton_animation_impl_cook( );
-
-private:
-	virtual	void	translate_query	( resources::query_result_for_cook& parent ) override;
-	virtual	void	delete_resource	( resources::resource_base* resource_to_delete ) override;
 
 private:
 	static	void	on_resources_ready(
 						resources::queries_result&				results,
 						resources::query_result_for_cook* const	parent_query
 					);
+
+private:
+	virtual	void	translate_query	( resources::query_result_for_cook& parent ) override;
+	virtual	void	delete_resource	( resources::resource_base* resource_to_delete ) override;
 }; // class bi_spline_skeleton_animation_impl_cook
 
 STATIC_SIZE_ASSERT(bi_spline_skeleton_animation_impl_cook, 0x20);

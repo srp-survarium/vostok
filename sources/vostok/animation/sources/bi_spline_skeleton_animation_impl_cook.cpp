@@ -10,13 +10,13 @@ namespace animation {
 typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::unmanaged_intrusive_base >
 	bi_spline_skeleton_animation_baked_ptr;
 
- bi_spline_skeleton_animation_impl_cook::bi_spline_skeleton_animation_impl_cook( )
+inline bi_spline_skeleton_animation_impl_cook::bi_spline_skeleton_animation_impl_cook( )
 	: resources::translate_query_cook( resources::bi_spline_skeleton_animation_class, reuse_true, use_resource_manager_thread_id )
 {
 	resources::register_cook( this );
 }
 
-void bi_spline_skeleton_animation_impl_cook::on_resources_ready(
+inline void bi_spline_skeleton_animation_impl_cook::on_resources_ready(
 	resources::queries_result&				results,
 	resources::query_result_for_cook* const	parent_query
 )
@@ -31,7 +31,7 @@ void bi_spline_skeleton_animation_impl_cook::on_resources_ready(
 	}
 
 	bi_spline_skeleton_animation_baked_ptr animation	= static_cast_resource_ptr< bi_spline_skeleton_animation_baked_ptr >( results[0].get_unmanaged_resource( ) );
-
+	// sushi@TODO: Recover the bones_names binding without shortening its scope-end lifetime.
 	configs::binary_config_ptr bones_names				= static_cast_resource_ptr< configs::binary_config_ptr >( results[1].get_unmanaged_resource( ) );
 
 	animation->m_bones_names			= bones_names;
@@ -40,7 +40,7 @@ void bi_spline_skeleton_animation_impl_cook::on_resources_ready(
 	parent_query->finish_query			( result_success );
 }
 
-void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_result_for_cook& parent )
+inline void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	pcstr const requested_path			= parent.get_requested_path();
 
@@ -64,7 +64,7 @@ void bi_spline_skeleton_animation_impl_cook::translate_query( resources::query_r
 	);
 }
 
-void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resource_base* resource_to_delete )
+inline void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resource_base* resource_to_delete )
 {
 	resource_to_delete->~resource_base( );
 }
