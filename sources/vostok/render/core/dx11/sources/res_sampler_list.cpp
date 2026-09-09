@@ -23,7 +23,7 @@ res_sampler_list::res_sampler_list( fixed_vector<sampler_slot, 16> const& slots 
 
 void res_sampler_list::rebind( )
 {
-	for ( u32 i = 0, count = m_samplers.size( ); i < count; ++i )
+	for ( u32 i = 0; i < m_samplers.size( ); ++i )
 		m_samplers[i] = resource_manager::ref( ).find_registered_sampler( m_names[i].c_str( ) );
 }
 
@@ -34,7 +34,7 @@ void res_sampler_list::destroy_impl( ) const
 
 s32 res_sampler_list::compare( res_sampler_list const& base ) const
 {
-	for ( u32 size = std::min( m_samplers.size( ), base.m_samplers.size( ) ), cmp = 0; cmp < size; ++cmp )
+	for ( u32 count = std::min( m_samplers.size( ), base.m_samplers.size( ) ), cmp = 0; cmp < count; ++cmp )
 	{
 		if ( m_samplers[cmp] < base.m_samplers[cmp] )
 			return -1;
