@@ -7,43 +7,46 @@ namespace render {
 template < typename device_state, typename state_desc >
 inline device_state* state_cache< device_state, state_desc >::get_state( state_desc const& desc )
 {
-	u32 const crc = state_utils::get_hash( desc );
+	device_state* res;
 
-	device_state* result = find( desc, crc );
+	u32 crc = state_utils::get_hash( desc );
 
-	if ( result )
-		return result;
+	res = find( desc, crc );
 
-	state_record rec;
-	rec.crc = crc;
-	create_state( desc, &rec.state );
+	if ( !res )
+	{
+		state_record rec;
+		rec.crc = crc;
+		create_state( desc, &rec.state );
+		res = rec.state;
+		states.push_back( rec );
+	}
 
-	states.push_back( rec );
-
-	return rec.state;
+	return res;
 }
 
-// claude@NOTE: the target retains the final result check; the base jump-threads it away.
 template < typename device_state, typename state_desc >
-inline device_state* state_cache< device_state, state_desc >::find( state_desc const& desc, u32 crc )
+inline device_state* state_cache< device_state, state_desc >::find( state_desc const& desc, u32 CRC )
 {
-	u32 result = u32( -1 );
-	for ( u32 index = 0; index < states.size( ); ++index ) {
-		if ( states[index].crc != crc )
-			continue;
-
-		state_desc desc_candidate;
-		states[index].state->GetDesc( &desc_candidate );
-		if ( desc_candidate == desc ) {
-			result = index;
-			break;
+	u32 res = 0xffffffff;
+	for ( u32 i = 0; i < states.size( ); ++i )
+	{
+		if ( states[i].crc == CRC )
+		{
+			state_desc desc_candidate;
+			states[i].state->GetDesc( &desc_candidate );
+			if ( desc_candidate == desc )
+			{
+				res = i;
+				break;
+			}
 		}
 	}
 
-	if ( result != u32( -1 ) )
-		return states[result].state;
-
-	return 0;
+	if ( res != 0xffffffff )
+		return states[res].state;
+	else
+		return NULL;
 }
 
 } // namespace render
