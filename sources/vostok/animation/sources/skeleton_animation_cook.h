@@ -21,15 +21,11 @@ class skeleton_animation_cook :
 	public resources::translate_query_cook,
 	private boost::noncopyable
 {
-public:
-						skeleton_animation_cook		( );
-
 private:
 	typedef translate_query_cook					super;
 
-private:
-	virtual	void	translate_query					( resources::query_result_for_cook& parent );
-	virtual void	delete_resource					( resources::resource_base* resource_to_delete );
+public:
+						skeleton_animation_cook		( );
 
 private:
 	static	void	on_cubic_spline_animation_cooked(
@@ -37,6 +33,10 @@ private:
 						bi_spline_skeleton_animation_baked_ptr	bi_spline_animation
 					);
 	static	void	on_bi_spline_animation_arrived	( resources::queries_result& result );
+
+private:
+	virtual	void	translate_query					( resources::query_result_for_cook& parent );
+	virtual void	delete_resource					( resources::resource_base* resource_to_delete );
 }; // class skeleton_animation_cook
 
 STATIC_SIZE_ASSERT(skeleton_animation_cook, 0x20);
