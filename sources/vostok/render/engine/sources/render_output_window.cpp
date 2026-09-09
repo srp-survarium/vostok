@@ -138,11 +138,7 @@ void render_output_window::resize( bool force_resize )
 math::uint2 render_output_window::get_window_client_size( HWND__* const window, bool windowed )
 {
 	RECT			rect;
-	BOOL const result = windowed ?
-		GetClientRect( window, &rect ) :
-		GetWindowRect( window, &rect );
-
-	if ( result )
+	if ( windowed ? GetClientRect( window, &rect ) : GetWindowRect( window, &rect ) )
 		return		math::uint2(rect.right-rect.left, rect.bottom-rect.top);
 
 	return			math::uint2( 0, 0 );
