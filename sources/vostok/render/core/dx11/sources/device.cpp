@@ -216,15 +216,15 @@ bool device::get_query_data( ID3D11Query* in_query, void* in_out_data, u32 const
 
 	HRESULT result = m_context->GetData( in_query, in_out_data, in_data_size, 0 );
 
-	while ( ( result == S_FALSE ) && in_wait )
+	if ( ( result == S_FALSE ) && in_wait )
 	{
-
-		result = m_context->GetData( in_query, in_out_data, in_data_size, 0 );
-
+		do
+		{
+			result = m_context->GetData( in_query, in_out_data, in_data_size, 0 );
+		} while ( result == S_FALSE );
 	}
 
 	if ( result == S_OK )
-
 		return true;
 
 	if ( result != S_FALSE )
@@ -232,8 +232,10 @@ bool device::get_query_data( ID3D11Query* in_query, void* in_out_data, u32 const
 
 		if ( result == DXGI_ERROR_DEVICE_REMOVED || result == DXGI_ERROR_DEVICE_RESET ||
 			result == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
+		{
 			m_device_removed = true;
-
+			return false;
+		}
 	}
 
 	return false;
