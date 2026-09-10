@@ -38,9 +38,10 @@ void effect_sky_sphere_default_materials::compile(
 			if (config.value_exists("sky_fog_power") && config.value_exists("sky_fog_up_limit"))
 			{
 				float const fog_power = float(config["sky_fog_power"]);
+				float const fog_up_limit = float(config["sky_fog_up_limit"]);
 				compiler.set_constant(
 					"fog_power_and_range",
-					float4(fog_power, float(config["sky_fog_up_limit"]), 0.f, 0.f)
+					float4(fog_power, fog_up_limit, 0.f, 0.f)
 				);
 			} else
 				compiler.set_constant("fog_power_and_range", float4(1.f, 0.25f, 0.f, 0.f));
