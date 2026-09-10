@@ -45,7 +45,7 @@ inline u32 calc_surface_size(
 	u32 row_min_pitch
 )
 {
-	u32 row_pitch = 0;
+	u32 row_pitch;
 	return calc_surface_size(
 		width,
 		height,
