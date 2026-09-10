@@ -77,15 +77,12 @@ void environment_probe::set_properties(
 
 	remove_collision();
 
-	float3 probe_scale3;
-
 	if (m_properties.geometry == 0)
 	{
 		m_collision_geometry = &*collision::new_sphere_geometry_instance(g_allocator, math::float4x4().identity());
 		m_collision_object = &*collision::new_collision_object(g_allocator, 1, m_collision_geometry, this);
 		new_transform = math::create_translation(in_properties.location);
-		probe_scale3 = float3(in_properties.radius, in_properties.radius, in_properties.radius);
-		new_transform.set_scale(probe_scale3);
+		new_transform.set_scale(float3(in_properties.radius, in_properties.radius, in_properties.radius));
 		m_collision_tree->insert(m_collision_object, new_transform);
 	}
 	else
@@ -95,7 +92,7 @@ void environment_probe::set_properties(
 		new_transform = m_properties.transform;
 		m_collision_tree->insert(m_collision_object, new_transform);
 
-		probe_scale3 = m_properties.transform.get_scale();
+		float3 probe_scale3 = m_properties.transform.get_scale();
 
 		float const max_scale = math::max(probe_scale3.x,
 			math::max(probe_scale3.y, probe_scale3.z));
