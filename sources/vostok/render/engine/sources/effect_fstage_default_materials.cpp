@@ -39,9 +39,10 @@ void effect_fstage_default_materials::compile(
 		compiler.set_constant("solid_transparency",   solid_transparency);
 
 		compiler.set_constant("solid_color_specular", solid_color_specular);
-		compiler.set_constant("constant_tile_uv", config.value_exists("constant_tile_u") && config.value_exists("constant_tile_v") ?
-				float2(float(config["constant_tile_u"]), float(config["constant_tile_v"])) :
-				float2(1.0f, 1.0f));
+		if (config.value_exists("constant_tile_u") && config.value_exists("constant_tile_v"))
+			compiler.set_constant("constant_tile_uv", float2(float(config["constant_tile_u"]), float(config["constant_tile_v"])));
+		else
+			compiler.set_constant("constant_tile_uv", float2(1.0f, 1.0f));
 		compiler.set_cull_mode(D3D_CULL_NONE);
 
 	compile_end(compiler);
