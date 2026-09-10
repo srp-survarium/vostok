@@ -23,7 +23,7 @@ hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 	m_rasterize_height				( rasterize_height ),
 	m_num_mips						(
 		u32(
-			::log( float( math::max( rasterize_width, rasterize_height ) ) ) /
+			::log( float( math::min( rasterize_width, rasterize_height ) ) ) /
 			::log( 2.0 )
 		) + 1
 	),
@@ -128,9 +128,10 @@ void hw_hiz_occlusion_manager::process_culling(
 	u32 const in_num_bounds_and_results )
 {
 
-	if ( !in_num_bounds_and_results ||
+	if ( !in_num_bounds_and_results )
+		return;
 
-		!m_hiz_occlusion_effect )
+	if ( !m_hiz_occlusion_effect )
 		return;
 
 	backend::ref( ).draw_calls_counting = false;
@@ -332,7 +333,8 @@ bool hw_hiz_occlusion_manager::quary_and_get_results_if_ready( pbyte out_results
 	for ( u32 y = 0; y < m_culling_buffer_height; ++y ) {
 		for ( u32 x = 0; x < m_culling_buffer_width; ++x ) {
 
-			u32 const index = y * m_culling_buffer_width + x; if ( index > in_num_results - 1 )
+			u32 const index = y * m_culling_buffer_width + x;
+			if ( index > in_num_results - 1 )
 				goto unmap;
 			out_results[index] = data[x];
 		}
