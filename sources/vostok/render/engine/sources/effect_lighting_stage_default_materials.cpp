@@ -133,27 +133,27 @@ void effect_lighting_stage_default_materials::compile(
 		compiler.set_alpha_blend(true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_ONE);
 		if (configuration.vertex_input_type == particle_vertex_input_type || configuration.vertex_input_type == particle_subuv_vertex_input_type || configuration.vertex_input_type == particle_beamtrail_vertex_input_type)
 			compiler.set_depth(false, false);
-		if (probe_configuration.use_diffuse_texture)
+		if (configuration.use_diffuse_texture)
 			compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, false, u32(-1));
 		float4 solid_color_specular = float4(custom_config["constant_diffuse"]);
 		solid_color_specular.w = 0.0f;
 		compiler.set_constant("solid_color_specular", solid_color_specular);
 
-		if (probe_configuration.use_normal_texture)
+		if (configuration.use_normal_texture)
 			compiler.set_texture("t_normal", pcstr(custom_config["texture_normal"]), 0, false, u32(-1));
-		if (probe_configuration.use_transparency_texture)
+		if (configuration.use_transparency_texture)
 			compiler.set_texture("t_transparency", pcstr(custom_config["texture_transparency"]), 0, false, u32(-1));
 
 		float solid_transparency = custom_config.value_exists("constant_transparency") ? float(custom_config["constant_transparency"]) : 1.0f;
 
 		compiler.set_constant("solid_transparency", solid_transparency);
 
-		if (probe_configuration.use_soft_edges)
+		if (configuration.use_soft_edges)
 			compiler.set_texture("t_position", "$user$position", 0, false, u32(-1));
 
 		float4 specular_fresnel_roughness_parameters(0.0f, 0.0f, 0.0f, 0.0f);
 
-		if (probe_configuration.use_roughness_texture)
+		if (configuration.use_roughness_texture)
 		{
 			compiler.set_texture("t_roughness", pcstr(custom_config["texture_roughness"]), 0, false, u32(-1));
 			if (custom_config.value_exists("constant_roughness_min"))
@@ -167,7 +167,7 @@ void effect_lighting_stage_default_materials::compile(
 		else if (custom_config.value_exists("constant_roughness"))
 			specular_fresnel_roughness_parameters.z = float(custom_config["constant_roughness"]);
 
-		if (probe_configuration.use_fresnel_texture)
+		if (configuration.use_fresnel_texture)
 		{
 			compiler.set_texture("t_fresnel", pcstr(custom_config["texture_fresnel"]), 0, false, u32(-1));
 			if (custom_config.value_exists("constant_fresnel_min"))
