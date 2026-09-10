@@ -10,13 +10,13 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,480 / 13,014 functions exact (80.53%) &middot; 11,069 / 13,014 functions exact-max (85.05%) &middot; 93.45% fuzzy &middot; 95.04% fuzzy-max.**
+**Overall: 10,480 / 13,014 functions exact (80.53%) &middot; 11,069 / 13,014 functions exact-max (85.05%) &middot; 93.48% fuzzy &middot; 95.07% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
-| `render`        |   351 | 2,034 / 2,734 (74.4%) | 2,254 / 2,734 (82.4%) |  91.4% |     93.5% |
+| `render`        |   351 | 2,034 / 2,734 (74.4%) | 2,254 / 2,734 (82.4%) |  91.5% |     93.5% |
 | `game`          |   141 |   980 / 1,528 (64.1%) | 1,111 / 1,528 (72.7%) |  85.6% |     88.7% |
 | `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.2% |     98.6% |
 | `vostok`        |   112 | 1,095 / 1,250 (87.6%) | 1,114 / 1,250 (89.1%) |  96.6% |     97.8% |
