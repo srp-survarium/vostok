@@ -371,7 +371,7 @@ void scene::process_streaming(
 		}
 
 		u32 num_wanted_mips = 0;
-		float distance;
+		float distance = 0.f;
 		for (
 			streaming_texture_instance* instance_it = info_it->instances.begin( );
 			instance_it != info_it->instances.end( );
@@ -484,16 +484,16 @@ void scene::on_texture_loaded(
 		requested_streamable_textures.end( ),
 		find_requested_texture_predicate( texture )
 	);
-	if ( requested_it == requested_streamable_textures.end( ) || !data[0].is_successful( ) )
-		return;
-
-	streaming_ready_texture ready_texture;
-	ready_texture.texture	= texture;
-	ready_texture.data		= data[0].get_managed_resource( );
-	ready_texture.name		= data[0].get_requested_path( );
-	ready_texture.num_mips	= num_mips;
-	ready_texture.distance	= distance;
-	ready_streaming_textures.push_back( ready_texture );
+	if ( requested_it != requested_streamable_textures.end( ) && data[0].is_successful( ) )
+	{
+		streaming_ready_texture ready_texture;
+		ready_texture.texture	= texture;
+		ready_texture.data		= data[0].get_managed_resource( );
+		ready_texture.num_mips	= num_mips;
+		ready_texture.name		= data[0].get_requested_path( );
+		ready_texture.distance	= distance;
+		ready_streaming_textures.push_back( ready_texture );
+	}
 }
 
 void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bool update_only )
@@ -552,20 +552,21 @@ void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bo
 				info.path = tex_it->path;
 				info.instances.push_back( texture_instance );
 				streaming_textures.push_back( info );
-				continue;
 			}
-
-			streaming_texture_instance* instance_it = update_only ?
-				std::find(
-					info_it->instances.begin( ),
-					info_it->instances.end( ),
-					texture_instance
-				) :
-				info_it->instances.end( );
-			if ( instance_it == info_it->instances.end( ) )
-				info_it->instances.push_back( texture_instance );
 			else
-				instance_it->object_sphere = texture_instance.object_sphere;
+			{
+				streaming_texture_instance* instance_it = update_only ?
+					std::find(
+						info_it->instances.begin( ),
+						info_it->instances.end( ),
+						texture_instance
+					) :
+					info_it->instances.end( );
+				if ( instance_it == info_it->instances.end( ) )
+					info_it->instances.push_back( texture_instance );
+				else
+					instance_it->object_sphere = texture_instance.object_sphere;
+			}
 		}
 	}
 }
@@ -626,39 +627,41 @@ void scene::select_models(
 		if ( !selection.empty( ) )
 			return;
 	}
-	math::frustum view_frustum (mat_vp);
-
-	selection.clear();
-
-	collision::objects_type query_result(render::g_allocator);
-
-	if ( moved_only )
 	{
-		moved_object_predicate_helper						helper( query_result );
-		boost::function< void ( collision::object const& ) >	callback =
-			boost::bind( &moved_object_predicate_helper::check_object, &helper, _1 );
+		math::frustum view_frustum (mat_vp);
 
-		m_models_tree->cuboid_query( u32(-1), view_frustum, callback);
-	}
-	else
-		m_models_tree->cuboid_query( u32(-1), view_frustum, query_result);
+		selection.clear();
 
-	selection.reserve( selection.size() + query_result.size());
+		collision::objects_type query_result(render::g_allocator);
 
-	collision::objects_type::const_iterator end = query_result.end();
-	for( collision::objects_type::iterator it = query_result.begin(); it != end; ++it)
-	{
-		render_model_instance_impl* const model =
-			static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it)->owner( );
+		if ( moved_only )
+		{
+			moved_object_predicate_helper						helper( query_result );
+			boost::function< void ( collision::object const& ) >	callback =
+				boost::bind( &moved_object_predicate_helper::check_object, &helper, _1 );
 
-		// claude@NOTE: the transformed bounding box is computed and dropped -
-		// the target keeps both calls (virtual get_aabb + out-of-line
-		// aabb::modify) and never consumes the result.
-		model->get_aabb( ).modify		( model->transform( ) );
+			m_models_tree->cuboid_query( u32(-1), view_frustum, callback);
+		}
+		else
+			m_models_tree->cuboid_query( u32(-1), view_frustum, query_result);
 
-		u8 const lod_id					= fixed_lod_value == -1 ? u8( -1 ) : u8( fixed_lod_value );
+		selection.reserve( selection.size() + query_result.size());
 
-		model->get_surfaces( &mat_vp, &view_pos, selection, true, lod_id, surface_flags );
+		collision::objects_type::const_iterator end = query_result.end();
+		for( collision::objects_type::iterator it = query_result.begin(); it != end; ++it)
+		{
+			render_model_instance_impl* const model =
+				static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it)->owner( );
+
+			// claude@NOTE: the transformed bounding box is computed and dropped -
+			// the target keeps both calls (virtual get_aabb + out-of-line
+			// aabb::modify) and never consumes the result.
+			model->get_aabb( ).modify		( model->transform( ) );
+
+			u8 lod_id					= fixed_lod_value == -1 ? u8( -1 ) : u8( fixed_lod_value );
+
+			model->get_surfaces( &mat_vp, &view_pos, selection, true, lod_id, surface_flags );
+		}
 	}
 }
 
