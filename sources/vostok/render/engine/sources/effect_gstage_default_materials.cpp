@@ -125,7 +125,10 @@ void effect_gstage_default_materials::compile(
 			D3D_STENCIL_OP_KEEP
 		);
 
-		compiler.set_depth(true, s_z_only_0);
+		if (s_z_only_0)
+			compiler.set_depth(true, false);
+		else
+			compiler.set_depth(true, true);
 		if (custom_config.value_exists("constant_tile_u") && custom_config.value_exists("constant_tile_v"))
 			compiler.set_constant("constant_tile_uv", float2(float(custom_config["constant_tile_u"]), float(custom_config["constant_tile_v"])));
 		else
@@ -164,9 +167,9 @@ void effect_gstage_default_materials::compile(
 				float const angle = float(custom_config["constant_diffuse_masked_hue"]) * math::pi;
 
 				math::sine_cosine sc(angle);
-				float3 cvec(0.0f, 0.0f, 1.0f);
+				sc.cosine = 1.0f - sc.cosine;
 
-				cvec = math::normalize_safe(float3(sc.cosine, 1.0f - sc.cosine - sc.sine, 1.0f - sc.cosine + sc.sine));
+				float3 cvec = math::normalize_safe(float3(1.0f - sc.cosine, sc.cosine - sc.sine, sc.cosine + sc.sine));
 
 				compiler.set_constant("hue_matrix_component_x", cvec);
 				compiler.set_constant("hue_matrix_component_y", float3(cvec.z, cvec.x, cvec.y));
@@ -269,7 +272,10 @@ void effect_gstage_default_materials::compile(
 		{
 			pcstr texture_cubemap = pcstr(custom_config["texture_cubemap"]);
 
-			compiler.set_texture("t_cubemap", strings::equal(texture_cubemap, "") ? "cubemap/reflect_blue" : texture_cubemap, 0, false, u32(-1));
+			if (strings::equal(texture_cubemap, ""))
+				compiler.set_texture("t_cubemap", "cubemap/reflect_blue", 0, false, u32(-1));
+			else
+				compiler.set_texture("t_cubemap", texture_cubemap, 0, false, u32(-1));
 
 			if (configuration.use_reflection_mask)
 			{
