@@ -118,14 +118,14 @@ void device::create_d3d( )
 		output->GetDisplayModeList( DXGI_FORMAT_R8G8B8A8_UNORM, 0, &num_display_modes, display_modes );
 
 		u32 real_resolution_index = 0;
-		LOG_INFO( "monitor %d", monitor_index );
+		LOG_ERROR( "monitor %d", monitor_index );
 		for ( u32 resolution_index = 0; resolution_index < num_display_modes; ++resolution_index )
 		{
 			math::int2 const res( display_modes[resolution_index].Width, display_modes[resolution_index].Height );
 			if ( is_resolution_already_exists( monitor_index, res ) )
 				continue;
 			g_monitor_resolutions[monitor_index][real_resolution_index] = res;
-			LOG_INFO( "  %dx%d", res.x, res.y );
+			LOG_ERROR( "  %dx%d", res.x, res.y );
 
 			++real_resolution_index;
 
@@ -138,6 +138,7 @@ void device::create_d3d( )
 		DXGI_OUTPUT_DESC output_desc;
 
 		output->GetDesc( &output_desc );
+		output = 0;
 		++monitor_index;
 	}
 
