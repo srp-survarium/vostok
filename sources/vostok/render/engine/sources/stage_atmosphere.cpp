@@ -203,13 +203,13 @@ void stage_atmosphere::execute( )
 			u32 offset;
 			screen_vertex* pv = reinterpret_cast<screen_vertex*>( backend::ref( ).vertex.lock( 4, sizeof(screen_vertex), offset ) );
 
-			pv->set( float4( -1.0f, -1.0f, 0.0f, 1.0f ), float2( 0.0f, 0.0f ) );
+			pv->set( float4( -1.0f, -1.0f, 0.0f, 1.0f ), float2( 0.0f, 1.0f ) );
 			++pv;
-			pv->set( float4( -1.0f, 1.0f, 0.0f, 1.0f ), float2( 0.0f, 1.0f ) );
+			pv->set( float4( -1.0f, 1.0f, 0.0f, 1.0f ), float2( 0.0f, 0.0f ) );
 			++pv;
-			pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f ), float2( 1.0f, 0.0f ) );
+			pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f ), float2( 1.0f, 1.0f ) );
 			++pv;
-			pv->set( float4( 1.0f, 1.0f, 0.0f, 1.0f ), float2( 1.0f, 1.0f ) );
+			pv->set( float4( 1.0f, 1.0f, 0.0f, 1.0f ), float2( 1.0f, 0.0f ) );
 
 			backend::ref( ).vertex.unlock( );
 
@@ -221,29 +221,29 @@ void stage_atmosphere::execute( )
 			if ( sun->right.squared_length( ) > math::epsilon_5 )
 			{
 
-				L_up = sun->right;
+				L_right = sun->right;
+				L_right.normalize( );
+				L_up = L_dir ^ L_right;
 				L_up.normalize( );
 				L_right = L_up ^ L_dir;
 				L_right.normalize( );
-				L_up = L_right ^ L_dir;
-				L_up.normalize( );
 			} else {
 				L_up.set( 0.0f, 1.0f, 0.0f );
-				if ( math::abs( L_dir | L_up ) > 0.99f )
+				if ( fabsf( L_dir | L_up ) > 0.99f )
 					L_up.set( 0.0f, 0.0f, 1.0f );
 				L_right = L_up ^ L_dir;
 				L_right.normalize( );
-				L_up = L_right ^ L_dir;
+				L_up = L_dir ^ L_right;
 				L_up.normalize( );
 			}
 			float scale = ( m_context->get_view_pos( ) - sun->position ).length( );
 			scale /= 384467000.0f;
 			scale *= 6948400.0f;
-			float4x4 rotation_X_translation( float4( L_up, 0.0f ), float4( L_right, 0.0f ),
-				float4( L_dir, 0.0f ), float4( sun->position, 1.0f ) );
+			float4x4 rotation_X_translation( float4( L_right, 0.0f ), float4( L_up, 0.0f ),
+				float4( sun->direction, 0.0f ), float4( sun->position, 1.0f ) );
 			scale *= pp_parameters.sun_moon_billboard_scale;
 			float4x4 world_transform =
-				math::create_scale( float3( scale, scale, scale ) ) * math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
+				math::create_scale( float3( scale, scale, scale ) ) * math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + sun->direction * 0.0f );
 			m_context->set_w( world_transform );
 
 			backend::ref( ).set_ps_texture( "sun_moon_texture", pp_parameters.sun_moon_texture.c_ptr( ) );
