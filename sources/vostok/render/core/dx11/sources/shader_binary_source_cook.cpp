@@ -33,7 +33,7 @@ shader_binary_source_cook::shader_binary_source_cook( )
 	  m_tasks_type( tasks::create_new_task_type("compile_shader_task", 0) ),
 	  m_blob_creation_counter( 0 )
 {
-	// claude@NOTE: the task parameter constructor is inlined only in the target.
+
 }
 
 shader_binary_source_cook::~shader_binary_source_cook( )
@@ -46,34 +46,36 @@ void shader_binary_source_cook::converted_shader_loaded(
 	resources::queries_result& result
 )
 {
-	data->new_resource->shader_source			= result[0].get_managed_resource();
-	if (data->new_resource->shader_source == 0)
-		debug::debug_message_box				("data->new_resource->shader_source == 0");
+	{
+		data->new_resource->shader_source			= result[0].get_managed_resource();
+		if (data->new_resource->shader_source == 0)
+			debug::debug_message_box				("data->new_resource->shader_source == 0");
 
-	resources::pinned_ptr_const<u8>	ptr_managed	(result[0].get_managed_resource());
+		resources::pinned_ptr_const<u8>	ptr_managed	(result[0].get_managed_resource());
 
-	u32		num_saved_infos						= ((u32*)ptr_managed.c_ptr())[0];
-	u32		additional_data_size				= sizeof(u32) + num_saved_infos * sizeof(shader_file_info);
-	u32		binary_shader_size					= ptr_managed.size() - additional_data_size;
-	pvoid	binary_shader_byte_code				= (pbyte)ptr_managed.c_ptr() + additional_data_size;
+		u32		num_saved_infos						= ((u32*)ptr_managed.c_ptr())[0];
+		u32		additional_data_size				= sizeof(u32) + num_saved_infos * sizeof(shader_file_info);
+		u32		binary_shader_size					= ptr_managed.size() - additional_data_size;
+		pvoid	binary_shader_byte_code				= (pbyte)ptr_managed.c_ptr() + additional_data_size;
 
-	data->new_resource->m_shader_byte_code		= binary_shader_byte_code;
-	data->new_resource->m_shader_byte_code_size	= binary_shader_size;
+		data->new_resource->m_shader_byte_code		= binary_shader_byte_code;
+		data->new_resource->m_shader_byte_code_size	= binary_shader_size;
 
-	data->new_resource->configuration			= data->cook_data->configuration;
-	data->new_resource->shader_name				= data->cook_data->shader_name;
-	data->new_resource->shader_type				= data->cook_data->shader_type;
+		data->new_resource->configuration			= data->cook_data->configuration;
+		data->new_resource->shader_name				= data->cook_data->shader_name;
+		data->new_resource->shader_type				= data->cook_data->shader_type;
 
-	data->in_out_query->set_unmanaged_resource	(data->new_resource, resources::nocache_memory, sizeof(binary_shader_source));
-	data->in_out_query->finish_query			(result_success);
+		data->in_out_query->set_unmanaged_resource	(data->new_resource, resources::nocache_memory, sizeof(binary_shader_source));
+		data->in_out_query->finish_query			(result_success);
 
-	DELETE										(data->cook_data);
-	DELETE										(data);
+		DELETE										(data->cook_data);
+		DELETE										(data);
+	}
 }
 
-static pcstr shader_type_to_ext( enum_shader_type type )
+static pcstr shader_type_to_ext( enum_shader_type st )
 {
-	switch(type)
+	switch(st)
 	{
 		case enum_shader_type_vertex:	return "vs";
 		case enum_shader_type_pixel:	return "ps";
@@ -204,7 +206,7 @@ mutable_buffer shader_binary_source_cook::allocate_resource(
 	bool file_exist
 )
 {
-	// claude@NOTE: mutable_buffer construction is out-of-line only in the target.
+
 	VOSTOK_UNREFERENCED_PARAMETERS					(&file_exist, &raw_file_data, &in_query);
 	return											vostok::mutable_buffer(
 		(pvoid)ALLOC(binary_shader_source, 1),
