@@ -128,6 +128,7 @@ effect_compiler& effect_compiler::set_texture(
 	{
 		texture_query_desc	desc;
 		desc.m_query_physicaly_path		= physical_name_lower_case.c_str();
+		desc.m_mip_level_cut				= 0;
 		desc.m_num_last_mips_used		= num_last_mips_used;
 
 		m_textures_for_query.push_back	( desc);
