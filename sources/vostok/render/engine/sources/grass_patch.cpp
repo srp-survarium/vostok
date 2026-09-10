@@ -228,10 +228,7 @@ u32 grass_patch::get_valid_lod_index( u32 const lod_index ) const
 	if ( !m_num_avaliable_lods )
 		return 0;
 
-	if ( lod_index >= m_num_avaliable_lods )
-		return m_num_avaliable_lods - 1;
-
-	return lod_index;
+	return lod_index >= m_num_avaliable_lods ? m_num_avaliable_lods - 1 : lod_index;
 }
 
 void grass_patch::render(
@@ -265,14 +262,12 @@ void grass_patch::render(
 		return;
 
 	surface->get_material_effects( ).m_effects[stage_type]->apply( tech_index, 0 );
-	float4x4 identity;
-	identity.identity( );
-	context->set_w( identity );
+	context->set_w( float4x4( ).identity( ) );
 	m_geometry[m_current_lod_index]->apply( );
 	backend::ref( ).set_vb_stream_1( &*m_vb_stream_1[m_current_lod_index], sizeof( stream_1_type ) );
 
 	if ( options::ref( ).current.m_use_vegetation_trample ) {
-		backend::ref( ).set_ps_texture( "t_grass_motion_mask", &*m_movement_texture );
+		backend::ref( ).set_vs_texture( "t_grass_motion_mask", &*m_movement_texture );
 		in_grass_world->set_patch_parameters( this );
 	}
 
