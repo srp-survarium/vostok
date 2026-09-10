@@ -978,12 +978,12 @@ void resource_manager::on_texture_loaded(
 				NULL,
 				copy_ptr,
 				row_pitch,
-				row_pitch * height_in_blocks
+				row_pitch * width_in_blocks
 			);
 			copy_ptr += mip_size;
 		}
 
-		mem_usage = dds_size + sizeof(dds_header);
+		mem_usage = dds_size - sizeof(dds_header);
 	}
 
 	tex->m_mem_usage = mem_usage;
@@ -1025,51 +1025,52 @@ void resource_manager::on_texture_loaded(
 			data[0].get_requested_path( ),
 			num_last_mips_used
 		);
-		return;
-	}
-
-	resources::pinned_ptr_const< u8 > ptr_man( data[0].get_managed_resource( ) );
-
-	D3DX_IMAGE_INFO dds_info = { 0 };
-	CHECK_RESULT(
-		D3DXGetImageInfoFromMemory(
-			ptr_man.c_ptr( ),
-			ptr_man.size( ),
-			NULL,
-			&dds_info,
-			NULL
-		)
-	);
-
-	D3DX_IMAGE_LOAD_INFO load_info;
-
-	bool staging = false;
-	if ( staging )
-	{
-		load_info.Usage = D3D_USAGE_STAGING;
-		load_info.BindFlags = 0;
-		load_info.CpuAccessFlags = D3D_CPU_ACCESS_WRITE;
 	}
 	else
 	{
-		load_info.Usage = D3D_USAGE_DEFAULT;
-		load_info.BindFlags = D3D_BIND_SHADER_RESOURCE;
+		resources::pinned_ptr_const< u8 > ptr_man( data[0].get_managed_resource( ) );
+
+		D3DX_IMAGE_INFO dds_info = { 0 };
+		CHECK_RESULT(
+			D3DXGetImageInfoFromMemory(
+				ptr_man.c_ptr( ),
+				ptr_man.size( ),
+				NULL,
+				&dds_info,
+				NULL
+			)
+		);
+
+		D3DX_IMAGE_LOAD_INFO load_info;
+
+		bool staging = false;
+		if ( staging )
+		{
+			load_info.Usage = D3D_USAGE_STAGING;
+			load_info.BindFlags = 0;
+			load_info.CpuAccessFlags = D3D_CPU_ACCESS_WRITE;
+		}
+		else
+		{
+			load_info.Usage = D3D_USAGE_DEFAULT;
+			load_info.BindFlags = D3D_BIND_SHADER_RESOURCE;
+		}
+
+		ID3DBaseTexture* base_tex = NULL;
+		HRESULT res = D3DXCreateTextureFromMemory(
+			device::ref( ).d3d_device( ),
+			ptr_man.c_ptr( ),
+			ptr_man.size( ),
+			&load_info,
+			NULL,
+			&base_tex,
+			NULL
+		);
+		CHECK_RESULT( res );
+
+		tex->set_hw_texture( base_tex, mip_level_cut );
+		base_tex->Release( );
 	}
-
-	ID3DBaseTexture* base_tex = NULL;
-	HRESULT res = D3DXCreateTextureFromMemory(
-		device::ref( ).d3d_device( ),
-		ptr_man.c_ptr( ),
-		ptr_man.size( ),
-		&load_info,
-		NULL,
-		&base_tex,
-		NULL
-	);
-	CHECK_RESULT( res );
-
-	tex->set_hw_texture( base_tex, mip_level_cut );
-	base_tex->Release( );
 }
 
 u32 resource_manager::get_texture_video_memory_size( )
@@ -1135,7 +1136,10 @@ res_texture* resource_manager::load_texture(
 			tex->mark_registered();
 			m_texture_registry.insert( mk_pair( tex->name(), tex));
 		}
-		else tex = it->second;
+		else
+		{
+			tex = it->second;
+		}
 
 		if( strstr( tex->name(), "$user$") == 0 && texture_name && texture_name[0] && num_last_mips_used)
 		{
@@ -1180,16 +1184,12 @@ res_texture* resource_manager::load_texture(
 			resources::query_resource_and_wait( path.c_str(),
 				class_id,
 				boost::bind( &resource_manager::on_texture_loaded_staging, this, _1, mip_level_cut, use_converter ),
-				::vostok::render::g_allocator,
-				0,
-				parent);
+				::vostok::render::g_allocator);
 		else
 			resources::query_resource( path.c_str(),
 				class_id,
 				boost::bind( &resource_manager::on_texture_loaded_staging, this, _1, mip_level_cut, use_converter ),
-				::vostok::render::g_allocator,
-				0,
-				parent);
+				::vostok::render::g_allocator);
 
 		return tex;
 	}
