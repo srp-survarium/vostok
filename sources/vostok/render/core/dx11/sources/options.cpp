@@ -181,65 +181,6 @@ options::options( )
 
 void options::set_default_values( )
 {
-	current.m_radiance_volume_scale = 10.0f;
-	current.m_lpv_flux_amplifier = 0.17f;
-	current.m_lpv_interreflection_contribution = 0.4f;
-	current.m_test_float_option = 1.0f;
-	current.m_lpv_occlusion_amplifier = 1.0f;
-	current.m_clouds_noise_octaves = 8.0f;
-	current.m_clouds_noise_frequency = 100.0f;
-	current.m_clouds_noise_amplitude = 0.5f;
-	current.m_clouds_noise_power = 1.0f;
-	current.m_clouds_height = 0.0f;
-	current.m_clouds_scale = 1.0f;
-	current.m_clouds_moving_speed = 1.0f;
-	current.m_clouds_scale_by_distance = 0.0f;
-	current.m_clouds_scale_xy = 5.0f;
-	current.m_fxaa_quality_subpix = 0.25f;
-	current.m_fxaa_quality_edge_threshold = 0.166f;
-	current.m_fxaa_quality_edge_threshold_min = 0.03f;
-	current.m_grass_lod1_distance = 40.0f;
-	current.m_grass_lod2_distance = 60.0f;
-	current.m_ssao_screen_ratio = 0.5f;
-	current.m_motion_blur_scale = 1.0f;
-	current.m_gamma_correction_factor = 1.0f;
-	current.m_ssao_num_samples = 24;
-	current.m_clouds_num_evaluate_slices = 128;
-	current.m_clouds_grid_width = 128;
-	current.m_clouds_grid_height = 8;
-	current.m_organic_irradiance_texture_size = 1024;
-	current.m_shadow_map_size = 1024;
-	current.m_spot_shadow_map_size = 1024;
-	current.m_shadow_quality = uro_shadow_quality_ultra;
-	current.m_light_propagation_volumes_rsm_size = 128;
-	current.m_num_radiance_volume_cells = 32;
-	current.m_num_propagate_iterations = 8;
-	current.m_lpv_num_cascades = 3;
-	current.m_lpv_refresh_once_per_frames = 1;
-	current.m_num_test_lights = 1024;
-	current.m_hiz_occlusion_culling_width = 512;
-	current.m_hiz_occlusion_culling_height = 256;
-	current.m_hiz_occlusion_culling_framerate = 8;
-	current.m_num_shadow_cascades = 4;
-	current.m_cascaded_shadow_map_size = 1024;
-	current.m_num_max_light_instances = 128;
-	current.m_texture_quality = 2;
-	current.m_max_anisotropic = uro_anisotrophic_filter_16x;
-	current.m_monitor_index = 0;
-	current.m_geometry_quality = uro_geometry_quality_high;
-	current.m_lighting_quality = uro_lighting_quality_ultra;
-	current.m_post_process_quality = uro_post_process_quality_high;
-	current.m_particles_quality = uro_particles_quality_high;
-	current.m_motion_blur_quality = uro_motion_blur_quality_high;
-	current.m_shading_quality = uro_shading_quality_ultra;
-	current.m_ambient_occlusion_quality = uro_ambient_occlusion_quality_ssao;
-	current.m_antialiasing_method = uro_antialiasing_method_2xTAA;
-	current.m_decorations_quality = uro_decorations_quality_high;
-	current.m_graphics_quality = uro_graphics_quality_ultra;
-	current.m_resolution_x = 1280;
-	current.m_resolution_y = 720;
-	current.m_fullscreen = false;
-	current.m_vsync = false;
 	current.m_enabled_g_stage = true;
 	current.m_enabled_g_stage_pre_pass = true;
 	current.m_enabled_g_stage_material_pass = true;
@@ -248,15 +189,23 @@ void options::set_default_values( )
 	current.m_enabled_sun_shadows_stage = true;
 	current.m_enabled_sun_stage = true;
 	current.m_enabled_lighting_stage = true;
-	current.m_enabled_ambient_occlusion_stage = true;
 	current.m_enabled_forward_lighting_stage = true;
 	current.m_enabled_deferred_lighting_stage = true;
 	current.m_enabled_forward_stage = true;
 	current.m_enabled_particles_stage = true;
 	current.m_enabled_post_process_stage = true;
 	current.m_enabled_sky_box_stage = false;
-	current.m_enabled_clouds_stage = true;
+	current.m_test_float_option = 1.0f;
+	current.m_use_parallax = true;
+	current.m_enabled_ambient_occlusion_stage = true;
 	current.m_enabled_light_propagation_volumes_stage = false;
+	current.m_enabled_mlaa = true;
+	current.m_use_cpu_mlaa = false;
+	current.m_shadow_map_size = 1024;
+	current.m_spot_shadow_map_size = 1024;
+	current.m_organic_irradiance_texture_size = 1024;
+	current.m_shadow_quality = uro_shadow_quality_ultra;
+	current.m_enabled_local_light_shadows = true;
 	current.m_enabled_terrain_shadows = true;
 	current.m_enabled_draw_terrain = true;
 	current.m_enabled_draw_speedtree = true;
@@ -265,14 +214,17 @@ void options::set_default_values( )
 	current.m_enabled_draw_speedtree_fronds = true;
 	current.m_enabled_draw_speedtree_leafcards = true;
 	current.m_enabled_draw_speedtree_leafmeshes = true;
-	current.m_enabled_local_light_shadows = true;
-	current.m_use_parallax = true;
 	current.m_enabled_fxaa = true;
-	current.m_enabled_mlaa = true;
-	current.m_use_cpu_mlaa = false;
 	current.m_enabled_sharpen = true;
+	current.m_light_propagation_volumes_rsm_size = 128;
+	current.m_num_radiance_volume_cells = 32;
+	current.m_radiance_volume_scale = 10.0f;
+	current.m_num_propagate_iterations = 8;
 	current.m_enabled_lpv_occluders = true;
+	current.m_lpv_flux_amplifier = 0.17f;
+	current.m_lpv_interreflection_contribution = 0.4f;
 	current.m_lpv_movable = true;
+	current.m_lpv_num_cascades = 3;
 	current.m_lpv_gather_occluders_from_light_view = true;
 	current.m_lpv_gather_occluders_from_camera_view = false;
 	current.m_lpv_disable_rsm_generating = false;
@@ -281,18 +233,43 @@ void options::set_default_values( )
 	current.m_lpv_disable_gv_injection = false;
 	current.m_lpv_disable_propagation = false;
 	current.m_lpv_disable_lpv_lookup = false;
+	current.m_lpv_refresh_once_per_frames = 1;
+	current.m_lpv_occlusion_amplifier = 1.0f;
 	current.m_lpv_use_specular_reflection = false;
 	current.m_enabled_draw_models = true;
-	current.m_clouds_allow_moving = true;
+	current.m_enabled_clouds_stage = true;
+	current.m_clouds_noise_octaves = 8.0f;
+	current.m_clouds_noise_frequency = 100.0f;
+	current.m_clouds_noise_amplitude = 0.5f;
+	current.m_clouds_noise_power = 1.0f;
+	current.m_clouds_height = 0.0f;
+	current.m_clouds_scale = 1.0f;
+	current.m_clouds_grid_width = 128;
+	current.m_clouds_grid_height = 8;
+	current.m_clouds_num_evaluate_slices = 128;
+	current.m_clouds_moving_speed = 1.0f;
 	current.m_clouds_debug_mode = false;
+	current.m_clouds_scale_by_distance = 0.0f;
+	current.m_clouds_scale_xy = 5.0f;
+	current.m_clouds_allow_moving = true;
+	current.m_num_test_lights = 1024;
+	current.m_cascaded_shadow_map_size = 1024;
+	current.m_num_max_light_instances = 128;
 	current.m_use_god_rays = false;
 	current.m_use_hiz_occlusion_culling = true;
+	current.m_hiz_occlusion_culling_width = 512;
+	current.m_hiz_occlusion_culling_height = 256;
+	current.m_hiz_occlusion_culling_framerate = 8;
+	current.m_num_shadow_cascades = 4;
 	current.m_enabled_sky_sphere_stage = false;
 	current.m_enabled_atmosphere_stage = true;
+	current.m_fxaa_quality_subpix = 0.25f;
+	current.m_fxaa_quality_edge_threshold = 0.166f;
+	current.m_fxaa_quality_edge_threshold_min = 0.03f;
+	current.m_ssao_screen_ratio = 0.5f;
+	current.m_ssao_num_samples = 24;
 	current.m_ssao_use_filtering = true;
 	current.m_ssao_use_temporal_filtering = true;
-	current.m_use_temporal_antialiasing = true;
-	current.m_use_motion_blur = true;
 	current.m_draw_grass = true;
 	current.m_enabled_volume_fog_stage = true;
 	current.m_use_16bit_rt = false;
@@ -300,9 +277,32 @@ void options::set_default_values( )
 	current.m_update_shadows_every_frame = true;
 	current.m_use_screenspace_reflections_mask = false;
 	current.m_use_poisson_disc_shadow_filter = false;
+	current.m_use_temporal_antialiasing = true;
+	current.m_use_motion_blur = true;
+	current.m_grass_lod1_distance = 40.0f;
+	current.m_grass_lod2_distance = 60.0f;
 	current.m_use_texture_streaming = true;
 	current.m_use_motion_vectors_in_taa = true;
+	current.m_texture_quality = 2;
+	current.m_motion_blur_scale = 1.0f;
 	current.m_use_vegetation_trample = false;
+	current.m_gamma_correction_factor = 1.0f;
+	current.m_max_anisotropic = uro_anisotrophic_filter_16x;
+	current.m_monitor_index = 0;
+	current.m_fullscreen = false;
+	current.m_vsync = false;
+	current.m_geometry_quality = uro_geometry_quality_high;
+	current.m_lighting_quality = uro_lighting_quality_ultra;
+	current.m_post_process_quality = uro_post_process_quality_high;
+	current.m_particles_quality = uro_particles_quality_high;
+	current.m_motion_blur_quality = uro_motion_blur_quality_high;
+	current.m_shading_quality = uro_shading_quality_ultra;
+	current.m_resolution_x = 1280;
+	current.m_resolution_y = 720;
+	current.m_ambient_occlusion_quality = uro_ambient_occlusion_quality_ssao;
+	current.m_antialiasing_method = uro_antialiasing_method_2xTAA;
+	current.m_decorations_quality = uro_decorations_quality_high;
+	current.m_graphics_quality = uro_graphics_quality_ultra;
 	previous = current;
 }
 
@@ -509,7 +509,8 @@ enum_options_changes_result options::end_render_options_changing(
 	current.m_resolution_y = res_str.y;
 	current.m_enabled_local_light_shadows = current.m_lighting_quality != uro_lighting_quality_low;
 
-	if ( current.m_shadow_quality > uro_shadow_quality_low )
+	if ( current.m_shadow_quality > uro_shadow_quality_low &&
+		current.m_antialiasing_method != uro_antialiasing_method_off )
 	{
 		switch ( current.m_antialiasing_method )
 		{
@@ -528,37 +529,56 @@ enum_options_changes_result options::end_render_options_changing(
 		}
 	}
 
-	if ( current.m_shadow_quality == uro_shadow_quality_low )
+	switch ( current.m_shadow_quality )
 	{
+	case uro_shadow_quality_low:
 		current.m_use_poisson_disc_shadow_filter = false;
 		current.m_cascaded_shadow_map_size = 512;
-	}
-	else if ( current.m_shadow_quality < uro_shadow_quality_count )
-	{
+		break;
+	case uro_shadow_quality_medium:
+	case uro_shadow_quality_high:
+	case uro_shadow_quality_ultra:
 		current.m_use_poisson_disc_shadow_filter = true;
 		current.m_cascaded_shadow_map_size = 1024;
+		break;
 	}
 
-	if ( current.m_ambient_occlusion_quality == uro_ambient_occlusion_quality_off )
+	switch ( current.m_ambient_occlusion_quality )
+	{
+	case uro_ambient_occlusion_quality_off:
 		current.m_enabled_ambient_occlusion_stage = false;
-	else if ( current.m_ambient_occlusion_quality < uro_ambient_occlusion_quality_count )
+		break;
+	case uro_ambient_occlusion_quality_ssao:
+	case uro_ambient_occlusion_quality_hbao:
+	case uro_ambient_occlusion_quality_ssdo:
 		current.m_enabled_ambient_occlusion_stage = true;
+		break;
+	}
 
-	if ( current.m_motion_blur_quality == uro_motion_blur_quality_off )
+	switch ( current.m_motion_blur_quality )
+	{
+	case uro_motion_blur_quality_off:
 		current.m_use_motion_blur = false;
-	else if ( current.m_motion_blur_quality < uro_motion_blur_quality_count )
+		break;
+	case uro_motion_blur_quality_low:
+	case uro_motion_blur_quality_medium:
+	case uro_motion_blur_quality_high:
 		current.m_use_motion_blur = true;
+		break;
+	}
 	if ( current.m_post_process_quality == uro_post_process_quality_minimum )
 		current.m_ssao_use_temporal_filtering = false;
 
 	enum_options_changes_result result = ocr_need_nothing;
-	for ( render_cc* command = first_render_command; command; command = command->render_next )
+	render_cc* command = first_render_command;
+	while ( command )
 	{
-		if ( !command->is_changed( ) )
-			continue;
-
-		result = static_cast<enum_options_changes_result>( result | command->get_changes_result( ) );
-		out_changed_defines.push_back( fs_new::virtual_path_string( command->define_name( ) ) );
+		if ( command->is_changed( ) )
+		{
+			result = static_cast<enum_options_changes_result>( result | command->get_changes_result( ) );
+			out_changed_defines.push_back( fs_new::virtual_path_string( command->define_name( ) ) );
+		}
+		command = command->render_next;
 	}
 
 	previous = current;
@@ -597,10 +617,7 @@ void options::on_config_loaded( resources::queries_result& data )
 	load_impl					( F );
 }
 
-static bool is_line_term( char a )
-{
-	return (a==13)||(a==10);
-}
+static bool is_line_term (char a) {	return (a==13)||(a==10); };
 
 static u32 advance_term_string( memory::reader& F )
 {
