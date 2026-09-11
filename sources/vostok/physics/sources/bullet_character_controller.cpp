@@ -239,8 +239,7 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = math::abs( m_shape_offset.y( ) );
-	btManifoldArray manifold_array;
+	float shape_y = math::abs( m_shape_offset.y( ) ); btManifoldArray manifold_array;
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{
@@ -289,14 +288,17 @@ float bullet_character_controller::recover_from_penetration( )
 
 void bullet_character_controller::step_up( bool change_shape_size, btVector3& pos_up_correction )
 {
-	float new_cylinder_height = math::max( 0.0f, ( m_current_shape_dim.y - m_current_shape_dim.x ) - s_step_height );
+	float2 const shape_dim = m_current_shape_dim;
 
-	float new_full_height = m_current_shape_dim.x + new_cylinder_height;
-	setup_shape_dim( float2( m_current_shape_dim.x, new_full_height ) );
 
-	pos_up_correction.setValue( 0.0f, ( m_current_shape_dim.y - new_full_height ) * 0.5f, 0.0f );
+	float new_cylinder_height = math::max( 0.0f, ( shape_dim.y - shape_dim.x ) - s_step_height );
 
-    m_current_pos += pos_up_correction;
+	float new_full_height = shape_dim.x + new_cylinder_height;
+	setup_shape_dim( float2( shape_dim.x, new_full_height ) );
+
+	pos_up_correction.setValue( 0.0f, ( shape_dim.y - new_full_height ) * 0.5f, 0.0f );
+
+	m_current_pos += pos_up_correction;
 	m_current_step_offset = pos_up_correction.y( );
 
 }
