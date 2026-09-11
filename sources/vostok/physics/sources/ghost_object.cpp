@@ -67,17 +67,18 @@ void bt_ghost_object::contact_test( world* world, base_physics_object* object, c
 
 bool bt_ghost_object::contact_test( world* world )
 {
-	btHashedOverlappingPairCache* bt_pair_cache = m_bt_object->getOverlappingPairCache( );
-	btBroadphasePairArray& bt_pair_array = bt_pair_cache->getOverlappingPairArray( );
+	btBroadphasePairArray& bt_pair_array = m_bt_object->getOverlappingPairCache( )->getOverlappingPairArray( );
+
 
 	s32	pairs_count = bt_pair_array.size( );
 	for ( s32 i = 0 ; i < pairs_count ; ++i )
 	{
 		btBroadphasePair& bt_broadphase_pair = bt_pair_array[i];
-		btBroadphasePair* bt_pair = static_cast<bullet_physics_world*>(world)->get_bt_internal( )->getBroadphase( )->getOverlappingPairCache( )->findPair( bt_broadphase_pair.m_pProxy0, bt_broadphase_pair.m_pProxy1 );
+		btOverlappingPairCache* bt_pair_cache = static_cast<bullet_physics_world*>(world)->get_bt_internal( )->getBroadphase( )->getOverlappingPairCache( );
+		btBroadphasePair* bt_pair = bt_pair_cache->findPair( bt_broadphase_pair.m_pProxy0, bt_broadphase_pair.m_pProxy1 );
+
 		if ( bt_pair )
 		{
-
 			if ( bt_pair->m_algorithm )
 			{
 				btAlignedObjectArray<btPersistentManifold *> manifold_results;
