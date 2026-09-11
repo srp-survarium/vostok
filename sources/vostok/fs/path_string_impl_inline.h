@@ -84,9 +84,13 @@ path_string_impl &   path_string_impl::appendf (pcstr const format, ...)
 template <class src_type>
 path_string_impl &   path_string_impl::append (src_type const & s)
 {
+#ifndef MASTER_GOLD
 	u32 const current_length			=	m_string.length(); 
+#endif // #ifndef MASTER_GOLD
 	m_string.append							(s); 
+#ifndef MASTER_GOLD
 	verify									(m_string.c_str() + current_length);
+#endif // #ifndef MASTER_GOLD
 	return									* this;
 }
 

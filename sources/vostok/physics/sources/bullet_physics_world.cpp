@@ -736,18 +736,18 @@ void bullet_physics_world::subscribe_on_contact( base_physics_object* object, ca
 void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object, callback_type* callback )
 {
 	callbacks_begin_end_pair ret = m_contact_callbacks.equal_range( object );
-
-
 	callbacks_type::iterator it = m_contact_callbacks.end( );
 
 	for ( ; ret.first != ret.second; ++ret.first )
 	{
-		if ( ret.first->second == callback ) { it = ret.first; break; }
+		if ( ret.first->second == callback )
+		{
+			it = ret.first;
+			break;
+		}
 	}
 
-	ASSERT(
-		it != m_contact_callbacks.end( )
-	);
+	ASSERT( it != m_contact_callbacks.end( ) );
 	m_contact_callbacks.erase( it );
 }
 
