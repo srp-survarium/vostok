@@ -119,7 +119,8 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );
-	get_non_compound_shapes_centers( m_shape->get_bt_shape( ), transform, centres_results );
+	bt_collision_shape& shape = *m_shape;
+	get_non_compound_shapes_centers( shape.get_bt_shape( ), transform, centres_results );
 }
 
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
