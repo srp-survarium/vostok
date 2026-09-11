@@ -15,7 +15,7 @@ bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGho
 	m_shape			( shape ),
 	m_bt_object		( obj )
 {
-	obj->setUserPointer( this );
+	m_bt_object->setUserPointer( this );
 }
 
 bt_ghost_object::~bt_ghost_object( )
