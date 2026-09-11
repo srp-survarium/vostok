@@ -49,7 +49,8 @@ bool box_geometry_instance::cuboid_query		( object const* object, math::cuboid c
 
 bool box_geometry_instance::ray_query			( object const* object, math::float3 const& origin, math::float3 const& direction, float max_distance, float& distance, ray_triangles_type& triangles, triangles_predicate_type const& predicate ) const
 {
-	if ( !ray_test( origin, direction, max_distance, distance ) )
+	if ( !ray_test( origin, direction, max_distance, distance )
+	)
 		return false;
 	
 	ray_triangle_result		result( object, u32(-1), distance );
