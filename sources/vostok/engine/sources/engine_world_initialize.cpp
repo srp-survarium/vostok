@@ -118,8 +118,7 @@ void engine_world::initialize			( )
 										   & g_allocator );
 
 	fixed_string<256>					build_resources_string;
-	if ( s_build_resources.is_set_as_string( &build_resources_string )
-	)
+	if ( s_build_resources.is_set_as_string( &build_resources_string ) )
 		initialize_build				( build_resources_string.c_str() );
 
 	bool const is_editor				= command_line_editor();

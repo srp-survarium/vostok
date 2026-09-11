@@ -150,8 +150,10 @@ def report_only_observations(roster, maxima_rows, previous):
             "size": size or old.get("size") or 0,
             "frameless": old.get("flags") == "f",
             # There is no PDB statement record to classify. Exact object bytes
-            # remain exact evidence without inventing a statement verdict.
-            "cls": old.get("cls") or None,
+            # remain exact evidence without inventing a statement verdict - and
+            # without carrying one: a class copied from an older ledger state
+            # would report a QUANTITY/SPLIT divergence no build can show.
+            "cls": None,
             "cur": fuzzy,
             "hash": body_hash,
             "max": fuzzy,
