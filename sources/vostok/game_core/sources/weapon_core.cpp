@@ -1093,9 +1093,6 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// claude@NOTE: the target keeps the `player_input const&` binding unnamed (0 recorded locals)
-// yet calls m_user->input() once - the single-call shape needs the reference, so it stays a
-// named local here and the extra PDB local is the residual.
 float weapon_core::computed_backward_recoil_time(
 	const float		animation_length,
 	const float		animation_time_before_time_scale_starts,
@@ -1107,10 +1104,7 @@ float weapon_core::computed_backward_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) * animation_length;
 }
 
@@ -1125,10 +1119,7 @@ float weapon_core::computed_horizontal_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return horizontal_recoil_value( ) * animation_length;
 }
 
@@ -1143,10 +1134,7 @@ float weapon_core::computed_vertical_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return vertical_recoil_value( ) * animation_length;
 }
 

@@ -18,7 +18,7 @@ namespace physics {
 
 bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
-	return VOSTOK_NEW_IMPL( static_cast<vostok::memory::base_allocator&>( *::survarium::g_allocator ), bt_character_controller )( w );
+	return VOSTOK_NEW_IMPL( allocator, bt_character_controller )( w );
 }
 
 bt_character_controller::bt_character_controller( world* w ) :

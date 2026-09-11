@@ -150,12 +150,10 @@ buffer_string const&   buffer_string::operator = (value_type  c)
 inline
 buffer_string const&   buffer_string::operator = (const buffer_string& s)
 {
-	if ( this == &s )
-	{
-		return					*this;
-	}
-	clear						();
-	return						*this += s;
+	if ( this == &s ) return *this;
+	clear						(); *this += s;
+
+	return						*this;
 }
 
 inline
@@ -235,8 +233,7 @@ buffer_string::size_type   buffer_string::rfind	(value_type const c, size_type o
 inline
 buffer_string::size_type   buffer_string::find	(value_type const * s) const
 {
-	pstr res				=	strstr(m_begin, s);
-	return						res ? (size_type)(res - m_begin) : npos;
+	pstr res				=	strstr(m_begin, s); return res ? (size_type)(res - m_begin) : npos;
 }
 
 inline

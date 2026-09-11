@@ -42,7 +42,8 @@ void scaleform_engine::xrSysAllocMalloc::Free( void* ptr, u32 size, u32 align )
 	VOSTOK_UNREFERENCED_PARAMETERS	( size, align );
 	// the aligned block stores the byte distance back to the raw allocation in the
 	// u32 just before it; recover the raw pointer and hand it to the X-Ray free hook.
-	m_mem_free_ptr( ( u8* )ptr - ( ( u32* )ptr )[ -1 ] );
+	pvoid const raw_pointer = ( u8* )ptr - ( ( u32* )ptr )[ -1 ];
+	m_mem_free_ptr( raw_pointer );
 }
 
 void* scaleform_engine::xrSysAllocMalloc::Realloc( void* oldPtr, u32 oldSize, u32 newSize, u32 align )

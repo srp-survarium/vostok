@@ -48,7 +48,7 @@ inline void weapon_core_state_cook_template<T>::create_resource( resources::quer
 
 	for ( u32 i = 0; i != 4; ++i ) requests.push_back( resources::create_request( cfg["animations"][ i ], resources::animation_class ) );
 
-	ASSERT( UNKNOWN_EXPRESSION_T( cfg.value_exists( "user_animations" ) ) );
+	cfg.value_exists( "user_animations" ); // retail MASTER_GOLD keeps the call, result unused
 
 	resources::query_resources(
 		requests.begin( ),
