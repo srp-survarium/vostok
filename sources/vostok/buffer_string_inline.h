@@ -322,10 +322,7 @@ u32   buffer_string::max_length	() const
 }
 
 inline
-bool   buffer_string::empty	() const
-{
-	return						m_begin == m_end; 
-}
+bool   buffer_string::empty	() const { return m_begin == m_end; }
 
 inline
 buffer_string::value_type*	  buffer_string::c_str ()			
