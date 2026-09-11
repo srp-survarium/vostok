@@ -1245,22 +1245,6 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 	return !is_trying_to_aim( );
 }
 
-// claude@NOTE: release COMDAT (target 0 PDB statements, fully folded -> objdiff leaves it
-// "unpaired"). Body is byte-recovered: filtering the uniform [ebp-N] slot-alloc shift and the
-// ICF assert-fold name, the ONLY residual is one folded-empty assert call named
-// unreferenced_parameter_helper (base) vs finalize_impl (target) - the same compiled-out
-// resource_ptr::operator-> non-null assert. ammunition() returns a resource_ptr by value (each
-// call = an inc/dec copy); the && chain short-circuits to a common false sink.
-bool weapon_core::ready_to_reload( ) const
-{
-	u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false );
-	return current_ammo != maximum_ammo_in_weapon( )
-		&& ammunition( )
-		&& ammunition( )->amount( ) != 0
-		&& !m_is_in_sprint_transition
-		&& !m_user_animations_selector.is_in_jump( );
-}
-
 // record and no read - not source-pinnable. claude@NOTE
 bool weapon_core::can_and_must_reload_predicate( ) const
 {

@@ -85,7 +85,7 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
-			bool								ready_to_reload					( ) const;
+	inline	bool								ready_to_reload					( ) const { u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false ); return current_ammo != maximum_ammo_in_weapon( ) && ammunition( ) && ammunition( )->amount( ) != 0 && !m_is_in_sprint_transition && !m_user_animations_selector.is_in_jump( ); }
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
 	inline	weapon_targets						get_target						( ) const { return m_target; }
