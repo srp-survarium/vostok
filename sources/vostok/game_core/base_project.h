@@ -54,10 +54,7 @@ inline void base_project::register_named_object( pcstr name, base_game_object* o
 	m_objects_registry[name] = obj;
 }
 
-inline void base_project::register_object_to_resolve( link_resolver* obj, configs::binary_config_value cfg )
-{
-	m_objects_to_resolve.push_back( resolve_link_object( obj, cfg ) );
-}
+inline void base_project::register_object_to_resolve( link_resolver* obj, configs::binary_config_value cfg ) { m_objects_to_resolve.push_back( resolve_link_object( obj, cfg ) ); }
 
 // free helper used by project_cooker_simple::create_game_objects.
 void read_transform( configs::binary_config_value const& cfg, float4x4& result );
