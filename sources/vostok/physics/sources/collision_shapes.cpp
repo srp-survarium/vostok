@@ -79,8 +79,8 @@ void destroy_bt_shape( btCollisionShape* sh )
 			shape->removeChildShapeByIndex( 0 );
 			destroy_bt_shape( child );
 		}
-	}
-	else if ( sh->getShapeType( ) == TRIANGLE_MESH_SHAPE_PROXYTYPE )
+	} else
+	if ( sh->getShapeType( ) == TRIANGLE_MESH_SHAPE_PROXYTYPE )
 	{
 		btTriangleMeshShape* shape = (btTriangleMeshShape*)sh;
 		btStridingMeshInterface* mesh = shape->getMeshInterface( );

@@ -472,6 +472,25 @@ class ReportOnlyObservationTests(unittest.TestCase):
         self.assertEqual(rows[0]["size"], 11)
         self.assertEqual(rows[0]["hash"], "sourcehash")
 
+    def test_does_not_carry_a_stale_structure_class(self):
+        """A report-only row has no statement record this build, so a class
+        remembered from an older ledger state must not survive into the
+        observation - it would count as a divergence nothing can verify."""
+        roster = SimpleNamespace(
+            target={},
+            artifacts=SimpleNamespace(
+                report_fns=[("vostok/render/engine/sources/stage_ambient_occlusion.cpp", self.THUNK, 100.0, 11)]
+            ),
+        )
+        previous = {
+            self.THUNK: {"mangled": self.THUNK, "unit": "", "module": "render", "size": 0, "flags": "", "cls": "QUANTITY", "hash": ""}
+        }
+
+        rows = list(report_only_observations(roster, {}, previous))
+
+        self.assertEqual(len(rows), 1)
+        self.assertIsNone(rows[0]["cls"])
+
     def test_does_not_invent_ownership_from_internal_delinker_bucket(self):
         symbol = "??_Elobby_camera@survarium@@UAEPAXI@Z"
         roster = SimpleNamespace(
