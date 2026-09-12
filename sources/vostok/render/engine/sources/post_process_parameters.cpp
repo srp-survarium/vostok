@@ -14,6 +14,12 @@ namespace render {
 
 post_process_parameters::post_process_parameters( )
 {
+	atmosphere_kresun_multiplier	= 1.0f;
+	atmosphere_kmesun_multiplier	= 1.0f;
+	atmosphere_kr4pi_multiplier		= 1.0f;
+	atmosphere_km4pi_multiplier		= 1.0f;
+	atmosphere_params_changed		= true;
+
 	dof_height_lights				= vostok::math::float3( 1.0f, 1.0f, 1.0f );
 	dof_focus_power					= 0.6f;
 	dof_focus_region				= 20.0f;
@@ -41,7 +47,6 @@ post_process_parameters::post_process_parameters( )
 	frame_fade_amount				= 0.0f;
 	frame_dark_desaturation_limit	= 0.04f;
 	enable_scene					= true;
-	enable_advanced_bloom			= true;
 	environment_sun_position		= vostok::math::float3( 0.0f, survarium::s_camera_far_plane, 0.0f );
 	environment_far_fog_color		= vostok::math::float3( 1.0f, 1.0f, 1.0f );
 	environment_sun_color			= vostok::math::float3( 0.87f, 0.8f, 0.8f );
@@ -50,9 +55,6 @@ post_process_parameters::post_process_parameters( )
 	environment_near_fog_distance	= 0.0f;
 	environment_shadow_transparency	= 0.5f;
 	environment_fog_alpha			= 1.0f;
-	aberration_max_variance			= 2.0f;
-	aberration_min_variance			= 0.125f;
-	aberration_power				= 1.0f;
 	environment_rain_angle_x		= 0.0f;
 	environment_rain_angle_y		= 0.0f;
 	environment_rain_density		= 1.0f;
@@ -94,20 +96,19 @@ post_process_parameters::post_process_parameters( )
 	image_grain_update_frequency	= 1;
 	vignette_power					= 1.0f;
 	use_image_space_reflections		= true;
+	enable_advanced_bloom			= true;
 	skylight_color					= vostok::math::float3( 0.5f, 0.7f, 1.0f );
 	skylight_lower					= 0.0f;
 	skylight_upper					= 50.0f;
 	skylight_power					= 1.0f;
 	skylight_multiplier				= 1.0f;
 	use_dynamic_lens_flares			= false;
+	aberration_max_variance			= 2.0f;
+	aberration_min_variance			= 0.125f;
+	aberration_power				= 1.0f;
 	environment_probes_diffuse_instensity_multiplier = 1.0f;
 	environment_probes_specular_instensity_multiplier = 1.0f;
 	environment_rain_wet_intensity	= 1.0f;
-	atmosphere_kresun_multiplier	= 1.0f;
-	atmosphere_kmesun_multiplier	= 1.0f;
-	atmosphere_kr4pi_multiplier		= 1.0f;
-	atmosphere_km4pi_multiplier		= 1.0f;
-	atmosphere_params_changed		= true;
 	dof_blur_kernel					= 1;
 	environment_rain_num_cones		= 16;
 	environment_rain_u_scale		= 1.0f;
