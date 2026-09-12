@@ -286,23 +286,23 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float3 const&			foot_to_toe_dir					= math::normalize( toe_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
 	float3 const&			left_dir						= math::normalize( foot_to_leg_dir ^ foot_to_toe_dir );
 
-	float4x4				result;
-	result.identity( );
-	result.i.xyz( )		= left_dir;
-	result.j.xyz( )		= foot_to_leg_dir;
-	result.k.xyz( )		= math::normalize( foot_to_leg_dir ^ left_dir );
+	float4x4				foot_center_transform;
+	foot_center_transform.identity( );
+	foot_center_transform.i.xyz( )		= left_dir;
+	foot_center_transform.j.xyz( )		= foot_to_leg_dir;
+	foot_center_transform.k.xyz( )		= math::normalize( foot_to_leg_dir ^ left_dir );
 
 	float const				rotation_angle					= math::deg2rad( 30.0f );
-	result				= math::create_rotation( left_dir, rotation_angle ) * result;
+	foot_center_transform				= math::create_rotation( left_dir, rotation_angle ) * foot_center_transform;
 
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
-	result.c.xyz( )		= foot_world_matrix.c.xyz( );
+	foot_center_transform.c.xyz( )		= foot_world_matrix.c.xyz( );
 
 	float3					up_dir( 0.0f, 0.082f, 0.05f );
-	result.c.xyz( )		= result.transform_position( up_dir );
+	foot_center_transform.c.xyz( )		= foot_center_transform.transform_position( up_dir );
 
 	float3					capsule_size( s_ik_foot_capsule_radius_value, 0.12f, s_ik_foot_capsule_radius_value );
 	float3					foot_to_cube_center_offset( 0.0f, 1.0f, 0.0f );
@@ -336,23 +336,23 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 		original_color.set_B( 0x64u );
 	}
 
-	float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, result );
+	float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, foot_center_transform );
 
 	if ( s_ik_legs_debug_draw_value && m_drawer )
-		m_drawer->draw_line_capsule( result, capsule_size, original_color, false );
+		m_drawer->draw_line_capsule( foot_center_transform, capsule_size, original_color, false );
 
-	m_character_controller->adjust_foot_transform( capsule_size, start, finish, rotation_interpolation_koef, params.heel_transition_time, result );
+	m_character_controller->adjust_foot_transform( capsule_size, start, finish, rotation_interpolation_koef, params.heel_transition_time, foot_center_transform );
 
 	if ( s_ik_legs_debug_draw_value && m_drawer )
-		m_drawer->draw_solid_capsule( result, capsule_size, fixed_color, true );
+		m_drawer->draw_solid_capsule( foot_center_transform, capsule_size, fixed_color, true );
 
-	float4x4				foot_center_transform			= foot_to_center_rel * result;
+	float4x4				result			= foot_to_center_rel * foot_center_transform;
 
 	float const				leg_len							= matrices[params.knee_bone_index   - m_skeleton->get_root_bones_count( )].c.xyz( ).length( );
 	float const				up_leg_len						= matrices[params.leg_bone_index    - m_skeleton->get_root_bones_count( )].c.xyz( ).length( );
 	float const				knee_len						= matrices[params.foot_bone_index   - m_skeleton->get_root_bones_count( )].c.xyz( ).length( );
 
-	float const				up_leg_to_fixed_foot_dist		= ( up_leg_world_matrix.c.xyz( ) - foot_center_transform.c.xyz( ) ).length( );
+	float const				up_leg_to_fixed_foot_dist		= ( up_leg_world_matrix.c.xyz( ) - result.c.xyz( ) ).length( );
 	delta_len			= leg_len + up_leg_len + knee_len - up_leg_to_fixed_foot_dist;
 
 	float const				up_leg_to_original_foot_dist_sqr	= ( up_leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) ).squared_length( );
@@ -360,11 +360,11 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	if ( math::sqr( up_leg_to_fixed_foot_dist ) > up_leg_to_original_foot_dist_sqr && params.heel_transition_time != 0.0f )
 	{
 		float const			position_iterpolation_koef		= 1.0f - m_heel_interpolator.interpolated_value( params.heel_transition_time );
-		float3 const&		position						= foot_world_matrix.c.xyz( ) * position_iterpolation_koef + foot_center_transform.c.xyz( ) * ( 1.0f - position_iterpolation_koef );
-		foot_center_transform.c.xyz( )	= position;
+		float3 const&		position						= foot_world_matrix.c.xyz( ) * position_iterpolation_koef + result.c.xyz( ) * ( 1.0f - position_iterpolation_koef );
+		result.c.xyz( )	= position;
 	}
 
-	return foot_center_transform;
+	return result;
 }
 
 void legs_ik_processor::set_left_heel_on_ground( bool value )
