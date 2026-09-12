@@ -67,7 +67,8 @@ void animated_object::destroy		( memory::base_allocator* allocator )
 	bone_collision_data* begin_data	= m_geometries_data.begin();
 	VOSTOK_FREE_IMPL					( allocator, begin_data );
 	
-	geometry_instance* const* begin	= geometry->begin(); geometry_instance* const* end = geometry->end();
+	geometry_instance* const* begin	= geometry->begin();
+	geometry_instance* const* end	= geometry->end();
 
 	size_t const instances_count	= std::distance( begin, end );
 	size_t const buffer_size		= instances_count * sizeof( geometry_instance* );

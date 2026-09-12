@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import unittest
+from pathlib import Path
 
 from vostok.tool.joined import is_joined
 
@@ -24,6 +25,14 @@ class JoinedLineDetection(unittest.TestCase):
         self.assertFalse(is_joined('\tLOG( "x; y;" );'))
         self.assertFalse(is_joined("#define X( a ) a; b \\"))
         self.assertFalse(is_joined("typedef int a; typedef int b;"))
+
+    def test_block_comments_span_lines(self):
+        import tempfile
+        from vostok.tool.joined import scan
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "a.cpp").write_text("/* off\n\tDEBUG_BREAK(); x(); */\n\ta(); b();\n")
+            self.assertEqual([n for _, n, _ in scan(root)], [3])
 
     def test_case_one_liners_and_wrapped_for_headers_are_idioms(self):
         self.assertFalse(is_joined("\tcase kSHOP:\t\tshow( 1 );\tbreak;"))

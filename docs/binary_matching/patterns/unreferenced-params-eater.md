@@ -22,14 +22,18 @@ VOSTOK_UNREFERENCED_PARAMETERS( a, b );  // if(identity(false)){ unreferenced_pa
 ```
 Prefer singular to stay row-free (plural added a 16th row + 0x25 bytes in udp_network_flow_emulator::tick); plural is right when the target row carries the full eater.
 
-UNGUARDED direct call variant: a target whose ENTIRE body is just `push arg2; push arg1; call
-<folded-empty>; add esp,8` (NO `mov byte;lea;call;movzx;test;je` guard, NO `push 0`) is a
-DIRECT `vostok::detail::unreferenced_parameter_helper( a, b )` call - NOT the macro. The macro's
-`if(identity(false)){...}` guard DCE-collapses the whole never-taken block to a bare `ret N`
-(the call never reaches codegen), so the macro produces the WRONG bytes here; only the unguarded
-call survives DCE and emits the eater. A class-reference arg (incomplete type at the call site)
-is passed by ADDRESS - `helper( map_name, &director )` - so it pushes the reference pointer
-(matching `mov eax,[esp+8]; push eax`), not a by-value `rep movsd` copy.
-Evidence: weapon_core_shotgun_reload_state_cook::allocate_resource 41.38->87.45 (the 0x3d row
-byte-for-byte; ASSERT(UNKNOWN_EXPRESSION) had produced only the 0xc half); network_client::load
-(unguarded direct helper call, &director pointer-push, structure-exact - VOSTOK_UNREFERENCED_PARAMETERS collapsed to bare `ret 8`).
+UNGUARDED variant (stubs that must never be called): a target whose body is `mov byte;lea;call
+<eater>` followed DIRECTLY by `push args; call <folded-empty>; add esp,N` - no movzx/test/je - is
+the macro followed by `VOSTOK_UNREACHABLE_CODE( )`. The `__assume(0)` lets MSVC drop the
+`identity(false)` test even at /Od (Wine probe, 2026-09-12), so the never-taken block is emitted
+unconditionally. A reference to a class the retail header only forward-declares is handed over as
+a pointer (`&user, &engine`, `&weight_driving_animation`) - by value the eater would copy the
+object (0x11C `rep movsd` for base_player) and would not compile for an incomplete type; a small
+complete type (`resources::managed_resource_ptr`, `mutable_buffer`) goes by value as usual.
+```cpp
+virtual void activate( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
+```
+Evidence: weapon_ammunition / medkit / oxygen_tank / artefact_lifebone_core activate (43) and
+selected_animations (50), weapon_core_inactive_state on_animation_end / on_specific_event (45) and
+weapon_and_hands_expression (58) - all byte-exact in build 26; network_client::load (the same
+shape in an /Ox TU, `&director`).
