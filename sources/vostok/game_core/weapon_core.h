@@ -75,7 +75,7 @@ public:
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
 			u16									ammo_in_magazine				( ) const;
-	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
+	inline	u16									ammo_in_weapon					( ) const { return m_ammo_in_magazine + ( m_is_round_chambered != false ); }
 
 			u16									maximum_ammo_in_weapon			( ) const;
 
@@ -85,7 +85,7 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
-	inline	bool								ready_to_reload					( ) const { return u16( m_ammo_in_magazine + ( m_is_round_chambered != false ) ) != maximum_ammo_in_weapon( ) && ammunition( ) && ammunition( )->amount( ) != 0 && !m_is_in_sprint_transition && !m_user_animations_selector.is_in_jump( ); }
+	inline	bool								ready_to_reload					( ) const { return ammo_in_weapon( ) != maximum_ammo_in_weapon( ) && ammunition( ) && ammunition( )->amount( ) != 0 && !m_is_in_sprint_transition && !m_user_animations_selector.is_in_jump( ); }
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
 	inline	weapon_targets						get_target						( ) const { return m_target; }

@@ -20,7 +20,7 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 // /Od inline-heuristic ceiling on the shared boost::function machinery, not steerable.
 void weapon_core_aimed_fire_state_base::initialize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
+	set_is_firing( true );
 
 	weapon_core_animation_end_aware_state::initialize( );
 
@@ -61,7 +61,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 
 	m_weapon.remove_animation_callback( "aiming", this );
 
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
+	set_is_firing( false );
 }
 
 // claude@NOTE: paired (@@MAE), structure matches (10/10 stmts); sole residual is a 3-byte
