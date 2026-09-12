@@ -115,7 +115,9 @@ void lobby_client::on_error(
 
 void lobby_client::connect( server_connection_info const& lobby_connection_info )
 {
+	u32 const connection_error_count = m_connection_info.connection_error_count;
 	m_connection_info	= lobby_connection_info;
+	m_connection_info.connection_error_count = connection_error_count;
 	m_packet_client.connect	( m_connection_info.host, m_connection_info.port );
 }
 
@@ -123,12 +125,9 @@ void lobby_client::connect( server_connection_info const& lobby_connection_info 
 void lobby_client::disconnect( )
 {
 	m_net_client_connected	= false;
-
 	if ( m_on_disconnected )
 		m_on_disconnected	( );
-
 	LOG_INFO	( "lobby client initiate disconnect" );
-
 	clear_profile_info	( );
 	m_packet_client.disconnect	( );
 }
@@ -254,10 +253,11 @@ u8 lobby_client::read_profile_content_info( network_core::packet_reader& reader 
 
 	for ( u8 i = 0; i < 3; ++i )
 	{
-		if ( m_profiles[ i ].profile_id == profile.profile_id )
+		player_profile& current_profile = m_profiles[ i ];
+		if ( current_profile.profile_id == profile.profile_id )
 		{
-			m_profiles[ i ]	= profile;
-			m_profiles[ i ].team	= team_undefined;
+			current_profile		= profile;
+			current_profile.team	= team_1;
 			return i;
 		}
 	}
@@ -268,10 +268,10 @@ u8 lobby_client::read_profile_content_info( network_core::packet_reader& reader 
 bool lobby_client::read_enumerate_inventory_info( network_core::packet_reader& reader )
 {
 	u32 const count	= reader.r< u32 >( );
-
 	m_inventory_item_instances.resize	( count );
+	u32 const data_size = count * sizeof( inventory_item_instance );
 	if ( count )
-		reader.r	( &m_inventory_item_instances[ 0 ], count * sizeof( inventory_item_instance ), count * sizeof( inventory_item_instance ) );
+		reader.r	( &m_inventory_item_instances[ 0 ], data_size, data_size );
 
 	return true;
 }
@@ -286,7 +286,6 @@ faction_price const& lobby_client::price(
 u8 lobby_client::read_price_items( network_core::packet_reader& reader )
 {
 	u8 const faction_id	= reader.r< u8 >( );
-
 	faction_price& price	= m_prices[ faction_id ];
 	price.faction_id	= faction_id;
 	price.count			= reader.r< u16 >( );
@@ -294,7 +293,9 @@ u8 lobby_client::read_price_items( network_core::packet_reader& reader )
 	if ( price.count )
 	{
 		price.items	= VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, price_item, price.count );
-		reader.r	( price.items, price.count * sizeof( price_item ), price.count * sizeof( price_item ) );
+
+		u32 const data_size = price.count * sizeof( price_item );
+		reader.r	( price.items, data_size, data_size );
 	}
 
 	return faction_id;
@@ -435,7 +436,7 @@ void lobby_client::set_player_skills( vectora< survarium::player_skill >& skills
 
 	packet.append	( (u8)perks.size( ) );
 	if ( !perks.empty( ) )
-		packet.append	( &perks[ 0 ], perks.size( ) );
+		packet.append	( perks.begin( ), perks.size( ) );
 
 	m_packet_client.send	( packet );
 }
