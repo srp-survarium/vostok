@@ -463,7 +463,8 @@ void grass_patch::merge_instances( )
 					merged_vertices_it->tangent
 				);
 
-				++stream_1_data_it; ++merged_vertices_it;
+				++stream_1_data_it;
+				++merged_vertices_it;
 			}
 
 			current_num_vertices			+=	surface->m_num_vertices;
