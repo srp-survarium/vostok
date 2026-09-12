@@ -46,16 +46,16 @@ float cloud_noise::evaluate( float x, float y, u32 num_octaves )
 
 	for ( u32 octave_index = 0; octave_index < num_octaves; ++octave_index )
 	{
-		float const octave_scale = math::pow( 2.0f, octave_index );
+		u32 const octave_scale = math::floor( math::pow( 2.0f, octave_index ) );
 
 		float const table_x = frac( octave_scale * x ) * 8.0f;
 		float const table_y = frac( octave_scale * y ) * 8.0f;
 
 		u32 const x0 = math::floor( table_x );
-		u32 const x1 = math::min<u32>( x0 + 1, 7u );
+		u32 const x1 = math::min<u32>( math::floor( table_x ) + 1, 7u );
 
 		u32 const y0 = math::floor( table_y );
-		u32 const y1 = math::min<u32>( y0 + 1, 7u );
+		u32 const y1 = math::min<u32>( math::floor( table_y ) + 1, 7u );
 
 		float const alpha_x = frac( table_x );
 		float const alpha_y = frac( table_y );
