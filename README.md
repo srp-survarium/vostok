@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,442 / 13,014 functions exact (80.24%) &middot; 11,090 / 13,014 functions exact-max (85.22%) &middot; 93.43% fuzzy &middot; 95.15% fuzzy-max.**
+**Overall: 10,442 / 13,014 functions exact (80.24%) &middot; 11,090 / 13,014 functions exact-max (85.22%) &middot; 93.44% fuzzy &middot; 95.16% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -52,7 +52,7 @@ _Auto-generated from the consumer-owned objdiff projection plus the independent 
 
 _The projection has 41,977 paired copies across 2,129 units and 145 unresolved blockers. Strict relocation comparison exposes 1,477 otherwise-exact functions (592,037 code bytes) with referent debt._
 
-_The linked-image audit is 99.44% exact and covers 99.47% by PDB type extent, with 99.99% paired-only fidelity (33881 / 33978 definitions). Integrity ratchet: armed._
+_The linked-image audit is 99.44% exact and covers 99.47% by PDB type extent, with 99.99% paired-only fidelity (33883 / 33980 definitions). Integrity ratchet: armed._
 
 _Updated 2026-09-12._
 <!-- data-match:end -->
