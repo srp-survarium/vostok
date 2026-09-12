@@ -183,7 +183,8 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 		for ( u32 i = 0; i < temp_count; ++i )
 		{
 			float const distance = f.planes( )[plane_id].plane.classify( temp[i] );
-			if ( math::is_zero( distance ) || distance > 0.f )
+			if ( math::is_zero( distance ) ||
+				f.planes( )[plane_id].plane.classify( temp[i] ) > 0.f )
 				pos.push_back( temp[i] );
 			float3 intersection_position;
 			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) )
@@ -399,7 +400,7 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 	if ( !cull_points_by_frustum( frustum, points ) )
 		return;
 	float3 const edge0 = points[2] - points[1], edge1 = points[1] - points[0];
-	if ( math::is_zero( edge0.length( ) * edge1.length( ), math::epsilon_3 ) )
+	if ( math::is_zero( edge1.length( ) * edge0.length( ), math::epsilon_3 ) )
 		return;
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_points_for_frustum( points, next_sector_id ) )
@@ -492,7 +493,7 @@ void portal_sector_system::process_portal_in_screen_space(
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
 	aab_rect limited_portal_rect = portals_rects[portal_id];
 	if ( !limiting_rect.contains( portals_rects[portal_id] ) &&
-		!portal_screen_rect_to_four_points( portals_rects[portal_id], far_plane, inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
+		!portal_screen_rect_to_four_points( portals_rects[portal_id], p.get_plane( ), inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
 		return;
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_ss_aab_rect( limited_portal_rect, next_sector_id ) )
@@ -556,11 +557,11 @@ void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
 void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 {
 	portals_type::const_iterator const portals_end = m_structure->get_portals( ).end( );
-	for ( portals_type::const_iterator i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
+	for ( portals_type::const_iterator it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
 	{
-		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
-		float const radius = math::max( math::max( math::squared_length( i->get_points( )[0] - center ), math::squared_length( i->get_points( )[1] - center ) ), math::max( math::squared_length( i->get_points( )[2] - center ), math::squared_length( i->get_points( )[3] - center ) ) );
-		m_occlusion_bounds.push_back( float4( center, math::sqrt( radius ) ) );
+		float3 const center = std::accumulate( &it->get_points( )[0], &it->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
+		float const sqr_radius = math::max( math::max( math::squared_length( it->get_points( )[0] - center ), math::squared_length( it->get_points( )[1] - center ) ), math::max( math::squared_length( it->get_points( )[2] - center ), math::squared_length( it->get_points( )[3] - center ) ) );
+		m_occlusion_bounds.push_back( float4( center, math::sqrt( sqr_radius ) ) );
 	}
 	std::fill( m_occlusion_results.begin( ), m_occlusion_results.end( ), u8( -1 ) );
 }
