@@ -1,0 +1,106 @@
+Survarium\binaries\win32
+❯                Vostok Engine v0.1, build 489, May  9 2013
+                  Copyright(C) Vostok Games - 2013
+      Finger print info: Build 802, 11.05.2013 14:43:44
+
+Global options:
+    -check_all_threads_do_dispatch_callbacks
+    -client                                                                 : connect to server
+    -editor                                                                 : run editor
+    -editor_single_thread [-editor_st]                                      : run editor in single thread
+    -flow_emulator                                                          : use network flow emulator
+    -generate_shader_masks                                                  : generate shader masks config, for shader writers only
+    -generate_shaders
+    -gpu_compressor                                                         : use gpu compressor
+    -help [-h]                                                              : shows this help
+    -lost_packets                                                           : probability of packets being lost on server side (flow emulator)
+    -max_ping                                                               : set maximum ping time in milliseconds (flow emulator)
+    -min_ping                                                               : set minimum ping time in milliseconds (flow emulator)
+    -mouse_lock                                                             : is mouse locked
+    -mouse_unlock                                                           : is mouse locked
+    -navigation_debug_controls                                              : ai navigation debug controls enabled
+    -no_cache_shaders                                                       : disable binary shaders caching
+    -no_effect_result
+    -no_effects_initialize
+    -no_level
+    -no_srgb_textures
+    -one_texture
+    -print_build_id                                                         : prints build id to stdout
+    -spectator                                                              : connect as spectator
+    -sync_effects_creation                                                  : enable sync effects creation
+    -target_test
+    -z_only_0
+    -z_only_1
+
+Animation options:
+    -test_animation
+
+Application options:
+    -build_resources                                                        : runs engine in build resources mode
+    -no_splash_screen                                                       : suppress splash screen on startup
+
+Debug options:
+    -assert_on_cook_failure
+
+File system options:
+    -no_fs_watch                                                            : disables file system changes watching
+
+Fs options:
+    -skip_file_not_found                                                    : doesn't debug break if file is not found
+
+Logging options:
+    -console                                                                : turns on console output
+    -log_to_stdout                                                          : turns on writing to stdout
+    -log_verbosity                                                          : one of: [trace|debug|info|warning|error|silent]
+    -no_log_file [-no_log_file] = <<no arguments>>                          : disables writing log to a file
+    -write_errors_to_stderr
+
+Math options:
+    -floating_point_control_disabled                                        : disables floating point control flags setup for each thread
+    -fpe_disabled                                                           : turns off fpu exceptions
+
+Memory options:
+    -enable_crt_memory_allocator                                            : enables crt memory allocator usage
+    -fill_arenas_with_garbage                                               : fills all the memory in all the arenas with garbage; could slowdown startup significantly!
+    -max_video_memory                                                       : set maximum video memory limit, Mb
+    -minimum_resources_memory_size                                          : set up minimum resources memory size in Mb
+    -no_memory_usage_stats                                                  : disable CRT and GetProcessHeap() memory usage stats detection. Use this option if another program injected thread into application, which uses one of these allocators.
+    -no_warning_on_page_file_size                                           : suppress warning about too many programs open or not enough page file size
+
+Render options:
+    -debug_dx                                                               : create d3d device with D3D_CREATE_DEVICE_DEBUG flag
+    -texture_streaming                                                      : using texture streaming
+
+Resources options:
+    -assert_on_resource_failure [-assert_on_resource_failure]               : asserts when resources loading or cooking failed
+    -max_resources_size                                                     : setup maximum size for resource arenas, Mb
+
+Sound engine options:
+    -debug_audio                                                            : running debug XAudio2 engine
+    -propagators_count                                                      : count of sound_instance_propagator's, default is 64.
+    -speed_of_sound                                                         : speed of sound
+    -xaudio_mono_voices_count [-xaudio_mono_voices]                         : count of mono xaudio voices in voice_factory, default is 64.
+    -xaudio_stereo_voices_count [-xaudio_stereo_voices]                     : count of stereo xaudio voices in voice_factory, default is 64.
+
+Sound rms options:
+    -rms_discreteness [-rms_discr]                                          : set discretization frequency(floats per second). Default 50.
+
+Task system options:
+    -spin_count                                                             : number of trylocks before task system is notified about long lock
+
+Testing options:
+    -no_test_watch                                                          : disables thread that watches for too long tests
+    -run_tests
+    -run_tests_and_exit
+
+Tests options:
+    -suppress_debug_window_on_crash = <boolean>                             : application will not show debug window on crash
+    -terminate_on_timeout = <specify time limit (in seconds) as a first argument>  : application will be terminated after timeout
+
+Threading options:
+    -core_affinity                                                          : string mask with 1 and 0
+    -debug_single_thread                                                    : run all in one thread
+    -dont_check_multithreaded_safety                                        : turn off checks of parallel use of code that is not multithreaded
+
+Vfs options:
+    -mount_mounts_path

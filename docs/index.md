@@ -8,6 +8,8 @@
 * [binary_matching/unanswered_questions.md](binary_matching/unanswered_questions.md) - tooling the matching agent wants but does not have yet.
 
 ### Build & setup
+
+* [Historical v0.100b references](reference/v0.100b/README.md) — console commands, executable help, and original engine source paths preserved from `srp-survarium/gists`.
 * [../README.md](../README.md) — Nix/Linux quickstart (the supported workflow).
 * [materials.md](materials.md) — recovered SDK material authoring, runtime material/effect/shader interaction, and the map-porting workflow.
 * [shaders.md](shaders.md) — shipped shader cache format, permutation recovery, and byte-exact roundtrip validation.
