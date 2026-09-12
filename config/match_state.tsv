@@ -23483,7 +23483,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?get_flash_factory@game@survarium@@QAEAAVflash_factory@2@XZ	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	0	7	f	3232a3381d0f	
 ?get_focused@ui_window@ui@vostok@@UBE_NXZ	vostok/ui/sources/ui_window.h	ui	done	MATCH	100	100	100	1	4	f	29d967e460f7	auto: at 100% ceiling, demoted from queue
 ?get_follow_last_line@ui_scroll_view@ui@vostok@@UBE_NXZ	vostok/ui/sources/ui_scroll_view.h	ui	done	MATCH	100	100	100	1	10	f	df287c12b541	auto: at 100% ceiling, demoted from queue
-?get_foot_fixed_transform@legs_ik_processor@survarium@@ABE?AVfloat4x4@math@vostok@@ABUleg_params@12@ABV345@PBV345@AAM@Z	vostok/game_core/sources/legs_ik_processor.cpp	game_core	inprogress	SPLIT	92.5326	92.5326	92.5326	0	2908		87596f8a9dbc	
+?get_foot_fixed_transform@legs_ik_processor@survarium@@ABE?AVfloat4x4@math@vostok@@ABUleg_params@12@ABV345@PBV345@AAM@Z	vostok/game_core/sources/legs_ik_processor.cpp	game_core	inprogress	SIZE	92.5326	92.5326	92.5326	0	2908		a197bc663401	
 ?get_format_4x4_pixel_size@utils@render@vostok@@YAIW4DXGI_FORMAT@@@Z	vostok/render/core/dx11/sources/utils.cpp	render	done	MATCH	100	100	100	0	8	f	8dbdf46d8629	
 ?get_front_color@ui_progress_bar@ui@vostok@@UBE?AVcolor@math@3@XZ	vostok/ui/sources/ui_progress_bar.cpp	ui	done	MATCH	100	100	100	1	12	f	cc545008814f	auto: at 100% ceiling, demoted from queue
 ?get_frustum_vertices@math@vostok@@YA_NABVfrustum@12@AAY07Vfloat3@12@@Z	vostok/core/sources/math_frustum.cpp	core	done	QUANTITY	100	100	100	1	422	f	6c59dc5993a6	portal selection root and frustum image cone reconstructed from retail PDB topology and disassembly
@@ -23943,7 +23943,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?get_weapon_lexeme_pair@weapon_core_reload_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	vostok/game_core/sources/weapon_core_reload_state.cpp	game_core	done	MATCH	100	100	100	0	155		ac30f0a51f95	
 ?get_weapon_lexeme_pair@weapon_core_shotgun_reload_base_substate@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	vostok/game_core/sources/weapon_core_shotgun_reload_base_substate.cpp	game_core	done	MATCH	100	100	100	0	176		2a5bce826c2d	
 ?get_weapon_lexeme_pair@weapon_core_show_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	vostok/game_core/sources/weapon_core_show_state.cpp	game_core	done	MATCH	100	100	100	0	155		1a5cd1f60e08	
-?get_weapon_lexeme_pair_impl@survarium@@YA?AUweapon_lexeme_pair@1@AAVmutable_buffer@vostok@@PBDABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@PBXABUanimation_playback_state@animation@4@IMW4playback_enum@mixing@84@ABUbase_interpolator@84@@Z	vostok/game_core/sources/weapon_lexeme_pair.cpp	game_core	inprogress	SIZE	97.0847	97.0847	97.0847	0	503		b32c752c45b0	
+?get_weapon_lexeme_pair_impl@survarium@@YA?AUweapon_lexeme_pair@1@AAVmutable_buffer@vostok@@PBDABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@PBXABUanimation_playback_state@animation@4@IMW4playback_enum@mixing@84@ABUbase_interpolator@84@@Z	vostok/game_core/sources/weapon_lexeme_pair.cpp	game_core	inprogress	SIZE	97.0847	97.0847	97.0847	1	503		b32c752c45b0	retail names + frame exact (offset_lexeme hands-only, main lexeme a temporary in return, can_generate_events(false) is the lone byte); residual: animation_lexeme_parameters::playback_type passes in ecx in retail, pushed here (LTCG leaf convention) x2
 ?get_weapon_name_by_id@ai_world@ai@vostok@@UBEPBDII@Z	vostok/ai/sources/ai_world.cpp	ai	done	MATCH	100	100	100	0	176		a5caafb85898	
 ?get_weapons_count@ai_world@ai@vostok@@UBEII@Z	vostok/ai/sources/ai_world.cpp	ai	done	MATCH	100	100	100	0	192		87ee74ff2268	
 ?get_width@flash_text@survarium@@QAEMXZ	vostok/scaleform/sources/movie.cpp	scaleform	done	MATCH	100	100	100	0	35		ba4db35b154c	
@@ -27980,7 +27980,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ray_test@?$render_collision_object@Vrender_model_instance_impl@render@vostok@@@render@vostok@@UBE_NABVfloat3@math@3@0MAAM@Z	vostok/render/engine/sources/render_collision_object.h	render	done	MATCH	100	100	100	0	5	f	5388d799bb23	
 ?ray_test@aabb_object@collision@vostok@@UBE_NABVfloat3@math@3@0MAAM@Z	vostok/collision/sources/aabb_object.cpp	collision	done	MATCH	100	100	100	1	291		d02a6b484433	auto: at 100% ceiling, demoted from queue
 ?ray_test@box_geometry_instance@collision@vostok@@UBE_NABVfloat3@math@3@0MAAM@Z	vostok/collision/sources/box_geometry_instance.cpp	collision	done	MATCH	100	100	100	0	796		a14d6861f085	
-?ray_test@bullet_physics_world@physics@vostok@@UAE?AUclosest_ray_result@23@ABVfloat3@math@3@0MGG@Z	vostok/physics/sources/bullet_physics_world.cpp	physics	inprogress	QUANTITY	91.8384	91.8384	91.8384	0	432		9d8480d71a9a	
+?ray_test@bullet_physics_world@physics@vostok@@UAE?AUclosest_ray_result@23@ABVfloat3@math@3@0MGG@Z	vostok/physics/sources/bullet_physics_world.cpp	physics	inprogress	QUANTITY	91.8384	91.8384	91.8384	0	432		674b630b3899	
 ?ray_test@capsule_geometry_instance@collision@vostok@@EBE_NABVfloat3@math@3@0MAAM@Z	vostok/collision/sources/capsule_geometry_instance.cpp	collision	done	MATCH	100	100	100	0	306	f	d6e48783bffb	
 ?ray_test@collision_object@collision@vostok@@UBE_NABVfloat3@math@3@0MAAM@Z	vostok/collision/sources/collision_object.cpp	collision	done	MATCH	100	100	100	1	36	f	6a309bcce18c	auto: at 100% ceiling, demoted from queue
 ?ray_test@composite_geometry@collision@vostok@@EBE_NABVfloat3@math@3@0MAAM@Z	vostok/collision/sources/composite_geometry.cpp	collision	done	MATCH	100	100	100	0	90	f	336625a290ae	
@@ -32152,7 +32152,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_radiance_occluders_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	0	60	f	36ddd9be1046	
-`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	5773f0ea6f31	
+`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b46aba7c616	
 `dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH		100	100	3	60	f	87d416f4c349	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
@@ -32180,7 +32180,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_portals_occlusion_culling_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH		100	100	0	60	f	26f7581b9f55	
 `dynamic atexit destructor for 's_print_animations_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_process_allocator''	vostok/core/sources/memory.cpp	core	done	MATCH	100	100	100	0	11	f	accc1b9f20fa	
-`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	5773f0ea6f31	
+`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b46aba7c616	
 `dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_shadow_z_near''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_short_statistics''	vostok/render/engine/sources/statistics.cpp	render	done	MATCH		100	100	0	60	f	5cdb712b03ea	
@@ -34024,7 +34024,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `vostok::math::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	1	44		9765f405b48c	auto: at 100% ceiling, demoted from queue
 `vostok::particle::curve_line_points<float,0>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
 `vostok::particle::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
-`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	5773f0ea6f31	
+`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	4b46aba7c616	
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	vostok/physics/sources/bullet_physics_world.cpp	physics	parked	QUANTITY	68.094	68.094	68.094	0	502		bf228fad474c	[BLOCKED] sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	126	f	93e2a9b45c35	
 `vostok::physics::set_memory_allocator'::`6'::`dynamic atexit destructor for 'animated_model_cook''	vostok/physics/sources/physics_entry_point.cpp	physics	done	MATCH	100	100	100	0	11	f	1e3458ea833a	
@@ -34494,11 +34494,11 @@ survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok
 survarium::`dynamic atexit destructor for 's_enable_breath_vibration_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH		100	100	2	60	f	5e7430933d55	
 survarium::`dynamic atexit destructor for 's_freeze_culling''	vostok/game/sources/base_game_scene.cpp	game	done	MATCH		100	100	1	60	f	e45b557ca39d	
-survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		89d30080a23c	
-survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		89d30080a23c	
+survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
+survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
 survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		778ce58ccdc9	
-survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		89d30080a23c	
-survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		89d30080a23c	
+survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
+survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
 survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH		100	100	0	60	f	5e7430933d55	
 survarium::`dynamic atexit destructor for 's_ik_use_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_ik_use_on_legs_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
