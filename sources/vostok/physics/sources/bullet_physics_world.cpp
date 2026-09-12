@@ -339,9 +339,9 @@ closest_ray_result bullet_physics_world::ray_test(
 	btVector3 to = from_vostok( ray_from + ray_dir * ray_length );
 
 	closest_ray_result_callback cb( from, to );
+	cb.m_flags |= 1 << 1;
 	cb.m_collisionFilterGroup = filter_group;
 	cb.m_collisionFilterMask = filter_mask;
-	cb.m_flags |= 1 << 1;
 
 	m_dynamicsWorld->rayTest( from, to, cb );
 
