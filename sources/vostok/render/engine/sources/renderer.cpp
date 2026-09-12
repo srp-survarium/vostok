@@ -683,7 +683,7 @@ void renderer::fill_opaque_models( )
 			if ( me.m_effects[gbuffer_render_stage].c_ptr( ) )
 				opaque_models.push_back( *i );
 		}
-		sort_models( opaque_models, gbuffer_render_stage, 0 );
+		sort_models( m_renderer_context->get_scene_view( )->get_visible_opaque_models( ), gbuffer_render_stage, 0 );
 		return;
 	}
 
@@ -715,16 +715,16 @@ void renderer::fill_opaque_models( )
 
 		float const lod0_threshold = s_debug_use_skeletel_mesh_lods_value && skeletal_mesh ? 0.01f : 0.005f;
 
-		instance->m_shader_lod_index = factor > lod0_threshold ? 0
+		( *i )->m_shader_lod_index = factor > lod0_threshold ? 0
 			: factor <= 0.0000333f && instance->m_render_surface
 				&& instance->m_render_surface->get_vertex_input_type( ) == static_mesh_vertex_input_type ? 2 : 1;
 
 		instance->m_dynamic_screen_factor = factor;
 
-		if ( instance->m_shader_lod_index == 0 )
-			opaque_models_lod0.push_back( instance );
-		else if ( instance->m_shader_lod_index == 1 )
-			opaque_models_lod1.push_back( instance );
+		if ( ( *i )->m_shader_lod_index == 0 )
+			opaque_models_lod0.push_back( *i );
+		else if ( ( *i )->m_shader_lod_index == 1 )
+			opaque_models_lod1.push_back( *i );
 	}
 
 	if ( opaque_models_lod0.size( ) )
@@ -1077,7 +1077,7 @@ void renderer::render(
 
 	present						( output_window, viewport );
 
-	if ( static_cast_checked< render_output_window* >( output_window.c_ptr( ) ) )
+	if ( output_window )
 	{
 
 		if ( s_ui_enabled && static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer )
@@ -1093,7 +1093,7 @@ void renderer::render(
 			backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
 			backend::ref( ).flush( );
 
-			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.begin( ), movies_vec.size( ), text_manager );
+			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.empty( ) ? NULL : movies_vec.begin( ), movies_vec.size( ), text_manager );
 		}
 		backend::ref( ).flush_rt_shader_resources( );
 		scene->flush			( on_draw_scene, false, true );
@@ -1233,9 +1233,9 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 {
 	fixed_string< 64 > strings[8];
 	math::color rgbl_colors[4]				= {
+		math::color( math::color_rgba( 1.f, 0.5f, 0.5f, 1.f ) ),
 		math::color( math::color_rgba( 0.5f, 1.f, 0.5f, 1.f ) ),
 		math::color( math::color_rgba( 0.5f, 0.5f, 1.f, 1.f ) ),
-		math::color( math::color_rgba( 1.f, 0.5f, 0.5f, 1.f ) ),
 		math::color( math::color_rgba( 1.f, 1.f, 1.f, 1.f ) )
 	};
 	const float lum_diffuse					= m_debug_readed_data[0].x * 0.2125f + m_debug_readed_data[0].y * 0.7154f + m_debug_readed_data[0].z * 0.0721f;
@@ -1292,7 +1292,7 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 
 		const u32 char_color				= string_index & 1 ?
 			math::color_rgba( 0.75f, 1.f, 0.75f, 1.f ) :
-			math::color_rgba( 0.5f, 0.75f, 1.f, 1.f );
+			math::color_rgba( 1.f, 0.75f, 0.5f, 1.f );
 
 		draw_text_shadowed	( default_font, render_stage_names[stage_index], 5, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_gpu_time.c_str( ), 201, string_index * 12 + 5, char_color );
@@ -1364,8 +1364,8 @@ void renderer::draw_frame_histogram( ) const
 
 	if ( count > 1 )
 	{
-		system_renderer::ref( ).draw_screen_lines( lines_time, count, math::color( math::color_rgba( 0.f, 1.f, 0.f, 1.f ) ), 1, 0xffffffff, true, true );
-		system_renderer::ref( ).draw_screen_lines( lines_dips, count, math::color( math::color_rgba( .5f, .5f, .7f, 1.f ) ), 1, 0xffffffff, true, true );
+		system_renderer::ref( ).draw_screen_lines( lines_time, count, math::color( math::color_rgba( 1.f, 0.f, 0.f, 1.f ) ), 1, 0xffffffff, true, true );
+		system_renderer::ref( ).draw_screen_lines( lines_dips, count, math::color( math::color_rgba( .1f, .7f, .1f, 1.f ) ), 1, 0xffffffff, true, true );
 	}
 }
 
