@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       20 / 22 (90.9%) |      22 / 22 (100.0%) |  97.9% |    100.0% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-09-12 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-09-13 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -54,7 +54,7 @@ _The projection has 14,393 paired copies across 1,695 units and 31,648 unresolve
 
 _The linked-image audit is 3.99% exact and covers 98.57% by PDB type extent, with 86.38% paired-only fidelity (10658 / 12178 definitions). Integrity ratchet: armed._
 
-_Updated 2026-09-12._
+_Updated 2026-09-13._
 <!-- data-match:end -->
 
 ## Requirements
