@@ -235,8 +235,9 @@ void game_material_manager_cook::on_decals_loaded( resources::queries_result& da
 		{
 			it->pair->set_decal1( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );
+			continue;
 		}
-		else if ( it->type == decal2 )
+		if ( it->type == decal2 )
 		{
 			it->pair->set_decal2( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );

@@ -69,18 +69,18 @@ u16 bt_collision_shape::get_triangle_material( const s32 triangle_id, const bool
 
 void destroy_bt_shape( btCollisionShape* sh )
 {
-	s32 shape_type = sh->getShapeType();
-	if ( shape_type == COMPOUND_SHAPE_PROXYTYPE )
+	if ( sh->getShapeType( ) == COMPOUND_SHAPE_PROXYTYPE )
 	{
 		btCompoundShape* shape = (btCompoundShape*)sh;
+
 		while ( shape->getNumChildShapes( ) )
 		{
 			btCollisionShape* child = shape->getChildList( )->m_childShape;
 			shape->removeChildShapeByIndex( 0 );
 			destroy_bt_shape( child );
 		}
-	}
-	else if ( shape_type == TRIANGLE_MESH_SHAPE_PROXYTYPE )
+	} else
+	if ( sh->getShapeType( ) == TRIANGLE_MESH_SHAPE_PROXYTYPE )
 	{
 		btTriangleMeshShape* shape = (btTriangleMeshShape*)sh;
 		btStridingMeshInterface* mesh = shape->getMeshInterface( );
@@ -121,6 +121,7 @@ btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 co
 			btScalar height = dim.y;
 			result = VOSTOK_NEW_IMPL( g_ph_allocator, btCapsuleShape )( radius, height );
 		}break;
+	default : break;
 	}
 	return result;
 }

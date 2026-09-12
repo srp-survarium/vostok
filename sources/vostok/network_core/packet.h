@@ -46,10 +46,7 @@ private:
 
 	// target mangles AAE (private) - ?reallocate@?$packet@Vtcp_packet..@@AAEXI@Z; only
 	// reserve/resize call it, so the original kept it private.
-	inline	void		reallocate		( u32 new_size )
-	{
-		implementation( ).reallocate( new_size );
-	}
+	inline	void		reallocate		( u32 new_size ) { implementation( ).reallocate( new_size ); }
 }; // class packet
 
 } // namespace network_core

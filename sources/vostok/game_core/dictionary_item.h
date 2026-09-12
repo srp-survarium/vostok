@@ -16,14 +16,7 @@ struct dictionary_item {
 	/* 0x011c */	float							weight;
 
 	// STATE[STUB]: Defined in `items_dictionary_cook.h`.
-			bool	is_ammo			( )
-	{
-		return item_category == 9 // sushi@TODO: There should be an enum for that
-			|| item_category == 18
-			|| item_category == 19
-			|| item_category == 20
-			|| item_category == 21;
-	}
+			bool	is_ammo			( ) { return item_category == 9 || item_category == 18 || item_category == 19 || item_category == 20 || item_category == 21; } // sushi@TODO: There should be an enum for that
 }; // struct dictionary_item
 
 STATIC_SIZE_ASSERT(dictionary_item, 0x120);

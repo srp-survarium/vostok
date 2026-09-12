@@ -147,8 +147,8 @@ public:
 				match_mode_			= (game_mode_type)reader.r< u8 >( );
 				players_count		= reader.r< u8 >( );
 				victory_items_count	= reader.r< u8 >( );
-				respawn_time		= reader.r< u8 >( ); match_time = reader.r< u16 >( );
-
+				respawn_time		= reader.r< u8 >( );
+				match_time			= reader.r< u16 >( );
 				match_id			= 0xFFFFFFFF;
 				received_players_count	= 0xFF;
 			}
