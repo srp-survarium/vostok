@@ -232,7 +232,8 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = math::abs( m_shape_offset.y( ) ); btManifoldArray manifold_array;
+	float shape_y = math::abs( m_shape_offset.y( ) );
+	btManifoldArray manifold_array;
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{
@@ -368,7 +369,8 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	BT_PROFILE("step_down");
 
 	btTransform start;
-	start.setIdentity( );	start.setOrigin( m_current_pos );
+	start.setIdentity( );
+	start.setOrigin( m_current_pos );
 
 	float step_height = m_vertical_velocity < 0.f ? -m_vertical_velocity * dt : 0.f;
 	if ( s_step_height > step_height && m_was_on_ground )

@@ -76,7 +76,10 @@ inline void scheduler::unregister( scheduler::id_type* identifier )
 	scheduler::OBJECTS& records = objects( identifier );
 
 
-	scheduler::record& src = records.back( ); scheduler::record& dst = records[identifier->m_id]; dst = src;
+	scheduler::record& src = records.back( );
+	scheduler::record& dst = records[identifier->m_id];
+
+	dst = src;
 	dst.m_id->m_id = identifier->m_id;
 	records.pop_back( );
 
