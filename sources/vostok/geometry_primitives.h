@@ -141,6 +141,7 @@ namespace cylinder_solid {
 
 	extern VOSTOK_CORE_API const u32 face_count; 
 	extern VOSTOK_CORE_API const u32 index_count; 
+	extern VOSTOK_CORE_API const u32 index_count_no_caps;
 	extern VOSTOK_CORE_API const u16 faces[];
 } //namespace cylinder_solid 
 
