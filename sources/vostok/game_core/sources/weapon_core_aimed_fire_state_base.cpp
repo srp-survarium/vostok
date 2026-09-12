@@ -12,15 +12,15 @@ weapon_core_aimed_fire_state_base::weapon_core_aimed_fire_state_base( weapon_cor
 {
 }
 
-// claude@NOTE: paired (@@MAE), structure matches (6/6 stmts after folding ASSERT +
-// *m_is_firing_ptr into one statement). Residual is a boost::function inlining divergence
-// on the SECOND set_animation_callback: the target inlines function1<>::assign_to (exposing
-// basic_vtable1::assign_to + the conditional flag path, like the first bind) but MSVC here
-// emits an out-of-line function1<>::assign_to for the second, shifting the frame by 8 bytes.
-// /Od inline-heuristic ceiling on the shared boost::function machinery, not steerable.
+// Preserve the retail __LINE__ geometry of LOG_WARNING below.
+
+
+
+
+
 void weapon_core_aimed_fire_state_base::initialize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
+	set_is_firing( true );
 
 	weapon_core_animation_end_aware_state::initialize( );
 
@@ -61,7 +61,7 @@ void weapon_core_aimed_fire_state_base::finalize( )
 
 	m_weapon.remove_animation_callback( "aiming", this );
 
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
+	set_is_firing( false );
 }
 
 // claude@NOTE: paired (@@MAE), structure matches (10/10 stmts); sole residual is a 3-byte
