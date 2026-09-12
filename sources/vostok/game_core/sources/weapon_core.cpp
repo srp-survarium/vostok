@@ -757,7 +757,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 	m_dispersion_calculator.set_weapon( this );
 	m_recoil_calculator.set_weapon( this );
 
-	set_transform( user.get_transform( ) );
+	m_transform = user.get_transform( );
 	set_fire_bullet_transform( user.get_transform( ) );
 
 	m_user = &user;
@@ -772,7 +772,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 	m_hand_ik_processor.activate( user.skeleton( ), *m_skeleton );
 	m_legs_ik_processor.activate( user.skeleton( ) );
 
-	m_legs_ik_processor.set_character_controller( &get_user( )->physics_controller( ) );
+	m_legs_ik_processor.set_character_controller( &m_user->physics_controller( ) );
 
 	m_user_animations_selector.activate( user, boost::bind( &weapon_core::on_user_sprint, this, false ), boost::bind( &weapon_core::on_user_sprint, this, true ) );
 
@@ -782,8 +782,8 @@ void weapon_core::activate( base_player& user, engine& engine )
 	profile_slot_enum ammo1_slot = get_ammo_slot( first_ammo );
 	profile_slot_enum ammo2_slot = get_ammo_slot( second_ammo );
 
-	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1 = get_inventory( ).item_in_slot( ammo1_slot );
-	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2 = get_inventory( ).item_in_slot( ammo2_slot );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1 = m_inventory->item_in_slot( ammo1_slot );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2 = m_inventory->item_in_slot( ammo2_slot );
 
 	if ( ammo1 )
 		set_ammunition( static_cast< weapon_ammunition* >( ammo1.c_ptr( ) ) );

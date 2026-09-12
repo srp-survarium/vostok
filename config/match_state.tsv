@@ -18913,7 +18913,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?activate@legs_ik_processor@survarium@@QAEXABVskeleton@animation@vostok@@@Z	vostok/game_core/sources/legs_ik_processor.cpp	game_core	inprogress	SIZE	68.6	68.6	100	0	97		55980cbf03e0	
 ?activate@weapon@survarium@@EAEXAAUbase_player@2@AAUengine@2@@Z	vostok/game/sources/weapon.cpp	game	inprogress	SPLIT	73.5503	73.5503	73.5503	0	1100		96ca9e6da95d	
 ?activate@weapon_ammunition@survarium@@EAEXAAUbase_player@2@AAUengine@2@@Z	vostok/game_core/artefact_lifebone_core.h	game_core	done	MATCH	100	100	100	1	43		61dccfe23b06	retail PDB records one line for the whole body: body on the brace line (structure MATCH)
-?activate@weapon_core@survarium@@UAEXAAUbase_player@2@AAUengine@2@@Z	vostok/game_core/sources/weapon_core.cpp	game_core	inprogress	SPLIT	79.4095	79.4095	82.1598	0	4302		8438285b60fb	
+?activate@weapon_core@survarium@@UAEXAAUbase_player@2@AAUengine@2@@Z	vostok/game_core/sources/weapon_core.cpp	game_core	inprogress	SPLIT	82.2214	82.2214	82.2214	0	4302		81181e52b04b	
 ?activate@weapon_user_animations_selector@survarium@@QAEXAAUbase_player@2@ABV?$function@$$A6AXXZ@boost@@1@Z	vostok/game_core/sources/weapon_user_animations_selector.cpp	game_core	inprogress	SIZE	63.2941	63.2941	63.2941	0	285		d7344b9fbd55	
 ?activate_hand@fingers_to_weapon_corrector@survarium@@QAEXW4hands_enum@12@_NI@Z	vostok/game/sources/fingers_to_weapon_corrector.cpp	game	done	MATCH	100	100	100	0	39	f	eb828648772a	
 ?activate_hand@hand_to_weapon_ik_processor@survarium@@QAEXW4hands_enum@12@_NI@Z	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	99		c0ac519ace95	
