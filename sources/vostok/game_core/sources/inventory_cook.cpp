@@ -26,7 +26,7 @@ inventory_cook::inventory_cook( ) :
 	resources::register_cook( this );
 	static items_cook				s_items_cook;
 	static damage_model_cook 		s_damage_model_cook;
-	static weapon_ammunition_cook	s_weapon_ammunition_cook;;
+	static weapon_ammunition_cook	s_weapon_ammunition_cook;
 }
 
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )

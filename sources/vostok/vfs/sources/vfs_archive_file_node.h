@@ -47,7 +47,7 @@ archive_file_node<T> *   cast_archive_file (base_node<T> * node)
 	if ( node->is_folder() || !node->is_archive() || node->is_compressed() || node->is_inlined() )
 		return								NULL;
 
-	return									cast_base_node_to< archive_file_node<T> >(node);;
+	return									cast_base_node_to< archive_file_node<T> >(node);
 }
 
 template <platform_pointer_enum T>
