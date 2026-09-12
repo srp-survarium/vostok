@@ -13,7 +13,7 @@
 #include <vostok/sound/sound_emitter.h>
 #include <vostok/sound/sound_type.h>
 #include <vostok/sound/atomic_half3.h>
-#include "new_sound_propagator.h"
+#include "sound_propagator.h"
 
 namespace vostok {
 

@@ -3,7 +3,7 @@
 #ifndef SOUND_UNIQUE_PROPAGATOR_INFO_H_INCLUDED
 #define SOUND_UNIQUE_PROPAGATOR_INFO_H_INCLUDED
 
-#include "new_sound_propagator.h"
+#include "sound_propagator.h"
 #include "sound_voice_params.h"
 
 namespace vostok {
