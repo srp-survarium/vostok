@@ -59,11 +59,7 @@ public:
 
 	// claude@MATCH: positive guard, no early return - the target's single `jne`
 	// over the call (an `if ( x ) return;` shape emits je + jmp instead)
-	inline	void				send_queued_packets		( const u32 current_time_in_ms )
-	{
-		if ( !is_disconnected( ) )
-			m_client.send_queued_packets	( current_time_in_ms );
-	}
+	inline	void				send_queued_packets		( const u32 current_time_in_ms ) { if ( !is_disconnected( ) ) m_client.send_queued_packets( current_time_in_ms ); }
 
 	inline	bool				is_connected			( ) const { return m_client.is_connected( ); }
 	inline	bool				is_disconnected			( ) const { return m_client.is_disconnected( ); }
