@@ -41,9 +41,8 @@ flash_text flash_text_manager::create_text( pcstr text )
 	result.text_impl	= text_manager_impl->CreateText( text, Scaleform::Render::RectF( 0.f, 0.f, extent.Width, extent.Height ) );
 
 	result.visible		= true;
-
-	need_capture		= true; result.owner	= this;
-
+	result.owner		= this;
+	need_capture		= true;
 	return result;
 }
 
@@ -56,9 +55,8 @@ flash_text flash_text_manager::create_text_w( wchar_t* text )
 	result.text_impl	= text_manager_impl->CreateText( text, Scaleform::Render::RectF( 0.f, 0.f, extent.Width, extent.Height ) );
 
 	result.visible		= true;
-
-	need_capture		= true; result.owner	= this;
-
+	result.owner		= this;
+	need_capture		= true;
 	return result;
 }
 

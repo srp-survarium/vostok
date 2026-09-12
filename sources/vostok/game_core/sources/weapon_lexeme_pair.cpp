@@ -33,7 +33,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	offset_lexeme_parameters.weight_interpolator					( interpolator_for_offset_lexeme );
 	offset_lexeme_parameters.time_scale								( time_scale );
 	offset_lexeme_parameters.time_synchronization_group_id			( time_synchronization_group );
-	// sushi@TODO: target line 40 here is a lone 4-byte `mov byte[ebp-5],0` (<0x4> at 0x72, no lea/call, no PDB local) - a compiler-materialized bool temp; do not fabricate a local. trail: patterns/lone-byte-store-zero.md
+	offset_lexeme_parameters.can_generate_events					( false );
 	animation::mixing::animation_lexeme offset_lexeme( offset_lexeme_parameters );
 
 	animation::mixing::animation_lexeme_parameters main_lexeme_parameters( buffer, identifier, animation, time_synchronization_group != u32( -1 ) ? &offset_lexeme : NULL, NULL );
