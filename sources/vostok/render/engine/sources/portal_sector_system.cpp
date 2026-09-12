@@ -186,15 +186,20 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 			if ( math::is_zero( distance ) || distance > 0.f )
 				pos.push_back( temp[i] );
 			float3 intersection_position;
-			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) &&
-				( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) ) )
-				pos.push_back( intersection_position );
+			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) )
+			{
+				if ( pos.empty( ) || !intersection_position.is_similar( pos.back( ) ) )
+					pos.push_back( intersection_position );
+			}
 		}
 		if ( pos.size( ) < 3 )
 			return false;
 		temp.clear( );
 		std::copy( pos.begin( ), pos.end( ), std::back_inserter( temp ) );
 	}
+
+	if ( pos.size( ) < 3 )
+		return false;
 
 	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
 	u32 longest_edge_id = 0;
@@ -221,9 +226,9 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	world_to_local.try_invert( local_to_world );
 	wm_vertices_2d_buffer_type wm_vertices_2d( ALLOCA( pos.size( ) * sizeof( wm_vertex_2d ) ), pos.size( ) );
 
-	for ( u32 i = 0; i < pos.size( ); ++i )
+	for ( vertices_buffer_type::const_iterator i = pos.begin( ); i != pos.end( ); ++i )
 	{
-		float3 const local_position = world_to_local.transform_position( pos[i] );
+		float3 const local_position = world_to_local.transform_position( *i );
 		wm_vertices_2d.push_back( wm_vertex_2d( local_position.x, local_position.y ) );
 	}
 	Wm4::Box2< float > min_box = Wm4::ContMinBox( wm_vertices_2d.size( ), &wm_vertices_2d.front( ), 0.f, Wm4::Query::QT_REAL, false );
@@ -661,15 +666,13 @@ u32 get_aabb_furthest_vertex_id( float3 const view_dir )
 void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
 	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
-	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
+	buffer_vector< float3 > furthest_vertices( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ), m_structure->get_sectors( ).size( ) );
 	sectors_type::const_iterator const sectors_end = m_structure->get_sectors( ).end( );
-	float3* output = furthest_vertices;
-	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i )
 	{
-		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id );
-		new ( output ) float3( furthest_vertex );
+		furthest_vertices.push_back( i->get_aabb( ).vertex( furthest_vertex_id ) );
 	}
-	m_preventer->make_frustum_images( furthest_vertices );
+	m_preventer->make_frustum_images( furthest_vertices.begin( ) );
 }
 
 } // namespace culling

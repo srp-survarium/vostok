@@ -6,6 +6,8 @@ One line per pattern: `- [title](file.md) — cN — tags — symptoms` (cN = co
 Authoring: new pattern = new file (schema in `../assembly_patterns.md`) + one
 line here, same commit.
 
+- [A returned value copied after the null guard can be buffer_vector::push_back](buffer-vector-insertion-preserves-return-temporary.md) — c9 — cpp:template cpp:new-delete cpp:call | asm:call asm:test asm:mov | topic:structure-shape topic:source-fidelity — value call into temporary before destination test and copy; direct placement new elides the target copy; existing const-reference insertion restores one statement
+
 - [A `??__E<cc_static>` initializer looks argument-less: read the args out of the shipped `.data`](cc-static-args-from-data-section.md) — c9 — cpp:static cpp:ctor cpp:console-command | asm:mov asm:movss asm:call | topic:data-section topic:dynamic-initializer topic:recovery-technique — unpaired `dynamic initializer for '<cc_*>'`, note claims the command-NAME string is unrecoverable; m_name/m_command_type/m_serializable are constant-folded into .data, read them at obj+0x10/0x14/0x1D in survarium.exe (image base 0x10000); target cc_bool derives from cc_value<bool> and re-sets m_need_args in its own body
 
 - [Rich-index exact evidence fills an objdiff score gap](rich-index-exact-fills-objdiff-gap.md) — c9 — cpp:comdat cpp:inline | topic:measurement topic:pairing topic:scoring-artifact — equal normalized streams, including uniquely PDB-proven ICF aliases at otherwise identical calls/jumps, establish function-scoped exactness when objdiff omits the score
