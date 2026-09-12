@@ -5264,7 +5264,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0blackboard@ai@vostok@@QAE@XZ	vostok/ai/sources/blackboard.cpp	ai	done	MATCH	100	100	100	0	171		0b56d40c0630	
 ??0bloom_shader_constants@render@vostok@@QAE@XZ	vostok/render/engine/sources/stage_postprocess.cpp	render	done	MATCH	100	100	100	1	188	f	f9dcb3a62d66	Exact 188-byte size, 2-statement structure, and 11-block CFG; remaining diff is address/relocation attribution.
 ??0body_part_parameters@survarium@@QAE@PBDMMM_NAAVdamage_model@1@E@Z	vostok/game_core/sources/body_part_parameters.cpp	game_core	inprogress	MATCH	94.1724	99.7241	99.7241	0	354		77c9d7b9d8a5	
-??0body_part_parameters_modifyer@survarium@@QAE@ABU01@@Z	vostok/type_variant_inline.h	vostok	done	MATCH	100	100	100	0	64		3fce0d7fb78b	
+??0body_part_parameters_modifyer@survarium@@QAE@ABU01@@Z	vostok/type_variant_inline.h	vostok	done	MATCH	100	100	100	0	64		e846097661e8	
 ??0bone_collision_data@collision@vostok@@QAE@ABV012@@Z	vostok/collision/hit_targets_creation_utils_inline.h	collision	done	MATCH	100	100	100	0	102	f	a3c41e6b5fa6	
 ??0bone_collision_data@collision@vostok@@QAE@PBDPAVgeometry_instance@12@0@Z	vostok/collision/bone_collision_data.h	collision	done	MATCH	100	100	100	0	74	f	9a34355f0ff1	
 ??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z	vostok/animation/sources/bone_matrices_computer.cpp	animation	inprogress	SIZE	82.3762	82.3762	82.3762	0	314	f	8c81eed0faa5	
@@ -6992,7 +6992,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1main_menu@survarium@@UAE@XZ	vostok/game/sources/main_menu.cpp	game	done	MATCH	100	100	100	0	28	f	0b56d40c0630	
 ??1managed_node_owner@memory@vostok@@UAE@XZ	vostok/core/sources/managed_node_owner.cpp	core	done	MATCH	100	100	100	0	7	f	bc4f5ca9911b	
 ??1managed_resource@resources@vostok@@UAE@XZ	vostok/core/sources/resources_managed_resource.cpp	core	done	MATCH	100	100	100	0	91	f	4cb105535e15	
-??1manager@shared@strings@vostok@@QAE@XZ	vostok/core/sources/strings_shared_manager.cpp	core	inprogress	SPLIT	94.9516	94.9516	94.9516	0	562		7d023d606000	
+??1manager@shared@strings@vostok@@QAE@XZ	vostok/core/sources/strings_shared_manager.cpp	core	done	MATCH	100	100	100	0	562		7d023d606000	
 ??1match_client@network@vostok@@QAE@XZ	vostok/network/sources/match_client.cpp	network	parked	SIZE	52.5699	52.5699	52.5699	1	328		ca48c7f628b0	Target statements and flow match. Residuals are Boost lowering, allocator/delete ICF, or intrusive_ptr inline-versus-call ownership; reopen after the shared intrusive_ptr audit or compiler-context changes.
 ??1match_client@survarium@@QAE@XZ	vostok/game/sources/match_client.cpp	game	done	MATCH	100	100	100	0	5	f	137f554ee0f6	
 ??1match_client_impl@network@vostok@@QAE@XZ	vostok/network/sources/match_client_impl.cpp	network	parked	MATCH	93.3333	93.3333	93.3333	1	104		1bab8224434f	Target statements and flow match. Residuals are Boost lowering, allocator/delete ICF, or intrusive_ptr inline-versus-call ownership; reopen after the shared intrusive_ptr audit or compiler-context changes.
@@ -7592,8 +7592,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??EFormatRunIterator@Paragraph@Text@Render@Scaleform@@QAEXXZ	src/render/text/text_styledtext.cpp	gfx	done	MATCH	100	100	100	0	73	f		
 ??EGlyphIterator@LineBuffer@Text@Render@Scaleform@@QAEXXZ	src/render/text/text_linebuffer.cpp	gfx	done	MATCH	100	100	100	0	96	f		
 ??EHighlighterRangeIterator@Text@Render@Scaleform@@QAEXH@Z	src/render/text/text_highlight.cpp	gfx	done	MATCH	100	100	100	0	24	f		
-??Eiterator@?$hash_multiset@Vname_registry_entry@resources@vostok@@PAV123@$0M@V?$fixed_size_policy@$0IAAA@@detail@3@Uname_registry_hash@523@Uname_registry_equal@523@Vsingle_threading_policy@threading@3@@vostok@@QAE?AV012@XZ	vostok/hash_multiset_inline.h	vostok	inprogress	QUANTITY	75.8824	75.8824	75.8824	0	133	f	00262446fec3	
-??Eiterator@?$hash_multiset@Vprofile@shared@strings@vostok@@PAV1234@$03V?$fixed_size_policy@$0IAAA@@detail@4@Uhash_function@manager@234@U78234@Vsingle_threading_policy@threading@4@@vostok@@QAE?AV012@XZ	vostok/hash_multiset_inline.h	vostok	parked	QUANTITY	75.8824	75.8824	75.8824	1	133	f	00262446fec3	Pinned /Ox+/GL probe reproduces the candidate's 132-byte pointer-scan sequence from this source. Retail's 133-byte copies receive iterator this in EDX while current real callers assign ESI, causing register-only instruction and line-attribution drift; the temporary /include anchor was removed.
+??Eiterator@?$hash_multiset@Vname_registry_entry@resources@vostok@@PAV123@$0M@V?$fixed_size_policy@$0IAAA@@detail@3@Uname_registry_hash@523@Uname_registry_equal@523@Vsingle_threading_policy@threading@3@@vostok@@QAE?AV012@XZ	vostok/hash_multiset_inline.h	vostok	inprogress	SIZE	83.902	83.902	83.902	0	133	f	0937a3084c8a	
+??Eiterator@?$hash_multiset@Vprofile@shared@strings@vostok@@PAV1234@$03V?$fixed_size_policy@$0IAAA@@detail@4@Uhash_function@manager@234@U78234@Vsingle_threading_policy@threading@4@@vostok@@QAE?AV012@XZ	vostok/hash_multiset_inline.h	vostok	parked	SIZE	83.902	83.902	83.902	1	133	f	0937a3084c8a	Pinned /Ox+/GL probe reproduces the candidate's 132-byte pointer-scan sequence from this source. Retail's 133-byte copies receive iterator this in EDX while current real callers assign ESI, causing register-only instruction and line-attribution drift; the temporary /include anchor was removed.
 ??En_ary_tree_animation_event_iterator@mixing@animation@vostok@@QAEAAV0123@XZ	vostok/animation/sources/mixing_n_ary_tree_animation_event_iterator.cpp	animation	done	MATCH	100	100	100	0	14	f	b01a12c80df1	
 ??En_ary_tree_event_iterator@mixing@animation@vostok@@QAEAAV0123@XZ	vostok/animation/sources/mixing_n_ary_tree_event_iterator.cpp	animation	done	MATCH	100	100	100	1	43	f	6f4505ab4b2d	Target/base are both 43 bytes with identical CFG; only return-this scheduling moves across the select_state call, leaving one PDB statement row.
 ??En_ary_tree_weight_event_iterator@mixing@animation@vostok@@QAEAAV0123@XZ	vostok/animation/sources/mixing_n_ary_tree_weight_event_iterator.cpp	animation	done	MATCH	100	100	100	1	77	f	3d0c95d5e5b9	complete TU reconstructed and structure-audited
@@ -21219,7 +21219,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?debug_draw@simple_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/simple_animation_controller.cpp	game	done	MATCH	100	100	100	0	3	f	137f554ee0f6	
 ?debug_draw@single_position_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/single_position_animation_controller.cpp	game	inprogress	SIZE	69.5208	74.9896	74.9896	0	330		80a570f423aa	
 ?debug_draw_allowed@human_npc@survarium@@UBE_NXZ	vostok/game/sources/human_npc.cpp	game	done	MATCH	100	100	100	0	6	f	c288699978a2	
-?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	vostok/physics/sources/bullet_physics_world.cpp	physics	inprogress	QUANTITY	78.5733	78.5733	78.5733	1	261		fa487ea00fd9	declaring object_colors before the loop does not stop the hoisted template + per-iteration movdqa copy; retail stores the constants inside the loop each iteration
+?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	vostok/physics/sources/bullet_physics_world.cpp	physics	done	SPLIT	100	100	100	1	261		b3e7f48faf5d	declaring object_colors before the loop does not stop the hoisted template + per-iteration movdqa copy; retail stores the constants inside the loop each iteration
 ?debug_engine@debug@vostok@@YAPAUengine@12@XZ	vostok/debug/sources/debug.cpp	debug	done	MATCH	100	100	100	0	10		c9546a44dfff	
 ?debug_log_callback@core@vostok@@YAXPBD_N10@Z	vostok/core/sources/logging_extensions.cpp	core	inprogress	MATCH	99.9872	99.9872	100	1	437		9845038f46e6	Restored the direct forced append expansions and emitted log-site line values; byte exact.
 ?debug_message_box@debug@vostok@@YAXPBD@Z	vostok/debug/sources/debug_win.cpp	debug	done	MATCH	100	100	100	0	24		d96887155c71	
@@ -22693,7 +22693,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?finalize_impl@process_allocator@memory@vostok@@EAEXXZ	vostok/core/sources/memory_process_allocator.cpp	core	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
 ?finalize_impl@pthreads3_allocator@memory@vostok@@EAEXXZ	vostok/core/sources/memory_pthreads3_allocator.cpp	core	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
 ?finalize_impl@stack_allocator@memory@vostok@@MAEXXZ	vostok/core/sources/memory_stack_allocator.cpp	core	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
-?finalize_name_registry@resources_manager@resources@vostok@@AAEXXZ	vostok/core/sources/resources_manager.cpp	core	inprogress	SIZE	92.1429	97.8163	97.8163	0	164	f	ec7b745f181e	
+?finalize_name_registry@resources_manager@resources@vostok@@AAEXXZ	vostok/core/sources/resources_manager.cpp	core	done	MATCH	100	100	100	0	164	f	ec7b745f181e	
 ?finalize_nomaterial_material@material@render@vostok@@SAXXZ	vostok/render/engine/sources/material.cpp	render	done	MATCH	100	100	100	0	81	f	7baf9739acc5	
 ?finalize_resources@core@vostok@@YAXXZ	vostok/core/sources/core_entry_point.cpp	core	done	MATCH	100	100	100	0	23	f	beeb6da70a08	
 ?finalize_resources@engine_world@engine@vostok@@AAEXXZ	vostok/engine/sources/engine_world_resources.cpp	engine	done	MATCH	100	100	100	0	729	f	6fdb5fde291c	
@@ -28246,7 +28246,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?remove@collision_sensor@survarium@@QAEXXZ	vostok/game_core/sources/collision_sensor.cpp	game_core	done	MATCH	100	100	100	2	599		da40f6e25f9f	[PARTIAL 93.08%] target INLINES `m_old_objects.empty()`; our base keeps it an out-of-line call. | game_core loop-2 closeout: non-steerable residual on VERIFIED structure (named-locals + statement structure match the target; bytes capped by toolchain). SIZE/SPLIT/unpaired = inline-vs-call (intrusive_ptr operator*/base-ctor/packet r<>+append/reset()/delete_helper/has_animation_ended/COMDAT). QUANTITY parked = cross-module-blocked (cc_bool/console_command recoil trio+on_skeleton+process_finger; scheduler optimized-COMDAT; get_weapon_lexeme temp idiom; finalize/apply inline wall) or structure-match-at-byte-ceiling. Per-fn detail in claude@NOTE.
 ?remove@hittable_object@survarium@@QAEXXZ	vostok/game_core/sources/hittable_object.cpp	game_core	done	MATCH	100	100	100	0	73		0b590bdf4cba	
 ?remove@inventory@survarium@@QAEXXZ	vostok/game_core/sources/inventory.cpp	game_core	done	MATCH	100	100	100	0	76		bd22ab0f073a	
-?remove@manager@shared@strings@vostok@@QAEXPAVprofile@234@@Z	vostok/core/sources/strings_shared_manager.cpp	core	inprogress	SIZE	94.1667	94.1667	94.1667	0	100	f	3393260461c5	
+?remove@manager@shared@strings@vostok@@QAEXPAVprofile@234@@Z	vostok/core/sources/strings_shared_manager.cpp	core	done	MATCH	100	100	100	0	100	f	3393260461c5	
 ?remove@object_ambient_volume@survarium@@UAEXXZ	vostok/game/sources/object_ambient_volume.cpp	game	done	MATCH	100	100	100	1	48	f	e80b7475645f	
 ?remove@object_decal@survarium@@UAEXXZ	vostok/game/sources/object_decal.cpp	game	done	MATCH	100	100	100	0	39	f	92515a0156bb	
 ?remove@object_environment@survarium@@UAEXXZ	vostok/game/sources/object_environment.cpp	game	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
@@ -30086,7 +30086,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?strengthSet@BevelFilter@fl_filters@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@N@Z	src/gfx/as3/obj/filters/as3_obj_filters_bevelfilter.cpp	gfx	done	MATCH	100	100	100	0	33	f		
 ?strengthSet@DropShadowFilter@fl_filters@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@N@Z	src/gfx/as3/obj/filters/as3_obj_filters_glowfilter.cpp	gfx	done	MATCH	100	100	100	0	21	f		
 ?strengthenImage@GlyphCache@Render@Scaleform@@AAEXPAEIIIIIMH@Z	src/render/render_glyphcache.cpp	gfx	done	MATCH	100	100	100	0	142	f		
-?string@manager@shared@strings@vostok@@QAEPAVprofile@234@PBD@Z	vostok/core/sources/strings_shared_manager.cpp	core	parked	MATCH	99.9485	99.9485	99.9485	1	265		a36fee341c5c	Target retains create_temp and hash iterator increment; candidate inlines both because its Boost CRC process_block is also inlined. Recheck after core call graph is restored.
+?string@manager@shared@strings@vostok@@QAEPAVprofile@234@PBD@Z	vostok/core/sources/strings_shared_manager.cpp	core	done	MATCH	100	100	100	1	265		a36fee341c5c	Target retains create_temp and hash iterator increment; candidate inlines both because its Boost CRC process_block is also inlined. Recheck after core call graph is restored.
 ?string_to_evaluate_type@math@vostok@@YA?AW4enum_evaluate_type@12@PBD@Z	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	0	111	f	12a4c4530848	
 ?string_to_evaluate_type@particle@vostok@@YA?AW4enum_evaluate_type@12@PBD@Z	vostok/particle/sources/evaluate_type.cpp	particle	done	MATCH	100	100	100	0	63		d6c540faeee5	
 ?string_to_verbosity@logging@vostok@@YA?AW4verbosity@12@PBD@Z	vostok/logging/sources/filter_tree.cpp	logging	parked	MATCH	99.9677	99.9677	99.9677	1	115		9a45ede3e55c	[DONE 80%] core strings::compare_insensitive called out-of-line in target (ecx/eax conv), inlined to __stricmp in base. | logging: structure + named-locals MATCH the target (verified). Byte residual = /Od helper inline-depth wall (target keeps a small inline/template helper - buffer_string ops, math::min, strings::copy, compare_insensitive, boost-intrusive find/iterator - OUT-of-line; our /Od base inlines one level deeper with unnamed temps) + varargs/boost::function. Not source-steerable. See od-helper-inline-depth-wall.md.
@@ -32152,7 +32152,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_radiance_occluders_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	0	60	f	36ddd9be1046	
-`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b46aba7c616	
+`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	59a1d53f617b	
 `dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH		100	100	3	60	f	87d416f4c349	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
@@ -32180,7 +32180,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_portals_occlusion_culling_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH		100	100	0	60	f	26f7581b9f55	
 `dynamic atexit destructor for 's_print_animations_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_process_allocator''	vostok/core/sources/memory.cpp	core	done	MATCH	100	100	100	0	11	f	accc1b9f20fa	
-`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b46aba7c616	
+`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	59a1d53f617b	
 `dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_shadow_z_near''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_short_statistics''	vostok/render/engine/sources/statistics.cpp	render	done	MATCH		100	100	0	60	f	5cdb712b03ea	
@@ -34024,7 +34024,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `vostok::math::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	1	44		9765f405b48c	auto: at 100% ceiling, demoted from queue
 `vostok::particle::curve_line_points<float,0>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
 `vostok::particle::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
-`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	4b46aba7c616	
+`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	59a1d53f617b	
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	vostok/physics/sources/bullet_physics_world.cpp	physics	parked	QUANTITY	68.094	68.094	68.094	0	502		bf228fad474c	[BLOCKED] sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	126	f	93e2a9b45c35	
 `vostok::physics::set_memory_allocator'::`6'::`dynamic atexit destructor for 'animated_model_cook''	vostok/physics/sources/physics_entry_point.cpp	physics	done	MATCH	100	100	100	0	11	f	1e3458ea833a	
