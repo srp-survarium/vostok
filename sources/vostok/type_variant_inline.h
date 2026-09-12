@@ -159,7 +159,10 @@ variant<MaxSize>::~variant ()
 template <int MaxSize>
 void   variant<MaxSize>::destroy_previous_variable_if_needed	()
 {
-	if ( m_helper ) { m_helper->destroy( m_storage ); m_helper = NULL; }
+	if ( !m_helper )
+		return;
+	m_helper->destroy		(m_storage);
+	m_helper			=	NULL;
 }
 
 } // namespace vostok
