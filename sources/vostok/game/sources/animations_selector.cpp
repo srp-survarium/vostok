@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "animations_selector.h"
 #include "game_world.h"				// m_game_world.get_game() ...
 #include "game.h"					// ... .game_time_ms() inlines the game clock

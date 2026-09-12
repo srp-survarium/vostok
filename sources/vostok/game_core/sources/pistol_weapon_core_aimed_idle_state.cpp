@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/pistol_weapon_core_aimed_idle_state.h>
 
 #include <vostok/game_core/weapon_core.h>
@@ -11,8 +12,6 @@
 #include <vostok/animation/linear_interpolator.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	mutable_buffer&								buffer,
@@ -84,7 +83,7 @@ weapon_lexeme_pair pistol_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( 
 		u32( -1 ),
 		1.0f,
 		animation::mixing::play_cyclically,
-		animation::linear_interpolator( s_aim_transition_time )
+		animation::linear_interpolator( 0.3f )
 	);
 }
 

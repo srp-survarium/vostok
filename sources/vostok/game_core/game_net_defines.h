@@ -39,29 +39,27 @@ static u16 const player_templates[11][13] =
 
 static u32 const player_templates_count = array_size( player_templates );
 
-// per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
-// (one copy per includer, like player_templates_count's dynamic initializer).
-static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
+static slot_serialize_mode_enum slot_serialize_mode[ max_slots_count ] =
 {
-	serialize_just_condition_stack_values,	// helmet_slot
-	serialize_just_condition_stack_values,	// mask_slot
-	serialize_just_condition_stack_values,	// torso_slot
-	serialize_just_condition_stack_values,	// back_slot
-	serialize_just_condition_stack_values,	// pants_slot
-	serialize_just_condition_stack_values,	// gloves_slot
-	serialize_just_condition_stack_values,	// boots_slot
-	serialize_just_condition_stack_values,	// weapon1_slot
-	serialize_both_values,					// ammo1_weapon1_slot
-	serialize_both_values,					// ammo2_weapon1_slot
-	serialize_just_condition_stack_values,	// weapon2_slot
-	serialize_both_values,					// ammo1_weapon2_slot
-	serialize_both_values,					// ammo2_weapon2_slot
-	serialize_both_values,					// quick_slot1
-	serialize_both_values,					// quick_slot2
-	serialize_both_values,					// quick_slot3
-	serialize_both_values,					// quick_slot4
-	serialize_both_values,					// quick_slot5
-	serialize_both_values,					// quick_slot6
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_just_condition_stack_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
 };
 
 inline void player_profile::deserialize( network_core::packet_reader& reader )

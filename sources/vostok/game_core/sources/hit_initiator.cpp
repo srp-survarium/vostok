@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/hit_initiator.h>
 #include <vostok/game_core/hit_info.h>
 #include <vostok/network_core/packet_reader.h>

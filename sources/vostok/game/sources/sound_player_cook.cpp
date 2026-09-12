@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "sound_player_cook.h"
 #include <vostok/resources.h>
 #include <vostok/resources_query_result.h>

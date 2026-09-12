@@ -6,7 +6,7 @@
 #include <vostok/game_core/inventory_item.h>
 #include <vostok/game_core/scheduler.h>
 #include <vostok/game_core/damage_protector.h>
-#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/affect_types.h>
 
 namespace vostok {
 namespace network_core {

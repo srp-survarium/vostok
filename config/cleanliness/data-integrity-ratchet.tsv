@@ -1,17 +1,17 @@
 metric	maximum	note
 AMBIGUOUS	0	linked allocation comparisons with ambiguous ownership
-BASE_ONLY	1154	candidate allocations without a paired retail allocation
+BASE_ONLY	515	candidate allocations without a paired retail allocation
 BYTES	1	paired allocations with normalized byte differences
-INVALID_EXTENT	11	PDB allocations whose recorded extent is unusable
-RELOCS	386	paired allocations with relocation-target differences
+INVALID_EXTENT	10	PDB allocations whose recorded extent is unusable
+RELOCS	385	paired allocations with relocation-target differences
 RELOC_TOPOLOGY	0	paired allocations with different pointer-cell layout
 SIZE	0	paired allocations with different complete extents
-TARGET_ONLY	1104	retail allocations without a paired candidate allocation
-blockers	31123	consumer-owned allocation copies blocked from objdiff projection
-wrong_referent_regions	1120	functions whose candidate accesses resolve to another allocation
-ordering_only_regions	26	functions differing only in repeated-access order
-multiplicity_only_regions	77	functions differing only in repeated-access count
-access_shape_functions	741	functions with a different decoded data-access shape
-base_missing_functions	493	functions with a retail allocation absent from the candidate image
-referent_debt_functions	1457	normal code matches rejected by strict referent comparison
-referent_debt_code_bytes	587746	code bytes in normal matches rejected by strict referent comparison
+TARGET_ONLY	602	retail allocations without a paired candidate allocation
+blockers	30792	consumer-owned allocation copies blocked from objdiff projection
+wrong_referent_regions	1051	functions whose candidate accesses resolve to another allocation
+ordering_only_regions	27	functions differing only in repeated-access order
+multiplicity_only_regions	76	functions differing only in repeated-access count
+access_shape_functions	751	functions with a different decoded data-access shape
+base_missing_functions	487	functions with a retail allocation absent from the candidate image
+referent_debt_functions	1449	normal code matches rejected by strict referent comparison
+referent_debt_code_bytes	596395	code bytes in normal matches rejected by strict referent comparison

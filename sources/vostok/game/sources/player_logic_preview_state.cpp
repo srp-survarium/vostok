@@ -9,8 +9,6 @@
 
 namespace survarium {
 
-static float s_aim_transition_time = 0.3f;
-
  player_logic_preview_state::player_logic_preview_state(
 	resources::managed_resource_ptr*	animations,
 	u32									animations_count,
@@ -34,7 +32,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 {
 	VOSTOK_UNREFERENCED_PARAMETER( is_third_view );
 
-	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
+	animation::linear_interpolator		l_interpolator( 0.3f );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
