@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,494 / 12,996 functions exact (80.75%) &middot; 11,082 / 12,996 functions exact-max (85.27%) &middot; 93.54% fuzzy &middot; 95.13% fuzzy-max.**
+**Overall: 10,495 / 12,996 functions exact (80.76%) &middot; 11,083 / 12,996 functions exact-max (85.28%) &middot; 93.54% fuzzy &middot; 95.13% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -37,7 +37,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
-| `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
+| `survarium`     |     5 |       20 / 22 (90.9%) |      22 / 22 (100.0%) |  97.9% |    100.0% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
 _Updated 2026-09-12 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
@@ -48,9 +48,9 @@ _Updated 2026-09-12 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.13% (70,200,521 / 71,536,291 unique bytes) &middot; paired for comparison: 4.31% (3,085,817 / 71,536,291) &middot; matched projected copies: 66.00% (17,411,365 / 26,382,049).**
+**Function-reachable retail data: 98.13% (70,200,521 / 71,536,291 unique bytes) &middot; paired for comparison: 4.31% (3,085,817 / 71,536,291) &middot; matched projected copies: 66.01% (17,413,677 / 26,382,049).**
 
-_The projection has 14,395 paired copies across 1,695 units and 31,646 unresolved blockers. Strict relocation comparison exposes 1,472 otherwise-exact functions (570,864 code bytes) with referent debt._
+_The projection has 14,395 paired copies across 1,695 units and 31,646 unresolved blockers. Strict relocation comparison exposes 1,472 otherwise-exact functions (572,328 code bytes) with referent debt._
 
 _The linked-image audit is 3.99% exact and covers 98.57% by PDB type extent, with 86.38% paired-only fidelity (10657 / 12178 definitions). Integrity ratchet: armed._
 
