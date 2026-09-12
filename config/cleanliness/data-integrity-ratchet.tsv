@@ -11,7 +11,7 @@ blockers	537	consumer-owned allocation copies blocked from objdiff projection
 wrong_referent_regions	1981	functions whose candidate accesses resolve to another allocation
 ordering_only_regions	27	functions differing only in repeated-access order
 multiplicity_only_regions	51	functions differing only in repeated-access count
-access_shape_functions	663	functions with a different decoded data-access shape
+access_shape_functions	717	functions with a different decoded data-access shape
 base_missing_functions	483	functions with a retail allocation absent from the candidate image
-referent_debt_functions	1495	normal code matches rejected by strict referent comparison
-referent_debt_code_bytes	605556	code bytes in normal matches rejected by strict referent comparison
+referent_debt_functions	1870	normal code matches rejected by strict referent comparison
+referent_debt_code_bytes	819323	code bytes in normal matches rejected by strict referent comparison
