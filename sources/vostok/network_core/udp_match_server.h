@@ -29,9 +29,21 @@ class udp_network_flow_emulator;
 class udp_match_server : private boost::noncopyable {
 public:
 	struct comparer {
-		inline	bool	operator()	( udp_match_client_session const& left, udp_match_client_session const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( boost::asio::ip::udp::endpoint const& left, udp_match_client_session const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
-		inline	bool	operator()	( udp_match_client_session const& left, boost::asio::ip::udp::endpoint const& right ) const { VOSTOK_UNREFERENCED_PARAMETERS( left, right ); return false; }
+		inline	bool	operator()	( udp_match_client_session const& left, udp_match_client_session const& right ) const
+		{
+			VOSTOK_UNREFERENCED_PARAMETERS( left, right );
+			return false;
+		}
+		inline	bool	operator()	( boost::asio::ip::udp::endpoint const& left, udp_match_client_session const& right ) const
+		{
+			VOSTOK_UNREFERENCED_PARAMETERS( left, right );
+			return false;
+		}
+		inline	bool	operator()	( udp_match_client_session const& left, boost::asio::ip::udp::endpoint const& right ) const
+		{
+			VOSTOK_UNREFERENCED_PARAMETERS( left, right );
+			return false;
+		}
 	}; // struct comparer
 
 	struct destroy_predicate : private boost::noncopyable {
