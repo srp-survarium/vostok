@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+sources/scaleform/Src/Render/D3D1x/D3D1x_ShaderBinary.cpp -diff linguist-generated=true
