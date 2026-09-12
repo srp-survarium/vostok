@@ -481,21 +481,19 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;
 	m_in_crouch = crouch;
-    float shape_y;
-    if ( crouch )
-    {
-    	m_current_shape_dim = m_crouch_shape_dim;
+	if ( crouch )
+	{
+		m_current_shape_dim = m_crouch_shape_dim;
 		setup_shape_dim( m_current_shape_dim );
-        shape_y = m_crouch_shape_dim.y;
-    }
-    else
-    {
-        m_current_shape_dim = m_stand_shape_dim;
+		m_shape_offset.setValue( 0.f, m_crouch_shape_dim.y * 0.5f, 0.f );
+	}
+	else
+	{
+		m_current_shape_dim = m_stand_shape_dim;
 		setup_shape_dim( m_current_shape_dim );
-        shape_y = m_stand_shape_dim.y;
-    }
-	m_shape_offset.setZero( );
-	m_shape_offset.setY( shape_y * 0.5f );
+		m_shape_offset.setValue( 0.f, m_stand_shape_dim.y * 0.5f, 0.f );
+	}
+
 
 	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( );
 	orign -= prev_shape_offset - m_shape_offset;
