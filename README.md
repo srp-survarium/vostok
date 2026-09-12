@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,487 / 13,014 functions exact (80.58%) &middot; 11,080 / 13,014 functions exact-max (85.14%) &middot; 93.52% fuzzy &middot; 95.12% fuzzy-max.**
+**Overall: 10,490 / 13,014 functions exact (80.61%) &middot; 11,082 / 13,014 functions exact-max (85.15%) &middot; 93.53% fuzzy &middot; 95.12% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -20,7 +20,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `game`          |   141 |   979 / 1,528 (64.1%) | 1,111 / 1,528 (72.7%) |  85.6% |     88.7% |
 | `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.2% |     98.6% |
 | `vostok`        |   112 | 1,094 / 1,250 (87.5%) | 1,114 / 1,250 (89.1%) |  96.6% |     97.8% |
-| `game_core`     |   189 |   835 / 1,181 (70.7%) |   865 / 1,181 (73.2%) |  93.9% |     96.1% |
+| `game_core`     |   189 |   838 / 1,181 (71.0%) |   867 / 1,181 (73.4%) |  93.9% |     96.1% |
 | `animation`     |   102 |     590 / 727 (81.2%) |     612 / 727 (84.2%) |  92.6% |     93.2% |
 | `ai`            |   124 |     645 / 691 (93.3%) |     658 / 691 (95.2%) |  99.3% |     99.6% |
 | `sound`         |    69 |     491 / 510 (96.3%) |     493 / 510 (96.7%) |  99.8% |     99.9% |
@@ -48,7 +48,7 @@ _Updated 2026-09-12 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,087,945 / 71,536,291) &middot; matched projected copies: 66.10% (17,436,795 / 26,377,975).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,087,945 / 71,536,291) &middot; matched projected copies: 66.10% (17,436,487 / 26,377,975).**
 
 _The projection has 15,035 paired copies across 1,701 units and 31,096 unresolved blockers. Strict relocation comparison exposes 1,465 otherwise-exact functions (574,170 code bytes) with referent debt._
 
