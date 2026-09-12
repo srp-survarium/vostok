@@ -26,7 +26,9 @@ public:
 				team		( team_undefined ),
 				is_local	( false )
 			{
-				profile_name[ 0 ] = 0; memory::zero( boosters );
+				profile_name[ 0 ] = 0;
+
+				memory::zero( boosters );
 			}
 
 	inline	void		serialize		( network_core::udp_match_packet& packet ) const { /* no source */ }
