@@ -43,11 +43,7 @@ private:
 	// pushes the two reference POINTERS, so the source called the helper directly rather than
 	// through VOSTOK_UNREFERENCED_PARAMETERS - the macro's never-taken block would copy
 	// base_player by value (0x11C rep movsd). See patterns/unreferenced-params-eater.md.
-	virtual	void		activate					( base_player& user, engine& engine ) override
-	{
-		ASSERT( UNKNOWN_EXPRESSION );
-		vostok::detail::unreferenced_parameter_helper( & user, & engine );
-	}
+	virtual	void		activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( user, engine ); }
 	virtual	void		deactivate					( ) override { }
 	virtual	float4x4	transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
