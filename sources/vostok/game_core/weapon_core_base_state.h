@@ -53,7 +53,11 @@ public:
 	// the inlined call stores the pointer at [state+0x12C] (m_is_firing_ptr).
 	inline	void		set_is_firing_ptr			( bool* is_firing ) { m_is_firing_ptr = is_firing; }
 protected:
-	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
+	inline	void		set_is_firing				( bool is_firing )
+	{
+		ASSERT( m_is_firing_ptr );
+		*m_is_firing_ptr = is_firing;
+	}
 
 	// mangles ?deserializing@...@@IBE_NXZ -> protected, const (objdiff pairs by mangled name)
 			bool		deserializing				( ) const;

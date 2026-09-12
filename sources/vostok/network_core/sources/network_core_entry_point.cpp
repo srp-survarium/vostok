@@ -35,13 +35,11 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 		boost::asio::ip::address	addr = iter->endpoint( ).address( );
 		if ( !addr.is_loopback( ) && addr.is_v4( ) ) {
 			return iter->endpoint( ).address( ).to_string( );
+			break;
 		}
 	}
 
 	return "unknown";
-	// sushi@TODO: residual is the dead loop closing-brace `jmp short` anchor MSVC emits so
-	// the `}` is breakpointable (0x216, unreachable) - our build omits it, shifting later
-	// offsets by 2. Find the source/flag lever for it - see review_todos.md.
 }
 
 bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port )

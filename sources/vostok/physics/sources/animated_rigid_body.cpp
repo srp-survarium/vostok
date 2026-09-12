@@ -130,6 +130,7 @@ btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_con
 
 		collision::bone_collision_data data( animation_bone, NULL, hit_param );
 		geometries_data.push_back(data);
+
 		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );
 		btTransform joint_transform( from_vostok( float4x4().identity() ) );
 		bt_shape->addChildShape( joint_transform, element_joint );

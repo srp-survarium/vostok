@@ -9,8 +9,11 @@ namespace animation {
 struct animation_playback_state {
 	inline			animation_playback_state( ) : interval_id( 0 ), interval_time( 0.0f ) { }
 
-	// Target reset @0x087f60 zeros both members (interval_id = 0; interval_time = 0.0f).
-	inline	void	reset					( ) { interval_id = 0; interval_time = 0.0f; }
+	inline	void	reset					( )
+	{
+		interval_id		= 0;
+		interval_time	= 0.0f;
+	}
 
 public:
 	/* 0x0000 */	u32			interval_id;

@@ -29,7 +29,7 @@ protected:
 			void								activate_impl				( );
 			bool								protect_affect				( pcstr __formal, hit_affects_type_enum affect );
 private:
-	virtual	void								activate					( base_player& user, engine& engine ) override { }
+	virtual	void								activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate					( ) override {}
 
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
@@ -38,7 +38,7 @@ private:
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; /* no source */ }
 
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }

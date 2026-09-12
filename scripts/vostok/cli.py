@@ -46,7 +46,7 @@ TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "libs": "vostok.tool.libs", "sizes": "vostok.tool.sizes",
          "breakpoints": "vostok.tool.breakpoints",
          "pdb-order-probe": "vostok.tool.pdb_order_probe",
-         "usage": "vostok.tool.usage"}
+         "usage": "vostok.tool.usage", "joined": "vostok.tool.joined"}
 
 
 def _run(module: str, argv: list[str], prog: str) -> int:

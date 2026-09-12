@@ -43,8 +43,7 @@ inline bool   open_cached_file			(synchronous_device_interface const &	device,
 		bool const result				=	device->open(out, physical_path, mode, access, assert_on_fail, notify_watcher, use_buffering);
 		if ( result )
 		{
-			file_type * file			=	* out;
-			set_owned_by_pointer			(file, true);
+			set_owned_by_pointer			(* out, true);
 		}
 		return							result;
 	}
@@ -74,9 +73,8 @@ inline bool   open_cached_file			(synchronous_device_interface const &	device,
 	{
 		if ( g_open_file_cache[min_index].handle )
 		{
-			file_type * old_file		=	g_open_file_cache[min_index].handle;
-			set_owned_by_pointer			(old_file, false);
-			device->close					(old_file);
+			set_owned_by_pointer			(g_open_file_cache[min_index].handle, false);
+			device->close					(g_open_file_cache[min_index].handle);
 		}
 
 		g_open_file_cache[min_index].name	=	physical_path;
@@ -85,8 +83,9 @@ inline bool   open_cached_file			(synchronous_device_interface const &	device,
 		g_open_file_cache[min_index].access	=	access;
 		g_open_file_cache[min_index].counter	=	g_open_file_counter++;
 
-		file_type * file				=	g_open_file_cache[min_index].handle;
-		set_owned_by_pointer				(file, true);
+
+
+		set_owned_by_pointer				(g_open_file_cache[min_index].handle, true);
 	}
 	return								result;
 }
