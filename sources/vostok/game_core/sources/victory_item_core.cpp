@@ -47,13 +47,15 @@ bool victory_item_core::use_initialize( usable_object_user_data* user )
 
 bool victory_item_core::use_execute( usable_object_user_data* user )
 {
-	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
+	ASSERT( user );
+	VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 }
 
 bool victory_item_core::use_finalize( usable_object_user_data* user )
 {
-	ASSERT( user ); VOSTOK_UNREFERENCED_PARAMETER( user );
+	ASSERT( user );
+	VOSTOK_UNREFERENCED_PARAMETER( user );
 	return true;
 }
 
