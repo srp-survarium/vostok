@@ -48,10 +48,10 @@ public:
 private:
 	class ladder_occluder : public usable_object {
 	private:
-		virtual	bool		use_initialize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
-		virtual	bool		use_execute					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
-		virtual	bool		use_finalize				( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return false; }
-		virtual	pcstr		use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return "st_do_not_use_ladder_from_this_side"; }
+		virtual	bool		use_initialize				( usable_object_user_data* ) override { return false; }
+		virtual	bool		use_execute					( usable_object_user_data* ) override { return false; }
+		virtual	bool		use_finalize				( usable_object_user_data* ) override { return false; }
+		virtual	pcstr		use_info					( usable_object_user_data* ) override { return "st_do_not_use_ladder_from_this_side"; }
 	}; // class ladder_occluder
 
 private:
