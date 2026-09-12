@@ -118,23 +118,21 @@ animation::mixing::expression player_logic_crouch_state::get_recoil_animation_le
 ) const
 {
 	pcstr const							additive_animation_id	= m_owner.animations( ).get_crouch_animation_caption( aimed, animation_index );
-
 	resources::managed_resource_ptr		additive_animation		= m_owner.animations( ).get_crouch_animation( aimed, animation_index, is_third_view );
-
+	ASSERT( UNKNOWN_EXPRESSION );
 	animation::mixing::animation_lexeme_parameters	recoil_lexeme_parameters( buffer, additive_animation_id, additive_animation, 0, 0 );
+	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * math::min( 1.f, math::abs( coeff ) );
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * coeff;
-
-	animation::mixing::animation_lexeme	lexeme(
-		recoil_lexeme_parameters
+	recoil_lexeme_parameters
 		.start_animation_interval_time	( start_animation_interval_time )
 		.animated_object				( m_user )
 		.additivity_priority			( additivity_priority )
 		.weight_interpolator			( interpolator )
 		.time_scale_interpolator		( interpolator )
-		.time_calculator				( time_calculator )
-	);
-
+		.time_calculator				( time_calculator );
+	animation::mixing::animation_lexeme	lexeme( recoil_lexeme_parameters );
 	return animation::mixing::expression( lexeme );
 }
 
@@ -157,18 +155,15 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 	resources::managed_resource_ptr		look_animation		= m_owner.animations( ).get_crouch_animation( is_aimed, animation_type, is_third_view );
 
 	animation::mixing::animation_lexeme_parameters	look_lexeme_parameters( buffer, look_animation_id, look_animation, NULL, &weight_driving_animation );
-
 	float const							start_animation_interval_time	= look_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * m_owner.look_time_factor( );
-
-	animation::mixing::animation_lexeme	look_lexeme(
-		look_lexeme_parameters
+	look_lexeme_parameters
 		.start_animation_interval_time	( start_animation_interval_time )
 		.animated_object				( m_user )
 		.additivity_priority			( 4 )
 		.time_scale_interpolator		( interpolator )
-		.time_calculator				( m_owner.look_time_calculator( ) )
-	);
+		.time_calculator				( m_owner.look_time_calculator( ) );
 
+	animation::mixing::animation_lexeme	look_lexeme( look_lexeme_parameters );
 	animation::mixing::expression		result( look_lexeme );
 
 	weapon_core&						weapon	= static_cast< weapon_core& >( *m_user->current_active_object( ) );
