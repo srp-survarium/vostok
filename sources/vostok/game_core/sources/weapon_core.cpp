@@ -581,7 +581,7 @@ void weapon_core::set_target( weapon_targets target )
 {
 	if ( target == weapon_target_fire || target == weapon_target_aim_fire )
 	{
-		if ( ( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) == 0 )
+		if ( ammo_in_weapon( ) == 0 )
 			target = weapon_target_reload;
 		else if ( !is_ready_to_shoot( ) )
 		{
@@ -635,14 +635,7 @@ void weapon_core::reset_fire_queue( )
 			++m_bullets_in_queue;
 	}
 	else
-		// sushi@TODO: the min's 2nd operand is an INLINE ACCESSOR, proven by experiment - a
-		// helper returning `m_ammo_in_magazine + ( m_is_round_chambered != 0 )` lands 99.81%
-		// MATCH (0xbc==0xbc; the return-temp double-store is byte-required) vs 85.8% for this
-		// direct expression. Its real name/signature is unknown (inline, no standalone symbol),
-		// so we do NOT fabricate the function here; restore the accessor call once it is
-		// identified. NOTE: a named `u16 bullets_in_queue` local also byte-matches (0xbc) but the
-		// target records ZERO locals here, so that form is a phantom-local (locals>%); avoid it.
-		m_bullets_in_queue = math::min( fire_queue_length( ), u16( m_ammo_in_magazine + ( m_is_round_chambered != 0 ) ) );
+		m_bullets_in_queue = math::min( fire_queue_length( ), ammo_in_weapon( ) );
 }
 
 void weapon_core::set_next_fire_queue_type( )
@@ -727,10 +720,7 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
-	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, NULL, 0xff, this );
 }
 
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
@@ -740,10 +730,7 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
-	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, NULL, this );
 }
 
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )
@@ -751,8 +738,6 @@ void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enu
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// Retail inlines the trailing callback registrations while retaining their
-// standalone helpers; preserve the shared helper ownership here.
 void weapon_core::activate( base_player& user, engine& engine )
 {
 	m_dispersion_calculator.set_character_dispersion_params( &user.get_dispersion_params( ) );
@@ -770,22 +755,22 @@ void weapon_core::activate( base_player& user, engine& engine )
 	m_dispersion_calculator.set_weapon( this );
 	m_recoil_calculator.set_weapon( this );
 
-	set_transform( user.get_transform( ) );
+	m_transform = user.get_transform( );
 	set_fire_bullet_transform( user.get_transform( ) );
 
 	m_user = &user;
 
-	m_user->subscribe_animation_player( "Left toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Left heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Right toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Right heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	get_user( )->subscribe_animation_player( "left_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::left ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	get_user( )->subscribe_animation_player( "right_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::right ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	m_user->subscribe_animation_player( "Left toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Left heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Right toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Right heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	get_user( )->subscribe_animation_player( "left_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::left ), this, NULL, 0xff, NULL );
+	get_user( )->subscribe_animation_player( "right_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::right ), this, NULL, 0xff, NULL );
 
 	m_hand_ik_processor.activate( user.skeleton( ), *m_skeleton );
 	m_legs_ik_processor.activate( user.skeleton( ) );
 
-	m_legs_ik_processor.set_character_controller( &get_user( )->physics_controller( ) );
+	m_legs_ik_processor.set_character_controller( &m_user->physics_controller( ) );
 
 	m_user_animations_selector.activate( user, boost::bind( &weapon_core::on_user_sprint, this, false ), boost::bind( &weapon_core::on_user_sprint, this, true ) );
 
@@ -795,8 +780,8 @@ void weapon_core::activate( base_player& user, engine& engine )
 	profile_slot_enum ammo1_slot = get_ammo_slot( first_ammo );
 	profile_slot_enum ammo2_slot = get_ammo_slot( second_ammo );
 
-	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1 = get_inventory( ).item_in_slot( ammo1_slot );
-	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2 = get_inventory( ).item_in_slot( ammo2_slot );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo1 = m_inventory->item_in_slot( ammo1_slot );
+	resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> const& ammo2 = m_inventory->item_in_slot( ammo2_slot );
 
 	if ( ammo1 )
 		set_ammunition( static_cast< weapon_ammunition* >( ammo1.c_ptr( ) ) );
@@ -821,10 +806,10 @@ void weapon_core::activate( base_player& user, engine& engine )
 
 	if ( g_is_server )
 	{
-		set_animation_callback( "sound_events", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "shell_extraction", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "left_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "right_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+		get_user( )->subscribe_animation_player( "sound_events", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), get_user( ), NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "shell_extraction", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "left_hand_corrector", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "right_hand_corrector", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
 	}
 }
 
@@ -1093,9 +1078,6 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// claude@NOTE: the target keeps the `player_input const&` binding unnamed (0 recorded locals)
-// yet calls m_user->input() once - the single-call shape needs the reference, so it stays a
-// named local here and the extra PDB local is the residual.
 float weapon_core::computed_backward_recoil_time(
 	const float		animation_length,
 	const float		animation_time_before_time_scale_starts,
@@ -1107,10 +1089,7 @@ float weapon_core::computed_backward_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) * animation_length;
 }
 
@@ -1125,10 +1104,7 @@ float weapon_core::computed_horizontal_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return horizontal_recoil_value( ) * animation_length;
 }
 
@@ -1143,10 +1119,7 @@ float weapon_core::computed_vertical_recoil_time(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
-
-	player_input const& input = m_user->input( );
-	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
-
+	update_breath_vibration( m_user->input( ).is_holding_breath( ), target_time_in_ms, time_scale );
 	return vertical_recoil_value( ) * animation_length;
 }
 
@@ -1243,22 +1216,6 @@ bool weapon_core::is_trying_to_aim( ) const
 bool weapon_core::is_not_trying_to_aim_predicate( ) const
 {
 	return !is_trying_to_aim( );
-}
-
-// claude@NOTE: release COMDAT (target 0 PDB statements, fully folded -> objdiff leaves it
-// "unpaired"). Body is byte-recovered: filtering the uniform [ebp-N] slot-alloc shift and the
-// ICF assert-fold name, the ONLY residual is one folded-empty assert call named
-// unreferenced_parameter_helper (base) vs finalize_impl (target) - the same compiled-out
-// resource_ptr::operator-> non-null assert. ammunition() returns a resource_ptr by value (each
-// call = an inc/dec copy); the && chain short-circuits to a common false sink.
-bool weapon_core::ready_to_reload( ) const
-{
-	u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false );
-	return current_ammo != maximum_ammo_in_weapon( )
-		&& ammunition( )
-		&& ammunition( )->amount( ) != 0
-		&& !m_is_in_sprint_transition
-		&& !m_user_animations_selector.is_in_jump( );
 }
 
 // record and no read - not source-pinnable. claude@NOTE
