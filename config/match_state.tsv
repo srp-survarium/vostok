@@ -21219,7 +21219,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?debug_draw@simple_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/simple_animation_controller.cpp	game	done	MATCH	100	100	100	0	3	f	137f554ee0f6	
 ?debug_draw@single_position_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	vostok/game/sources/single_position_animation_controller.cpp	game	inprogress	SIZE	69.5208	74.9896	74.9896	0	330		80a570f423aa	
 ?debug_draw_allowed@human_npc@survarium@@UBE_NXZ	vostok/game/sources/human_npc.cpp	game	done	MATCH	100	100	100	0	6	f	c288699978a2	
-?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	vostok/physics/sources/bullet_physics_world.cpp	physics	done	SPLIT	100	100	100	1	261		f2221c85e867	declaring object_colors before the loop does not stop the hoisted template + per-iteration movdqa copy; retail stores the constants inside the loop each iteration
+?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	1	261		0199518807e5	declaring object_colors before the loop does not stop the hoisted template + per-iteration movdqa copy; retail stores the constants inside the loop each iteration
 ?debug_engine@debug@vostok@@YAPAUengine@12@XZ	vostok/debug/sources/debug.cpp	debug	done	MATCH	100	100	100	0	10		c9546a44dfff	
 ?debug_log_callback@core@vostok@@YAXPBD_N10@Z	vostok/core/sources/logging_extensions.cpp	core	inprogress	MATCH	99.9872	99.9872	100	1	437		9845038f46e6	Restored the direct forced append expansions and emitted log-site line values; byte exact.
 ?debug_message_box@debug@vostok@@YAXPBD@Z	vostok/debug/sources/debug_win.cpp	debug	done	MATCH	100	100	100	0	24		d96887155c71	
@@ -32152,7 +32152,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_draw_radiance_occluders_debug_cc''	vostok/render/engine/sources/radiance_volume.cpp	render	done	MATCH		100	100	0	60	f	4b72e6fa9a69	
 `dynamic atexit destructor for 's_draw_snd_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	1	60	f	36ddd9be1046	
 `dynamic atexit destructor for 's_draw_stats''	vostok/game/sources/game.cpp	game	done	MATCH		100	100	0	60	f	36ddd9be1046	
-`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	9905a8b7e323	
+`dynamic atexit destructor for 's_dump_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b16936e61a9	
 `dynamic atexit destructor for 's_is_ui_minimap_rotable''	vostok/game/sources/game_world_ui.cpp	game	done	MATCH		100	100	3	60	f	87d416f4c349	Moved the minimap state and command to target global file scope; all three generated bodies are byte-exact.
 `dynamic atexit destructor for 's_lights_cull''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_local_player_random_input_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
@@ -32180,7 +32180,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `dynamic atexit destructor for 's_portals_occlusion_culling_cc''	vostok/render/engine/sources/portal_sector_system.cpp	render	done	MATCH		100	100	0	60	f	26f7581b9f55	
 `dynamic atexit destructor for 's_print_animations_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_process_allocator''	vostok/core/sources/memory.cpp	core	done	MATCH	100	100	100	0	11	f	accc1b9f20fa	
-`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	9905a8b7e323	
+`dynamic atexit destructor for 's_reset_statistics''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	13	f	4b16936e61a9	
 `dynamic atexit destructor for 's_sf_animation_states_cc''	vostok/game/sources/player_tick.cpp	game	done	MATCH		100	100	0	60	f	28519269e7be	
 `dynamic atexit destructor for 's_shadow_z_near''	vostok/render/engine/sources/stage_lights.cpp	render	done	MATCH		100	100	0	60	f	b95d7a196c6c	
 `dynamic atexit destructor for 's_short_statistics''	vostok/render/engine/sources/statistics.cpp	render	done	MATCH		100	100	0	60	f	5cdb712b03ea	
@@ -34024,7 +34024,7 @@ _zcfree	zlib/zutil.c	zlib	parked	MATCH	88	88	100	1	12	f	e4e66aa95f15	Instruction
 `vostok::math::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/math_curve_inline.h	vostok	done	MATCH	100	100	100	1	44		9765f405b48c	auto: at 100% ceiling, demoted from queue
 `vostok::particle::curve_line_points<float,0>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
 `vostok::particle::curve_line_points<vostok::math::float4_pod,1>::sort_points_by_time'::`5'::predicate::compare	vostok/particle/sources/curve_line_inline.h	particle	done	MATCH	100	100	100	0	44		9765f405b48c	
-`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	9905a8b7e323	
+`vostok::physics::bullet_physics_world::adjust_foot_transform'::`2'::`dynamic atexit destructor for 's_ik_change_foot_rotation_cc''	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	60	f	4b16936e61a9	
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	vostok/physics/sources/bullet_physics_world.cpp	physics	parked	QUANTITY	68.094	68.094	68.094	0	502		bf228fad474c	[BLOCKED] sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::object_query_callback	vostok/physics/sources/bullet_physics_world.cpp	physics	done	MATCH	100	100	100	0	126	f	93e2a9b45c35	
 `vostok::physics::set_memory_allocator'::`6'::`dynamic atexit destructor for 'animated_model_cook''	vostok/physics/sources/physics_entry_point.cpp	physics	done	MATCH	100	100	100	0	11	f	1e3458ea833a	
