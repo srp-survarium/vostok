@@ -25,6 +25,12 @@ class JoinedLineDetection(unittest.TestCase):
         self.assertFalse(is_joined("#define X( a ) a; b \\"))
         self.assertFalse(is_joined("typedef int a; typedef int b;"))
 
+    def test_case_one_liners_and_wrapped_for_headers_are_idioms(self):
+        self.assertFalse(is_joined("\tcase kSHOP:\t\tshow( 1 );\tbreak;"))
+        self.assertFalse(is_joined("\tdefault: mouse_btn = 2; break;"))
+        self.assertFalse(is_joined("\t\ti = 0; i < n; ++i )"))
+        self.assertTrue(is_joined("\tcase kSHOP: a = 1; b = 2; break;"))
+
 
 if __name__ == "__main__":
     unittest.main()
