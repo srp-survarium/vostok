@@ -329,13 +329,13 @@ void effect_manager::recompile_shaders_async(
 			effects_to_recompile.push_back( effect_to_recompile_struct( it->effect, it->descriptor, it->config, 0 ) );
 	}
 
-	u32 const num_requests = effects_to_recompile.size( );
-	if ( !num_requests )
+	if ( !effects_to_recompile.size( ) )
 		return;
 
+	u32 const num_requests = effects_to_recompile.size( );
 	resources::user_data_variant** user_data_variants_ptr = (resources::user_data_variant**)ALLOCA( sizeof(resources::user_data_variant*) * num_requests );
-	resources::creation_request* requests = (resources::creation_request*)ALLOCA( sizeof(resources::creation_request) * num_requests );
 	resources::user_data_variant* user_data_variants = (resources::user_data_variant*)ALLOCA( sizeof(resources::user_data_variant) * num_requests );
+	resources::creation_request* requests = (resources::creation_request*)ALLOCA( sizeof(resources::creation_request) * num_requests );
 
 	u32 request_index = 0;
 	for ( vectora<effect_to_recompile_struct>::iterator it = effects_to_recompile.begin( ); it != effects_to_recompile.end( ); ++it )
