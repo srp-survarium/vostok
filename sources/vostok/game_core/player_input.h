@@ -30,7 +30,7 @@ struct player_input {
 	inline	bool	is_using			( ) const { return ( actions_mask & 0x10000000 ) != 0; }
 	inline	bool	is_aiming			( ) const { /* no source */ }
 	inline	bool	is_shooting			( ) const { /* no source */ }
-	inline	bool	is_holding_breath	( ) const { /* no source */ }
+	inline	bool	is_holding_breath	( ) const { return ( actions_mask & 0x80 ) != 0 && ( actions_mask & 0x8000000 ) != 0; }
 
 	typedef u32 actions_mask_type;
 
