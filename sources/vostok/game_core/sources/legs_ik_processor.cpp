@@ -273,17 +273,17 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	static float				dist_to_test					= 0.5f;
 
 	float4x4 const&			up_leg_world_matrix				= matrices[params.up_leg_bone_index - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
-	float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
-	float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
-	float4x4 const&			foot_world_matrix				= matrices[params.foot_bone_index   - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
-	float4x4 const&			toe_world_matrix				= matrices[params.toe_bone_index    - m_skeleton->get_root_bones_count( )] * hip_world_matrix;
+	float4x4 const&			knee_world_matrix				= matrices[params.knee_bone_index   - m_skeleton->get_root_bones_count( )] * up_leg_world_matrix;
+	float4x4 const&			leg_world_matrix				= matrices[params.leg_bone_index    - m_skeleton->get_root_bones_count( )] * knee_world_matrix;
+	float4x4 const&			foot_world_matrix				= matrices[params.foot_bone_index   - m_skeleton->get_root_bones_count( )] * leg_world_matrix;
+	float4x4 const&			toe_world_matrix				= matrices[params.toe_bone_index    - m_skeleton->get_root_bones_count( )] * foot_world_matrix;
 
-	if ( math::is_similar( foot_world_matrix.c.xyz( ), toe_world_matrix.c.xyz( ) ) ||
-		 math::is_similar( foot_world_matrix.c.xyz( ), leg_world_matrix.c.xyz( ) ) )
+	if ( math::is_similar( toe_world_matrix.c.xyz( ), foot_world_matrix.c.xyz( ) ) ||
+		 math::is_similar( leg_world_matrix.c.xyz( ), foot_world_matrix.c.xyz( ) ) )
 		return foot_world_matrix;
 
-	float3 const&			foot_to_leg_dir					= math::normalize( leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
 	float3 const&			foot_to_toe_dir					= math::normalize( toe_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
+	float3 const&			foot_to_leg_dir					= math::normalize( leg_world_matrix.c.xyz( ) - foot_world_matrix.c.xyz( ) );
 	float3 const&			left_dir						= math::normalize( foot_to_leg_dir ^ foot_to_toe_dir );
 
 	float4x4				foot_center_transform;
