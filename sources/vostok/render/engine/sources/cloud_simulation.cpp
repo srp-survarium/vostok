@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "pch.h"
+#include <vostok/math_curve.h>
 #include <vostok/render/core/options.h>
 
 #include "cloud_noise.h"
@@ -84,16 +85,19 @@ void cloud_simulation::compute_cloud_density( )
 					{
 						for ( s32 z0 = -2; z0 <= 2; ++z0 )
 						{
-							++num;
+							u32 sample_x = x + x0;
+							u32 const sample_y = y + y0;
+							u32 sample_z = z + z0;
 
-							u32 sample_x = x + x0; u32 const sample_y = y + y0; u32 sample_z = z + z0;
+							++num;
 
 							if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) {
 								sample_x %= m_clouds_size_x;
 
 								sample_z %= m_clouds_size_z;
 							}
-							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
+							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) )
+								accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
 						}
 					}
 				}
@@ -175,9 +179,11 @@ void cloud_simulation::compute_indirect_light(
 	cloud_key_parameters const& init_key
 )
 {
-	float const vertical_direction = math::clamp_r( math::abs( sun_direction | float3( 0.0f, 1.0f, 0.0f ) ), 0.0f, 1.0f );
-
-	u32 num = static_cast<u32>( (1.0f - vertical_direction) * static_cast<float>( m_clouds_size_y * 6 ) + vertical_direction * static_cast<float>( m_clouds_size_y ) );
+	u32 num = static_cast<u32>( math::linear_interpolation(
+		static_cast<float>( m_clouds_size_y * 6 ),
+		static_cast<float>( m_clouds_size_y ),
+		math::clamp_r( math::abs( sun_direction | float3( 0.0f, 1.0f, 0.0f ) ), 0.0f, 1.0f )
+	) );
 
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
@@ -195,7 +201,7 @@ void cloud_simulation::compute_indirect_light(
 					{
 						float3 coord =
 							float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) +
-							sun_direction * static_cast<float>( i + 1 );
+							sun_direction * ( static_cast<float>( i ) + 1.f );
 
 						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x ||
 							!in_grid(
@@ -291,34 +297,44 @@ void cloud_simulation::generate(
 
 	fill_default_volume( );
 
-	float const cloudiness = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.05f, 0.0f, 1.0f );
-	float const cloudiness2 = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.1f, 0.0f, 1.0f );
+	float const cloudiness = 1.0f - init_key.cloud_generate_cloudiness;
+	float const cloudiness2 = math::clamp_r( cloudiness + 0.05f, 0.0f, 1.0f );
+	float const cloudiness3 = math::clamp_r( cloudiness + 0.1f, 0.0f, 1.0f );
 	u32 const num_octaves = math::floor( init_key.cloud_generate_octaves );
-	float const cloudiness3 = 1.0f - init_key.cloud_generate_cloudiness;
 
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
 		{
-			float const noise = cloud_noise::evaluate( static_cast<float>( z ) / static_cast<float>( m_clouds_size_z ), static_cast<float>( x ) / static_cast<float>( m_clouds_size_x ), num_octaves );
-			u32 min_y = 1, max_y = 1;
+			float const normalized_x = static_cast<float>( x ) / static_cast<float>( m_clouds_size_x );
+			float const normalized_z = static_cast<float>( z ) / static_cast<float>( m_clouds_size_z );
 
-			if ( noise - cloudiness2 > 0.0f )
+			float const noise = cloud_noise::evaluate( normalized_x, normalized_z, num_octaves );
+
+			float const density = noise - cloudiness;
+			float const density2 = noise - cloudiness2;
+			float const density3 = noise - cloudiness3;
+
+			u32 const upper_y = m_clouds_size_y - 1;
+			u32 min_y = 1;
+			u32 max_y = 1;
+
+			if ( density3 > 0.0f )
 			{
-				max_y = m_clouds_size_y;
+				max_y = upper_y;
 			}
-			else if ( noise - cloudiness > 0.0f )
+			else if ( density2 > 0.0f )
 			{
 				min_y = 2;
-				max_y = m_clouds_size_y - 2;
+				max_y = upper_y - 2;
 			}
-			else if ( noise - cloudiness3 > 0.0f )
+			else if ( density > 0.0f )
 			{
 				min_y = 3;
-				max_y = m_clouds_size_y - 3;
+				max_y = upper_y - 3;
 			}
 
-			if ( max_y - min_y > 1 && min_y < max_y )
+			if ( max_y - min_y > 1 )
 			{
 				for ( u32 y = min_y; y < max_y; ++y )
 				{
