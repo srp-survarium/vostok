@@ -23483,7 +23483,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?get_flash_factory@game@survarium@@QAEAAVflash_factory@2@XZ	vostok/game/sources/game.cpp	game	done	MATCH	100	100	100	0	7	f	3232a3381d0f	
 ?get_focused@ui_window@ui@vostok@@UBE_NXZ	vostok/ui/sources/ui_window.h	ui	done	MATCH	100	100	100	1	4	f	29d967e460f7	auto: at 100% ceiling, demoted from queue
 ?get_follow_last_line@ui_scroll_view@ui@vostok@@UBE_NXZ	vostok/ui/sources/ui_scroll_view.h	ui	done	MATCH	100	100	100	1	10	f	df287c12b541	auto: at 100% ceiling, demoted from queue
-?get_foot_fixed_transform@legs_ik_processor@survarium@@ABE?AVfloat4x4@math@vostok@@ABUleg_params@12@ABV345@PBV345@AAM@Z	vostok/game_core/sources/legs_ik_processor.cpp	game_core	inprogress	SIZE	92.5326	92.5326	92.5326	0	2908		a197bc663401	
+?get_foot_fixed_transform@legs_ik_processor@survarium@@ABE?AVfloat4x4@math@vostok@@ABUleg_params@12@ABV345@PBV345@AAM@Z	vostok/game_core/sources/legs_ik_processor.cpp	game_core	inprogress	SIZE	92.5593	92.5593	92.5593	1	2908		fbfa1ea804ac	names + bone chain (knee*up_leg, leg*knee, foot*leg, toe*foot), is_similar arg order, toe-dir before leg-dir: 47 -> 51 of 64 statements exact; rest is temp-slot order (start/finish lines carry an extra out-of-line call on a top-of-frame temp in retail)
 ?get_format_4x4_pixel_size@utils@render@vostok@@YAIW4DXGI_FORMAT@@@Z	vostok/render/core/dx11/sources/utils.cpp	render	done	MATCH	100	100	100	0	8	f	8dbdf46d8629	
 ?get_front_color@ui_progress_bar@ui@vostok@@UBE?AVcolor@math@3@XZ	vostok/ui/sources/ui_progress_bar.cpp	ui	done	MATCH	100	100	100	1	12	f	cc545008814f	auto: at 100% ceiling, demoted from queue
 ?get_frustum_vertices@math@vostok@@YA_NABVfrustum@12@AAY07Vfloat3@12@@Z	vostok/core/sources/math_frustum.cpp	core	done	QUANTITY	100	100	100	1	422	f	6c59dc5993a6	portal selection root and frustum image cone reconstructed from retail PDB topology and disassembly
@@ -34494,11 +34494,11 @@ survarium::`dynamic atexit destructor for 's_draw_linear_speed_graph_cc''	vostok
 survarium::`dynamic atexit destructor for 's_enable_breath_vibration_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_first_person_animations_command''	vostok/game/sources/player.cpp	game	done	MATCH		100	100	2	60	f	5e7430933d55	
 survarium::`dynamic atexit destructor for 's_freeze_culling''	vostok/game/sources/base_game_scene.cpp	game	done	MATCH		100	100	1	60	f	e45b557ca39d	
-survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
-survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
+survarium::`dynamic atexit destructor for 's_ik_adjust_hip_position_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		607fefe30fc6	
+survarium::`dynamic atexit destructor for 's_ik_foot_capsule_radius_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		607fefe30fc6	
 survarium::`dynamic atexit destructor for 's_ik_hands_debug_draw_cc''	vostok/game_core/sources/hand_to_weapon_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		778ce58ccdc9	
-survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
-survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		01ed3a193aaa	
+survarium::`dynamic atexit destructor for 's_ik_legs_debug_draw_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		607fefe30fc6	
+survarium::`dynamic atexit destructor for 's_ik_legs_rot_axis_cc''	vostok/game_core/sources/legs_ik_processor.cpp	game_core	done	MATCH	100	100	100	0	17		607fefe30fc6	
 survarium::`dynamic atexit destructor for 's_ik_translation_time_command''	vostok/game/sources/player.cpp	game	done	MATCH		100	100	0	60	f	5e7430933d55	
 survarium::`dynamic atexit destructor for 's_ik_use_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
 survarium::`dynamic atexit destructor for 's_ik_use_on_legs_cc''	boost/bind/placeholders.hpp	boost	done	MATCH	100	100	100	0	17		e7addf46204c	
