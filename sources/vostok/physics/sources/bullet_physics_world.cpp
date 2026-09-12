@@ -218,8 +218,9 @@ void bullet_physics_world::debug_draw_world( )
 			color_idx = 0;
 		if ( s_debug_draw_hittable && ( group & 8 ) )
 			color_idx = 1;
-		if ( s_debug_draw_sensor && ( group & 0x81 ) )
+		if ( s_debug_draw_sensor && ( group & 0x81 ) ) {
 			color_idx = 2;
+		}
 		else if ( color_idx == -1 )
 			continue;
 

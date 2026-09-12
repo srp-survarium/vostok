@@ -299,8 +299,7 @@ thread_local_data*   resources_manager::get_thread_local_data (threading::thread
 		}
 	}
 
-	threading::lock_type_enum const lock_type	=	create_if_not_exist ? threading::lock_type_write : threading::lock_type_read;
-	m_thread_local_data_lock.lock			(lock_type);
+	m_thread_local_data_lock.lock			(create_if_not_exist ? threading::lock_type_write : threading::lock_type_read);
 
 	thread_local_data_tree::iterator it	=	m_thread_local_data.find(thread_id,thread_local_data_compare());
 
@@ -324,7 +323,7 @@ thread_local_data*   resources_manager::get_thread_local_data (threading::thread
  	if ( threading::current_thread_id() == thread_id && local_data )
  		threading::tls_set_value			(m_tls_key_thread_local_data, local_data);
 
-	m_thread_local_data_lock.unlock			(lock_type);
+	m_thread_local_data_lock.unlock			(create_if_not_exist ? threading::lock_type_write : threading::lock_type_read);
 
 	return									local_data;
 }
