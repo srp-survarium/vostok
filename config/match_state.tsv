@@ -8556,7 +8556,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_GbtTriangleIndexVertexArray@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/bttriangleindexvertexarray.h	bullet	done	MATCH	100	100	100	0	92	f	8c9c5fe31daf	
 ??_Gbt_animated_rigid_body@physics@vostok@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btsphereshape.h	bullet	done	MATCH	100	100	100	0	84	f	877c2156bf43	
 ??_Gbt_collision_shape@physics@vostok@@UAEPAXI@Z	bullet/bulletcollision/collisionshapes/btbvhtrianglemeshshape.h	bullet	done	MATCH	100	100	100	0	30	f	03738ac9a32b	
-??_Gbullet_character_controller@physics@vostok@@UAEPAXI@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	parked	MATCH	91.6667	91.6667	91.6667	1	31	f	8d589018a7e2	Target statement shape and control flow match; residual is Bullet/math helper instruction selection, register allocation, static-constructor relocation, or compiler-generated destructor code.
+??_Gbullet_character_controller@physics@vostok@@UAEPAXI@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	parked	MATCH	91.6667	91.6667	91.6667	1	31	f	295c7435f0bc	Target statement shape and control flow match; residual is Bullet/math helper instruction selection, register allocation, static-constructor relocation, or compiler-generated destructor code.
 ??_Gbullet_physics_world@physics@vostok@@UAEPAXI@Z	vostok/physics/bullet_utils.h	physics	done	MATCH	100	100	100	0	67	f	b7d13311641e	
 ??_Gcc_delegate@console_commands@vostok@@UAEPAXI@Z	vostok/game/sources/key_binder.cpp	game	done	MATCH	100	100	100	0	30	f	440cb9692a74	
 ??_Gchat_handler@survarium@@UAEPAXI@Z	vostok/game/sources/network_client.h	game	done	MATCH	100	100	100	0	30	f	7fa705d2c5a2	
@@ -26566,7 +26566,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?noise@BitmapData@fl_display@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@JKKK_N@Z	src/gfx/as3/obj/display/as3_obj_display_bitmapdata.cpp	gfx	done	MATCH	100	100	100	0	112	f		
 ?nomaterial_material@material@render@vostok@@SAAAUmaterial_effects@23@W4enum_vertex_input_type@23@@Z	vostok/render/engine/sources/material.cpp	render	done	MATCH	100	100	100	0	8	f	b8d8dfc4d90b	
 ?non_blocking_connect@socket_ops@detail@asio@boost@@YA_NIAAVerror_code@system@4@@Z	boost/asio/detail/impl/socket_ops.ipp	boost	done	MATCH	100	100	100	0	143		8c1d6dd98941	
-?non_compound_shapes_centers@bt_ghost_object@physics@vostok@@QBEXAAV?$vectora@Vfloat3@math@vostok@@@3@@Z	vostok/physics/sources/ghost_object.cpp	physics	done	QUANTITY	100	100	100	1	40	f	bd3a400d7500	tried a bt_collision_shape& deref statement for retail's middle record: operator* emits extra code (100 -> 36.7), reverted
+?non_compound_shapes_centers@bt_ghost_object@physics@vostok@@QBEXAAV?$vectora@Vfloat3@math@vostok@@@3@@Z	vostok/physics/sources/ghost_object.cpp	physics	done	MATCH	100	100	100	2	40	f	29a8cad6cbf2	get_bt_shape() into a named local: retail records the shape lookup as its own statement
 ?nonnull@dummy@?$function1@XABVtcp_packet@network_core@vostok@@@boost@@QAEXXZ	boost/asio/deadline_timer_service.hpp	boost	done	MATCH	100	100	100	0	11		2f1702e382ed	
 ?normalize@Point@fl_geom@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@N@Z	src/gfx/as3/obj/geom/as3_obj_geom_point.cpp	gfx	done	MATCH	100	100	100	0	103	f		
 ?normalize@Vector3D@fl_geom@Instances@AS3@GFx@Scaleform@@QAEXAAN@Z	src/gfx/as3/obj/geom/as3_obj_geom_vector3d.cpp	gfx	done	MATCH	100	100	100	0	65	f		
@@ -29747,7 +29747,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?setupIntersections@Tessellator@Render@Scaleform@@AAEXXZ	src/render/render_tessellator.cpp	gfx	done	MATCH	100	100	100	0	204	f		
 ?setupRigidBody@btRigidBody@@IAEXABUbtRigidBodyConstructionInfo@1@@Z	bullet/bulletdynamics/dynamics/btrigidbody.cpp	bullet	done	MATCH	100	100	100	1	984		3efde2a1d352	auto: at 100% ceiling, demoted from queue
 ?setup_camera_for_warmup@network_client@survarium@@AAEXXZ	vostok/game/sources/network_client_processing.cpp	game	inprogress	SIZE	81.443	81.443	81.443	0	763	f	2d72d866fa7d	
-?setup_crouch_state@bullet_character_controller@physics@vostok@@AAEX_N@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	parked	QUANTITY	92.6514	92.6514	92.6514	0	488		b92f9f492545	[PARTIAL 92%] The closest I was able to get. The assembly is the same except for a few instructions reshuffled.
+?setup_crouch_state@bullet_character_controller@physics@vostok@@AAEX_N@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	inprogress	MATCH	98.1651	98.1651	98.1651	1	488		2fca0efbdd77	no shape_y local: m_shape_offset.setValue( 0.f, y * 0.5f, 0.f ) inside each branch (tail-merged); STRUCTURE MATCH, residual is scheduling in the merged tail
 ?setup_demo_profile@inventory@survarium@@QAEXXZ	vostok/game_core/sources/inventory.cpp	game_core	inprogress	QUANTITY	87.7	87.7	97.13	0	364		9abbfaadb0dd	
 ?setup_from_profile@inventory@survarium@@QAEXAAUplayer_profile@2@ABVitems_dictionary@2@@Z	vostok/game_core/sources/inventory.cpp	game_core	inprogress	SIZE	80.0676	80.0676	80.0676	0	518		ec6d4d969262	
 ?setup_game_material_groups@physics@vostok@@YAXPBGG@Z	vostok/physics/sources/bullet_character_controller.cpp	physics	done	MATCH	100	100	100	0	15	f	c1343b026986	
