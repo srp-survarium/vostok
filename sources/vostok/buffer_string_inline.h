@@ -234,8 +234,9 @@ buffer_string::size_type   buffer_string::rfind	(value_type const c, size_type o
 inline
 buffer_string::size_type   buffer_string::find	(value_type const * s) const
 {
-	pstr res				=	strstr(m_begin, s);
-	return						res ? (size_type)(res - m_begin) : npos;
+	pstr res;
+	return						( res = strstr(m_begin, s) ) ? (size_type)(res - m_begin)
+								: npos;
 }
 
 inline
