@@ -54,7 +54,8 @@ void network_client::destroy_player_impl( const u8 id )
 	if ( m_current_player && m_current_player->id == id )
 	{
 		m_current_player = NULL;
-		m_game.get_game_world( ).game_ui.show_quick_slots( false );
+		game_world_ui& ui = m_game.get_game_world( ).game_ui;
+		ui.show_quick_slots( false );
 	}
 }
 
@@ -204,10 +205,10 @@ void network_client::process_player_hit( network_core::packet_reader& packet )
 
 void network_client::process_affect_damage_model( network_core::packet_reader& packet )
 {
-	player_ptr player = get_player( packet.r< u8 >( ) );
+	const u8 player_id = packet.r< u8 >( );
+	player_ptr player = get_player( player_id );
 	char body_part_name[ 16 ];
 	packet.r_string( body_part_name );
-
 	hit_affects_type_enum affect = packet.r< hit_affects_type_enum >( );
 	affect_event_type_enum event = packet.r< affect_event_type_enum >( );
 	if ( player )
@@ -303,8 +304,7 @@ void network_client::process_respawn_timer( network_core::packet_reader& packet 
 void network_client::process_match_wait_timer( network_core::packet_reader& packet )
 {
 	const u32 time_left = packet.r< u32 >( );
-	m_game.get_game_world( ).game_ui.set_pregame(
-		m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
+	m_game.get_game_world( ).game_ui.set_pregame( m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
 }
 
 // TU console values backing setup_camera_for_warmup: cc_float3 console commands
@@ -342,23 +342,23 @@ void network_client::process_game_status( network_core::packet_reader& packet )
 
 	if ( m_game_status != status )
 	{
+
 		game_world_ui& ui = m_game.get_game_world( ).game_ui;
 
 		if ( status == game_status_inprocess )
 		{
 			ui.show_pregame( false );
 			if ( m_local_player && m_is_time_synchronized_first_time )
-				ui.show_parametrized_message( "st_start_match_welcome_message", 0, 0, 0 );
-			attach_to_player( player_ptr( ) );
-		}
-		else
-		{
-			if ( !m_game_status )
 			{
-				ui.show_pregame( true );
-				if ( m_local_player )
-					setup_camera_for_warmup( );
+				ui.show_parametrized_message( "st_start_match_welcome_message", 0, 0, 0 );
+				attach_to_player( player_ptr( ) );
 			}
+		}
+		else if ( !m_game_status )
+		{
+			ui.show_pregame( true );
+			if ( m_local_player )
+				setup_camera_for_warmup( );
 		}
 
 		m_game_status = status;
@@ -370,17 +370,11 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	const u8 player_id = packet.r< u8 >( );
 	const u32 kills = packet.r< u32 >( );
 	const u32 deaths = packet.r< u32 >( );
-	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
+	game_world_ui& ui = m_game.get_game_world( ).game_ui;
+	ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
-// claude@NOTE: STRUCTURE match (35 target / 32 base statements). The 3-statement gap and
-// the byte residual are cross-TU whole-program-inline walls the single-TU base cannot
-// reproduce: packet_reader::r<T> (out-of-line calls vs the target's inlined byte reads),
-// simple_game_project::get_items_container (out-of-line call vs the target's inlined
-// m_victory_items_containers search loop), and inventory_holder::inventory() ([ecx+8] vs
-// call). team_2_points is read for the cursor advance only (recorded as a named local).
-// The add_victory_points sign ( slot ? -1 : 1 ) is CSE'd once in the target but per-arg in
-// the base - an LTCG scheduling artifact, not a structure divergence.
+// claude@NOTE: Target inlines packet reads, project container lookup, and inventory access here.
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
 	const s8 team_1_points = packet.r< s8 >( );
@@ -454,6 +448,7 @@ void network_client::process_sync_response( network_core::packet_reader& packet 
 {
 	m_server_latency = ( m_game.permanent_timer( ).get_elapsed_msec( ) - m_last_sync_request_time ) / 2;
 
+
 	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x46 ) );
 
 	m_is_time_synchronized_first_time = true;
@@ -483,12 +478,6 @@ void network_client::send_local_player_input(
 	m_player_inputs.push_back( update );
 }
 
-// claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is the cross-TU inline
-// wall: base_player::is_alive() / set_character_transform are direct out-of-line calls here
-// but the target inlines them (the m_is_alive load and the transform setup) so its reads /
-// member accesses fold into the surrounding statements (TRGT_ONLY rows). server_player_update
-// ::deserialize is bodied now so the deserialize call is emitted. Lifts when whole-program
-// inlining is reproduced.
 void network_client::process_player_action( network_core::packet_reader& packet, const u32 time_in_ms )
 {
 	const u8 id = packet.r< u8 >( );
@@ -499,7 +488,9 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 
 	if ( !player )
 	{
+#line 535
 		LOG_WARNING( "player not found %d", id );
+#line 502
 		return;
 	}
 
@@ -517,12 +508,14 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 
 void network_client::send_player_inputs( )
 {
-	for ( client_player_update* update = m_player_inputs.begin( ); update != m_player_inputs.end( ); ++update )
+	for ( client_player_update* update = m_player_inputs.begin( ), *update_end = m_player_inputs.end( ); update != update_end; ++update )
 	{
 		network_core::udp_match_packet* packet = m_match_client.new_packet( ( match_client_message_types_enum )0x43 );
 		update->serialize( *packet );
+
 		m_match_client.enqueue( packet );
 	}
+
 	m_player_inputs.clear( );
 }
 
@@ -539,7 +532,6 @@ void network_client::send_player_inputs( )
 // Reopen only when resource_ptr destructor ownership or one of those callee contexts changes.
 // The four PDB locals are current_time_in_ms, is_game_paused, id, and player.
 // set_broken_connection_message's argument is VOSTOK_UNREFERENCED, so its literal is eliminated.
-// Preserve this comment line count: LOG_WARNING below embeds the physical source line.
 // This pass stops at that demonstrated compiler-context boundary.
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
@@ -565,7 +557,9 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 				lobby_client( ).connection_info( ).need_resolve =
 					!http_query_server_connection_info( 2 );
 				lobby_resolve_time = current_time_in_ms;
+#line 616
 				LOG_WARNING( "LOBBY: try reconnect" );
+#line 568
 			}
 		}
 		else
@@ -661,18 +655,21 @@ bool network_client::is_player_local( const u8 player_id ) const
 	return m_local_player && m_local_player->id == player_id;
 }
 
-// claude@NOTE: STRUCTURE match. The TRGT_ONLY rows are resource_ptr<player> destructor
-// cleanup blocks (lock xadd refcount + unmanaged_intrusive_base::destroy) the target whole-
-// program-inlines at each early-return tail, plus the packet_reader::r<T> inline split; the
-// base emits a single out-of-line ~resource_ptr / r<T> call. Lifts with networking inlining.
 void network_client::player_visibility_change( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
 	const bool is_visible = packet.r< bool >( );
+
 	player_ptr player = get_player( id );
-	if ( m_local_player && player )
-		if ( player->has_been_inserted( ) && is_visible != player->is_visible( ) )
-			is_visible ? player->show( ) : player->hide( );
+	if ( !m_local_player.c_ptr( ) || !player )
+		return;
+
+
+	if ( player->has_been_inserted( ) && is_visible != player->is_visible( ) )
+		if ( is_visible )
+			player->show( );
+		else
+			player->hide( );
 }
 
 // claude@NOTE: the four on_trap_* handlers read three packet bytes (player id, slot
@@ -687,7 +684,9 @@ void network_client::on_trap_placed( network_core::packet_reader& packet )
 	const u8 index = packet.r< u8 >( );
 	float3 position = packet.r< float3 >( );
 	float3 angles = packet.r< float3 >( );
+
 	player_ptr player = get_player( player_id );
+
 	static_cast< booby_trap_set* >( player->inventory( ).item_in_slot( ( profile_slot_enum )slot ).c_ptr( ) )
 		->on_trap_placed_message( index, position, angles );
 }
@@ -724,7 +723,9 @@ void network_client::on_trap_disarmed( network_core::packet_reader& packet )
 
 void network_client::game_world_object_state_arrived( network_core::packet_reader& reader )
 {
-	player_ptr player = get_player( reader.r< u8 >( ) );
+	const u8 player_id = reader.r< u8 >( );
+	player_ptr player = get_player( player_id );
+
 	player->deserialize_game_world_object( reader );
 }
 
@@ -757,7 +758,9 @@ void network_client::on_world_sync_request( )
 
 void network_client::damage_model_state_arrived( network_core::packet_reader& packet )
 {
-	player_ptr player = get_player( packet.r< u8 >( ) );
+	const u8 player_id = packet.r< u8 >( );
+	player_ptr player = get_player( player_id );
+
 	player->damage_model( )->deserialize( packet );
 }
 
