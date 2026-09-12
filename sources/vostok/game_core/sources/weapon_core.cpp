@@ -762,12 +762,12 @@ void weapon_core::activate( base_player& user, engine& engine )
 
 	m_user = &user;
 
-	m_user->subscribe_animation_player( "Left toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Left heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Right toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	m_user->subscribe_animation_player( "Right heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	get_user( )->subscribe_animation_player( "left_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::left ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
-	get_user( )->subscribe_animation_player( "right_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::right ), this, resources::managed_resource_ptr( NULL ), 0xff, NULL );
+	m_user->subscribe_animation_player( "Left toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Left heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Right toe", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	m_user->subscribe_animation_player( "Right heel", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+	get_user( )->subscribe_animation_player( "left_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::left ), this, NULL, 0xff, NULL );
+	get_user( )->subscribe_animation_player( "right_hand_ik", boost::bind( &weapon_core::on_hand_ik_event, this, _1, hand_to_weapon_ik_processor::right ), this, NULL, 0xff, NULL );
 
 	m_hand_ik_processor.activate( user.skeleton( ), *m_skeleton );
 	m_legs_ik_processor.activate( user.skeleton( ) );
@@ -808,10 +808,10 @@ void weapon_core::activate( base_player& user, engine& engine )
 
 	if ( g_is_server )
 	{
-		set_animation_callback( "sound_events", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "shell_extraction", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "left_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
-		set_animation_callback( "right_hand_corrector", get_user( ), boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ) );
+		get_user( )->subscribe_animation_player( "sound_events", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), get_user( ), NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "shell_extraction", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "left_hand_corrector", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
+		get_user( )->subscribe_animation_player( "right_hand_corrector", boost::bind( &weapon_core::on_animation_ik_interval, this, _1 ), this, NULL, 0xff, NULL );
 	}
 }
 
