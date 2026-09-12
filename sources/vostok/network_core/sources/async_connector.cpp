@@ -19,13 +19,14 @@ void async_connector::on_connected(
 )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == connection_is_being_established ) );
-	if ( error_code )
-	{
+
+	if ( error_code ) {
 		m_connection_state	= host_name_is_unresolved;
 		if ( m_on_error )
 			m_on_error( server_cannot_be_connected, error_code );
 		return;
 	}
+
 	LOG_INFO( "connection_has_been_established!" );
 	m_connection_state	= connection_has_been_established;
 
