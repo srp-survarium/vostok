@@ -76,7 +76,11 @@ public:
 							);
 			void			deactivate						( );
 
-	inline	base_player&	user							( ) const { ASSERT( m_user ); return *m_user; }
+	inline	base_player&	user							( ) const
+	{
+		ASSERT( m_user );
+		return *m_user;
+	}
 			void			tick							( );
 
 public:

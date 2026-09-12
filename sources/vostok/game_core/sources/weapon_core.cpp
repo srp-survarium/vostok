@@ -720,10 +720,7 @@ animation::callback_return_type_enum weapon_core::on_animation_ik_interval( anim
 
 void weapon_core::set_animation_callback( pcstr channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
-	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, 0xff, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), 0xff, this );
 }
 
 void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_uid )
@@ -733,10 +730,7 @@ void weapon_core::remove_animation_callback( pcstr channel_id, pcvoid callback_u
 
 void weapon_core::set_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid, boost::function<enum animation::callback_return_type_enum(animation::animation_callback_params &)> const& animation_callback )
 {
-	// claude@MATCH: named local materializes the managed_resource_ptr(NULL) temp ahead of
-	// the argument pushes, matching the target's temp scheduling (push 0;ctor before push this).
-	// Both on one source line: the target emits the ctor + subscribe call as a single statement.
-	resources::managed_resource_ptr tmp( NULL ); m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, tmp, this );
+	m_user->subscribe_animation_player( channel_id, animation_callback, callback_uid, resources::managed_resource_ptr( NULL ), this );
 }
 
 void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enum channel_id, pcvoid callback_uid )

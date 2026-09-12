@@ -50,7 +50,7 @@ private:
 	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
 	// faithful idioms below. update_bones_matrices ICF-folds with the oxygen_tank and
 	// artefact_lifebone_core copies at rva 0xbc810; see that header's note.
-	virtual	void								activate					( base_player& user, engine& engine ) override { /* VOSTOK_UNREFERENCED_PARAMETERS( user, engine ); */ }
+	virtual	void								activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate					( ) override { }
 
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE(); }
@@ -59,7 +59,7 @@ private:
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { /* no source sushi@TODO */ return false; }
 
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE(); }
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }

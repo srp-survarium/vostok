@@ -162,11 +162,17 @@ public:
 			void								load_magazine					( );
 			void								chamber_a_round					( );
 
-	// claude@MATCH: weapon_core_cook::load_weapon_parameters inlines these two setters
-	// WITH an empty_stub (compiled-out ASSERT) before the member store.
-	inline	void								set_bullet_damage				( float bullet_damage ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) ); m_bullet_damage = bullet_damage; }
+	inline	void								set_bullet_damage				( float bullet_damage )
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) );
+		m_bullet_damage = bullet_damage;
+	}
 	inline	float								get_bullet_damage				( ) const { return m_bullet_damage; }
-	inline	void								set_bullet_pierce				( float bullet_pierce ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) ); m_bullet_pierce = bullet_pierce; }
+	inline	void								set_bullet_pierce				( float bullet_pierce )
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) );
+		m_bullet_pierce = bullet_pierce;
+	}
 	inline	float								get_bullet_pierce				( ) const { return m_bullet_pierce; }
 	inline	void								set_aim_fov_factor				( const float aim_fov_factor ) { m_aim_fov_factor = aim_fov_factor; }
 	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
@@ -175,7 +181,11 @@ public:
 
 			profile_slot_enum					ammo_slot						( );
 
-	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
+	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count )
+	{
+		m_weapon_fire_queue_types		= weapon_fire_queue_types;
+		m_weapon_fire_queue_types_count	= count;
+	}
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }

@@ -47,6 +47,7 @@ _STRING = re.compile(r'"(?:[^"\\]|\\.)*"')
 _CHAR = re.compile(r"'(?:[^'\\]|\\.)'")
 _LINE_COMMENT = re.compile(r"//.*$")
 _BLOCK_COMMENT = re.compile(r"/\*.*?\*/")
+_CASE_ONE_LINER = re.compile(r"^(case\b[^:]*|default)\s*:[^;]*;\s*(break|return[^;]*);\s*}?$")
 _DECL_START = re.compile(
     r"^(typedef|using|enum|class|struct|union|template|namespace|friend|public|"
     r"private|protected|extern|static_assert|STATIC_SIZE_ASSERT|COMPILE_ASSERT)\b"
@@ -67,6 +68,10 @@ def is_joined(line: str) -> bool:
         return False
     if code.endswith("\\"):
         return False  # macro continuation lines are one logical line
+    if _CASE_ONE_LINER.match(code):
+        return False  # `case x: stmt; break;` is an idiom, not a join
+    if code.count(";") == 2 and code.count(")") > code.count("("):
+        return False  # the middle line of a wrapped for-header
     return bool(_JOINED.search(code))
 
 
