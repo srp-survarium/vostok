@@ -27,7 +27,7 @@ void sound_environment_cook::translate_query	( resources::query_result_for_cook&
 	pcstr model_name				= (*model_user_data.config)["lib_name"];
 
 	fixed_string<256> path;
-	path.assignf					( "resources/models/%s.model/render", model_name );
+	path.assignf					( "resources/models/%s.model/render/export_properties", model_name );
 
 	resources::query_resource(
 		path.c_str( ),
@@ -77,7 +77,7 @@ void sound_environment_cook::on_model_config_loaded	( resources::queries_result&
 	}
 
 	fixed_string<256> path;
-	path.assignf					( "resources/sounds/environments/%s", environment_name );
+	path.assignf					( "resources/sounds/environments/%s.environment", environment_name );
 	resources::query_resource(
 		path.c_str( ),
 		resources::binary_config_class,

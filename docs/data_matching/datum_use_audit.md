@@ -10,16 +10,16 @@ should survive regeneration.
 The initial current-source queue contained 84 open function datum-use rows.
 After rebuilding every module, including all eight GFx libraries from the
 current SDK overlays, the aggregate covers 34 modules and 71,415 retail plus
-71,066 candidate relocation sites with `OPEN=0`.
+70,905 candidate relocation sites with `OPEN=0`.
 
 The terminal function-row breakdown after the full datum-definition pass is:
 
-- 16,767 direct `EXACT` rows;
-- 152 `CURRENT_EXACT`, 24 `HASH_MAX_EXACT`, and 33 `CALL_CONE_EXACT` rows;
-- 70 source- and datum-diff-hash-bound `REVIEWED_WALL` rows.
+- 16,934 direct `EXACT` rows;
+- 57 `CALL_CONE_EXACT` rows;
+- 51 source- and datum-diff-hash-bound `REVIEWED_WALL` rows.
 
-The 70 reviews consist of 47 inline-boundary, 11 register-allocation, four
-other compiler materialization, three masked/generated-function, four folded
+The 51 reviews consist of 30 inline-boundary, six register-allocation, four
+other compiler-materialization, two masked/generated-function, eight folded
 referent-alias, and one CFG-boundary case. Their complete evidence is in
 `config/codex_wall_reviews.tsv`. A source or datum-difference change makes the
 corresponding review stale and reopens the gate.
@@ -44,14 +44,21 @@ classifying every difference:
 - the complete player-template table, cloud-noise and LPV tables, camera near
   plane, animation frame-rate constants, and several target linkage/ownership
   declarations were recovered from the linked retail allocations;
-- `lobby_menu::on_operation_denied_received` now emits retail's unknown-type
-  error, including its exact format string;
-- `new_bt_primitive` constructs box and cylinder half-extents without the
-  unrelated Vostok-to-Bullet Z-axis conversion and returns null in the default
-  arm, matching retail's constants and control flow.
+- AI position tolerance, hit-target config keys, command-line diagnostics,
+  resource paths/extensions, localization paths, and sound environment paths
+  were restored to the retail literals;
+- breath, dispersion, recoil, camera, ambient-volume, gravity, and light-id
+  initializers were restored to the values and linkage observed in retail;
+- Boost.Asio binder placeholders were restored to their PDB-proven spellings,
+  and engine allocation sites use the existing `VOSTOK_NEW_IMPL` /
+  `VOSTOK_DELETE_IMPL` contract;
+- Scaleform's D3D blend-state table, SDK `TypeInfo` flags, word-break table,
+  and missing explicit template emissions were restored from the target data.
 
-The historical fixes in the first five bullets are already present in the
-campaign base. The final two were found by the zero-gate closeout build.
+The final closeout build found one remaining real defect in this set:
+`weapon_dispersion_calculator` initialized three coefficients to `0.0f` and
+its maximum to `1.0f`; retail's relocation set proves `1.0f`, `1.0f`, `1.0f`,
+and `2.0f`. Correcting all four removed the last unreviewed `game_core` row.
 
 ## What remains outside this gate
 
@@ -60,20 +67,21 @@ either identical, proved equivalent under the current source body, or have a
 specific hash-scoped compiler/linker wall. It does not claim that every byte of
 the executable's data sections has a paired source definition.
 
-The same build reports 98.57% gross PDB-extent coverage, 98.41% whole-image
-exactness, and 99.96% byte fidelity among paired definitions, with 12,406 exact
-definitions. The sole remaining normalized-byte row is a proved
-static-initializer versus dynamic-initializer placement split whose runtime
-writes agree. The projection also retains 31,123 blockers and 1,457
-otherwise-exact functions / 587,746 code bytes with strict referent debt. Those
+The same build reports 99.47% gross PDB-extent coverage, 99.43% whole-image
+exactness, and 99.98% byte fidelity among paired definitions, with 33,511 exact
+definitions. The projected objdiff denominator is 421,520,461 of 429,715,669
+bytes (98.09%). It also retains 537 projection blockers and 1,495
+otherwise-exact functions / 605,556 code bytes with strict referent debt. Those
 are definition/ownership and compiler-context work for later passes; they are
 not unreviewed datum uses in the completed function audit.
 
-The integrity ratchet was tightened to this new baseline. Physical-allocation
-multiset accounting removed the old ambiguous bucket and exposed a slightly
-larger truthful access-shape/base-missing denominator; those four increased
-metrics are recorded at their measured values rather than hidden by the older
-identity-collapsing comparison.
+The integrity ratchet was remeasured against the expanded complete-extent and
+consumer-owned denominator. That denominator reduced BASE_ONLY, RELOCS,
+invalid extents, blockers, multiplicity, access-shape, and base-missing debt,
+while exposing more normalized-byte, relocation-topology, target-only, and
+strict-referent differences than the older identity-collapsing comparison.
+Both directions are recorded at their measured values; the stable acceptance
+criterion remains the hash-scoped 34-module `OPEN=0` function-use gate.
 
 ## Reproduction
 

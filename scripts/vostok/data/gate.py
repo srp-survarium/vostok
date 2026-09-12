@@ -143,10 +143,12 @@ def check(*, require_zero: bool = False) -> int:
         print("aggregate datum-use report does not cover every ledger module")
         return 1
 
+    context = render_relocs.build_audit_context()
+    module_inputs = render_relocs._inputs()
     module_rows = {}
     open_rows = []
     for module in expected_modules:
-        if render_relocs.check(module):
+        if render_relocs.check(module, context, module_inputs):
             return 1
         module_report = render_relocs._load_report(module)
         module_rows[module] = _module_row(module, module_report)

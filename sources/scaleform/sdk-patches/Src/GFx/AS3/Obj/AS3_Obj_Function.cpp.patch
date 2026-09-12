@@ -1,0 +1,10 @@
+--- a/Src/GFx/AS3/Obj/AS3_Obj_Function.cpp
++++ b/Src/GFx/AS3/Obj/AS3_Obj_Function.cpp
+@@ -552,6 +552,7 @@
+ 
+ }
+ 
++#line 564
+ typedef ThunkFunc2<Instances::ThunkFunction, __LINE__, Value, unsigned, const Value*> TFunc_ThunkFunction_length;
+ typedef ThunkFunc0<Instances::FunctionBase, __LINE__, UInt32> TFunc_FunctionBase_lengthGet;
+ 

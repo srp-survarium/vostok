@@ -15,7 +15,7 @@ namespace survarium {
 
 void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
-static u32 light_ids = 1000000;
+extern u32 light_ids;
 
 object_light::object_light( base_game_scene& w ) :
 	game_object_static( w )

@@ -125,7 +125,13 @@ void udp_match_connection::send( udp_match_packet* const packet )
 		m_remote_endpoint,
 		make_custom_alloc_handler	(
 			m_handler_allocator,
-			boost::bind( &udp_match_connection::handle_send, this, packet, _1, _2 )
+			boost::bind(
+				&udp_match_connection::handle_send,
+				this,
+				packet,
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred
+			)
 		)
 	);
 }
