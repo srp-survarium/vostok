@@ -95,8 +95,6 @@ bool inventory::action(
 				if ( m_holder->set_new_active_item( iitem ) )
 					m_active_slot = slot_id;
 			break;
-
-			default: NODEFAULT( );
 		}
 		return true;
 	}
