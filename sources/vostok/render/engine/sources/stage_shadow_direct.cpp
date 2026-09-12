@@ -320,8 +320,14 @@ void stage_shadow_direct::render_models(
 	render_surface_instance** it_d = begin_d;
 	render_surface_instance* const* end_d = m_caster_model.end( );
 	u32 render_index = 0;
-	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
+	for ( ; it_d != end_d; ++it_d, ++render_index )
 	{
+		if ( render_index >= num_render )
+		{
+			m_caster_model.erase( begin_d, begin_d + num_render );
+			break;
+		}
+
 		render_surface_instance& instance = **it_d;
 		render_surface* surface = instance.m_render_surface;
 		material_effects& effects = surface->get_material_effects( );
@@ -376,8 +382,6 @@ void stage_shadow_direct::render_models(
 		m_context->set_w( *instance.m_transform );
 		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0 );
 	}
-	if ( it_d != end_d )
-		m_caster_model.erase( begin_d, it_d );
 	if ( !pass_index && s_draw_grass_shadows_value && m_context->scene( )->get_grass( ) )
 		m_context->scene( )->get_grass( )->render( m_context, real_view_pos, shadow_render_stage, 0, 25.f, false, 0, true, cascade_index );
 
