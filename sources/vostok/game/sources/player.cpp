@@ -1098,7 +1098,8 @@ void player::kill( const u32 current_time_in_ms )
 		m_local_input_controller->set_yaw_pitch_distance( s_death_camera_yaw, s_death_camera_pitch, s_death_camera_distance );
 		m_local_input_controller->set_key_binder_context( 16 );
 		static_cast< game_world& >( m_game_scene ).switch_camera_mode( m_local_input_controller->input_mode( ) );
-		m_game_ui->show_ammo_indicator( false ); m_game_ui->show_quick_slots( false );
+		m_game_ui->show_ammo_indicator( false );
+		m_game_ui->show_quick_slots( false );
 	}
 
 	select_animations( current_time_in_ms );
