@@ -123,9 +123,11 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 		packet_reader	subpacket_reader( base_packet( pbyte( reader.pointer( ) ), subpacket_size ) );
 		reader.advance				( subpacket_size );
 		if ( i || !reader.eof( ) )
-			call_predicate			( predicate, subpacket_reader );
-		else
 		{
+
+			call_predicate			( predicate, subpacket_reader );
+		}
+		else {
 			++m_stats.received_low_level.packets.count;
 			m_stats.received_low_level.packets.bytes	+= packet_bytes;
 			++m_stats.received_low_level.messages.count;
