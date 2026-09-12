@@ -31,7 +31,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from vostok.core import log as _log
-from vostok.core.paths import REPO, SOURCES
+from vostok.core.paths import BASE_IDX, REPO, SOURCES, TARGET_IDX
 
 # Subtrees whose joined lines are not ours to unwind: third-party code kept in
 # tree, and tool programs that are not binary-matched.
@@ -85,14 +85,71 @@ def scan(root: Path, include_all: bool = False):
         for name in sorted(filenames):
             if not name.endswith((".cpp", ".h", ".inl")):
                 continue
+            stem = f"{rel}/{name}" if rel != "." else name
+            if not include_all and any(stem.startswith(s) for s in SKIPPED_SUBTREES):
+                continue  # a single vendored file (compressor_ppmd.cpp, ptmalloc3.c)
             path = Path(dirpath) / name
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
+            in_comment = False
             for number, line in enumerate(text.split("\n"), 1):
-                if is_joined(line):
+                code = line
+                if in_comment:
+                    end = code.find("*/")
+                    if end < 0:
+                        continue
+                    code = code[end + 2:]
+                    in_comment = False
+                if is_joined(code):
                     yield path, number, line.strip()
+                stripped = _LINE_COMMENT.sub("", _CHAR.sub("''", _STRING.sub('""', code)))
+                if stripped.rfind("/*") > stripped.rfind("*/"):
+                    in_comment = True
+
+
+def verdicts(rows):
+    """Map each (rel_path, line) to what the retail record says about the join.
+
+    `retail-one-liner`: the base and retail functions have the same statement count -
+    the joined line is retail's own shape (a one-line header body). `retail-split`:
+    retail records more statements - unwind it. `no-record`: no base statement starts
+    on that line (inlined everywhere), `no-target`: base-only function.
+    """
+    by_loc = {}
+    import json  # local: the indexes are large, keep the import cost off the plain scan
+
+    def load(path):
+        out = {}
+        for raw in path.read_text(errors="replace").split("\n"):
+            if raw:
+                rec = json.loads(raw)
+                out.setdefault(rec["name"], rec)
+        return out
+
+    target = load(TARGET_IDX) if TARGET_IDX.exists() else {}
+    base = load(BASE_IDX) if BASE_IDX.exists() else {}
+    for name, rec in base.items():
+        for stmt in rec.get("statements", []):
+            by_loc.setdefault((rec.get("file") or "", stmt["line"]), []).append(name)
+    result = {}
+    for rel, number in rows:
+        names = by_loc.get((rel.removeprefix("sources/"), number), [])
+        if not names:
+            result[(rel, number)] = "no-record"
+            continue
+        verdict = "no-target"
+        for name in names:
+            trec = target.get(name)
+            if trec is None:
+                continue
+            if len(trec["statements"]) > len(base[name]["statements"]):
+                verdict = "retail-split"
+                break
+            verdict = "retail-one-liner"
+        result[(rel, number)] = verdict
+    return result
 
 
 def blame_dates(path: Path) -> list[str]:
@@ -123,6 +180,8 @@ def main() -> int:
     parser.add_argument("--blame", action="store_true", help="add the git commit date of each line")
     parser.add_argument("--since", metavar="YYYY-MM-DD", help="only lines committed on/after this date (implies --blame)")
     parser.add_argument("--all", action="store_true", help="scan vendored subtrees and tool programs too")
+    parser.add_argument("--verdict", action="store_true",
+                        help="look each line up in the rich indexes: retail-one-liner / retail-split / no-record")
     parser.add_argument("root", nargs="?", type=Path, default=ENGINE)
     args = parser.parse_args()
     root = args.root.resolve()
@@ -144,10 +203,13 @@ def main() -> int:
                 continue
             rows.append((module_of(path, root), path.relative_to(REPO).as_posix(), number, date, text))
 
+    said = verdicts([(rel, number) for _, rel, number, _, _ in rows]) if args.verdict else {}
+
     if args.list:
         for module, rel, number, date, text in sorted(rows):
             stamp = f"\t{date}" if want_blame else ""
-            print(f"{rel}\t{number}{stamp}\t{text}")
+            tag = f"\t{said[(rel, number)]}" if args.verdict else ""
+            print(f"{rel}\t{number}{stamp}{tag}\t{text}")
         return 0
 
     per_module = Counter(module for module, *_ in rows)
@@ -157,6 +219,9 @@ def main() -> int:
     if want_blame:
         per_month = Counter(date[:7] for *_, date, _ in rows)
         print("by month: " + ", ".join(f"{m} {c}" for m, c in sorted(per_month.items())))
+    if args.verdict:
+        per_verdict = Counter(said.values())
+        print("verdicts: " + ", ".join(f"{v} {c}" for v, c in sorted(per_verdict.items())))
     return 0
 
 
