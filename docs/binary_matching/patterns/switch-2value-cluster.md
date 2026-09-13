@@ -23,3 +23,12 @@ switch ( type )
 }
 ```
 Evidence: artefact_lifebone_core::protect_affect 49.89 -> 100.
+
+The same retained `break;` can occur after a return inside a loop.
+`network_core::get_ip_address` (retail RVA `0x577040`) records a return on
+line 147 followed by a two-byte jump on line 148, at offset `0x216`. That
+unreachable jump targets the loop exit, not the backedge. Restoring `break;`
+after the return gives all 11 statements / 676 bytes and 100% in full build
+`bb8b533d29bb49c2ac2e6b406c16891b`. Do not attribute such a span to a generic
+closing-brace breakpoint artifact before testing the source-level exit implied
+by its destination. An unreachable `continue;` would have a different target.

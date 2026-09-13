@@ -233,6 +233,79 @@ unreachable-code, deprecated OpenSSL free, CRT-PDB and linker warnings remain;
 there is no warning on the changed send expression. The same two Scaleform
 UnexpectedEof extraction skips remain.
 
+## Entry-point unit in progress
+
+`get_ip_address` at RVA `0x577040` has one missing two-byte statement at
+offset `0x216`, retail line 148, immediately after the return on line 147.
+It jumps to loop exit `0x21d`, not the backedge `0x218`, and is unreachable
+because the return's cleanup already jumps to the epilogue. Test the ordinary
+C++ `break;` after return. This is stronger evidence than the old generic
+closing-brace-breakpoint explanation; the review question stays open until
+full-build verification. Preserve the five locals, host/service query and
+IPv4/non-loopback filtering. No padding, assembly, or flag change is involved.
+
+The complete owned unit is `network_core_entry_point.cpp`; memory_allocator,
+get_connection_info_from_string, initialize and finalize retain their
+existing bodies. The two nonempty sibling procedures have projected structure
+matches. Do not alter forced header includes or type emission as part of this
+function correction. Baseline get_ip_address: 10/11 statements, 674/676 bytes,
+99.0116 current and banked maximum.
+
+Build `bb8b533d29bb49c2ac2e6b406c16891b` passed in 10m44s and verifies the
+unreachable break: 100%, STRUCTURE MATCH, 11 statements and 676 bytes on
+both sides. Its two-byte jump at offset `0x216` reaches the loop exit exactly.
+All five named locals match, and the four sibling procedures retain their
+projected structure matches. The source gate remains 734/94/253. The global
+report has zero regressions, one improvement, zero fold-churn and no banked
+maximum falls. Existing compiler/linker warnings and two Scaleform extraction
+skips remain; there is no new warning on this break. Both network data gates
+report `OPEN=0`.
+
+The source/review TODO is cleared together, retaining a lean explanation for
+the dead break. Final cleanup build `bd28186b79c34f1aa5d20331c7c04a1a` passed
+in 10m41s: the function remains 100% with all statements and locals matching.
+The global report is unchanged (zero regressions, improvements or fold-churn),
+and no banked maximum falls. Warning categories and both extraction skips
+are unchanged. This disproves the previous claim that the missing statement was
+a non-steerable compiler/ICF wall; it does not establish that other dead jumps
+have this cause without checking their destinations and statement evidence.
+
+## Remaining class evidence after the entry-point build
+
+The fresh full topology comparison from build `bd28186b79c34f1aa5d20331c7c04a1a`
+still reports nine owned class cases: two record-multiplicity, five variant
+overlaps, one missing-base complete type, and one different class. None is
+silently closed by choosing one retail record.
+
+Three cases share a concrete layout dependency. Retail connection records
+`0x19026` and `0x7152e` use four byte-sized versus four word-sized sequence
+numbers respectively. The latter agrees with base and the emitted
+`process_incoming_packet` at RVA `0x121980`, which reads words and uses remote
+sequence offset `0x126`. Shrinking the shared class would contradict that body.
+
+| Field/layout | Byte-sequence retail variant | Word-sequence retail/base variant |
+| --- | --- | --- |
+| connection size | `0x530` | `0x538` |
+| connection handler allocator | `0x128` | `0x130` |
+| session endpoint | `0x538` | `0x540` |
+| session set hook | `0x554` (1364) | `0x55c` (1372) |
+| session destroy-list link | `0x564` (1380) | `0x56c` (1388) |
+| session size | `0x568` | `0x570` |
+
+The server's four nested/field-type differences embed exactly those two hook
+offsets. They are consequences of the session variant, not four incorrect
+visibility declarations. The target procedure inventory has no
+`udp_match_server` entry; its existing server-target review TODO remains open.
+Do not fabricate a second same-named class or change all client layouts to
+make these type-only records disappear.
+
+Likewise, emitted `match_client_impl` constructor RVA `0x766240` uses allocator
+offset `0x258000`, client offset `0x258038`, and state offset `0x258ba0`.
+These support the current 8192-packet / larger-client variant, not the unmatched
+2048-packet complete type. This does not prove every alternative type record
+was unused; broader compiland/consumer provenance remains open. Missing a
+complete TPI record is not permission to add a forced runtime instance.
+
 ## Reproduction
 
 ```sh
