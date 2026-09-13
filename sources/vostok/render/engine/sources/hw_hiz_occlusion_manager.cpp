@@ -170,10 +170,10 @@ void hw_hiz_occlusion_manager::render_occluders( renderer_context* in_context )
 	D3D11_VIEWPORT view_port;
 	view_port.Width = float( m_rasterize_width );
 	view_port.Height = float( m_rasterize_height );
-	view_port.TopLeftX = 0.f;
-	view_port.TopLeftY = 0.f;
 	view_port.MinDepth = 0.f;
 	view_port.MaxDepth = clear_value;
+	view_port.TopLeftX = 0.f;
+	view_port.TopLeftY = 0.f;
 
 	backend::ref( ).set_viewport( view_port );
 
@@ -201,14 +201,14 @@ void hw_hiz_occlusion_manager::render_debug(
 		!in_num_bounds_and_results )
 		return;
 
-	float const scale = 0.01f;
 	for ( u32 i = 0; i < in_num_bounds_and_results; ++i, ++in_bounds ) {
-		float4x4 const world_matrix =
-			math::create_scale( float3( in_bounds->w, in_bounds->w, in_bounds->w ) ) *
-			math::create_translation( in_bounds->xyz( ) );
-		in_context->set_w( world_matrix );
+		float const scale = in_bounds->w;
+		in_context->set_w(
+			math::create_scale( float3( scale, scale, scale ) ) *
+			math::create_translation( in_bounds->xyz( ) )
+		);
 		m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_render_debug_geometry_invisible_pass, 0 );
-		backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( scale, scale, scale, 0.f ) );
+		backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( 0.01f, 0.01f, 0.01f, 0.f ) );
 		m_sphere_occluder_geometry.render( );
 	}
 }
@@ -224,10 +224,10 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 		D3D11_VIEWPORT view_port;
 		view_port.Width = float( m_rt_depth_mips[mip_level_index]->width( ) );
 		view_port.Height = float( m_rt_depth_mips[mip_level_index]->height( ) );
-		view_port.TopLeftX = 0.f;
-		view_port.TopLeftY = 0.f;
 		view_port.MinDepth = 0.f;
 		view_port.MaxDepth = 1.f;
+		view_port.TopLeftX = 0.f;
+		view_port.TopLeftY = 0.f;
 		backend::ref( ).set_viewport( view_port );
 
 		backend::ref( ).set_render_targets( m_rt_depth_mips[mip_level_index].c_ptr( ), 0, 0, 0 );
@@ -284,10 +284,10 @@ void hw_hiz_occlusion_manager::render_model_bounds(
 	D3D11_VIEWPORT view_port;
 	view_port.Width = float( m_culling_buffer_width );
 	view_port.Height = float( m_culling_buffer_height );
-	view_port.TopLeftX = 0.f;
-	view_port.TopLeftY = 0.f;
 	view_port.MinDepth = 0.f;
 	view_port.MaxDepth = 1.f;
+	view_port.TopLeftX = 0.f;
+	view_port.TopLeftY = 0.f;
 
 	backend::ref( ).set_viewport( view_port );
 	backend::ref( ).set_render_targets( m_rt_culling_result.c_ptr( ), 0, 0, 0 );
