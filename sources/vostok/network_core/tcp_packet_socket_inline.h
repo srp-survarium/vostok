@@ -149,7 +149,7 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 	boost::system::error_code	error_code;
 	boost::asio::write( m_socket, buffer, boost::asio::transfer_all( ), error_code );
 
-	on_packet_has_been_sent( cloned_packet, error_code, cloned_packet->buffer_size( ) );
+	on_packet_has_been_sent( cloned_packet, error_code, boost::asio::buffer_size( buffer ) );
 }
 
 template < typename Socket >

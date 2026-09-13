@@ -185,6 +185,54 @@ does not adjudicate all other aliases. Existing C4701/C4715, missing-CRT-PDB
 and other compiler warnings remain, along with the two Scaleform extraction
 skips. No global regression-free claim is made.
 
+## TCP packet socket unit in progress
+
+The next owned unit is `tcp_packet_socket_inline.h`, with its eight emitted
+TCP specializations. Send at retail RVA `0x123ee0`, offset `0x9e`, reads the
+const-buffer reference and then its size field at offset 4. It passes that
+wire-buffer size to `on_packet_has_been_sent`, not the cloned packet's payload
+size and not the return value of `write`. Restore
+`boost::asio::buffer_size(buffer)`: the local Boost overload exposes exactly
+that size field. Keep the synchronous `write(..., transfer_all(), error_code)`
+and the three PDB-recorded locals. The target's 27-line gap before write is
+not evidence for inventing asynchronous send code or extra statements.
+
+Both sides currently have six send statements, but target's last two spans
+are 45/32 bytes versus base 45/28; the line-weighted alignment mispairs them.
+Verification must check the final argument's instructions as well as the
+post-build aligned verdict. The completion callback deletes the packet first
+and tests error/nonzero length, so this correction is not a claim that every
+nonempty send had observably different behavior.
+
+The receive callback remains unchanged: retail offset `0x1be` explicitly
+calls `tcp_packet::allocated_size`, matching the existing comparison.
+`on_packet_received` and `new_packet` have projected structure matches.
+The size-reader specializations retain +42/+38-byte async-read residuals;
+start-receiving retains an extra 18-byte handler-copy sequence, and
+stop-receiving retains nine bytes from different stack-slot encodings.
+The send callback retains a three-byte LOG-size residual. These remain open;
+no shared Boost helper is rewritten to steer this caller.
+
+Full build `8453e1826d534d8d8ef48ae9055aef02` passed in 10m24s.
+Send improves from 95.2833 to 99.9. All six ordinal spans now have the same
+offsets and sizes, and both bodies are 197 bytes. The completion argument
+loads the buffer's size at +4 exactly as retail does. Three named locals
+and their types remain identical. Buffer/error-code stack slots are still
+exchanged, and the source-line gap still causes the aligned comparator to
+report the write span as BASE_ONLY/TRGT_ONLY. This is not a structure-closure
+claim despite the ledger's approximate MATCH class. No padding or invented
+intervening statements were added. The seven other emitted header procedures
+retain their previous structure verdicts.
+
+No banked source maximum falls. The uncapped global report has three raw
+regressions to zero in untouched Scaleform Vector_int AS3join/fixedGet/AS3some,
+three improvements, and two separately classified fold-churn entries.
+Those raw attribution findings remain visible. Both network data gates
+report `OPEN=0`. Existing unused-variable/parameter, truncation, C4701/C4715,
+unreachable-code, deprecated OpenSSL free, CRT-PDB and linker warnings remain;
+there is no warning on the changed send expression. The same two Scaleform
+UnexpectedEof extraction skips remain.
+
 ## Reproduction
 
 ```sh
