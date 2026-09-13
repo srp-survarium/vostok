@@ -28,10 +28,10 @@ private:
 
 	virtual	void								tick						( ) override { /* no source */ }
 
-	virtual	bool								is_ready_to_be_deactivated	( ) const override
-	{
-		return false;
-	}
+	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; }
+
+
+
 
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override;
 
@@ -48,10 +48,10 @@ private:
 													animation::animation_player const&		animation_player
 												) override;
 
-	virtual	bool								is_sprinting				( ) const override
-	{
-		return false;
-	}
+	virtual	bool								is_sprinting				( ) const override { return false; }
+
+
+
 
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override
 	{
