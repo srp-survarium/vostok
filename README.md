@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,441 / 13,014 functions exact (80.23%) &middot; 11,094 / 13,014 functions exact-max (85.25%) &middot; 93.58% fuzzy &middot; 95.28% fuzzy-max.**
+**Overall: 10,441 / 13,014 functions exact (80.23%) &middot; 11,094 / 13,014 functions exact-max (85.25%) &middot; 93.58% fuzzy &middot; 95.29% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-09-12 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-09-13 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -54,7 +54,7 @@ _The projection has 42,014 paired copies across 2,129 units and 108 unresolved b
 
 _The linked-image audit is 99.44% exact and covers 99.47% by PDB type extent, with 99.99% paired-only fidelity (33883 / 33980 definitions). Integrity ratchet: armed._
 
-_Updated 2026-09-12._
+_Updated 2026-09-13._
 <!-- data-match:end -->
 
 ## Requirements

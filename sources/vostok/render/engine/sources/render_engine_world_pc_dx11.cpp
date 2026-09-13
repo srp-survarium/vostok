@@ -57,7 +57,7 @@
 #include <GFx.h>
 
 struct singletons_on_preinitialize {
-	singletons_on_preinitialize( vostok::configs::binary_config_ptr const& config, bool is_editor );
+	singletons_on_preinitialize( vostok::configs::binary_config_ptr const& in_config, bool is_editor );
 
 	vostok::render::resource_manager		resource_manager;
 	vostok::render::device					device;
@@ -89,7 +89,6 @@ renderer_cook::renderer_cook( ) :
 	resources::register_cook( this );
 }
 
-// claude@NOTE: mutable_buffer construction remains out-of-line only in the target.
 mutable_buffer renderer_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
@@ -105,7 +104,6 @@ void renderer_cook::deallocate_resource( void* buffer )
 	FREE									(buffer);
 }
 
-// claude@NOTE: query_result_for_cook::user_data is inlined only in the target.
 void renderer_cook::create_resource(
 	resources::query_result_for_cook&		in_out_query,
 	const_buffer							raw_file_data,
@@ -188,10 +186,10 @@ static void initialize_options( )
 }
 
 singletons_on_preinitialize::singletons_on_preinitialize(
-	vostok::configs::binary_config_ptr const& config,
+	vostok::configs::binary_config_ptr const& in_config,
 	bool is_editor
 ) :
-	resource_manager( config ),
+	resource_manager( in_config ),
 	device( is_editor )
 {
 }
@@ -432,9 +430,9 @@ static void query_materials_and_wait( vector< fs_new::virtual_path_string > cons
 		assert_on_fail_true
 	);
 
-	FREE( user_data_variants_ptrs );
-	FREE( user_data_variants );
 	FREE( requests );
+	FREE( user_data_variants );
+	FREE( user_data_variants_ptrs );
 
 	while ( waiting_for )
 	{
@@ -491,12 +489,14 @@ static void on_fs_iterator_materials_ready(
 			name.length() < strings::length( "post_process/" ) ||
 			!strstr( name.c_str(), "post_process/" )
 		)
+		{
 			query_names.push_back( name );
 
-		if ( query_names.size() == 50 )
-		{
-			query_materials_and_wait( query_names );
-			query_names.clear();
+			if ( query_names.size() == 50 )
+			{
+				query_materials_and_wait( query_names );
+				query_names.clear();
+			}
 		}
 	}
 
