@@ -14,7 +14,7 @@ skeleton_combined_model_cook::skeleton_combined_model_cook( ) : resources::trans
 {
 	resources::register_cook( this );
 }
-
+// sushi@TODO: Recover the try_get statement partition and callback construction boundary.
 void skeleton_combined_model_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	skeleton_combined_cook_data* cook_data = 0;
@@ -38,7 +38,7 @@ void skeleton_combined_model_cook::translate_query( resources::query_result_for_
 	);
 
 }
-
+// sushi@TODO: Recover the string-copy induction shape without changing the shared path helpers.
 void build_from_config( configs::binary_config_ptr& cfg, skeleton_combined_cook_data* cook_data )
 {
 	configs::binary_config_value root = cfg->get_root( );
@@ -63,15 +63,15 @@ void skeleton_combined_model_cook::on_config_loaded( resources::queries_result& 
 	}
 
 	skeleton_combined_cook_data* cook_data = NEW( skeleton_combined_cook_data )( true );
-	configs::binary_config_ptr config = static_cast_resource_ptr< configs::binary_config_ptr >(
+	configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >(
 		result[0].get_unmanaged_resource( ) );
-	build_from_config( config, cook_data );
+	build_from_config( cfg, cook_data );
 	query_resources_by_data( parent, cook_data );
 }
 void skeleton_combined_model_cook::query_resources_by_data( resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
 { u32 request_count = cook_data->models_count * 3 + 2;
 	resources::request* requests = ALLOC( resources::request, request_count );
-
+	// sushi@TODO: Recover the path-assignment and request traversal shape without inventing iterator locals.
 	requests[0].set( cook_data->skeleton_name.c_str( ), resources::skeleton_class );
 	requests[1].set( cook_data->bind_pose_name.c_str( ), resources::raw_data_class );
 
@@ -121,13 +121,13 @@ static enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum typ
 			return static_mesh_vertex_input_type;
 		case mt_static_submesh_colored:
 			return static_mesh_vertex_colored_input_type;
+		case mt_skinned_mesh:
 		case mt_skinned_submesh_1w:
 			return skeletal_1_bones_mesh_vertex_input_type;
 		case mt_skinned_submesh_2w:
 			return skeletal_2_bones_mesh_vertex_input_type;
 		case mt_skinned_submesh_3w:
 			return skeletal_3_bones_mesh_vertex_input_type;
-		case mt_skinned_mesh:
 		case mt_skinned_submesh_4w:
 			return skeletal_4_bones_mesh_vertex_input_type;
 		case mt_user_mesh_wire:
@@ -152,7 +152,7 @@ void skeleton_combined_model_cook::on_resources_loaded( resources::queries_resul
 	resources::request* requests = ALLOC( resources::request, parts_count );
 	resources::user_data_variant* user_data_variants = ALLOC( resources::user_data_variant, parts_count );
 	resources::user_data_variant** user_data_variants_ptrs = ALLOC( resources::user_data_variant*, parts_count );
-
+	// sushi@TODO: Recover material-copy and variant statement partitions; preserve the proven allocation lifetimes.
 	for ( u32 i = 0; i < cook_data->models_count; ++i )
 	{
 
@@ -194,7 +194,7 @@ void skeleton_combined_model_cook::on_resources_loaded( resources::queries_resul
 void skeleton_combined_model_cook::on_material_effects_loaded( resources::queries_result& data, resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
 {
 	if ( !data.is_successful( ) )
-
+		// sushi@TODO: Recover diagnostic source location and resource-registration statement attribution.
 		LOG_ERROR( "skeleton_combined_model_cook::on_material_effects_loaded : data loading failed" );
 	render_model* result_model = model_factory::create_render_model( mt_skinned_mesh );
 
@@ -238,7 +238,7 @@ skeleton_combined_render_model_instance_cook::skeleton_combined_render_model_ins
 {
 	resources::register_cook( this );
 }
-
+// sushi@TODO: Recover the try_get guard partition without removing the unused extraction call.
 void skeleton_combined_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	skeleton_combined_cook_data* cook_data = 0;
@@ -281,9 +281,13 @@ skeleton_combined_model_instance_cook::skeleton_combined_model_instance_cook( ) 
 
 void skeleton_combined_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	resources::user_data_variant ud;
 	skeleton_combined_cook_data* cook_data = 0;
 	if ( parent.user_data( ) )
 		parent.user_data( )->try_get( cook_data );
+
+	ud.set( cook_data );
+	resources::user_data_variant const* params[2] = { &ud, 0 };
 
 	resources::request r[2] = {
 		{ parent.get_requested_path( ), resources::skeleton_combined_render_model_instance_class },
@@ -293,10 +297,6 @@ void skeleton_combined_model_instance_cook::translate_query( resources::query_re
 			resources::skeleton_class
 		}
 	};
-
-	resources::user_data_variant ud;
-	ud.set( cook_data );
-	resources::user_data_variant const* params[2] = { &ud, 0 };
 
 	resources::query_resources(
 		r, 2,
