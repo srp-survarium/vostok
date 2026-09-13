@@ -165,7 +165,7 @@ bool set_client_rect( HWND h_wnd, s32 pos_x, s32 pos_y, s32 size_x, s32 size_y )
 
 	return true;
 }
-
+// sushi@TODO: Recover the max-call partitions and raw pos_y projection without dropping the local.
 void res_render_output::set_size( const u32 in_width, const u32 in_height, const bool in_fullscreen, bool force_resize )
 {
 	m_windowed = !in_fullscreen;
@@ -235,7 +235,7 @@ void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_
 
 	if ( m_swap_chain->SetFullscreenState( !m_windowed, output ) != S_OK )
 	{
-		SetFocus( m_window );
+		SetFocus( m_swap_chain_desc.OutputWindow );
 
 		MSG msg;
 		BOOL message_result;
