@@ -16,10 +16,10 @@ namespace render {
 
 namespace survarium {
 
-// void* generate_shaders_world::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x1234a0]: <0xb2740>|0x000|      :'32'	{
 
-// one of game_entry_point.cpp's pending statics (s_generate_shaders_world) -
-// that refresh belongs to the TU-enablement batch
+
+
+
 class generate_shaders_world : public engine_user::world {
 public:
 			explicit		generate_shaders_world		( render::world& render_world );
@@ -47,12 +47,12 @@ public:
 
 	virtual	void			on_fullscreen_alttab		( bool arg_0 ) override { /* no source */ }
 
-	virtual	ui::world&		ui_world					( ) override
-	{
-		return *( ui::world* )NULL;
-	}
+	virtual	ui::world&		ui_world					( ) override { return *( ui::world* )NULL; }
 
-	virtual	input::world&	input_world					( ) override { /* no source */ return *( input::world* )NULL; }
+
+
+
+	virtual	input::world&	input_world					( ) override { return *( input::world* )NULL; }
 
 private:
 			void			generate_renderer_shaders	( );
