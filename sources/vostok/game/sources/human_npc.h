@@ -70,7 +70,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > human_npc_ptr;
 
-// void* human_npc::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0xabb50]: <0xabb40>|0x000|      :'235'	{
+
 
 class human_npc : public ai::npc , public ai::game_object , public sound::sound_producer , public sound::sound_receiver , public hit_receiver , public game_object_ {
 public:
@@ -161,12 +161,12 @@ public:
 		return m_is_patrolling;
 	}
 
-	virtual	bool								is_at_cover					( ) const override
-	{
-		return false;
-	}
+	virtual	bool								is_at_cover					( ) const override { return false; }
+
+
+
 	virtual	bool								is_safe						( ) const override;
-	virtual	bool								is_invisible				( ) const override { /* no source */ return false; }
+	virtual	bool								is_invisible				( ) const override { return false; }
 	virtual	bool								is_target_in_melee_range	( ai::npc const* const target ) const override;
 	virtual	bool								is_at_node					( ai::game_object const* const node ) const override;
 
