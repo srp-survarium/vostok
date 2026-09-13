@@ -29,7 +29,7 @@ void shadow_batched_geometry::add_vertex(
 	vertex.object_position = not_modified_position;
 	m_vertices.push_back( vertex );
 }
-
+// sushi@TODO: Recover the surface_set initialization partition and pointer-store order.
 void shadow_batched_geometry::build(
 	vector<render_model_instance_impl_ptr>& model_instances
 )
@@ -45,15 +45,13 @@ void shadow_batched_geometry::build(
 
 	surfaces_type surfaces;
 	render_model_instance_impl_ptr* it = model_instances.begin( );
-	render_model_instance_impl_ptr* end = model_instances.end( );
-	for ( ; it != end; ++it )
+	for ( render_model_instance_impl_ptr* end = model_instances.end( ); it != end; ++it )
 	{
 		vector<render_surface_instance*> model_surfaces;
 		( *it )->get_surfaces( NULL, NULL, model_surfaces, false, 0, 3 );
 
 		render_surface_instance** it_surf = model_surfaces.begin( );
-		render_surface_instance** end_surf = model_surfaces.end( );
-		for ( ; it_surf != end_surf; ++it_surf )
+		for ( render_surface_instance** end_surf = model_surfaces.end( ); it_surf != end_surf; ++it_surf )
 		{
 			if ( !( *it_surf )->m_render_surface->m_materail_effects_instance )
 			{
@@ -76,8 +74,7 @@ void shadow_batched_geometry::build(
 
 	std::sort( surfaces.begin( ), surfaces.end( ), sort_predicate( ) );
 
-	surface_set* surface = surfaces.begin( );
-	for ( ; surface != surfaces.end( ); ++surface )
+	for ( surface_set* surface = surfaces.begin( ); surface != surfaces.end( ); ++surface )
 		surface->surface->add_shadow_vertices( this, surface->transform );
 
 	finalize_batch( );
