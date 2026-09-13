@@ -11,12 +11,6 @@ using boost::asio::ip::tcp;
 namespace vostok {
 namespace network_core {
 
-// claude@NOTE: structure matches (5 stmts / 2 locals). Residual is the ASSERT: the target's
-// plain ASSERT emits a single-arg expression_eater( prefix ) guarded block, but our MASTER_GOLD
-// ASSERT_T -> VOSTOK_EMPTY_EXPRESSION_VA_ARGS emits no eater (just the identity(false) guard).
-// The original game's VOSTOK_EMPTY_EXPRESSION_VA_ARGS expanded to expression_eater(__VA_ARGS__);
-// recovering it is a shared debug_macros.h change affecting every plain-ASSERT site, out of
-// scope for this TU. ASSERT_U( prefix ) overshoots (pushes prefix AND assert_untyped).
 void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( prefix );
@@ -95,9 +89,8 @@ void http_client::handle_connect( boost::system::error_code const& err, tcp::res
 	{
 		m_socket.close();
 		tcp::endpoint endpoint = *endpoint_iterator;
-		boost::asio::async_connect(
-			m_socket,
-			&endpoint,
+		m_socket.async_connect(
+			endpoint,
 			boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );
 	}
 	else
@@ -119,12 +112,6 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 		on_error( err );
 }
 
-// claude@NOTE: structure + local set (3) match. Residual is StlPort basic_string::find overload
-// resolution: status_message.find( "HTTP/" ) / "200" - the target binds the 2-arg
-// find( const char* s, size_type pos ) which computes traits::length internally, our StlPort
-// headers bind the path that pre-computes char_traits::length( s ) before the call (+0xd each).
-// Library/header version wall, not steerable from this source. The async_read( ... ) tail is the
-// usual boost::bind / read_streambuf_op completion-handler inline-vs-call.
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )
@@ -133,28 +120,28 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 
 		std::string status_message;
 		std::getline( response_stream, status_message );
-		s32	found = status_message.find( "HTTP/" );	// @TODO: std::string::size_type
+		s32	found = status_message.find( "HTTP/" );
 		if ( !response_stream || found != 0 )
 		{
 			LOG_ERROR( "http_client: Invalid response" );
-		} else
-		{
-			found = status_message.find( "200" );
-			if ( found == status_message.npos )
-			{
-				LOG_ERROR( "http_client: Response returned with status code %s", status_message.c_str( ) );
-			} else
-			{
-				read_lines_from_stream( "read_status_line", m_response_buff );
-
-				boost::asio::async_read(
-					m_socket,
-					m_response_buff,
-					boost::asio::transfer_at_least( 1 ),
-					boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error )
-				);
-			}
+			return;
 		}
+
+		found = status_message.find( "200" );
+		if ( found == status_message.npos )
+		{
+			LOG_ERROR( "http_client: Response returned with status code %s", status_message.c_str( ) );
+			return;
+		}
+
+		read_lines_from_stream( "read_status_line", m_response_buff );
+
+		boost::asio::async_read(
+			m_socket,
+			m_response_buff,
+			boost::asio::transfer_at_least( 1 ),
+			boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error )
+		);
 	} else
 		on_error( err );
 }

@@ -22,3 +22,11 @@ calling the four-argument resolver-query constructor. This is
 sets `PF_UNSPEC`, whereas the former uses the given protocol's family.
 The default `address_configured` flags (`0x400`) are unchanged. Inspect the
 extra argument, not merely the demangled constructor family name.
+
+Distinguish socket-member `async_connect(endpoint, handler)` from the free
+iterator algorithm `asio::async_connect(socket, iterator, handler)`. Retail
+HTTP retry (RVA `0x77a820`, call offset `0x1c5`) passes the local endpoint by
+reference to the socket member. Passing `&endpoint` to the free algorithm
+does not recover that call: it supplies an iterator into a local object and
+changes the retry/lifetime semantics. The resolver iterator belongs in this
+function's completion callback, not in an invented one-element pointer range.

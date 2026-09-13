@@ -130,6 +130,61 @@ Existing C4701/C4715 and missing-CRT-PDB warnings remain, alongside the two
 Scaleform extraction skips. The generated README and ledger retain this build's
 results; there is no claim of a regression-free global report.
 
+## HTTP unit in progress
+
+The owned unit is `sources/vostok/network_core/sources/http_client.cpp`, including the
+free `read_lines_from_stream` helper. Its eleven emitted procedures were
+checked before edits; no header/library rewrite is part of this unit.
+
+`handle_read_status_line` at RVA `0x77a3e0` records `s32 found`, so remove the
+incorrect suggestion to replace it with `size_type`. At offsets `0x19d` and
+`0x271`, retail independently destroys the status string and response stream
+then jumps to the epilogue. These are the two explicit returns after error
+logging, not nested else-join branches. Restore the guards while keeping the
+three locals inside the outer successful-read block. The find-overload
+call/inline residual remains separate; do not label the entire function a
+library-version wall.
+
+`handle_connect` at RVA `0x77a820`, offset `0x1c5`, calls the socket member
+`async_connect(endpoint, handler)` on its retry path. The reconstructed free
+`boost::asio::async_connect(socket, &endpoint, handler)` instead treats a local
+endpoint pointer as an iterator and retains different retry/lifetime behavior.
+Restore the member call, preserving the observed Asio error placeholder and
+incremented resolver iterator stored in the callback.
+
+Remove the obsolete prefix/assert narrative: the current
+`VOSTOK_UNREFERENCED_PARAMETERS(prefix)` already emits the target's guarded
+single-argument helper call, and the remaining disassembly name differences
+are folded aliases. No shared assertion macro is changed. The two stale
+source-status paragraphs are deleted rather than retained as layout padding.
+Full build `8a2e9e8411bd4bf891ae5f9344b955ee` passed in 10m42s.
+`handle_connect` improves from 97.9796 to 100, with all eight statements and
+549 bytes matching. `handle_read_status_line` improves from a banked 90.8722
+(previous current 90.4977) to 94.3516. All 16 statements now align, including
+both independent 24-byte string/stream cleanup-and-return paths. The three
+named locals and their types match. Remaining sizes are +13 at each `find`,
+-4 at the first LOG, +1 at `read_lines_from_stream`, and -1 at async-read.
+The target retains a two-argument string-find call while base expands length
+and calls the three-argument overload. LOG line immediates are still 126/133
+versus retail 132/138; these and register choices remain open, not a claim of
+complete HTTP closure. Removing the stale helper preamble also restores
+`on_error`'s retail LOG line 58 and raises that function to 100.
+
+The other nine procedures retain their projected structure matches (the
+constructor has no addressed statements). HTTP class topology is identical;
+the strict source gate remains 734 MATCH / 94 AMBIGUOUS / 253 UNOBSERVABLE.
+Both network data gates report `OPEN=0`.
+
+The uncapped global report has 140 regressions, all to zero, 212 improvements,
+and 115 separately classified fold-churn entries; no banked source maximum
+falls. These raw regressions are retained for attribution review, not declared
+harmless. For example, the report's network-world deleting-destructor drop
+does not mean its body disappeared: direct PDB inspection still pairs the
+44-byte scalar deleting destructor and the ledger records 100. That sample
+does not adjudicate all other aliases. Existing C4701/C4715, missing-CRT-PDB
+and other compiler warnings remain, along with the two Scaleform extraction
+skips. No global regression-free claim is made.
+
 ## Reproduction
 
 ```sh
