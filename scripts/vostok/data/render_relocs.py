@@ -259,6 +259,33 @@ class DatumIndex:
         index = bisect.bisect_right(starts, rva)
         return starts[index] if index < len(starts) else None
 
+    def _compiler_stub_identities(self, rva: int) -> frozenset[str]:
+        """Identify narrow MSVC/linker code stubs omitted from the PDB."""
+        section = self.image.section_at(rva)
+        if section is None or section.name != ".text":
+            return frozenset()
+        raw = self.image.read_rva(rva, 16)
+        if len(raw) >= 8 and raw[0] == 0x83 and raw[3] == 0xE9:
+            destination = rva + 8 + struct.unpack_from("<i", raw, 4)[0]
+            identities = self.function_identities.get(destination, frozenset())
+            if identities:
+                prefix = raw[:4].hex()
+                return frozenset(
+                    f"THUNK:{prefix}:{identity}" for identity in identities
+                )
+        if len(raw) >= 6 and raw[:2] == b"\xff\x35":
+            pointer = struct.unpack_from("<I", raw, 2)[0]
+            pointer_rva = (
+                pointer - self.image.image_base
+                if pointer >= self.image.image_base else pointer
+            )
+            identities = self.resolve_all(pointer_rva)
+            if any("pPurecall" in identity for identity in identities):
+                return frozenset(
+                    f"DELAY_PURECALL:{identity}" for identity in identities
+                )
+        return frozenset()
+
     def resolve_all(self, rva: int) -> frozenset[str]:
         datum = self.evidence_owner(rva)
         if datum is not None:
@@ -266,6 +293,9 @@ class DatumIndex:
         if functions := self.function_identities.get(rva):
             return functions
         section = self.image.section_at(rva)
+        if section is not None and section.name == ".text":
+            if stubs := self._compiler_stub_identities(rva):
+                return stubs
         return frozenset((
             f"S:{section.name}+{rva - section.rva:#x}"
             if section is not None else f"RVA:{rva:#x}",
@@ -276,6 +306,12 @@ class DatumIndex:
     ) -> tuple[Datum, ...]:
         """Return every allocation spelling valid at one machine address."""
         rows = list(self.exact.get(rva, ()))
+        # MSVC folds ``table[index - 1]`` into an indexed absolute operand at
+        # ``table - 4``.  Keep that allocation as an alias even when the
+        # address also lies in the tail of a preceding PDB object.
+        rows.extend(
+            row for row in self.exact.get(rva + 4, ()) if row.complete
+        )
         rows.extend(
             row for row in self.pages.get(rva >> 12, ())
             if row.end is not None and row.rva <= rva < row.end
@@ -632,9 +668,13 @@ def _function_identities(side: str, pairs: sema_pairing.Pairing
     return {rva: frozenset(names) for rva, names in result.items()}
 
 
-def _datum_index(side: str, image: PEImage,
-                 pairs: sema_pairing.Pairing) -> DatumIndex:
-    pdb_symbols = load(
+def _datum_index(
+    side: str,
+    image: PEImage,
+    pairs: sema_pairing.Pairing,
+    symbols: list[pipeline.DataSymbol] | None = None,
+) -> DatumIndex:
+    pdb_symbols = symbols if symbols is not None else load(
         paths.DATA_TARGET_INDEX if side == "target" else paths.DATA_BASE_INDEX
     )
     overrides = {
@@ -654,10 +694,14 @@ def _datum_index(side: str, image: PEImage,
                 f"cv:{symbol.type_index:#x}"
                 if symbol.type_index else "PDB public-only"
             ),
-            source="pdb-extent" if extent is not None else "pdb",
+            source=(
+                "pdb-extent" if extent is not None
+                else symbol.size_kind if symbols is not None
+                else "pdb"
+            ),
             comment=extent.comment if extent is not None else "",
         ))
-    if side == "target":
+    if side == "target" and symbols is None:
         for symbol in missing.load_symbols():
             section = image.section_at(symbol.rva)
             if section is None:
@@ -1065,9 +1109,18 @@ def _extentless_end(datum: Datum, index: DatumIndex) -> int:
         and end - 4 in index.relocations
     ):
         # An MSVC vftable public points at its first virtual slot.  The RTTI
-        # complete-object locator for the next table is stored at
-        # next_vftable-4 and is not part of this symbol's table.
-        end -= 4
+        # complete-object locator for the next table can be stored at
+        # next_vftable-4.  A final virtual slot occupies the same geometric
+        # position, so subtract only when that relocated cell does not point
+        # into code.
+        value = index.image.u32_rva(end - 4)
+        destination = (
+            value - index.image.image_base
+            if value >= index.image.image_base else value
+        )
+        target_section = index.image.section_at(destination)
+        if target_section is None or target_section.name != ".text":
+            end -= 4
     return end
 
 
@@ -1442,6 +1495,99 @@ def _datum_token_aliases(
     )
 
 
+def _paired_index_bias_aliases(
+    target_index: DatumIndex,
+    base_index: DatumIndex,
+    target_rva: int,
+    base_rva: int,
+) -> tuple[tuple[Datum, Datum], ...]:
+    """Recover the named table behind an indexed negative displacement.
+
+    MSVC encodes ``table[index - first]`` as an indexed access whose absolute
+    operand is ``table - first * sizeof(element)``.  That operand can sit well
+    inside an unrelated preceding PDB allocation on both images.  A shared
+    later PDB identity at the same positive displacement is the unambiguous
+    logical owner; the paired instruction supplies the shifting candidate
+    address, so no candidate RVA is persisted.
+    """
+    section = target_index.image.section_at(target_rva)
+    if section is None:
+        return ()
+    starts = target_index.starts_by_section.get(section.name, ())
+    begin = bisect.bisect_right(starts, target_rva)
+    end = bisect.bisect_right(starts, min(section.end, target_rva + 0x10000))
+    result = []
+    for start in starts[begin:end]:
+        displacement = start - target_rva
+        for target_datum in target_index.exact[start]:
+            for base_datum in base_index.by_identity.get(
+                target_datum.identity, ()
+            ):
+                if base_datum.rva - base_rva != displacement:
+                    continue
+                if base_datum.section != target_datum.section:
+                    continue
+                result.append((target_datum, base_datum))
+    return tuple(sorted(set(result), key=lambda pair: (
+        pair[0].rva, pair[0].identity, pair[1].rva,
+    )))
+
+
+def _paired_folded_vtable_prefix_exact(
+    target_index: DatumIndex,
+    base_index: DatumIndex,
+    target_rva: int,
+    base_rva: int,
+    target_hint: str,
+    base_hint: str,
+) -> bool:
+    """Prove two differently named ICF vtable representatives equivalent.
+
+    Public-only PDB vtable extents can run through adjacent folded tables when
+    the linker retained no symbol at the real boundary.  The other image often
+    retains that boundary.  Compare the smaller independently bounded prefix,
+    but only when every cell is a relocated function pointer; ordinary arrays
+    and wrong constants must never gain this alias.
+    """
+    target = target_index.evidence_owner(target_rva, target_hint)
+    base = base_index.evidence_owner(base_rva, base_hint)
+    if (
+        target is None or base is None
+        or target.rva != target_rva or base.rva != base_rva
+        or not target.identity.startswith("E:??_7")
+        or not base.identity.startswith("E:??_7")
+    ):
+        return False
+
+    target_size = (
+        target.size if target.complete
+        else _extentless_end(target, target_index) - target.rva
+    )
+    base_size = (
+        base.size if base.complete
+        else _extentless_end(base, base_index) - base.rva
+    )
+    size = min(target_size or 0, base_size or 0)
+    if size < 4 or size % 4:
+        return False
+    if not all(
+        target_rva + offset in target_index.relocations
+        and base_rva + offset in base_index.relocations
+        for offset in range(0, size, 4)
+    ):
+        return False
+    comparison = _compare_window(
+        target_index.image,
+        base_index.image,
+        target_index,
+        base_index,
+        target_rva,
+        base_rva,
+        size,
+    )
+    return comparison["status"] == "EXACT"
+
+
 def _content_keys(index: DatumIndex) -> set[str]:
     """Return address-independent keys for compiler-owned allocations."""
     result = set()
@@ -1582,7 +1728,11 @@ def _function_data_rows(
     base_cones: CallConeIndex | None = None,
     reviews: dict[str, dict[str, str]] | None = None,
     pairs: sema_pairing.Pairing | None = None,
+    target_sites: dict[int, Site] | None = None,
+    base_sites: dict[int, Site] | None = None,
+    base_function_accesses: dict[int, tuple[Access, ...]] | None = None,
 ) -> list[dict[str, str]]:
+    folded_vtable_cache: dict[tuple[int, int, str, str], bool] = {}
     groups: dict[tuple[str, str], dict] = defaultdict(lambda: {
         "paired": False,
         "target_rvas": set(), "base_rvas": set(),
@@ -1590,7 +1740,142 @@ def _function_data_rows(
         "target_aliases": defaultdict(set),
         "base_aliases": defaultdict(set),
     })
+
+    def add_access(
+        side: str,
+        access: Access,
+        owner: tuple[str, str] | None = None,
+    ) -> tuple[str, str]:
+        key = owner or (access.unit, access.function)
+        group = groups[key]
+        peer = "base" if side == "target" else "target"
+        group[f"{side}_rvas"].add(f"{access.function_rva:#x}")
+        if owner is not None:
+            group["paired"] = True
+        elif access.partner_rva is not None:
+            group[f"{peer}_rvas"].add(f"{access.partner_rva:#x}")
+            group["paired"] = True
+        index = target_index if side == "target" else base_index
+        counterpart = base_index if side == "target" else target_index
+        datum = index.evidence_owner(access.target, access.identity)
+        reference = _reference(datum, access.target, access.identity)
+        token = _datum_token(index, access.target, reference, counterpart)
+        group[side][token].add(reference)
+        group[f"{side}_aliases"][token].update(_datum_token_aliases(
+            index,
+            access.target,
+            reference,
+            counterpart,
+            one_past=access.access == "address",
+        ))
+        return token, reference
+
+    # A physical instruction can carry hundreds of valid PDB function aliases
+    # after LTCG/ICF.  The site audit deliberately emits one physical row, but
+    # the function-use gate must project that evidence onto every logical
+    # owner.  Otherwise whichever alias _access_pair() selected was audited and
+    # all sibling aliases appeared to have lost their datum.
+    logical_target: dict[tuple[str, str], set[Access]] = defaultdict(set)
+    base_by_function: dict[int, set[Access]] = defaultdict(set)
+    for site in (target_sites or {}).values():
+        for access in site.accesses:
+            logical_target[(access.unit, access.function)].add(access)
+            add_access("target", access)
+    for site in (base_sites or {}).values():
+        for access in site.accesses:
+            base_by_function[access.function_rva].add(access)
+    for function_rva, accesses in (base_function_accesses or {}).items():
+        base_by_function[function_rva].update(accesses)
+
+    # Pair logical aliases independently of physical-site bijection.  Many
+    # retail functions may legitimately fold into one candidate body (or the
+    # reverse), but a given logical owner still has an exact function-offset
+    # correspondence.  The paired row is also where index-bias and folded-
+    # vtable equivalence can be proven safely.
+    for key in sorted(logical_target):
+        partner_rvas = {
+            access.partner_rva
+            for access in logical_target[key]
+            if access.partner_rva is not None
+        }
+        base_by_site: dict[int, list[Access]] = defaultdict(list)
+        for partner_rva in partner_rvas:
+            assert partner_rva is not None
+            physical = base_by_function.get(partner_rva, ())
+            # One physical ICF body is the implementation of every logical PDB
+            # alias paired to it.  Project its complete datum set, including
+            # candidate-only accesses for which retail has no site to drive a
+            # direct pair.
+            unique: dict[tuple, Access] = {}
+            for right in physical:
+                signature = (
+                    right.site, right.instruction, right.target, right.access,
+                    right.width, right.form, right.scale, right.identity,
+                    right.instruction_text,
+                )
+                unique.setdefault(signature, right)
+            for right in unique.values():
+                base_by_site[right.site].append(right)
+                add_access("base", right, key)
+        for left in sorted(logical_target[key], key=lambda row: (
+            row.site, row.instruction, row.target,
+        )):
+            if left.partner_rva is None:
+                continue
+            candidate = left.partner_rva + left.function_offset
+            rights = base_by_site.get(candidate, ())
+            if not rights:
+                continue
+            right = min(rights, key=lambda row: (
+                row.token != left.token,
+                abs(row.function_offset - left.function_offset),
+                row.instruction,
+                row.target,
+            ))
+            target_token, target_reference = add_access("target", left)
+            base_token, base_reference = add_access("base", right, key)
+            group = groups[key]
+            if target_reference != base_reference:
+                for target_datum, base_datum in _paired_index_bias_aliases(
+                    target_index, base_index, left.target, right.target
+                ):
+                    group["target_aliases"][target_token].add(
+                        _datum_token_for_datum(
+                            target_index, target_datum, base_index
+                        )
+                    )
+                    group["base_aliases"][base_token].add(
+                        _datum_token_for_datum(
+                            base_index, base_datum, target_index
+                        )
+                    )
+                if (
+                    left.access == "address"
+                    and right.access == "address"
+                    and _paired_folded_vtable_prefix_exact(
+                        target_index,
+                        base_index,
+                        left.target,
+                        right.target,
+                        target_reference,
+                        base_reference,
+                    )
+                ):
+                    group["target_aliases"][target_token].add(base_token)
+                    group["base_aliases"][base_token].add(target_token)
+
     for row in audit:
+        if (
+            pairs is not None
+            and row["pair_status"] == "BASE_ONLY"
+            and row["function"] not in pairs.target
+        ):
+            # A candidate-only ICF representative is not a logical target
+            # function.  Its physical body's data uses have already been
+            # projected onto every paired retail alias above; emitting the
+            # linker-chosen candidate spelling as another function invents a
+            # target datum obligation that does not exist.
+            continue
         key = (row["unit"], row["function"])
         group = groups[key]
         # A paired function can legitimately have no relocation on one side.
@@ -1605,9 +1890,14 @@ def _function_data_rows(
             group["target_rvas"].add(row["target_function_rva"])
         if row["base_function_rva"] != "-":
             group["base_rvas"].add(row["base_function_rva"])
+        target_token = None
+        base_token = None
+        target_rva = None
+        base_rva = None
         if row["target_target_rva"] != "-":
             rva = int(row["target_target_rva"], 0)
-            token = _datum_token(
+            target_rva = rva
+            token = target_token = _datum_token(
                 target_index, rva, row["target_identity"], base_index
             )
             group["target"][token].add(row["target_identity"])
@@ -1620,7 +1910,8 @@ def _function_data_rows(
             ))
         if row["base_target_rva"] != "-":
             rva = int(row["base_target_rva"], 0)
-            token = _datum_token(
+            base_rva = rva
+            token = base_token = _datum_token(
                 base_index, rva, row["base_identity"], target_index
             )
             group["base"][token].add(row["base_identity"])
@@ -1631,6 +1922,65 @@ def _function_data_rows(
                 target_index,
                 one_past=row.get("base_access") == "address",
             ))
+        if (
+            target_token is not None
+            and base_token is not None
+            and row.get("identity_status") == "EXACT"
+            and row.get("datum_status") == "EXACT"
+        ):
+            # Content keys include every linker-visible alias of relocated
+            # function pointers, so the same named allocation can hash
+            # differently when only its ICF representative set changes.  A
+            # paired, byte/relocation-exact window proves the two tokens name
+            # the same datum without discarding content evidence globally.
+            group["target_aliases"][target_token].add(base_token)
+            group["base_aliases"][base_token].add(target_token)
+        if (
+            target_token is not None
+            and base_token is not None
+            and row.get("identity_status") == "DIFF"
+        ):
+            assert target_rva is not None and base_rva is not None
+            for target_datum, base_datum in _paired_index_bias_aliases(
+                target_index, base_index, target_rva, base_rva
+            ):
+                group["target_aliases"][target_token].add(
+                    _datum_token_for_datum(
+                        target_index, target_datum, base_index
+                    )
+                )
+                group["base_aliases"][base_token].add(
+                    _datum_token_for_datum(
+                        base_index, base_datum, target_index
+                    )
+                )
+        if (
+            target_token is not None
+            and base_token is not None
+            and target_rva is not None
+            and base_rva is not None
+            and row.get("identity_status") == "DIFF"
+            and row.get("target_access") == "address"
+            and row.get("base_access") == "address"
+        ):
+            cache_key = (
+                target_rva, base_rva,
+                row["target_identity"], row["base_identity"],
+            )
+            prefix_exact = folded_vtable_cache.get(cache_key)
+            if prefix_exact is None:
+                prefix_exact = _paired_folded_vtable_prefix_exact(
+                    target_index,
+                    base_index,
+                    target_rva,
+                    base_rva,
+                    row["target_identity"],
+                    row["base_identity"],
+                )
+                folded_vtable_cache[cache_key] = prefix_exact
+            if prefix_exact:
+                group["target_aliases"][target_token].add(base_token)
+                group["base_aliases"][base_token].add(target_token)
 
     target_content = _content_keys(target_index)
     base_content = _content_keys(base_index)
@@ -1859,22 +2209,18 @@ def _function_data_resolution(
     cone_status: str = "NOT_CHECKED",
     reviewed: bool = False,
 ) -> str:
-    """Separate raw relocation equality from hash-scoped byte proof.
+    """Separate raw relocation equality from independent datum proof.
 
     Direct datum ownership moves across function and overlapping PDB-owner
     boundaries under LTCG. A raw USE_DIFF therefore remains valuable evidence.
-    It closes only through byte proof for this source hash or an independently
-    decoded call cone with the same complete datum set. Ordinary parked ledger
-    notes describe code-matching work and are not data-audit evidence.
+    Code equality cannot close it: objdiff deliberately normalizes relocation
+    targets, so a 100% body can still load the wrong object. It closes only
+    through an independently decoded call cone with the same complete datum set
+    or a dedicated, hash-scoped data review. Ordinary parked ledger notes
+    describe code-matching work and are not data-audit evidence.
     """
     if raw_status == "EXACT":
         return "EXACT"
-    current = ledger_row.get("cur")
-    if isinstance(current, (int, float)) and current >= 100:
-        return "CURRENT_EXACT"
-    maximum = ledger_row.get("max")
-    if isinstance(maximum, (int, float)) and maximum >= 100:
-        return "HASH_MAX_EXACT"
     if cone_status == "EXACT":
         return "CALL_CONE_EXACT"
     if reviewed:
@@ -2034,9 +2380,10 @@ def _write_markdown(audit: list[dict[str, str]],
         "A `*_DEFINITION_MISSING` result is stronger: at least one allocation",
         "has neither a stable identity/content counterpart nor an exact complete",
         "window proved elsewhere by aligned relocation evidence.",
-        "`CURRENT_EXACT` means the current body is byte-exact; `HASH_MAX_EXACT`",
-        "means this source-body hash previously emitted the retail body byte-for-byte.",
-        "`CALL_CONE_EXACT` means exact E8 call and E9/EB tail-jump decoding",
+        "A byte-exact or banked-100 code body does not acquit a datum difference:",
+        "objdiff normalizes relocations and can therefore report 100% while a",
+        "function addresses the wrong object. `CALL_CONE_EXACT` means exact E8",
+        "call and E9/EB tail-jump decoding",
         "reaches the same deduplicated datum set on both sides. The TSV keeps",
         "both cone sizes and the shortest retail/base paths for every direct",
         "referent that moved across an inline or overlapping-owner boundary.",
@@ -2336,6 +2683,8 @@ class AuditContext:
     base_index: DatumIndex
     target_sites: dict[str, dict[int, Site]]
     base_sites: dict[str, dict[int, Site]]
+    target_accesses: dict[int, tuple[Access, ...]]
+    base_accesses: dict[int, tuple[Access, ...]]
     target_cones: CallConeIndex
     base_cones: CallConeIndex
     reviews: dict[str, dict[str, str]]
@@ -2347,8 +2696,14 @@ def build_audit_context() -> AuditContext:
     ledger = store.load()
     target_image = PEImage(pipeline.image_paths("target")[0])
     base_image = PEImage(pipeline.image_paths("base")[0])
-    target_index = _datum_index("target", target_image, pairs)
-    base_index = _datum_index("base", base_image, pairs)
+    target_symbols, base_symbols = pipeline._comparison_symbols()
+    target_symbols, base_symbols = pipeline._augment_comparison_symbols(
+        target_symbols, base_symbols, target_image, base_image
+    )
+    target_index = _datum_index(
+        "target", target_image, pairs, target_symbols
+    )
+    base_index = _datum_index("base", base_image, pairs, base_symbols)
     target_sites, target_accesses = _load_site_inventory(
         "target", pairs, ledger
     )
@@ -2366,6 +2721,8 @@ def build_audit_context() -> AuditContext:
         base_index=base_index,
         target_sites=target_sites,
         base_sites=base_sites,
+        target_accesses=target_accesses,
+        base_accesses=base_accesses,
         target_cones=CallConeIndex(
             _direct_call_graph(pairs.target_records, target_image),
             target_tokens,
@@ -2438,6 +2795,9 @@ def refresh(module: str = "render", context: AuditContext | None = None) -> dict
         context.base_cones,
         context.reviews,
         pairs,
+        target_sites,
+        base_sites,
+        context.base_accesses,
     )
     _write_tsv(artifacts.audit, AUDIT_COLUMNS, audit)
     _write_tsv(artifacts.extentless, EXTENTLESS_COLUMNS, extentless)
@@ -2524,7 +2884,11 @@ def print_report(report: dict | None = None, module: str = "render") -> None:
         ))
 
 
-def check(module: str = "render") -> int:
+def check(
+    module: str = "render",
+    context: AuditContext | None = None,
+    inputs: dict[str, str] | None = None,
+) -> int:
     artifacts = _artifacts(module)
     required = tuple(dataclasses.astuple(artifacts))
     if missing_paths := [path for path in required if not path.is_file()]:
@@ -2535,7 +2899,7 @@ def check(module: str = "render") -> int:
     if report.get("schema") != 5 or report.get("module") != module:
         print(f"unsupported {module} relocation report schema")
         return 1
-    if report.get("inputs") != _inputs():
+    if report.get("inputs") != (inputs or _inputs()):
         print(f"{module} relocation report inputs are stale")
         return 1
     outputs = {
@@ -2579,18 +2943,11 @@ def check(module: str = "render") -> int:
     if len(base_sites) != len(set(base_sites)):
         print(f"a base {module} relocation appears more than once in the audit")
         return 1
-    pairs = sema_pairing.Pairing()
-    ledger = store.load()
-    target_image = PEImage(pipeline.image_paths("target")[0])
-    base_image = PEImage(pipeline.image_paths("base")[0])
-    if set(target_sites) != _expected_sites(
-        "target", target_image, pairs, ledger, module
-    ):
+    context = context or build_audit_context()
+    if set(target_sites) != set(context.target_sites.get(module, {})):
         print(f"{module} relocation audit does not contain every retail site")
         return 1
-    if set(base_sites) != _expected_sites(
-        "base", base_image, pairs, ledger, module
-    ):
+    if set(base_sites) != set(context.base_sites.get(module, {})):
         print(f"{module} relocation audit does not contain every base site")
         return 1
     if len(audit) != report["audit_rows"] or len(extentless) != report[

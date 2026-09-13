@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "object_particle_visual.h"
 #include "base_game_scene.h"
 #include <vostok/math_float4x4.h>

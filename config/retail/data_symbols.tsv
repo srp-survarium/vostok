@@ -147,8 +147,8 @@ rva	name	size	type	comment
 0x36cee0	DAT_0037cee0	0x1a0	code	libjpeg jquant1 private quantize_fs_dither callback; performs Floyd-Steinberg one-pass quantization and ends at ret 0x36d07f
 0x36d0c0	DAT_0037d0c0	0xe4	code	libjpeg jquant1 private start_pass_1_quant callback; selects the five quantizers and initializes their workspaces, ending at ret 0x36d1a3
 0x36d1b0	DAT_0037d1b0	0x17	code	libjpeg jquant1 private new_color_map_1_quant callback; tail-dispatches the unsupported mode-change error and fills its exact contribution
-0x4f8150	DAT_00508150	0x11	code	PCRE private default allocation callback stored in pcre_malloc and pcre_stack_malloc; forwards one size argument to the target malloc and ends at ret 0x4f8160
-0x4f8170	DAT_00508170	0x11	code	PCRE private default deallocation callback stored in pcre_free and pcre_stack_free; forwards one pointer argument to the target free and ends at ret 0x4f8180
+0x4f8150	LocalPcreMalloc	0x11	code	PCRE private default allocation callback stored in pcre_malloc and pcre_stack_malloc; source identity recovered from the matching pcre_globals.c callback and exact COFF contribution
+0x4f8170	LocalPcreFree	0x11	code	PCRE private default deallocation callback stored in pcre_free and pcre_stack_free; source identity recovered from the matching pcre_globals.c callback and exact COFF contribution
 0x4f8190	DAT_00508190	0x1b8	code	PCRE private _pcre_find_bracket body; scans compiled opcodes for a numbered bracket and ends at ret 0x4f8347 before its two switch-table pairs
 0x4f8348	DAT_00508348	0x14	switch::JumpTable[5]	PCRE _pcre_find_bracket opcode dispatch table used by jmp [eax*4+0x508348]; five relocated code-label pointers end at 0x4f835c
 0x4f835c	DAT_0050835c	0x41	switch::IndexTable<u8>[65]	PCRE _pcre_find_bracket opcode index for values 0x55..0x95; subtract 0x55 and cmp 0x40 prove 65 entries

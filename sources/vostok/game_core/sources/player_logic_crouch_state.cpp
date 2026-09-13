@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_logic_crouch_state.h"
 #include <vostok/game_core/base_player.h>
 #include <vostok/game_core/weapon_core.h>
@@ -12,8 +13,6 @@
 #include <vostok/animation/instant_interpolator.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 // claude@NOTE: single .rdata copy in the target exe (?crouch_animations_captions@survarium@@3QBQBDB
 // @va 0x89d118); mirrors stand_animations_captions with a crouch_ prefix. 33 entries,
@@ -83,7 +82,7 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 {
 	u32 const							move_animation_index	= is_firing ? animation_index + 1 : animation_index;
 
-	animation::linear_interpolator		interpolator( s_aim_transition_time );
+	animation::linear_interpolator		interpolator( 0.3f );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -148,7 +147,7 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 ) const
 {
 	animation::instant_interpolator		interpolator;
-	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
+	animation::linear_interpolator		l_interpolator( 0.3f );
 
 	animation_type_enum const			animation_type	= animation_type_enum( movement_animation_index + 2 );
 

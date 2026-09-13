@@ -3,7 +3,7 @@
 #ifndef AFFECTS_THRESHOLD_H_INCLUDED
 #define AFFECTS_THRESHOLD_H_INCLUDED
 
-#include "hit_affects_type_enum.h"
+#include "affect_types.h"
 
 namespace survarium {
 

@@ -91,9 +91,11 @@ static char s_crt_allocator_buffer	[ sizeof(vostok::memory::doug_lea_mt_allocato
 static vostok::threading::atomic32_type	s_crt_allocator_creation	=	0;
 
 #if VOSTOK_PLATFORM_WINDOWS_32
-	char s_CRT_arena[ 64*1024*1024 ];
+	u8 s_CRT_arena[ 64*1024*1024 ];
+	u32 g_CRT_arena_size = sizeof( s_CRT_arena );
+	u8* g_CRT_arena = s_CRT_arena;
 #elif VOSTOK_PLATFORM_WINDOWS_64 // #if VOSTOK_PLATFORM_WINDOWS_32
-	static char s_CRT_arena[ 128*1024 ];
+	static u8 s_CRT_arena[ 128*1024 ];
 #else // #elif VOSTOK_PLATFORM_PS3
 #	error please define your platform!
 #endif // #elif VOSTOK_PLATFORM_WINDOWS_64

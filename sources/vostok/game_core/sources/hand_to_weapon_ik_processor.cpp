@@ -12,14 +12,12 @@
 
 namespace survarium {
 
-static float	s_aim_transition_time			= 0.3f;
-
 static bool		s_ik_hands_debug_draw_value		= false;
 
 static console_commands::cc_bool	s_ik_hands_debug_draw_cc	( "ik_hands_debug_draw", s_ik_hands_debug_draw_value, false, console_commands::command_type_engine_internal );
 
 hand_to_weapon_ik_processor::hand_to_weapon_ik_processor( )
-	: m_interpolator( s_aim_transition_time ), m_current_transition_time( 0.0f ), m_active( true )
+	: m_interpolator( 0.3f ), m_current_transition_time( 0.0f ), m_active( true )
 {
 }
 

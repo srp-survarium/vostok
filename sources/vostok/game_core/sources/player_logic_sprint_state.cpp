@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_logic_sprint_state.h"
 
 #include <vostok/game_core/base_player.h>
@@ -14,8 +15,6 @@
 #include <vostok/animation/instant_interpolator.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 // claude@NOTE: single .rdata copy in the target exe (?sprint_animations_captions@survarium@@3QBQBDB
 // @va 0x89d19c); 2 captions (move, look) sitting between crouch_animations_captions and
@@ -45,7 +44,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 		sprint_look_animation_index,
 	};
 
-	animation::linear_interpolator		l_interpolator( s_aim_transition_time );
+	animation::linear_interpolator		l_interpolator( 0.3f );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(

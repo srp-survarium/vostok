@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_core.h>
 
 #include <vostok/animation/sources/mixing_base_lexeme.h>
@@ -11,6 +12,7 @@
 #include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/base_player.h>
+#include <vostok/game_core/engine.h>
 #include <vostok/game_core/player_input.h>
 #include <vostok/game_core/weapon_ammo_info.h>
 #include <vostok/game_core/weapon_animation_parameters.h>
@@ -359,7 +361,7 @@ void weapon_core::update_dispersion( const bool is_moving, u32 current_time_in_m
 void weapon_core::update_breath_vibration( const bool is_holding_breath, u32 current_time_in_ms, const float time_scale )
 {
 	m_breath_vibration_calculator.hold_breath( is_holding_breath );
-	m_breath_vibration_calculator.set_character_multiplier( 0.0f );
+	m_breath_vibration_calculator.set_character_multiplier( 1.0f );
 	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 

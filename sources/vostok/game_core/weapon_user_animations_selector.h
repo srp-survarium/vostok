@@ -10,7 +10,7 @@
 
 #include <vostok/game_core/weapon_user_animations_container.h>
 #include <vostok/game_core/weapon_user_state_enum.h>
-#include <vostok/game_core/damage_model.h> // sushi@NOTE: For affect_subscriber
+#include <vostok/game_core/affect_subscriber.h>
 
 namespace vostok {
 namespace network_core {

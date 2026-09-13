@@ -11,7 +11,6 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: collision tree construction is inlined only in the base.
 lights_db::lights_db( ) :
 	m_lights_tree( 0 )
 {

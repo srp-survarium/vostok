@@ -182,9 +182,9 @@ stage_lights::stage_lights(
 
 	if (options::ref().current.m_enabled_local_light_shadows)
 	{
-		m_shadow_depth_stencil[0] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_1024, 1024, 1024, DXGI_FORMAT_R24G8_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
-		m_shadow_depth_stencil[1] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_512,   512,  512, DXGI_FORMAT_R24G8_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
-		m_shadow_depth_stencil[2] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_256,   256,  256, DXGI_FORMAT_R24G8_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
+		m_shadow_depth_stencil[0] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_1024, 1024, 1024, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
+		m_shadow_depth_stencil[1] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_512,   512,  512, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
+		m_shadow_depth_stencil[2] = resource_manager::ref().create_render_target(r2_rt_shadow_map_size_256,   256,  256, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 		m_shadow_depth_stencil_texture[0] = resource_manager::ref().create_texture(r2_rt_shadow_map_size_1024, 0, 0, false, true, true, u32(-1));
 		m_shadow_depth_stencil_texture[1] = resource_manager::ref().create_texture(r2_rt_shadow_map_size_512, 0, 0, false, true, true, u32(-1));
 		m_shadow_depth_stencil_texture[2] = resource_manager::ref().create_texture(r2_rt_shadow_map_size_256, 0, 0, false, true, true, u32(-1));
@@ -272,7 +272,7 @@ stage_lights::stage_lights(
 		*m_screen_vertex_ib
 	);
 
-	m_num_instanced_lights = options::ref( ).current.m_num_test_lights;
+	m_num_instanced_lights = options::ref( ).current.m_num_max_light_instances;
 	m_c_light_instances = backend::ref( ).register_constant_host( "light_instances", rc_float );
 	m_light_instances = NEW_ARRAY( float4x4, m_num_instanced_lights );
 
@@ -394,13 +394,22 @@ void stage_lights::render_to_hw_shadowmap(
 	m_context->push_set_p( projection_matrix);
 
 	vector< render_surface_instance* > m_dynamic_visuals_to_shadow;
-	m_context->scene()->select_models(
-		m_context->get_culling_vp(),
-		m_dynamic_visuals_to_shadow,
-		m_context->get_view_pos(),
-		visible_flag,
-		l->static_shadows
-	);
+	if ( l->static_shadows )
+		m_context->scene()->select_models(
+			m_context->get_culling_vp(),
+			m_dynamic_visuals_to_shadow,
+			m_context->get_view_pos(),
+			visible_flag,
+			true
+		);
+	else
+		m_context->scene()->select_models(
+			m_context->get_culling_vp(),
+			m_dynamic_visuals_to_shadow,
+			m_context->get_view_pos(),
+			visible_flag,
+			false
+		);
 
 	if ( !l->static_shadows || !m_dynamic_visuals_to_shadow.empty() || l->need_refresh_static_shadows )
 	{
@@ -450,7 +459,7 @@ void stage_lights::render_to_hw_shadowmap(
 			backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count*3, 0, 0);
 		}
 
-		if (options::ref().current.m_enabled_draw_speedtree)
+		if (options::ref().current.m_enabled_draw_speedtree && m_context->scene()->get_speedtree_forest())
 		{
 			speedtree_forest::tree_render_info_array_type visible_trees;
 			m_context->scene()->get_speedtree_forest()->get_visible_tree_components(m_context, view_position, true, visible_trees);
@@ -731,7 +740,7 @@ void stage_lights::make_skin_scattering_texture(
 	light*						l
 )
 {
-	math::float4 clear_color				= float4(-1.0f, 0.0f, 0.0f, 0.0f);//float4(m_context->get_scene_view()->post_process_parameters().environment_ambient_color, 0.0f) + instance->m_render_surface->get_material_effects().organic_clear_color;
+	math::float4 clear_color				= float4(-1.0f, 0.0f, 0.0f, 0.0f);
 	backend::ref().set_render_targets		(&*m_rt_skin_scattering_temp, &*m_rt_skin_scattering_stretch, 0, 0);
 	backend::ref().set_depth_stencil_target (0);
 	backend::ref().clear_render_targets		(clear_color.x, clear_color.y, clear_color.z, 0.0f);
@@ -811,7 +820,7 @@ void stage_lights::make_skin_scattering_texture(
 
 			float3 const* const eye_rays	= m_context->get_eye_rays();
 			backend::ref().set_ps_constant	(m_c_eye_ray_corner,	((float4*)eye_rays)[0]);
-			//backend::ref().set_vs_constant(m_c_near_far, m_context->get_near_far());
+
 
 			if (l->is_cast_shadows() && options::ref().current.m_enabled_local_light_shadows)
 			{
@@ -940,7 +949,7 @@ void stage_lights::make_skin_scattering_texture(
 		backend::ref().set_ps_constant		(m_blur_offsets_weights, blur_offsets_weights);
 		fill_surface						(m_rt_skin_scattering_blurred_4);
 
-		// Set old. TODO: get_render_targets(), set_render_targets()
+
 		backend::ref().set_render_targets( &*m_context->get_rt(rt_generic_0), 0, 0, 0);
 		backend::ref().reset_depth_stencil_target();
 		backend::ref().set_viewport( orig_viewport);
@@ -963,7 +972,7 @@ void stage_lights::make_skin_scattering_texture(
 		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, instance->m_render_surface->m_render_geometry.primitive_count*3, 0, 0);
 	}
 
-	// Set old. TODO: get_render_targets(), set_render_targets()
+
 	backend::ref().set_render_targets( &*m_context->get_rt(rt_generic_0), 0, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().set_viewport( orig_viewport);
@@ -1171,6 +1180,15 @@ void stage_lights::render_model_lighting(
 			backend::ref().set_ps_constant( m_c_light_range, light_range );
 			backend::ref().set_ps_constant( m_c_light_attenuation_power, l->attenuation_power );
 			backend::ref().set_ps_constant( m_c_light_sphere_radius, l->scale.x );
+
+			backend::ref().set_ps_constant( m_c_light_color, light_color );
+			backend::ref().set_ps_constant( m_c_light_intensity, l->intensity );
+			backend::ref().set_ps_constant( m_c_lighting_model, l->lighting_model );
+
+			float3 const* const eye_rays = m_context->get_eye_rays();
+			backend::ref().set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
+			backend::ref().set_vs_constant( m_c_near_far, m_context->get_near_far() );
+
 			draw = true;
 			break;
 		}
@@ -1334,6 +1352,13 @@ void stage_lights::render_speedtree_lighting(
 			backend::ref().set_ps_constant	( m_c_light_sphere_radius,	l->scale.x );
 
 			backend::ref().set_ps_constant	( m_c_light_color, light_color );
+			backend::ref().set_ps_constant	( m_c_light_intensity, l->intensity );
+			backend::ref().set_ps_constant	( m_c_lighting_model, l->lighting_model );
+
+			float3 const* const eye_rays	= m_context->get_eye_rays();
+			backend::ref().set_ps_constant	( m_c_eye_ray_corner,	((float4*)eye_rays)[0] );
+			backend::ref().set_vs_constant	( m_c_near_far, m_context->get_near_far());
+
 			draw = true;
 			break;
 		}
@@ -1444,10 +1469,8 @@ void stage_lights::execute( )
 		for (vector< light_ptr >::const_iterator it = visible_lights.begin(); it != visible_lights.end(); ++it)
 		{
 			light* const l = &**it;
-			if ((options::ref().current.m_use_hiz_occlusion_culling && l->is_occluded()) || !l->m_enabled)
-				continue;
-
-			render_light(l, false);
+			if ((!options::ref().current.m_use_hiz_occlusion_culling || !l->is_occluded()) && l->m_enabled)
+				render_light(l, false);
 		}
 
 		m_context->set_w					( float4x4().identity() );
@@ -1478,7 +1501,7 @@ void stage_lights::execute( )
 	float max_rad = 0.0f;
 
 	vector< render_surface_instance* > m_dynamic_visuals;
-	m_context->scene()->select_models( m_context->get_culling_vp(), m_dynamic_visuals, m_context->get_v_inverted().c.xyz(), visible_flag, false );
+	m_context->scene()->select_models( m_context->get_culling_vp(), m_dynamic_visuals, m_context->get_view_pos(), visible_flag, false );
 
 	vector< render_surface_instance* >::iterator it_d		= m_dynamic_visuals.begin();
 	vector< render_surface_instance* >::const_iterator end_d	= m_dynamic_visuals.end();
@@ -1506,20 +1529,20 @@ void stage_lights::execute( )
 
 			float3 model_location = instance.m_transform->c.xyz();
 			float const model_max_scale = math::max(
+				(bbox.max.x - bbox.min.x) * 0.5f,
 				math::max(
-					(bbox.max.x - bbox.min.x) * 0.5f,
-					(bbox.max.y - bbox.min.y) * 0.5f
-				),
-				(bbox.max.z - bbox.min.z) * 0.5f
+					(bbox.max.y - bbox.min.y) * 0.5f,
+					(bbox.max.z - bbox.min.z) * 0.5f
+				)
 			);
 
 			if (bbox.extents().squared_length() > 2.0f)
 			{
-				if (probe->m_properties.radius <= max_rad)
-					continue;
-
-				max_rad = probe->m_properties.radius;
-				found_probe = probe;
+				if (probe->m_properties.radius > max_rad)
+				{
+					max_rad = probe->m_properties.radius;
+					found_probe = probe;
+				}
 				continue;
 			}
 
@@ -1532,16 +1555,17 @@ void stage_lights::execute( )
 			)
 				probe->m_properties.transform.get_scale();
 			else
+#line 2090
 				LOG_ERROR("invalid probe->m_properties.transform");
 
-			if (probe->m_properties.radius * 0.45f + model_max_scale < model_probe_sqdist)
-				continue;
-
-			if (min_dist <= model_probe_sqdist)
-				continue;
-
-			min_dist = model_probe_sqdist;
-			found_probe = probe;
+			if (probe->m_properties.radius * 0.45f + model_max_scale >= model_probe_sqdist)
+			{
+				if (min_dist > model_probe_sqdist)
+				{
+					min_dist = model_probe_sqdist;
+					found_probe = probe;
+				}
+			}
 		}
 
 		if (found_probe)
@@ -1555,10 +1579,8 @@ void stage_lights::execute( )
 		for (lights_db::lights_type::const_iterator e_it=e_lights.begin() ; e_it!=e_lights.end(); ++e_it)
 		{
 			light_ptr L = e_it->light;
-			if ((options::ref().current.m_use_hiz_occlusion_culling && L->is_occluded()) || !L->m_enabled)
-				continue;
-
-			render_model_lighting( &instance, &*L);
+			if ((!options::ref().current.m_use_hiz_occlusion_culling || !L->is_occluded()) && L->m_enabled)
+				render_model_lighting( &instance, &*L);
 		}
 	}
 
@@ -1588,81 +1610,81 @@ void stage_lights::execute( )
 		}
 	}
 
-	if (options::ref().current.m_lighting_quality)
+	if (!options::ref().current.m_lighting_quality)
+		return;
+
+	particle::world* part_world = m_context->scene()->particle_world();
+
+	if (!part_world)
 	{
-		particle::world* part_world = m_context->scene()->particle_world();
+		m_context->set_w					( float4x4().identity() );
+		return;
+	}
 
-		if (!part_world)
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref().get_viewport(orig_viewport);
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float(m_context->get_rt(rt_particle_lighting)->width());
+	tmp_viewport.Height = float(m_context->get_rt(rt_particle_lighting)->height());
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref().set_viewport(tmp_viewport);
+
+	backend::ref().set_render_targets(&*m_context->get_rt(rt_particle_lighting), 0, 0, 0);
+
+	particle::render_particle_emitter_instances_type emitters(g_allocator);
+	part_world->get_render_emitter_instances(m_context->get_culling_vp(), emitters);
+
+	for (particle::render_particle_emitter_instances_type::const_iterator it=emitters.begin(); it!=emitters.end(); ++it)
+	{
+		render::render_particle_emitter_instance* instance = static_cast< render::render_particle_emitter_instance* >(*it);
+		u32 const num_particles = instance->get_num_particles();
+
+		if (!num_particles)
+			continue;
+
+		particle::enum_particle_render_mode particle_render_mode = m_context->get_scene_view()->get_particles_render_mode();
+
+		for ( ; probe_it != m_context->get_scene_view()->get_visible_environment_probes().end(); ++probe_it)
 		{
-			m_context->set_w					( float4x4().identity() );
-			return;
-		}
-
-		D3D11_VIEWPORT orig_viewport;
-		backend::ref().get_viewport(orig_viewport);
-
-		D3D11_VIEWPORT tmp_viewport;
-		tmp_viewport.TopLeftX = 0.0f;
-		tmp_viewport.TopLeftY = 0.0f;
-		tmp_viewport.Width = float(m_context->get_rt(rt_generic_0)->width());
-		tmp_viewport.Height = float(m_context->get_rt(rt_generic_0)->height());
-		tmp_viewport.MinDepth = 0.0f;
-		tmp_viewport.MaxDepth = 1.0f;
-		backend::ref().set_viewport(tmp_viewport);
-
-		backend::ref().set_render_targets(&*m_context->get_rt(rt_generic_0), 0, 0, 0);
-
-		particle::render_particle_emitter_instances_type emitters(g_allocator);
-		part_world->get_render_emitter_instances(m_context->get_culling_vp(), emitters);
-
-		for (particle::render_particle_emitter_instances_type::const_iterator it=emitters.begin(); it!=emitters.end(); ++it)
-		{
-			render::render_particle_emitter_instance* instance = static_cast< render::render_particle_emitter_instance* >(*it);
-			u32 const num_particles = instance->get_num_particles();
-
-			if (!num_particles)
+			environment_probe* probe = *probe_it;
+			if ((options::ref().current.m_use_hiz_occlusion_culling && probe->is_occluded()) || !probe->m_texture || !probe->m_properties.enabled)
 				continue;
 
-			particle::enum_particle_render_mode particle_render_mode = m_context->get_scene_view()->get_particles_render_mode();
+			math::aabb bbox = instance->get_aabb();
+			bbox.modify(instance->transform());
 
-			for ( ; probe_it != m_context->get_scene_view()->get_visible_environment_probes().end(); ++probe_it)
+			if (probe->m_properties.radius > max_rad)
 			{
-				environment_probe* probe = *probe_it;
-				if ((options::ref().current.m_use_hiz_occlusion_culling && probe->is_occluded()) || !probe->m_texture || !probe->m_properties.enabled)
-					continue;
-
-				math::aabb bbox = instance->get_aabb();
-				bbox.modify(instance->transform());
-
-				if (probe->m_properties.radius <= max_rad)
-					continue;
-
 				max_rad = probe->m_properties.radius;
 				found_probe = probe;
 			}
-
-			if (found_probe)
-				render_particle_probe_lighting(instance, found_probe, num_particles);
-
-			light* L = m_context->scene()->lights().get_sun().c_ptr();
-
-			if (L && L->m_enabled)
-				render_particle_lighting(instance, L, num_particles);
-
-			if (particle_render_mode==particle::normal_particle_render_mode && instance->get_material_effects().stage_enable[lighting_render_stage])
-			{
-				for (lights_db::lights_type::const_iterator e_it=e_lights.begin() ; e_it!=e_lights.end(); ++e_it)
-				{
-					if (&*e_it->light == L)
-						continue;
-
-					render_particle_lighting(instance, &*e_it->light, num_particles);
-				}
-			}
 		}
 
-		backend::ref().set_viewport(orig_viewport);
+		if (found_probe)
+			render_particle_probe_lighting(instance, found_probe, num_particles);
+
+		light* L = m_context->scene()->lights().get_sun().c_ptr();
+
+		if (L && L->m_enabled)
+			render_particle_lighting(instance, L, num_particles);
+
+		if (particle_render_mode==particle::normal_particle_render_mode && instance->get_material_effects().stage_enable[lighting_render_stage])
+		{
+			for (lights_db::lights_type::const_iterator e_it=e_lights.begin() ; e_it!=e_lights.end(); ++e_it)
+			{
+				if (&*e_it->light == L)
+					continue;
+
+				render_particle_lighting(instance, &*e_it->light, num_particles);
+			}
+		}
 	}
+
+	backend::ref().set_viewport(orig_viewport);
 
 	END_CPUGPU_TIMER;
 

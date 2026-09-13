@@ -5,10 +5,18 @@ rva	size	comment
 0x833390	0x1e0	OpenSSL dsa_ameth.obj _dsa_asn1_meths occupies its exact 480-byte COFF .rdata contribution
 0x8355b8	0x1c0	OpenSSL v3_ia5.obj _v3_ns_ia5_list occupies its exact 448-byte COFF .rdata contribution
 0x8448ec	0x20	Scaleform RenderBufferManager RBGenericImpl has eight slots through the next PDB vftable at 0x84490c
+0x845fa0	0x6a0	Scaleform UnicodeAlnumBits spans through the next PDB array UnicodeAlphaBits at 0x846640
+0x847320	0x240	Scaleform UnicodeXDigitBits spans through the next PDB array UnicodeToUpperBits at 0x847560
+0x84d130	0x10	Scaleform GlyphEvictNotifier has the destructor and three virtual methods recorded by the retail PDB class
 0x852400	0x200	libjpeg jerror.obj _jpeg_std_message_table is the exact 128-pointer table ending at 0x852600
+0x853248	0xc	Scaleform ImageUpdateSync has the destructor and two UpdateImage virtual methods recorded by the retail PDB class
+0x857b60	0x54	Scaleform AS2 ObjectInterface vftable has 21 slots through Object::Unwatch in the retail PDB class
+0x85b270	0x54	Scaleform AS2 XmlCtorFunction ObjectInterface vftable has 21 inherited slots through Object::Unwatch
+0x877d70	0x8	Scaleform String::InitStruct has the destructor and pure InitString virtual slots recorded by the retail PDB class
 0x877f90	0x44	Scaleform AS3 Vector_object has seventeen slots through the next PDB vftable at 0x877fd4
 0x878ee0	0x9c	PCRE __pcre_OP_lengths spans to the next PDB data symbol __pcre_utf8_table1 at 0x878f7c
 0x87f748	0x200	zlib _dist_code is the exact 512-byte table ending at PDB symbol __length_code
+0x87f948	0x100	zlib _length_code is the declared 256-byte table ending at PDB symbol base_length
 0x882cf0	0x10	CRT PI_BY_2 owns the full 16-byte assembly constant through the next COFF symbol NEG_PI
 0x882d10	0x10	CRT PI owns the full 16-byte assembly constant through the next COFF symbol SIGNMASK
 0x882d50	0x20	CRT cv owns its exact COFF range through cv2
@@ -32,3 +40,4 @@ rva	size	comment
 0xa9156c	0xc	SpeedTree CDefaultCoordinateSystem::m_vRight is Vec3
 0xa9168c	0x14	SpeedTree g_sEmptyDrawCallInfo is SDrawCallInfo
 0x4c17274	0xc	Scaleform SysAllocMalloc singleton Container is SysAllocContainer
+0x4c1bf20	0x100	CRT __pioinfo is the 64-pointer table ending at PDB symbol __active_heap

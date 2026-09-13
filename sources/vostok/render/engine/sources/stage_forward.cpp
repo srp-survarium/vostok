@@ -105,10 +105,10 @@ void stage_forward::accumulate_local_reflections( )
 	D3D11_VIEWPORT view_port;
 	view_port.Width = float( m_context->get_rt( rt_local_reflection_result )->width( ) );
 	view_port.Height = float( m_context->get_rt( rt_local_reflection_result )->height( ) );
-	view_port.TopLeftX = 0.0f;
-	view_port.TopLeftY = 0.0f;
 	view_port.MinDepth = 0.0f;
 	view_port.MaxDepth = 1.0f;
+	view_port.TopLeftX = 0.0f;
+	view_port.TopLeftY = 0.0f;
 	backend::ref( ).set_viewport( view_port );
 
 	float const use_rain = m_context->get_scene_view( )->post_process_parameters( ).environment_use_rain ? 1.0f : 0.0f;
@@ -132,15 +132,17 @@ void stage_forward::accumulate_local_reflections( )
 			&*m_context->get_rt( rt_local_reflection_result_params ),
 			0,
 			0
-		); backend::ref( ).reset_depth_stencil_target( );
+		);
+		backend::ref( ).set_depth_stencil_target( 0 );
 	}
 
 	for ( ; it_d != end_d; ++it_d )
 	{
-		if ( options::ref( ).current.m_use_hiz_occlusion_culling && ( *it_d )->m_occluded )
+		render_surface_instance& instance = **it_d;
+
+		if ( options::ref( ).current.m_use_hiz_occlusion_culling && instance.m_occluded )
 			continue;
 
-		render_surface_instance& instance = **it_d;
 		material_effects& effects = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
@@ -165,8 +167,8 @@ void stage_forward::accumulate_local_reflections( )
 				m_context->get_scene_view( )->post_process_parameters( ).environment_far_fog_distance
 			)
 		);
-		backend::ref( ).set_ps_constant( m_near_fog_distance, m_context->get_scene_view( )->post_process_parameters( ).environment_near_fog_distance );
 		backend::ref( ).set_ps_constant( m_fog_alpha, m_context->get_scene_view( )->post_process_parameters( ).environment_fog_alpha );
+		backend::ref( ).set_ps_constant( m_near_fog_distance, m_context->get_scene_view( )->post_process_parameters( ).environment_near_fog_distance );
 		backend::ref( ).set_ps_constant( m_use_rain_parameter, use_rain );
 
 		backend::ref( ).render_indexed(
@@ -196,15 +198,16 @@ void stage_forward::render_forward_models(
 
 	for ( ; it_d != end_d; ++it_d )
 	{
-		if ( options::ref( ).current.m_use_hiz_occlusion_culling && ( *it_d )->m_occluded )
+		render_surface_instance& instance = **it_d;
+
+		if ( options::ref( ).current.m_use_hiz_occlusion_culling && instance.m_occluded )
 			continue;
 
-		render_surface_instance& instance = **it_d; material_effects& effects = instance.m_render_surface->get_material_effects( );
+		material_effects& effects = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
-		if ( pass_index == 0 && effects.is_forward_after_fog )
-			continue;
-		else if ( pass_index == 1 && !effects.is_forward_after_fog )
+		if ( ( pass_index == 0 && effects.is_forward_after_fog ) ||
+			 ( pass_index == 1 && !effects.is_forward_after_fog ) )
 			continue;
 
 		instance.set_constants( );
@@ -222,8 +225,8 @@ void stage_forward::render_forward_models(
 				m_context->get_scene_view( )->post_process_parameters( ).environment_far_fog_distance
 			)
 		);
-		backend::ref( ).set_ps_constant( m_near_fog_distance, m_context->get_scene_view( )->post_process_parameters( ).environment_near_fog_distance );
 		backend::ref( ).set_ps_constant( m_fog_alpha, m_context->get_scene_view( )->post_process_parameters( ).environment_fog_alpha );
+		backend::ref( ).set_ps_constant( m_near_fog_distance, m_context->get_scene_view( )->post_process_parameters( ).environment_near_fog_distance );
 
 		float const use_rain = m_context->get_scene_view( )->post_process_parameters( ).environment_use_rain ? 1.0f : 0.0f;
 		backend::ref( ).set_ps_constant( m_use_rain_parameter, use_rain );
@@ -252,10 +255,12 @@ void stage_forward::render_opaque_models( )
 
 	for ( ; opaque_it_d != end_d; ++opaque_it_d )
 	{
-		if ( options::ref( ).current.m_use_hiz_occlusion_culling && ( *opaque_it_d )->m_occluded )
+		render_surface_instance& instance = **opaque_it_d;
+
+		if ( options::ref( ).current.m_use_hiz_occlusion_culling && instance.m_occluded )
 			continue;
 
-		render_surface_instance& instance = **opaque_it_d; material_effects& effects = instance.m_render_surface->get_material_effects( );
+		material_effects& effects = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
 		if ( !effects.is_emissive || !effects.m_effects[gbuffer_render_stage].c_ptr( ) )
@@ -293,6 +298,8 @@ void stage_forward::execute( )
 		return;
 	}
 
+	vector< render_surface_instance* > m_dynamic_visuals;
+
 	device::ref( ).d3d_context( )->CopyResource(
 		m_context->get_t( rt_generic_1 )->hw_texture( ),
 		m_context->get_t( rt_generic_0 )->hw_texture( )
@@ -305,7 +312,6 @@ void stage_forward::execute( )
 		m_rain_offset_counter = 0.0f;
 	}
 
-	vector< render_surface_instance* > m_dynamic_visuals;
 	m_context->scene( )->select_models(
 		m_context->get_culling_vp( ),
 		m_dynamic_visuals,

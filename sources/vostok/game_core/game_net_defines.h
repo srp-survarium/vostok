@@ -22,36 +22,44 @@ namespace network_core {
 
 namespace survarium {
 
-// STATE[STUB]: `static u32 const player_templates_count = array_size( player_templates );`
-// The target's initializer is 15 bytes - `call array_size<unsigned short const [13],11>;
-// mov [player_templates_count], eax` - which pins player_templates as `u16 const [11][13]`
-// (one dynamic-initializer copy per includer, ~90 of them, all ICF-folded). BLOCKED on the
-// table CONTENT: it lives in .rdata and no index we have carries data, so writing the
-// declaration would mean fabricating 143 values.
-
-// per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
-// (one copy per includer, like player_templates_count's dynamic initializer).
-static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
+static u16 const player_templates[11][13] =
 {
-	serialize_just_condition_stack_values,	// helmet_slot
-	serialize_just_condition_stack_values,	// mask_slot
-	serialize_just_condition_stack_values,	// torso_slot
-	serialize_just_condition_stack_values,	// back_slot
-	serialize_just_condition_stack_values,	// pants_slot
-	serialize_just_condition_stack_values,	// gloves_slot
-	serialize_just_condition_stack_values,	// boots_slot
-	serialize_just_condition_stack_values,	// weapon1_slot
-	serialize_both_values,					// ammo1_weapon1_slot
-	serialize_both_values,					// ammo2_weapon1_slot
-	serialize_just_condition_stack_values,	// weapon2_slot
-	serialize_both_values,					// ammo1_weapon2_slot
-	serialize_both_values,					// ammo2_weapon2_slot
-	serialize_both_values,					// quick_slot1
-	serialize_both_values,					// quick_slot2
-	serialize_both_values,					// quick_slot3
-	serialize_both_values,					// quick_slot4
-	serialize_both_values,					// quick_slot5
-	serialize_both_values,					// quick_slot6
+	{  0,  0, 29, 0, 28, 41, 36, 12, 51, 0, 13,  7, 0 },
+	{  0,  0, 31, 0, 45, 25, 37, 16, 22, 0,  0,  0, 0 },
+	{  0, 43, 34, 9, 46, 41, 38, 14, 52, 0,  0,  0, 0 },
+	{  0,  0, 48, 0, 47, 42, 39, 19, 53, 0,  0,  0, 0 },
+	{  0,  0, 29, 0, 28, 42, 24, 17, 22, 0,  0,  0, 0 },
+	{ 27,  0, 32, 0, 28, 25, 35, 55, 53, 0,  0,  0, 0 },
+	{  0, 43, 33, 9, 44, 40, 36, 13,  7, 0, 56, 20, 0 },
+	{  0,  0, 31, 0, 47, 25, 37, 15, 22, 0,  0,  0, 0 },
+	{  0,  0, 29, 0, 44, 42, 36, 56, 20, 0,  0,  0, 0 },
+	{  0,  0, 48, 0, 28, 40, 24, 17, 22, 0,  0,  0, 0 },
+	{  0,  0, 33, 0, 46, 41, 37, 64, 70, 0,  0,  0, 0 },
+};
+
+static u32 const player_templates_count = array_size( player_templates );
+
+static slot_serialize_mode_enum slot_serialize_mode[ max_slots_count ] =
+{
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_just_condition_stack_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_just_condition_stack_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
+	serialize_both_values,
 };
 
 inline void player_profile::deserialize( network_core::packet_reader& reader )

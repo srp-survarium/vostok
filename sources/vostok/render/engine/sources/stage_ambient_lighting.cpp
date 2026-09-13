@@ -44,12 +44,11 @@ stage_ambient_lighting::stage_ambient_lighting(
 	renderer*			in_renderer,
 	renderer_context*	context
 ) :
-	stage( in_renderer, context )
+	stage( in_renderer, context ),
+	m_ambient_multiplier( 1.0f ),
+	m_use_probes( true )
 {
-	set_ambient_multiplier( 1.0f );
 	effect_manager::ref( ).create_effect<effect_light_mask>( &m_effect_accum_mask );
-	use_probes( true );
-
 	effect_manager::ref( ).create_effect<effect_sky_ambient_occlusion>( &m_sky_ambient_occlusion_effect );
 	effect_manager::ref( ).create_effect<effect_ambient_volume>( &m_ambient_volume_effect );
 	effect_manager::ref( ).create_effect<effect_reflection_mask>( &m_reflection_mask_effect );
@@ -223,7 +222,7 @@ void stage_ambient_lighting::execute( )
 
 			for ( tech_index = 0; tech_index < 2; ++tech_index )
 			{
-				m_ambient_volume_effect->apply_pass( tech_index );
+				m_ambient_volume_effect->apply( tech_index, 0 );
 				m_box_geometry->apply( );
 				backend::ref( ).set_ps_constant( m_c_ambient_volume_multiplier, volume->m_properties.ambient_multiplier );
 				backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 36, 0, 0 );
@@ -274,7 +273,7 @@ void stage_ambient_lighting::execute( )
 
 			for ( tech_index = 0; tech_index < 2; ++tech_index )
 			{
-				m_environment_probe_lighting_effect[clip_by_normal][with_shadows][geometry]->apply_pass( tech_index );
+				m_environment_probe_lighting_effect[clip_by_normal][with_shadows][geometry]->apply( tech_index, 0 );
 				backend::ref( ).set_ps_texture( "t_probe_cubemap", &*probe->m_texture );
 				if ( probe->m_properties.with_shadows && probe->m_texture_depth )
 					backend::ref( ).set_ps_texture( "t_probe_cubemap_depth", &*probe->m_texture_depth );
@@ -284,9 +283,11 @@ void stage_ambient_lighting::execute( )
 				backend::ref( ).set_ps_constant( m_c_num_mips, probe->m_num_mips );
 				backend::ref( ).set_ps_constant(
 					m_c_color_parameters,
-					float2(
+					float4(
 						parameters.environment_probes_diffuse_instensity_multiplier * probe->m_properties.diffuse_multiplier,
-						parameters.environment_probes_specular_instensity_multiplier * probe->m_properties.specular_multiplier
+						parameters.environment_probes_specular_instensity_multiplier * probe->m_properties.specular_multiplier,
+						0.0f,
+						0.0f
 					)
 				);
 

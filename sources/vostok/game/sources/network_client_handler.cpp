@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "network_client.h"
 
 #include <vostok/network_core/packet_reader.h>		// packet.r<u32>() / eof() in the player-action loop

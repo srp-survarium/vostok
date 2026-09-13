@@ -104,11 +104,12 @@ void stage_rain::execute( )
 	math::random32 r( 1000 );
 	float2 view_dir_2d = math::normalize_safe( float2( m_context->get_view_dir( ).x, m_context->get_view_dir( ).z ), float2( 0.0f, 0.0f ) );
 	float2 right_dir_2d = math::normalize_safe( float2( view_matrix.i.x, view_matrix.k.x ), float2( 0.0f, 0.0f ) );
-	float2 offset_vector_ground( m_context->get_view_pos( ).x - m_previous_view_position.x, m_context->get_view_pos( ).z - m_previous_view_position.z );
+	float2 offset_vector_ground = float2( m_context->get_view_pos( ).x, m_context->get_view_pos( ).z ) -
+		float2( m_previous_view_position.x, m_previous_view_position.z );
 	float2 offset_direction_ground = math::normalize_safe( offset_vector_ground, float2( 0.0f, 0.0f ) );
 
-	float const abs_ov_dot_dir_ground = offset_direction_ground | view_dir_2d;
-	float const abs_ov_dot_dir_ground2 = offset_direction_ground | right_dir_2d;
+	float const abs_ov_dot_dir_ground = view_dir_2d | offset_direction_ground;
+	float const abs_ov_dot_dir_ground2 = right_dir_2d | offset_direction_ground;
 
 	if ( abs_ov_dot_dir_ground > 0.0f )
 		m_camera_offset_view += offset_vector_ground.length( ) * math::abs( abs_ov_dot_dir_ground ) * 0.5f;
@@ -140,9 +141,9 @@ void stage_rain::execute( )
 		u32 i = m_context->get_scene_view( )->post_process_parameters( ).environment_rain_start_cone_index;
 		for ( ; i < num_cones; ++i )
 		{
-			float const cone_scale = float( i ) * ( i == 1 ? 1.0f : 2.0f ) * mult;
+			float const cone_scale = float( i );
 			float4x4 cone_transform =
-				math::create_scale( float3( cone_scale, cone_scale * 10.0f, cone_scale ) ) *
+				math::create_scale( float3( 1.0f, 10.0f, 1.0f ) * ( cone_scale * ( i == 1 ? 1.0f : 2.0f ) * mult ) ) *
 				math::create_rotation_y( r.random_f( 1.0f ) * math::pi_x2 ) *
 				math::create_rotation_x( rain_angle_x + math::cos( m_rain_rotation_x[i] ) * m_context->get_scene_view( )->post_process_parameters( ).environment_rain_random_rotaion_radius +
 					m_rain_offsets[i].x * m_context->get_scene_view( )->post_process_parameters( ).environment_rain_random_base_offset ) *
@@ -153,7 +154,7 @@ void stage_rain::execute( )
 
 			m_rain_effect->apply( 0, 0 );
 			m_context->set_w( cone_transform );
-			backend::ref( ).set_ps_constant( m_radius_parameter, float( i ) * mult );
+			backend::ref( ).set_ps_constant( m_radius_parameter, cone_scale * mult );
 			backend::ref( ).set_ps_constant( m_rain_speed_parameter, rain_speed );
 			backend::ref( ).set_ps_constant( m_rain_density_parameter, rain_density );
 			backend::ref( ).set_ps_constant( m_rain_uv_scales_parameter, rain_uv_scales );

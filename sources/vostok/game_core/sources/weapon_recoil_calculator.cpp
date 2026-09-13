@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_recoil_calculator.h>
 
+#include <vostok/game_core/base_player.h>
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/console_command.h>
 
@@ -184,7 +186,7 @@ float weapon_recoil_calculator::get_random_angle( const float range )
 {
 	if ( s_recoil_use_pseudo_random_value )
 	{
-		m_pseudo_random.set_time( m_weapon->get_user( )->local_time( m_last_time_in_ms ) * 0.01f );
+		m_pseudo_random.set_time( m_weapon->get_user( )->local_time( m_last_time_in_ms ) * 0.001f );
 		return m_pseudo_random.random_f( range );
 	}
 	else

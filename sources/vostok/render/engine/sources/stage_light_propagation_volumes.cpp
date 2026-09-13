@@ -623,6 +623,15 @@ static float3 view_matrix_parameters[6][3] = {
 	{float3(0.0f, 0.0f, 0.0f), float3(0.0f, 0.0f, 1.0f),	float3(0.0f, 1.0f, 0.0f)},	//  z
 	{float3(0.0f, 0.0f, 0.0f), float3(0.0f, 0.0f, -1.0f),	float3(0.0f, 1.0f, 0.0f)},	// -z
 };
+
+static float3 sky_light_matrix_parameters[6][3] = {
+	{float3(0.0f, 0.0f, 0.0f), float3(-0.5f, -0.5f, -0.0f), float3(-0.5f, 0.5f, 0.0f)},
+	{float3(0.0f, 0.0f, 0.0f), float3( 0.5f, -0.5f, -0.0f), float3( 0.5f, 0.5f, 0.0f)},
+	{float3(0.0f, 0.0f, 0.0f), float3(-0.0f, -1.0f, -0.0f), float3( 0.0f, 0.0f, -1.0f)},
+	{float3(0.0f, 0.0f, 0.0f), float3( 0.0f, -1.0f,  0.0f), float3( 0.0f, 0.0f,  1.0f)},
+	{float3(0.0f, 0.0f, 0.0f), float3(-0.0f, -0.5f, -0.5f), float3( 0.0f, 0.5f, -0.5f)},
+	{float3(0.0f, 0.0f, 0.0f), float3(-0.0f, -0.5f,  0.5f), float3( 0.0f, 0.5f,  0.5f)}
+};
 void stage_light_propagation_volumes::render_to_point_rms(
 	light*				l,
 	u32 const			face_index,
@@ -648,7 +657,7 @@ void stage_light_propagation_volumes::render_to_sky_rms( light* sun, u32 const f
 
 	float4x4 sun_rotation = sun ? math::create_rotation(float3(sun->direction.x, 0.0f, sun->direction.z)) : float4x4().identity();
 
-	float3 direction = math::normalize(sun_rotation.transform_direction(view_matrix_parameters[face_index][1]));
+	float3 direction = math::normalize(sun_rotation.transform_direction(sky_light_matrix_parameters[face_index][1]));
 	float3 up = math::normalize(math::cross_product(math::normalize(math::cross_product(direction, float3(1.0f, 1.0f, 1.0f))), direction));
 
 	float3 sky_position = m_context->get_view_pos() - direction * max_scale * 1.41421f * 2.0f;

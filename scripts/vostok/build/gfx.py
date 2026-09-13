@@ -147,6 +147,7 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
 #                                      Include/, the rest map under Src/
 OVERLAY_ROOT = VOSTOK_DIR / "sources/scaleform"
 OVERLAY_LIB_ONLY = OVERLAY_ROOT / "sdk-overlay"
+SDK_PATCH_ROOT = OVERLAY_ROOT / "sdk-patches"
 OVERLAY_SKIP = {
     # engine-pch macro armor (parenthesized CRT calls, trimmed Realloc) - an
     # engine-side workaround, not a 4.2.21 truth; the lib compiles the
@@ -191,6 +192,15 @@ def _overlay_files():
             yield rel, f
 
 
+def _patch_files():
+    """Yield narrow source patches keyed by their SDK-relative target path."""
+    if not SDK_PATCH_ROOT.is_dir():
+        return
+    for patch in SDK_PATCH_ROOT.rglob("*.patch"):
+        relative = patch.relative_to(SDK_PATCH_ROOT)
+        yield str(relative.with_suffix("")), patch
+
+
 def materialize_tree():
     """(Re)build GFX_BUILD_TREE: link the pristine SDK, copy overlays over.
 
@@ -202,7 +212,8 @@ def materialize_tree():
     from shutil import copy2
     tree = GFX_BUILD_TREE
     overlays = dict(_overlay_files())
-    linked = copied = 0
+    patches = dict(_patch_files())
+    linked = copied = patched = 0
     for sub in ("Src", "Include", "3rdParty"):
         src_root = SDK / sub
         for f in src_root.rglob("*"):
@@ -240,8 +251,28 @@ def materialize_tree():
         dst.parent.mkdir(parents=True, exist_ok=True)
         copy2(src, dst)
         copied += 1
-    if linked or copied:
-        print(f"[tree] {tree.name}: +{linked} sdk links, {copied} overlay copies")
+    for rel, patch in patches.items():
+        dst = tree / rel
+        if not dst.is_file():
+            raise FileNotFoundError(f"SDK patch target does not exist: {rel}")
+        contents = dst.read_bytes()
+        uses_crlf = b"\r\n" in contents
+        dst.unlink()
+        dst.write_bytes(contents.replace(b"\r\n", b"\n"))
+        Path(f"{dst}.rej").unlink(missing_ok=True)
+        subprocess.run(
+            ["patch", "--silent", "--no-backup-if-mismatch", "-p1", "-i",
+             str(patch)],
+            cwd=tree, check=True,
+        )
+        if uses_crlf:
+            dst.write_bytes(dst.read_bytes().replace(b"\n", b"\r\n"))
+        patched += 1
+    if linked or copied or patched:
+        print(
+            f"[tree] {tree.name}: +{linked} sdk links, {copied} overlay copies, "
+            f"{patched} source patches"
+        )
 
 
 def lib_config(name):
@@ -275,11 +306,16 @@ def build_key(name, flags, defines, includes, tu_list):
         "includes": list(includes),
         "tus": tu_list,
         "overlays": [],
+        "patches": [],
     }
     if name in CPP_LIBS:
         for rel, source in sorted(_overlay_files()):
             inputs["overlays"].append(
                 [rel, hashlib.sha256(source.read_bytes()).hexdigest()]
+            )
+        for rel, patch in sorted(_patch_files()):
+            inputs["patches"].append(
+                [rel, hashlib.sha256(patch.read_bytes()).hexdigest()]
             )
     payload = json.dumps(inputs, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(payload).hexdigest()

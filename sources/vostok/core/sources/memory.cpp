@@ -33,7 +33,9 @@ vostok::memory::doug_lea_mt_allocator_type		vostok::debug::g_mt_allocator(
 #endif // #if VOSTOK_DEBUG_ALLOCATOR
 
 vostok::memory::pthreads_allocator_type			vostok::memory::g_mt_allocator;
+#ifndef MASTER_GOLD
 vostok::memory::fs_allocator						vostok::memory::g_fs_allocator;
+#endif // #ifndef MASTER_GOLD
 vostok::memory::doug_lea_allocator_type			vostok::memory::g_cook_allocator;
 vostok::memory::doug_lea_allocator_type			vostok::strings::shared::g_allocator( vostok::memory::thread_id_const_false );
 

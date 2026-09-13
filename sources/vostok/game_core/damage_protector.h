@@ -3,7 +3,7 @@
 #ifndef DAMAGE_PROTECTOR_H_INCLUDED
 #define DAMAGE_PROTECTOR_H_INCLUDED
 
-#include <vostok/game_core/hit_affects_type_enum.h>
+#include <vostok/game_core/affect_types.h>
 
 namespace survarium {
 

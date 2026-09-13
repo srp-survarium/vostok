@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 #include <vostok/game_core/weapon_core.h>		// m_weapon.set/remove_animation_callback, get_user
 #include <vostok/game_core/base_player.h>		// get_user()->is_replaying_history()

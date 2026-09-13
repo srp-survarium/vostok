@@ -6,11 +6,11 @@
 namespace survarium {
 
 weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
-	m_one_shoot_dispersion_amount	( 0.0f ),
-	m_reload_dispersion_amount		( 0.0f ),
+	m_one_shoot_dispersion_amount	( 1.0f ),
+	m_reload_dispersion_amount		( 1.0f ),
 	m_growth_speed					( 5.0f ),
-	m_aiming_speed					( 0.0f ),
-	m_max_value						( 1.0f ),
+	m_aiming_speed					( 1.0f ),
+	m_max_value						( 2.0f ),
 	m_target_coeff					( 0.0f ),
 	m_current_coeff					( 0.0f ),
 	m_current_time					( 0 )

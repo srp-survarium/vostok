@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "jump_logic_state_start.h"
 #include <vostok/game_core/weapon_user_animations_selector.h>
 #include <vostok/game_core/weapon_animation_parameters.h>
@@ -12,8 +13,6 @@
 #include <vostok/fixed_vector.h>
 
 namespace survarium {
-
-static float s_aim_transition_time = 0.3f;
 
 jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
 	: jump_logic_base_state( owner ),
@@ -83,9 +82,9 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 		return animation::mixing::animation_lexeme(
 			animation::mixing::animation_lexeme_parameters( buffer, caption, intervals.begin( ), intervals.end( ), 0, 0 )
 			.weight_synchronization_group_id	( 0 )
-			.weight_interpolator				( animation::linear_interpolator( s_aim_transition_time ) )
+			.weight_interpolator				( animation::linear_interpolator( 0.3f ) )
 			.time_synchronization_group_id		( 0 )
-			.time_scale_interpolator			( animation::linear_interpolator( s_aim_transition_time ) )
+			.time_scale_interpolator			( animation::linear_interpolator( 0.3f ) )
 			.animated_object					( m_user )
 			.bones_mask							( bones_mask )
 		);
@@ -94,7 +93,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 	{
 		m_interval_id_to_wait_for	= 0;
 
-		animation::linear_interpolator	interpolator( s_aim_transition_time );
+		animation::linear_interpolator	interpolator( 0.3f );
 
 		return animation::mixing::animation_lexeme(
 			animation::mixing::animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )

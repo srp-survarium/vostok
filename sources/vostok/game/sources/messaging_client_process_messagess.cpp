@@ -4,6 +4,7 @@
 // (sic, PDB-attested typo) - keep the filename
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "messaging_client.h"
 
 #include <vostok/network_core/tcp_packet.h>

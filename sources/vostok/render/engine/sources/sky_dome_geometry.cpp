@@ -29,42 +29,34 @@ sky_dome_geometry::sky_dome_geometry( ) :
 
 	for ( float i = 0.f; i < 16.f; i += 1.f )
 	{
-		float const move_xz = i / 15.f;
+		float const move_xz = i / 15.f * math::deg2rad( 100.f );
 		for ( float j = 0.f; j < 8.f; j += 1.f )
 		{
 			float const move_y = j / 7.f * math::pi;
-			vertices[vertex_index].position.set(
-				math::cos( move_y ) * math::cos( move_xz * math::deg2rad( 100.f ) ),
-				math::sin( move_xz * math::deg2rad( 100.f ) ),
-				math::sin( move_y ) * math::cos( move_xz * math::deg2rad( 100.f ) ),
-				1.f
-			);
+			vertices[vertex_index].position.x = math::cos( move_y ) * math::sin( move_xz );
+			vertices[vertex_index].position.y = math::cos( move_xz );
+			vertices[vertex_index].position.z = math::sin( move_y ) * math::sin( move_xz );
+			vertices[vertex_index].position.w = 1.f;
 			vertices[vertex_index].position *= 10.f;
-			vertices[vertex_index].uv.set(
-				i / 16.f + 0.5f / 16.f,
-				j / 8.f + 0.5f / 8.f
-			);
+			vertices[vertex_index].uv.x = i / 16.f + 0.5f / 16.f;
+			vertices[vertex_index].uv.y = j / 8.f + 0.5f / 8.f;
 			++vertex_index;
 		}
 	}
 
 	for ( float i = 0.f; i < 16.f; i += 1.f )
 	{
-		float const move_xz = i / 15.f;
+		float const move_xz = i / 15.f * math::deg2rad( 100.f );
 		for ( float j = 0.f; j < 8.f; j += 1.f )
 		{
-			float const move_y = math::pi_x2 - j / 7.f * math::pi;
-			vertices[vertex_index].position.set(
-				math::cos( move_y ) * math::cos( move_xz * math::deg2rad( 100.f ) ),
-				math::sin( move_xz * math::deg2rad( 100.f ) ),
-				math::sin( move_y ) * math::cos( move_xz * math::deg2rad( 100.f ) ),
-				1.f
-			);
+			float const move_y = math::pi * 2.0f - j / 7.f * math::pi;
+			vertices[vertex_index].position.x = math::cos( move_y ) * math::sin( move_xz );
+			vertices[vertex_index].position.y = math::cos( move_xz );
+			vertices[vertex_index].position.z = math::sin( move_y ) * math::sin( move_xz );
+			vertices[vertex_index].position.w = 1.f;
 			vertices[vertex_index].position *= 10.f;
-			vertices[vertex_index].uv.set(
-				i / 16.f + 0.5f / 16.f,
-				j / 8.f + 0.5f / 8.f
-			);
+			vertices[vertex_index].uv.x = i / 16.f + 0.5f / 16.f;
+			vertices[vertex_index].uv.y = j / 8.f + 0.5f / 8.f;
 			++vertex_index;
 		}
 	}

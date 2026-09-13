@@ -1128,10 +1128,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\new_sound_propagator.h"
-					>
-				</File>
-				<File
 					RelativePath=".\sound_voice_params.h"
 					>
 				</File>

@@ -84,12 +84,12 @@ cloud_key_parameters environment_temp::get_interp_key( float time )
 	float const key_time = 0.0f / key_time_step;
 	cloud_key_parameters result;
 
-	s32 ipos = math::floor( key_time );
-	u32 const source_index = ipos % num_keys;
+	u32 const source_index = math::floor( key_time ) % num_keys;
 	u32 const target_index = source_index + 1 < num_keys ? source_index + 1 : 0;
+	s32 ipos = static_cast<s32>( key_time );
 	float local_time = math::abs( key_time ) - static_cast<float>( math::abs( ipos ) );
 
-	float alpha = math::pow( local_time, 1.0f );
+	float alpha = math::pow( local_time, 2.0f );
 
 	result = cloud_key_parameters::lerp( keys[source_index], keys[target_index], alpha );
 	result.interp_alpha = alpha;
@@ -309,9 +309,9 @@ void stage_clouds::execute( )
 		float const wind_dot_view_direction = m_wind_direction | view_dir_2d2;
 		if ( math::abs( wind_dot_view_direction ) > 0.0f )
 		{
-			m_camera_offset += math::sign( wind_dot_view_direction ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( wind_dot_view_direction ) * m_clouds_scale_multiplier;
+			m_camera_offset += math::sign( wind_dot_view_direction ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( wind_dot_view_direction ) * interp_key.wind_speed;
 		}
-		m_wind_offset += m_wind_direction * ( m_clouds_scale_multiplier * 0.0125f ) * m_clouds_scale_multiplier;
+		m_wind_offset += m_wind_direction * ( interp_key.wind_speed * 0.0125f ) * m_clouds_scale_multiplier;
 	}
 
 	if ( m_camera_offset >= 1.0f )
@@ -356,9 +356,9 @@ void stage_clouds::execute( )
 
 		);
 		{
-			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
-			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
+			float scale = static_cast<float>( i ) * m_clouds_scale_multiplier - m_camera_offset * m_clouds_scale_multiplier;
 			m_clouds_effect->apply( 0, 0 );
+			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
 			m_context->set_w( world_matrix );
 			backend::ref( ).set_ps_constant( m_c_sphere_to_sky_matrix, math::transpose( sphere_to_clouds_matrix ) );
 			backend::ref( ).set_ps_constant( m_c_clouds_grid_size, float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) );
@@ -379,10 +379,10 @@ void stage_clouds::execute( )
 		if ( options::ref( ).current.m_use_god_rays )
 		{
 
-			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
+			float scale = static_cast<float>( i ) * m_clouds_scale_multiplier - m_camera_offset * m_clouds_scale_multiplier;
 
-			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
 			m_god_rays_effect->apply( 0, 0 );
+			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
 
 			m_context->set_w( world_matrix );
 			backend::ref( ).set_ps_constant( m_c_sphere_to_sky_matrix, math::transpose( world_to_god_rays_matrix ) );
@@ -399,8 +399,8 @@ void stage_clouds::execute( )
 
 	m_context->pop_p( );
 	backend::ref( ).reset_render_targets( );
-	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture[0];
-	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture[1];
+	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture_left;
+	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture_right;
 
 	m_fixed_time += 0.0125f;
 }

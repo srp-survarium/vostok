@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
 #include <vostok/ai/fsm.h>
 #include <vostok/network_core/udp_match_packet.h>

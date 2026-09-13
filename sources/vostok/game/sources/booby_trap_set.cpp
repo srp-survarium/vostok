@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "booby_trap_set.h"
 #include "booby_trap.h"
 #include "game_world.h" // get_game_material_manager() needs complete type

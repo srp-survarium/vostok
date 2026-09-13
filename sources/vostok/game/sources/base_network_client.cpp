@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "base_network_client.h"
 #include "player.h"
 #include "game.h"					// m_game.get_game_world()

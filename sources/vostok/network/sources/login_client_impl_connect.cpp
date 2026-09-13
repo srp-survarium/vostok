@@ -71,8 +71,8 @@ void login_client_impl::connect(
 			retry_count,
 			functor,
 			iterator,
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::iterator
+			_1,
+			_2
 		)
 	);
 }
