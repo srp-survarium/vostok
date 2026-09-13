@@ -39,7 +39,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > simple_game_project_ptr;
 
-// void* lobby_menu::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x92eb0]: <0x92ea0>|0x000|      :'63'	{
+
 
 class lobby_menu : public base_game_scene , public input::handler {
 	typedef base_game_scene super;
@@ -70,11 +70,11 @@ public:
 		return *this;
 	}
 
-	// buildability return; the real body reaches the manager through m_game
-	virtual	bullet_manager&				get_bullet_manager					( ) const override
-	{
-		return *( bullet_manager* )NULL;
-	}
+	// sushi@TODO: Verify the claimed m_game lookup in inlined callers.
+	virtual	bullet_manager&				get_bullet_manager					( ) const override { return *( bullet_manager* )NULL; }
+
+
+
 
 	virtual	bool						on_keyboard_action					(
 											input::world*					input_world,
