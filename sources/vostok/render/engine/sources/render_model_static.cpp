@@ -112,9 +112,9 @@ template bool read_diffuse_colors< 64 >(
 	math::color (&)[64][64]
 );
 
-static float frac( float f )
+static float frac( float v )
 {
-	return math::abs(f) - math::abs(math::floor(f));
+	return math::abs(v) - math::abs(math::floor(v));
 }
 
 template < u32 Size >
@@ -139,7 +139,7 @@ template math::color interpolated_color< 64 >(
 	math::color (&)[64][64],
 	const float2
 );
-
+// sushi@TODO: Recover the uncolored allocation entry partition without splitting this template.
 template < typename StaticVertex, typename OptimizedVertex >
 static void create_shadow_pass_geometry_type(
 	render_geometry&					in_render_geometry,
@@ -153,7 +153,10 @@ static void create_shadow_pass_geometry_type(
 	OptimizedVertex* temp_data = ALLOC(OptimizedVertex, num_vertices);
 
 	for (u32 i = 0; i < num_vertices; ++i)
-		temp_data[i].set(*reinterpret_cast<StaticVertex const*>(data + i * sizeof(StaticVertex)));
+	{
+		temp_data[i].set(*reinterpret_cast<StaticVertex const*>(data));
+		data += sizeof(StaticVertex);
+	}
 
 	untyped_buffer_ptr vb = resource_manager::ref().create_buffer(
 		num_vertices * sizeof(OptimizedVertex),
@@ -187,7 +190,7 @@ static void fill_static_lpv_vertex_color(
 	bool const diffuse_colors_read = read_diffuse_colors( in_materail_effects_instance, color_grid );
 	if ( !diffuse_colors_read )
 		return;
-
+	// sushi@TODO: Recover the LPV loop addressing and cached index-buffer byte size; preserve buffer lifetimes.
 	untyped_buffer_ptr vb = in_render_geometry.geom->m_vb;
 	u32 const num_vertices = vb->size( ) / in_render_geometry.geom->m_vb_stride;
 	StaticVertex* temp_data = static_cast<StaticVertex*>( MALLOC( vb->size( ), "" ) );
@@ -286,10 +289,10 @@ static void fill_static_lpv_vertex_color(
 		*ib
 	);
 
+	FREE( indices_temp_data );
 	FREE( temp_data );
 	FREE( lpv_temp_data );
 	FREE( static_temp_data );
-	FREE( indices_temp_data );
 }
 
 void static_render_surface::fill_lpv_vertex_color( batched_geometry_interface* in_out_geometry, float4x4 const& transform )
@@ -457,11 +460,11 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 		math::color	normal;
 		float2			uv;
 
-		void set( static_vertex0 const& source )
+		void set( static_vertex0 const& base )
 		{
-			position = source.position;
-			normal = source.normal;
-			uv = source.uv;
+			position = base.position;
+			normal = base.normal;
+			uv = base.uv;
 		}
 	};
 
@@ -471,12 +474,12 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 		float2			uv;
 		math::color	color;
 
-		void set( colored_static_vertex const& source )
+		void set( colored_static_vertex const& base )
 		{
-			position = source.position;
-			normal = source.normal;
-			uv = source.uv;
-			color = source.color_component;
+			position = base.position;
+			normal = base.normal;
+			uv = base.uv;
+			color = base.color_component;
 		}
 	};
 
@@ -616,7 +619,7 @@ void static_render_model_instance::assign_original( static_render_model_ptr v )
 	m_instances_count	= m_original->m_childs_count;
 	m_surface_instances = NEW_ARRAY( render_surface_instance, m_instances_count );
 
-	for( u8 i = 0; i < m_instances_count; ++i )
+	for( u16 i = 0; i < m_instances_count; ++i )
 	{
 		render_surface_instance& info = m_surface_instances[i];
 		info.m_parent				= this;
@@ -728,15 +731,16 @@ void static_render_model_instance::get_surfaces(
 )
 {
 	if (lod_id == u8(-1))
-
-		lod_id = select_lod(*mat_vp, *view_pos);
-
-	if (lod_id != 0xaa)
 	{
-		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id]) {
-			if (!lod_id)
-				break;
-			--lod_id;
+		lod_id = select_lod(*mat_vp, *view_pos);
+		// sushi@TODO: Recover the fallback loop entry and selected-count retest without changing explicit-LOD bypass.
+		if (lod_id != 0xaa)
+		{
+			while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id]) {
+				if (!lod_id)
+					break;
+				--lod_id;
+			}
 		}
 	}
 	if (lod_id == 0xaa)
