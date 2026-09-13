@@ -102,9 +102,9 @@ void stage_sun::execute( )
 	if ( !sun )
 		return;
 
-	float3 sun_dir = m_context->get_v( ).transform_direction( sun->direction );
-
 	float3 const* const eye_rays = m_context->get_eye_rays( );
+
+	float3 sun_dir = m_context->get_v( ).transform_direction( sun->direction );
 	float3 sun_clr = sun->color;
 	sun_dir.normalize( );
 	m_sun_effect->apply( 0, 0 );

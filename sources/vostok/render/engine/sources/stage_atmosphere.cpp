@@ -193,14 +193,14 @@ void stage_atmosphere::execute( )
 			backend::ref( ).set_ps_constant( m_sky_clouds_parameters0, float4( pp_parameters.sky_clouds_color.xyz( ), pp_parameters.sky_clouds_u_tile ) );
 			backend::ref( ).set_ps_constant( m_sky_clouds_parameters1, float4( pp_parameters.sky_clouds_fog_power, pp_parameters.sky_clouds_fog_up_limit, 0.0f, 0.0f ) );
 
-			float const angle_in_rad = pp_parameters.sky_clouds_rotation / 180.0f;
-			backend::ref( ).set_vs_constant( m_sky_clouds_parameters2, float4( math::cos( angle_in_rad * math::pi ), math::sin( angle_in_rad * math::pi ), 0.0f, 0.0f ) );
+			float const angle_in_rad = pp_parameters.sky_clouds_rotation / 180.0f * math::pi;
+			backend::ref( ).set_vs_constant( m_sky_clouds_parameters2, float4( math::cos( angle_in_rad ), math::sin( angle_in_rad ), 0.0f, 0.0f ) );
 
 			m_clouds_geometry.draw( );
 		}
 		if ( pp_parameters.sun_moon_texture && sun )
 		{
-			u32 offset;
+			u32 offset = 0;
 			screen_vertex* pv = reinterpret_cast<screen_vertex*>( backend::ref( ).vertex.lock( 4, sizeof(screen_vertex), offset ) );
 
 			pv->set( float4( -1.0f, -1.0f, 0.0f, 1.0f ), float2( 0.0f, 1.0f ) );
