@@ -107,7 +107,12 @@ class CleanFinalPdbTests(unittest.TestCase):
             prefix = Path(tmp) / "prefix"
             sources = Path(tmp) / "checkout" / "sources"
             sources.mkdir(parents=True)
-            with mock.patch.object(toolchain.paths, "SOURCES", sources):
+            with (
+                mock.patch.object(toolchain.paths, "SOURCES", sources),
+                mock.patch("vostok.build.gfx.materialize_tree"),
+                mock.patch.object(toolchain.paths, "GFX_BUILD_TREE", Path(tmp) / "gfx-sdk"),
+                mock.patch.object(toolchain.paths, "GFX_OBJECT_TREE", Path(tmp) / "gfx-obj"),
+            ):
                 toolchain.ensure_retail_source_root(prefix)
                 toolchain.ensure_retail_source_root(prefix)
 

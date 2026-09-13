@@ -41,5 +41,5 @@
 
 #include <vostok/render/core/render_include.h>
 #include <vostok/render/core/memory.h>
-
+#include <Vostok_HeapMH_SysAllocMalloc.h>
 #endif // #ifndef PCH_H_INCLUDED

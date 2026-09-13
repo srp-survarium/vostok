@@ -193,15 +193,12 @@ DATA_FUNCTION_OPEN = GEN_DIR / "data_function_open.tsv"
 # relative path, so target and base key identically: both reduce to `Src\...`.
 GFX_TARGET_PREFIX = r"c:\w\42216f4658640829\scaleform\releases\gfx_4.2.21"
 SCALEFORM_SDK = Path(
-    os.environ.get("SCALEFORM_SDK", str(Path.home() / "Projects/survarium/scaleform_sdk"))
+    os.environ.get("SCALEFORM_SDK", str(BINARIES / "nix-store/scaleform-sdk"))
 )
 
-# Merged GFx build tree: the pristine SDK linked file-by-file, with the repo's
-# reconstructed 4.2.21 files (sources/scaleform/...) copied over it.
-# vostok.build.gfx materializes it and compiles the lib TUs FROM it, so bare
-# neighbor-includes ("Render_HAL.h") resolve to the reconstructed copies -
-# an -I overlay cannot reach those. Both PDB readers strip this prefix on
-# the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
+# The pinned recovered SDK is linked through a stable Wine alias. Both engine
+# and library compilations resolve the same files while PDB readers retain the
+# original GFX_TREE_PREFIX provenance.
 GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 GFX_OBJECT_TREE = WIN32_DIR / "intermediates" / "gfx"
 
@@ -215,6 +212,27 @@ GFX_OBJECT_TREE = WIN32_DIR / "intermediates" / "gfx"
 GFX_TREE_PREFIX = r"c:\survarium\gfx-sdk"
 GFX_RELEASE_PREFIX = GFX_TREE_PREFIX
 GFX_OBJECT_PREFIX = r"c:\survarium\gfx-obj"
+def gfx_source_relative(filename: str) -> str | None:
+    """Identify normalized SDK sources without borrowing an engine overlay."""
+    name = filename.replace("\\", "/")
+    for prefix in (GFX_TARGET_PREFIX, GFX_TREE_PREFIX, str(SCALEFORM_SDK),
+                   str(SCALEFORM_SDK.resolve()), str(GFX_BUILD_TREE)):
+        prefix = prefix.replace("\\", "/").rstrip("/") + "/"
+        if name.casefold().startswith(prefix.casefold()):
+            name = name[len(prefix):]
+            break
+    if name.casefold().startswith("scaleform/"):
+        name = name[len("scaleform/"):]
+        if name.casefold() == "src/kernel/heapmh/heapmh_sysallocmalloc.h":
+            return "Include/Vostok_HeapMH_SysAllocMalloc.h"
+    parts = name.split("/")
+    if parts[0].casefold() not in {"src", "include", "3rdparty"}:
+        return None
+    if any(part in {"", ".", ".."} for part in parts):
+        return None
+    return name
+
+
 GFX_SHIPPING_ARCHIVES = tuple(
     PREBUILT / "Win32" / "libraries" / "shipping" / name
     for name in (

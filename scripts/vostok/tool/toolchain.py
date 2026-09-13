@@ -247,6 +247,9 @@ def ensure_retail_source_root(wineprefix: Path) -> None:
 
 def ensure_gfx_tree_root(parent: Path) -> None:
     """Give GFx source and object trees machine-independent Wine paths."""
+    from vostok.build.gfx import materialize_tree
+
+    materialize_tree()
     ensure_gfx_alias(parent, "gfx-sdk", paths.GFX_BUILD_TREE)
     ensure_gfx_alias(parent, "gfx-obj", paths.GFX_OBJECT_TREE)
 

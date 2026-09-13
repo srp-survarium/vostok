@@ -94,10 +94,10 @@ class FunctionDataResolutionTests(unittest.TestCase):
                     "e2f12c7bf31a",
                 )
 
-    def test_gfx_review_hashes_lib_overlay_before_pristine_sdk(self):
+    def test_gfx_review_hashes_pinned_sdk(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            overlay = root / "sources/scaleform/sdk-overlay/GFx/example.cpp"
+            overlay = root / "sources/src/gfx/example.cpp"
             sdk = root / "sdk/Src/GFx/example.cpp"
             overlay.parent.mkdir(parents=True)
             sdk.parent.mkdir(parents=True)
@@ -119,7 +119,7 @@ class FunctionDataResolutionTests(unittest.TestCase):
                         {"module": "gfx"},
                         None,
                     ),
-                    "e3eb0451f80e",
+                    "b90427c0f679",
                 )
 
     def test_direct_exact_needs_no_ledger_evidence(self):
