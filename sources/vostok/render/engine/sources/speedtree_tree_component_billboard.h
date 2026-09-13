@@ -48,10 +48,10 @@ public:
 
 	virtual void render( lod_entry const* lod, renderer_context* context );
 
-	virtual enum_vertex_input_type get_vertex_input_type( )
-	{
-		return null_vertex_input_type;
-	}
+	virtual enum_vertex_input_type get_vertex_input_type( ) { return null_vertex_input_type; }
+
+
+
 
 	bool is_initialized( ) const { return m_is_init; }
 

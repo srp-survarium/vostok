@@ -29,17 +29,17 @@ public:
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
 
-	virtual SpeedTree::EGeometryType get_geometry_type( ) const
-	{
-		return SpeedTree::GEOMETRY_TYPE_LEAF_MESHES;
-	}
+	virtual SpeedTree::EGeometryType get_geometry_type( ) const { return SpeedTree::GEOMETRY_TYPE_LEAF_MESHES; }
+
+
+
 
 	virtual void render( lod_entry const* lod, renderer_context* context );
 
-	virtual enum_vertex_input_type get_vertex_input_type( )
-	{
-		return null_vertex_input_type;
-	}
+	virtual enum_vertex_input_type get_vertex_input_type( ) { return null_vertex_input_type; }
+
+
+
 
 	void init_index_buffer( SpeedTree::SIndexedTriangles const* lod, vector<u16>& out_indices );
 };

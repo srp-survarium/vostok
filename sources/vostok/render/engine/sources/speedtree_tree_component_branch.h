@@ -28,10 +28,10 @@ public:
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
 
-	virtual SpeedTree::EGeometryType get_geometry_type( ) const
-	{
-		return SpeedTree::GEOMETRY_TYPE_BRANCHES;
-	}
+	virtual SpeedTree::EGeometryType get_geometry_type( ) const { return SpeedTree::GEOMETRY_TYPE_BRANCHES; }
+
+
+
 
 	virtual void render( lod_entry const* lod, renderer_context* context );
 
