@@ -11,6 +11,7 @@
 namespace vostok {
 namespace network_core {
 
+#line 17
 udp_match_client::udp_match_client(
 	boost::asio::io_service&			io_service,
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
@@ -36,10 +37,12 @@ udp_match_client::udp_match_client(
 {
 	m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
 }
+#line 47
 void udp_match_client::on_error( const client_error_codes_enum, const boost::system::error_code )
 {
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
+#line 76
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint )
 {
 	ASSERT_U( endpoint == m_server_endpoint );
@@ -77,6 +80,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 		on_error			( unable_to_read_from_socket, error_code );
 		return;
 	}
+
 	if ( m_network_flow_emulator ) {
 		m_network_flow_emulator->on_packet_received( m_receive_buffer.c_array( ), bytes_transferred, m_remote_endpoint, m_time_in_ms, m_connection.unacknowledged_packets_count( ) );
 	}
@@ -84,14 +88,18 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 		packet_reader	reader( base_packet( m_receive_buffer.c_array( ), bytes_transferred ) );
 		process_incoming_packet( reader, m_remote_endpoint );
 	}
+
 	check_consistency		( );
+
 	if ( !m_connection.is_disconnected( ) )
 		start_receiving		( );
 }
+
 void udp_match_client::start_receiving( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_is_receiving ) );
 	m_is_receiving				= true;
+
 	m_socket.async_receive_from	(
 		boost::asio::buffer( m_receive_buffer ),
 		m_remote_endpoint,
@@ -101,6 +109,7 @@ void udp_match_client::start_receiving( )
 		)
 	);
 }
+#line 138
 void udp_match_client::connect(
 	pcstr const					host,
 	const u16					port,
@@ -112,17 +121,23 @@ void udp_match_client::connect(
 		m_socket.close		( );
 	m_socket.open			( boost::asio::ip::udp::v4( ) );
 	m_socket.bind			( boost::asio::ip::udp::endpoint( ) );
+
 	m_server_endpoint		= boost::asio::ip::udp::endpoint( boost::asio::ip::address::from_string( host ), port );
+
 	m_connection.connect	( packet );
+
 	check_consistency		( );
 	start_receiving			( );
+
 	m_connection.send_queued_packets( current_time_in_ms );
 	check_consistency		( );
 }
+
 void udp_match_client::disconnect( )
 {
 	m_connection.disconnect( );
 }
+
 void udp_match_client::enqueue( udp_match_packet* packet )
 {
 	if ( m_connection.is_connected( ) ) {
@@ -134,11 +149,10 @@ void udp_match_client::enqueue( udp_match_packet* packet )
 	}
 	check_consistency				( );
 }
-
+// claude@MATCH: flow emulation observes the previous frame time before m_time_in_ms updates.
 void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 {
 	if ( m_network_flow_emulator ) {
-		// claude@MATCH: tick gets the OLD m_time_in_ms - the member is updated only after this block
 		m_network_flow_emulator->tick( m_time_in_ms, boost::bind( &udp_match_client::process_incoming_packet, this, _1, _2 ) );
 		if ( m_connection.is_disconnected( ) )
 			return;
@@ -161,6 +175,7 @@ void udp_match_client::on_disconnect( const disconnect_event_types_enum disconne
 {
 	if ( m_is_receiving )
 		m_socket.cancel( );
+
 
 	if ( m_on_disconnect )
 		m_on_disconnect( disconnect_type );

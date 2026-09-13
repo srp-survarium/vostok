@@ -25,7 +25,7 @@ void weapon_core_fire_state_base::initialize( )
 
 	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
 
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
+	set_is_firing( true );
 }
 
 // claude@NOTE: paired, walled by a cross-unit inline-vs-call boundary. The target emits a
@@ -44,7 +44,7 @@ void weapon_core_fire_state_base::finalize( )
 
 	m_weapon.remove_animation_callback( "shoot", this );
 
-	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
+	set_is_firing( false );
 }
 
 // claude@NOTE: paired, structure matches (10/10 stmts); sole residual is a 3-byte size
