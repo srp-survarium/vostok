@@ -101,8 +101,8 @@ void stage_volume_fog::execute( )
 		backend::ref( ).get_viewport( orig_viewport );
 		tmp_viewport.TopLeftX = 0.f;
 		tmp_viewport.TopLeftY = 0.f;
-		tmp_viewport.Width = float( m_context->get_rt( rt_generic_1 )->width( ) );
-		tmp_viewport.Height = float( m_context->get_rt( rt_generic_1 )->height( ) );
+		tmp_viewport.Width = float( m_context->get_t( rt_generic_0 )->width( ) );
+		tmp_viewport.Height = float( m_context->get_t( rt_generic_0 )->height( ) );
 		tmp_viewport.MinDepth = 0.f;
 		tmp_viewport.MaxDepth = 1.f;
 		backend::ref( ).set_viewport( tmp_viewport );

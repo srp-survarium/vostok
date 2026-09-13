@@ -142,10 +142,10 @@ void clouds::set_time( float time )
 			m_interp_alpha = (time + 1.0f - key_0.linear_time) / interval;
 	}
 
+	m_is_updated = false;
+
 	if ( async )
 	{
-		m_is_updated = false;
-
 		if ( k0 != m_current_key_0 || k1 != m_current_key_1 )
 		{
 			if ( m_current_key_0 == k1 )
@@ -158,15 +158,15 @@ void clouds::set_time( float time )
 					m_tasks_type,
 					&m_parent_task
 				);
+				m_is_updated = true;
 			}
 			else if ( m_current_key_1 != k0 )
 			{
 				m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
 				m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
 				m_cloud_simulation_2->generate( m_keys[get_next_index_of( m_current_key_1 )], -m_sun_direction );
+				m_is_updated = true;
 			}
-
-			m_is_updated = true;
 		}
 	}
 	else
