@@ -9,7 +9,7 @@ namespace survarium {
 
 class game;
 
-// the canonical global_input_handler_1.h variant is byte-identical - no union needed
+
 class global_input_handler : public input::handler , private boost::noncopyable {
 public:
 			explicit	global_input_handler	( game& game );
@@ -37,10 +37,10 @@ public:
 							s32					z
 						) override;
 
-	virtual	s32			input_priority			( ) override
-	{
-		return 1;
-	}
+	virtual	s32			input_priority			( ) override { return 1; }
+
+
+
 
 private:
 	/* 0x0000 */	/* input::handler */
