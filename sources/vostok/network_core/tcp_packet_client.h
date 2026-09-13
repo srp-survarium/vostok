@@ -35,7 +35,7 @@ public:
 	// form of the same body (100%).
 	inline	void						set_on_connected			( boost::function< void() > const& value ) { m_on_connected = value; /* no source */ }
 	inline	void						set_on_disconnected			( boost::function< void() > const& value ) { m_on_disconnected = value; /* no source */ }
-	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { m_on_packet_received = value; /* no source */ }
+	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { m_packet_socket.set_on_packet_received( value ); }
 	inline	void						set_on_error				(
 											boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	value
 										) { m_on_error = value; /* no source */ }

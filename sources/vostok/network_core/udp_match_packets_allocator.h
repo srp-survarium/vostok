@@ -22,14 +22,11 @@ public:
 	{
 	}
 
-	// STATE[REMOVED] (destroy/increment/decrement): the intrusive_ptr machinery reads
-	// object.m_reference_count directly through threading::multi_threading_policy (see
-	// threading_policies.h) - it never calls these member hooks, and no other consumer
-	// does. The only emitted/target member is the ctor. Uninstantiated both sides.
+	// STATE[REMOVED]: no retained consumer exposes the destroy member hook.
 	inline	void	destroy						( udp_match_packets_allocator* allocator ) { /* no source */ } // STATE[REMOVED]
 
-	inline	void	increment					( ) { /* no source */ } // STATE[REMOVED]
-	inline	void	decrement					( ) { /* no source */ } // STATE[REMOVED]
+	inline	void	increment					( ) { threading::multi_threading_policy::increment( m_reference_count ); }
+	inline	void	decrement					( ) { threading::multi_threading_policy::decrement( m_reference_count ); }
 
 private:
 	// intrusive_ptr's threading policy reads m_reference_count directly
