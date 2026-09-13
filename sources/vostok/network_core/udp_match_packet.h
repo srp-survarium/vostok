@@ -42,24 +42,14 @@ inline void delete_udp_match_packet(
 
 class udp_match_packet : public packet< udp_match_packet > {
 public:
-	class helper {
-	private:
-		// STATE[REMOVED]: never referenced - the factory new_udp_match_packet uses placement
-		// new directly, not call_constructor. Uninstantiated both sides.
-		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ } // STATE[REMOVED]
-	private:
-		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
-
-		static	inline	void	call_destructor		( udp_match_packet& packet )
-		{
-			packet.~udp_match_packet( );
-		}
-
-		friend	void	::vostok::network_core::delete_udp_match_packet(
-			memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
-			udp_match_packet*&		packet
-		);
-	}; // class helper
+	typedef u16					acknowledgement_bits_type;
+	typedef sequence_number< u8 >	sequence_id_type;
+	typedef sequence_number< u16 >	order_id_type;
+	enum
+	{
+		max_message_size	= 256,
+		packet_header_size	= 4,
+	};
 
 private:
 	inline				udp_match_packet	( ) :
@@ -79,7 +69,29 @@ private:
 	// trivial dtor (POD/aggregate members); the empty body is correct. Referenced via
 	// helper::call_destructor in delete_udp_match_packet but never emitted standalone
 	// (inlined into the destroying scope - no ??1 target symbol).
-	inline				~udp_match_packet	( ) { /* no source */ }
+	inline				~udp_match_packet	( ) { }
+
+public:
+	class helper {
+	private:
+		static	inline	void	call_constructor	( udp_match_packet& packet )
+		{
+			new( &packet ) udp_match_packet( );
+		}
+
+		static	inline	void	call_destructor		( udp_match_packet& packet )
+		{
+			packet.~udp_match_packet( );
+		}
+
+		friend	udp_match_packet* ::vostok::network_core::new_udp_match_packet(
+			memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
+		);
+		friend	void	::vostok::network_core::delete_udp_match_packet(
+			memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
+			udp_match_packet*&		packet
+		);
+	}; // class helper
 
 public:
 	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }
@@ -132,7 +144,7 @@ inline udp_match_packet* new_udp_match_packet(
 )
 {
 	udp_match_packet* const	result	= (udp_match_packet*)allocator.allocate( );
-	new( result ) udp_match_packet( );
+	udp_match_packet::helper::call_constructor( *result );
 	return					result;
 }
 

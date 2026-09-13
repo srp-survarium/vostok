@@ -261,13 +261,13 @@ udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_t
 	pcstr	message_id_string;
 	switch ( message_type )
 	{
-		case initiate_disconnection :	message_id_string	= "initiatie disconnection";
+		case low_level_message_type_initiate_disconnection :	message_id_string	= "initiatie disconnection";
 										break;
 
-		case confirm_disconnection :	message_id_string	= "confirm disconnection";
+		case low_level_message_type_confirm_disconnection :	message_id_string	= "confirm disconnection";
 										break;
 
-		case continuous_flow :			message_id_string	= "continuous flow";
+		case low_level_message_type_continuous_flow :		message_id_string	= "continuous flow";
 										break;
 
 		default :						message_id_string	= "<unknown low level message type>";
@@ -298,7 +298,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 			ASSERT					( UNKNOWN_EXPRESSION );
 			ASSERT					( UNKNOWN_EXPRESSION );
 
-			m_packets_to_send.push_back( new_low_level_packet( initiate_disconnection ) );
+			m_packets_to_send.push_back( new_low_level_packet( low_level_message_type_initiate_disconnection ) );
 			break;
 
 		case confirming_disconnection :
@@ -307,7 +307,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 				return;
 			}
 
-			m_packets_to_send.push_back( new_low_level_packet( confirm_disconnection ) );
+			m_packets_to_send.push_back( new_low_level_packet( low_level_message_type_confirm_disconnection ) );
 			break;
 
 		case disconnected :
@@ -327,7 +327,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 			return;
 		}
 
-		m_packets_to_send.push_back	( new_low_level_packet( continuous_flow ) );
+		m_packets_to_send.push_back	( new_low_level_packet( low_level_message_type_continuous_flow ) );
 		packets_count	= 1;
 	}
 
@@ -438,7 +438,7 @@ void udp_match_connection::enqueue( udp_match_packet* packet )
 
 // the acknowledgement purge helper of update_acknowledgements - GLOBAL scope per the
 // target mangling (intrusive_list<..>::remove_if<sequence_id_predicate>).
-class sequence_id_predicate : public boost::noncopyable {
+class sequence_id_predicate : private boost::noncopyable {
 public:
 	inline			sequence_id_predicate	(
 						vostok::memory::single_size_buffer_allocator< 300, vostok::threading::single_threading_policy >&	packets_allocator,
@@ -535,7 +535,7 @@ void udp_match_connection::update_acknowledgements(
 void udp_match_connection::process_low_level_message( packet_reader& reader, const u32 time_in_ms )
 {
 	switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
-		case initiate_disconnection :
+		case low_level_message_type_initiate_disconnection :
 		default :
 			if ( m_state != connected )
 			{
@@ -546,7 +546,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 			m_disconnection_receive_time_in_ms	= time_in_ms;
 			break;
 
-		case confirm_disconnection :
+		case low_level_message_type_confirm_disconnection :
 			if ( m_state == connected ) {
 				LOG_ERROR( "processing low level packet: skip confirming disconnection - we didn't initiated it" );
 				break;
@@ -559,7 +559,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 			}
 			break;
 
-		case continuous_flow :
+		case low_level_message_type_continuous_flow :
 			break;
 	}
 }
@@ -569,7 +569,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 
 // the disconnect purge helper of instant_disconnect/disconnect - GLOBAL scope per the
 // target mangling (intrusive_list<..>::remove_if<remove_all_predicate>).
-class remove_all_predicate : public boost::noncopyable {
+class remove_all_predicate : private boost::noncopyable {
 public:
 	inline			remove_all_predicate	(
 						vostok::memory::single_size_buffer_allocator< 300, vostok::threading::single_threading_policy >&	packets_allocator,

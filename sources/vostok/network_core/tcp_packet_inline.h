@@ -10,7 +10,6 @@ inline tcp_packet::tcp_packet( memory::base_allocator& allocator ) :
 	m_allocator			( allocator ),
 	m_allocated_size	( 0 )
 {
-	/* no source */
 }
 
 inline tcp_packet::~tcp_packet( )

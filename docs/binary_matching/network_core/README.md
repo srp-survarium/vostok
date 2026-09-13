@@ -33,6 +33,10 @@ No PDB counterpart (dead for matching): the readers/writers web, `buffer_*_devic
 `signalling_reader`, `std_string`, `io_service` wrapper, `asio_*` glue,
 `server*`/`client_session*` (server-side).
 
+The [inline-body audit](inline_recovery.md) records which no-source declarations
+were recovered from retail expansions, which are source-prior reconstructions,
+and which cannot be observed in the shipped client target.
+
 ## Per-function logs
 One `<function>.md` in this folder per function that needed real effort (see
 [../agentic_loop.md](../agentic_loop.md) section 7). Live status is in the

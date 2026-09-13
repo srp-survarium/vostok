@@ -11,9 +11,7 @@
 // the tick remove_if predicate lives at GLOBAL scope - the target mangling carries no
 // namespace (??Rdelayed_packets_predicate@@QBE..); the namespaced spelling mangles
 // @network_core@vostok@ and the symbol join fails SILENTLY (objdiff never pairs it).
-// sushi@TODO: target derives this from boost::noncopyable, but std::remove_if
-// copy-constructs the predicate (C2248) - cannot add the base without rework.
-class delayed_packets_predicate {
+class delayed_packets_predicate : private boost::noncopyable {
 public:
 	inline	delayed_packets_predicate	(
 		vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
@@ -21,6 +19,14 @@ public:
 	) :
 		m_packets		( delayed_packets_to_appear ),
 		m_time_in_ms	( time_in_ms )
+	{ }
+
+	// Retail's two by-value STLPort copies self-load the time field. Preserve the
+	// bug while default-constructing the private, stateless noncopyable base.
+	inline	delayed_packets_predicate	( delayed_packets_predicate const& other ) :
+		boost::noncopyable( ),
+		m_packets		( other.m_packets ),
+		m_time_in_ms	( m_time_in_ms )
 	{ }
 
 	bool	operator()	( std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;

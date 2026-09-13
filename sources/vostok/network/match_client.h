@@ -7,6 +7,7 @@
 #include <vostok/login_server/message_types.h>
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/network_core/udp_match_packets_allocator.h>
+#include <vostok/network_core/udp_match_packet.h>
 #include <vostok/network_core/disconnect_event_types_enum.h>
 
 namespace vostok {
@@ -26,6 +27,11 @@ class match_client_impl;
 
 class VOSTOK_NETWORK_API match_client : private core::noncopyable {
 public:
+	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) >	connect_callback_type;
+	typedef boost::function< void ( u8, network_core::packet_reader& ) >	on_packet_received_callback_type;
+	typedef boost::function< void ( enum network_core::disconnect_event_types_enum ) >	on_disconnect_callback_type;
+	typedef network_core::udp_match_packet	udp_match_packet;
+
 								match_client						(
 									world&		world,
 									network_core::udp_match_packets_orderer&	packets_orderer,
@@ -49,10 +55,9 @@ public:
 
 			network_core::udp_match_packet*	new_packet				( u8 message_type );
 
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_packet						( network_core::udp_match_packet*& packet )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( packet );
+		network_core::delete_udp_match_packet	( *m_order_packets_allocator, packet );
 	}
 
 	inline	void				set_on_packet_received				( boost::function< void ( u8, network_core::packet_reader& ) > const& on_packet_received )
@@ -77,16 +82,14 @@ public:
 // the target manglings are AAE (private) for the whole create_*/on_* surface;
 // the type record puts the response-packet stubs at the head of that block
 private:
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	network_core::udp_match_packet*	new_response_packet		( )
 	{
-		return NULL;
+		return network_core::new_udp_match_packet( *m_response_packets_allocator );
 	}
 
-	// STATE[STUB]: anchor-only placeholder, no real consumer to verify against
 	inline	void				delete_response_packet				( network_core::udp_match_packet*& packet )
 	{
-		VOSTOK_UNREFERENCED_PARAMETER	( packet );
+		network_core::delete_udp_match_packet	( *m_response_packets_allocator, packet );
 	}
 
 			void				create_client						( network_core::udp_network_flow_emulator_options const* options );

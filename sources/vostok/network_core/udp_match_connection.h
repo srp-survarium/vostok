@@ -26,6 +26,7 @@ namespace network_core {
 
 class base_packet;
 class packet_reader;
+class move_to_list_predicate;
 
 class udp_match_connection : private boost::noncopyable {
 public:
@@ -37,46 +38,7 @@ public:
 		disconnected				= 0x3,
 	}; // enum state
 
-	// low-level (connection-control) message ids carried in new_low_level_packet /
-	// process_low_level_message; the values are inferred from the dispatch order.
-	enum low_level_message_type_enum
-	{
-		initiate_disconnection		= 0x0,
-		confirm_disconnection		= 0x1,
-		continuous_flow				= 0x2,
-	}; // enum low_level_message_type_enum
-
-	// claude@MATCH: bodies read from the target key_nodeptr_comp<comparer,...> thunks
-	// (0x122ed0/0x122f20/0x123120/0x1231e0): each compares order_id (packet @0x26)
-	// via sequence_number<u16>::operator<.
-	struct comparer {
-		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { return left.order_id < right.order_id; }
-		inline	bool	operator()	( const sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
-		inline	bool	operator()	( udp_match_packet const& left, const sequence_number< u16 > right ) const { return left.order_id < right; }
-	}; // struct comparer
-
-	struct channel {
-		inline			channel	( ) :
-			received_order_id	( 0xFFFF ),
-			sent_order_id		( 0 )
-		{
-		}
-
-		inline	void	reset	( )
-		{
-			ASSERT( UNKNOWN_EXPRESSION_T( packets.empty( ) ) );
-			packets.clear		( );
-			received_order_id	= sequence_number< u16 >( 0xFFFF );
-			sent_order_id		= sequence_number< u16 >( 0 );
-		}
-
-	public:
-		/* 0x0000 */	boost::intrusive::set< udp_match_packet, boost::intrusive::member_hook< udp_match_packet, boost::intrusive::set_member_hook< boost::intrusive::none, boost::intrusive::none, boost::intrusive::none, boost::intrusive::none >, &udp_match_packet::set_member_hook >, boost::intrusive::compare< udp_match_connection::comparer >, boost::intrusive::none, boost::intrusive::none >	packets;
-		/* 0x0014 */	sequence_number< u16 >		received_order_id;
-		/* 0x0016 */	sequence_number< u16 >		sent_order_id;
-	}; // struct channel
-
-	typedef	intrusive_list< udp_match_packet, udp_match_packet*, &udp_match_packet::next, threading::single_threading_policy, size_policy, no_debug_policy >	udp_match_packet_list;
+	typedef boost::function< void( enum disconnect_event_types_enum ) >	on_disconnect_type;
 
 public:
 										udp_match_connection			(
@@ -102,39 +64,73 @@ public:
 			void						instant_disconnect				( disconnect_event_types_enum type );
 	inline	void						set_on_disconnect				( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
-	// STATE[REMOVED] (the `/* no source */` shams below): consumed only by the
-	// udp_match_server tick/delete_client path, which is dedicated-server code -
-	// zero target symbols, never instantiated (server is absent from the shipped
-	// client EXE), and no matched consumer in our scope ODR-uses them. The empty
-	// shams are therefore correct (absent from BOTH binaries); reconstruct from a
-	// consumer's bytes only if the server path is ever matched.
+	// STATE[INLINED]: expanded by udp_match_client::enqueue and the network wrapper.
 	inline	bool						is_connected					( ) const { return m_state == connected; }
 
-	inline	bool						has_disconnection_initiated		( ) const { return false; /* no source */ } // STATE[REMOVED]
+	inline	bool						has_disconnection_initiated		( ) const { return m_state != connected; }
 
-	inline	bool						is_disconnecting				( ) const { return false; /* no source */ } // STATE[REMOVED]
+	inline	bool						is_disconnecting				( ) const { return m_state == initiating_disconnection || m_state == confirming_disconnection; }
+	// STATE[INLINED]: expanded by three udp_match_client methods and the network wrapper.
 	inline	bool						is_disconnected					( ) const { return m_state == disconnected; }
-	inline	void						set_disconnected				( ) { /* no source */ } // STATE[REMOVED]
+	inline	void						set_disconnected				( ) { m_state = disconnected; }
 
-	inline	udp_match_packet*			new_packet						( const u8 message_type ) { return NULL; /* no source */ } // STATE[REMOVED]
+	inline	udp_match_packet*			new_packet						( const u8 message_type )
+	{
+		udp_match_packet* const packet	= new_udp_match_packet( m_packets_allocator );
+		construct_packet					( m_packets_orderer, *packet, message_type );
+		return							packet;
+	}
+	static			void				construct_packet				(
+											udp_match_packets_orderer&		packets_orderer,
+											udp_match_packet&				packet,
+											u8								message_type
+										);
+	// STATE[INLINED]: udp_match_client::enqueue retains this allocator seam.
 	inline	void						delete_packet					( udp_match_packet*& packet ) { delete_udp_match_packet( m_packets_allocator, packet ); }
 
-	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { /* no source */ } // STATE[REMOVED]
+	inline	void						set_max_packet_wait_time_in_ms	( const u32 value ) { m_max_packet_wait_time_in_ms = value; }
 
-	inline	bool						are_there_any_queued_packets	( ) const { return false; /* no source */ } // STATE[REMOVED]
+	inline	bool						are_there_any_queued_packets	( ) const { return !m_packets_to_send.empty( ); }
 
+	// STATE[INLINED]: udp_match_client::handle_receive retains this container seam.
 	inline	u32							unacknowledged_packets_count	( ) const { return m_unacknowledged_packets.size( ); }
 			u32							packets_count					( ) const;
 
+	// STATE[INLINED]: sampled through the network match-client wrapper.
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
-	inline	u32							last_send_time_in_ms			( ) const { return 0; /* no source */ } // STATE[REMOVED]
+	inline	u32							last_send_time_in_ms			( ) const { return m_last_send_time_in_ms; }
 	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
 	// (single volatile load of m_last_receive_time_in_ms @+0xfc)
 	inline	u32							last_receive_time_in_ms			( ) const { return m_last_receive_time_in_ms; }
-	inline	u32							last_activity_time_in_ms		( ) const { return 0; /* no source */ } // STATE[REMOVED]
+	inline	u32							last_activity_time_in_ms		( ) const { return math::max( last_send_time_in_ms( ), last_receive_time_in_ms( ) ); }
 
-	inline	u32							pending_operations_count		( ) const { return 0; /* no source */ } // STATE[REMOVED]
+	inline	u32							pending_operations_count		( ) const { return m_pending_operations_count; }
+	static	bool						is_low_level_packet				( base_packet const& packet );
+
+	typedef u16							acknowledgement_bits_type;
+	typedef sequence_number< u16 >		sequence_id_type;
+	typedef sequence_number< u16 >		order_id_type;
+
+	enum
+	{
+		ethernet_header_size				= 18,
+		ipv4_header_size					= 20,
+		ipv6_header_size					= 40,
+		udp_header_size					= 8,
+		udp_ipv4_ethernet_header_size	= ethernet_header_size + ipv4_header_size + udp_header_size,
+		udp_ipv6_ethernet_header_size	= ethernet_header_size + ipv6_header_size + udp_header_size,
+		acknowledgement_bits_count		= 16,
+	};
+
+	// Low-level connection-control message ids.  The long names are retained by
+	// the retail type record and avoid colliding with the public state values.
+	enum low_level_message_type_enum
+	{
+		low_level_message_type_initiate_disconnection	= 0x0,
+		low_level_message_type_confirm_disconnection	= 0x1,
+		low_level_message_type_continuous_flow			= 0x2,
+	}; // enum low_level_message_type_enum
 
 private:
 			void						on_error						( client_error_codes_enum client_error_code, boost::system::error_code error_code );
@@ -169,23 +165,52 @@ private:
 
 			udp_match_packet*			new_low_level_packet			( u8 message_type );
 
-	inline	void						disconnect_impl					( ) { /* no source */ } // STATE[REMOVED]
+	inline	void						disconnect_impl					( ) { disconnect( ); }
 			void						enqueue_impl					( udp_match_packet* packet );
 
-public:
-	static			void				construct_packet				(
-											udp_match_packets_orderer&		packets_orderer,
-											udp_match_packet&				packet,
-											u8								message_type
-										);
-	static	bool						is_low_level_packet				( base_packet const& packet );
+	typedef	intrusive_list< udp_match_packet, udp_match_packet*, &udp_match_packet::next, threading::single_threading_policy, size_policy, no_debug_policy >	packets_queue_type;
+	friend class move_to_list_predicate;
+
+	// Bodies read from the target key_nodeptr_comp<comparer,...> thunks: each
+	// comparison is the sequence-number ordering of packet.order_id.
+	struct comparer {
+		inline	bool	operator()	( udp_match_packet const& left, udp_match_packet const& right ) const { return left.order_id < right.order_id; }
+		inline	bool	operator()	( const sequence_number< u16 > left, udp_match_packet const& right ) const { return left < right.order_id; }
+		inline	bool	operator()	( udp_match_packet const& left, const sequence_number< u16 > right ) const { return left.order_id < right; }
+	}; // struct comparer
+
+	typedef boost::intrusive::set< udp_match_packet, boost::intrusive::member_hook< udp_match_packet, boost::intrusive::set_member_hook< boost::intrusive::none, boost::intrusive::none, boost::intrusive::none, boost::intrusive::none >, &udp_match_packet::set_member_hook >, boost::intrusive::compare< udp_match_connection::comparer >, boost::intrusive::none, boost::intrusive::none >	ordered_packets_type;
+
+	struct channel {
+		inline			channel	( ) :
+			received_order_id	( 0xFFFF ),
+			sent_order_id		( 0 )
+		{
+		}
+
+		inline	void	reset	( )
+		{
+			ASSERT( UNKNOWN_EXPRESSION_T( packets.empty( ) ) );
+			packets.clear		( );
+			received_order_id	= sequence_number< u16 >( 0xFFFF );
+			sent_order_id		= sequence_number< u16 >( 0 );
+		}
+
+	public:
+		/* 0x0000 */	ordered_packets_type		packets;
+		/* 0x0014 */	order_id_type				received_order_id;
+		/* 0x0016 */	order_id_type				sent_order_id;
+	}; // struct channel
+
+	enum { channels_count = 1 };
+	typedef boost::array< channel, channels_count >	channels_type;
 
 private:
 	/* 0x0000 */	udp_match_stats						m_stats;
-	/* 0x0080 */	udp_match_packet_list				m_packets_to_send;
-	/* 0x0090 */	udp_match_packet_list				m_outgoing_packets;
-	/* 0x00a0 */	udp_match_packet_list				m_unacknowledged_packets;
-	/* 0x00b0 */	boost::array< channel, 1 >			m_channels;
+	/* 0x0080 */	packets_queue_type					m_packets_to_send;
+	/* 0x0090 */	packets_queue_type					m_outgoing_packets;
+	/* 0x00a0 */	packets_queue_type					m_unacknowledged_packets;
+	/* 0x00b0 */	channels_type						m_channels;
 	/* 0x00c8 */	boost::function< void( enum disconnect_event_types_enum ) >	m_on_disconnect;
 	/* 0x00e8 */	boost::asio::ip::udp::socket&		m_socket;
 	/* 0x00ec */	boost::asio::ip::udp::endpoint const&	m_remote_endpoint;

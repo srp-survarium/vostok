@@ -7,10 +7,13 @@ namespace vostok {
 namespace network_core {
 
 struct udp_network_flow_emulator_options {
-	// STATE[REMOVED]: the options struct is filled/constructed by its game-module owner
-	// and passed to udp_network_flow_emulator by const& - no in-scope TU default-constructs
-	// it, so this ctor is never instantiated here. Both sides.
-	inline		udp_network_flow_emulator_options	( ) { /* no source */ } // STATE[REMOVED]
+	inline		udp_network_flow_emulator_options	( ) :
+		logging_id				( NULL ),
+		lost_packet_probability	( 0.f ),
+		min_ping_time_in_ms		( 0 ),
+		max_ping_time_in_ms		( 0 )
+	{
+	}
 
 public:
 	/* 0x0000 */	pcstr		logging_id;

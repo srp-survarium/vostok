@@ -14,7 +14,7 @@ class udp_match_packet;
 class move_to_list_predicate : private boost::noncopyable {
 public:
 	inline			move_to_list_predicate	(
-						udp_match_connection::udp_match_packet_list&	list_to_move_to,
+						udp_match_connection::packets_queue_type&	list_to_move_to,
 						pcstr const						logging_id,
 						const u32						current_time_in_ms,
 						const u32						max_time_delta
@@ -36,7 +36,7 @@ public:
 	}
 
 private:
-	/* 0x0000 */	udp_match_connection::udp_match_packet_list&	m_list_to_move_to;
+	/* 0x0000 */	udp_match_connection::packets_queue_type&	m_list_to_move_to;
 	/* 0x0004 */	pcstr const					m_logging_id;
 	/* 0x0008 */	const u32					m_current_time_in_ms;
 	/* 0x000c */	const u32					m_max_time_delta;

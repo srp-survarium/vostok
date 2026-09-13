@@ -14,31 +14,9 @@ struct sign_up_info;
 namespace network {
 
 class login_client_impl : private boost::noncopyable {
-public:
-	enum client_state_enum
-	{
-		signing_out		= 0x0,
-		signed_out		= 0x1,
-		signing_in		= 0x2,
-		signed_in		= 0x3,
-		signing_up		= 0x4,
-	}; // enum client_state_enum
-
-	enum connection_state_enum
-	{
-		unresolved		= 0x0,
-		resolving		= 0x1,
-		resolved		= 0x2,
-		connecting		= 0x3,
-		connected		= 0x4,
-		handshaking		= 0x5,
-		handshaked		= 0x6,
-	}; // enum connection_state_enum
-
-	enum
-	{
-		ping_retry_count	= 0xa,
-	};
+typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > sign_in_callback_type;
+typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > sign_out_callback_type;
+typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, vostok::sign_up_info const& ) > sign_up_callback_type;
 
 public:
 			explicit	login_client_impl					( boost::asio::io_service& io_service );
@@ -79,6 +57,8 @@ public:
 private:
 			bool		verify_ssl_certificate				( const bool preverified, boost::asio::ssl::verify_context& verify_context );
 
+	typedef boost::function< void ( enum resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > on_resolved_functor_type;
+
 			void		on_resolved							(
 							boost::asio::ip::tcp::resolver* const	resolver,
 							const u32							retry_count,
@@ -91,6 +71,8 @@ private:
 							boost::function< void ( enum resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const&	functor,
 							const u32		retry_count
 						);
+
+	typedef boost::function< void ( enum connection_error_types_enum ) > on_connected_functor_type;
 
 			void		on_connected						(
 							const u32							retry_count,
@@ -106,6 +88,8 @@ private:
 							const u32					retry_count,
 							boost::function< void ( enum connection_error_types_enum ) > const&	functor
 						);
+
+	typedef boost::function< void ( enum handshaking_error_types_enum ) > on_handshaked_functor_type;
 
 	// claude@NOTE: no target symbol and no call site in any matched target body
 	// (the connect/handshake chain never binds it) - dead inline source
@@ -227,6 +211,11 @@ private:
 							sign_up_info const&					sign_up_info
 						);
 
+	enum
+	{
+		ping_retry_count	= 0xa,
+	};
+
 			void		on_ping_sent						(
 							const u32							try_count,
 							boost::system::error_code const&	error_code,
@@ -236,9 +225,31 @@ private:
 			void		ping								( u32 retry_count );
 
 private:
+	enum client_state_enum
+	{
+		signing_out		= 0x0,
+		signed_out		= 0x1,
+		signing_in		= 0x2,
+		signed_in		= 0x3,
+		signing_up		= 0x4,
+	}; // enum client_state_enum
+
+	enum connection_state_enum
+	{
+		unresolved		= 0x0,
+		resolving		= 0x1,
+		resolved		= 0x2,
+		connecting		= 0x3,
+		connected		= 0x4,
+		handshaking		= 0x5,
+		handshaked		= 0x6,
+	}; // enum connection_state_enum
+
+	typedef boost::asio::ssl::stream< boost::asio::ip::tcp::socket& > ssl_stream_type;
+
 	boost::asio::ip::tcp::socket	m_socket;
 	boost::asio::ssl::context		m_ssl_context;
-	boost::asio::ssl::stream< boost::asio::ip::tcp::socket& >	m_ssl_stream;
+	ssl_stream_type					m_ssl_stream;
 	boost::asio::ip::udp::socket	m_ping_socket;
 	boost::asio::deadline_timer		m_ping_timer;
 	boost::asio::io_service&		m_io_service;

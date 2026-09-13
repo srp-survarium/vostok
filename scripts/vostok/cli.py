@@ -38,6 +38,7 @@ import sys
 from vostok.core import log as _log
 
 DIFF = {"layout": "vostok.diff.layout", "order": "vostok.diff.order",
+        "declarations": "vostok.diff.declarations",
         "tu-order": "vostok.diff.tu_order", "enums": "vostok.diff.enums",
         "enums-compare": "vostok.diff.enums_compare"}
 TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",

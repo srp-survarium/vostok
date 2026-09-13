@@ -27,11 +27,10 @@ namespace network {
 // our matched network_core::udp_match_client (0xB28) pin the real one.
 class match_client_impl {
 public:
-	enum state
-	{
-		waiting_for_permission		= 0x0,
-		handshaked					= 0x1,
-	}; // enum state
+	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) >	connect_callback_type;
+	typedef boost::function< void ( u8, network_core::packet_reader& ) >	on_packet_received_type;
+	typedef network_core::udp_match_packet	udp_match_packet;
+	typedef network_core::udp_match_client	client_type;
 
 public:
 								match_client_impl		(
@@ -79,17 +78,6 @@ public:
 									boost::function< void ( u8, network_core::packet_reader& ) > const&	on_packet_received
 								);
 
-			network_core::udp_match_packet*	clone_packet	( network_core::udp_match_packet const& packet );
-
-	inline	network_core::udp_match_stats const&	get_stats				( ) const { return m_client.get_stats( ); }
-	inline	u32					last_receive_time_in_ms	( ) const { return m_client.last_receive_time_in_ms( ); }
-
-// the target manglings are AAE (private) for both callbacks
-private:
-			void				on_packet_received		( u8 message_type, network_core::packet_reader& reader );
-			void				on_disconnect			( const network_core::disconnect_event_types_enum disconnect_type );
-
-public:
 	// Target emits this only inline in match_client::new_packet.
 	static inline	void		construct_packet		(
 									network_core::udp_match_packets_orderer&	packets_orderer,
@@ -97,11 +85,28 @@ public:
 									u8									message_type
 								)
 	{
-		network_core::udp_match_connection::construct_packet( packets_orderer, packet, message_type );
+		network_core::udp_match_client::construct_packet( packets_orderer, packet, message_type );
 	}
 
+			network_core::udp_match_packet*	clone_packet	( network_core::udp_match_packet const& packet );
+
+	inline	network_core::udp_match_stats const&	get_stats				( ) const { return m_client.get_stats( ); }
+	inline	u32					last_receive_time_in_ms	( ) const { return m_client.last_receive_time_in_ms( ); }
 private:
-	boost::array< char[300], 8192 >		m_packets_storage;
+	// the target manglings are AAE (private) for both callbacks
+			void				on_packet_received		( u8 message_type, network_core::packet_reader& reader );
+			void				on_disconnect			( const network_core::disconnect_event_types_enum disconnect_type );
+
+	enum state
+	{
+		waiting_for_permission		= 0x0,
+		handshaked					= 0x1,
+	}; // enum state
+
+	typedef boost::array< char[300], 8192 >	packets_storage_type;
+
+private:
+	packets_storage_type					m_packets_storage;
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >	m_packets_allocator;
 	boost::function< void ( enum network_core::disconnect_event_types_enum ) >	m_on_disconnect;
 	network_core::udp_network_flow_emulator*	m_network_flow_emulator;

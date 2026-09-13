@@ -22,8 +22,11 @@ public:
 	{
 	}
 
-	// STATE[REMOVED]: no retained consumer exposes the destroy member hook.
-	inline	void	destroy						( udp_match_packets_allocator* allocator ) { /* no source */ } // STATE[REMOVED]
+	// STATE[INLINED]: recovered from intrusive_ptr's retail destruction path.
+	inline	void	destroy						( udp_match_packets_allocator* allocator )
+	{
+		VOSTOK_DELETE_IMPL	( m_allocator, allocator );
+	}
 
 	inline	void	increment					( ) { threading::multi_threading_policy::increment( m_reference_count ); }
 	inline	void	decrement					( ) { threading::multi_threading_policy::decrement( m_reference_count ); }
