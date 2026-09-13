@@ -35,7 +35,7 @@ public:
 public:
 	stage_forward(
 		renderer* in_renderer,
-		renderer_context* in_context,
+		renderer_context* context,
 		stage_type type
 	);
 
