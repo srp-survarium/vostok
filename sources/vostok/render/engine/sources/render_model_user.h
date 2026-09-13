@@ -37,18 +37,18 @@ protected:
 STATIC_SIZE_ASSERT( user_render_surface, 0x9C );
 
 class user_render_surface_editable : public user_render_surface {
+typedef user_render_surface super;
 public:
 	virtual void load_from_chunk_data( memory::chunk_reader& chunk );
-
 	untyped_buffer* m_vb;
 };
 
 STATIC_SIZE_ASSERT( user_render_surface_editable, 0xA0 );
 
 class user_render_surface_wire : public user_render_surface {
+typedef user_render_surface super;
 public:
 	virtual void load_from_chunk_data( memory::chunk_reader& chunk );
-
 };
 
 STATIC_SIZE_ASSERT( user_render_surface_wire, 0x9C );
@@ -57,10 +57,10 @@ class user_render_model_instance : public render_model_instance_impl {
 typedef render_model_instance_impl super;
 
 public:
-	virtual math::aabb get_aabb( )
-	{
-		return m_surface->m_aabbox;
-	}
+	virtual math::aabb get_aabb( ) { return m_surface->m_aabbox; }
+
+
+
 
 	void assign_surface( user_render_surface* surface );
 	virtual void get_surfaces(
@@ -72,15 +72,15 @@ public:
 		u32									surface_flags
 	);
 
-	virtual u32 get_surfaces_count( ) const
-	{
-		return 1;
-	}
+	virtual u32 get_surfaces_count( ) const { return 1; }
 
-	virtual u32 get_surfaces_count( u32 ) const
-	{
-		return 1;
-	}
+
+
+
+	virtual u32 get_surfaces_count( u32 ) const { return 1; }
+
+
+
 
 	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
 
