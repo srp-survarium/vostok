@@ -10,16 +10,15 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: init list byte-aligned, structure matches 2/2; residual is the two
-// body statements' udp_match_client set_on_* expansions (base lowers bind ->
-// function temp + operator= with extra slots, target's folds are tighter) - the
-// boost-function-assign inline-vs-call wall, not source-steerable.
- match_client_impl::match_client_impl(
+// claude@NOTE: callback binding and assignment remain shared Boost context walls.
+// claude@MATCH: array-size spelling preserves the target's runtime 0x2000 * 0x12c.
+#line 24
+match_client_impl::match_client_impl(
 	boost::asio::io_service&	io_service,
 	network_core::udp_match_packets_orderer&	packets_orderer,
 	network_core::udp_network_flow_emulator_options const*	options
 ) :
-	m_packets_allocator		( m_packets_storage.elems, 8192 * 300 ),
+	m_packets_allocator		( m_packets_storage.elems, m_packets_storage.size( ) * sizeof( m_packets_storage.elems[ 0 ] ) ),
 	m_network_flow_emulator	( options ? NEW( network_core::udp_network_flow_emulator )( *g_allocator, m_packets_allocator, *options ) : 0 ),
 	m_client				( io_service, m_packets_allocator, packets_orderer, m_network_flow_emulator ),
 	m_state					( waiting_for_permission )
@@ -61,10 +60,8 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 }
 #line 64
 
-// claude@NOTE: structure matches 2/2, the clone/connect statement byte-aligned;
-// residual is `m_on_connected = on_connected` (base inlines copy-swap-clear,
-// target calls the folded edi-promoted operator=) - the boost-function-assign
-// inline-vs-call wall, not source-steerable.
+// claude@NOTE: m_on_connected assignment remains a shared Boost context wall.
+#line 67
 void match_client_impl::connect(
 	pcstr const	host,
 	const u16	port,
@@ -78,9 +75,8 @@ void match_client_impl::connect(
 	m_client.connect		( host, port, packet ? clone_packet( *packet ) : 0, current_time_in_ms );
 }
 
-// claude@NOTE: structure matches 3/3; residual is both function2 assigns (base
-// inlines copy-swap-clear, target calls the folded edi-dest operator=) - the
-// boost-function-assign inline-vs-call wall, not source-steerable.
+// claude@NOTE: callback assignment remains a shared Boost context wall.
+#line 77
 void match_client_impl::set_on_packet_received(
 	boost::function< void ( u8, network_core::packet_reader& ) > const&	on_packet_received
 )
@@ -105,9 +101,8 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	return					result;
 }
 
-// claude@NOTE: structure matches 3/3, stmt sizes within +0x1; residual is
-// register/slot renames inside the set_on_packet_received bind expansion - an
-// LTCG artifact, not source-steerable.
+// claude@NOTE: packet callback binding remains a shared Boost context wall.
+#line 99
 void match_client_impl::disconnect( )
 #line 100
 {
@@ -116,9 +111,8 @@ void match_client_impl::disconnect( )
 	m_client.disconnect		( );
 }
 
-// claude@NOTE: structure matches 4/4; residual is the set_on_packet_received bind/
-// function-temp lowering slots - the boost-function inline-vs-call wall, not
-// source-steerable.
+// claude@NOTE: packet callback binding remains a shared Boost context wall.
+#line 104
 void match_client_impl::on_disconnect(
 	const network_core::disconnect_event_types_enum	disconnect_type
 )
