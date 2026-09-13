@@ -86,6 +86,50 @@ skips remain. The generated README is byte-identical to its parent.
 The measured base PDB SHA-256 is
 `adef9b524139a53b949783560f440183b6efa2d1cc393723854734182bdfeafa`.
 
+## Connector unit in progress
+
+The next measured unit is `sources/async_connector.cpp`, together with its
+unexpanded private helper definitions in `async_connector_inline.h`.
+Two source corrections are prepared:
+
+- Public `connect` at RVA `0x5458a0`: use `query(tcp::v4(), host, port)`.
+  Retail writes protocol family 2 to a temporary and passes its address at
+  instruction offsets `0x1e3`/`0x200`; base previously omitted this argument
+  and selected the `PF_UNSPEC` overload. The query's flags remain `0x400`.
+  Apply the same IPv4 behavior to the source-prior `resolve` helper for
+  consistency; its body is not independently observable in retail.
+- Iterator `connect` at RVA `0x5451f0`: use direct `_1`/`_2` bind placeholders.
+  Retail loads their bytes directly; base previously loaded Asio reference
+  placeholders first. Both resolver callbacks retain their observed Asio
+  placeholders. This is a per-call evidence decision, not a global convention.
+
+All six emitted CPP procedures were inspected before editing. `reset` has a
+1/1-statement, 24/24-byte baseline match. The constructor's zero addressed
+statements do not prove equal bytes (128/134). `on_connected` is 10/10 but
+retains guard attribution and LOG-line differences. `on_resolved` is 20/20
+with a three-byte residual at its final `connect(m_host)` call. Those findings
+remain open. The five-line source-status comment that misidentified the query
+as an inline-boundary issue is removed.
+
+Full build `249098eeae3c42ea8cd732a28c150a05` passed in 11m31s.
+Iterator-connect is now 100 (from 91.8868), with a 2/2-statement, 178/178-byte
+match. Public connect improves from 90.6215 to 93.4689: all 11 addressed
+statements now align, including the IPv4 query. The remaining aligned size
+residual is +38 bytes at `m_on_error = on_error` (base expands temporary
+copy/swap/clear while retail calls assignment). Frame/register choices and
+the LOG source-line immediate also differ; this function remains open.
+Class topology matches and the three recorded public-connect locals are
+retained. The strict source gate remains 734/94/253 and both network data
+gates have `OPEN=0`.
+
+Global objdiff reports eight regressions in untouched Scaleform functions,
+19 improvements, and four separately classified fold-churn entries. No banked
+source maximum falls. Keep the eight raw findings visible; absence of a
+source-max loss is not proof that every external score difference is harmless.
+Existing C4701/C4715 and missing-CRT-PDB warnings remain, alongside the two
+Scaleform extraction skips. The generated README and ledger retain this build's
+results; there is no claim of a regression-free global report.
+
 ## Reproduction
 
 ```sh

@@ -13,3 +13,12 @@ ctor + `rep movsd` 7 dwords into the member. The huge /Od frame (sub esp,51Ch wi
 ~0x4b4 unused gap) reproduces by itself - don't chase it.
 
 Evidence: network_core/udp_match_client::connect (100% first build).
+
+The protocol temporary matters for DNS queries too. In retail
+`async_connector::connect(socket,host,port,...)` at RVA `0x5458a0`, the query
+statement writes `2` into a protocol temporary and passes its address before
+calling the four-argument resolver-query constructor. This is
+`query(tcp::v4(), host, port)`, not `query(host, port)`: the latter's overload
+sets `PF_UNSPEC`, whereas the former uses the given protocol's family.
+The default `address_configured` flags (`0x400`) are unchanged. Inspect the
+extra argument, not merely the demangled constructor family name.

@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,473 / 13,014 functions exact (80.47%) &middot; 11,069 / 13,014 functions exact-max (85.05%) &middot; 93.50% fuzzy &middot; 95.09% fuzzy-max.**
+**Overall: 10,474 / 13,014 functions exact (80.48%) &middot; 11,070 / 13,014 functions exact-max (85.06%) &middot; 93.51% fuzzy &middot; 95.09% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -33,7 +33,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
 | `engine`        |    22 |     154 / 162 (95.1%) |     159 / 162 (98.1%) |  99.4% |     99.9% |
 | `network`       |    25 |      85 / 159 (53.5%) |      91 / 159 (57.2%) |  90.5% |     91.8% |
-| `network_core`  |    22 |      63 / 127 (49.6%) |      66 / 127 (52.0%) |  94.6% |     95.2% |
+| `network_core`  |    22 |      64 / 127 (50.4%) |      67 / 127 (52.8%) |  94.7% |     95.3% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
@@ -48,11 +48,11 @@ _Updated 2026-09-13 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,805 / 71,536,291) &middot; matched projected copies: 66.10% (17,437,367 / 26,379,803).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,087,947 / 71,536,291) &middot; matched projected copies: 66.10% (17,436,151 / 26,377,975).**
 
-_The projection has 15,280 paired copies across 1,701 units and 30,851 unresolved blockers. Strict relocation comparison exposes 1,474 otherwise-exact functions (574,966 code bytes) with referent debt._
+_The projection has 15,039 paired copies across 1,701 units and 31,092 unresolved blockers. Strict relocation comparison exposes 1,475 otherwise-exact functions (574,981 code bytes) with referent debt._
 
-_The linked-image audit is 4.01% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11270 / 12787 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.01% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11271 / 12787 definitions). Integrity ratchet: armed._
 
 _Updated 2026-09-13._
 <!-- data-match:end -->

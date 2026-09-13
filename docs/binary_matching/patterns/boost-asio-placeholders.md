@@ -14,3 +14,11 @@ boost::bind( &on_xxx, this, boost::asio::placeholders::error,
 ```
 Member-callback binds that are NOT asio handlers (m_on_error = bind(&on_error, this, _1, _2)) correctly keep boost _1/_2.
 Evidence: network_core/tcp_packet_socket::start_receiving (94 -> 99.88%).
+
+Do not apply this as a blanket source convention. Retail
+`async_connector::connect(iterator)` at RVA `0x5451f0` directly loads `_2`
+and `_1` at offsets `0x1f` and `0x27`; use those placeholders at that call.
+Its `async_resolve` callbacks instead load the Asio placeholder references.
+Identical callback types do not prove identical placeholder objects: inspect
+the actual loads. Replacing a direct byte load with a reference load adds an
+indirection and can change both statement size and downstream register use.
