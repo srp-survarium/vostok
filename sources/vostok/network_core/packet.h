@@ -38,7 +38,7 @@ public:
 	inline	void		append			( float3 const& value );
 	inline	void		append			( pcstr string );
 	inline	void		append			( pcstr string, u8 string_length );
-	inline	void		append			( pcvoid buffer, u32 const buffer_size );
+	inline	void		append			( pcvoid buffer, u32 buffer_size );
 
 private:
 	inline	T const&	implementation	( ) const;
