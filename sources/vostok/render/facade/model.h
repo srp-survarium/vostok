@@ -50,10 +50,10 @@ public:
 	{
 	}
 
-	virtual bool get_locator( pcstr, model_locator_item& ) const
-	{
-		return false;
-	}
+	virtual bool get_locator( pcstr, model_locator_item& ) const { return false; }
+
+
+
 
 	virtual u32 get_surfaces_count( ) const = 0;
 	virtual u32 get_surfaces_count( u32 lod_id ) const = 0;
