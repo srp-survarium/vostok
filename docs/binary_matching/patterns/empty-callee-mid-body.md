@@ -8,7 +8,7 @@ The prologue-eater shape appearing MID-function with a genuine source-line numbe
 to a helper that is empty/stripped/COMDAT-folded whole-program. NOT reproducible from the
 function's own source - match every other statement, mark PARTIAL. Verify the class by:
 (1) the call target disassembles to a bare `ret`; (2) the arg register/convention matches
-no writable C++ convention; (3) pdb_rich_query finds no standalone symbol in target OR base.
+no writable C++ convention; (3) vostok-pdb inspect finds no standalone symbol in target OR base.
 
 ```asm
 mov byte[ebp-1],0; lea eax,[ebp-1]; call <fn>   ; callee = single ret, misnamed finalize_impl

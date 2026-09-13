@@ -4,8 +4,8 @@
 vostok.build.rebuild - full base-side refresh after editing sources.
 
   1. Build survarium via ninja under Wine (vostok.build.ninja).
-  2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
-     normalizer consumes the completed rich index, so those two steps must be
+  2. Regenerate binaries/pdb/base, then binaries/objdiff/base. The COFF symbol
+     normalizer consumes the completed PDB evidence, so those two steps must be
      ordered. binaries/structure/base remains disjoint and runs in parallel.
   3. Re-derive the committed ledger config/match_state.tsv from
      the fresh report.json (vostok.derive.roster.regen()), and refresh README's
@@ -14,11 +14,11 @@ vostok.build.rebuild - full base-side refresh after editing sources.
      already-built report. A regen failure warns but does not fail the build.
 
 The target side (binaries/structure/target, binaries/objdiff/target,
-binaries/rich/target) is the original game and does not change between
+binaries/pdb/target) is the original game and does not change between
 recompiles; it is generated once on first `nix develop` (see vostok.tool.toolchain).
 
 Each run appends one audit line to binaries/rebuild.log (git-ignored, mirrors
-binaries/pdb_fetch.log):
+binaries/vostok_usage.log):
     [<timestamp>][<git-branch>]: <elapsed>, <summary>
 where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
@@ -51,7 +51,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from vostok.build import generate_delink
-from vostok.build import generate_rich
+from vostok.build import generate_pdb
 from vostok.build import generate_structure
 from vostok.build import ninja_regen
 
@@ -270,20 +270,20 @@ def main() -> None:
             die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
 
         log(
-            f"Build OK ({_summarize(modules)}). Regenerating base rich index "
+            f"Build OK ({_summarize(modules)}). Regenerating base PDB evidence "
             "then COFF; base structure runs in parallel ..."
         )
         failures = []
         with ThreadPoolExecutor(max_workers=1) as ex:
             structure = ex.submit(generate_structure.generate, "base")
             try:
-                generate_rich.generate("base")
-                log("base rich index: OK")
+                generate_pdb.generate("base")
+                log("base PDB evidence: OK")
             except Exception as e:  # noqa: BLE001 - report every step's failure
-                failures.append("base rich index")
-                log(f"base rich index: FAILED - {e}")
+                failures.append("base PDB evidence")
+                log(f"base PDB evidence: FAILED - {e}")
 
-            if "base rich index" not in failures:
+            if "base PDB evidence" not in failures:
                 try:
                     from vostok.data import pipeline as data_pipeline
                     data_pipeline.prepare_manifests()
@@ -292,7 +292,7 @@ def main() -> None:
                     failures.append("data manifests")
                     log(f"consumer-owned data manifests: FAILED - {e}")
 
-            if "base rich index" not in failures:
+            if "base PDB evidence" not in failures:
                 try:
                     # The established code project stays on the measured legacy
                     # delinker and never consumes data manifests.

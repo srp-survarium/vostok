@@ -19,6 +19,10 @@ class login_client_impl;
 
 class VOSTOK_NETWORK_API login_client : private core::noncopyable {
 public:
+	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) >	sign_in_callback_type;
+	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) >	sign_out_callback_type;
+	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) >	sign_up_callback_type;
+
 	enum client_state_enum
 	{
 		signed_out		= 0x0,
@@ -33,7 +37,7 @@ public:
 									pcstr					host,
 									u16						port,
 									sign_up_info const&		info,
-									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) > const&	callback
+									sign_up_callback_type const&	callback
 								);
 
 			void				sign_in							(
@@ -41,10 +45,10 @@ public:
 									u16			port,
 									pcstr		account_name,
 									pcstr		password,
-									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
+									sign_in_callback_type const&	callback
 								);
 			void				sign_out						(
-									boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
+									sign_out_callback_type const&	callback
 								);
 
 	// claude@NOTE: no standalone symbols and no matched consumer; bodies are the
@@ -102,9 +106,9 @@ private:
 
 private:
 	sign_up_info				m_sign_up_info;
-	boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) >	m_on_sign_up;
-	boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) >	m_on_sign_in;
-	boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) >	m_on_sign_out;
+	sign_up_callback_type		m_on_sign_up;
+	sign_in_callback_type		m_on_sign_in;
+	sign_out_callback_type		m_on_sign_out;
 	network_world&				m_world;
 	login_client_impl*			m_client;
 	client_state_enum			m_client_state;

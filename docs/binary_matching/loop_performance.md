@@ -19,7 +19,7 @@ actionable.
 - The dominant cost is now **token consumption** (agent context re-read on each
   iteration), NOT the rebuild. A full `vostok build` (recompile the changed module
   under Wine + rerun the delinker over the EXE to regenerate `binaries/objdiff/base`
-  + `binaries/rich/base`) is ~10 min and runs in the **background** — it is not the
+  + `binaries/pdb/base`) is ~10 min and runs in the **background** — it is not the
   thing to obsess over minimizing.
 - Therefore: **get the function RIGHT in as few iterations as possible** — each wrong
   iteration means re-reading the target/context (tokens) and another wait. Reading
@@ -29,7 +29,7 @@ actionable.
 - **`vostok build` is the dominant cost, and it is ~fixed per call** regardless of
   how small the function is. One invocation recompiles the whole changed module
   under Wine *and* reruns the delinker over the entire EXE to regenerate
-  `binaries/objdiff/base` + `binaries/rich/base`.
+  `binaries/objdiff/base` + `binaries/pdb/base`.
 - Still worth **minimizing wasted `vostok build` calls** — a cycle spent on a
   reachability or compile bug teaches nothing. Everything else (reading target asm,
   writing the body, diffing) is cheap by comparison.
@@ -37,12 +37,12 @@ actionable.
 ## How to converge in fewer iterations
 
 - **Get the body as right as you can before the *first* rebuild.** Read the target
-  with `pdb_fetch --view structure/target/callees/info` and wire reachability in
+  with `vostok-pdb inspect --view structure/target/callees/info` and wire reachability in
   `temp_include_all.cpp` in the *same* edit pass, so the first build already
   produces a diffable base object. A wasted first build (function stripped because
   it was unreachable) is a whole rebuild cycle lost.
 - **The `--view diff` inspection step does NOT need a rebuild.** It reads the
-  existing `binaries/rich/base` vs `target`. Only re-run `vostok build` after you
+  existing `binaries/pdb/base` vs `target`. Only re-run `vostok build` after you
   have actually *changed source*; never rebuild just to "look again".
 - **Batch source edits between rebuilds.** If the diff shows two independent fixes,
   apply both, then rebuild once.
@@ -62,7 +62,7 @@ _(Append new findings below this line.)_
   `client_player_update::serialize`.
 
 - **A correct pre-existing STUB body needs zero rebuilds.** If the function's symbol
-  is already in `binaries/rich/base/index.jsonl` (the STUB compiled and is reachable)
+  is already in `binaries/pdb/base/evidence.sqlite` (the STUB compiled and is reachable)
   and `--view diff` shows the body is already byte-exact (remaining `~` rows are only
   register / stack-slot LTCG noise, or a cross-function inlining diff you can't steer
   from this function's source), the score in `report.json` is already final. Updating
@@ -82,7 +82,7 @@ _(Append new findings below this line.)_
   sub-target (the module's `.lib`).** `vostok build` forwards its args to
   `vostok.build.ninja`, which passes them through as ninja *targets*; with no arg it
   builds the full game (`survarium_-_PC_-_DirectX_11`) and relinks the EXE. The
-  delinker/rich index read the linked **EXE**, so if you pass a module name the
+  delinker/PDB evidence database read the linked **EXE**, so if you pass a module name the
   EXE is stale and your source change does not show up in `--view diff` or the
   score (build finishes in ~1 min instead of ~10, and `report-changes.json` shows
   score (the build finishes fast but does NOT relink, and `report-changes.json` shows
@@ -93,7 +93,7 @@ _(Append new findings below this line.)_
 - **MSVC LTCG objects are ANONYMOUS OBJECTs (IL, not machine code).** `dumpbin
   /DISASM` on `binaries/Win32/intermediates/.../*.obj` prints nothing useful -
   codegen happens at link. The only post-codegen disassembly is the delinked
-  base obj / `binaries/rich/base`, which requires the full EXE relink (above).
+  base obj / `binaries/pdb/base`, which requires the full EXE relink (above).
 - **Read the actual float/struct constants straight out of the target `.obj`**
   instead of guessing - rich/objdiff mask rdata operands as `[0]`/`[offset]`.
   A ~30-line Python COFF parser (section headers -> dump `.rdata` as f32 ->
@@ -103,7 +103,7 @@ _(Append new findings below this line.)_
 - **A getter whose carcass shows `return 0.0f` + a collapsed FUNCTION BODY can still be a
   big function.** The base-build STUB compiled tiny, so its carcass addresses/source-lines
   are sparse (`<0> <1> ...` placeholders) and look trivial. Always pull the *target* asm
-  (`pdb_fetch --view target --rva <target rva>`) - the `--list` rva (target) differs from the
+  (`vostok-pdb inspect --view target --rva <target rva>`) - the `--list` rva (target) differs from the
   carcass addresses (base build). `get_dispersion`'s carcass implied ~3 statements; the target
   was a 0x194-byte function with a smart-ptr temp, a ternary, and a 5-term FPU expression.
 - **Read ALL member offsets straight from the target asm before writing - one pass, zero
@@ -157,7 +157,7 @@ _(Append new findings below this line.)_
   `fld dword ptr [eax+0xNN]` offset, map it to the `/* 0xNN */` member, write
   `return m_member;`, anchor it (instantiate + call) in temp_include_all, rebuild once
   -> 100%. No `--view diff` round trip needed (`get_value` @ 0x18 = m_current_coeff).
-- **`pdb_fetch --view diff` silently refuses ("needs both indexes") when the
+- **`vostok-pdb inspect --view diff` silently refuses ("needs both indexes") when the
   `--function` substring matches >1 index entry** - notably it also matches a
   *caller* whose `callees` field contains your function name (e.g. `get_target_koef`
   also matches `tick`). Workaround: byte-diff the two COFF `.text` regions directly
@@ -199,9 +199,9 @@ _(Append new findings below this line.)_
 - **Before changing a correct body to chase a `call X` -> `inline of X` diff, DISASSEMBLE the
   base out-of-line `X` (zero rebuilds) and confirm its body == the target's inlined sequence.**
   If a WIP handoff says "the residual is the N-arg form of ctor X, rewrite the source to that form",
-  first check: does the source's chosen overload ALREADY delegate to X? Query both rich indexes for
+  first check: does the source's chosen overload ALREADY delegate to X? Query both PDB evidence databases for
   X's symbol - if TARGET has no out-of-line X (inlined whole-program) but BASE keeps it at a real rva,
-  it is the unsteerable LTCG inline-vs-call class. Then `pdb_fetch --view target --rva <base X rva>`:
+  it is the unsteerable LTCG inline-vs-call class. Then `vostok-pdb inspect --view target --rva <base X rva>`:
   if base-X's body is exactly the target's inlined instructions, the source is already correct and NO
   rewrite/rebuild can help -> mark PARTIAL. Saved a wasted rebuild on
   `fill_new_stats_item`'s `fixed_string<46>("none")` (the const-char* ctor already delegates to the
@@ -258,7 +258,7 @@ _(Append new findings below this line.)_
 - **A target callee kept OUT-OF-LINE (`call X`) that our /GL LTCG INLINES at the caller is
   unsteerable - and the header decl/def split does NOT help.** `weapon_core_aimed_state_base::finalize`
   calls `animation_playback_state::reset()`; the target keeps reset standalone (@0x087f60, `call reset`)
-  but our base has NO standalone reset (`pdb_rich_query base --function reset` -> "no function matched")
+  but our base has NO standalone reset (`vostok-pdb inspect --database binaries/pdb/base/evidence.sqlite --function reset` -> "no function matched")
   because LTCG folds its tiny body into every caller whole-program. I burned 2 rebuilds trying to
   force a call: (a) filling reset's body IN-CLASS in the shared header -> /Od inlined it into finalize
   (54%, wrong frame); (b) splitting decl (in type_definitions.h) from an out-of-class `inline` def in a
@@ -269,7 +269,7 @@ _(Append new findings below this line.)_
   the no-op call (finalize 83%, the only diff is the 3 missing call instrs, frame correct) which beats
   the real-body inline (54%). Mark the caller PARTIAL [LTCG inline-vs-call], leave the callee stub
   untouched. Recognize this pattern from the asm BEFORE editing the shared header - a 0x97f60-class tiny
-  member-zeroing reset called once is a textbook LTCG fold; verify with `pdb_rich_query base` (no standalone
+  member-zeroing reset called once is a textbook LTCG fold; verify with `vostok-pdb inspect --database binaries/pdb/base/evidence.sqlite` (no standalone
   symbol) and stop at the empty-stub 83% in ONE rebuild.
 
 - **Confirmed dead ends for the LTCG inline-vs-call of a tiny member (don't re-burn rebuilds on
@@ -306,10 +306,10 @@ _(Append new findings below this line.)_
   representative symbol at the folded address differs build-to-build and side-to-side, so
   neither delinker re-attaches the body to `your_class::method` - the `.h` unit reads
   `fuzzy: None` with stray *other-class* fold-siblings (e.g. `breath_state*`) listed, and
-  `binaries/rich/base/index.jsonl` has no standalone symbol for your function (same class as
+  `binaries/pdb/base/evidence.sqlite` has no standalone symbol for your function (same class as
   the documented `game_core_initialize` gap). PROVE the bytes instead of chasing a symbol:
-  read the target fold body (`pdb_rich_query target --rva`), then scan
-  `binaries/rich/base/index.jsonl` for functions whose `instructions` are byte-identical -
+  read the target fold body (`vostok-pdb inspect --database binaries/pdb/target/evidence.sqlite --rva`), then scan
+  `binaries/pdb/base/evidence.sqlite` for functions whose `instructions` are byte-identical -
   if the empty-thiscall fold (push ebp;mov ebp,esp;push ecx;mov [ebp-4],ecx;mov esp,ebp;pop
   ebp;ret) and the return-true fold (...mov al,1...) both have a populated family (~100 / ~30
   members on game_core), your bytes are emitted and correct. Mark 100%|DONE. The 50-ish
@@ -373,7 +373,7 @@ objdiff pairs base<->target by full mangled symbol. The access char is mangled i
 (private) but your header declares the method `public` (`QAE`), the names don't match and
 objdiff reports `fuzzy: None` (NOT 0%) even though the body may be byte-identical and the
 size matches. Read the target's mangled access char (`grep -o '<name>@...@@[A-Z]AE'
-binaries/rich/target/index.jsonl`) and set the header's access specifier to match BEFORE
+binaries/pdb/target/evidence.sqlite`) and set the header's access specifier to match BEFORE
 the first build. (initialize_weapon_logic: target `AAE`, declared public -> `None`.)
 
 ## A fake-observation direct anchor is RARELY the cap on a private method's %
@@ -402,7 +402,7 @@ TARGET obj symbols + asm, with zero re-rebuilds:
   `public:` -> would be unpairable; moved them to `protected:` in the same pass.
 - **Recognize the THREE unscorable-but-byte-correct classes up front so you don't chase the None:**
   (1) ICF-fold trivial overrides (`return this`/`return true`/empty/`return NULL`) - PROVE bytes by
-  counting the fold family in `binaries/rich/base/index.jsonl` (mov al,1;ret / ret 4 / xor eax,eax;ret
+  counting the fold family in `binaries/pdb/base/evidence.sqlite` (mov al,1;ret / ret 4 / xor eax,eax;ret
   / empty-this-frame families were 25/68/16/100 members), mark None|DONE, do NOT anchor (a folded body
   can't be made scorable). (2) trivial-accessor LTCG inline-vs-call - a getter/setter/registrar
   anchored only by a synthetic caller gets INLINED whole-program into the anchor; verify by
@@ -471,17 +471,17 @@ sources/vostok/game_core/sources/temp_include_all.cpp` before the rebuild (do NO
 re-run the regen mid-run - it rewrites the rsp files and loses hand patches like the
 OpenSSL exe-link libs). Cost one relink on string_response::~string_response.
 
-## A stale incrementally-linked base PDB can crash pdb_parser ("Enums cannot be of different length")
+## A stale incrementally-linked base PDB can crash vostok-pdb ("Enums cannot be of different length")
 The base link UPDATES `survarium-dx11-win32-gold.pdb` incrementally, so a TYPE record from an
 earlier build of the same worktree (e.g. an enum whose enumerators a later commit changed) can
 survive in the exe PDB even after every obj that defined it was recompiled - and
-`pdb_parser`'s header generation then panics merging the old and new same-name enums
+`vostok-pdb`'s header generation then panics merging the old and new same-name enums
 (gen_headers.rs `Data::add`). Symptom: `[rebuild] base structure: FAILED ... Enums cannot be
-of different length` while report.json/rich index still regenerate fine. FIX: move aside
+of different length` while report.json/PDB evidence database still regenerate fine. FIX: move aside
 `binaries/Win32/survarium-dx11-win32-gold.{exe,pdb}` and relink - the fresh PDB carries only
 current types. (Hit on the login-stack match after the #303 lobby-enum values changed; the
 4-entry `connection_allowed` era record lingered through every clean module rebuild.)
-Diagnosis trick: build a scratch copy of vostok-pdb-parser with the `unreachable!` swapped for
+Diagnosis trick: build a scratch copy of vostok-pdb with the `unreachable!` swapped for
 an `eprintln!` of `e.name` + both lengths - it names the colliding enum immediately.
 
 ## Header edits to vostok/network or vostok/login_server headers do NOT recompile temp_include_all

@@ -6,7 +6,7 @@ cpp:ctor cpp:inline cpp:reachability | asm:call | topic:inline-vs-call topic:rea
 
 A header-declared `inline` constructor (or any `inline` member) shows `unpaired` in
 `report.json` even though its body in the `*_inline.h` is already fully and correctly
-written. `pdb_rich_query --index base/index.jsonl --function <ctor>` returns nothing -
+written. `vostok-pdb inspect --database binaries/pdb/base/evidence.sqlite --function <ctor>` returns nothing -
 the base emits no standalone COMDAT for it at all. The TARGET index DOES list it as a
 standalone symbol (e.g. `n_ary_tree_animation_node::n_ary_tree_animation_node` at its own
 RVA, single-statement structure = just the prologue + member-init stores).

@@ -857,7 +857,7 @@ def refresh(*, export: bool = True) -> dict:
     report["inputs"] = {
         "exe_sha256": pipeline._file_hash(pipeline.image_paths("target")[0]),
         "pdb_index_sha256": pipeline._file_hash(paths.DATA_TARGET_INDEX),
-        "rich_index_sha256": pipeline._file_hash(paths.TARGET_IDX),
+        "rich_index_sha256": pipeline._file_hash(paths.TARGET_EVIDENCE),
         "pdb_extents_sha256": pipeline._file_hash(paths.RETAIL_PDB_DATA_EXTENTS),
         "reloc_referents_sha256": pipeline._file_hash(paths.RETAIL_RELOC_REFERENTS),
         "candidates_sha256": pipeline._file_hash(paths.DATA_MISSING_CANDIDATES),
@@ -897,7 +897,7 @@ def check(*, require_complete: bool = True) -> int:
     actual_inputs = {
         "exe_sha256": pipeline._file_hash(pipeline.image_paths("target")[0]),
         "pdb_index_sha256": pipeline._file_hash(paths.DATA_TARGET_INDEX),
-        "rich_index_sha256": pipeline._file_hash(paths.TARGET_IDX),
+        "rich_index_sha256": pipeline._file_hash(paths.TARGET_EVIDENCE),
         "pdb_extents_sha256": pipeline._file_hash(paths.RETAIL_PDB_DATA_EXTENTS),
         "reloc_referents_sha256": pipeline._file_hash(paths.RETAIL_RELOC_REFERENTS),
         "candidates_sha256": pipeline._file_hash(paths.DATA_MISSING_CANDIDATES),

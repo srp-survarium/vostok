@@ -6,7 +6,7 @@ variants: inline-header-split-pairing.md, static-plain-name-pairing.md
 
 ## Symptom
 
-`render/engine`'s `frac` appears **nine** times in the target rich index:
+`render/engine`'s `frac` appears **nine** times in the target PDB evidence database:
 
 | `file:` | size |
 |---|---:|
@@ -39,7 +39,7 @@ say which TU emitted them. The linker lays a TU's COMDATs out contiguously, so *
 whole index by `rva` and read the neighbours**:
 
 ```python
-recs = [json.loads(l) for l in open('binaries/rich/target/index.jsonl')]
+recs = [json.loads(l) for l in open('binaries/pdb/target/evidence.sqlite')]
 recs = sorted((r for r in recs if r.get('rva')), key=lambda r: r['rva'])
 i = next(k for k,r in enumerate(recs) if r['rva'] == 6280272)
 for r in recs[i-3:i+4]:

@@ -15,19 +15,20 @@
 namespace vostok {
 namespace network {
 
+typedef intrusive_spsc_queue< order, order, &order::next_for_orders >				orders_queue_type;
+typedef intrusive_spsc_queue< response, response, &response::next_for_responses >	responses_queue_type;
+
+typedef one_way_threads_channel<
+	responses_queue_type,
+	responses_queue_type
+>	responses_channel_type;
+
+typedef one_way_threads_channel<
+	orders_queue_type,
+	orders_queue_type
+>	orders_channel_type;
+
 struct two_way_threads_channel : private boost::noncopyable {
-	typedef intrusive_spsc_queue< order, order, &order::next_for_orders >				orders_queue_type;
-	typedef intrusive_spsc_queue< response, response, &response::next_for_responses >	responses_queue_type;
-
-	typedef one_way_threads_channel<
-		responses_queue_type,
-		responses_queue_type
-	>	responses_channel_type;
-
-	typedef one_way_threads_channel<
-		orders_queue_type,
-		orders_queue_type
-	>	orders_channel_type;
 
 	inline two_way_threads_channel	(
 			memory::doug_lea_allocator& responses_allocator,

@@ -2,7 +2,7 @@
 
 """vostok.derive.inventory - one side's functions, as the campaign sees them.
 
-The rich index says what the linker emitted; report.json says which translation
+The PDB evidence says what the linker emitted; report.json says which translation
 unit objdiff compared it in; the override tables say who OWNS it. This joins the
 three into one record per function, and it is the shape the committed ledger's
 roster columns (unit / module / size / frameless) are written from.
@@ -23,7 +23,7 @@ class Function:
     mangled: str
     demangled: str
     unit: str | None      # report.json TU (or the owning header), None when unknown
-    file: str             # source file the rich index attributes the body to
+    file: str             # source file the PDB evidence attributes the body to
     module: str           # logical owner, resolved through the override tables
     rva: int
     line: int | None      # first statement line, None for line-less compiler bodies
@@ -71,6 +71,6 @@ def describe(mangled, rec, artifacts):
 
 
 def functions(side, artifacts):
-    """{mangled: Function} for one side of the rich index, RVA-ordered."""
+    """{mangled: Function} for one side of the PDB evidence, RVA-ordered."""
     described = (describe(mangled, rec, artifacts) for mangled, rec in side.items())
     return {fn.mangled: fn for fn in sorted(described, key=lambda fn: fn.rva)}

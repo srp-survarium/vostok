@@ -41,10 +41,10 @@ the caller's source.
 WHY: to match an inline cluster you need the inlinee's code, not just the knowledge
 that something was inlined; and pragmas are unresolved (we don't steer inlining),
 so reading the inlinee directly is the lever the agent does have.
-IDEA: `pdb_fetch --view target --function <inlinee>` already prints any *standalone*
+IDEA: `vostok-pdb inspect --view target --function <inlinee>` already prints any *standalone*
 function's asm, so the common case works today. Gap: a function inlined
 *everywhere* has no standalone copy in the target - nothing to fetch on that side.
-Fall back to the base side's un-inlined copy (`--base-index ... --view base`) or its
+Fall back to the base side's un-inlined copy (`--base ... --view base`) or its
 `structure`/source. A helper that, given a caller + a suspected inlinee, returns
 whichever exists (target standalone -> base standalone -> source) would close it.
 STATUS: partial (standalone inlinees fetchable now; inlined-everywhere ones are the gap)
@@ -69,7 +69,7 @@ statement-offset delta), per section 5.
 ## Why does generate_structure skip vostok/scaleform?
 
 The shipped PDB has 10 `vostok/scaleform/sources/*.cpp` compilands (+4 headers
-with addressed inlines) - the rich index sees all ~275 functions - but
+with addressed inlines) - the PDB evidence database sees all ~275 functions - but
 `binaries/structure/target/sources/` contains no `vostok/scaleform/` dir at
 all; every other of the 1,187 compilands is emitted. Found 2026-06-12 during
 the game carcass rebuild (the flash/scaleform types were initially mistaken

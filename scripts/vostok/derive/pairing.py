@@ -448,7 +448,7 @@ class _Pairer:
             log(f"cross-name paired {n} exact PDB spelling aliases")
 
     def cross_unit_no_source_exacts(self):
-        """Recover reviewed compiler bodies omitted from the base rich index.
+        """Recover reviewed compiler bodies omitted from the base PDB evidence.
 
         The supplementary cross-unit report compares the actual COFF symbol,
         but occasionally the base PDB contributes no function record at all.

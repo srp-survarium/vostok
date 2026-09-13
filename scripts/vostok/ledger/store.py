@@ -10,7 +10,7 @@ per line - ~20 KB per commit - and `git diff` names the functions that moved.
   config/match_state.tsv    the record; there is no other copy
 
 The derived roster (pairs, per-statement classification, cross-name aliases) is
-a pure function of `report.json` + the rich indexes and is rebuilt by
+a pure function of `report.json` + the PDB evidence and is rebuilt by
 `vostok.derive.roster.regen()` on every build, which hands it to `project`
 below. Only the columns that survive a rebuild and cannot be recomputed - hist,
 note, tries, and a banked max - are the matching campaign's memory.
@@ -236,7 +236,7 @@ def project(
 
     `vostok.derive` owns the roster columns (unit / module / size / flags), `cur`,
     `cls`, and the hash-scoped `max`; it recomputes all of them from report.json
-    and the rich indexes on every build. This function owns everything a build
+    and the PDB evidence on every build. This function owns everything a build
     must NOT be able to destroy:
 
       hist    ratcheted here, so a peak survives an ICF fold, a max reset, and a

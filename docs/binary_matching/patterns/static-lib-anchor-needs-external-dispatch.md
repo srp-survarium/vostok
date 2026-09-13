@@ -12,7 +12,7 @@ namespace { struct holder { holder( ) { anchor_render_facade( ); } }; holder s_h
 
 The `.obj` is produced (`binaries/Win32/intermediates/Master Gold/<module>/anchor_*.obj`
 exists) but **nothing changes**: the anchored functions stay `unpaired`, and
-`grep -c anchor_<module> binaries/rich/base/index.jsonl` prints `0`.
+`grep -c anchor_<module> binaries/pdb/base/evidence.sqlite` prints `0`.
 
 ## Cause
 Every vostok module builds to a **static library**. The linker only extracts a member

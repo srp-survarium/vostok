@@ -17,7 +17,7 @@ between the shipped game (`target`) and our reconstruction (`base` /
 Two authoritative, fully-local signals, cross-checked against each other:
 
 1. **Functions** — the rich per-function inventory
-   `binaries/rich/{target,base}/index.jsonl` (demangled `name`, `mangled`, `rva`,
+   `binaries/pdb/{target,base}/evidence.sqlite` (demangled `name`, `mangled`, `rva`,
    `size`, `statements`). Key on the demangled **`name`**: `rva` is shared by
    COMDAT-folded (ICF) functions and `mangled` is the linker's fold-representative,
    which differs between the two builds by link order — keying on `mangled`
@@ -34,7 +34,7 @@ Whole-TU confirmation: `pdb_diff --source-dir` compares the **target PDB's
 declarations** against our on-disk source and emits MATCH/DIFF per TU. It cannot
 compile bodies, so a DIFF is a declaration-level (structural) divergence *or* a
 transitive consequence of an included header that changed. Of 77 bullet TUs, **65
-MATCH and 12 DIFF**; drilling each DIFF with `pdb_fetch --view structure-diff`
+MATCH and 12 DIFF**; drilling each DIFF with `vostok-pdb inspect --view structure-diff`
 plus a per-class size-assert check isolates the real structural change.
 
 ### Noise that masquerades as a structural change
@@ -65,7 +65,7 @@ virtual unsigned int getShapeId(unsigned int local_shape_id)
   `~RayResultCallback`, `needsCollision`, `addSingleResult`, `getShapeId`).
 - **Evidence**: target carcass
   `binaries/structure/target/headers/others/btCollisionWorld__RayResultCallback.h`
-  declares it; the target body (`pdb_fetch --function RayResultCallback::getShapeId
+  declares it; the target body (`vostok-pdb inspect --function RayResultCallback::getShapeId
   --view target`) is `mov eax,[ecx+14h]; cmp eax,-1; jne .1; mov eax,[esp+4]; .1: ret 4`
   — i.e. return `m_shape_id` unless it is `(u32)-1`, then the caller's `local_shape_id`.
 - The backing field **`m_shape_id`** (offset `0x14`) already existed in our source
@@ -128,23 +128,23 @@ rough order of remaining work (objdiff fuzzy %):
 
 ## Reproduce
 ```bash
-P=$(nix build .#vostok-pdb-parser --no-link --print-out-paths)
-TGT=/nix/store/…/survarium/survarium.pdb   # gcroot binaries/nix-store/survarium-game
-
-# whole-library TU verdict (declaration-level)
-"$P/bin/pdb_diff" --target-pdb "$TGT" --target-engine-path c:/survarium/sources \
-  --source-dir sources | grep '^DIFF.*bullet/'
+# Raw C13 checksum evidence. The historical pdb_diff source-hashing frontend
+# that produced the triage above is not shipped by vostok-pdb.
+vostok-pdb topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order --module bullet --json
 
 # function inventory diff, keyed on demangled name (filter ICF/lexical/thunk noise)
-for s in target base; do jq -r 'select(.file|test("^bullet/"))|.name' \
-  binaries/rich/$s/index.jsonl | sort -u > /tmp/$s.bt; done
+for s in target base; do vostok-pdb inspect \
+  --database binaries/pdb/$s/evidence.sqlite --list --json \
+  | jq -r '.[] | select(.file | startswith("bullet/")) | .name' | sort -u > /tmp/$s.bt; done
 comm -23 /tmp/target.bt /tmp/base.bt          # target-only functions
 
 # field/layout (target is ground truth; base omits bullet asserts)
 grep -rh 'STATIC_SIZE_ASSERT(bt' binaries/structure/target/headers/ | sort -u
 
 # per-function structure diff / target body
-"$P/bin/pdb_fetch" --target-index binaries/rich/target/index.jsonl \
-  --base-index binaries/rich/base/index.jsonl \
+vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite \
+  --base binaries/pdb/base/evidence.sqlite \
   --function 'RayResultCallback::getShapeId' --view structure-diff
 ```

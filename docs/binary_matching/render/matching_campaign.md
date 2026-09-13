@@ -114,7 +114,7 @@ non-trivial inline body out of `<x>.h` into a sibling `<x>_inline.h`, and our
 reconstructions kept them in the main header - so byte-identical bodies sat in
 two different units and never paired. See
 `patterns/inline-header-split-pairing.md` for the detection recipe (per-file
-function-count diff of the two rich indexes, confirmed by mangled-name
+function-count diff of the two PDB evidence databases, confirmed by mangled-name
 intersection) and the mechanical fix.
 
 B5 relocated eight header groups with no code change and took render/core from
@@ -199,7 +199,7 @@ overload (`QBD` = top-level pointer const). Pattern:
   positionally and its POLARITY/SIGNEDNESS rows are unreliable when block counts
   differ (it now warns).
 - **Two limits.** (A8) sema says WHERE shapes differ, never WHY - pair it with
-  `pdb_fetch --view structure-diff` / `--view target`. (B8) **it cannot
+  `vostok-pdb inspect --view structure-diff` / `--view target`. (B8) **it cannot
   distinguish "the target inlined our callee" from "the target has code we
   don't"** - both present as target-only blocks, and this cost B8 eleven of
   fourteen rows. Triage recipe: `patterns/branch-count-row-triage.md`.
@@ -344,7 +344,7 @@ amending.
 `report.json` stays at the previous epoch's numbers and `--view structure-diff` reads a
 stale base. Always run `vostok build` with **no** module argument. Second trap: entering
 `nix develop` again while a build runs kills that build's `mspdbsrv` (exit 144 / LNK1318);
-never run a `pdb_fetch` in parallel with a rebuild in the same worktree.
+never run a `vostok-pdb inspect` in parallel with a rebuild in the same worktree.
 
 
 ## Batch B6 notes (render/core, inline-header splits round 2)
@@ -693,7 +693,7 @@ alone**, no body change:
 pair (one unit holding both an undecorated and a decorated copy of one short
 name) - that really is exhausted. The productive query is one-sided: *target
 undecorated + base decorated + same `file:` + same demangled identifier.* Join
-the two rich indexes on `(file, ident)`; details now in
+the two PDB evidence databases on `(file, ident)`; details now in
 `patterns/static-plain-name-pairing.md`.
 
 Three of the fifteen conversions produced **no** row: `calc_pattern`,
@@ -782,7 +782,7 @@ bodied *and* our LTCG also declines to inline it.
 1. **`get_format_block_size` (90.1)** - the target's switch has **no** `cmp/ja`
    range check, so its `default` is `NODEFAULT` and the `4` arm is a real case;
    arm order is 2,4,1,8,16 against our 16,8,1,2,4. Recover the case->arm map from
-   the byte index table in the delinked target `.obj` (the rich index only prints
+   the byte index table in the delinked target `.obj` (the PDB evidence database only prints
    it as garbage instructions), then reorder. Same technique closes
    `mesh_type_to_vertex_input_type`'s last 0.1%.
 2. **`stage_clouds::execute` and `stage_rain::execute`** are the only two

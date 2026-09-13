@@ -175,7 +175,7 @@ def snapshot():
         "report_head": (paths.REPORT_HEAD.read_text().strip()
                         if paths.REPORT_HEAD.is_file() else None),
         "sha256": {str(path.relative_to(paths.REPO)): _sha256(path)
-                   for path in (paths.TARGET_IDX, paths.BASE_IDX, paths.REPORT,
+                   for path in (paths.TARGET_EVIDENCE, paths.BASE_EVIDENCE, paths.REPORT,
                                 paths.MATCH_STATE)},
         "excluded_modules": sorted(_NON_ENGINE),
     }
@@ -218,7 +218,7 @@ def render(payload):
         "changed by this command. Existing parks remain visible, not permanent exclusions.",
         "",
         "QUANTITY/SPLIT/SIZE are approximate candidates; validate with the two-sided",
-        "`pdb_fetch --view structure-diff` before changing source. LOCALS compares the",
+        "`vostok-pdb inspect --view structure-diff` before changing source. LOCALS compares the",
         "named records, including type/const spelling and exposed block identity, not",
         "register/stack placement. Optimized omissions and ICF aliases require review.",
         "PRESENCE means no established pair, not proof that source is missing.",
@@ -229,8 +229,8 @@ def render(payload):
         "LEDGER_ONLY additionally means there is no direct current object-report identity.",
         "",
         "Class layout/access/declaration order, enum variants and source definition order",
-        "are separate whole-PDB evidence channels: `pdb_topology --classes --json` and",
-        "`pdb_divergence`. This function queue is not a claim those channels are clean.",
+        "are separate whole-PDB evidence channels: `vostok-pdb topology --classes --json` and",
+        "`vostok-pdb divergence`. This function queue is not a claim those channels are clean.",
         "",
         "Excluded vendor/internal modules: " + ", ".join(snap["excluded_modules"]) + ".",
         "Unknown module ownership is counted separately in coverage, not called matched.",

@@ -4,8 +4,8 @@
 `python3 -m vostok sema` or `python3 -m vostok.sema`).**
 
 `sema` is the layer vostok did not have: a **basic-block / branch** comparison of
-our compiled function against the original one. It sits below `pdb_fetch --view
-structure-diff` (source statements) and beside `pdb_fetch --view diff`
+our compiled function against the original one. It sits below `vostok-pdb inspect --view
+structure-diff` (source statements) and beside `vostok-pdb inspect --view diff`
 (instructions), and answers a question neither of them asks:
 
 > Does our function have the same SHAPE - the same blocks, the same branch
@@ -13,7 +13,7 @@ structure-diff` (source statements) and beside `pdb_fetch --view diff`
 
 ## Why - the blind spot, with evidence
 
-`pdb_fetch --view diff` is an operand- and relocation-aware instruction diff
+`vostok-pdb inspect --view diff` is an operand- and relocation-aware instruction diff
 (objdiff-core 2.5.0). It is excellent at what it does, and it is **structurally
 unable to show you a control-flow difference as a control-flow difference**:
 
@@ -26,7 +26,7 @@ unable to show you a control-flow difference as a control-flow difference**:
    `ObjInsArg::BranchDest`, `diff/code.rs:278`) by comparing
    `branch_to.ins_idx` - the destination's index in the ALIGNED instruction
    vector. That is the right idea, and it means a branch row is often marked
-   **Equal**. `pdb_fetch` renders Equal rows with the base text only. So a
+   **Equal**. `vostok-pdb inspect` renders Equal rows with the base text only. So a
    correct-looking `je` row proves nothing about where either side jumps.
 3. When the two sides are shaped differently, objdiff's Patience alignment over
    the opcode sequence produces an alignment that is locally plausible and
@@ -38,7 +38,7 @@ unable to show you a control-flow difference as a control-flow difference**:
 
 Every paired render function below 100% that has at least one branch on either
 side - **796 functions** - cross-tabulated by (a) does `sema` see a control-flow
-difference, (b) does `pdb_fetch --view diff` flag any row whose instruction is a
+difference, (b) does `vostok-pdb inspect --view diff` flag any row whose instruction is a
 branch:
 
 | | objdiff flags a branch row | objdiff flags NO branch row |
@@ -79,7 +79,7 @@ residual off as "LTCG/regalloc" (the shape is right, but nothing proved it).
 ## What it does
 
 Both sides come from the same delinker and the same disassembler
-(`pdb_fetch --view target` / `--view base` over `binaries/rich/{target,base}`),
+(`vostok-pdb inspect --view target` / `--view base` over `binaries/pdb/{target,base}`),
 so - unlike the two-disassembler setups this idea comes from - **almost no
 instruction normalization is needed**. Exactly one thing is masked: the branch
 operand. Everything else that differs textually is a real byte difference.
@@ -123,7 +123,7 @@ so the graphviz stream stays pipeable.
 ## Command surface
 
 The navigation front of the HoMM2/Gruntz sema family is available against
-Vostok's PDB-rich indexes as well as the CFG views:
+Vostok's PDB-PDB evidence databases as well as the CFG views:
 
     python3 -m vostok sema rva      <fn>             # address/source/match dossier
     python3 -m vostok sema xref     <fn> --callees   # direct callees (root-first work)
@@ -156,8 +156,8 @@ Flags, exactly:
   in address order. Without it, callees are grouped by name with `xN` counts,
   so the offset column is the FIRST call site, not a sorted address list.
 * `xref --callees` lists indirect calls under their register operand (`eax x8`).
-  Those are call sites, not a function named `eax`; `pdb_fetch --view callees`
-  omits them, which is why its count is lower.
+  Those are call sites, not a function named `eax`. Use this command for the
+  callee inventory; `vostok-pdb inspect` provides the underlying instructions.
 * `rva` prints a `match` block only for a function the committed ledger carries,
   which is exactly the TARGET functions. A `BASE_ONLY` symbol gets its `base`
   record and nothing else - the absence of the block is the only signal that it
@@ -170,12 +170,12 @@ Other sema-family capabilities already have stronger Vostok-native owners:
 
 | HoMM2/Gruntz view | Vostok owner |
 |---|---|
-| `disasm` / rich source lines | `pdb_fetch --view target|base|diff|structure|structure-diff` |
+| `disasm` / rich source lines | `vostok-pdb inspect --view target|base|diff|structure|structure-diff` |
 | `match` | `vostok ledger report --unit <tu>` or `--module <m> --per-unit` |
 | `symbol`, `def`, `refs`, `hover` | `vostok tool clangd` with the same operation name |
-| symbol/function map | `pdb_rich_query --list` and `vostok ledger list` |
+| symbol/function map | `vostok-pdb inspect --database DB --list` and `vostok ledger list` |
 | class hierarchy and layout | generated `binaries/structure/target/headers` |
-| vtable order and slot use | target structure headers plus `pdb_fetch --view target` at a real vcall |
+| vtable order and slot use | target structure headers plus `vostok-pdb inspect --view target` at a real vcall |
 
 Gruntz needs separate `map`, `class`, and `vtable` inference because its retail
 binary is stripped. Vostok's retail PDB already records the declarations and
@@ -189,8 +189,8 @@ Ambiguous substrings are listed, never guessed at.
 
 A bare hex is FOUR questions - target RVA, target VA, base RVA, base VA - and
 sema has no side flag for an address. Every reading that hits a real function is
-listed and the command stops; pick one by its mangled name, or ask `pdb_fetch`,
-which takes `--target-index`/`--base-index` with `--rva`/`--va` and so has no
+listed and the command stops; pick one by its mangled name, or ask `vostok-pdb inspect`,
+which takes `--target`/`--base` with `--rva`/`--va` and so has no
 tie. About 3,000 of the ~42,000 addresses in the two indexes are ties.
 
 Several index records at ONE address are an **ICF fold group**, not an ambiguity
@@ -204,9 +204,9 @@ an RVA where a VA belongs and you land 64 KB early, inside a different function,
 with nothing to complain about it - so every absolute address printed anywhere in
 the toolchain says which space it is in:
 
-    rva=      what the rich indexes and the ledger STORE; `pdb_fetch --rva`
+    rva=      what the PDB evidence databases and the ledger STORE; `vostok-pdb inspect --rva`
     va=       rva + image_base - what IDA shows and what carcass comments quote;
-              `pdb_fetch --va`
+              `vostok-pdb inspect --va`
     +0xNN     a function-RELATIVE offset (xref call sites, block starts, the
               `@1f` in a block header). Never an address.
 
@@ -215,10 +215,10 @@ out by hand:
 
     target  rva=0x6243e0  va=0x6343e0  size=0x80  stmts=11
 
-`pdb_fetch` labels its own headers the same way and names its structure-diff
+`vostok-pdb inspect` labels its own headers the same way and names its structure-diff
 columns `t.va`/`b.va`; its flags (`--rva`, `--va`, `--address`, `--offset`) each
 say which kind they take. A stale `nix develop` shell can still hold a
-`pdb_fetch` that prints bare addresses - the numbers are the same either way.
+`vostok-pdb inspect` that prints bare addresses - the numbers are the same either way.
 
 The hex-ambiguity listing prints both forms too, because the READING that hit
 (`as rva` / `as va`) is not the number the record sits at - it used to print the
@@ -280,7 +280,7 @@ signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 | `COND-FLIP` | equal blocks AND branches, a mnemonic differs | possibly an inverted condition or signed/unsigned twin - but the mnemonic lists are compared BY POSITION, so confirm with `blocks --diff --lite` before believing it (see below) |
 | `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BLOCK-SPLIT` | same branch sequence, different block count | usually an unreachable/padding artifact |
-| `TRIMMED` | the trailing trim dropped more blocks than it kept, so the graph is a PREFIX | **not a flow verdict** - read the function with `pdb_fetch --view target|base`; see the `trim_tail` limit |
+| `TRIMMED` | the trailing trim dropped more blocks than it kept, so the graph is a PREFIX | **not a flow verdict** - read the function with `vostok-pdb inspect --view target|base`; see the `trim_tail` limit |
 
 ### Which classes are worth a matcher's time (measured, batches B7 + B8)
 
@@ -394,7 +394,7 @@ exactly the case a human under-investigates.
     0   answered YES
     1   answered NO
     2   error         (no such function, an ambiguous selector, only one side
-                       present, pdb_fetch missing)
+                       present, vostok-pdb inspect missing)
 
 `1` is an ANSWER, not a failure - do not treat a non-zero rc as a broken run.
 **What the answer is about differs per verb, so do not read rc 1 as "the flow
@@ -425,9 +425,9 @@ Take the flow verdict from the printed `flow SAME | DIFFERS` line, not from rc.
 * **One side only.** A `TARGET_ONLY` (nothing compiled yet) or `BASE_ONLY`
   function has nothing to diff; `blocks <fn>` still shows the side that exists.
 * **Stale artifacts read as divergence.** `sema` reads
-  `binaries/rich/{base,target}/index.jsonl`, which `vostok build` regenerates.
+  `binaries/pdb/{base,target}/evidence.sqlite`, which `vostok build` regenerates.
   A base index older than your source is the single most likely cause of a
-  surprising verdict - `ls -la binaries/rich/base/index.jsonl` before believing
+  surprising verdict - `ls -la binaries/pdb/base/evidence.sqlite` before believing
   one.
 * **`branches --diff` pairs branches BY POSITION.** `blocks --diff [--lite]`
   aligns by CONTENT and is the view to take a verdict from. When the two sides
@@ -490,7 +490,7 @@ Take the flow verdict from the printed `flow SAME | DIFFERS` line, not from rc.
   trailing blocks it trimmed per side and flags the case where it dropped more
   than it kept, and the `< 100%` hint is suppressed there** - but the underlying
   edge model is still wrong. When you see that `!!` line, read the function with
-  `pdb_fetch --view target|base`, not with sema.
+  `vostok-pdb inspect --view target|base`, not with sema.
 
   The candidate fix, measured on two functions only: seed reachability with the
   disassembler's LABEL TARGETS as well as the entry block. Jump-table DATA
@@ -527,7 +527,7 @@ pad. The real residual is a CSE'd zero: the target keeps 0 in `edx` and spells
 its null tests `cmp reg,edx` where we emit `test reg,reg`.
 
 The blind spot the tool exists to close is still real (see the evidence table
-above - `pdb_fetch --view diff` flags 40 rows for that function and not one is a
+above - `vostok-pdb inspect --view diff` flags 40 rows for that function and not one is a
 branch). What was wrong was the direction of the finding. Two lessons, both now
 built in:
 
@@ -539,19 +539,19 @@ built in:
    the tool.** That is now impossible by construction, but it remains the right
    instinct for whatever the next canonicalisation gap turns out to be.
 * **It says nothing about statements or locals.** Structure verdicts stay
-  `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
+  `vostok-pdb inspect --view structure-diff`; `sema` is strictly about shape below the
   statement level.
 * **`sema` does not read the ledger.** It never did anything the two
-  rich indexes and the committed ledger cannot answer, and reading a derived
+  PDB evidence databases and the committed ledger cannot answer, and reading a derived
   cache meant `sema` could not answer at all on a tree that had never run a
-  derivation. The split now is: `binaries/rich/{target,base}/index.jsonl` owns
+  derivation. The split now is: `binaries/pdb/{target,base}/evidence.sqlite` owns
   every BUILD fact (address, size, statements, owning file, both spellings of
   the name, and - through `vostok.sema.pairing` - which base function a target
   function IS); `config/match_state.tsv` owns the CAMPAIGN's
   memory (`cur`/`max`, structure class, attempts, status, park note, module and
   TU ownership). `sweep` takes its scope and percentages from the ledger and its
   RVA pair from the pairing; `rva` reads both; every CFG verdict comes from
-  `binaries/rich` as before.
+  `binaries/pdb` as before.
 * **The pairing is recomputed, not cached.** `vostok.sema.pairing` runs the same
   passes as `vostok.derive.pairing` over the same helpers and reproduces all
   18,791 pairs at the same two RVAs (measured 2026-08-16: 0 disagreements, 0
@@ -568,10 +568,10 @@ built in:
 * **The ledger stores four decimals.** `sweep` prints three, so a percentage can
   land 0.001 away from the raw `report.json` figure (175 of 18,791 rows). No row
   ever crosses the `< 100` line, so the candidate list is unaffected.
-* **`rva`'s `stmts=` is not `pdb_fetch --view structure`'s count.** `rva`
-  prints `len(record.statements)` from the rich index (and the same number under
-  `statements=t:b`); `pdb_fetch` counts BODY statements
+* **`rva`'s `stmts=` is not `vostok-pdb inspect --view structure`'s count.** `rva`
+  prints `len(record.statements)` from the PDB evidence database (and the same number under
+  `statements=t:b`); `vostok-pdb inspect` counts BODY statements
   and drops the opening and closing brace records, so it reports two fewer.
   `stage_postprocess::execute` is `stmts=201` / `statements=201:200` in sema
-  and `199 statements` / `198` in `pdb_fetch`. Neither is wrong; they count
+  and `199 statements` / `198` in `vostok-pdb inspect`. Neither is wrong; they count
   different things.

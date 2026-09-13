@@ -69,7 +69,7 @@ def report_score_for_target(mangled, scores, folded_aliases=None):
 
     ``folded_aliases`` is the delinker's generated target-identity -> selected
     COFF-representative map.  Callers admit it only for identities absent from
-    the base rich index, after same-name function-scoped evidence has had first
+    the base PDB evidence, after same-name function-scoped evidence has had first
     refusal.
     """
     fuzzy = scores.get(mangled)

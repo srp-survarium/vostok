@@ -12,16 +12,16 @@ question:
 
 | Question | Evidence owner | Strength |
 |---|---|---|
-| complete class shape and declaration order | `pdb_topology --classes` | direct field-list evidence |
-| same-name class record variants/multiplicity | `pdb_topology --classes` | direct raw-TPI inventory |
-| enum values/underlying type | `pdb_divergence` plus raw variant inspection | semantic after variant ambiguity is excluded |
-| source definition order and constants | `pdb_divergence` | semantic when both files/functions pair |
-| function locals/statements/lexical blocks | `pdb_fetch --view structure-diff` | direct procedure evidence |
-| complete MSF/PDB stream topology | `pdb_topology --order` | per-channel: semantic where identities survive; otherwise physical/linker/hash/address-derived diagnostic |
-| out-of-line function presence | `pdb_divergence --list-presence-fns` and the ledger | scheduling/reachability evidence |
+| complete class shape and declaration order | `vostok-pdb topology --classes` | direct field-list evidence |
+| same-name class record variants/multiplicity | `vostok-pdb topology --classes` | direct raw-TPI inventory |
+| enum values/underlying type | `vostok-pdb divergence` plus raw variant inspection | semantic after variant ambiguity is excluded |
+| source definition order and constants | `vostok-pdb divergence` | semantic when both files/functions pair |
+| function locals/statements/lexical blocks | `vostok-pdb inspect --view structure-diff` | direct procedure evidence |
+| complete MSF/PDB stream topology | `vostok-pdb topology --order` | per-channel: semantic where identities survive; otherwise physical/linker/hash/address-derived diagnostic |
+| out-of-line function presence | `vostok-pdb divergence --list-presence-fns` and the ledger | scheduling/reachability evidence |
 | emitted member use | target/base disassembly at a real consumer | direct for that access path |
 
-`pdb_divergence` remains useful as a broad normalized compatibility view. Its
+`vostok-pdb divergence` remains useful as a broad normalized compatibility view. Its
 class/enum model collapses same-name records, so a row involving a multi-variant
 name is not a source verdict by itself. `report.json` owns emitted byte results;
 it does not explain every record retained in the linked PDB.
@@ -36,10 +36,10 @@ it does not explain every record retained in the linked PDB.
 3. Run the unfiltered comparison first. Then run the campaign-filtered view with
    every `--skip` value written out; never describe a hidden filter as “our
    types.”
-4. Run `pdb_topology --classes --json` and preserve these categories separately:
+4. Run `vostok-pdb topology --classes --json` and preserve these categories separately:
    `identical`, `record-multiplicity`, `variant-overlap`, disjoint `different`,
    target-missing-base, and base-only names.
-5. Run `pdb_topology --order --json`. Preserve its coverage inventory and keep
+5. Run `vostok-pdb topology --order --json`. Preserve its coverage inventory and keep
    MSF allocation, DBI/module extraction, TPI/IPI insertion and hashes,
    GSI/PSI/public indexes, module/C13 records, and optional debug streams as
    separate channels. Semantic order claims use only stable identities; report

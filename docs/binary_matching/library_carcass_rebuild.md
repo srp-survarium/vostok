@@ -164,7 +164,7 @@ is moved into the legacy queue and rebuilt against canonical structure.
   `// FUNCTION BODY[0xVA]` blocks; `.cpp` files carry out-of-line definitions.
 
 You reassemble each real header from BOTH views. **When the canonical header and a real
-symbol disagree, the symbol wins** (`binaries/rich/target/index.jsonl`, `mangled`
+symbol disagree, the symbol wins** (`binaries/pdb/target/evidence.sqlite`, `mangled`
 field; access letter `Q/R`=public, `I/J`=protected, `A/B`=private, virtual variants
 `E/F/M/N/U/V`).
 
@@ -212,7 +212,7 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
     in one signature collide - leave them UNNAMED in the definition, or name them +
     `VOSTOK_UNREFERENCED_PARAMETER(S)` with a "PDB: __formal, genuinely unused" note so
     the next agent keeps it.
-11. **Trailing `// TYPEDEFS` scratch** in a carcass is pdb-parser noise (often duplicate
+11. **Trailing `// TYPEDEFS` scratch** in a carcass is vostok-pdb noise (often duplicate
     `iterator_type` -> C2040) - delete it. Cross-type junk (a stray dtor from another
     module in a same-named carcass) - ignore it.
 

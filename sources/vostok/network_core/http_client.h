@@ -20,11 +20,15 @@ namespace network_core {
 
 class http_client {
 public:
+	typedef boost::asio::ip::tcp					tcp;
+	typedef boost::function< void() >				on_content_downloaded_type;
+	typedef boost::function< void( boost::system::error_code ) >	on_error_type;
+
 			explicit				http_client				( boost::asio::io_service& io_service );
 
 			void					get						( pcstr server, pcstr path, boost::function< void() > const& callback );
 
-	inline	void					set_on_error			( boost::function< void( boost::system::error_code ) > const& callback ) { m_on_error = callback; }
+	inline	void					set_on_error			( on_error_type const& callback ) { m_on_error = callback; }
 
 	inline	std::string const&		result_content			( ) const { return m_result_content; }
 
@@ -48,13 +52,13 @@ private:
 			void					close_connection		( );
 
 private:
-	/* 0x0000 */	boost::asio::ip::tcp::resolver		m_resolver;
-	/* 0x000c */	boost::asio::ip::tcp::socket		m_socket;
+	/* 0x0000 */	tcp::resolver					m_resolver;
+	/* 0x000c */	tcp::socket					m_socket;
 	/* 0x0050 */	boost::asio::streambuf				m_request_buff;
 	/* 0x0080 */	boost::asio::streambuf				m_response_buff;
 	/* 0x00b0 */	std::string							m_result_content;
-	/* 0x00c8 */	boost::function< void() >			m_on_content_downloaded;
-	/* 0x00e8 */	boost::function< void( boost::system::error_code ) >	m_on_error;
+	/* 0x00c8 */	on_content_downloaded_type			m_on_content_downloaded;
+	/* 0x00e8 */	on_error_type					m_on_error;
 }; // class http_client
 
 STATIC_SIZE_ASSERT(http_client, 0x108);

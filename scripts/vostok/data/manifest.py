@@ -13,7 +13,6 @@ from __future__ import annotations
 import bisect
 import csv
 import hashlib
-import json
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass
 
@@ -22,6 +21,7 @@ from vostok.core.tsv import write_if_changed
 from vostok.data.inventory import DataSymbol, display_bytes, load
 from vostok.data.pe import PEImage
 from vostok.data.pipeline import AddressResolver, compare, image_paths
+from vostok.derive.index import load_index_records
 
 
 MANIFEST_COLUMNS = (
@@ -366,11 +366,10 @@ def _write_rows(rows: list[ConsumerRow], blockers: list[dict[str, str]]) -> None
 
 
 def _rich_records(side: str) -> list[dict]:
-    path = paths.TARGET_IDX if side == "target" else paths.BASE_IDX
+    path = paths.TARGET_EVIDENCE if side == "target" else paths.BASE_EVIDENCE
     if not path.is_file():
         return []
-    with path.open(encoding="utf-8") as source:
-        return [json.loads(line) for line in source if line.strip()]
+    return load_index_records(path)
 
 
 def _function_access_signatures(side: str) -> dict[tuple[str, str], list[tuple]]:

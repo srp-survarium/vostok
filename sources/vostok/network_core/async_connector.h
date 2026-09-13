@@ -10,7 +10,13 @@
 #include <boost/asio.hpp>
 
 namespace vostok {
+namespace memory {
+	class base_allocator;
+} // namespace memory
+
 namespace network_core {
+
+extern memory::base_allocator* g_allocator;
 
 class async_connector {
 public:
@@ -76,5 +82,7 @@ STATIC_SIZE_ASSERT(async_connector, 0x460);
 
 } // namespace network_core
 } // namespace vostok
+
+#include <vostok/network_core/async_connector_inline.h>
 
 #endif // #ifndef NETWORK_CORE_ASYNC_CONNECTOR_H_INCLUDED

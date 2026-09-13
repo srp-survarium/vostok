@@ -7,7 +7,7 @@ description: Verify and fix whether reconstructed Vostok C++ has the target PDB 
 
 1. Read `AGENTS.md`, `docs/binary_matching/MATCHING.md`, and relevant pattern
    entries. Start from current built indexes and reports.
-2. Run `pdb_fetch --view structure-diff` first. For small functions, also compare
+2. Run `vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite --base binaries/pdb/base/evidence.sqlite --function NAME --view structure-diff` first. For small functions, also compare
    target and base `structure` views. Pin ambiguous overloads by target RVA.
 3. Compare:
    - statement quantity and order;

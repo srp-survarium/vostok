@@ -41,7 +41,7 @@ from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
 from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_BUILD_TREE,
                                GFX_TARGET_PREFIX,
-                               OBJDIFF_DIR, RICH_DIR, SCALEFORM_SDK, SOURCES,
+                               OBJDIFF_DIR, PDB_DIR, SCALEFORM_SDK, SOURCES,
                                SYMBOL_MAP, SYMBOL_MAP_OVERRIDES, WIN32_DIR,
                                survarium_bin)
 from vostok.derive.aliases import (instruction_stream_exact,
@@ -123,8 +123,8 @@ def _nonempty_dir(p: Path) -> bool:
 
 
 def _rich_pdb_aliases() -> dict[str, str]:
-    target_index = RICH_DIR / "target" / "index.jsonl"
-    base_index = RICH_DIR / "base" / "index.jsonl"
+    target_index = PDB_DIR / "target" / "evidence.sqlite"
+    base_index = PDB_DIR / "base" / "evidence.sqlite"
     if not target_index.is_file() or not base_index.is_file():
         return {}
     return normalize_objdiff_symbols.rich_pdb_aliases(
@@ -154,13 +154,13 @@ def _strict_current_exact_symbols() -> set[str]:
     """Return same-identity functions proven exact by current rich streams.
 
     Raw objdiff can drop a COMDAT from 100 to unscored when LTCG selects the
-    same body from a different header owner.  The rich indexes still carry the
+    same body from a different header owner.  The PDB evidence DBs still carry the
     target and base identities and their normalized instruction streams, so an
     equal stream is strict current-build evidence that this is attribution
     churn rather than a source regression.
     """
-    target_index = RICH_DIR / "target" / "index.jsonl"
-    base_index = RICH_DIR / "base" / "index.jsonl"
+    target_index = PDB_DIR / "target" / "evidence.sqlite"
+    base_index = PDB_DIR / "base" / "evidence.sqlite"
     if not target_index.is_file() or not base_index.is_file():
         return set()
 

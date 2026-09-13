@@ -50,7 +50,7 @@ together instead of one at a time - the target's `binaries/structure/target/.../
 dump lists every `` `dynamic initializer for 's_x'` `` **in declaration order**, which is
 also the order the definitions must appear in your source.
 
-1. `pdb_fetch --va <each initializer> --view target` in one shell loop. Each body is the
+1. `vostok-pdb inspect --va <each initializer> --view target` in one shell loop. Each body is the
    same 0x4f/0x57-byte shape and hands you three things: the cc object address
    (`mov [X], eax` at 0x05, where `obj == X - 0x0c`), the *backing value* symbol name
    (`mov dword ptr [obj+0x40], s_x_value`) and the limits (`[obj+0x44]`/`[obj+0x45]` for

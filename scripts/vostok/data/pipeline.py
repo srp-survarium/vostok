@@ -112,11 +112,12 @@ def export_index(side: str) -> Path:
 
 
 def _load_rich(side: str) -> list[dict]:
-    path = paths.TARGET_IDX if side == "target" else paths.BASE_IDX
+    from vostok.derive.index import load_index_records
+
+    path = paths.TARGET_EVIDENCE if side == "target" else paths.BASE_EVIDENCE
     if not path.is_file():
         return []
-    with path.open(encoding="utf-8") as source:
-        return [json.loads(line) for line in source if line.strip()]
+    return load_index_records(path)
 
 
 class AddressResolver:

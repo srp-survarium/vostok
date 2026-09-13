@@ -40,7 +40,7 @@ with `#include <vostok/render/core/resource_intrusive_base_inline.h>`). Our
 reconstructions kept the bodies in the main header.
 
 ## Detection (cheap, no build)
-Diff the per-file function counts of the two rich indexes:
+Diff the per-file function counts of the two PDB evidence databases:
 
 ```sh
 python3 - <<'EOF'
@@ -51,8 +51,8 @@ def counts(p, pref):
         d = json.loads(ln); f = d.get('file') or ''
         if f.startswith(pref) and f.endswith('.h'): c[f] += 1
     return c
-b = counts('binaries/rich/base/index.jsonl',   'vostok/<module>/')
-t = counts('binaries/rich/target/index.jsonl', 'vostok/<module>/')
+b = counts('binaries/pdb/base/evidence.sqlite',   'vostok/<module>/')
+t = counts('binaries/pdb/target/evidence.sqlite', 'vostok/<module>/')
 for f in sorted(set(b) | set(t)):
     print('%-58s base=%3d target=%3d' % (f, b.get(f,0), t.get(f,0)))
 EOF
@@ -140,7 +140,7 @@ confirm the mangled name EXISTS on the base side before assuming a split.
 
 ## Two traps
 
-* **ICF folds poison the attribution.** The rich index is RVA-keyed, so several mangled
+* **ICF folds poison the attribution.** The PDB evidence database is RVA-keyed, so several mangled
   names can share one record and inherit the file of whichever symbol won the fold. Before
   moving anything, check the target RVAs are DISTINCT and the sizes non-trivial. Small
   compiler-generated dtors sitting at an RVA adjacent to a real function in some unrelated

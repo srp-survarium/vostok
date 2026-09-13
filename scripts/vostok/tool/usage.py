@@ -105,7 +105,7 @@ SURFACE = [
     "vostok data", "vostok diff", "vostok tool",
     "vostok.build.ninja", "vostok.build.ninja_regen", "vostok.build.gfx",
     "vostok.build.generate_delink", "vostok.build.generate_structure",
-    "vostok.build.generate_rich", "vostok.build.generate_objdiff_config",
+    "vostok.build.generate_pdb", "vostok.build.generate_objdiff_config",
     "vostok.ledger.store", "vostok.ledger.readme", "vostok.ledger.queue",
     "vostok.core.symbols", "vostok.shaders", "vostok.derive", "vostok.sema",
     "vostok.data", "vostok.ledger",

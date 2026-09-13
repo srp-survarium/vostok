@@ -3,7 +3,7 @@
 # Generated special members
 
 MSVC's PDB class records distinguish compiler-generated methods directly. The
-method property bit `0x100` is rendered by `pdb_topology` as
+method property bit `0x100` is rendered by `vostok-pdb topology` as
 `compiler-generated`; it is not inferred from disassembly, line zero, or a
 missing procedure. This matters because an implicit constructor or destructor
 may be emitted, folded, inlined, or absent while retaining the same type-record
@@ -12,7 +12,7 @@ property.
 Use the two-sided class comparison as the verdict:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --classes --json

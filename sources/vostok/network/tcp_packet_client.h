@@ -27,6 +27,11 @@ class network_world;
 // network_core::tcp_packet_client
 class VOSTOK_NETWORK_API tcp_packet_client : private core::noncopyable {
 public:
+	typedef boost::function< void ( network_core::packet_reader& ) >	client_on_packet_received_type;
+	typedef boost::function< void ( ) >					client_on_connected_type;
+	typedef boost::function< void ( ) >					client_on_disconnected_type;
+	typedef boost::function< void ( enum network_core::client_error_codes_enum, boost::system::error_code ) >	client_on_error_type;
+
 	explicit	tcp_packet_client		( world& world );
 				~tcp_packet_client		( );
 
@@ -37,12 +42,12 @@ public:
 	void		send					( network_core::tcp_packet const& packet );
 
 	void		set_on_packet_received	(
-					boost::function< void ( network_core::packet_reader& ) > const&	on_packet_received
+					client_on_packet_received_type const&	on_packet_received
 				);
-	void		set_on_connected		( boost::function< void ( ) > const& on_connected );
-	void		set_on_disconnected		( boost::function< void ( ) > const& on_disconnected );
+	void		set_on_connected		( client_on_connected_type const& on_connected );
+	void		set_on_disconnected		( client_on_disconnected_type const& on_disconnected );
 	void		set_on_error			(
-					boost::function< void ( enum network_core::client_error_codes_enum, boost::system::error_code ) > const&	on_error
+					client_on_error_type const&	on_error
 				);
 
 	// claude@MATCH: private - all the on_*/create_client/connect_impl symbols
@@ -68,10 +73,10 @@ private:
 	void		connect_impl			( pcstr host, u16 port );
 
 private:
-	boost::function< void ( network_core::packet_reader& ) >	m_on_packet_received;
-	boost::function< void ( ) >			m_on_connected;
-	boost::function< void ( ) >			m_on_disconnected;
-	boost::function< void ( enum network_core::client_error_codes_enum, boost::system::error_code ) >	m_on_error;
+	client_on_packet_received_type	m_on_packet_received;
+	client_on_connected_type		m_on_connected;
+	client_on_disconnected_type		m_on_disconnected;
+	client_on_error_type			m_on_error;
 	network_world&						m_world;
 	network_core::tcp_packet_client*	m_client;
 }; // class tcp_packet_client

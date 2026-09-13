@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.diff.enums_compare - compare enum definitions between the BASE and TARGET
-pdb-parser structure dumps.
+vostok-pdb structure dumps.
 
-The pdb-parser (see vostok.build.generate_structure) emits, for each enum, a block
+The vostok-pdb (see vostok.build.generate_structure) emits, for each enum, a block
 of the form
 
     enum survarium::affect_event_type_enum

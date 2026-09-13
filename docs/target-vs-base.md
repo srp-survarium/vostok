@@ -1,6 +1,6 @@
 # Target vs. Base — what the PDB/EXE extraction tooling reveals
 
-A synthesis of every comparison the `vostok-pdb-parser` tooling can now make
+A historical synthesis of the comparisons made by the former external tooling
 between the **target** (original `survarium.exe` / `survarium.pdb`, the shipped
 game) and the **base** (our VS2008/Wine build, `survarium-dx11-win32-gold`).
 
@@ -14,7 +14,7 @@ what is different, and which differences are actionable for matching.**
 | `pe_build_info` *(improve/pe-build-info)* | PE header, Rich header, CodeView, sections, version | yes (§1) |
 | `pdb_link_order` *(improve/link-order)* | per-module link order from section contributions | yes (§3) |
 | `pe_rtti` *(improve/rtti-vftables)* | RTTI/polymorphic class set from the EXE | yes (§4) |
-| `pdb_parser` *(static / locals / layout-asserts / typedefs)* | the generated reference "carcass" | improves both sides (§5) |
+| `vostok-pdb` *(static / locals / layout-asserts / typedefs)* | the generated reference "carcass" | improves both sides (§5) |
 
 ---
 
@@ -132,7 +132,7 @@ backlog of polymorphic types**. The 82 base-only classes are mostly test/extra.
 
 ---
 
-## 5. The generated reference "carcass" (`pdb_parser` improvements)
+## 5. The generated reference "carcass" (`vostok-pdb` improvements)
 
 These don't diff target vs base — they make the generated reference more
 faithful **for whichever PDB you feed**, which is the input to all matching work:

@@ -4,7 +4,7 @@
 
 Everything else here takes a resolved record. One selector - a mangled name, a
 demangled substring, or a hex RVA/VA on either side - is answered by ONE pass
-over each side's `binaries/rich/<side>/index.jsonl` (~85 MB), then completed
+over each side's `binaries/pdb/<side>/evidence.sqlite`, then completed
 from `sema.pairing`, which is how naming ONE side's address also finds the
 other side's twin (the two sides sit at different addresses).
 
@@ -23,8 +23,9 @@ import json
 import re
 import sys
 
-from vostok.core.paths import RICH_DIR as RICH
+from vostok.core.paths import PDB_DIR
 from vostok.derive.aliases import dyn_canon_base
+from vostok.derive.index import load_index_records
 
 from vostok.sema import die
 
@@ -35,23 +36,23 @@ def va_of(rec):
 
 
 def _index_path(side):
-    p = RICH / side / "index.jsonl"
+    p = PDB_DIR / side / "evidence.sqlite"
     if not p.is_file():
         die(f"{p} missing - run `python3 -m vostok build` first")
     return p
 
 
 def _scan_index(side, want):
-    """One pass over binaries/rich/<side>/index.jsonl (~85 MB, ~0.05 s).
+    """One pass over the normalized function rows.
 
     `want(record_line, record_or_None)` is called with the raw line first so the
     common case never pays for json.loads."""
     hits = []
-    with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
-        for line in fh:
-            rec = want(line)
-            if rec is not None:
-                hits.append(rec)
+    for record in load_index_records(_index_path(side)):
+        line = json.dumps(record, separators=(",", ":"))
+        rec = want(line)
+        if rec is not None:
+            hits.append(rec)
     return hits
 
 
@@ -112,16 +113,12 @@ def _hex_readings(sel):
     out = []
     for side in ("target", "base"):
         hits = {}
-        with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
-            for line in fh:
-                if f'"rva":{h}' not in line and f'"rva":{h - 0x10000}' not in line:
-                    continue                       # cheap prefilter before parsing
-                rec = json.loads(line)
-                base_addr = rec.get("image_base", 0)
-                if rec["rva"] == h:
-                    hits.setdefault("rva", []).append(rec)
-                elif base_addr and rec["rva"] == h - base_addr:
-                    hits.setdefault("va", []).append(rec)
+        for rec in load_index_records(_index_path(side)):
+            base_addr = rec.get("image_base", 0)
+            if rec["rva"] == h:
+                hits.setdefault("rva", []).append(rec)
+            elif base_addr and rec["rva"] == h - base_addr:
+                hits.setdefault("va", []).append(rec)
         for how, recs in hits.items():
             for rec in _fold_aliases(side, recs, sel):
                 out.append((side, how, rec))
@@ -188,7 +185,7 @@ def _same_function(a, b):
     """Same symbol on the two sides.
 
     The mangled name is the primary key, but the two indexes do not always carry
-    the same spelling: where the PDB records no mangled name, pdb_parser falls
+    the same spelling: where the PDB records no mangled name, vostok-pdb falls
     back to the demangled one, so the target can say
     `vostok::render::copy_destroyer<binary_config_value, custom_config_value>`
     where the base says `??$copy_destroyer@Vbinary_config_value@configs@...`.
@@ -213,8 +210,8 @@ def _resolve_hex(sel):
                 f"{rec['mangled']}\n      {rec['name']}\n")
         die(f"'{sel}' reads as {len(readings)} different functions (listed above): a bare "
             f"hex is a target/base RVA and a target/base VA at once, and sema has no side "
-            f"flag for it. Pass the mangled name printed above, or ask pdb_fetch, which "
-            f"takes the side and the kind explicitly (--target-index/--base-index with "
+            f"flag for it. Pass the mangled name printed above, or ask vostok-pdb, which "
+            f"takes the side and the kind explicitly (--target/--base with "
             f"--rva/--va)")
     if not readings:
         return None, None
@@ -238,7 +235,7 @@ def resolve(sel):
     base = _fold_aliases("base", _scan_index("base", want), sel)
     # A partner found through the ledger's pairing is authoritative and is NOT
     # re-checked by name below. The two indexes really do spell some symbols
-    # differently: where the PDB carries no mangled name, pdb_parser falls back
+    # differently: where the PDB carries no mangled name, vostok-pdb falls back
     # to the demangled one, so `copy_destroyer<binary_config_value,
     # custom_config_value>` is the target's `mangled` and `??$copy_destroyer@V...`
     # is the base's. Filtering the partner by name dropped it and the view then
@@ -271,16 +268,15 @@ def resolve(sel):
             sys.stderr.write(f"  ... and {len(hits) - _AMBIGUITY_LIST} more\n")
         die(f"'{sel}' is ambiguous ({len(hits)} hits) - copy one of the spellings above, "
             f"or narrow the substring (`vostok ledger list --unit <tu>` and "
-            f"`pdb_rich_query --list --function <substring>` enumerate candidates)")
+            f"`vostok-pdb inspect --database binaries/pdb/target/evidence.sqlite "
+            f"--list --function <substring>` enumerate candidates)")
     if tgt and base and not from_pairing:
         base = [r for r in base if _same_function(r, tgt[0])]
     return (tgt[0] if tgt else None), (base[0] if base else None)
 
 
 def _records(side):
-    with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
-        for line in fh:
-            yield json.loads(line)
+    yield from load_index_records(_index_path(side))
 
 
 def _side_record(args):
@@ -319,7 +315,7 @@ def hint(rec, clean_flow, clean_branches):
         print(f"[this function is {pct:.2f}%, not 100, yet base and target have the SAME "
               "control-flow graph and the SAME branch destinations. The residual is "
               "instruction selection / register allocation / operand values - run "
-              "`pdb_fetch --view diff` (operand-aware) for the byte cause, and "
+              "`vostok-pdb inspect --view diff` (operand-aware) for the byte cause, and "
               "`--view structure-diff` for the statement shape.]")
     elif clean_branches:
         print(f"[this function is {pct:.2f}%, not 100. The branch SEQUENCE agrees but "

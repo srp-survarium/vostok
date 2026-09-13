@@ -40,7 +40,7 @@
   keep it.
 - **`string_response::execute` likewise folds into `string_order::execute`** (no
   code attributed to `string_response.h` in the target). The body is still REAL -
-  write it in `string_response.h` and verify by NAME (`pdb_fetch --view diff
+  write it in `string_response.h` and verify by NAME (`vostok-pdb inspect --view diff
   --function string_response::execute` pairs against the fold survivor at rva
   0x49490; byte-identical as of the responses match); the unit-level objdiff score
   stays `None` because the survivor lives in `string_order.h`'s unit.

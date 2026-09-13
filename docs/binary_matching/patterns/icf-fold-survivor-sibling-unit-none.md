@@ -7,7 +7,7 @@ variants: boost-bind-icf-sibling-fold.md, none-constant-pool-names.md, unit-own-
 When two classes carry identical method bodies, /OPT:ICF keeps ONE copy whose unit/line
 attribution is the SIBLING header, so the symbol never appears in this header's target
 unit and objdiff reports `None` for the unit pairing. Verify by NAME instead:
-`pdb_fetch --view diff --function <class>::method` pairs the base symbol against the
+`vostok-pdb inspect --view diff --function <class>::method` pairs the base symbol against the
 fold survivor. Write the real body in its own header; never leave `{}` because "no code
 is attributed here".
 

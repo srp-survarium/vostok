@@ -6,7 +6,7 @@ confidence: 9/10
 
 ## Symptom
 
-`pdb_fetch --view diff` shows a wall of `~` rows on registers and displacements and
+`vostok-pdb inspect --view diff` shows a wall of `~` rows on registers and displacements and
 **not one flagged branch instruction**, so the natural conclusion is "control flow is
 fine, this is regalloc". Then no amount of operand work moves the score.
 
@@ -17,7 +17,7 @@ different address spaces, and the reader chases a divergence that does not exist
 
 `--view diff` is objdiff-core. It compares a branch destination by the destination's
 index in the **aligned** instruction vector (`arg_eq` / `ObjInsArg::BranchDest`), which is
-the right idea and makes a branch row read *Equal* most of the time - and `pdb_fetch`
+the right idea and makes a branch row read *Equal* most of the time - and `vostok-pdb inspect`
 renders an Equal row with the base text only. Two consequences:
 
 * when the two sides are shaped differently, the Patience alignment over the opcode

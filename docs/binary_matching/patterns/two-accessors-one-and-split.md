@@ -14,5 +14,5 @@ mark the caller PARTIAL.
 ; matching:  mov al,[this+48Fh]            ; inlined both sides
 ; residual:  call ...::round_is_chambered  ; target standalone @0x09b360, base inlines mov cl,[+48Eh]
 ```
-Confirm which is the residual by querying BOTH rich indexes per accessor (target standalone + base absent = the diverger).
+Confirm which is the residual by querying BOTH PDB evidence databases per accessor (target standalone + base absent = the diverger).
 Evidence: weapon_core_reload_state_base::initialize 92% (!deserializing() && chamber_a_round_on_reload() && round_is_chambered()).

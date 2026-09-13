@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""vostok.sema.disasm - pdb_fetch renders the assembly, this parses it.
+"""vostok.sema.disasm - vostok-pdb renders the assembly, this parses it.
 
 Both sides come out of the same delinker and the same disassembler, so almost
 no instruction-spelling normalization is needed - which is what lets everything
@@ -29,23 +29,23 @@ RE_LABEL = re.compile(r"^\.(\d+):\s*$")
 RE_INSN = re.compile(r"^0x([0-9a-fA-F]+):\s+(\S.*?)\s*$")
 
 
-def _pdb_fetch():
-    exe = os.environ.get("PDB_FETCH") or shutil.which("pdb_fetch")
+def _pdb_tool():
+    exe = os.environ.get("PDB_TOOL") or shutil.which("vostok-pdb")
     if not exe:
-        die("pdb_fetch not on PATH - run inside `nix develop`")
+        die("vostok-pdb not on PATH - run inside `nix develop`")
     return exe
 
 
 def disasm(side, rva):
     """One side's rendered disassembly (offsets, `.N` labels, symbolized calls,
     and - base side only - the source statement headers)."""
-    cmd = [_pdb_fetch(), f"--{side}-index", str(_index_path(side)),
+    cmd = [_pdb_tool(), "inspect", "--database", str(_index_path(side)),
            "--rva", hex(rva), "--view", side]
     res = subprocess.run(cmd, cwd=str(VOSTOK), capture_output=True, text=True)
     if res.returncode != 0:
-        die(f"pdb_fetch failed: {res.stderr.strip()}")
+        die(f"vostok-pdb failed: {res.stderr.strip()}")
     if "no function matched" in res.stdout:
-        die(f"pdb_fetch found no {side} function at rva={rva:#x}")
+        die(f"vostok-pdb found no {side} function at rva={rva:#x}")
     return res.stdout
 
 

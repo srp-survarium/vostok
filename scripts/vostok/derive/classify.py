@@ -42,7 +42,7 @@ def normalized_stmt_lines(rec):
 
 def classify(t_rec, b_rec):
     """Approximate structure classification for queue ranking (the authoritative
-    per-function verdict stays `pdb_fetch --view structure-diff`)."""
+    per-function verdict stays `vostok-pdb inspect --view structure-diff`)."""
     t_seq, b_seq = stmt_seq(t_rec), stmt_seq(b_rec)
     t_n, b_n = len(t_seq), len(b_seq)
     if t_seq == b_seq:

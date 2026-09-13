@@ -37,14 +37,16 @@ over this note.
 
 ## Rule #1 — apply the source-checksum filter before touching anything
 
-The target PDB records a per-source-file checksum. `pdb_diff --source-dir` hashes
-our on-disk source and compares it, printing **MATCH/DIFF per compiland**:
+The target PDB records a per-source-file checksum. The historical
+`pdb_diff --source-dir` frontend hashed on-disk source and printed
+**MATCH/DIFF per compiland**. That frontend is not part of `vostok-pdb`.
+The recorded triage below remains historical evidence. Inspect the raw C13
+checksum records and their differences with:
 
 ```
-P=$(nix build .#vostok-pdb-parser --no-link --print-out-paths)
-TGT=$(readlink -f binaries/nix-store/survarium-game)/survarium.pdb   # gcroot
-"$P/bin/pdb_diff" --target-pdb "$TGT" --target-engine-path c:/survarium/sources \
-  --source-dir sources | grep '^DIFF.*bullet/'
+vostok-pdb topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --order --module bullet --json
 ```
 
 - **checksum-MATCH compiland** ⇒ its source is byte-identical to the original.
@@ -123,19 +125,17 @@ sub-100 entries are these — it has no real work left).
 
 ## Tooling & environment
 
-- **Parser binaries** (path changes on flake bump — resolve fresh):
-  `P=$(nix build .#vostok-pdb-parser --no-link --print-out-paths)` → `$P/bin/{pdb_fetch,pdb_diff,pdb_parser}`.
+- **Evidence binary:** `vostok-pdb` from the repository dev shell.
 - **PDBs:** base `binaries/Win32/survarium-dx11-win32-gold.pdb`; target
   `$(readlink -f binaries/nix-store/survarium-game)/survarium.pdb`.
 - **Per-function structure diff (do this FIRST for every function — structure
   before %):**
-  `"$P/bin/pdb_fetch" --target-index binaries/rich/target/index.jsonl \
-     --base-index binaries/rich/base/index.jsonl --function '<demangled substr>' \
+  `vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite \
+     --base binaries/pdb/base/evidence.sqlite --function '<demangled substr>' \
      --view structure-diff` (also `--view target` for the target asm/body,
-  `--view diff` with `--objdiff-target-dir/-base-dir binaries/objdiff/{target,base}`
-  for the operand-aware byte %).
+  `--view diff` for the normalized instruction diff).
 - **Build + rescore:** `nix develop --command python3 -m vostok build`
-  (~10 min Wine build, then regen delink/structure/rich + ledger + README).
+  (~10 min Wine build, then delink/structure/PDB evidence + ledger + README).
 - **objdiff report:** `binaries/objdiff/report.json` (per-function
   `fuzzy_match_percent`).
 
@@ -145,27 +145,24 @@ sub-100 entries are these — it has no real work left).
    `no target symbol map … yet; emitting local defaults`, the score will smear
    DOWN across EVERY module (a phantom ~-1% / -800 exact) — NOT a regression.
    Fix before believing any drop:
-   `cd scripts && python3 vostok.build.generate_delink target && python3 vostok.build.generate_rich target \
-    && python3 vostok.build.generate_structure target && python3 vostok.build.generate_delink base \
-    && python3 vostok derive refresh && python3 vostok ledger readme --write-readme`.
+   Regenerate target evidence with `python3 -m vostok.build.generate_pdb target`,
+   then run the canonical build and derive refresh.
    See memory `per-worktree-target-staleness`.
 2. **Don't bank build-artifact churn.** Everything under `binaries/` is gitignored;
    only `README.md` + `config/match_state.tsv` are tracked. Commit source
    per-TU; let a clean rebuild own the README/ledger refresh.
 
-### Tools that DON'T work here (don't waste time)
-- `pdb_diff --base-pdb` (the header-level base-vs-target checksum compare) is
-  **broken** in the pinned parser (clap forbids `--base-engine-path` next to
-  `--base-pdb`, code unwraps it → panic at `pdb_diff.rs:92`). If you want exact
-  per-header touched verdicts (to classify the 88 header-attributed diffs), fix
-  that one unwrap first — it's the cleanest way to finish the header triage.
+### Historical tool limitations
+- The retired `pdb_diff --base-pdb` frontend had an incompatible clap argument
+  combination. The current topology view compares PDB checksum records; it
+  does not reproduce that frontend's on-disk source hashing verdict.
 - `llvm-pdbutil` cannot read these PDBs (`Too many directory blocks`, BigMSF).
 
 ---
 
 ## Workflow conventions (from MATCHING.md / agentic_loop.md)
 - **Reproduce the target exactly** — never "fix" a bug; the disassembly decides.
-- **Structure first**: get `pdb_fetch --view structure-diff` to `STRUCTURE MATCH`
+- **Structure first**: get `vostok-pdb inspect --view structure-diff` to `STRUCTURE MATCH`
   (statement quantity + per-statement size) before chasing the last %; loop to
   100% or until only an LTCG **argument-passing** residual remains.
 - **LTCG is an excuse ONLY for argument passing** at the call boundary — register

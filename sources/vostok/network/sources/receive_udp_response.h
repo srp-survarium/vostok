@@ -17,13 +17,18 @@ class receive_udp_response :
 	private boost::noncopyable
 {
 public:
+	typedef boost::function< void ( network_core::packet_reader& ) >	on_packed_received_type;
+	typedef network_core::udp_match_packets_allocator_ptr	udp_match_packets_allocator_ptr;
+	typedef network_core::udp_match_packet	udp_match_packet;
+	typedef network_core::udp_match_stats	udp_match_stats;
+
 	// Target emits this constructor only inline in match_client::on_packet_received.
 	inline			receive_udp_response	(
-			boost::function< void ( network_core::packet_reader& ) > const& receiver,
-			network_core::udp_match_packets_allocator_ptr const& allocator,
-			network_core::udp_match_packet& packet,
-			network_core::udp_match_stats const& source_stats,
-			network_core::udp_match_stats& target_stats
+			on_packed_received_type const& receiver,
+			udp_match_packets_allocator_ptr const& allocator,
+			udp_match_packet& packet,
+			udp_match_stats const& source_stats,
+			udp_match_stats& target_stats
 		) :
 		m_copied_stats	( source_stats ),
 		m_receiver		( receiver ),
@@ -38,7 +43,7 @@ public:
 	// target calls them out-of-line) - the inline-vs-call wall, not steerable.
 	virtual			~receive_udp_response	( )
 	{
-		network_core::udp_match_packet* temp	= &m_packet;
+		udp_match_packet* temp	= &m_packet;
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
 	}
 
@@ -55,11 +60,11 @@ public:
 	}
 
 private:
-	network_core::udp_match_stats		m_copied_stats;
-	boost::function< void ( network_core::packet_reader& ) >	m_receiver;
-	network_core::udp_match_packets_allocator_ptr	m_allocator;
-	network_core::udp_match_packet&		m_packet;
-	network_core::udp_match_stats&		m_target_stats;
+	udp_match_stats		m_copied_stats;
+	on_packed_received_type	m_receiver;
+	udp_match_packets_allocator_ptr	m_allocator;
+	udp_match_packet&	m_packet;
+	udp_match_stats&	m_target_stats;
 }; // class receive_udp_response
 
 STATIC_SIZE_ASSERT(receive_udp_response, 0xB8);

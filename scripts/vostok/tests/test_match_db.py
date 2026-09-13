@@ -3,6 +3,7 @@
 import os
 import pathlib
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -583,8 +584,8 @@ class CompilerNameTests(unittest.TestCase):
     def test_derives_only_unique_same_owner_rich_pdb_aliases(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
-            target_index = root / "target.jsonl"
-            base_index = root / "base.jsonl"
+            target_index = root / "target.sqlite"
+            base_index = root / "base.sqlite"
             target_records = [
                 {
                     "file": "vostok/render/core/dx11/sources/custom_config.cpp",
@@ -649,12 +650,21 @@ class CompilerNameTests(unittest.TestCase):
                     "mangled": "?shared_alias@@YAXXZ",
                 },
             ]
-            target_index.write_text(
-                "".join(json.dumps(record) + "\n" for record in target_records)
-            )
-            base_index.write_text(
-                "".join(json.dumps(record) + "\n" for record in base_records)
-            )
+            for database, records in (
+                (target_index, target_records), (base_index, base_records)
+            ):
+                connection = sqlite3.connect(database)
+                try:
+                    connection.execute(
+                        "CREATE TABLE functions(file TEXT,name TEXT,mangled TEXT)"
+                    )
+                    connection.executemany(
+                        "INSERT INTO functions(file,name,mangled) VALUES(?,?,?)",
+                        ((r["file"], r["name"], r["mangled"]) for r in records),
+                    )
+                    connection.commit()
+                finally:
+                    connection.close()
 
             aliases = NORMALIZE.rich_pdb_aliases(
                 target_index, base_index, source_prefix="vostok/"
@@ -668,6 +678,46 @@ class CompilerNameTests(unittest.TestCase):
                 "core_placeholder": "?core_placeholder@@YAXXZ",
             },
         )
+
+
+class DataEvidenceReaderTests(unittest.TestCase):
+    def test_manifest_readers_consume_sqlite_and_preserve_aliases(self):
+        from vostok.data import manifest, pipeline
+
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "evidence.sqlite"
+            connection = sqlite3.connect(database)
+            try:
+                connection.executescript(
+                    "CREATE TABLE functions(id INTEGER,name TEXT,mangled TEXT,"
+                    "rva INTEGER,image_base INTEGER,size INTEGER,file TEXT);"
+                    "CREATE TABLE function_payloads(function_id INTEGER,"
+                    "statements_json TEXT,instructions_json TEXT,locals_json TEXT,"
+                    "skipped_blocks_json TEXT);"
+                )
+                for index, name in enumerate(("first", "folded_alias"), 1):
+                    connection.execute(
+                        "INSERT INTO functions VALUES(?,?,?,?,?,?,?)",
+                        (index, name, name, 4096, 4194304, 8, "unit.cpp"),
+                    )
+                    connection.execute(
+                        "INSERT INTO function_payloads VALUES(?,?,?,?,?)",
+                        (index, "[]", "[]", "[]", "[]"),
+                    )
+                connection.commit()
+            finally:
+                connection.close()
+            with mock.patch.object(paths, "TARGET_EVIDENCE", database), \
+                    mock.patch.object(paths, "BASE_EVIDENCE", database):
+                for reader in (manifest._rich_records, pipeline._load_rich):
+                    for side in ("target", "base"):
+                        with self.subTest(reader=reader.__name__, side=side):
+                            records = reader(side)
+                            self.assertEqual(
+                                [record["name"] for record in records],
+                                ["first", "folded_alias"],
+                            )
+                            self.assertEqual(records[0]["rva"], 4096)
 
 
 class IndexByMangledTests(unittest.TestCase):

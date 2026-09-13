@@ -5,9 +5,8 @@
 Everything the derivation knows comes from four generated files:
 
     binaries/objdiff/report.json            per-TU roster + objdiff's fuzzy %s
-    binaries/rich/target/index.jsonl        the retail inventory + statements
-    binaries/rich/base/index.jsonl          the same for our build
-    binaries/rich/target/declarations.jsonl PDB declarations (optional)
+    binaries/pdb/target/evidence.sqlite        retail functions + declarations
+    binaries/pdb/base/evidence.sqlite          the same for our build
 
 This module owns reading them and the two freshness questions worth asking
 before anyone believes a number: is the TARGET side ancient relative to the base
@@ -18,15 +17,16 @@ deliberate act, and refusing here would just hide the warning behind a rerun.
 
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 from dataclasses import dataclass, field
 
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
-from vostok.core.paths import (BASE_IDX, CROSS_UNIT_REPORT, DECLARATIONS,
+from vostok.core.paths import (BASE_EVIDENCE, CROSS_UNIT_REPORT,
                                EFFECTIVE_SYMBOL_MAP, REPORT, REPORT_HEAD,
-                               SYMBOL_MAP, TARGET_IDX)
+                               SYMBOL_MAP, TARGET_EVIDENCE)
 from vostok.core.paths import REPO as VOSTOK
 from vostok.derive import log
 from vostok.derive.index import (authoritative_demangled_names,
@@ -57,7 +57,7 @@ def git_head():
 
 
 def _require_present():
-    for required in (REPORT, TARGET_IDX, BASE_IDX):
+    for required in (REPORT, TARGET_EVIDENCE, BASE_EVIDENCE):
         if not required.is_file():
             sys.exit(f"[derive] missing {required} - run `vostok build` / the delink first")
 
@@ -67,7 +67,7 @@ def _warn_if_stale():
     sources moved. Neither refuses - `refresh` is a deliberate regen-only step -
     but a silent re-derive off a stale build is how a queue dispatches work that
     is already done."""
-    t_mtime, b_mtime = os.stat(TARGET_IDX).st_mtime, os.stat(BASE_IDX).st_mtime
+    t_mtime, b_mtime = os.stat(TARGET_EVIDENCE).st_mtime, os.stat(BASE_EVIDENCE).st_mtime
     if b_mtime - t_mtime > STALE_TARGET_SECONDS:
         log(
             "WARNING: target index is >7 days older than base - a stale target "
@@ -131,10 +131,10 @@ def load(declarations=True):
     _require_present()
     _warn_if_stale()
 
-    log("loading rich indexes ...")
-    target_records = load_index_records(TARGET_IDX)
+    log("loading PDB evidence ...")
+    target_records = load_index_records(TARGET_EVIDENCE)
     target = index_by_mangled(target_records)
-    base_records = load_index_records(BASE_IDX)
+    base_records = load_index_records(BASE_EVIDENCE)
     # Pairing prefers the other side's owner and primary signature, so a static
     # helper compiled into several TUs resolves to the same record on both sides.
     target_primary_signatures = {
@@ -147,7 +147,7 @@ def load(declarations=True):
     }
     base = index_by_mangled(base_records, target_owners, target_primary_signatures)
     rich_pdb_aliases = normalize_objdiff_symbols.rich_pdb_aliases(
-        TARGET_IDX, BASE_IDX, source_prefix="vostok/",
+        TARGET_EVIDENCE, BASE_EVIDENCE, source_prefix="vostok/",
     )
     folded_symbol_aliases = _load_folded_symbol_aliases()
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
@@ -211,7 +211,7 @@ def _load_report(artifacts):
 
     The disposable target COFF tree normalizes safe retail PDB backtick names to
     MSVC's ??__E/??__F spelling so objdiff can pair them with candidate objects.
-    The rich indexes retain the authoritative PDB names, so every normalized
+    The PDB evidence databases retain the authoritative PDB names, so every normalized
     score is reflected back onto that identity here, before anything reads it.
     """
     log("loading report.json ...")
@@ -300,21 +300,22 @@ def _load_report(artifacts):
 
 
 def _load_declarations(artifacts):
-    """PDB declaration records, read TRANSIENTLY (222k rows / 85 MB).
+    """PDB class-method declarations from normalized target facts.
 
     They exist to answer one question - was this base-only symbol ever DECLARED
     in the retail PDB - so only the per-function verdict outlives the load.
     """
-    if not DECLARATIONS.is_file():
-        log("no declarations.jsonl - BASE_ONLY legitimacy check degraded (parser dump pending)")
+    if not TARGET_EVIDENCE.is_file():
+        log("no target evidence database - BASE_ONLY legitimacy check degraded")
         return
-    log("loading declaration records (transient) ...")
-    with open(DECLARATIONS, encoding="utf-8") as f:
-        for line in f:
-            declaration = json.loads(line)
-            if declaration.get("class"):
-                artifacts.declared_methods.add(
-                    (norm_name(declaration["class"]), norm_name(declaration["name"]))
-                )
-            else:
-                artifacts.declared_free.add(norm_name(declaration["name"]))
+    log("loading normalized declaration facts ...")
+    connection = sqlite3.connect(f"file:{TARGET_EVIDENCE}?mode=ro", uri=True)
+    for subject, value_json in connection.execute(
+        "SELECT subject,value_json FROM facts WHERE category='function'"
+    ):
+        owner, separator, name = subject.rpartition("::")
+        if separator:
+            artifacts.declared_methods.add((norm_name(owner), norm_name(name)))
+        else:
+            artifacts.declared_free.add(norm_name(subject))
+    connection.close()

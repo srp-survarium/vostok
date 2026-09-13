@@ -12,7 +12,7 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
 3. Build a fresh queue from the ledger. Dispatch genuine `QUANTITY`, `SPLIT`,
    wrong-named-locals, target-only body, and verified low-score structural work.
    (The ledger's four classes are MATCH / SIZE / QUANTITY / SPLIT; a wrong local
-   set has no class of its own - `pdb_fetch --view structure` is what shows it.) Do not
+   set has no class of its own - `vostok-pdb inspect --database DB --function NAME --view structure` is what shows it.) Do not
    waste workers on high-score `MATCH` or ordinary `SIZE` codegen walls.
 4. Assign one complete TU per `$vostok-match-unit` worker; bundle only tiny
    related units. Keep every live worker's root and callee file sets disjoint.

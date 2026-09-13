@@ -32,12 +32,12 @@ DATA SOURCES, and each answers exactly one question:
   binaries/objdiff/report.json     WHICH TU. A unit is an object roster entry -
                                    exactly the functions emitted into that one
                                    .obj, i.e. the COMDAT membership. Nothing
-                                   else knows this; the rich index records a
+                                   else knows this; the PDB evidence records a
                                    function's SOURCE FILE, which is a different
                                    question (a header-inlined method's file is
                                    the header, not the .obj).
-  binaries/rich/{target,base}/     WHICH FUNCTIONS, at which RVA, defined at
-    index.jsonl                    which source line, under which signature.
+  binaries/pdb/{target,base}/     WHICH FUNCTIONS, at which RVA, defined at
+    evidence.sqlite                    which source line, under which signature.
   vostok.sema.pairing              WHETHER IT IS PAIRED. A target function whose
                                    RVA is nobody's pair is TARGET_ONLY, and
                                    likewise BASE_ONLY.

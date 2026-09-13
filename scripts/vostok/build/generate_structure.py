@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-vostok.build.generate_structure - run pdb-parser to (re)generate the annotated C++ "structure"
+vostok.build.generate_structure - ask vostok-pdb to generate the annotated C++ carcass
 stubs used for objdiff/IDA comparison, for one side:
 
   base    from the freshly compiled PDB
           binaries/Win32/survarium-dx11-win32-gold.pdb
-          -> binaries/structure/base   (pdb_parser --as-base --skip-non-engine-headers)
+          -> binaries/structure/base
 
   target  from the original game PDB
           $SURVARIUM_BIN/survarium.pdb
@@ -21,7 +21,7 @@ Usage:
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN - directory containing the original survarium.pdb (target side)
-  PDB_PARSER    - pdb-parser binary to invoke (default: pdb_parser on PATH)
+  PDB_TOOL      - unified Rust binary to invoke (default: vostok-pdb on PATH)
 """
 
 import argparse
@@ -38,21 +38,21 @@ from vostok.core import log as _log
 log = logger("structure")
 
 
-def _pdb_parser() -> str:
-    return os.environ.get("PDB_PARSER", "pdb_parser")
+def _pdb_tool() -> str:
+    return os.environ.get("PDB_TOOL", "vostok-pdb")
 
 
 def generate(side: str) -> None:
     """Regenerate binaries/structure/<side> from the matching PDB.
 
     Raises RuntimeError if the source PDB is missing and CalledProcessError if
-    pdb-parser fails - callers (e.g. vostok.build.rebuild) handle/report these.
+    vostok-pdb fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
     out = STRUCTURE_DIR / side
 
     if side == "base":
         pdb = BASE_PDB
-        # pdb-parser strips this prefix from every source path recorded in the
+        # vostok-pdb strips this prefix from every source path recorded in the
         # PDB. Engine includes are compiled through the retail virtual root, so
         # both PDBs reduce to the same `vostok\...` tree.
         engine = RETAIL_SOURCE_PREFIX + "\\"
@@ -80,9 +80,9 @@ def generate(side: str) -> None:
     try:
         proc = subprocess.run(
             [
-                _pdb_parser(),
-                "--output-path", str(out),
-                "--pdb-path",     str(pdb),
+                _pdb_tool(), "generate", "carcass",
+                "--output",      str(out),
+                "--pdb",         str(pdb),
                 "--engine-path",  engine,
                 *extra,
             ],
@@ -91,10 +91,10 @@ def generate(side: str) -> None:
         )
     except FileNotFoundError:
         raise RuntimeError(
-            f"pdb-parser binary {_pdb_parser()!r} not found on PATH - run inside "
-            "`nix develop`, or set PDB_PARSER"
+            f"vostok-pdb binary {_pdb_tool()!r} not found on PATH - run inside "
+            "`nix develop`, or set PDB_TOOL"
         )
-    # pdb-parser (since the all-enums/-unions extraction bump) prints one warning per
+    # vostok-pdb prints one warning per
     # enum it sees recorded with differing enumerator counts across compilands (a
     # forward-decl in one TU vs the full definition in another). It keeps the first and
     # the extracted enums are reference-only (gitignored, zero match risk), so this is
@@ -109,7 +109,7 @@ def generate(side: str) -> None:
             print(line, file=sys.stderr)
     if suppressed:
         log(f"({suppressed} benign 'enum differing enumerator counts' notes from "
-            "pdb-parser suppressed)")
+            "vostok-pdb suppressed)")
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode, proc.args)
     log(f"Done: {out}")
@@ -117,7 +117,7 @@ def generate(side: str) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Generate base/target C++ structure stubs via pdb-parser."
+        description="Generate base/target C++ carcass views via vostok-pdb."
     )
     ap.add_argument("side", choices=["base", "target"])
     try:

@@ -30,7 +30,7 @@ This is one of the few places where the target *proves* a source detail outright
 overrides both the current source and any judgement about what "should" be const or public.
 
 ## The sweep (cheap, no build)
-Blank the access/CV group and intersect the two rich indexes:
+Blank the access/CV group and intersect the two PDB evidence databases:
 
 ```python
 import json, re, collections
@@ -39,7 +39,7 @@ def load(p):
     for ln in open(p):
         d = json.loads(ln); m.setdefault(d['mangled'], d.get('file') or '')
     return m
-T = load('binaries/rich/target/index.jsonl'); B = load('binaries/rich/base/index.jsonl')
+T = load('binaries/pdb/target/evidence.sqlite'); B = load('binaries/pdb/base/evidence.sqlite')
 pat = re.compile(r'@@([A-Z])([A-Z])E')
 key = lambda m: pat.sub('@@__E', m, count=1)
 bk = collections.defaultdict(list)

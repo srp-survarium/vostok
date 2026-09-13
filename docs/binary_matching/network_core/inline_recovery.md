@@ -22,6 +22,8 @@ Evidence labels used below:
   constrain the implementation;
 - **server model**: the client PDB supplies the declaration and layout, while the
   body is reconstructed from the live connection layer and server invariants.
+- **source-file table**: the target PDB's compilation-unit files and visible
+  procedure line geometry constrain where an uninstantiated inline body lived.
 
 ## Marker-only annotations (7)
 
@@ -43,6 +45,13 @@ The predicate destructor is intentionally implicit. The target PDB marks it
 compiler-generated; spelling an empty destructor produces a distinct qualifier
 and declaration-order record even though both bodies do no runtime work.
 
+The predicate copy constructor is also intentionally implicit. Both the retail
+and current base type streams contain the same compiler-generated public copy
+constructor at declaration order 1 and the explicit server-reference constructor
+at order 2. The private `boost::noncopyable` base makes an attempted copy
+unusable; it does not justify inventing an explicit derived copy constructor.
+The active `remove_if` instantiation accepts the temporary without copying it.
+
 ## Packet and allocator primitives (6)
 
 | Declaration | Recovered behavior | Evidence |
@@ -57,14 +66,19 @@ and declaration-order record even though both bodies do no runtime work.
 ## Async connector legacy seams (3)
 
 These private helpers have no calls in the shipped client: the live
-`async_connector` procedures open-code the work. Their placement in the `.cpp`
-keeps the private seam without changing the class definition order.
+`async_connector` procedures open-code the work. The target object names
+`async_connector.h` and `async_connector.cpp`, but CodeView does not identify the
+physical source file of an unexpanded inline body. The recovered definitions
+therefore live in `async_connector_inline.h`, following the module's established
+header/`_inline.h` convention. This source home is a reviewed inference, not a
+PDB `MATCH`; the evidence database reports source-body and unexpanded-inline
+location as `UNOBSERVABLE`.
 
-| Declaration | Recovered behavior | Evidence |
-|---|---|---|
-| `async_connector::resolve` | allocate the resolver, create the query, and start `async_resolve` with the class handler allocator | ancestor plus live `connect`/`on_resolved` path |
-| `async_connector::close_connection` | shutdown and close the socket through error-code overloads | ancestor plus live `reset`/connection teardown |
-| `async_connector::on_error` | reset state and invoke the stored error callback | ancestor plus the error branches in the live connector procedures |
+| Declaration | Source home | Recovered behavior | Evidence |
+|---|---|---|---|
+| `async_connector::resolve` | `async_connector_inline.h` | allocate the resolver, create the query, and start `async_resolve` | ancestor and live `connect`/`on_resolved` path; source home reviewed inference |
+| `async_connector::close_connection` | `async_connector_inline.h` | shutdown and close the socket | ancestor and live `reset`/connection teardown; source home reviewed inference |
+| `async_connector::on_error` | `async_connector_inline.h` | reset state and invoke the stored error callback | ancestor and live connector error branches; source home reviewed inference |
 
 ## TCP marker and sham bodies (5)
 

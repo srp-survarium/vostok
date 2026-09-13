@@ -17,8 +17,9 @@ body statement's line is the number of physical source lines the body occupied**
 that count DOES see the zero-byte lines.
 
 ```
-pdb_fetch --target-index ... --rva 0x<fn> --view structure
-# or, for the whole TU at once, read `statements[].line` straight out of index.jsonl
+vostok-pdb inspect --target ... --rva 0x<fn> --view structure
+# or query the TU with `vostok-pdb inspect --database DB --file FILE --list --json`
+# and read each entry's `statements[].line`
 ```
 
 `vostok::render::scene_renderer` (facade forwarders, all one `owner_push_back`

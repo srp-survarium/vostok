@@ -34,8 +34,8 @@ The target's caller has only `mov/test/je; call` - it did not partial-inline.
 Confirm by fetching the caller on both sides:
 
 ```
-pdb_fetch --target-index ... --function <caller> --view target | grep -B4 <callee>
-pdb_fetch --base-index   ... --function <caller> --view base   | grep -B4 <callee>
+vostok-pdb inspect --target ... --function <caller> --view target | grep -B4 <callee>
+vostok-pdb inspect --base   ... --function <caller> --view base   | grep -B4 <callee>
 ```
 
 ## What it is NOT

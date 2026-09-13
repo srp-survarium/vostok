@@ -7,7 +7,7 @@ variants: mangled-access-instance.md, mangled-access-virtual.md, mangled-access-
 The base/target pairing joins on the EXACT mangled symbol; access letters, virtual-ness,
 const `this`, and parameter top-level consts are all baked in. A wrong letter fails
 SILENTLY (no compiler/objdiff error) - 0%/unpaired even with byte-identical code. Before
-banking any 0/None, diff the mangled names in both rich indexes (`mangled` field). A
+banking any 0/None, diff the mangled names in both PDB evidence databases (`mangled` field). A
 WHOLE unit at 0/None = the class's access sections are wrong class-wide: grep both
 indexes for `@<class>@survarium@@[A-Z]{3}` and fix the header sections.
 

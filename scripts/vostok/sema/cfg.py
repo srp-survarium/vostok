@@ -360,7 +360,7 @@ def graphs_for(sel, need_both=True):
         # "BASE_ONLY - not in the original" here is a claim about the binary, and
         # the commonest way to get here is a typo in a mangled name.
         die(f"no function matches '{sel}' - check the spelling, or list candidates "
-            f"with `pdb_rich_query --index binaries/rich/target/index.jsonl --list "
+            f"with `vostok-pdb inspect --database binaries/pdb/target/evidence.sqlite --list "
             f"--function <substring>`")
     if need_both and not (tgt and base):
         missing = "base" if tgt else "target"

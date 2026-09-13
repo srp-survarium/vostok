@@ -1,13 +1,13 @@
 # Raw PDB topology evidence
 
-`pdb_parser` already uses the `pdb2` Rust crate, but its normal carcass and rich
-index intentionally flatten most CodeView records. `pdb_topology` owns the raw
+`vostok-pdb` already uses the `pdb2` Rust crate, but its normal carcass and rich
+index intentionally flatten most CodeView records. `vostok-pdb topology` owns the raw
 CodeView comparisons that need record identity or sequence: one-procedure
 topology, complete class variant sets, and the observable MSF/PDB stream layout.
 Inspect one procedure with:
 
 ```sh
-pdb_topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
+vostok-pdb topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
   --module render_engine_world_pc_dx11 \
   --function 'world::draw_scene' --context 6
 ```
@@ -18,7 +18,7 @@ future match-database ingestion.
 For matching, compare the retail and reconstructed PDBs directly:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --module render_engine_world_pc_dx11 \
@@ -41,7 +41,7 @@ definition in the target TPI stream and compares it with the same qualified clas
 in base:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --classes
@@ -104,7 +104,7 @@ phantom, or the record used by a particular emitted function.
 semantic, hash, and address-derived sequences separately:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --order --limit 100
@@ -162,7 +162,7 @@ address-derived evidence. LTCG, COMDAT selection, archive extraction, type
 merging, and linker processing can reorder them. Anonymous TPI records cannot
 be authoritatively paired across independently allocated streams and are not
 given invented identities. Source definition order remains owned by
-`pdb_divergence`; class and complete-enum declaration order and
+`vostok-pdb divergence`; class and complete-enum declaration order and
 function-internal structure are the high-confidence `--classes`, enum-scope,
 and `--function` channels. The current measured coverage and confidence limits
 are recorded in `pdb_comparison_audit.md`.
@@ -183,7 +183,7 @@ use `/Z7`; PCH-retention and PCH-boundary cases also run `/Zi` and `/Zi /GL`
 controls. It keeps source and
 output paths fixed, changes one input per pair, and stores the exact commands,
 linker logs, file hashes, copied PDB/EXE artifacts, full
-`pdb_topology --order --json` reports, and channel summaries under
+`vostok-pdb topology --order --json` reports, and channel summaries under
 `binaries/gen/pdb-order-probes/`. The directory is generated and gitignored;
 each invocation replaces it, so preserve a result externally if it must outlive
 the next run.
@@ -209,7 +209,7 @@ module/library population. It decodes the DBI sequence and the matching
 modules' DBI source-file and C13 checksum/line/subsection sequences:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --order --module vostok_vfs --json
@@ -227,7 +227,7 @@ report preserves their physical TPI sequence and lists the DBI-ordered modules
 that directly reference each type:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --order \

@@ -1,6 +1,6 @@
 # Read the unit's OWN recovered symbol for access letters, not the ICF fold rep
 tags: cpp:virtual | topic:fold-icf topic:mangling
-symptoms: rich index shows an unrelated fold rep mangling, report.json lists the unit's own symbol
+symptoms: PDB evidence database shows an unrelated fold rep mangling, report.json lists the unit's own symbol
 confidence: 6/10
 variants: mangled-access-virtual.md, icf-fold-names-noise.md
 

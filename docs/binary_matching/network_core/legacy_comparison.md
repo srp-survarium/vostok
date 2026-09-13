@@ -7,7 +7,7 @@ Doc-only audit (2026-06-10) of every network_core piece with a legacy ancestor
 (see "Legacy ancestry" in [README.md](README.md)). "Ours" = the tip of the
 network_core packet-leaves stack, since landed (#283+#285+#288);
 "legacy" = `temp/network_legacy/`. Byte evidence from the target PDB index
-(`pdb_fetch`) and `strings` on the original exe is marked **[proven]** /
+(`vostok-pdb inspect`) and `strings` on the original exe is marked **[proven]** /
 **[disproven]**; everything else is a text-shape prior.
 
 ## Headline byte evidence

@@ -64,7 +64,7 @@ game base objs delink (`game_entry_point.cpp`, `temp_include_all.cpp` — the
 reachable ones); the objdiff config points the other 139 game units at
 `./dummy.obj`. Nothing instantiates the game object graph (the interim
 `create_world` returns NULL), so `/OPT:REF` drops every game class method. The
-base rich index has ZERO `human_npc`/`game_camera`/`camera_director` symbols.
+base PDB evidence database has ZERO `human_npc`/`game_camera`/`camera_director` symbols.
 
 So before the next-phase matching can measure/drive any game function (harvested
 or not), the game functions must be made REACHABLE in the base exe — either:

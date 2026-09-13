@@ -7,7 +7,7 @@
 
 ## Symptom
 
-`pdb_divergence --headers-only` can report one `[member]` or `[size]` row for a
+`vostok-pdb divergence --headers-only` can report one `[member]` or `[size]` row for a
 qualified name even though the same PDB contains several complete records with
 that name and different layouts. For example, the network cluster has records
 that disagree about `sequence_number<u8>` versus `sequence_number<u16>` and
@@ -33,7 +33,7 @@ position or name in the type stream.
 Use the raw variant-set query first:
 
 ```sh
-pdb_topology \
+vostok-pdb topology \
   --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --classes --class 'vostok::network_core::udp_match_connection'

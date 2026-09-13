@@ -29,10 +29,10 @@ the reference uses the consumer's. They never meet.
 
 ## Fix
 Make the forward declaration agree with the type's real class-key (and with the
-target's mangling). Check the rich index for which the SHIPPED build used:
+target's mangling). Check the PDB evidence database for which the SHIPPED build used:
 
 ```
-grep -o '<fn>@<class>@<ns>@@[^"]*' binaries/rich/target/index.jsonl   # PAU vs PAV
+grep -o '<fn>@<class>@<ns>@@[^"]*' binaries/pdb/target/evidence.sqlite   # PAU vs PAV
 ```
 
 then correct the wrong forward-decl (here `class world;` → `struct world;` in the
@@ -56,8 +56,8 @@ the class-key for every type at once:
 
 ```
 for t in ambient_volume clouds environment_probe material_effects_instance ...; do
-  u=$(grep -c "U$t@render@vostok@@" binaries/rich/target/index.jsonl)
-  v=$(grep -c "V$t@render@vostok@@" binaries/rich/target/index.jsonl)
+  u=$(grep -c "U$t@render@vostok@@" binaries/pdb/target/evidence.sqlite)
+  v=$(grep -c "V$t@render@vostok@@" binaries/pdb/target/evidence.sqlite)
   echo "$t: struct(U)=$u class(V)=$v"
 done
 ```

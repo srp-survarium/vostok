@@ -9,7 +9,7 @@
 The derivation (`scripts/vostok/derive/`, run as `python3 -m vostok derive
 refresh`) answers the bulk questions the matching loop needs - build queues,
 per-TU/module rollups, unpaired functions - by writing the committed ledger
-straight from the built artifacts. It does NOT replace `pdb_fetch`: the parser
+straight from the built artifacts. It does NOT replace `vostok-pdb inspect`: the parser
 stays the authoritative per-function view (structure-diff, rich asm, statement
 slices); the ledger exists for questions spanning thousands of functions.
 
@@ -26,8 +26,8 @@ if sources moved). "refresh" below means that regen step regardless of trigger.
 | source | gives |
 |---|---|
 | `binaries/objdiff/report.json` | TU roster (unit name = `vostok/<module>/sources/<file>.cpp`), per-function mangled name, size, `fuzzy_match_percent` |
-| `binaries/rich/target/index.jsonl` | exe-level target inventory: rva, size, file, statement table (off/size/line), locals |
-| `binaries/rich/base/index.jsonl` | same for our build; refreshed by every `vostok build` |
+| `binaries/pdb/target/evidence.sqlite` | exe-level target inventory: rva, size, file, statement table (off/size/line), locals |
+| `binaries/pdb/base/evidence.sqlite` | same for our build; refreshed by every `vostok build` |
 | target PDB **declaration records** (new parser dump, JSONL) | every function the ORIGINAL SOURCE declared - including methods the target binary inlined everywhere and emits no symbol for; class methods carry the true access/virtual/const |
 | sources tree | the function's source extent for the "touched" fingerprint |
 
@@ -111,7 +111,7 @@ A by-name intersection misses both variants, so they double-list as `target_only
 `base_only` even when the body is byte-identical. The pass canonicalizes the SAFE subset (fully-qualified plain
 identifiers, plus local statics with a plain qualified owner, numeric scope, and
 plain variable; anon-ns/`?A0x` hash, template, and cook scopes are deferred to a
-Rust-side demangler fix in pdb-parser), pairs 1:1 + identical statement-shape
+Rust-side demangler fix in vostok-pdb), pairs 1:1 + identical statement-shape
 only (never onto the wrong variable), and records the pair keyed by the TARGET sym.
 Because such a pair's base twin carries a *different* sym, the anti-join views
 exclude by **RVA** (`p.target_rva`/`p.base_rva`), not by sym, so both sides drop
@@ -124,7 +124,7 @@ correctness (paired/`target_only` counts), not the weighted README %.
 Computed per paired function from the two statement tables via sequence
 alignment (difflib over `(line-delta, size)` tuples; one in-memory pass over
 all functions). Approximation for QUEUE RANKING only - the per-function verdict
-stays `pdb_fetch --view structure-diff`.
+stays `vostok-pdb inspect --view structure-diff`.
 
 | class | meaning |
 |---|---|
@@ -176,7 +176,7 @@ configuration. Hashing the complete translation unit is required because LTCG
 can change a function after an edit to a different body in the same `.cpp`.
 
 When objdiff omits a function score, refresh may recover only a strict exact
-observation from the rich indexes: target and base must have equal size and an
+observation from the PDB evidence databases: target and base must have equal size and an
 identical non-empty ordered stream of normalized `(offset, length, instruction
 text)` tuples. If ICF selected different canonical mangled identities for the
 two RVAs, their rich aliases must also provide a unique unused base RVA with the
@@ -222,7 +222,7 @@ hash, score, exact bit, and state identity already measured by the normal
 report/index pipeline.
 
 When the island artifacts are deliberately kept outside the canonical build
-tree, use `import-island --report <report.json> --base-index <index.jsonl>
+tree, use `import-island --report <report.json> --base <evidence.sqlite>
 --evidence <manifest.json>`. The tracked evidence manifest explicitly names
 each reviewed function and pins the candidate report/index SHA-256, expected
 score, module, and effective source hash. The importer updates only those
@@ -277,7 +277,7 @@ column and as `claude@NOTE:` at the function - never in commit messages
 
 ## Parser dependency
 
-A new vostok-pdb-parser dump: declaration records -> JSONL (class, name,
+A new vostok-pdb dump: declaration records -> JSONL (class, name,
 signature, access, virtual/static/const, kind), deterministic order. Until the
 dump exists, `refresh` skips `declared_functions` ingestion with a warning and
 the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
@@ -288,8 +288,8 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
 > text file `config/match_state.tsv` and `vostok derive refresh` is the only
 > writer. Kept for the record of what the columns meant.
 
-- **Declarations are transient.** The dump (vostok-pdb-parser PR #25,
-  `pdb_declarations`; 222k rows / 85MB at `binaries/rich/target/
+- **Declarations are transient.** The dump (vostok-pdb PR #25,
+  `pdb_declarations`; 222k rows / 85MB at `binaries/pdb/target/
   declarations.jsonl`) is too big to store in the committed DB; `refresh`
   loads it in memory and persists only the per-function verdict in
   `base_only_status(mangled, status, detail)`. There is no `declared_functions`
@@ -337,7 +337,7 @@ was for. Every one of these verbs is now retired: the queries live in
 `vostok ledger`, and `refresh` is derive's only verb.
 
 1. this design doc
-2. schema + `refresh` ingest of report.json + both rich indexes; `pairs` with
+2. schema + `refresh` ingest of report.json + both PDB evidence databases; `pairs` with
    struct classification
 3. `list` + `report` (module/TU rollups) + `sql`
 4. `queue` (one batch per TU)

@@ -19,11 +19,11 @@ class receive_response :
 	private boost::noncopyable
 {
 public:
-	typedef boost::function< void ( network_core::packet_reader& ) >	on_packet_received_type;
+	typedef boost::function< void ( network_core::packet_reader& ) >	on_packed_received_type;
 
 	// Target emits this constructor only inline in tcp_packet_client::on_packet_received.
 	inline			receive_response	(
-			on_packet_received_type const& receiver,
+			on_packed_received_type const& receiver,
 			memory::doug_lea_allocator& allocator,
 			network_core::tcp_packet const& packet
 		) :
@@ -52,7 +52,7 @@ public:
 	}
 
 private:
-	on_packet_received_type		m_receiver;
+	on_packed_received_type		m_receiver;
 	memory::doug_lea_allocator&	m_allocator;
 	network_core::tcp_packet const&		m_packet;
 }; // class receive_response

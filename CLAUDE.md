@@ -63,8 +63,9 @@ in the same order, each compiling to the same bytes. The same bytes over a diffe
 partition is a false win: a 100% `cur` on a `QUANTITY` row. The parser's two-sided
 diff is the verdict:
 
-    pdb_fetch --target-index binaries/rich/target/index.jsonl \
-              --base-index binaries/rich/base/index.jsonl \
+    python3 -m vostok pdb inspect \
+              --target binaries/pdb/target/evidence.sqlite \
+              --base binaries/pdb/base/evidence.sqlite \
               --function 'weapon_core::tick' --view structure-diff
 
 It lists only the diverging statements, tagged, and ends with `STRUCTURE MATCH`
@@ -91,7 +92,7 @@ inline-vs-call or LTCG call-boundary difference: confirm it with
 rather than bending the source to the bytes. The ledger's `cls` column
 (`QUANTITY`, `SPLIT`, `SIZE`, `MATCH`) is only an approximation of this verdict;
 `QUANTITY` and `SPLIT` rows are where to look first. Definitions and the deeper
-PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/pdb_topology.md`.
+PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/vostok-pdb topology.md`.
 
 ## Matching rules
 
@@ -100,7 +101,7 @@ PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/pdb_to
   and assembly before writing a body; never fabricate a function, type, override
   or symbol to gain percentage, and never change another unit to steer a caller's
   inlining. Match one translation unit at a time.
-- Evidence beats taste: `pdb_fetch --view target|base|structure-diff` for
+- Evidence beats taste: `vostok-pdb inspect --view target|base|structure-diff` for
   disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
   for control flow (its exit code 1 is an answer, read the printed verdict),
   `binaries/structure/target/headers` for class layout and vtable order.
@@ -117,7 +118,7 @@ PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/pdb_to
 
 One package, run as `python3 -m vostok ...` (`python3 -m vostok` maps the surface):
 `core/` (paths, tsv, symbols, log, wine, fmt - blind helpers), `ledger/`, `derive/`
-(report + rich indexes -> ledger), `sema/` (control-flow views), `build/`, `diff/`,
+(report + PDB evidence databases -> ledger), `sema/` (control-flow views), `build/`, `diff/`,
 `tool/`, `shaders/`, `data/`, `tests/`. Every repo path is spelled once, in
 `core/paths.py` - add new ones there. After editing anything under `scripts/`, run
 `ruff check scripts/` and `python3 -m vostok.tests.test_match_db`. If you change

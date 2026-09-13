@@ -34,7 +34,7 @@ name on the target side.
 
 Verify the source is still correct WITHOUT objdiff, by RVA (name-independent):
 ```
-pdb_fetch --target-index ... --base-index ... --function <fn> --view diff --rva 0x<base-rva-of-this-overload>
+vostok-pdb inspect --target ... --base ... --function <fn> --view diff --rva 0x<base-rva-of-this-overload>
 ```
 The two-sided diff identifies each overload independently even though objdiff's report
 cannot. Exact complete rich instruction streams are correctness-facing evidence and are

@@ -5,7 +5,7 @@ confidence: 9/10
 variants: inline-vs-call-trivial-getter.md, outline-empty-virtual.md
 
 When the target emits `call accessor` for a trivial accessor defined IN the class body
-(implicitly inline) and the accessor is a REAL standalone target symbol (pdb_rich_query
+(implicitly inline) and the accessor is a REAL standalone target symbol (vostok-pdb inspect
 --list), declare it in the header and define it in the .cpp - /GL then stops inlining it
 at call sites. Not one instruction: the inlined temp grows the frame and cascades the
 whole function's register allocation.

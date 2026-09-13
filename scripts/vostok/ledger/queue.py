@@ -11,7 +11,7 @@ handled, and PRESERVES human-authored BLOCKED status + cause across regen.
 Idempotent (running twice produces the same file).
 
 SOURCE OF TRUTH: `vostok.derive` itself, run live (~40 s over report.json and
-the two rich indexes) - there is no database to query, so this projection cannot
+the two PDB evidence DBs) - there is no ledger database to query, so this projection cannot
 drift from a stale one. It classifies every paired function's `struct_class`
 from the two statement tables:
 
@@ -32,7 +32,7 @@ LOCALS: the classifier primarily aligns on statement sizes, with an exact
 normalized-PDB-line fallback for equal-count rows. It does NOT independently surface
 named-local divergence. "Locals are structure" (sushi); that work shows up inside
 QUANTITY/SPLIT/SIZE rows and the authoritative per-function local check stays
-`pdb_fetch --view structure-diff`. There is no separate LOCALS section because the
+`vostok-pdb inspect --view structure-diff`. There is no separate LOCALS section because the
 derivation carries no LOCALS class - see the doc's note.
 
 TARGET_ONLY: unpaired real bodies (framed, >=1 statement) - genuine MISSING
@@ -41,7 +41,7 @@ structure - get their own section.
 vostok diff layout CAVEAT: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases; Phase A proved 4 of 5 "resources size
 mismatches" were source-parse false positives). This queue therefore reads
-`struct_class` + (per function) `pdb_fetch --view structure-diff`, the
+`struct_class` + (per function) `vostok-pdb inspect --view structure-diff`, the
 authoritative oracles, NOT layout_diff.
 
 BLOCKED semantics (persistent, like enum_queue):
@@ -118,7 +118,7 @@ def live_set(declarations=False):
     """(primary, size, target_only) rows, re-derived from the artifacts.
 
     There is no cache to query: the structure classification comes from the
-    derivation itself (report.json + the two rich indexes, ~40 s) and the park
+    derivation itself (report.json + the two PDB evidence DBs, ~40 s) and the park
     state from the committed ledger. That is the point - a projection cannot
     drift from a source of truth it recomputes.
     """
@@ -309,10 +309,10 @@ logging, network_core, network, particle, physics, scaleform, sound, survarium,
 ui, vfs, vostok`.
 
 Source of truth: the derivation itself (`scripts/vostok/derive/`,
-ledger_design.md), re-run live over report.json and the rich indexes, which
+ledger_design.md), re-run live over report.json and the PDB evidence DBs, which
 classifies each paired function's `struct_class` from the two statement tables.
 This queue PROJECTS that classification - the authoritative per-function verdict
-stays `pdb_fetch --view structure-diff`.
+stays `vostok-pdb inspect --view structure-diff`.
 
 ## Sections
 
@@ -333,12 +333,12 @@ LOCALS note: "locals are structure" (sushi), but the classifier aligns on
 statement sizes/PDB line geometry and does not independently surface named-local
 divergence, so there is no standalone LOCALS section - that work rides inside the
 QUANTITY / SPLIT / SIZE rows and is checked per function with
-`pdb_fetch --view structure-diff`.
+`vostok-pdb inspect --view structure-diff`.
 
 vostok diff layout caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
 size mismatches" were source-parse false positives). This queue therefore trusts
-the derived struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
+the derived struct_class + `vostok-pdb inspect --view structure-diff`, not layout_diff.
 
 ## Persistence / BLOCKED semantics (like enum_queue)
 

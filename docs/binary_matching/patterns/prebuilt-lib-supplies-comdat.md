@@ -1,6 +1,6 @@
 # A prebuilt `.lib` supplies the COMDAT: base is unpaired AND compiled for a different ISA
 tags: cpp:comdat cpp:inline cpp:ctor | asm:fld1 asm:fldz asm:movss asm:xorps | topic:pairing topic:compiler-context topic:wall
-symptoms: target function has a delinked symbol and a real body, base emits NO symbol at all (its objdiff unit lacks it, `pdb_rich_query --function` finds nothing) yet the call site links; the code that IS in the base exe uses x87 (`fld1`/`fldz`/`fst`) where the target uses SSE (`xorps`/`movss`); the tree has a declaration and no definition
+symptoms: target function has a delinked symbol and a real body, base emits NO symbol at all (its objdiff unit lacks it, `vostok-pdb inspect --function` finds nothing) yet the call site links; the code that IS in the base exe uses x87 (`fld1`/`fldz`/`fst`) where the target uses SSE (`xorps`/`movss`); the tree has a declaration and no definition
 confidence: 9/10
 
 When a module links a **prebuilt** library alongside its own sources, the linker can
@@ -30,7 +30,7 @@ for l in glob.glob("binaries.prebuilt/**/*.lib", recursive=True):
 EOF
 # c) the linked code is outside our compile: decode the call site's E8
 #    displacement out of binaries/Win32/survarium-dx11-win32-gold.exe and look the
-#    resulting rva up in binaries/rich/base/index.jsonl -- NO record.
+#    resulting rva up in binaries/pdb/base/evidence.sqlite -- NO record.
 ```
 
 `strings -a <lib> | grep '\.obj$'` names the objects and usually the tree they were

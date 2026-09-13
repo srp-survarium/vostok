@@ -8,7 +8,7 @@ variants: strip-pointer-delete-resource.md, free-vs-delete-impl.md
 the frame by 4: TARGET calls the wrapper (`<allocator>::malloc_impl`, `delete_helper
 <alloc,T>`), BASE inlines the wrapper to the leaf (`try_pop`; `delete_helper_impl<...,
 call_destructor_predicate>` with the predicate bool materialized at the site). TELL:
-pdb_rich_query finds the wrapper at a real rva in target only. Source macros correct;
+vostok-pdb inspect finds the wrapper at a real rva in target only. Source macros correct;
 mark PARTIAL.
 
 Evidence: bullet_manager add_decal (malloc_impl @target 0xae5c0), free_bullet (delete_helper @0xae9f0, delete_helper_impl @0xaed80); bullet_functor_mt_allocator.

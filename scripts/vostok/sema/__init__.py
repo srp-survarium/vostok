@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """sema - CONTROL-FLOW views over the delinked base<->target function pair.
 
-The layer vostok did not have. `pdb_fetch --view structure-diff` compares SOURCE
-STATEMENTS and `pdb_fetch --view diff` compares INSTRUCTIONS (objdiff-core,
+The layer vostok did not have. `vostok-pdb inspect --view structure-diff` compares
+SOURCE STATEMENTS and `vostok-pdb inspect --view diff` compares INSTRUCTIONS,
 operand/reloc aware); neither says anything about the shape of the control-flow
 graph. A branch that lands on a different basic block is, to both of those views,
 either invisible or an uninterpretable pair of absolute addresses:
@@ -18,7 +18,7 @@ two sides become comparable and a uniform displacement shift compares EQUAL whil
 a genuine retarget does not. Design + evidence: docs/binary_matching/sema_tools.md.
 
 Both sides come out of the same delinker and the same disassembler
-(`pdb_fetch --view target` / `--view base` over `binaries/rich/{target,base}`),
+(`vostok-pdb inspect --view target` / `--view base` over the evidence DBs),
 so - unlike the two-disassembler setups this idea comes from - almost no
 instruction-spelling normalization is needed: only the branch operand is masked.
 Every other textual difference between the two sides is a real byte difference.
@@ -57,17 +57,17 @@ differ by the 0x10000 image base, so an unlabelled number is a 64 KB error
 waiting to happen - paste an RVA where a VA belongs and you land inside a
 DIFFERENT function, with nothing to complain about it:
 
-    rva=      what the rich indexes and the ledger STORE; pdb_fetch's `--rva`
+    rva=      what the PDB evidence DBs and ledger store; inspect's `--rva`
     va=       rva + image_base (0x10000) - what IDA shows and what carcass
-              comments and bug reports quote; pdb_fetch's `--va`
+              comments and bug reports quote; inspect's `--va`
     +0xNN     a function-RELATIVE offset (xref call sites, block starts). Never
               an address, and never image-based.
 
 `sema rva` prints BOTH forms of each side's address so the reader never has to
-do the arithmetic; pdb_fetch labels its own headers the same way and names its
+do the arithmetic; vostok-pdb labels its own headers the same way and names its
 structure-diff columns `t.va`/`b.va`. Its FLAGS (`--rva`, `--va`, `--address`,
 `--offset`) say which kind they take and are unchanged by any of this. A stale
-`nix develop` shell can still hold a pdb_fetch that prints bare addresses - the
+`nix develop` shell can still hold a stale vostok-pdb - the
 NUMBERS are the same either way, so a value comparison against it stays valid.
 
 rc: 0 = answered YES, 1 = answered NO, 2 = error. WHAT the answer is about is

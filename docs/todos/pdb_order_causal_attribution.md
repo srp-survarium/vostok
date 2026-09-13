@@ -112,7 +112,7 @@ The harness compiles only tiny VS2008 fixtures, normally with `/Z7` and with a
 targeted `/Zi` control where compiler-PDB behavior matters. It links without the
 CRT and never builds game sources. It keeps source/output paths fixed and writes
 exact commands, linker logs, PDB/EXE hashes, copied artifacts, full
-`pdb_topology --order --json` reports, and compact channel summaries under
+`vostok-pdb topology --order --json` reports, and compact channel summaries under
 `binaries/gen/pdb-order-probes/`. That directory is generated and replaced by
 the next run.
 
@@ -203,7 +203,7 @@ dependency with a compiler switch.
 
 ### Named-type provenance
 
-`pdb_topology --order` now reports `named_type_module_references`. It joins a
+`vostok-pdb topology --order` now reports `named_type_module_references`. It joins a
 named complete TPI index to direct module symbol references from procedures,
 locals, data, constants, UDT symbols, and related typed records, preserving DBI
 module order. For the shared-type fixture it shows both modules and which is
@@ -524,7 +524,7 @@ earliest direct-reference module for both types in both PDBs, so module order
 alone cannot explain them. This is a triage reduction, not ten authorized source
 edits: the retained symbol sequence inside the module must also be checked.
 
-`pdb_topology --order --type <substring>` performs that narrower query. It
+`vostok-pdb topology --order --type <substring>` performs that narrower query. It
 reports each selected type's physical TPI position and direct module sequence.
 The full module-symbol stream and separate procedure views are still required
 to locate exact references. Two production pairs establish the current limits:
@@ -953,7 +953,7 @@ staged archives before the first link. They accept those roots alongside the
 fixed release contract, so another restage cannot silently turn a
 path-provenance difference into thousands of missing functions. Raw PDB
 comparison still exposes the different paths. An intermediate end-to-end replay
-that recognized the C++ archive root expanded the rich index from 25,233 to
+that recognized the C++ archive root expanded the PDB evidence database from 25,233 to
 43,821 rows, exactly recovering those 18,588 procedures; the generalized reader
 also covers the separately recorded C-library SDK root. That second replay
 produced 44,555 rich rows versus 44,542 in the unaffected xray worktree and

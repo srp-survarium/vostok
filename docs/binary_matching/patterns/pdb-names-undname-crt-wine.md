@@ -19,7 +19,7 @@ enums and postfix-const-plus-space —
     pair<unsigned int const,...>
 
 Uniformly, both sides: ~1,700 elaborated records in retail, zero in ours.
-It looks like a third mystery printer, and once made `pdb_divergence` drown
+It looks like a third mystery printer, and once made `vostok-pdb divergence` drown
 in the spelling delta.
 
 ## Cause (proven 2026-08-25, probe A/B — msvcr90; refined mechanism)
@@ -95,7 +95,7 @@ Traps, all hit while landing this:
   verify the override with a same-process disk read of user.reg; trust the
   `reg add /f`.
 
-A pdb-parser `canon_display()` normalization (commit 93165d2) once compensated
+A vostok-pdb `canon_display()` normalization (commit 93165d2) once compensated
 for this on the comparison side by stripping the elaboration keywords from both
 sides. It is now REMOVED (reverted in e4ed03e, flake re-pinned): the native CRT
 makes both PDBs spell records the same at the source, so the normalization was

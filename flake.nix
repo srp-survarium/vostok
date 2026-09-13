@@ -11,56 +11,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
-    # so they can't be used as derivation sources in sandboxed builds).
-    vostok-pdb-parser-src = {
-      # Pinned to the branch tip, newest first. Re-track master once these land.
-      # Output is gitignored/reference-only, so a bump can never move the bytes.
-      #
-      #   6262ce1  extends focused DBI queries with module-local file/C13 order.
-      #   90e7d9e  adds causal module/type/frame evidence and a focused DBI query.
-      #   1eee4a0  decodes residual DBI string/hash tables, TPI/IPI hashes and
-      #            index maps, GSI/PSI maps, C13 inner records, and optional
-      #            FPO/frame-data streams instead of hiding them as raw bytes.
-      #   5cd58bd  compares the complete observable MSF/PDB stream topology:
-      #            allocation pages, stream roles, DBI/TPI/IPI/symbol/module
-      #            order, source/line records, and raw fallbacks.
-      #   50a8f49  source-definition order requires both attributed line order
-      #            and compiland procedure-symbol order, rejecting #line-only
-      #            inversions.
-      #   c8124fd  normalized order-distance/locality metrics, causal grouping
-      #            by library/record kind, and explicit base/target definition
-      #            orders for actionable source rows.
-      #   ee1cfd5  raw class variant/multiplicity comparison and physical
-      #            DBI/TPI/global/module-symbol order diagnostics.
-      #   e4ed03e  reverts 93165d2: the undname-style record-name split was a
-      #            Wine artifact (its builtin msvcr90 __unDName renders enums
-      #            bare where Microsoft's elaborates them). The build now loads
-      #            the native VC90 CRT (see vostok.build.native_crt), so both
-      #            PDBs spell records the same natively - the normalization was
-      #            redundant AND masked real class-vs-struct source drifts.
-      #   93165d2  (reverted) pdb_divergence headers side normalized
-      #            undname-style record names.
-      #   d0eb201  gitignores that checkout's own nix gcroots.
-      #   c9ad86c  every printed address says whether it is a VA or an RVA
-      #            (headers carry both; columns are `va`/`t.va`/`b.va`). The
-      #            rich indexes and the ledger speak RVA and this tool spoke
-      #            VA, differing by the image base with nothing to say which -
-      #            paste one for the other and you land 64 KB off, silently.
-      #   01020c6  pdb_divergence joins source functions by mangled symbol.
-      #   7460355  `pub mod divergence;` + the `gen_sources::for_each_function`
-      #            compiland walker, so `pdb_divergence` (the base-vs-target
-      #            structure-divergence verifier) builds on a clean checkout.
-      #   d757820  pdb_divergence itself.
-      #   c5a4d0f  C++ `private:`/`protected:`/`public:` section labels for
-      #            class members (CV_access_t), narrowing `/* no source */`.
-      #   89d3a1e  demangles `??__E`/`??__F` thunks to the target PDB's
-      #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
-      #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
-      #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/6262ce150b12729b865a7eca6d82ad563256ba20";
-      flake = false;
-    };
     vcproj2ninja-src = {
       url = "github:srp-survarium/vcproj2ninja";
       flake = false;
@@ -85,13 +35,6 @@
       url = "github:srp-survarium/vostok-resources-db";
       flake = false;
     };
-    # pdb_fetch.nvim - the in-editor match views (:Vostok). Auto-loaded into nvim
-    # by the dev shell's shim (see shellHook). Bump with `nix flake update
-    # pdb-fetch-nvim-src` to pick up new plugin versions on the next `nix develop`.
-    pdb-fetch-nvim-src = {
-      url = "github:srp-survarium/pdb_fetch.nvim";
-      flake = false;
-    };
     bullet-2_79-src = {
       # The first official 2.79 revision. Multiple stock target-PDB MD5s land
       # exactly on this commit after the repository's LF -> CRLF conversion.
@@ -100,7 +43,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, pdb-fetch-nvim-src, bullet-2_79-src }:
+  outputs = { self, nixpkgs, rust-overlay, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, bullet-2_79-src }:
     let
       system = "x86_64-linux";
 
@@ -125,20 +68,18 @@
       mingw = pkgs.pkgsCross.mingwW64;
 
       # ---------------------------------------------------------------------------
-      # vostok-pdb-parser - Linux binary, generates C++ stubs from PDB files.
-      # Run: vostok-pdb-parser --pdb-path survarium.pdb --output-path ../vostok-structure
-      #
-      # cargoHash: update by running `nix build .#vostok-pdb-parser` after bumping
-      # the input (nix flake update vostok-pdb-parser-src) - Nix reports the new hash.
+      # Unified in-repo PDB/PE/source evidence engine.
       # ---------------------------------------------------------------------------
-      vostok-pdb-parser = nightly-rustPlatform.buildRustPackage {
-        pname = "vostok-pdb-parser";
+      vostok-pdb = nightly-rustPlatform.buildRustPackage {
+        pname = "vostok-pdb";
         version = "0.1.0";
-        src = vostok-pdb-parser-src;
-        # Keep the campaign-specific raw CodeView topology query beside this
-        # repository while it is evaluated for upstreaming into the parser.
-        patches = [ ./patches/vostok-pdb-parser/focused-type-order.patch ];
-        cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
+        src = ./tools/vostok-pdb;
+        cargoHash = "sha256-AoIYYQaXoQWTz29FjTxTaNAvPSe0lQIKP68oFa2U3vs=";
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        postInstall = ''
+          wrapProgram "$out/bin/vostok-pdb" \
+            --set LIBCLANG_PATH "${pkgs.llvmPackages.libclang.lib}/lib"
+        '';
       };
 
       # ---------------------------------------------------------------------------
@@ -521,7 +462,7 @@
           vostok-data-objdiff-cli
 
           # Nix-built tools and assets - all evaluated when entering the shell.
-          vostok-pdb-parser
+          vostok-pdb
           vostok-delinker
           vostok-data-delinker
           vostok-resources-db
@@ -586,12 +527,12 @@
 
           python3 -m vostok.tool.toolchain
 
-          # Wrap nvim to auto-load pdb_fetch.nvim (:Vostok match views), leaving the
+          # Wrap nvim to auto-load the in-tree Vostok PDB frontend (:Vostok match
+          # views), leaving the
           # user's own config intact. A wrapper SCRIPT on PATH (not a shell function)
           # survives `nix develop --command fish`; the real nvim is resolved before we
           # shadow it, VOSTOK_NVIM_WRAPPED guards nested shells, and rtp points at the
-          # flake-pinned plugin so `nix flake update pdb-fetch-nvim-src` ships new
-          # versions on the next `nix develop`.
+          # in-tree plugin from the active worktree.
           if [ -z "''${VOSTOK_NVIM_WRAPPED:-}" ] && command -v nvim >/dev/null 2>&1; then
             _vnv_bin="$VOSTOK_DIR/binaries/nvim-shim"
             mkdir -p "$_vnv_bin"
@@ -606,11 +547,11 @@
           # than write a shim that execs "".
           if [ -n "''${_vnv_real:-}" ]; then
             printf '#!/bin/sh\nexec "%s" --cmd "set rtp^=%s" "$@"\n' \
-              "$_vnv_real" "${pdb-fetch-nvim-src}" > "$_vnv_bin/nvim"
+              "$_vnv_real" "$VOSTOK_DIR/tools/vostok-pdb/editor/nvim" > "$_vnv_bin/nvim"
             chmod +x "$_vnv_bin/nvim"
             export PATH="$_vnv_bin:$PATH"
             export VOSTOK_NVIM_WRAPPED=1
-            echo "[vostok] nvim       : WRAPPED -> auto-loads pdb_fetch.nvim (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
+            echo "[vostok] nvim       : WRAPPED -> auto-loads vostok-pdb (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
           fi
         '';
       };
@@ -669,7 +610,7 @@
 
     in {
       packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vostok-data-delinker vostok-resources-db vcproj2ninja
+        inherit vostok-pdb vostok-delinker vostok-data-delinker vostok-resources-db vcproj2ninja
           vostok-toolchain vostok-libs survarium
           objdiff objdiff-cli vostok-data-objdiff-cli dxsdk-shader-compiler;
         # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand

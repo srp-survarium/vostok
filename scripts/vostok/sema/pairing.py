@@ -4,8 +4,8 @@
 
 sema used to ask `binaries/match.db` for the pairing. That was a category
 error: the pairing is a BUILD FACT, and every fact it rests on already lives in
-the two files sema reads for disassembly - `binaries/rich/{target,base}/
-index.jsonl`. The cache only held a derived copy, so a sema that needed it could
+the two files sema reads for disassembly - `binaries/pdb/{target,base}/
+evidence.sqlite`. The cache only held a derived copy, so a sema that needed it could
 not answer on a tree that had never run `vostok derive`.
 
 The passes are `vostok.derive.pairing`'s, run here over sema's inputs, because

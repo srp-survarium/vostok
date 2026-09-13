@@ -10,12 +10,16 @@ namespace network {
 
 class string_order : public order {
 public:
+	typedef boost::function< void ( pcstr ) >			functor_type0;
+	typedef boost::function< void ( pcstr, pcstr ) >		functor_type1;
+	typedef boost::function< void ( pcstr, pcstr, pcstr ) >	functor_type2;
+
 	// claude@NOTE: only diff is `sub esp` - target reserves one untouched ghost
 	// temp dword per strings::duplicate call; zero PDB locals on either side,
 	// whole-program LTCG inline-consideration context (assembly_patterns.md)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr ) > const&	functor,
+			functor_type0 const&	functor,
 			pcstr const					string0
 		) :
 		m_functor0	( functor ),
@@ -31,7 +35,7 @@ public:
 	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x2)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr, pcstr ) > const&	functor,
+			functor_type1 const&	functor,
 			pcstr const					string0,
 			pcstr const					string1
 		) :
@@ -48,7 +52,7 @@ public:
 	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x3)
 	inline			string_order	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr, pcstr, pcstr ) > const&	functor,
+			functor_type2 const&	functor,
 			pcstr const					string0,
 			pcstr const					string1,
 			pcstr const					string2
@@ -87,9 +91,9 @@ public:
 	}
 
 private:
-	const boost::function< void ( pcstr ) >					m_functor0;
-	const boost::function< void ( pcstr, pcstr ) >			m_functor1;
-	const boost::function< void ( pcstr, pcstr, pcstr ) >	m_functor2;
+	const functor_type0		m_functor0;
+	const functor_type1		m_functor1;
+	const functor_type2		m_functor2;
 	char* const					m_string0;
 	char* const					m_string1;
 	char* const					m_string2;

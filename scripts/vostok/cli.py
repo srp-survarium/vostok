@@ -3,7 +3,7 @@
 """vostok - the umbrella CLI over the matching toolchain.
 
     vostok build [ninja args...]   THE canonical build: ninja under Wine, then
-                                   delink + structure + rich, then the derive
+                                   delink + structure + PDB evidence, then derive
                                    and ledger refresh and the README block
     vostok ledger <verb>           the committed campaign record: report / list
                                    / queue / tried / park / open, plus `readme`
@@ -14,6 +14,7 @@
     vostok sema <view>             read-only control-flow views over one
                                    base<->target function pair
     vostok data <verb>             independent PDB/image data matching lane
+    vostok pdb <verb>              PDB/PE/source evidence and structure views
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
     vostok tool <name>             operational helpers: clangd / toolchain /
@@ -27,7 +28,7 @@ learns which verbs earn their keep and which ones keep failing under agents.
 
 Every module is also a direct entry (`python3 -m vostok.sema xref ...`), which
 is the only spelling for the ones this umbrella does not name: the build steps
-(`vostok.build.ninja`, `.ninja_regen`, `.generate_{delink,structure,rich}`,
+(`vostok.build.ninja`, `.ninja_regen`, `.generate_{delink,structure,pdb}`,
 `.gfx`), `vostok.ledger.store` and `vostok.core.symbols`.
 """
 
@@ -38,7 +39,6 @@ import sys
 from vostok.core import log as _log
 
 DIFF = {"layout": "vostok.diff.layout", "order": "vostok.diff.order",
-        "declarations": "vostok.diff.declarations",
         "tu-order": "vostok.diff.tu_order", "enums": "vostok.diff.enums",
         "enums-compare": "vostok.diff.enums_compare"}
 TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
@@ -66,9 +66,10 @@ def main(argv: list[str] | None = None) -> int:
     cmd, rest = argv[0], argv[1:]
     if cmd == "build":
         return _run("vostok.build.rebuild", rest, "vostok build")
-    if cmd in ("ledger", "derive", "sema", "data"):
+    if cmd in ("ledger", "derive", "sema", "data", "pdb"):
         mod = {"ledger": "vostok.ledger", "derive": "vostok.derive.cli",
-               "sema": "vostok.sema", "data": "vostok.data.cli"}[cmd]
+               "sema": "vostok.sema", "data": "vostok.data.cli",
+               "pdb": "vostok.pdb"}[cmd]
         sys.argv = [f"vostok {cmd}", *rest]
         return importlib.import_module(mod).main() or 0
     for name, table in (("diff", DIFF), ("tool", TOOLS)):

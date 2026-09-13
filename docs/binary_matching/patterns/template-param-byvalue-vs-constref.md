@@ -7,7 +7,7 @@ variants: param-pointer-const-mangling.md
 A by-value class param is constructed straight into the arg slot (`push ecx; mov esi,esp`)
 and callee-destroyed (caller just `add esp,4`); a const& param materializes a frame local
 the CALLER destroys (`lea ecx,[temp]; call intrusive_ptr::dec`). The mangled letters
-(`V?$...` by value vs `ABV?$...` const&) gate COMDAT pairing - grep both rich indexes.
+(`V?$...` by value vs `ABV?$...` const&) gate COMDAT pairing - grep both PDB evidence databases.
 
 ```cpp
 template < typename P >

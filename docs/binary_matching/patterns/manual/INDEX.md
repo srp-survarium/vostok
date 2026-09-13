@@ -4,7 +4,7 @@
 1. **Foundational probes** — write a minimal snippet, compile it with the real toolchain,
    read the `/FAcs` machine-code listing. Recipe below.
 2. **Real-function mining** — grep the engine source for a genuinely-used idiom, then read the
-   shipped TARGET asm of a real function with `pdb_fetch --view target` (cited per pattern).
+   shipped TARGET asm of a real function with `vostok-pdb inspect --view target` (cited per pattern).
 
 These complement the diff-recovery patterns in `../` — those tell you what a *divergence*
 means; these tell you what to **write** to get a shape (the matcher's "write a first
@@ -64,7 +64,7 @@ statement-level shapes documented here.
 - [Scalar float math = movss/addss/mulss on xmm, ONE component at a time, base ptr reloaded per component (/Od)](scalar-float-sse2-ops.md) — c9 — cpp:float | asm:movss asm:addss asm:mulss | topic:codegen-idiom — f3 0f 10/58/59, base pointer reloaded per component, __fltused, __real@<hex>, float global @@3MA
 - [Returning a struct by value: >8 bytes = hidden return-pointer (sret); <=8-byte POD = edx:eax](struct-by-value-return-sret.md) — c8 — cpp:return cpp:member | asm:lea asm:push asm:call asm:mov | topic:convention — lea slot/push as extra arg + result via eax (sret), or mov eax/mov edx for an 8-byte POD
 
-## Real-function-mined engine idioms (target asm via pdb_fetch)
+## Real-function-mined engine idioms (target asm via vostok-pdb inspect)
 
 ### Build reality
 - [Optimization level is PER-TU (.vcproj Optimization 0 vs 3) — read the asm to know which world you're in](tu-optimization-level-od-vs-ox.md) — c9 — cpp:for cpp:operator | asm:idiv asm:mul asm:add | topic:convention topic:ltcg — idiv vs magic-multiply, verbose iterator object vs register pointer, same source two codegens

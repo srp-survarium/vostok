@@ -6,7 +6,7 @@ The first command of an investigation: where each side lives, how big it is,
 how many statements it carries, and what the campaign knows about it (current
 %, hash-scoped max, structure class, attempts, status).
 
-Two sources, and the split is the point. The two rich indexes own the BUILD
+Two sources, and the split is the point. The two PDB evidence DBs own the BUILD
 facts - address, size, statements, owning file, both spellings of the name. The
 committed ledger (`config/match_state.tsv`) owns the CAMPAIGN's
 memory - the percentages, the structure verdict, how many matchers have tried,

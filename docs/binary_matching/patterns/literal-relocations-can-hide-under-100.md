@@ -10,7 +10,7 @@ normalizes data relocations and does not compare the referenced string bytes.
 ## Proof and handling
 
 Compare the ordered literal-symbol sets in
-`binaries/rich/{target,base}/index.jsonl`. Ignore only proven build-path
+`binaries/pdb/{target,base}/evidence.sqlite`. Ignore only proven build-path
 metadata such as `__FILE__`. For every other difference, decode it with
 `vostok sema strings <fn>` and confirm long or truncated values directly with
 `strings -a binaries/nix-store/survarium-game/survarium.exe`.

@@ -6,7 +6,7 @@ variants: outline-accessor-to-recover-call.md, inline-vs-call-trivial-getter.md
 
 A derived override calling the empty base implementation (`Base::execute();` where the
 base defines `{}` inline in the header) shows target `call Base::execute` while /GL base
-inlines the no-op away. Both rich indexes can still list a standalone Base::execute -
+inlines the no-op away. Both PDB evidence databases can still list a standalone Base::execute -
 a PER-call-site whole-program inline decision.
 
 ```cpp

@@ -7,7 +7,7 @@ work queue of every enum we still owe.
 
 Two sides, two very different shapes:
 
-  TARGET  binaries/structure/target/headers - pdb-parser's normalized dump. Since
+  TARGET  binaries/structure/target/headers - vostok-pdb's normalized dump. Since
           the all-enums type-stream-walk bump the builder emits EVERY enum it sees
           (~1150 unique names), as either a standalone file under an `enums/` dir
           or a nested `enum cls::foo` inside the owning class header. Bodies are
@@ -41,11 +41,11 @@ vostok::render:: split into a DEFERRED bucket - render is matched last):
   FIELD-MISMATCH - same qualified enum in both, but the enumerator set or values
                    differ (missing / extra / renamed members, or value diffs).
 
-EXPORT-COMPLETENESS (--check-export): the structure builder (pdb-parser) is the
+EXPORT-COMPLETENESS (--check-export): the structure builder (vostok-pdb) is the
 only tool that reads this BigMSF PDB (llvm-pdbutil chokes on it), so it is also
 the type-stream oracle. We regenerate a throwaway target dump and confirm the
 in-repo tree carries every enum the builder extracts; any builder-level NAME drop
-(pdb-parser's "enum X seen with differing enumerator counts; keeping first"
+(vostok-pdb's "enum X seen with differing enumerator counts" warning
 collision dedup) is surfaced separately as a builder gap, distinct from base gaps.
 
 QUEUE SEMANTICS (also documented at the top of enum_queue.md):
@@ -86,7 +86,7 @@ ENGINE_PREFIXES = ("survarium::", "vostok::")
 RENDER_PREFIX = "vostok::render::"
 
 # ---------------------------------------------------------------------------
-# TARGET parsing (pdb-parser normalized dump)
+# TARGET parsing (vostok-pdb normalized dump)
 # ---------------------------------------------------------------------------
 
 # `namespace X {` opener(s). A file may chain several on one line:
@@ -102,7 +102,7 @@ _ENUMERATOR_RE = re.compile(
 
 def _join_qual(ns_stack: list[str], name: str) -> str:
     """Build the qualified enum name, collapsing a redundant leading namespace
-    duplicate. The pdb-parser dump sometimes re-qualifies the enum on its own
+    duplicate. The vostok-pdb dump sometimes re-qualifies the enum on its own
     line, e.g. `enum survarium::action_type` INSIDE `namespace survarium {`,
     which would otherwise yield `survarium::survarium::action_type`. If the name
     already starts with (a suffix of) the namespace stack, drop the overlap so
@@ -499,7 +499,7 @@ def _intended_base_location(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Export-completeness (pdb-parser is the type-stream oracle)
+# Export-completeness (vostok-pdb is the type-stream oracle)
 # ---------------------------------------------------------------------------
 
 def check_export(target_dir: Path) -> tuple[list[str], list[str]]:
@@ -508,10 +508,10 @@ def check_export(target_dir: Path) -> tuple[list[str], list[str]]:
 
       oracle_only - enums the builder extracts that are MISSING from the in-repo
                     tree (stale/regenerable tree gap; empty if freshly regen'd).
-      collisions  - pdb-parser "differing enumerator counts; keeping first"
+      collisions  - vostok-pdb "differing enumerator counts" warnings
                     warnings (the only builder-level NAME drop).
     """
-    pdb_parser = os.environ.get("PDB_PARSER", "pdb_parser")
+    pdb_tool = os.environ.get("PDB_TOOL", "vostok-pdb")
     survarium_bin = Path(os.environ.get("SURVARIUM_BIN", ""))
     pdb = survarium_bin / "survarium.pdb"
     if not pdb.is_file():
@@ -525,9 +525,9 @@ def check_export(target_dir: Path) -> tuple[list[str], list[str]]:
     with tempfile.TemporaryDirectory(prefix="enum_export_") as tmp:
         proc = subprocess.run(
             [
-                pdb_parser,
-                "--output-path", tmp,
-                "--pdb-path", str(pdb),
+                pdb_tool, "generate", "carcass",
+                "--output", tmp,
+                "--pdb", str(pdb),
                 "--engine-path", "c:/survarium/sources",
             ],
             stderr=subprocess.PIPE,
@@ -557,7 +557,7 @@ Generated/reconciled by `python3 -m vostok diff enums --write-queue`.
 This is a PERSISTENT queue of every engine enum (`survarium::` / `vostok::`,
 **excluding** `vostok::render::` - render is matched last; see the deferred
 bucket at the bottom) whose definition in our base sources does NOT yet match the
-original game (the TARGET pdb-parser dump under
+original game (the TARGET vostok-pdb dump under
 `binaries/structure/target/headers`).
 
 ## Semantics
@@ -701,7 +701,7 @@ def main() -> int:
                     help="include the deferred vostok::render:: bucket in the diff")
     ap.add_argument("--check-export", action="store_true",
                     help="cross-check the in-repo target tree against a fresh "
-                         "pdb-parser extraction (the type-stream oracle)")
+                         "vostok-pdb extraction (the type-stream oracle)")
     ap.add_argument("--write-queue", action="store_true",
                     help="reconcile docs/binary_matching/enum_queue.md")
     ap.add_argument("--regen-target", action="store_true",
@@ -775,7 +775,7 @@ def main() -> int:
                 print(f"enum {name}")
 
     if args.check_export:
-        print("\n=== EXPORT-COMPLETENESS (pdb-parser type-stream oracle) ===")
+        print("\n=== EXPORT-COMPLETENESS (vostok-pdb type-stream oracle) ===")
         oracle_only, collisions = check_export(args.target)
         print(f"  enums extracted by builder but MISSING from in-repo tree: "
               f"{len(oracle_only)}")

@@ -1,6 +1,6 @@
 # Build-flag comparison — target vs. base
 
-Generated with `pdb_build_info` (vostok-pdb-parser) from the per-compiland
+Historical report generated with the retired `pdb_build_info` frontend from the per-compiland
 `S_COMPILE3` / `S_ENVBLOCK` records in each PDB.
 
 ```
@@ -8,7 +8,7 @@ TARGET = survarium.pdb                    (original game)
 BASE   = survarium-dx11-win32-gold.pdb    (our VS2008 build)
 ```
 
-Reproduce:
+Original command (historical; this frontend is not shipped by `vostok-pdb`):
 
 ```bash
 pdb_build_info \

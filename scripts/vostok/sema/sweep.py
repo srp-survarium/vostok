@@ -106,7 +106,7 @@ def cmd_sweep(args):
     if tally.get("TRIMMED"):
         print("[TRIMMED = the trailing trim dropped more blocks than it kept, so the graph "
               "is a PREFIX of the function and no flow verdict about it is honest. Read "
-              "those with `pdb_fetch --view target|base` - see sema_tools.md.]")
+              "those with `vostok-pdb inspect --view target|base` - see sema_tools.md.]")
     print("[FLOW-SAME/IDENTICAL = not control flow: operands, regalloc, scheduling.]")
     print("[ORDER-ONLY = isomorphic CFG, different block LAYOUT - one merged exit placed "
           "elsewhere; usually downstream, not a per-branch bug.]")

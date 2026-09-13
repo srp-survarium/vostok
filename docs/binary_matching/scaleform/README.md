@@ -23,19 +23,19 @@ of the Scaleform D3D11 render HAL (`d3d1x_*`). Scaffolded in game **batch 12**
 
 ## The structure-generator gap (symbol-list provenance)
 
-This is the ONLY engine module the structure generator (`pdb_parser`) never
+This is the ONLY engine module the structure generator (`vostok-pdb`) never
 emitted a carcass for - a parser gap (see
 [../unanswered_questions.md](../unanswered_questions.md)), recorded in
 the triage log (`git show 885e1d4a4:temp/triage_log.md`, "Pass 5"). So unlike every other carcass, there is no
 canonical `binaries/structure/target/sources/vostok/scaleform/` tree to
 reassemble from.
 
-The ground truth instead is `binaries/rich/target/index.jsonl` (the addressed
+The ground truth instead is `binaries/pdb/target/evidence.sqlite` (the addressed
 symbol set). The batch-12 work-items were fabricated from it - one `*.md` per
 compiland/header listing every addressed VA + demangled signature - and parked
 in `temp/structure_queue/sources_scaleform/` (deleted as each was reproduced;
 the dir is now empty = module complete). When a stub signature was ambiguous,
-`pdb_fetch --view carcass/structure --function <fully::qualified::name>`
+`vostok-pdb inspect --view carcass/structure --function <fully::qualified::name>`
 recovered it.
 
 ~275 addressed functions across 10 compilands; the flash type bodies that game

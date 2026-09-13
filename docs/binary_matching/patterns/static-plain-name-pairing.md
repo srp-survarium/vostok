@@ -14,7 +14,7 @@ static float distance_from_box_center_to_point_on_shape( ... );   // internal li
 ```
 Confirm it cheaply: `llvm-nm` the delinked target `.obj` - the static prints as the bare
 `namespace::foo` text symbol while every sibling is `?foo@@...` mangled. Equivalently, read
-the `mangled` field of both rich indexes side by side:
+the `mangled` field of both PDB evidence databases side by side:
 
 ```
 # target index                       # base index
@@ -31,7 +31,7 @@ is why `custom_config.cpp`'s anonymous-namespace `sort_by_crc` / `convert_type` 
 Do not stop at "the same short name appears undecorated on one side and decorated on the
 other in the same unit" - that INVERTED form is rare (A9 found the one instance in all of
 `render`). The productive form is one-sided: *target undecorated, base decorated, same
-`file:`, same short name.* Join the two rich indexes on `(file, demangled function
+`file:`, same short name.* Join the two PDB evidence databases on `(file, demangled function
 identifier)`:
 
 ```python
@@ -67,10 +67,10 @@ a linkage mismatch, not a matching gap:
 
 ```sh
 python3 - <<'PY'
-import json
+from pathlib import Path
+from vostok.derive.index import load_index_records
 for side in ('target','base'):
-    for line in open(f'binaries/rich/{side}/index.jsonl'):
-        d = json.loads(line)
+    for d in load_index_records(Path(f'binaries/pdb/{side}/evidence.sqlite')):
         m = d.get('mangled','')
         if not m.startswith(('?','_')) and 'dynamic' not in m:
             print(side, d.get('file'), m)

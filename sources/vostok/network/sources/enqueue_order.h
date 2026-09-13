@@ -13,13 +13,18 @@ namespace network {
 
 class enqueue_order : public order {
 public:
+	typedef network_core::udp_match_packet			udp_match_packet;
+	typedef network_core::udp_match_stats			udp_match_stats;
+	typedef network_core::udp_match_packets_allocator_ptr	udp_match_packets_allocator_ptr;
+	typedef boost::function< void ( udp_match_packet& ) >	enqueue_type;
+
 	// Target emits this constructor only inline in match_client::enqueue.
 	inline			enqueue_order	(
-			boost::function< void ( network_core::udp_match_packet& ) > const& enqueuer,
-			network_core::udp_match_packet& packet,
-			network_core::udp_match_packets_allocator_ptr const& allocator,
-			network_core::udp_match_stats const& source_stats,
-			network_core::udp_match_stats& target_stats
+			enqueue_type const& enqueuer,
+			udp_match_packet& packet,
+			udp_match_packets_allocator_ptr const& allocator,
+			udp_match_stats const& source_stats,
+			udp_match_stats& target_stats
 		) :
 		m_copied_stats	( target_stats ),
 		m_enqueuer		( enqueuer ),
@@ -37,7 +42,7 @@ public:
 	// inline-vs-call wall as ~connect_order, not source-steerable.
 	virtual			~enqueue_order	( )
 	{
-		network_core::udp_match_packet* temp	= &m_packet;
+		udp_match_packet* temp	= &m_packet;
 
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
 
@@ -53,12 +58,12 @@ public:
 	}
 
 private:
-	network_core::udp_match_stats		m_copied_stats;
-	boost::function< void ( network_core::udp_match_packet& ) >	m_enqueuer;
-	network_core::udp_match_packet&		m_packet;
-	network_core::udp_match_packets_allocator_ptr	m_allocator;
-	network_core::udp_match_stats const&	m_source_stats;
-	network_core::udp_match_stats&		m_target_stats;
+	udp_match_stats			m_copied_stats;
+	enqueue_type			m_enqueuer;
+	udp_match_packet&		m_packet;
+	udp_match_packets_allocator_ptr	m_allocator;
+	udp_match_stats const&	m_source_stats;
+	udp_match_stats&		m_target_stats;
 }; // class enqueue_order
 
 STATIC_SIZE_ASSERT(enqueue_order, 0xB8);

@@ -19,4 +19,4 @@ option name was present in `sources/vostok/` when these files were imported.
 The old `engine_structure.txt` dump was not imported. The original retail PDB
 and the current PDB tools provide the function, address, and source-line
 information; see [target versus base](../../target-vs-base.md) and
-[PDB topology](../../binary_matching/pdb_topology.md).
+[PDB topology](../../binary_matching/vostok-pdb topology.md).

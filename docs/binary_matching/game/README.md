@@ -57,7 +57,7 @@ complete.
   `game_generate_shaders.h`, so the file stays in the queue until they land.
 - **The flash/scaleform code belongs to an original `vostok/scaleform` module
   that the structure generator never emitted** (the ONLY compiland gap in the
-  whole tree - the symbol lists were fabricated from the rich index, ~275
+  whole tree - the symbol lists were fabricated from the PDB evidence database, ~275
   addressed fns, incl. out-of-line `flash_movie`/`flash_value` bodies in
   `movie.cpp`/`value.cpp` and the Scaleform D3D11 HAL `d3d1x_*` pair files).
   **Batch 12 built this module** (`sources/vostok/scaleform/`, see

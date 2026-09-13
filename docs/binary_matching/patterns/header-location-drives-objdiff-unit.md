@@ -15,8 +15,8 @@ isn't even in objdiff.json (no matching target obj).
 Tell it apart from a real miss:
 ```
 # base vs target source attribution disagree:
-pdb_rich_query --index .../base/index.jsonl   --function <name> --list   # vostok/game_core/foo.h
-pdb_rich_query --index .../target/index.jsonl --function <name> --list   # vostok/game_core/sources/foo.h   <-- sources/ !
+vostok-pdb inspect --database binaries/pdb/base/evidence.sqlite --function '<name>' --list   # vostok/game_core/foo.h
+vostok-pdb inspect --database binaries/pdb/target/evidence.sqlite --function '<name>' --list # vostok/game_core/sources/foo.h
 # confirm the target's unit obj has it and the base's does NOT:
 objdiff-cli diff -p binaries/objdiff -u "<unit>" --format json -o - <sym>   # left(target) has it, right(base) empty
 ```

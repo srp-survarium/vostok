@@ -5,9 +5,9 @@
 One verb, because there is one thing to do. The derivation reads
 
   binaries/objdiff/report.json          per-TU roster + fuzzy %s
-  binaries/rich/target/index.jsonl      exe-level target inventory + statements
-  binaries/rich/base/index.jsonl        same for our build
-  binaries/rich/target/declarations.jsonl   PDB declaration records (optional)
+  binaries/pdb/target/evidence.sqlite      exe-level target inventory + statements
+  binaries/pdb/base/evidence.sqlite        same for our build
+  binaries/pdb/target/declarations.jsonl   PDB declaration records (optional)
 
 and writes config/match_state.tsv (the committed record) plus
 binaries/base_only.tsv (the diagnostic for symbols only WE emit). `vostok build`

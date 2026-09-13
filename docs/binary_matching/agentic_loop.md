@@ -43,7 +43,7 @@ Run the loop as two tiers so context stays clean:
   pollutes neither the orchestrator nor the next worker.
 
 Within one build tree dispatch is **sequential** (each `vostok build` rewrites
-the shared base side - `binaries/rich/base`, `report.json`); the orchestrator
+the shared base side - `binaries/pdb/base`, `report.json`); the orchestrator
 parallelizes across SIBLING WORKTREES instead (own `binaries/`, own Wine
 prefix), up to its worker cap - see `.claude/agents/orchestrator.md`.
 
@@ -97,7 +97,7 @@ function the worker does the rest:
    `binaries/objdiff/report.json` and any regressions/improvements from
    `binaries/objdiff/report-changes.json`.
 4. **Compare again and iterate.** The rebuild also refreshes the *base* rich
-   index, so re-diff base vs target with `pdb_fetch --view diff` (section 2a) to
+   index, so re-diff base vs target with `vostok-pdb inspect --view diff` (section 2a) to
    read the exact diverging instructions, adjust the source, rebuild. Each pass
    should move the percentage or teach you something.
 5. **Stop** when the function matches, or when you judge you can no longer make
@@ -111,64 +111,60 @@ function the worker does the rest:
 
 ## 2. Getting the target assembly
 
-Use **`pdb_fetch`** / **`pdb_rich_query`** (from vostok-pdb-parser, on PATH inside
-`nix develop`) against the prebuilt indexes under `binaries/rich/`:
+Use **`vostok-pdb inspect`** (on PATH inside `nix develop`) against the generated
+evidence databases under `binaries/pdb/`:
 
 ```
 # discover / disambiguate overloads first (rva  file  signature)
-pdb_rich_query --index binaries/rich/target/index.jsonl --function <name> --list
+vostok-pdb inspect --database binaries/pdb/target/evidence.sqlite --function <name> --list
 
 # 1. the statement STRUCTURE - the shape to reproduce (one row per source
-#    statement: address, offset, <byte size>, 'srcline', [n] block-opens):
-pdb_fetch --target-index binaries/rich/target/index.jsonl \
+#    statement: address, offset, byte size, source file and line):
+vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite \
   --function <name> [--rva 0x...] --view structure
 
 # 2. the RICH ASM for the whole function - offset-prefixed instructions,
 #    each statement headed by `[0xNN]:` with its byte size:
-pdb_fetch --target-index binaries/rich/target/index.jsonl \
+vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite \
   --function <name> --view target
 
 # 3. the asm of ONE statement when the function is dense - slice by the
 #    structure's `address` column (an absolute VA: it also SELECTS the function,
 #    so no --function needed), by function-relative offset, or by 1-based index:
-pdb_fetch --target-index binaries/rich/target/index.jsonl --view target --address 0x<va>
-pdb_fetch --target-index ... --function <name> --view target --offset 0x<offst>
-pdb_fetch --target-index ... --function <name> --view target --index <N>
+vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite --view target --address 0x<va>
+vostok-pdb inspect --target ... --function <name> --view target --offset 0x<offst>
+vostok-pdb inspect --target ... --function <name> --view target --index <N>
 ```
 
 Work in that order: read the structure first (it is the skeleton your source must
 reproduce - statement count, order, sizes, block-opens), then the rich asm to write
 the body, then per-statement slices to drill into any statement that is dense or
 diverging - a slice keeps context tight where the full listing would drown you.
-Other views: `structure-diff --condensed` (the two-sided target-vs-base statement
+Other views: `structure-diff` (the two-sided target-vs-base statement
 diff - your FIRST stop on a non-100% function: it localizes WHICH statement diverges
-and HOW, see 2a), `callees` (the function's call targets resolved to signatures -
-match those first), `info` (PDB-recorded locals). The same `--address`/`--offset`/
-`--index` slicing works on the base side (`--base-index ... --view base`) once your
+and HOW, see 2a) and `info` (PDB-recorded locals). The same `--address`/`--offset`/
+`--index` slicing works on the base side (`--base ... --view base`) once your
 code builds.
 
-`binaries/rich/target` is built once at setup and never changes;
-`binaries/rich/base` is refreshed by every `vostok build`, so you always have a fresh
+`binaries/pdb/target` is built once at setup and never changes;
+`binaries/pdb/base` is refreshed by every `vostok build`, so you always have a fresh
 base-vs-target pair (section 2a).
 
 ## 2a. The base-vs-target instruction diff
 
 `report.json` (step 3 below) is the **scoreboard** - per-function match % and
 regressions across a rebuild. To see *where* base and target diverge, ask
-`pdb_fetch` for the operand-aware diff (objdiff-core backend), which interleaves
-your base source onto the rows:
+`vostok-pdb inspect` for the normalized instruction diff:
 
 ```
-pdb_fetch --target-index binaries/rich/target/index.jsonl \
-          --base-index   binaries/rich/base/index.jsonl \
-          --function <name> --view diff \
-          --objdiff-base-dir   binaries/objdiff/base \
-          --objdiff-target-dir binaries/objdiff/target
+vostok-pdb inspect --target binaries/pdb/target/evidence.sqlite \
+          --base   binaries/pdb/base/evidence.sqlite \
+          --function <name> --view diff
 ```
 
-Read the rows: `  ` equal, `~ base -> target` same slot/different instruction,
-`-` base-only, `+` target-only. A *handful* of `~` rows that are only a register or
-`[ebp-XX]` stack-slot difference is usually an LTCG/linker artifact, not a real
+Read the rows: `  ` equal, `-` base-only, `+` target-only. A small divergence
+consisting only of an `[ebp-XX]` stack-slot difference is usually an LTCG/linker
+artifact, not a real
 mismatch (grep `patterns/INDEX.md` for `topic:convention`) - match the body, don't chase those. But a
 *storm* of `[ebp-XX]` slot renames (dozens at once) is usually NOT LTCG: it means
 your locals landed in different stack slots because your block structure differs
@@ -178,12 +174,8 @@ block-opens with `<1>`-tagged block-scoped locals that your base structure lacks
 Block-scope the locals to match the target's braced blocks before writing it off as
 LTCG. (This is exactly what masqueraded as "447 slot renames" on `process_leg`.)
 
-The header `objdiff fuzzy match P%` is a target-byte-weighted fuzzy match (partial
-credit per instruction, so a stack-slot-only `~` barely costs anything). It tracks
-`report.json`'s `fuzzy_match_percent` closely but slightly conservatively (e.g.
-89.6 vs 89.3 here) - it is *not* bit-identical, since `report.json` is generated by
-a different objdiff version. So `report.json` stays the number of record;
-use this view for *where* the diffs are.
+The instruction view is diagnostic. `report.json` remains the byte-score record;
+use this view to localize the differing instructions.
 
 ## 3. Make it reachable (or the linker strips it)
 

@@ -13,13 +13,17 @@ class string_response :
 	private boost::noncopyable
 {
 public:
+	typedef boost::function< void ( pcstr ) >			functor_type0;
+	typedef boost::function< void ( pcstr, pcstr ) >		functor_type1;
+	typedef boost::function< void ( pcstr, pcstr, pcstr ) >	functor_type2;
+
 	// claude@NOTE: standalone target symbol at rva 0x49340 (NOT inlined-only); all
 	// statements byte-equal - sole residual is one extra dead frame dword in the
 	// target (this at -0x18 vs -0x14), LTCG slot slack with no source statement
 	// mapping to it
 	inline			string_response	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr ) > const&	functor,
+			functor_type0 const&	functor,
 			pcstr const					string0
 		) :
 		m_functor0	( functor ),
@@ -37,7 +41,7 @@ public:
 	// verifiable only through callers - not anchored
 	inline			string_response	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr, pcstr ) > const&	functor,
+			functor_type1 const&	functor,
 			pcstr const					string0,
 			pcstr const					string1
 		) :
@@ -53,7 +57,7 @@ public:
 
 	inline			string_response	(
 			memory::base_allocator&		allocator,
-			boost::function< void ( pcstr, pcstr, pcstr ) > const&	functor,
+			functor_type2 const&	functor,
 			pcstr const					string0,
 			pcstr const					string1,
 			pcstr const					string2
@@ -95,9 +99,9 @@ public:
 	}
 
 private:
-	const boost::function< void ( pcstr ) >					m_functor0;
-	const boost::function< void ( pcstr, pcstr ) >			m_functor1;
-	const boost::function< void ( pcstr, pcstr, pcstr ) >	m_functor2;
+	const functor_type0		m_functor0;
+	const functor_type1		m_functor1;
+	const functor_type2		m_functor2;
 	char* const					m_string0;
 	char* const					m_string1;
 	char* const					m_string2;

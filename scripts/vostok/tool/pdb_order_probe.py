@@ -4,7 +4,7 @@
 
 The probes use the worktree's isolated Wine prefix and write only generated
 artifacts below binaries/gen/pdb-order-probes. They never compile or link game
-sources. Each pair keeps the full pdb_topology JSON and the exact linker log.
+sources. Each pair keeps the full `vostok-pdb topology` JSON and linker log.
 """
 
 from __future__ import annotations
@@ -385,6 +385,7 @@ class ProbeRunner:
         result = subprocess.run(
             [
                 self.topology,
+                "topology",
                 "--target-pdb",
                 str(baseline.pdb),
                 "--base-pdb",
@@ -399,7 +400,7 @@ class ProbeRunner:
         )
         if result.returncode:
             raise RuntimeError(
-                f"pdb_topology failed for {name}: {result.stderr.strip()}"
+                f"vostok-pdb topology failed for {name}: {result.stderr.strip()}"
             )
         report_path.write_text(result.stdout, encoding="utf-8")
         report = json.loads(result.stdout)
@@ -1581,9 +1582,9 @@ def _parser() -> argparse.ArgumentParser:
         help=f"generated evidence directory (default: {PDB_ORDER_PROBE_OUTPUT})",
     )
     parser.add_argument(
-        "--pdb-topology",
-        default=os.environ.get("PDB_TOPOLOGY", "pdb_topology"),
-        help="pdb_topology binary (default: PDB_TOPOLOGY or PATH)",
+        "--pdb-tool",
+        default=os.environ.get("PDB_TOOL", "vostok-pdb"),
+        help="vostok-pdb binary (default: PDB_TOOL or PATH)",
     )
     return parser
 
@@ -1594,7 +1595,7 @@ def main(argv: list[str] | None = None) -> int:
         print("\n".join(CASES))
         return 0
     selected = args.cases or list(CASES)
-    runner = ProbeRunner(args.output, args.pdb_topology)
+    runner = ProbeRunner(args.output, args.pdb_tool)
     runner.prepare()
     results = []
     for case in selected:
@@ -1607,7 +1608,7 @@ def main(argv: list[str] | None = None) -> int:
             "cl": str(runner.cl),
             "link": str(runner.link),
             "lib": str(runner.lib),
-            "pdb_topology": runner.topology,
+            "vostok_pdb": runner.topology,
             "wineprefix": str(WINEPREFIX),
         },
         "repository": {

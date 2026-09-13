@@ -12,7 +12,7 @@ base  : ??$compare@Ups_data@render@vostok@@@render@vostok@@YAHABV?$res_xs@...@Z 
 ```
 
 The two never pair (objdiff reports the target symbol `unpaired`) even when the bodies
-are byte-identical and the same size. The rich index shows several PDB records for
+are byte-identical and the same size. The PDB evidence database shows several PDB records for
 different instantiations resolving to ONE address (ICF folded the identical bodies), all
 printing the same non-template name.
 
@@ -58,7 +58,7 @@ target's line numbers indicate, and switch the call sites from `left->compare( *
 ```
 python3 - <<'EOF'
 import json
-for l in open('binaries/rich/base/index.jsonl'):
+for l in open('binaries/pdb/base/evidence.sqlite'):
     if 'render::compare' in l:
         d=json.loads(l); print(d['mangled'][:110], hex(d['rva']+d['image_base']), d['size'])
 EOF

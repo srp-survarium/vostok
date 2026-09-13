@@ -25,6 +25,8 @@ struct udp_network_flow_emulator_options;
 
 class udp_network_flow_emulator : private core::noncopyable {
 public:
+	typedef boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) >	on_packet_received_functor_type;
+
 					udp_network_flow_emulator	(
 						memory::base_allocator&		allocator,
 						memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
@@ -34,7 +36,7 @@ public:
 
 			void	tick						(
 						u32		time_in_ms,
-						boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
+						on_packet_received_functor_type const&	functor
 					);
 
 			void	on_packet_received			(
@@ -61,7 +63,9 @@ private:
 			void	make_packet_lost			( pbyte buffer, u32 buffer_size, boost::asio::ip::udp::endpoint const& endpoint );
 
 private:
-	/* 0x0000 */	vectora< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >	m_delayed_packets;
+	typedef vectora< std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint > >	delayed_packets_type;
+
+	/* 0x0000 */	delayed_packets_type	m_delayed_packets;
 	/* 0x0010 */	math::random32		m_lost_packets_random;
 	/* 0x0014 */	math::random32		m_ping_random;
 	/* 0x0018 */	math::random32		m_out_of_order_random;

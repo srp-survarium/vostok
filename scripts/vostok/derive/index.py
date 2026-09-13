@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""vostok.derive.index - the rich PDB index, keyed for pairing.
+"""vostok.derive.index - SQLite PDB evidence, keyed for pairing.
 
-`binaries/rich/<side>/index.jsonl` is one JSON record per emitted function. The
-job here is turning that stream into a {mangled: record} map that survives the
+`binaries/pdb/<side>/evidence.sqlite` is the canonical extracted evidence. The
+job here is turning its normalized rows into a {mangled: record} map that survives the
 two ways a PDB lies about identity: several overloads sharing one mangled
 placeholder (disambiguated by signature, with the target's choice preferred so
 both sides agree), and several names folded onto one RVA by ICF.
@@ -11,12 +11,31 @@ both sides agree), and several names folded onto one RVA by ICF.
 
 import hashlib
 import json
+import sqlite3
 
 
 def load_index_records(path):
-    """Load every rich-index record, including same-RVA PDB aliases."""
-    with open(path, encoding="utf-8") as f:
-        return [json.loads(line) for line in f]
+    """Load every function record, including same-RVA PDB aliases."""
+    connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    connection.row_factory = sqlite3.Row
+    functions = {}
+    for row in connection.execute(
+        "SELECT f.id,f.name,f.mangled,f.rva,f.image_base,f.size,f.file,"
+        "p.statements_json,p.instructions_json,p.locals_json,p.skipped_blocks_json "
+        "FROM functions f JOIN function_payloads p ON p.function_id=f.id "
+        "ORDER BY file,rva,id"
+    ):
+        functions[row["id"]] = {
+            "name": row["name"], "mangled": row["mangled"],
+            "rva": row["rva"], "image_base": row["image_base"],
+            "size": row["size"], "file": row["file"],
+            "statements": json.loads(row["statements_json"]),
+            "instructions": json.loads(row["instructions_json"]),
+            "locals": json.loads(row["locals_json"]),
+            "skipped_blocks": json.loads(row["skipped_blocks_json"]),
+        }
+    connection.close()
+    return list(functions.values())
 
 
 def overload_key(mangled, name):
@@ -115,7 +134,7 @@ def body_statements(rec):
     """The record's REAL source statements, without the synthetic frame braces.
 
     A rich record's first and last entries are the `{` and `}` the compiler
-    emits for the frame itself, not source. pdb_fetch, gen_sources and the
+    emits for the frame itself, not source. vostok-pdb, gen_sources and the
     structure-diff all read `statements[1:-1]`; counting the raw list instead
     says a function has two more statements than it does, and since statement
     COUNT is the whole basis of the QUANTITY verdict, that phantom pair reads

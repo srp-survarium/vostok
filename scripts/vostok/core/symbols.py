@@ -19,7 +19,7 @@ left untouched.
 from __future__ import annotations
 
 import argparse
-import json
+import sqlite3
 import re
 import shutil
 import subprocess
@@ -185,14 +185,13 @@ def rich_pdb_aliases(
 
     def records_by_identity(path: Path) -> dict[tuple[str, str], set[str]]:
         records: dict[tuple[str, str], set[str]] = defaultdict(set)
-        with path.open(encoding="utf-8") as source:
-            for line in source:
-                record = json.loads(line)
-                file = record.get("file")
-                name = record.get("name")
-                mangled = record.get("mangled")
-                if file and name and mangled:
-                    records[(file, name)].add(mangled)
+        connection = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+        for file, name, mangled in connection.execute(
+            "SELECT file,name,mangled FROM functions"
+        ):
+            if file and name and mangled:
+                records[(file, name)].add(mangled)
+        connection.close()
         return records
 
     target = records_by_identity(target_index)

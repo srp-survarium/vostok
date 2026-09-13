@@ -49,7 +49,7 @@ from vostok.build import native_crt, ninja_regen
 from vostok.core import paths
 from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
                                DATA_TARGET_RELOCS, OBJDIFF_DIR, PREBUILT,
-                               RICH_DIR, SETUP_STAMP, STRUCTURE_DIR, WINEPREFIX)
+                               PDB_DIR, SETUP_STAMP, STRUCTURE_DIR, WINEPREFIX)
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
@@ -161,19 +161,19 @@ def _nonempty_dir(p: Path) -> bool:
 
 def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
-    binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
-    binaries/rich/target (pdb_rich_context index for `pdb_fetch`), and the
+    binaries/objdiff/target (COFF), binaries/structure/target (vostok-pdb stubs),
+    binaries/pdb/target (the vostok-pdb evidence database), and the
     independent PDB/image data inventory under binaries/gen/.
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
     doesn't go unnoticed.
     """
-    from vostok.build import generate_delink, generate_rich, generate_structure
+    from vostok.build import generate_delink, generate_pdb, generate_structure
 
     objdiff_target   = OBJDIFF_DIR / "target"
     structure_target = STRUCTURE_DIR / "target"
-    rich_target      = RICH_DIR / "target"
+    rich_target      = PDB_DIR / "target"
     if (
         not force
         and _nonempty_dir(objdiff_target)
@@ -185,14 +185,14 @@ def ensure_target_side(force: bool = False) -> None:
     ):
         return  # already generated
 
-    log("Generating target diff inputs (original game COFF + structure + rich index) ...")
+    log("Generating target diff inputs (original game COFF + structure + PDB evidence) ...")
     try:
         if force or not _nonempty_dir(objdiff_target):
             generate_delink.generate("target", reports=False)
         if force or not _nonempty_dir(structure_target):
             generate_structure.generate("target")
         if force or not _nonempty_dir(rich_target):
-            generate_rich.generate("target")
+            generate_pdb.generate("target")
         from vostok.data import pipeline as data_pipeline
         data_pipeline.init_target(force=force)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e:

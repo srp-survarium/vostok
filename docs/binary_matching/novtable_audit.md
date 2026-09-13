@@ -11,7 +11,7 @@ destruction cone.
 
 The 2026-09-04 pass covered all 136 abstract Vostok/Survarium class records in
 the retail PDB, all 84 attributed declarations in the source tree, every
-vtable reference in both rich indexes, 34,366 uniquely paired functions with
+vtable reference in both PDB evidence databases, 34,366 uniquely paired functions with
 identical mangled names, and every method qualifier on the 136 class records.
 
 ## Result

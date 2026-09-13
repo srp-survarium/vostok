@@ -1,6 +1,6 @@
 # Top-level `const` on a value parameter: byte-neutral under /Od, NOT under optimization
 
-The pdb_divergence [fn-order] diff lists `const T arg` (target) vs `T arg` (base) as
+The vostok-pdb divergence [fn-order] diff lists `const T arg` (target) vs `T arg` (base) as
 unpaired only-tgt / only-base entries when the target declared a by-value parameter
 `const`. Top-level const on a value parameter is **mangling-neutral** (the mangled name is
 identical), so adding it is what makes those two entries pair.

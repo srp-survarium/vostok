@@ -29,7 +29,7 @@ This is making a stub *correct*, not changing another unit's structure, and it i
 required for the dependent functions to inline the way the target did. The accessor
 itself usually jumps to 100% as a bonus, and every downstream chained caller picks
 up its inlined form. Confirm the offsets against the target body
-(`pdb_fetch --rva <accessor> --view target`) before writing.
+(`vostok-pdb inspect --rva <accessor> --view target`) before writing.
 
 ## Example
 `survarium::base_game_scene::renderer()` shipped as `return *(render::game::renderer*)NULL;`.

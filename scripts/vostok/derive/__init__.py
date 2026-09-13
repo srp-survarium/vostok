@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-"""vostok.derive - report.json + the rich indexes -> the match roster.
+"""vostok.derive - report.json + the PDB evidence -> the match roster.
 
 The derivation nobody else may duplicate. Given artifacts that already exist -
-objdiff's `report.json`, the two `binaries/rich/<side>/index.jsonl` inventories,
+objdiff's `report.json`, the two `binaries/pdb/<side>/evidence.sqlite` inventories,
 the reviewed override tables - this decides, for every target function:
 
     which base function it IS          (aliases: ICF folds and ??__E/??__F pairs
@@ -30,7 +30,7 @@ already-built report.
     python3 -m vostok ledger report --module render     # ask the record
 
 Design: docs/binary_matching/ledger_design.md. The ledger answers BULK
-questions (queues, per-TU reports, unpaired functions); `pdb_fetch` stays the
+questions (queues, per-TU reports, unpaired functions); `vostok-pdb inspect` is the
 authoritative per-function view.
 """
 

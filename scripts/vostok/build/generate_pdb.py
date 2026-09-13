@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-vostok.build.generate_rich - run pdb_rich_context to (re)build the "rich" function index
-(disassembly paired with source-level statements) used by `pdb_fetch`, per side:
+vostok.build.generate_pdb - build the canonical PDB/PE evidence database per side:
 
   base    from the freshly compiled PDB+EXE
           binaries/Win32/survarium-dx11-win32-gold.{pdb,exe}
-          -> binaries/rich/base   (index.jsonl + sources/ tree, --mode base)
+          -> binaries/pdb/base/evidence.sqlite
 
   target  from the original game PDB+EXE
           $SURVARIUM_BIN/survarium.{pdb,exe}
-          -> binaries/rich/target (--mode target)
+          -> binaries/pdb/target/evidence.sqlite
 
-Both sides live under binaries/rich/, mirroring binaries/objdiff/{base,target}
-and binaries/structure/{base,target}. `pdb_fetch` joins base<->target by
-signature name; the objdiff backend additionally reads binaries/objdiff/.
+Both sides live under binaries/pdb/, mirroring binaries/objdiff/{base,target}
+and binaries/structure/{base,target}. `vostok-pdb inspect` joins the sides by
+decorated identity and exposes JSON views on demand.
 
 Usage:
-  python3 -m vostok.build.generate_rich base
-  python3 -m vostok.build.generate_rich target
-  python3 -m vostok.build.generate_rich all     # both sides (e.g. after a parser bump)
+  python3 -m vostok.build.generate_pdb base
+  python3 -m vostok.build.generate_pdb target
+  python3 -m vostok.build.generate_pdb all     # both sides (e.g. after a parser bump)
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN - directory containing the original survarium.{pdb,exe} (target)
-  PDB_RICH      - pdb_rich_context binary to invoke (default: pdb_rich_context on PATH)
+  PDB_TOOL      - vostok-pdb binary to invoke (default: vostok-pdb on PATH)
 """
 
 import argparse
@@ -37,7 +36,7 @@ from vostok.core.paths import (
     GFX_BUILD_TREE,
     GFX_TARGET_PREFIX,
     RETAIL_SOURCE_PREFIX,
-    RICH_DIR,
+    PDB_DIR,
     SCALEFORM_SDK,
     WIN32_DIR,
     gfx_release_prefixes,
@@ -49,20 +48,20 @@ from vostok.core.log import logger
 from vostok.core import log as _log
 
 
-log = logger("rich")
+log = logger("pdb")
 
 
-def _pdb_rich() -> str:
-    return os.environ.get("PDB_RICH", "pdb_rich_context")
+def _pdb_tool() -> str:
+    return os.environ.get("PDB_TOOL", "vostok-pdb")
 
 
 def generate(side: str) -> None:
-    """Regenerate binaries/rich/<side> from the matching PDB+EXE.
+    """Regenerate binaries/pdb/<side> from the matching PDB+EXE.
 
     Raises RuntimeError if an input is missing and CalledProcessError if
-    pdb_rich_context fails - callers (e.g. vostok.build.rebuild) handle/report these.
+    vostok-pdb fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
-    out = RICH_DIR / side
+    out = PDB_DIR / side
 
     if side == "base":
         pdb, exe = BASE_PDB, BASE_EXE
@@ -97,34 +96,34 @@ def generate(side: str) -> None:
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
 
     out.mkdir(parents=True, exist_ok=True)
-    log(f"Building {side} rich index from {pdb.name}+{exe.name} -> {out}")
+    log(f"Building {side} PDB evidence from {pdb.name}+{exe.name} -> {out}")
     try:
         subprocess.run(
             [
-                _pdb_rich(),
+                _pdb_tool(), "index", "pdb",
                 "--pdb",         str(pdb),
                 "--exe",         str(exe),
+                "--database",    str(out / "evidence.sqlite"),
+                "--side",        side,
                 *[a for path in engine for a in ("--engine-path", path)],
-                "--mode",        side,
-                "--out",         str(out),
                 *extra,
             ],
             check=True,
         )
     except FileNotFoundError:
         raise RuntimeError(
-            f"pdb_rich_context binary {_pdb_rich()!r} not found on PATH - run inside "
-            "`nix develop`, or set PDB_RICH"
+            f"vostok-pdb binary {_pdb_tool()!r} not found on PATH - run inside "
+            "`nix develop`, or set PDB_TOOL"
         )
-    log(f"Done: {out}/index.jsonl")
+    log(f"Done: {out}/evidence.sqlite")
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Build the base/target rich function index via pdb_rich_context."
+        description="Build the base/target PDB/PE evidence database via vostok-pdb."
     )
-    # `all` regenerates BOTH sides - use it after bumping vostok-pdb-parser, when
-    # the one-time target index needs to pick up new extraction (e.g. local scope).
+    # `all` regenerates BOTH sides after changing the in-repo Rust extractor;
+    # the one-time target database then picks up the new evidence schema.
     # A normal build only refreshes `base` (the target retail binary never changes
     # between recompiles, so rebuild reuses it); `all`/`target` is the manual
     # path to refresh it on a parser change.
@@ -134,9 +133,9 @@ def main() -> None:
         for s in (["base", "target"] if side == "all" else [side]):
             generate(s)
     except (RuntimeError, subprocess.CalledProcessError) as e:
-        print(f"[rich] ERROR: {e}", file=sys.stderr)
+        print(f"[pdb] ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    raise SystemExit(_log.run("vostok.build.generate_rich", main))
+    raise SystemExit(_log.run("vostok.build.generate_pdb", main))

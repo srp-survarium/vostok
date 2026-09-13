@@ -4,7 +4,7 @@
 
 Five steps, one per module, and the order between them is the whole design:
 
-    artifacts   load report.json + the two rich indexes, and say so when they
+    artifacts   load report.json + the two PDB evidence DBs, and say so when they
                 are stale
     inventory   one record per function on each side: unit, module, size, frame
     pairing     which base function IS this target function, through every alias
@@ -100,7 +100,7 @@ def enclosing_function_mangled(mangled):
 
 
 def report_only_observations(roster, maxima_rows, previous):
-    """Recover measured compiler thunks omitted from the current rich index.
+    """Recover measured compiler thunks omitted from the current PDB evidence.
 
     These rows already belong to the committed target roster.  Keeping them as
     permanently unpaired rows discarded current 100% object evidence and left

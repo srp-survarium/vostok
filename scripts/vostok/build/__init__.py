@@ -10,8 +10,8 @@ The loop, in order:
     ninja         run that graph under Wine, with the watchdog that stops a
                   stalled mspdbsrv from holding the build pipe for ten minutes.
     generate_delink     the linked exe -> per-unit COFF, both sides, + report.json
-    generate_structure  each PDB -> rendered headers/statements (pdb_parser)
-    generate_rich       each PDB+EXE -> the pdb_fetch index
+    generate_structure  each PDB -> rendered headers/statements (vostok-pdb)
+    generate_pdb        each PDB+EXE -> the canonical evidence database
     rebuild             all of the above, then the derive + ledger refresh.
                         THE canonical build: a module-only build does not relink
                         and cannot establish a match score.

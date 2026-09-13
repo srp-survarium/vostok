@@ -1,10 +1,10 @@
-# The rich index's per-function line map recovers a whole TU's source layout, not just its order
+# The PDB evidence database's per-function line map recovers a whole TU's source layout, not just its order
 tags: cpp:file-layout cpp:macro | asm:push | topic:line-records topic:structure-shape topic:logging topic:data-recovery
 symptoms: log call pushes a __LINE__ immediate that cannot be reached by our source; functions match in order but every __LINE__/__FILE__ site is off; want to know how many lines a compiled-out block occupied
 confidence: 9/10
 variants: log-line-verbosity-immediates.md, multiline-statement-closing-line-record.md, statement-line-gap-recovers-zero-byte-statements.md, sunk-store-statement-loses-line-record.md
 
-`binaries/rich/target/index.jsonl` carries `file` and a `statements[]` array of
+`binaries/pdb/target/evidence.sqlite` carries `file` and a `statements[]` array of
 `{off,size,line}` for **every** function. One `jq` pass therefore prints the shipped
 source layout of a whole translation unit - definition ORDER *and* the line each body
 opens and closes on:
@@ -12,7 +12,7 @@ opens and closes on:
 ```sh
 jq -r 'select(.file|test("render/core/dx11/sources/device\\.cpp$"))
        | "\(.rva) lines=\([.statements[].line]|min)-\([.statements[].line]|max) \(.name)"' \
-   binaries/rich/target/index.jsonl | sort -n
+   binaries/pdb/target/evidence.sqlite | sort -n
 ```
 
 ```
@@ -42,7 +42,7 @@ What it gives you, in order of usefulness:
    two functions.
 
 Cross-check the layout you write with the per-function `--view structure` line column, and
-against the base side of the same query after the build (`binaries/rich/base/index.jsonl`)
+against the base side of the same query after the build (`binaries/pdb/base/evidence.sqlite`)
 - if the base's `dynamic initializer for 'X'` files on the closing `);` of a multi-line
 definition (it does, see `multiline-statement-closing-line-record.md`), the same rule holds
 for the target.

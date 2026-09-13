@@ -96,7 +96,7 @@ you write B to make the link resolve, B is NOT invisible scaffolding: it is a re
 function in the target binary with its own body and rva. You MUST (1) define B in its
 ONE real source location (its real header, never the consuming `.cpp` - see the
 `_N.h` note under "The carcass"), (2) match B against its own target shape - fetch its
-statement structure and rich asm like any unit (`pdb_fetch --function <B> --view
+statement structure and rich asm like any unit (`vostok-pdb inspect --function <B> --view
 structure` / `--view target`), and (3) track B's OWN `fuzzy_match_percent` - it shows
 up in `report.json` / the ledger like any function. A call that resolves but whose callee body is unverified
 is a half-match hiding an unmatched function.
@@ -201,7 +201,7 @@ Everything else is DERIVED and lives outside the source
 (design: `ledger_design.md`):
 - **current %s**: `report.json` / `vostok ledger readme` - the only live numbers.
 - **bulk status, queues, reports**: `config/match_state.tsv`, regenerated
-  from report.json + the rich indexes + the PDB declaration dump by `vostok build`
+  from report.json + the PDB evidence databases + the PDB declaration dump by `vostok build`
   at the end of every build (or, regen-only, by `python3 -m vostok derive
   refresh`). Per paired function it derives the structure class
   (`MATCH | SIZE | SPLIT | QUANTITY`), tracks pairing history ("matched at NN%
@@ -209,7 +209,7 @@ Everything else is DERIVED and lives outside the source
   classifies base-only symbols (`NEAR_MISS` mangling mismatches, declared-but-
   inlined-in-target, the fabricated-symbol lint). Query it with
   `vostok ledger list / report / queue`.
-- **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
+- **structure-diffs**: run on demand (`vostok-pdb inspect --view structure-diff`), never
   embedded in source.
 
 Globals, constants, pointer tables, and BSS use the data-reconstruction lane;
@@ -294,10 +294,10 @@ Stubs arrive with `// FUNCTION BODY` / `// LOCALS` / `// TYPEDEFS` blocks. A bod
 line is `<absoluteVA>|offset|+delta:'srcline'`: paste the VA into IDA (`G`);
 `<N>` = no address (inlined/comment); a large `+delta` = something inlined
 between. Use these as scratch while matching - and remember the same information
-(and more) is available LIVE from the rich indexes: `pdb_fetch --view structure`
+(and more) is available LIVE from the PDB evidence databases: `vostok-pdb inspect --view structure`
 (the statement skeleton), `--view target` (the rich asm), and `--address 0x<va>` /
 `--offset 0x..` / `--index N` (the asm of one specific statement). The carcass is
-a generation-time snapshot; `pdb_fetch` is the source of truth.
+a generation-time snapshot; `vostok-pdb inspect` is the source of truth.
 
 **`+delta` reads structure - and `+0x002` is almost always a closing brace `}`.** A
 2-byte step is a `jmp short` (EB xx); inside a switch that `jmp` is the `break` /
@@ -345,8 +345,8 @@ message (the ledger re-derives the structure class on every regen). A clean 100%
 match carries nothing.
 
 **Preferred for a non-100% function: the two-sided condensed structure-diff** (it
-supersedes the one-sided `// FUNCTION BODY` carcass). Run `pdb_fetch ... --view
-structure-diff --condensed` and read it: it shows target-vs-base aligned with the
+supersedes the one-sided `// FUNCTION BODY` carcass). Run `vostok-pdb inspect ... --view
+structure-diff` and read it: it shows target-vs-base aligned with the
 matched runs collapsed to
 `.. same ..` and each divergence as `NN: 0x{toff} <0x{tsize}> | 0x{boff} <0x{bsize}> |
 {stmt}   {SIZE|ONLY base|ONLY target}` (the `NN:` is a monotonic statement index; blank-
@@ -366,17 +366,17 @@ reproducing the target's statement count + order reproduces the original structu
 is why structure beats the byte %. (The `<N>` no-address lines below are the COMPLEMENT: a
 sub-expression the compiler set no breakpoint on - inlined, optimized out, or a continuation.)
 
-This evidence comes from the aligned `pdb_fetch --view structure-diff` rows, not
-from an aggregate line-table count. `pdb_divergence --raw-line-table-counts`
+This evidence comes from the aligned `vostok-pdb inspect --view structure-diff` rows, not
+from an aggregate line-table count. `vostok-pdb divergence --raw-line-table-counts`
 counts raw CodeView entries and is deliberately opt-in: optimization attribution
 and source-line packing can change it without changing the semantic statement
 shape. Never combine statements or tune whitespace merely to make that count
 agree.
 
 For whole-PDB structure, keep the evidence channels separate. Use
-`pdb_topology --classes` for raw complete class variant sets and declaration
-order, `pdb_divergence` for source definition order and the normalized enum
-view, and `pdb_topology --order` for complete observable MSF/PDB topology. That
+`vostok-pdb topology --classes` for raw complete class variant sets and declaration
+order, `vostok-pdb divergence` for source definition order and the normalized enum
+view, and `vostok-pdb topology --order` for complete observable MSF/PDB topology. That
 last view covers container pages/stream slots, DBI and source scopes, TPI/IPI
 records and hashes, global/public indexes, module symbols and C13 records, and
 optional FPO/frame streams; each channel labels whether its order is semantic,
@@ -384,10 +384,10 @@ physical, hash-, type-index-, address-, or linker-derived. A same-name duplicate
 record is not a canonical-source verdict. The reproducible audit and
 classifications live in
 [`divergence_queue.md`](divergence_queue.md); raw-order confidence limits live in
-[`pdb_topology.md`](pdb_topology.md).
+[`vostok-pdb topology.md`](vostok-pdb topology.md).
 
 **Named LOCALS are structure too, and structure beats the byte % for them as well.** The
-PDB records the source's named-local set; `pdb_fetch --view structure` prints a
+PDB records the source's named-local set; `vostok-pdb inspect --view structure` prints a
 `locals (N): <name> <type>` block per side (or none). It is ground truth - "locals don't
 lie" (sushi): if the target records 0 named locals and your base records 1, your source is
 structurally wrong, so REMOVE the local (inline a single-use temp; for a multi-use value
@@ -419,7 +419,7 @@ the compiler set no breakpoint on (inlined, optimized out, or a continuation); i
 count and grouping between two addressed lines are a *structural clue* (an inlined
 call, a nested scope, a fall-through `jmp` thunk). Do NOT annotate the carcass -
 it is deleted whole when the function is matched, and a per-statement question is
-answered live (`pdb_fetch --view target --address 0x<va>`, or `--offset`/`--index`)
+answered live (`vostok-pdb inspect --view target --address 0x<va>`, or `--offset`/`--index`)
 instead of with margin notes. While the body is still a STUB, leave its generated
 blocks intact (they are the matcher input); mine `// LOCALS` for the rule below.
 
@@ -438,10 +438,10 @@ few lines below. Read the whole statement before concluding a line was optimized
 out.
 
 **Carcass `<VA>` addresses are from the BASE build, not the target.** They differ
-from the target rvas that `pdb_rich_query --list` / `--rva` report (two different
+from the target rvas that `vostok-pdb inspect --list` / `--rva` report (two different
 binaries; often off by ~0x10000). Pasting a carcass address into the *target*
 index will miss. Use the carcass addresses only as scratch for the base build;
-get the target asm by function name / target rva via `pdb_fetch --view target`.
+get the target asm by function name / target rva via `vostok-pdb inspect --view target`.
 
 **A `<header>_N.h` filename in `binaries/structure/target` does NOT mean the header
 was split into numbered files.** The structure generator emits one file per

@@ -22,7 +22,7 @@ mixing later corrections into it. The candidate was the
 based on xray commit `87f0201c6aedaee2dd865316188cf421f294eb52` plus the
 sound correction documented below. Its authoritative full build measured
 75.66% code and 37,041 / 44,600 exact functions, with zero regressions or
-improvements. The comparison uses pinned `vostok-pdb-parser` commit
+improvements. The comparison uses pinned `vostok-pdb` commit
 `6262ce150b12729b865a7eca6d82ad563256ba20`.
 
 Later causal applications and their current counts are recorded in
@@ -41,16 +41,16 @@ Both PDBs record the engine tree under `c:\survarium\sources`, so the same
 normalization prefix is used on both sides:
 
 ```text
-pdb_divergence \
+vostok-pdb divergence \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --base-engine-path 'c:\survarium\sources' \
   --target-pdb <retail>/survarium.pdb \
   --target-engine-path 'c:\survarium\sources'
 
-pdb_topology --target-pdb <retail>/survarium.pdb \
+vostok-pdb topology --target-pdb <retail>/survarium.pdb \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes --json
 
-pdb_topology --target-pdb <retail>/survarium.pdb \
+vostok-pdb topology --target-pdb <retail>/survarium.pdb \
   --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
   --order --limit 0
 ```

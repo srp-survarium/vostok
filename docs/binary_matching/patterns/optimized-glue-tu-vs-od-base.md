@@ -10,7 +10,7 @@ optimization in the shipped binary, while our base module builds `/Od`. Every th
 the TU - the addressed `gfx()`-style bridge helper, the SDK forwarders (`gfx(this)->SetUInt(v)`),
 the ctors/dtors - is byte-capped no matter how faithful the source.
 
-Decisive tells (run `pdb_fetch --view structure` / `structure-diff`):
+Decisive tells (run `vostok-pdb inspect --view structure` / `structure-diff`):
 - a trivial bridge helper records **"0 stmts / 1 byte"** in the target (the identity cast got
   inlined into every caller AND emitted standalone as a bare `ret`); our /Od copy is a real
   8-byte `call` with a statement.

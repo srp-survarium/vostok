@@ -19,7 +19,7 @@ semantics.
 Evidence commands:
 
 ```text
-pdb_fetch --function sound_scene::create_sound_propagator --view structure-diff
-pdb_fetch --function sound_scene::create_sound_propagator --view diff
-pdb_fetch --function sound_scene::notify_listener --view target
+vostok-pdb inspect --function sound_scene::create_sound_propagator --view structure-diff
+vostok-pdb inspect --function sound_scene::create_sound_propagator --view diff
+vostok-pdb inspect --function sound_scene::notify_listener --view target
 ```

@@ -18,9 +18,12 @@ class packet_reader;
 class udp_match_packet;
 class udp_match_client_session : private boost::noncopyable {
 public:
+	typedef boost::function< void( udp_match_client_session&, u8, packet_reader& ) >	on_packet_received_type;
+	typedef boost::asio::ip::udp	udp;
+
 	inline								udp_match_client_session	(
-											boost::asio::ip::udp::socket&		socket,
-											boost::asio::ip::udp::endpoint const&	endpoint,
+											udp::socket&				socket,
+											udp::endpoint const&		endpoint,
 											memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 											udp_match_packets_orderer&			packets_orderer,
 											udp_network_flow_emulator*			flow_emulator
@@ -44,7 +47,7 @@ public:
 
 	virtual	void						on_packet_received			(
 											packet_reader&		reader,
-											boost::function< void( udp_match_client_session&, u8, packet_reader& ) > const&	callback
+											on_packet_received_type const&	callback
 										)
 	{
 		m_connection.process_incoming_packet(
@@ -68,7 +71,7 @@ public:
 
 	inline	u32							unacknowledged_packets_count( ) const { return m_connection.unacknowledged_packets_count( ); }
 
-	inline	boost::asio::ip::udp::endpoint const&	endpoint			( ) const { return m_client_endpoint; }
+	inline	udp::endpoint const&			endpoint			( ) const { return m_client_endpoint; }
 
 	inline	u32							last_send_time_in_ms		( ) const { return m_connection.last_send_time_in_ms( ); }
 	inline	u32							last_receive_time_in_ms		( ) const { return m_connection.last_receive_time_in_ms( ); }
@@ -88,7 +91,7 @@ protected:
 	/* 0x0008 */	udp_match_connection				m_connection;
 
 private:
-	/* 0x0540 */	boost::asio::ip::udp::endpoint		m_client_endpoint;
+	/* 0x0540 */	udp::endpoint				m_client_endpoint;
 
 public:
 	/* 0x055c */	boost::intrusive::set_member_hook<>	set_member_hook;

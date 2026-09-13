@@ -13,5 +13,5 @@ inlined is a whole-program decision - not forceable from the caller. Mark PARTIA
 ```asm
 ; target: call vostok::vectora<T>::size          ; base: mov; sub; cdq; mov ecx,38h; idiv ecx
 ```
-TELL it is LTCG: pdb_rich_query finds the wrapper out-of-line in TARGET's index but the base query returns nothing (inlined everywhere). Corollary: a wrong member with a shorter inlined form can score HIGHER fuzzy % - match the offset the target reads, not the metric.
+TELL it is LTCG: vostok-pdb inspect finds the wrapper out-of-line in TARGET's index but the base query returns nothing (inlined everywhere). Corollary: a wrong member with a shorter inlined form can score HIGHER fuzzy % - match the offset the target reads, not the metric.
 Evidence: game_core/scheduler::on_frame(u32,u32) (target rva 0x77de80, 46.39% PARTIAL; m_active_objects @0x10, not m_inactive @0x00).

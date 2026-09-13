@@ -19,8 +19,8 @@ Layout, mirrored by the constants below:
       objdiff/{base,target}/      delinked COFF, plus report.json
       data-objdiff/{base,target}/ consumer-owned data comparison project
       gen/                        generated manifests and data audits
-      structure/{base,target}/    pdb-parser's rendered headers/statements
-      rich/{base,target}/         pdb_rich_context index for pdb_fetch
+      structure/{base,target}/    generated C++ carcass/reference views
+      pdb/{base,target}/          canonical PDB/PE evidence databases
       base_only.tsv               why we emit what the target does not
     docs/binary_matching/       matching workflow and evidence prose
 
@@ -115,10 +115,9 @@ STRUCTURE_DIR = BINARIES / "structure"
 TARGET_HEADERS = STRUCTURE_DIR / "target" / "headers"
 TARGET_SOURCES = STRUCTURE_DIR / "target" / "sources"
 
-RICH_DIR = BINARIES / "rich"
-TARGET_IDX = RICH_DIR / "target" / "index.jsonl"
-BASE_IDX = RICH_DIR / "base" / "index.jsonl"
-DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
+PDB_DIR = BINARIES / "pdb"
+TARGET_EVIDENCE = PDB_DIR / "target" / "evidence.sqlite"
+BASE_EVIDENCE = PDB_DIR / "base" / "evidence.sqlite"
 
 #: the base-only taxonomy: one verdict per function OUR build emits and the
 #: target does not. A diagnostic about our own output, not campaign memory, so
@@ -187,7 +186,7 @@ DATA_FUNCTION_OPEN = GEN_DIR / "data_function_open.tsv"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 # The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
-# so both the delinker and pdb_rich_context need a second --engine-path to keep
+# so both the delinker and vostok-pdb need a second --engine-path to keep
 # its ~1,300 compilands (a single prefix dropped them on BOTH sides and their
 # functions could never pair). Give each side the prefix that leaves the SAME
 # relative path, so target and base key identically: both reduce to `Src\...`.
@@ -308,7 +307,7 @@ def _main_worktree() -> Path:
 
 
 # Every `python3 -m vostok...` invocation appends one line here (vostok.core.log
-# `record`); `vostok tool usage` reads it back. Same shape as pdb_fetch.log /
+# `record`); `vostok tool usage` reads it back. Same shape as the retired tool log /
 # rebuild.log, but pooled in the main checkout so worktree agents
 # all feed the one trail.
 USAGE_LOG = _main_worktree() / "binaries" / "vostok_usage.log"

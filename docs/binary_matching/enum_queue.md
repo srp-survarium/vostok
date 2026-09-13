@@ -5,7 +5,7 @@ Generated/reconciled by `python3 -m vostok diff enums --write-queue`.
 This is a PERSISTENT queue of every engine enum (`survarium::` / `vostok::`,
 **excluding** `vostok::render::` - render is matched last; see the deferred
 bucket at the bottom) whose definition in our base sources does NOT yet match the
-original game (the TARGET pdb-parser dump under
+original game (the TARGET vostok-pdb dump under
 `binaries/structure/target/headers`).
 
 ## Semantics

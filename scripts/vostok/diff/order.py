@@ -8,7 +8,7 @@ and getting them wrong is what drives downstream inline/codegen divergence. This
 script rolls up, per non-render module, every place TARGET and BASE diverge on a
 *class definition*.
 
-SOURCE: the Rust pdb_parser tool (wrapped by vostok.build.generate_structure) renders
+SOURCE: the Rust vostok-pdb tool (wrapped by vostok.build.generate_structure) renders
 each PDB's classes as annotated C++ under binaries/structure/{base,target}/headers/
 vostok. We re-use that output for BOTH PDBs and diff, per class present on both
 sides:
@@ -28,7 +28,7 @@ Classes are scoped to a module by the namespace head of their qualified name
 module-owned source and are dropped from the per-module rollup.
 
 Default run prints a human-readable, ranked report over the in-scope modules.
---regen first re-runs pdb_parser for both sides (slow; do not use while a build
+--regen first re-runs vostok-pdb for both sides (slow; do not use while a build
 runs). --json emits the structured data instead.
 """
 
@@ -249,7 +249,7 @@ def _module_of(cd: ClassDef) -> str | None:
     """Owning in-scope module of a class, else None.
 
     The QUALIFIED class name is authoritative (survarium::game_world_object_list is
-    survarium's, even though pdb_parser emits it inside a `namespace vostok` block).
+    survarium's, even though vostok-pdb emits it inside a `namespace vostok` block).
     Fall back to the enclosing namespace stack, which covers names the size-assert
     strips down to a bare identifier (e.g. `game_test_suite` -> vostok). A bare
     `vostok` with no module sub-namespace is the catch-all `vostok` module.
@@ -371,7 +371,7 @@ def class_diff_report() -> dict[str, list[ClassDiff]]:
 
 def _print_text(report: dict[str, list[ClassDiff]], modules: list[str]) -> None:
     print("=" * 78)
-    print("CLASS-DEFINITION DIFF  (pdb_parser structure stubs, TARGET vs BASE)")
+    print("CLASS-DEFINITION DIFF  (vostok-pdb structure stubs, TARGET vs BASE)")
     print("  methods: order + arg-count/attr/presence ; members: order/offset/size/presence")
     print("=" * 78)
     for m in modules:
@@ -433,7 +433,7 @@ def _to_json(report: dict[str, list[ClassDiff]], modules: list[str]) -> dict:
 def _regen() -> None:
     py = sys.executable or "python3"
     for side in ("target", "base"):
-        print(f"[regen] generating {side} structure stubs via pdb_parser ...",
+        print(f"[regen] generating {side} structure stubs via vostok-pdb ...",
               file=sys.stderr)
         subprocess.run([py, "-m", "vostok.build.generate_structure", side],
                        check=True, env=paths.child_env())
@@ -448,7 +448,7 @@ def main() -> None:
                          "(not the build module the rest of the CLI takes)")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of text")
     ap.add_argument("--regen", action="store_true",
-                    help="re-run pdb_parser for both PDBs first (slow; not while building)")
+                    help="re-run vostok-pdb for both PDBs first (slow; not while building)")
     args = ap.parse_args()
 
     if args.regen:
