@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
 vostok.build.gfx - build the shipped Scaleform GFx static-lib suite from the
-PRISTINE 4.2.22 SDK source, with the EXACT cl flags the shipped PDB records.
+pinned recovered 4.2.21 SDK source, with the EXACT cl flags the shipped PDB records.
 
 The shipped survarium.exe statically links a GFx lib suite Survarium built from
-their 4.2.22 SDK with the same VS2008 / Msvc90 toolchain we match. Crucially the
+their 4.2.21 SDK with the same VS2008 / Msvc90 toolchain we match. Crucially the
 PDB build records (`pdb_build_info --grep libgfx --full`) prove those libs were
-built **non-/GL, /Ox, from PRISTINE SDK source** - a finished machine-code
+built **non-/GL, /Ox, from SDK source** - a finished machine-code
 prebuilt staged to C:\\survarium\\binaries.prebuilt\\ (like boost/openssl), NOT
 in the engine whole-program LTCG. So:
 
@@ -77,7 +77,6 @@ from vostok.core.paths import (
     PREBUILT,
     SCALEFORM_SDK,
 )
-from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import GFX_TU_LISTS
 from vostok.core.wine import drive_path
 from vostok.core import log as _log
@@ -132,29 +131,6 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
                  "libgfxexpat", "pcre",
                  "libgfx_as2", "libgfx_as3", "libgfx"]
 
-# The lib TUs compile from GFX_BUILD_TREE: the pristine SDK linked file-by-file
-# (hardlinks when possible, symlinks for a read-only/cross-filesystem SDK) with
-# the repo's reconstructed 4.2.21 files copied over it.
-# That makes EVERY include style see the reconstructions - bare
-# neighbor-includes ("Render_HAL.h") resolve inside the tree, which an -I
-# overlay can never shadow. materialize_tree() below keeps it current.
-#
-# Overlay roots, applied in order (later wins):
-#   sources/scaleform/{Src,Include}  - the vendored reconstruction tree
-#                                      (engine-side TUs compile these same
-#                                      files, so both sides agree)
-#   sources/scaleform/sdk-overlay/   - lib-only shapes; GFxConfig.h maps to
-#                                      Include/, the rest map under Src/
-OVERLAY_ROOT = VOSTOK_DIR / "sources/scaleform"
-OVERLAY_LIB_ONLY = OVERLAY_ROOT / "sdk-overlay"
-OVERLAY_SKIP = {
-    # engine-pch macro armor (parenthesized CRT calls, trimmed Realloc) - an
-    # engine-side workaround, not a 4.2.21 truth; the lib compiles the
-    # pristine SDK file.
-    "Src/Kernel/HeapMH/HeapMH_SysAllocMalloc.h",
-}
-
-
 def tree_path(rel) -> str:
     """A GFX_BUILD_TREE path as the compiler must see it: through the neutral
     C:\\survarium\\gfx-sdk alias, so objects record GFX_TREE_PREFIX, not the
@@ -167,81 +143,37 @@ def object_path(rel) -> str:
     return GFX_OBJECT_PREFIX + "\\" + str(rel).replace("/", "\\")
 
 
-def _overlay_files():
-    """Yield (rel_path_in_tree, source_file) for every reconstruction file."""
-    for sub in ("Src", "Include"):
-        root = OVERLAY_ROOT / sub
-        if not root.is_dir():
-            continue
-        for f in root.rglob("*"):
-            if not f.is_file():
-                continue
-            rel = str(Path(sub) / f.relative_to(root))
-            if rel in OVERLAY_SKIP:
-                continue
-            yield rel, f
-    if OVERLAY_LIB_ONLY.is_dir():
-        for f in OVERLAY_LIB_ONLY.rglob("*"):
-            if not f.is_file():
-                continue
-            r = f.relative_to(OVERLAY_LIB_ONLY)
-            # map into the SDK layout: Include/ if the SDK has it there,
-            # else under Src/
-            rel = f"Include/{r}" if (SDK / "Include" / r).is_file() else f"Src/{r}"
-            yield rel, f
-
-
 def materialize_tree():
-    """(Re)build GFX_BUILD_TREE: link the pristine SDK, copy overlays over.
-
-    Idempotent and cheap: SDK files are links (created once); an overlay
-    file is re-copied only when its content is newer than the tree's. A file
-    whose overlay was DELETED is re-linked back to the SDK (detected by inode:
-    a tree file that is neither the SDK's inode nor overlay-fresh is stale).
-    """
-    from shutil import copy2
+    """Link the recovered SDK through the stable compiler path, removing stale files."""
     tree = GFX_BUILD_TREE
-    overlays = dict(_overlay_files())
-    linked = copied = 0
+    if not all((SDK / sub).is_dir() for sub in ("Src", "Include", "3rdParty")):
+        raise RuntimeError(f"recovered SDK not found: {SDK} (enter nix develop or set SCALEFORM_SDK)")
+    expected = set()
+    linked = 0
     for sub in ("Src", "Include", "3rdParty"):
-        src_root = SDK / sub
-        for f in src_root.rglob("*"):
-            if not f.is_file():
+        for source in (SDK / sub).rglob("*"):
+            if not source.is_file():
                 continue
-            rel = str(Path(sub) / f.relative_to(src_root))
-            dst = tree / rel
-            if rel in overlays:
-                continue  # overlay pass handles it
-            if dst.is_file():
-                if dst.stat().st_ino == f.stat().st_ino:
-                    continue
-                dst.unlink()  # was an overlay copy; overlay is gone now
-            dst.parent.mkdir(parents=True, exist_ok=True)
+            relative = source.relative_to(SDK)
+            expected.add(relative)
+            destination = tree / relative
+            if destination.is_file() and destination.samefile(source):
+                continue
+            destination.unlink(missing_ok=True)
+            destination.parent.mkdir(parents=True, exist_ok=True)
             try:
-                os.link(f, dst)
+                os.link(source, destination)
             except OSError as error:
-                # Nix outputs are immutable and cannot be hardlinked by the
-                # calling user. A symlink preserves the cheap merged-tree
-                # model and dst.stat() still identifies the SDK inode.
                 if error.errno not in {errno.EXDEV, errno.EPERM, errno.EROFS}:
                     raise
-                os.symlink(f, dst)
+                destination.symlink_to(source)
             linked += 1
-    for rel, src in overlays.items():
-        dst = tree / rel
-        if dst.is_file():
-            st_d, st_s = dst.stat(), src.stat()
-            sdk_f = SDK / rel
-            is_link = sdk_f.is_file() and st_d.st_ino == sdk_f.stat().st_ino
-            if not is_link and st_d.st_mtime >= st_s.st_mtime \
-                    and st_d.st_size == st_s.st_size:
-                continue
-            dst.unlink()
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        copy2(src, dst)
-        copied += 1
-    if linked or copied:
-        print(f"[tree] {tree.name}: +{linked} sdk links, {copied} overlay copies")
+    for sub in ("Src", "Include", "3rdParty"):
+        for destination in (tree / sub).rglob("*"):
+            if (destination.is_file() or destination.is_symlink()) and destination.relative_to(tree) not in expected:
+                destination.unlink()
+    if linked:
+        print(f"[tree] {tree.name}: +{linked} SDK links")
 
 
 def lib_config(name):
@@ -257,16 +189,9 @@ def tus(name):
 
 
 def build_key(name, flags, defines, includes, tu_list):
-    """Hash every input the resumable object cache is allowed to reuse.
-
-    The SDK lives in an immutable Nix store path.  The C++ libraries also see
-    the mutable reconstruction overlay, including headers whose consumers the
-    simple one-TU driver does not otherwise track.  Conservatively key the
-    whole C++ library on that overlay: source edits are rare and correctness is
-    more important than retaining stale objects.
-    """
+    """Key objects on the pinned SDK, compiler recipe and fixed provenance."""
     inputs = {
-        "version": 2,
+        "version": 3,
         "sdk": str(SDK),
         "build_time": GFX_BUILD_TIME,
         "object_prefix": GFX_OBJECT_PREFIX,
@@ -274,13 +199,14 @@ def build_key(name, flags, defines, includes, tu_list):
         "defines": list(defines),
         "includes": list(includes),
         "tus": tu_list,
-        "overlays": [],
     }
-    if name in CPP_LIBS:
-        for rel, source in sorted(_overlay_files()):
-            inputs["overlays"].append(
-                [rel, hashlib.sha256(source.read_bytes()).hexdigest()]
-            )
+    # An explicit development checkout is mutable; store inputs are immutable.
+    if not str(SDK).startswith("/nix/store/"):
+        inputs["sources"] = [
+            [str(source.relative_to(SDK)), hashlib.sha256(source.read_bytes()).hexdigest()]
+            for sub in ("Src", "Include", "3rdParty")
+            for source in sorted((SDK / sub).rglob("*")) if source.is_file()
+        ]
     payload = json.dumps(inputs, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(payload).hexdigest()
 
@@ -374,7 +300,7 @@ def build_one(name):
 
 def main():
     if not SDK.is_dir():
-        raise SystemExit(f"pristine SDK not found: {SDK} (set SCALEFORM_SDK)")
+        raise SystemExit(f"recovered SDK not found: {SDK} (set SCALEFORM_SDK)")
     stop_wine_session(GFX_BUILD_TIME)
     try:
         materialize_tree()

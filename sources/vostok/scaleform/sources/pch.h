@@ -23,7 +23,7 @@
 #include <vostok/os_include.h>
 
 #include "scaleform_memory.h"
-
+#include <Vostok_HeapMH_SysAllocMalloc.h>
 using namespace vostok;
 
 #endif // #ifndef PCH_H_INCLUDED

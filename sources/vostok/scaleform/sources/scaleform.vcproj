@@ -46,7 +46,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -114,7 +114,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN32;"
 				StringPooling="false"
 				MinimalRebuild="true"
@@ -187,7 +187,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -255,7 +255,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN32;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="false"
 				MinimalRebuild="true"
@@ -329,7 +329,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;SF_BUILD_SHIPPING;"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -404,7 +404,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN64;NDEBUG;"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -471,7 +471,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN64;"
 				StringPooling="false"
 				MinimalRebuild="true"
@@ -545,7 +545,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -612,7 +612,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN64;VOSTOK_STATIC_LIBRARIES;"
 				StringPooling="false"
 				MinimalRebuild="true"
@@ -686,7 +686,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
+				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);c:\survarium\gfx-sdk/Include;c:\survarium\gfx-sdk/Src"
 				PreprocessorDefinitions="WIN64;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -943,7 +943,7 @@
 			Name="source"
 			>
 			<File
-				RelativePath="..\..\..\scaleform\Src\Render\Render_BufferGeneric.cpp"
+				RelativePath="c:\survarium\gfx-sdk\Src\Render\Render_BufferGeneric.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"

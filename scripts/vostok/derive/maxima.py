@@ -20,6 +20,7 @@ from functools import lru_cache
 from pathlib import Path, PurePosixPath
 
 from vostok.core.paths import SOURCES
+from vostok.core import paths
 from vostok.derive import log
 
 EXACT = 99.995  # objdiff reports byte-exact as >= this
@@ -56,7 +57,9 @@ def _source_extent(rec):
     """Return ``(relative path, first line, last line, source text)``."""
     if rec is None:
         return None
-    path = _source_file(str(SOURCES), rec["file"])
+    relative = paths.gfx_source_relative(rec["file"])
+    path = _source_file(str(paths.SCALEFORM_SDK), relative) if relative is not None \
+        else _source_file(str(SOURCES), rec["file"])
     lines = [s["line"] for s in rec["statements"] if s.get("line")]
     if path is None:
         return None
@@ -117,6 +120,9 @@ def whole_source_file_hash(relative):
     extent.  Consumers that must invalidate evidence when that source changes
     use this deliberately conservative whole-file scope.
     """
+    sdk_relative = paths.gfx_source_relative(relative)
+    if sdk_relative is not None:
+        return whole_source_tree_hash(paths.SCALEFORM_SDK, sdk_relative)
     return whole_source_tree_hash(SOURCES, relative)
 
 

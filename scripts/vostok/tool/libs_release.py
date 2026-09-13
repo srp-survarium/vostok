@@ -5,14 +5,14 @@
 package the flake pins: the third-party blobs (.lib/.dll/.pdb) the engine links,
 laid out as the shipped game stored them (see vostok.tool.libs). The one part of
 that package this repo BUILDS is the Scaleform GFx static-lib suite:
-`vostok.build.gfx` compiles it from the pristine 4.2.22 SDK with the exact cl
+`vostok.build.gfx` compiles it from the pinned recovered 4.2.21 SDK with the exact cl
 recipe the shipped PDB records, into binaries.prebuilt/Win32/libraries/shipping/.
 
 A release is the previous package with those GFx libs replaced by a fresh build,
 zipped deterministically, published on the vostok GitHub release and
 pinned in flake.nix - the same flow as vostok.tool.toolchain_release for the
-toolchain. Run inside `nix develop` (the GFx build needs the pristine SDK:
-`nix develop .#with-scaleform-sdk`, or $SCALEFORM_SDK).
+toolchain. Run inside `nix develop`, which provides the pinned recovered SDK
+(or override $SCALEFORM_SDK with a recovered checkout).
 
     python3 -m vostok tool libs-release --tag gfx421r2             # build GFx, package, print sha256
     python3 -m vostok tool libs-release --tag gfx421r2 --skip-gfx  # package the suite already in binaries.prebuilt

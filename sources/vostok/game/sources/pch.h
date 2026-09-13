@@ -13,7 +13,7 @@
 #include <vostok/extensions.h>
 
 #include "game_memory.h"
-
+#include <Vostok_HeapMH_SysAllocMalloc.h>
 using namespace vostok;
 
 #endif // #ifndef PCH_H_INCLUDED
