@@ -32,13 +32,7 @@ object_decal::~object_decal( )
 {
 }
 
-// claude@NOTE: structure faithful (same idiom as STRUCTURE-MATCH sibling
-// object_particle_visual, which itself caps ~80%). Residual is a build-config ceiling, not
-// a source shape: target inlines configs::binary_config_value::operator float at every
-// float() read (asserts off -> cmp [.+14h],2 / movss|cvtsi2ss), our Master Gold base never
-// inlines it (asserts active -> call to the /Od out-of-line COMDAT, too big for /Ob2; same
-// in object_wire). Target's optimizer also folds the request r[]/ud[] inits into the
-// query_resources call (drops the r/ud named locals); ours keep them split.
+#line 28
 void object_decal::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -88,23 +82,24 @@ void object_decal::load(
 	resources::user_data_variant user_data;
 	user_data.set( cook_data );
 
-	resources::request r[] =
-	{
-		{ decal_material_name, resources::material_effects_instance_class },
-	};
-
-	resources::user_data_variant const* ud[] = { &user_data };
-
-	resources::query_resources(
-		r,
-		boost::bind( &object_decal::material_ready, this, _1, cook_data, cb ),
+	resources::query_resource(
+		decal_material_name,
+		resources::material_effects_instance_class,
+		boost::bind(
+			&object_decal::material_ready,
+			this,
+			_1,
+			cook_data,
+			cb
+		),
 		g_allocator,
-		ud
+		&user_data
 	);
 }
 
 void object_decal::insert( )
 {
+
 	get_game_scene().renderer().scene().update_decal(
 		get_game_scene().render_scene(),
 		m_decal_id,
@@ -115,11 +110,12 @@ void object_decal::insert( )
 			m_alpha_angle / 90.0f,
 			m_clip_angle / 90.0f,
 			m_projection_on_terrain_geometry,
-			m_projection_on_static_geometry,
-			m_projection_on_speedtree_geometry,
-			m_projection_on_skeleton_geometry,
-			m_projection_on_particle_geometry
-		)
+		m_projection_on_static_geometry,
+		m_projection_on_speedtree_geometry,
+		m_projection_on_skeleton_geometry,
+		m_projection_on_particle_geometry,
+		m_draw_priority
+	)
 	);
 }
 
@@ -128,16 +124,10 @@ void object_decal::remove( )
 	get_game_scene().renderer().scene().remove_decal( get_game_scene().render_scene(), m_decal_id );
 }
 
-void object_decal::material_ready(
-	resources::queries_result&		data,
-	render::material_effects_instance_cook_data*	cook_data,
-	boost::function< void( game_object_& ) >&	cb
-)
+void object_decal::material_ready( resources::queries_result& data, render::material_effects_instance_cook_data* cook_data, boost::function< void( game_object_& ) >& cb )
 {
 	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, cook_data );
-
 	m_material = data[0].get_unmanaged_resource();
-
 	cb( *this );
 }
 
