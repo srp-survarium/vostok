@@ -122,50 +122,50 @@ void stage_visibility::execute( )
 		models_array_type models;
 		models.reserve( 1024 );
 		for ( ; i != e; ++i ) {
-			render_surface_instance* instance = *i;
-			render_model_instance_impl* model = instance->m_parent;
+			render_model_instance_impl* model = ( *i )->m_parent;
 			fixed_string< 128 > model_name( "<unknown>" );
 
-			bool const is_other =
-				s_no_other_value &&
-				model_name.find( "flora" ) == model_name.npos &&
-				model_name.find( "terrain" ) == model_name.npos &&
-				model_name.find( "house" ) == model_name.npos &&
-				model_name.find( "background" ) == model_name.npos &&
-				model_name.find( "cane" ) == model_name.npos &&
-				model_name.find( "poplar" ) == model_name.npos &&
-				model_name.find( "fruit" ) == model_name.npos &&
-				model_name.find( "tree" ) == model_name.npos &&
-				model_name.find( "elka" ) == model_name.npos;
+			if ( s_no_other_value ) {
+				bool const is_other =
+					model_name.find( "flora" ) == model_name.npos &&
+					model_name.find( "terrain" ) == model_name.npos &&
+					model_name.find( "house" ) == model_name.npos &&
+					model_name.find( "background" ) == model_name.npos &&
+					model_name.find( "cane" ) == model_name.npos &&
+					model_name.find( "poplar" ) == model_name.npos &&
+					model_name.find( "fruit" ) == model_name.npos &&
+					model_name.find( "tree" ) == model_name.npos &&
+					model_name.find( "elka" ) == model_name.npos;
 
-			if ( s_no_other_value && is_other ) {
-				instance->m_occluded = true;
-				continue;
+				if ( s_no_other_value && is_other ) {
+					( *i )->m_occluded = true;
+					continue;
+				}
 			}
 
 			if ( s_no_flora_value && model_name.find( "flora" ) != model_name.npos )
-				instance->m_occluded = true;
+				( *i )->m_occluded = true;
 			if ( s_no_terrain_value && model_name.find( "terrain" ) != model_name.npos )
-				instance->m_occluded = true;
+				( *i )->m_occluded = true;
 			if ( s_no_house_value && model_name.find( "house" ) != model_name.npos )
-				instance->m_occluded = true;
+				( *i )->m_occluded = true;
 			if ( s_no_background_value && model_name.find( "background" ) != model_name.npos )
-				instance->m_occluded = true;
+				( *i )->m_occluded = true;
 			if ( s_no_bushes_value && model_name.find( "cane" ) != model_name.npos )
-				instance->m_occluded = true;
+				( *i )->m_occluded = true;
 
 			if (
-				( s_no_bushes_value && model->get_surfaces_count( ) == 1 ) ||
-				( s_no_trees_value && model->get_surfaces_count( ) > 1 )
-			) {
-				if (
+				(
+					( s_no_bushes_value && model->get_surfaces_count( ) == 1 ) ||
+					( s_no_trees_value && model->get_surfaces_count( ) > 1 )
+				) && (
 					model_name.find( "poplar" ) != model_name.npos ||
 					model_name.find( "fruit" ) != model_name.npos ||
 					model_name.find( "tree" ) != model_name.npos ||
 					model_name.find( "elka" ) != model_name.npos
 				)
-					instance->m_occluded = true;
-			}
+			)
+				( *i )->m_occluded = true;
 		}
 	}
 

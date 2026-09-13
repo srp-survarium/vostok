@@ -187,6 +187,7 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 			backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0 );
 		}
 
+	shadow_full_transform = m_context->get_culling_vp( );
 	m_context->pop_v( );
 
 	m_context->pop_p( );

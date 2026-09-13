@@ -36,9 +36,9 @@ public:
 
 private:
 	float3 compute_aligment(
-		float3 const& light_xz_shift,
+		float3 const& lightXZshift,
 		float4x4 const& light_space_transform,
-		float shadow_map_resolution
+		float smap_res
 	);
 
 	bool is_effects_ready( ) const;
