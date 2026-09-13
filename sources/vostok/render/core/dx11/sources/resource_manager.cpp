@@ -341,32 +341,32 @@ res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 
 res_xs_hw<vs_data>* resource_manager::create_vs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<vs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<vs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<gs_data>* resource_manager::create_gs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<gs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<gs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<ps_data>* resource_manager::create_ps_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<ps_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<ps_data>( name, shader_config, include_getter, shader_sources );
 }
 
 void resource_manager::bind_samplers_to_shaders( )
@@ -1097,9 +1097,9 @@ u32 resource_manager::get_texture_video_memory_size( )
 }
 
 void resource_manager::on_texture_loaded_staging(
-	resources::queries_result&,
-	u32,
-	bool
+	resources::queries_result& data,
+	u32 mip_level_cut,
+	bool use_converter
 )
 {
 }
