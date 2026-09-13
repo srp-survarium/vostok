@@ -29,7 +29,7 @@ void lpv_batched_geometry::add_vertex(
 	vertex.clr = in_vertex.clr;
 	m_vertices.push_back( vertex );
 }
-
+// sushi@TODO: Recover the two collection-loop entry partitions without packing source lines.
 void lpv_batched_geometry::build(
 	vector<render_model_instance_impl_ptr>& model_instances
 )
@@ -39,8 +39,8 @@ void lpv_batched_geometry::build(
 
 	invalidate( );
 
-	surface_matrices_type matrices;
 	surfaces_type surfaces;
+	surface_matrices_type matrices;
 	render_model_instance_impl_ptr* it = model_instances.begin( );
 	render_model_instance_impl_ptr* end = model_instances.end( );
 	for ( ; it != end; ++it )
@@ -60,7 +60,7 @@ void lpv_batched_geometry::build(
 	render_surface** surface = surfaces.begin( );
 	float4x4* matrix = matrices.begin( );
 	for ( ; surface != surfaces.end( ); ++surface, ++matrix )
-		( *surface )->fill_lpv_vertex_color( this, *matrix );
+		( *surface )->fill_lpv_vertex_color( NULL, *matrix );
 
 	finalize_batch( );
 }
