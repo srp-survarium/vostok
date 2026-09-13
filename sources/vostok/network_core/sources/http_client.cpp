@@ -11,12 +11,7 @@ using boost::asio::ip::tcp;
 namespace vostok {
 namespace network_core {
 
-// claude@NOTE: structure matches (5 stmts / 2 locals). Residual is the ASSERT: the target's
-// plain ASSERT emits a single-arg expression_eater( prefix ) guarded block, but our MASTER_GOLD
-// ASSERT_T -> VOSTOK_EMPTY_EXPRESSION_VA_ARGS emits no eater (just the identity(false) guard).
-// The original game's VOSTOK_EMPTY_EXPRESSION_VA_ARGS expanded to expression_eater(__VA_ARGS__);
-// recovering it is a shared debug_macros.h change affecting every plain-ASSERT site, out of
-// scope for this TU. ASSERT_U( prefix ) overshoots (pushes prefix AND assert_untyped).
+#line 13
 void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( prefix );
@@ -28,6 +23,7 @@ void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 	}
 }
 
+#line 20
 http_client::http_client( boost::asio::io_service& io_service ) :
 	m_resolver				( io_service ),
 	m_socket				( io_service ),
@@ -39,6 +35,7 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 {
 }
 
+#line 30
 void http_client::get( pcstr server, pcstr path, boost::function<void()> const& callback )
 {
 	m_result_content = "";
@@ -59,6 +56,7 @@ void http_client::get( pcstr server, pcstr path, boost::function<void()> const& 
 	);
 }
 
+#line 56
 void http_client::on_error( boost::system::error_code const& err )
 {
 	LOG_ERROR( "http_client error: %s", err.message().c_str() );
@@ -67,21 +65,24 @@ void http_client::on_error( boost::system::error_code const& err )
 		m_on_error( err );
 }
 
+#line 64
 void http_client::handle_resolve( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )
 	{
+
+
 		tcp::endpoint endpoint = *endpoint_iterator;
 		m_socket.async_connect(
 			endpoint,
 			boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );
-	}
-	else
+	} else
 	{
 		on_error( err );
 	}
 }
 
+#line 80
 void http_client::handle_connect( boost::system::error_code const& err, tcp::resolver::iterator endpoint_iterator )
 {
 	if ( !err )
@@ -93,43 +94,45 @@ void http_client::handle_connect( boost::system::error_code const& err, tcp::res
 	}
 	else if ( endpoint_iterator != tcp::resolver::iterator( ) )
 	{
+
 		m_socket.close();
 		tcp::endpoint endpoint = *endpoint_iterator;
-		boost::asio::async_connect(
-			m_socket,
-			&endpoint,
+		m_socket.async_connect(
+			endpoint,
 			boost::bind( &http_client::handle_connect, this, boost::asio::placeholders::error, ++endpoint_iterator ) );
-	}
-	else
+	} else
 	{
 		on_error( err );
 	}
 }
 
+#line 103
 void http_client::handle_write_request( boost::system::error_code const& err )
 {
 	if ( !err )
 		boost::asio::async_read_until(
-			m_socket,
-			m_response_buff,
-			"\r\n",
-			boost::bind( &http_client::handle_read_status_line, this, boost::asio::placeholders::error )
-		);
+		m_socket,
+		m_response_buff,
+		"\r\n",
+		boost::bind( &http_client::handle_read_status_line, this, boost::asio::placeholders::error ) );
 	else
+
 		on_error( err );
+
 }
 
-// claude@NOTE: structure + local set (3) match. Residual is StlPort basic_string::find overload
-// resolution: status_message.find( "HTTP/" ) / "200" - the target binds the 2-arg
-// find( const char* s, size_type pos ) which computes traits::length internally, our StlPort
-// headers bind the path that pre-computes char_traits::length( s ) before the call (+0xd each).
-// Library/header version wall, not steerable from this source. The async_read( ... ) tail is the
-// usual boost::bind / read_streambuf_op completion-handler inline-vs-call.
+// claude@NOTE: target keeps the two-argument string find wrapper; base precomputes string length.
+// The async-read tail remains a shared Boost completion-handler context wall.
+#line 117
 void http_client::handle_read_status_line( boost::system::error_code const& err )
 {
 	if ( !err )
 	{
+
 		std::istream response_stream( &m_response_buff );
+
+
+
 
 		std::string status_message;
 		std::getline( response_stream, status_message );
@@ -146,19 +149,19 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 			} else
 			{
 				read_lines_from_stream( "read_status_line", m_response_buff );
-
+#line 147
 				boost::asio::async_read(
 					m_socket,
 					m_response_buff,
 					boost::asio::transfer_at_least( 1 ),
-					boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error )
-				);
-			}
-		}
-	} else
+					boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error ) );
+			} } } else
+
 		on_error( err );
+
 }
 
+#line 158
 bool http_client::add_result_content( )
 {
 	std::istream response_stream( &m_response_buff );
@@ -167,11 +170,13 @@ bool http_client::add_result_content( )
 	for ( ; std::getline( response_stream, str ) && str != "\r" ; )
 	{
 		m_result_content.append( str );
+
 	}
 
 	return m_result_content.size( ) < 1024;
 }
 
+#line 172
 void http_client::close_connection( )
 {
 	if ( m_socket.is_open( ) )
@@ -180,6 +185,7 @@ void http_client::close_connection( )
 	m_on_content_downloaded( );
 }
 
+#line 180
 void http_client::handle_read_content( boost::system::error_code const& err )
 {
 	if ( !err )
@@ -190,8 +196,7 @@ void http_client::handle_read_content( boost::system::error_code const& err )
 				m_socket,
 				m_response_buff,
 				boost::asio::transfer_at_least( 1 ),
-				boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error )
-			);
+				boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error ) );
 		} else
 			close_connection( );
 	} else if ( err != boost::asio::error::eof )
