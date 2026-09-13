@@ -527,32 +527,6 @@
 
           python3 -m vostok.tool.toolchain
 
-          # Wrap nvim to auto-load the in-tree Vostok PDB frontend (:Vostok match
-          # views), leaving the
-          # user's own config intact. A wrapper SCRIPT on PATH (not a shell function)
-          # survives `nix develop --command fish`; the real nvim is resolved before we
-          # shadow it, VOSTOK_NVIM_WRAPPED guards nested shells, and rtp points at the
-          # in-tree plugin from the active worktree.
-          if [ -z "''${VOSTOK_NVIM_WRAPPED:-}" ] && command -v nvim >/dev/null 2>&1; then
-            _vnv_bin="$VOSTOK_DIR/binaries/nvim-shim"
-            mkdir -p "$_vnv_bin"
-            # Resolve the REAL nvim with the shim dir off PATH. VOSTOK_NVIM_WRAPPED
-            # alone is not enough: lose the variable but keep the PATH (env -u, a
-            # shell that drops it, a reattached multiplexer) and `command -v nvim`
-            # finds the shim, which then execs itself forever.
-            _vnv_real="$(PATH="$(printf %s "$PATH" | tr ':' '\n' \
-              | grep -vxF "$_vnv_bin" | paste -sd:)" command -v nvim)"
-          fi
-          # Empty means the only nvim on PATH was the shim: wrap nothing rather
-          # than write a shim that execs "".
-          if [ -n "''${_vnv_real:-}" ]; then
-            printf '#!/bin/sh\nexec "%s" --cmd "set rtp^=%s" "$@"\n' \
-              "$_vnv_real" "$VOSTOK_DIR/tools/vostok-pdb/editor/nvim" > "$_vnv_bin/nvim"
-            chmod +x "$_vnv_bin/nvim"
-            export PATH="$_vnv_bin:$PATH"
-            export VOSTOK_NVIM_WRAPPED=1
-            echo "[vostok] nvim       : WRAPPED -> auto-loads vostok-pdb (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
-          fi
         '';
       };
 

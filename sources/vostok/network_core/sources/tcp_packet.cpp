@@ -10,8 +10,8 @@ namespace network_core {
 
 boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet )
 {
-	u32 buffer_size = packet.buffer_size( );
-	pbyte buffer	= packet.buffer();
+	u32 const buffer_size = packet.buffer_size( );
+	pbyte const buffer	= packet.buffer();
 	if ( !buffer_size )
 		return boost::asio::buffer( static_cast<pcvoid>( NULL ), 0 );
 
@@ -21,8 +21,8 @@ boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet )
 	}
 
 	ASSERT( buffer_size < (u32(1) << 16) );
-	*(buffer - 1) = 0;
-	*static_cast<u16*>(static_cast<pvoid>(buffer - 3)) = static_cast<u16>( buffer_size );
+	*(buffer - 3) = 0;
+	*static_cast<u16*>(static_cast<pvoid>(buffer - 2)) = static_cast<u16>( buffer_size );
 	return boost::asio::buffer( static_cast<pcbyte>(buffer - 3), buffer_size + 3 );
 }
 

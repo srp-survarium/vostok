@@ -12,7 +12,7 @@ class packet_reader {
 public:
 	inline	explicit			packet_reader	( base_packet const& packet );
 
-	inline	void				r				( void* destination, u32 destination_size, u32 size );
+	inline	void				r				( void* destination, u32 destination_size, u32 const size );
 	template < typename T >
 	__declspec( noinline )	T			r				( );
 

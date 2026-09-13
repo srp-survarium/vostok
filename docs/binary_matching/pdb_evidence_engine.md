@@ -4,8 +4,9 @@
 
 The implementation lives in `tools/vostok-pdb`. Python owns build sequencing,
 the committed matching ledger, and the existing CFG views; Rust owns PDB/PE
-extraction, source declarations, and their comparisons. The editor invokes the
-same Rust executable. Generated SQLite databases are disposable snapshots,
+extraction, source declarations, and their comparisons. The unused Neovim
+frontend and dev-shell editor wrapper have been removed; use the CLI directly.
+Generated SQLite databases are disposable snapshots,
 not another committed ledger.
 
 ## Evidence and comparison plan

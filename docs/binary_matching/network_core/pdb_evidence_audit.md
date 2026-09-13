@@ -59,6 +59,53 @@ class-structure mismatch.
 
 ## Explicit proof boundaries
 
+### Recorded-local discrepancy follow-up
+
+The procedure audit identified three concrete qualifier discrepancies. Retail
+records `packet<udp_match_packet>::append`'s `buffer_size` and
+`packet_reader::r`'s `size` as `const u32`; their value-parameter declarations
+and definitions now retain that qualification. In `buffer_to_send`, retail
+records `buffer_size` as `const u32` and `buffer` as `u8* const`: the pointer
+itself is fixed, but the packet header it addresses remains writable.
+
+Inspecting the latter's retail assembly at RVA `0x6d78e0` also exposed a wire
+format discrepancy. The large-packet branch stores its zero marker at
+`buffer - 3` and its 16-bit length at `buffer - 2` (instruction offsets `0x86`
+and `0x91`). The reconstructed stores were reversed in placement. They now
+follow retail: `[zero marker][little-endian u16 length][payload]`. This also
+agrees with the receiving code's one-byte marker followed by a two-byte size.
+The one-byte small-packet header and empty-packet branch are unchanged.
+
+These edits preserve statement order and physical source-line counts. They do
+not assert that all procedure discrepancies are closed: the pre-change
+`packet_reader::r` assembly passes `destination` in ECX in base but on the
+stack in retail, and `buffer_to_send` calls a buffer accessor that retail
+inlines. The base-only recorded `destination` parameter is not grounds for
+deleting a real argument merely because retail optimized away its debug local.
+
+Full build `55cb785a6f3e4f7ca5fe28936f0cab35` verified these edits in 14m22s.
+All three procedures now record the intended const types, and the emitted TCP
+stores use offsets -3/-2. The local-comparison mismatch count falls from three
+to one: only `packet_reader::r`'s extra base `destination` debug record remains.
+`append` retains a 7/7-statement, 85/85-byte match and a 100 score; the reader
+retains its 81.6667 score and register/stack argument-boundary difference.
+`buffer_to_send` remains 11/11 statements with the three-byte accessor-call
+residual, while its score improves from 95.3770 to 95.4098. No banked source
+maximum falls. Two unchanged Boost records lose current pairing while retaining
+their 100 maxima; these are not reported as newly measured exact matches.
+
+The build reports zero objdiff regressions, one improvement, and `OPEN=0` for
+both network data gates. The refreshed strict source gate retains the counts
+above. Compiler/linker warnings include unused parameters/locals, conversions,
+class/struct spelling, deprecated functions and missing CRT PDBs. The four
+C4701 and two C4715 warnings in other modules also occur in the earlier
+compiling build; Wine EGL diagnostics and the two known Scaleform
+`UnexpectedEof` extraction skips remain. This is a successful, not warning-free,
+build. The generated data audit also changes (including linked-image exactness
+4.02% to 4.01%); the refreshed README preserves those results.
+
+### Type and reachability limits
+
 - `udp_match_fixed_packets_allocator<2048>` is present as a complete retail
   type but has no emitted retail procedure. Candidate source contains the exact
   template and documented size specialization; whether MSVC emits that complete

@@ -128,7 +128,7 @@ inline void packet< T >::append( pcstr string, u8 string_length )
 }
 
 template < typename T >
-inline void packet< T >::append( pcvoid buffer, u32 buffer_size )
+inline void packet< T >::append( pcvoid buffer, u32 const buffer_size )
 {
 	if ( m_buffer_size + buffer_size > allocated_size( ) ) {
 		u32 new_allocated_size	= allocated_size( ) ? allocated_size( ) : buffer_size;
