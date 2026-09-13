@@ -12,11 +12,6 @@
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
-// the compiland keeps its legacy name: the 2011/12 TU defined the whole
-// object_*_visual family (git show 885e1d4a4:temp/game_legacy/object_solid_visual.h), but
-// only object_particle_visual survived into the shipped PDB (source lines
-// 455-491 of a much larger file)
-
 namespace survarium {
 
 void load_transform( configs::binary_config_value const& t, float4x4& dest );
@@ -26,6 +21,7 @@ object_particle_visual::object_particle_visual( base_game_scene& w ) :
 {
 }
 
+#line 453
 void object_particle_visual::load(
 	configs::binary_config_value const&		t,
 	pcstr									project_resources_path,
@@ -35,39 +31,28 @@ void object_particle_visual::load(
 	load_transform( t, m_transform );
 
 	resources::user_data_variant ud;
-	ud.set( &get_game_scene().renderer().scene().particle_world( get_game_scene().render_scene() ) );
+	particle::world* p = &get_game_scene().renderer().scene().particle_world( get_game_scene().render_scene() );
+	ud.set( p );
 
 	pcstr lib_name = pcstr( t["lib_name"] );
 
-	resources::request r[] =
-	{
-		{ lib_name, resources::particle_system_instance_class },
-	};
-
-	resources::user_data_variant const* user_data[] = { &ud };
-
-	resources::query_resources(
-		r,
-		1,
+	resources::query_resource(
+		lib_name,
+		resources::particle_system_instance_class,
 		boost::bind( &object_particle_visual::on_visual_ready, this, _1, cb ),
 		g_allocator,
-		user_data
+		&ud
 	);
 }
 
 void object_particle_visual::on_visual_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
-	m_particle_system_instance_ptr = static_cast_resource_ptr< particle::particle_system_instance_ptr >( data[0].get_unmanaged_resource() );
 
+
+	m_particle_system_instance_ptr = static_cast_resource_ptr< particle::particle_system_instance_ptr >( data[0].get_unmanaged_resource() );
 	cb( *this );
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). The facade by-value play_particle_system fix
-// has landed, so the temp intrusive_ptr copy is no longer the wall. Residual is the
-// call-boundary register cascade: target keeps get_game_scene() in esi and computes
-// render_scene() (`lea ecx,[esi+4]`) last, using edx for the renderer().scene() chain;
-// the base uses ecx for the chain and `add esi,4`. Non-steerable /Od arg-eval
-// scheduling, same as weapon::play_weapon_*_pfx.
 void object_particle_visual::insert( )
 {
 	get_game_scene().renderer().scene().play_particle_system( get_game_scene().render_scene(), m_particle_system_instance_ptr, m_transform );
