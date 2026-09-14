@@ -27,16 +27,13 @@ namespace network {
 	m_client.set_on_disconnect		( boost::bind( &match_client_impl::on_disconnect, this, _1 ) );
 }
 
-// claude@NOTE: structure matches 1/1 (the g_allocator strip_pointer call is kept
-// by BOTH sides); residual is the compiler-emitted member clears' folded-COMDAT
-// this-convention (esi in target vs ecx in base) - an LTCG artifact, not steerable.
 match_client_impl::~match_client_impl( )
 {
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// sushi@TODO: Verify single-state dispatch against the unnamed selector store
-// and zero-local target record; callback lowering remains a separate question.
+// sushi@TODO: Recover the first callback guard's source form; its safe-bool
+// conversion still differs from the target's direct negation test.
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	switch ( m_state ) {
@@ -93,10 +90,6 @@ void match_client_impl::set_on_packet_received(
 		m_client.set_on_packet_received( m_on_packet_received );
 }
 
-// claude@NOTE: structure matches 9/9 (field copies byte-aligned); residuals are
-// base inlining packet_reader::pointer() at the append site and m_buffer[0]'s
-// boost::array operator[] on the source side (target keeps both as folded calls),
-// plus append's LTCG arg convention at the call boundary - inline-vs-call wall.
 network_core::udp_match_packet* match_client_impl::clone_packet( network_core::udp_match_packet const& packet )
 {
 	network_core::udp_match_packet* const result	= network_core::new_udp_match_packet( m_packets_allocator );
@@ -105,7 +98,7 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	result->channel_id		= packet.channel_id;
 	result->is_reliable		= packet.is_reliable;
 	result->is_ordered		= packet.is_ordered;
-	result->m_buffer[ 0 ]	= packet.m_buffer[ 0 ];
+	result->m_buffer[ 0 ]	= packet.m_buffer.data( )[ 0 ];
 	result->append			( reader.pointer( ), reader.size_to_eof( ) );
 	return					result;
 }

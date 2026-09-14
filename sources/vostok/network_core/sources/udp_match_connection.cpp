@@ -52,12 +52,6 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 {
 }
 
-// claude@NOTE: PARKED on an inline-vs-call wall. Statement count + the named-local
-// set (reader, bits) match the target. The LTCG target keeps packet_reader::r<u16>()
-// out-of-line (a `call` returning the value in ax); the single-TU base inlines the
-// `inline`-marked template into the r(void*,u32,u32) form (push 2; push 2; lea slot;
-// push; call). That byte divergence is why objdiff reports this unpaired. Not
-// source-steerable without de-inlining the template at every other call site.
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );

@@ -29,6 +29,10 @@ Every fact carries an origin (`OBSERVED`, `CORRELATED`, `INFERRED`, or
 `REVIEWED`). Comparison verdicts are `MATCH`, `MISMATCH`, `TARGET_ONLY`,
 `BASE_ONLY`, `AMBIGUOUS`, `UNOBSERVABLE`, `UNSUPPORTED`, or `STALE_INPUT`.
 
+Inspection prefers an exact full signature among shared decorated aliases
+before source-file preference, but retains true duplicate ambiguity. A missing
+paired function is reported separately from an omitted `--base` argument.
+
 `inspect --view base --json` selects the paired candidate record and rejects
 missing or ambiguous candidates. JSON `diff`/`structure-diff` views are not
 implemented: use the text views or `compare pdb --json`. Earlier versions

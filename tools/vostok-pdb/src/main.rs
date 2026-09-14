@@ -433,6 +433,7 @@ fn inspect(args: Inspect) -> vostok_pdb::Result<()> {
         }
         None => Vec::new(),
     };
+    prefer_exact_signature(&mut base, &function.name);
     if base
         .iter()
         .any(|entry| entry.file.eq_ignore_ascii_case(&function.file))
@@ -466,18 +467,41 @@ fn inspect(args: Inspect) -> vostok_pdb::Result<()> {
                     vostok_pdb::rich_diff::render_unified(f, function, &diff)
                 );
             }
-            None => return vostok_pdb::error!("diff requires --base"),
+            None => {
+                let detail = missing_base_detail("diff", args.base.is_some());
+                return vostok_pdb::error!("{detail}");
+            }
         },
         "structure-diff" => match base.first() {
             Some(f) => print!(
                 "{}",
                 vostok_pdb::rich_structure_diff::render_structure_diff(f, function)
             ),
-            None => return vostok_pdb::error!("structure-diff requires --base"),
+            None => {
+                let detail = missing_base_detail("structure-diff", args.base.is_some());
+                return vostok_pdb::error!("{detail}");
+            }
         },
         other => return vostok_pdb::error!("unknown view {other}"),
     }
     Ok(())
+}
+
+fn missing_base_detail(view: &str, supplied: bool) -> String {
+    if supplied {
+        format!("no base function matched for {view}; database was supplied")
+    } else {
+        format!("{view} requires --base")
+    }
+}
+
+fn prefer_exact_signature(
+    candidates: &mut Vec<vostok_pdb::rich_context::FunctionEntry>,
+    name: &str,
+) {
+    if candidates.iter().any(|entry| entry.name == name) {
+        candidates.retain(|entry| entry.name == name);
+    }
 }
 
 fn json_inspect_record<'a>(
@@ -503,6 +527,44 @@ fn json_inspect_record<'a>(
 mod inspect_tests {
     use super::json_inspect_record;
     use vostok_pdb::rich_context::FunctionEntry;
+
+    #[test]
+    fn missing_base_diagnostic_distinguishes_absent_database_and_function() {
+        for view in ["diff", "structure-diff"] {
+            assert_eq!(
+                super::missing_base_detail(view, false),
+                format!("{view} requires --base")
+            );
+            let missing = super::missing_base_detail(view, true);
+            assert!(missing.contains("no base function matched"));
+            assert!(missing.contains(view));
+            assert!(!missing.contains("requires --base"));
+        }
+    }
+
+    #[test]
+    fn exact_signature_narrows_aliases_without_hiding_duplicates() {
+        let exact = record(1);
+        let mut alias = record(2);
+        alias.name = "alias".into();
+        let mut candidates = vec![alias, exact];
+        super::prefer_exact_signature(&mut candidates, "test");
+        assert_eq!(candidates.len(), 1);
+        assert_eq!(candidates[0].rva, 1);
+        candidates.push(record(3));
+        super::prefer_exact_signature(&mut candidates, "test");
+        assert_eq!(candidates.len(), 2);
+    }
+
+    #[test]
+    fn absent_exact_signature_preserves_candidates_for_identity_review() {
+        let mut candidates = vec![record(1), record(2)];
+        super::prefer_exact_signature(&mut candidates, "absent");
+        assert_eq!(candidates.len(), 2);
+        let mut empty = Vec::new();
+        super::prefer_exact_signature(&mut empty, "absent");
+        assert!(empty.is_empty());
+    }
 
     fn record(rva: u32) -> FunctionEntry {
         serde_json::from_value(serde_json::json!({

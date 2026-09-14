@@ -4,6 +4,23 @@
 
 ## Measurement f8aff026 (2026-09-14)
 
+### Next-pass candidates (not yet measured)
+
+`match_client` explicitly initializes `m_response_packets_allocator(0)`:
+retail invokes the pointer-taking intrusive_ptr constructor with a null
+argument, whereas the omitted initializer selected our zero-argument overload.
+This is a local overload correction, not a shared-template inlining change.
+
+`clone_packet` now reads `packet.m_buffer.data()[0]`. Retail's call at
+RVA 0x766201 decodes directly to 0x3f210, a folded empty body with a recorded
+`boost::array<unsigned char,256>::data() const` identity in boost/array.hpp.
+No const array-index accessor record was found for this specialization. The
+target adds the buffer offset, calls that body, materializes its returned
+pointer and reads the first byte; the prior direct index omitted 13 bytes.
+This is an accessor hypothesis, not proof of exact original spelling: folding
+also admits other empty aliases. Verify all nine spans and 218-byte target
+body in the next combined build. Keep the destination access unchanged.
+
 Full game build succeeded in 11m15s. `is_low_level_packet` now has eight
 matching spans, 120 bytes, and 100% current/banked score: the sequence wrapper
 deserializations recover the missing word copies. `process_low_level_message`
@@ -780,6 +797,42 @@ differences remain work even when the addressed renderer says STRUCTURE MATCH.
 The async_connector ctor6B excess is an extra this-pointer temporary around
 the m_on_error default-construction call; the declared member and operation
 already agree. Do not add an assertion or fabricated local to compensate.
+
+## Build f195b4927af84b589bb6ba024bd5230e verification
+
+The full game build succeeded in 11m06s. The module-owned warnings remain
+C4189 for allocated_count and registered_packets_count in udp_match_client;
+the log also contains 234 LNK4099 warnings and two skipped Scaleform PDB
+modules (UnexpectedEof). This is not a warning-free or whole-PDB closure.
+
+The explicit response-allocator null initializer selects the pointer-taking
+constructor used by retail, but base expands zeroing plus set(0) instead of
+retaining the call. Constructor size is now target1046/base1095 bytes, versus
+base1082 previously; cur falls from93.5885 to93.2305. The three addressed
+spans still report STRUCTURE MATCH, demonstrating why initializer and total
+size checks must accompany that verdict. The residual remains open.
+
+clone_packet's const data()[0] spelling leaves the result unchanged:
+9/9 addressed spans, target218/base205 bytes, cur93.6842. The first-byte
+assignment remains target25/base12 bytes. Its accessor-call hypothesis has
+not closed the mismatch and is not a measured gain.
+
+The global report-changes summary has117 regressions,218 improvements,
+95 fold-churn entries and no added/removed entries. These summary labels
+are not proof that every global regression is harmless; final cross-unit
+pairing and affected bodies still require the ongoing regression audit.
+Exact demangled-name lookup across the final report plus cross-unit scores
+recovers at least the prior score for94 of117 entries;23 remain unresolved by
+that check. Network-related network_world deleting destructor and SSL io_op
+copy constructor recover100 and52.333332 respectively. The login callback's
+Boost storage3 copy entry remains0 (previous84.95652), and match_client retains
+the measured decrease above. Missing or folded pairing is not absence proof.
+The storage3 copy is confirmed present by exact target RVA0xe57f0 and paired
+base RVA0x4b000: target63/base72 bytes, no addressed spans on either side.
+Retail retains a Boost function copy-constructor call; base expands its empty
+construction and assign_to_own call. Thus the report's zero is not an absent
+implementation, but the body still has an unresolved9-byte expansion residual.
+The empty addressed projection again cannot certify byte closure.
 
 ## Reproduction
 
