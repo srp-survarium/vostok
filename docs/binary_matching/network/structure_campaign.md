@@ -306,6 +306,57 @@ These support the current 8192-packet / larger-client variant, not the unmatched
 was unused; broader compiland/consumer provenance remains open. Missing a
 complete TPI record is not permission to add a forced runtime instance.
 
+## Reopened parked-function audit (2026-09-14)
+
+The 55 parked `network_core` procedures are a re-audit queue, not proven
+compiler limitations. Inspection against build `bd28186b79c34f1aa5d20331c7c04a1a`
+found 17 projected statement matches, 28 aligned size residuals, four
+statement-presence/alignment findings, and six procedures without a paired
+base. Three of the projected matches contain no addressed statements; five
+have different total procedure sizes. Neither a park nor a projected match
+establishes complete source equivalence.
+
+The [per-function re-audit record](../network_core/parked_reaudit.tsv) preserves
+all 55 selectors, baseline scores, observations, next checks, and old notes.
+The old notes are historical inputs to challenge, not endorsed explanations.
+
+The first confirmed counterexample is `tcp_packet_client::close_connection`
+(retail RVA `0x77cb10`). Its five statements total 121 bytes against the
+previous base's 150 bytes. The extra 29 bytes occur at `m_socket.close(ec)`.
+Retail calls the **no-argument** socket overload at RVA `0xc2970`, which owns
+an error-code local and invokes `do_throw_error` on failure. The reconstruction
+instead used the nonthrowing error-code overload. The prior claim that this was
+merely an inline boundary was incorrect. The source now calls `close()` while
+retaining the separate `ec` local required by `shutdown`. Full build
+`d19d3d685ec848718a2e4e4ae84141a9` (10m40s) raises the score from 66.303 to
+100: all five spans, the 121-byte procedure, and the single named `ec` local
+match. The remaining disassembly labels are folded callee aliases, not different
+operations. All other TCP-client TU scores are unchanged; eight of its nine
+procedures have matching projected structure, with only the constructor's size
+finding remaining. Global report: one improvement, zero regressions, additions,
+removals or fold churn; no banked source maximum falls.
+
+The successful build is not warning-free: it reports unused variables/parameters,
+conversions, four C4701 and two C4715 diagnostics outside this TU, unreachable
+code, assignment conditions, two LNK4049 and 234 missing-CRT-PDB LNK4099 warnings.
+The two known Scaleform `UnexpectedEof` extraction skips and Wine EGL diagnostics
+remain. Both network data gates report `OPEN=0`.
+
+The constructor in the same TU also needs renewed investigation: its sole
+addressed callback statement is 94 bytes in retail versus 121 in base, while
+the prologue contains additional differences, including an extra base store to
+`m_first_packet`. An omitted optimized store alone does not prove an absent
+source initializer. This remains a hypothesis to resolve, not permission to
+delete the field or a claim that the constructor is byte-correct.
+
+Other stale notes must be checked against current instructions before reuse.
+For example, `udp_match_client::handle_receive` currently has 23 aligned spans
+and 950 bytes on both sides; its visible LOG line constants differ by 33 lines.
+The old note's callback-cleanup scheduling description does not describe the
+current diff. `update_acknowledgements` still has genuine subtraction and
+maximum-update size differences; these need callee/type/source checks rather
+than a blanket compiler explanation.
+
 ## Reproduction
 
 ```sh

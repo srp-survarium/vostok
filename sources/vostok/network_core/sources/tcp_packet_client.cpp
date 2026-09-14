@@ -63,7 +63,7 @@ void tcp_packet_client::close_connection( )
 
 	boost::system::error_code	ec;
 	m_socket.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ec );
-	m_socket.close( ec );
+	m_socket.close( );
 
 	m_async_connector.reset( );
 }
