@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "match_client_impl.h"
+#include <vostok/network/message_types.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/packet_reader.h>
@@ -38,7 +39,7 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 {
 	switch ( m_state ) {
 		case waiting_for_permission:
-			if ( message_type == set_status_ready_for_battle ) {
+			if ( message_type == match_server_connection_successful ) {
 				ASSERT_U			( reader.eof( ) );
 				m_state				= handshaked;
 				m_client.set_on_packet_received( m_on_packet_received );

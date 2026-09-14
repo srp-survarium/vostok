@@ -834,6 +834,47 @@ construction and assign_to_own call. Thus the report's zero is not an absent
 implementation, but the body still has an unresolved9-byte expansion residual.
 The empty addressed projection again cannot certify byte closure.
 
+## Next batch: generator fidelity, handshake identity, warning cleanup
+
+Raw retail enum0x1a64a/field-list0x1a649 records
+match_server_connection_successful=128. Use the existing network/message_types.h
+enumerator at the handshake consumer and remove the guessed anonymous
+set_status_ready_for_battle alias from login_server/message_types.h. Its open
+review row is resolved by raw enum evidence, not inferred from the immediate.
+
+The generator now retains non-compiler-generated copy declarations without
+standalone bodies, preserves base access and virtual status, and stops guessing
+explicit from argument count. Signed-minimum enum overflow and unsigned64
+rendering are corrected. Isolated Rust tests:86 passed. Generated artifacts are
+not hand-edited; fresh generation is required to validate these corrections.
+
+At the user's request, both check_consistency locals receive the project's
+VOSTOK_UNREFERENCED_PARAMETER macro after the assertion. Preserve calculations,
+const types and assertion. Baseline target/base:3 addressed spans,119 bytes.
+Next full build must confirm C4189 removal and unchanged compiled structure.
+
+## Build c0dd07dd7f234ceeb49039352a74c440 warning verification
+
+Full game build succeeded in12m58s. Neither registered_packets_count nor
+allocated_count appears in a warning. No warning was attributed to a scoped
+network/network_core path or matching relative source basename. Remaining
+C4189s belong to animated_model_instance_cook (res_user_data) and
+network_client_processing (team_2_points), outside these modules. This broader
+compilation also reports many other-module/header warnings; counts are not
+directly comparable to the previous incremental log.234 LNK4099 and two known
+Scaleform UnexpectedEof warnings remain.
+
+check_consistency retains3/3 addressed statements and119/119 bytes. Its current
+score remains99.9444 before/after; target/base local slots are still reversed
+and the empty assertion callee has a folded representative-name difference.
+Warning cleanup is verified, not a new byte-exact closure. Whole-batch regression
+and handshake-enum verification remain pending before committing this build.
+Completion audit: report-changes contains zero regressions, improvements,
+added/removed entries or fold churn for this build. The canonical handshake
+enum consumer retains11/11 spans and383/392 bytes, with the same first-guard9B
+residual. No new score changes are attributed to this batch. Earlier-build
+global unresolved findings are not erased by this empty delta report.
+
 ## Reproduction
 
 ```sh

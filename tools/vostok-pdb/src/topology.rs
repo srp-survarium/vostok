@@ -719,6 +719,8 @@ struct FocusedTypeOrderReport {
     filters: Vec<String>,
     target_sequence: Vec<OrderItem>,
     base_sequence: Vec<OrderItem>,
+    target_module_references: Vec<OrderItem>,
+    base_module_references: Vec<OrderItem>,
     named_types: SequenceComparison,
     named_type_module_references: SequenceComparison,
 }
@@ -783,6 +785,8 @@ fn build_focused_type_order_report(
         filters: filters.to_vec(),
         target_sequence: target.named_types,
         base_sequence: base.named_types,
+        target_module_references: target.named_type_module_references,
+        base_module_references: base.named_type_module_references,
         named_types,
         named_type_module_references,
     })

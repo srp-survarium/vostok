@@ -46,6 +46,16 @@ with both representative names; source-location differences remain independent.
 It does not prove byte equality or canonical ownership of an ICF group.
 Inferences and reviewed hypotheses never become `MATCH`.
 
+Carcass generation preserves recorded base-class access and virtual inheritance.
+It suppresses unobserved copy constructors/assignments only when CodeView marks
+them compiler-generated; a missing standalone body alone is not sufficient.
+It does not infer `explicit` from a constructor's argument count. Generated
+declarations remain reconstruction inputs, not proof of unobservable syntax.
+Enum rendering preserves signed minima and the full unsigned 64-bit range.
+Focused type-order JSON includes both sides' raw module-reference lists, even
+when their comparison has no differences; these references do not establish
+ownership of a particular same-name complete class variant.
+
 Comparisons validate the indexed PDB/EXE hashes. Source comparison also checks
 the compile-command hash and scoped source-file snapshot (including new and
 deleted files); `STALE_INPUT` fails `--strict` and requires re-indexing. This

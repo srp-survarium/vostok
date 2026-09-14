@@ -240,13 +240,28 @@ pub fn write_return_type(
 
 pub fn get_return_type(
     return_type: &type_parser::ReturnType,
-    args_len: usize,
+    _args_len: usize,
     namespace: &Namespace,
 ) -> std::borrow::Cow<'static, str> {
     match return_type {
-        ReturnType::Constructor if args_len == 1 => std::borrow::Cow::Borrowed("explicit"),
+        // Argument count does not establish whether a constructor was explicit.
         ReturnType::Constructor | ReturnType::Destructor => std::borrow::Cow::Borrowed(""),
         ReturnType::Type(type_) => std::borrow::Cow::Owned(Type::new(type_, namespace).0),
+    }
+}
+
+#[cfg(test)]
+mod constructor_tests {
+    #[test]
+    fn one_argument_does_not_imply_explicit() {
+        assert_eq!(
+            super::get_return_type(
+                &super::ReturnType::Constructor,
+                1,
+                &super::Namespace::default()
+            ),
+            ""
+        );
     }
 }
 
