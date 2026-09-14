@@ -47,15 +47,15 @@ match_client_impl::~match_client_impl( )
 // as a named [ebp-4] local. Tested: adding an ASSERT_U reader to "use" the dead
 // variable does NOT drop the symbol - it instead emits a real eater statement
 // (12th stmt, BASE_ONLY, % -> 2.7), a quantity regression - so the symbol-emission
-// gap is a target-side LTCG/PDB artifact, not source-steerable. previous_state is
-// authentic source (its store is in the target); we keep the natural shape.
+// sushi@TODO: Does the row-free unused-variable macro recover the target's
+// unnamed store? Retain it pending a measured macro/locals comparison.
 // claude@NOTE: the original's __LINE__ immediate pins the LOG to physical line 56
 // (the `}` must have shared a line); we keep the natural layout and accept the
 // 1-byte immediate residual per the no-line-padding rule
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	state const previous_state	= m_state;
-
+	VOSTOK_UNREFERENCED_PARAMETER( previous_state );
 	if ( message_type == set_status_ready_for_battle ) {
 		ASSERT_U			( reader.eof( ) );
 		m_state				= handshaked;

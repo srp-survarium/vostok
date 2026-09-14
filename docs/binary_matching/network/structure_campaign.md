@@ -493,6 +493,48 @@ modules, as do two LNK4049, 234 LNK4099 and two Scaleform extraction skips.
 Source/docs pass git diff --check; generated TSV empty final fields naturally
 trigger its trailing-tab diagnostic and are not hand-normalized.
 
+### Unused-variable and parameter audit (in progress)
+
+The singular `VOSTOK_UNREFERENCED_PARAMETER(x)` is `(void)(&x)`, unlike the
+plural guarded helper. An unaddressed source line can contain the singular
+macro, but blank space alone does not prove its spelling. Suppression must
+preserve target-backed locals and statement positions, not hide a mismatch.
+
+| Candidate | Target evidence | Current action |
+| --- | --- | --- |
+| `registered_packets_count`, `allocated_count` in `check_consistency` | Both const u32 locals are recorded. Declaration lines 194/195 and assertion line 196 are consecutive; the assertion emits only the 12-byte identity call, not an argument eater. | Retain declarations and plain assertion. No inter-statement gap supports inserting separate macros there. Check terminal/source boundary evidence before placing zero-byte statements after the assertion. |
+| `success` in `handle_send` | Const bool local is recorded. Erase-result declaration line 101, plain assertion line 102, next guard line 104. | A zero-byte suppression could occupy line 103. Candidate remains untested; singular only, not ASSERT_U or a plural eater. |
+| `new_size` in `udp_match_packet::reallocate` | Private const-u32 method declaration exists, but no standalone target procedure/line table is found. Existing grow-path recovery remains ambiguous. | A macro would silence the warning, but no recovered source-line gap establishes placement. Keep body-recovery question open; do not report source-exactness. |
+| `previous_state` in `match_client_impl::on_packet_received` | Retail store at line 45, unaddressed line 46, guard at 47. No target named local; base has a const state local and a 3-byte-short first span. | Testing singular macro in the existing line-46 gap. It neither adds a physical line nor changes the guard/LOG positions. Previous failed ASSERT_U experiment is not evidence against this variant. |
+
+The first measured test owns `match_client_impl.cpp` only, all eight procedures.
+Baseline scores: ctor 92.6739, dtor 93.3333, clone_packet 93.6842, connect
+65.3333, on_packet_received 95.8333; disconnect, on_disconnect and
+set_on_packet_received are 100. The handler has 11 addressed spans and
+383/389 total bytes, with first-span -3B and callback guard +9B. Check warning
+removal independently of whether the local-record mismatch changes; a clean
+warning log is not proof of a recovered original statement.
+
+Build `3b1d81f8504c4f7396b84063822d92a1` succeeds in 10m39s. The previous_state
+C4189 warning disappears; the raw global report has zero improvements,
+regressions, additions, removals or fold changes. All eight TU scores remain
+at their baseline. The handler still records one base local versus zero target
+locals, 11 addressed spans and 383/389 bytes, with the same -3B/+9B residuals.
+The singular macro is confirmed warning-suppressing and byte-neutral, not a
+recovery of the local projection or proof of the original macro spelling.
+The open review question remains open. This build recompiles network only;
+it still emits new_size twice through the included packet header, 18 OpenSSL
+deprecations, four external C4701, two C4715, five C4702, two C4706, two LNK4049,
+234 LNK4099 and two Scaleform extraction skips. It cannot remeasure the
+network_core source warnings that were not recompiled.
+
+The user requests a committed checkpoint followed by one combined
+network/network_core source pass and one full build/audit. Subsequent work
+therefore batches independent changes across the module pair, retaining
+per-function evidence and whole-scope regression controls. Parked status is
+not a completion criterion. Isolate variants only when measured failure or
+regression requires diagnosis, not by default for every small source change.
+
 ## Reproduction
 
 ```sh
