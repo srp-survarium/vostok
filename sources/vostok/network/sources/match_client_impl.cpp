@@ -33,8 +33,8 @@ match_client_impl::~match_client_impl( )
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// sushi@TODO: Verify the first guard's direct empty test against retail;
-// the failure-path guard intentionally retains its safe-bool conversion.
+// sushi@TODO: Recover the remaining source-location gap before LOG_ERROR;
+// retain the distinct direct-empty and safe-bool callback guards.
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	switch ( m_state ) {
@@ -47,17 +47,16 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 				if ( !m_on_connected.empty( ) )
 					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
 
-				return;
+			} else {
+				LOG_ERROR				( "connection forbidden" );
+				if ( m_on_connected )
+					m_on_connected		(
+						successfully_connected,
+						successfully_handshaked,
+						no_socket_error,
+						invalid_session_id
+					);
 			}
-
-			LOG_ERROR				( "connection forbidden" );
-			if ( m_on_connected )
-				m_on_connected		(
-					successfully_connected,
-					successfully_handshaked,
-					no_socket_error,
-					invalid_session_id
-				);
 			break;
 		default: NODEFAULT( );
 	}

@@ -7,6 +7,14 @@ their paired PE images, and scoped candidate C++ source. The normal build writes
 uncommitted SQLite databases at `binaries/pdb/{target,base}/evidence.sqlite`;
 candidate source is indexed only when explicitly requested.
 
+The `structure-diff` view compares a body-statement projection, not all bytes.
+It reports a signed `TOTAL SIZE` difference even when that projection agrees,
+and `NO BODY STATEMENTS COMPARED` when neither side supplies projected rows.
+An equal nonempty projection is explicitly qualified as not byte equality;
+inspect initializer/frame records, locals and assembly before claiming closure.
+Raw method attributes determine static/instance status even when a cached
+signature disagrees.
+
 ```text
 vostok-pdb index pdb --pdb FILE --exe FILE --database DB --side target
 vostok-pdb index source --compile-commands compile_commands.json \

@@ -918,6 +918,76 @@ Thus clone_packet's unresolved accessor-call residual does not justify changing
 the shared Boost array accessor body. Prepared verifier improvements remain
 outside this measured source state.
 
+## Next pass: full-size projection audit (unmeasured source)
+
+Integrated verifier/static-attribute changes pass94 tests (88 library,6 binary).
+A read-only scan of both module path scopes found303 target records;275 have a
+unique base match by mangled name (or full name if unmangled),28 require presence
+or ambiguity triage. This inventory is not the ledger denominator. Ten unique
+pairs have equal ordered projected-body sizes but differing whole-function sizes:
+
+| Function | Target/base bytes | Body rows |
+|---|---:|---:|
+| udp_match_connection constructor |553/546|0|
+| async_connector constructor |128/134|0|
+| login_client::sign_in_impl |201/199|1|
+| login_client destructor |315/313|1|
+| match_client constructor |1046/1095|3|
+| udp_match_packet constructor |179/191|2|
+| client_destroyer deleting destructor |46/44|0|
+| network::tcp_packet_client constructor |339/345|1|
+| match_client_impl destructor |104/113|1|
+| packet_reader::r(void*,u32,u32) |24/18|1|
+
+Initial assembly triage: packet_reader::r differs at its argument boundary
+(target loads a stack argument and ret4; base pushes ECX and returns normally).
+client_destroyer's deleting destructor differs in frame allocation20h versus4h.
+The async/TCP/UDP connection constructors differ in temporary spills around
+callback construction; packet constructor retains a base constructor call in
+retail while base expands it. match_client_impl destructor's final allocator
+destructor call receives explicit this setup only in base. These are concrete
+residual locations, not proof of unsteerability or completed constructor matching.
+Login residuals and the28 non-unique/missing pairs still need focused triage.
+
+Callback line evidence suggests an if/else rather than early-return shape:
+retail jump at+c1 maps to55, immediately followed by LOG_ERROR at56; current
+early return maps to50 followed by a brace/blank and log53. Candidate now uses
+an else branch and the existing switch break. No padding or #line was added.
+Both callback guards and arguments are unchanged; verify the whole function,
+line geometry and byte score in the next full build before accepting the shape.
+
+Presence follow-up resolves19 of the28 non-unique/missing-key findings:18 by
+exact demangled signature and one dynamic initializer by signature plus file.
+The remaining9 lack a standalone base record: http_client::set_on_error,
+base_packet constructor, handler_allocator constructor, packet<udp_match_packet>
+constructor, and its bool/u8/u16/float2/float3 append overloads. Source bodies
+exist for all9; standalone absence is not a missing-body verdict, nor proof of
+correct inline consumers. No anchors or replacement stubs were introduced.
+Removed the obsolete core HTTP header diagnosis claiming the network HTTP
+caller was unwritten; network/sources/http_client.cpp now calls set_on_error.
+
+The two login full-size residuals include retail ESI preservation around
+Boost callback clear calls, whereas base uses ECX; each explains the two-byte
+total difference with matching body sizes. Frame-size/spill differences remain
+visible and are not automatically dismissed as noise. This pass retains those
+implementations rather than inventing locals to reproduce register allocation.
+
+## Build6e628a154d1e4961b95eaaedc148f9ce verification
+
+Full build succeeded in10m58s. The if/else callback candidate retains11 body
+statements,383 bytes and zero locals, with unchanged99.9902 score. Its jump/log
+source lines are now50/51 (retail55/56), matching the consecutive relationship;
+the log immediate is0x33 versus retail0x38. Statement offsets all agree. This
+supports the branch shape but does not close source locations or prove unique
+original spelling. A separate prepared line-pin patch remains unmeasured.
+
+All report-changes arrays are empty. No scoped network/core warnings; other
+warnings remain18C4995,2C4715,5C4702,4C4701,2C4706,2LNK4049,234LNK4099 and the
+two known Scaleform UnexpectedEof skips. Integrated verifier tests passed94.
+Twenty-five base S_COMPILE records match all25 retail records: frontend/backend
+15.0.30729.1,Cpp,Pentium3,LTCG enabled,security checks disabled. This metadata
+does not record the optimization/inlining switches or complete command line.
+
 ## Reproduction
 
 ```sh

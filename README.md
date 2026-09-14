@@ -187,6 +187,11 @@ python3 -m vostok tool clangd def   <file> <line> [col]   # definition; also ref
 
 clang is a reader here; the Wine build is the only verdict on correctness.
 
+PDB `inspect --view structure-diff` compares projected body statements. It now
+flags whole-function `TOTAL SIZE` differences even when those statements agree,
+and reports `NO BODY STATEMENTS COMPARED` for an empty projection. A structure
+match alone does not certify initializer/frame bytes or byte equality.
+
 To investigate linker/PDB ordering without rebuilding game sources, run the
 fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
 It records commands, artifacts, and complete `vostok-pdb topology --order --json`
