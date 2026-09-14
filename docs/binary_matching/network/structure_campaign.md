@@ -392,6 +392,40 @@ enum-case and related diagnostics. The same four C4701, two C4715, two LNK4049,
 234 LNK4099 and two Scaleform extraction skips remain. Both network data gates
 retain `OPEN=0`.
 
+### Flow-emulator source-shape follow-up
+
+The destructor at retail RVA `0x728990` materializes the vector's `empty()`
+result with `cmp/sete/movzx/test`. The direct `begin()!=end()` reconstruction
+instead creates iterator temporaries and omits that boolean-return boundary.
+The loop now calls `!m_delayed_packets.empty()` without changing ownership or
+the four-statement, zero-local shape.
+
+In `add_packet` (RVA `0x728cf0`), retail copies both ping bounds into inline
+argument slots before subtracting them, calls the random generator, then adds
+the preserved minimum. Its four named locals include no ping-bound temporaries.
+This supports the existing two-argument `random(min,max)` overload, not the
+open-coded `operator()(max-min)+min` expression. The caller now uses that
+overload; the math header is unchanged. The packet-pressure sum also follows
+retail's observed `unacknowledged_packets_count + delayed_size` operand order.
+Build `d3b87dd09ab04a0fbc4009a81c582c99` succeeds in 11m21s. The destructor
+improves from 79.0732 to 99.7073 with all four statement spans (111 bytes) and
+zero locals matching. `add_packet` improves from 94.4057 to 99.7264 with all ten
+spans (356 bytes) and four locals matching. The helper-call reconstruction is
+confirmed, but neither function is closed: destructor frame size is 0x70 versus
+retail 0x78; `add_packet` is 0xb4 versus 0xb8, with shifted temporary slots and
+the two u16 locals allocated oppositely. Do not add unused locals or reorder
+declarations just to move stack slots. The other five procedure scores in the TU
+are unchanged, including the constructor's zero-statement projection and
+`tick`'s residual.
+
+Global report: 191 improvements, 129 raw regressions (all to zero), 88 fold-churn
+entries and no additions/removals. The ledger loses current attribution on 17
+previously scored records, but no banked maximum falls. These losses remain
+recorded rather than being called zero regressions. Warning counts match the
+earlier incremental TCP build: four C4701 and two C4715 outside this TU,
+unused/conversion/unreachable/assignment warnings, two LNK4049 and 234 LNK4099,
+plus the two known Scaleform extraction skips. Both network data gates are open-free.
+
 ## Reproduction
 
 ```sh
