@@ -128,13 +128,12 @@ inline sequence_number< T > sequence_number< T >::deserialize( packet_reader& re
 	return sequence_number( reader.r< T >( ) );
 }
 
-// operator-: signed serial-number distance. When right does not precede left we take
-// the direct 16-bit wrapped difference; otherwise the negated mirror distance.
 template < typename T >
 inline s32 operator- ( sequence_number< T > const& left, sequence_number< T > const& right )
 {
 	if ( right <= left )
-		return s16( left.m_number - right.m_number );
+		return ( left.m_number + sequence_number< T >::max_sequence_number - right.m_number ) %
+			sequence_number< T >::max_sequence_number;
 
 	return -( right - left );
 }

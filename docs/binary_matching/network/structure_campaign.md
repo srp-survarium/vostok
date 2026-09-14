@@ -357,6 +357,41 @@ current diff. `update_acknowledgements` still has genuine subtraction and
 maximum-update size differences; these need callee/type/source checks rather
 than a blanket compiler explanation.
 
+### Sequence-distance reconstruction measured
+
+Retail `operator-<u16>` (RVA `0x127b20`) has three statements, 77 bytes and no
+named locals. Its first return adds 65,536, subtracts the right operand and
+computes a signed remainder modulo 65,536. The previous `s16(left-right)`
+substitute emitted only 17 bytes against the target's 35-byte return span.
+It also changed half-window behavior: `(32768,0)` produced +32768 instead of
+retail's -32768; `(0,32768)` produced -32768 instead of +32768. A comparison
+over all 65,536 left operands against zero isolates the first disagreement.
+
+The reconstructed expression uses the existing `max_sequence_number` enum and
+retains the `right <= left` guard and recursive negated mirror. No class field,
+access, signature or helper placement changes. Full build
+`c7afede9203b4c81a40e5a5255c0ce9e` succeeds in 14m32s. Subtraction rises from
+81.3333 to 100: three matching statement spans, 77 bytes, zero locals, and
+30/30 normalized instructions. The two comparison procedures remain exact.
+
+Without editing its source, `update_acknowledgements` rises from 75.7738 to
+100: all 33 spans, 1,060 bytes and eight named locals (including their const
+qualification) match. The correct subtraction body restores three helper calls
+and the original frame size. The apparent `math::max` discrepancy was seven
+expanded frame displacements, three bytes each; it disappears too. No shared
+math helper needed adjustment. This disproves both old parked explanations.
+
+The global raw report records 37 improvements, 12 regressions (all 100-to-zero
+entries outside network), 12 fold-churn entries and no additions/removals.
+The derived ledger has no current-score or banked-maximum decrease; several
+generated aliases receive different source hashes while retaining 100. These
+are separate evidence channels, not a claim that the raw report is empty.
+Header-dependent recompilation emits more warnings than the prior incremental
+build: unused parameters, class/struct spelling, conversions, deprecations,
+enum-case and related diagnostics. The same four C4701, two C4715, two LNK4049,
+234 LNK4099 and two Scaleform extraction skips remain. Both network data gates
+retain `OPEN=0`.
+
 ## Reproduction
 
 ```sh

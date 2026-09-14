@@ -20,3 +20,11 @@ idiv  ecx                                div   dword ptr [ecx+18h]
                                          mov   [ebp-8], edx   ; remainder = bucket
 ```
 Steerable: emit the right signedness and reuse the divide for a paired `/`,`%`. In a /Ox TU a constant divisor becomes a magic-number multiply instead (integer-div-mod-magic-ox.md). cite: boost select_reactor::get_timeout select_reactor.ipp:285; hash_map::find hash_map.hpp:116.
+
+Power-of-two exception: retail network_core `operator-<u16>` at RVA `0x127b20`
+retains its frame and comparison call but lowers signed `% 65536` to
+`and eax,8000ffffh; jns; dec eax; or eax,ffff0000h; inc eax`.
+The preceding `add eax,10000h` belongs to the source numerator. This is not a
+signed-16-bit cast: at the serial-number half-window boundary the cast changes
+the result's sign. Reconstruct the arithmetic before blaming an inline boundary;
+the surrounding acknowledgement consumer calls this real helper.

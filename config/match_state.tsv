@@ -321,7 +321,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??$?BVfloat3@math@vostok@@@custom_config_value@render@vostok@@QBE?AVfloat3@math@2@XZ	vostok/render/core/dx11/custom_config_value_inline.h	render	done	MATCH	100	100	100	1	86	f	b0ed5896a0c4	auto: at 100% ceiling, demoted from queue
 ??$?BVfloat4@math@vostok@@@custom_config_value@render@vostok@@QBE?AVfloat4@math@2@XZ	vostok/render/core/dx11/custom_config_value_inline.h	render	done	MATCH	100	100	100	1	94	f	b0ed5896a0c4	auto: at 100% ceiling, demoted from queue
 ??$?DVanimation_lexeme@mixing@animation@vostok@@Vweight_lexeme@123@@mixing@animation@vostok@@YAAAVmultiplication_lexeme@012@AAVanimation_lexeme@012@AAVweight_lexeme@012@@Z	vostok/animation/mixing_multiplication_lexeme_inline.h	animation	done	MATCH	100	100	100	1	118	f	46820dc4b922	Target PDB maps the same one-line temporary construction and cloned_in_buffer expression. Retail inlines both temporary intrusive_ptr cleanup paths; base emits the binary-node destructor helper.
-??$?GG@network_core@vostok@@YAHABV?$sequence_number@G@01@0@Z	vostok/network_core/sequence_number_inline.h	network_core	parked	SIZE	81.3333	81.3333	81.3333	0	77		fb43a98dd6fa	network_core udp_misc (udp_match_client/flow_emulator/entry_point/allocators): structure + named-locals MATCH the target (verified structure-diff/info). Byte residual = LTCG/ICF call-boundary walls - LOG boost::function ctor scheduling, packet recv r<> inline-vs-call, allocator-template inlining, seed-immediate delinker asymmetry, secure-CRT reloc naming, dead-loop jmp-anchor (get_ip_address lever in review_todos.md). Not source-steerable.
+??$?GG@network_core@vostok@@YAHABV?$sequence_number@G@01@0@Z	vostok/network_core/sequence_number_inline.h	network_core	done	MATCH	100	100	100	2	77		2a146264abf9	Build c7afede9: 81.3333 to 100; three statements/77B, zero locals and all 30 normalized instructions match. Replaced incorrect s16 cast with retail signed modulo; half-window sign restored. update_acknowledgements also reaches 100 without a caller edit. No banked max loss; 12 raw report drops outside network remain separately reported.
 ??$?G_J@?$int_adapter@_J@date_time@boost@@QBE?AV012@ABV012@@Z	boost/date_time/int_adapter.hpp	boost	done	MATCH	100	100	100	0	1108		535fe926a4b9	
 ??$?HI@?$int_adapter@_J@date_time@boost@@QBE?AV012@ABV?$int_adapter@I@12@@Z	boost/date_time/int_adapter.hpp	boost	done	MATCH	100	100	100	0	761		cd515f1599a8	
 ??$?HVanimation_lexeme@mixing@animation@vostok@@@mixing@animation@vostok@@YA?AVexpression@012@AAV3012@AAVanimation_lexeme@012@@Z	vostok/animation/mixing_addition_lexeme_inline.h	animation	done	MATCH	100	100	100	2	159	f	0228d96347ce	Faithful generic source and caller family restored; target /GL selects an optimized COMDAT body while base selects the /Od game_core copy. Revisit after remaining consumer closure.
@@ -5608,7 +5608,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??0hw_hiz_occlusion_manager@render@vostok@@QAE@_NII@Z	vostok/render/engine/sources/hw_hiz_occlusion_manager.cpp	render	parked	QUANTITY	89.3346	89.3346	89.3346	7	1723		23da1a806fda	Full build verifies the retail min(width,height) mip selector: MAX 88.5545 to 89.3346 with no global MAX regression. The 19:16 statement residual and optimized-out current_rasterize_height remain; its declaration and use are preserved in source.
 ??0hw_hiz_point_list@render@vostok@@QAE@XZ	vostok/render/engine/sources/hw_hiz_point_list.cpp	render	done	MATCH	100	100	100	1	148	f	dbd257df9410	reconstructed complete Hi-Z point-list TU; class topology identical; set_points instruction flow exact
 ??0ik_processor@survarium@@IAE@XZ	vostok/game_core/sources/ik_processor.cpp	game_core	done	MATCH	100	100	100	1	41		0b56d40c0630	auto: at 100% ceiling, demoted from queue
-??0implementation_type@?$deadline_timer_service@U?$time_traits@Vptime@posix_time@boost@@@asio@boost@@@detail@asio@boost@@QAE@XZ	boost/asio/basic_socket.hpp	boost	done	MATCH	100	100	100	0	88		1bd23629279a	
+??0implementation_type@?$deadline_timer_service@U?$time_traits@Vptime@posix_time@boost@@@asio@boost@@@detail@asio@boost@@QAE@XZ	boost/asio/basic_socket.hpp	boost	done	MATCH	100	100	100	0	88		c3fe965cdb0c	
 ??0implementation_type@?$win_iocp_socket_service@Vtcp@ip@asio@boost@@@detail@asio@boost@@QAE@XZ	boost/asio/detail/win_iocp_socket_service.hpp	boost	done	MATCH	100	100	100	0	216		edbb16235620	
 ??0index_buffer@render@vostok@@QAE@I@Z	vostok/render/core/dx11/sources/index_buffer.cpp	render	parked	MATCH	99.9904	99.9904	100	3	281	f	b21bd3f4e67c	Fresh audit confirms exact four statements, const u32 local, 281-byte size, definition order, control flow, and operations. The sole operand is LOG_INFO retail line 24 versus reconstructed line 18; whitespace padding or per-line #line steering is excluded.
 ??0initiator_filter@logging@vostok@@QAE@ABU012@@Z	vostok/strings_detail_tuples_inline.h	vostok	inprogress	MATCH	90	90	100	0	83		38c7a140861f	
@@ -6974,7 +6974,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1lights_db@render@vostok@@QAE@XZ	vostok/render/engine/sources/lights_db.cpp	render	done	MATCH	100	100	100	1	178	f	36051e3de68d	
 ??1lobby_client@survarium@@QAE@XZ	vostok/game/sources/lobby_client.cpp	game	done	MATCH	100	100	100	1	235	f	c90cd71a7b6a	
 ??1lobby_menu@survarium@@UAE@XZ	vostok/game/sources/lobby_menu.cpp	game	done	MATCH	100	100	100	2	513	f	33db57267d12	integrated caller-cone reconstruction and target-structure audit
-??1lod_entry@particle@vostok@@QAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	26		37f2d0fd908a	
+??1lod_entry@particle@vostok@@QAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	26		2f4cb894c8fb	
 ??1log_file@logging@vostok@@QAE@XZ	vostok/logging/sources/log_file.cpp	logging	done	MATCH	100	100	100	2	67		d8405dbb4be0	auto: at 100% ceiling, demoted from queue
 ??1login_client@network@vostok@@QAE@XZ	vostok/network/sources/login_client.cpp	network	parked	MATCH	97.3804	99.7717	99.7717	1	315		efde4643233d	Target statements and flow match. Residuals are Boost function/bind lowering, LOG callback scheduling, fixed-string call boundaries, or ICF/COMDAT ownership; reopen after shared-header or compiler-context changes.
 ??1login_client_impl@network@vostok@@QAE@XZ	vostok/network/sources/login_client_impl.cpp	network	done	SIZE	94.9468	100	100	1	415		4e47618bb59f	Audited the complete login-client cone against target PDB structure, semantic flow, and call-site assembly.
@@ -7044,7 +7044,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??1particle_beam_emitter_instance@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_beam_emitter_instance.cpp	particle	done	MATCH	100	100	100	1	36		7991cfff4819	auto: at 100% ceiling, demoted from queue
 ??1particle_emitter_instance@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_emitter_instance.cpp	particle	done	MATCH	100	100	100	1	145		43b671ed6edd	Reconstructed instance cook through emitter factory, layout, render preparation, reset, material binding, and real render callers from target PDB and assembly.
 ??1particle_system@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_system.cpp	particle	done	MATCH	100	100	100	1	42		f180a983765d	auto: at 100% ceiling, demoted from queue
-??1particle_system_instance@particle@vostok@@UAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	58		37f2d0fd908a	
+??1particle_system_instance@particle@vostok@@UAE@XZ	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	58		2f4cb894c8fb	
 ??1particle_system_instance_impl@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_system_instance_impl.cpp	particle	done	MATCH	100	100	100	1	66		2d5a2fc339d2	Recovered target resource_ptr ownership and intrusive-list layout, world traversal, vtable order, insertion/removal control flow, and interlocked instance construction from PDB structure and assembly.
 ??1particle_world@particle@vostok@@UAE@XZ	vostok/particle/sources/particle_world.cpp	particle	done	MATCH	100	100	100	1	115		99169c2f934f	Recovered target resource_ptr ownership and intrusive-list layout, world traversal, vtable order, insertion/removal control flow, and interlocked instance construction from PDB structure and assembly.
 ??1particles_statistics_group@render@vostok@@QAE@XZ	vostok/render/engine/sources/statistics.h	render	done	MATCH	100	100	100	0	84	f	1eff9be2bdf5	
@@ -7935,8 +7935,8 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_G?$bind_t@XV?$mf3@XVweapon_cook@survarium@@AAVqueries_result@resources@vostok@@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@PAVweapon_core@2@@_mfi@boost@@V?$list4@V?$value@PAVweapon_cook@survarium@@@_bi@boost@@U?$arg@$00@3@V?$value@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@V?$value@PAVweapon@survarium@@@23@@_bi@3@@_bi@boost@@QAEPAXI@Z	boost/function/function_base.hpp	boost	done	MATCH	100	100	100	0	39	f	7f0b3237e361	
 ??_G?$btAxisSweep3Internal@G@@UAEPAXI@Z	bullet/bulletcollision/broadphasecollision/btaxissweep3.h	bullet	done	MATCH	100	100	100	0	45	f	aa8909894f46	
 ??_G?$cc_value@I@console_commands@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	70	f	72b8654d3e21	
-??_G?$concrete_type_helper@E@detail@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	45		3411954f54b8	
-??_G?$concrete_type_helper@Ubooby_trap_set_cook_data@survarium@@@detail@vostok@@UAEPAXI@Z	vostok/intrusive_ptr_inline.h	vostok	done	MATCH	100	100	100	0	44		37f2d0fd908a	
+??_G?$concrete_type_helper@E@detail@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	45		2f4cb894c8fb	
+??_G?$concrete_type_helper@Ubooby_trap_set_cook_data@survarium@@@detail@vostok@@UAEPAXI@Z	vostok/intrusive_ptr_inline.h	vostok	done	MATCH	100	100	100	0	44		2f4cb894c8fb	
 ??_G?$deadline_timer_service@Vptime@posix_time@boost@@U?$time_traits@Vptime@posix_time@boost@@@asio@3@@asio@boost@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	69		440cb9692a74	
 ??_G?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@UAEPAXI@Z	vostok/intrusive_list_inline.h	vostok	done	MATCH	100	100	100	0	44		d8af7619e572	
 ??_G?$fixed_size_allocator@Vresource_link@resources@vostok@@Vmutex@threading@3@@memory@vostok@@UAEPAXI@Z	vostok/math_functions_inline.h	vostok	done	MATCH	100	100	100	0	44	f	168722bcb13f	
@@ -7951,7 +7951,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_G?$resolver_service@Vtcp@ip@asio@boost@@@ip@asio@boost@@UAEPAXI@Z	boost/asio/impl/write.hpp	boost	done	MATCH	100	100	100	0	69		1bd23629279a	
 ??_G?$service_base@Vwin_iocp_io_service@detail@asio@boost@@@detail@asio@boost@@UAEPAXI@Z	boost/asio/basic_io_object.hpp	boost	done	MATCH	100	100	100	0	56		8ec24053d698	
 ??_G?$sound_instance_proxy_order_with_data@Ucreate_sound_propagator_params@sound@vostok@@@sound@vostok@@UAEPAXI@Z	vostok/sound/sources/sound_instance_proxy_order.h	sound	done	MATCH	100	100	100	0	68		a7090491a738	
-??_G?$sp_counted_impl_pd@PAXUnoop_deleter@socket_ops@detail@asio@boost@@@detail@boost@@UAEPAXI@Z	boost/asio/detail/impl/resolver_service_base.ipp	boost	done	MATCH	100	100	100	0	45		440cb9692a74	
+??_G?$sp_counted_impl_pd@PAXUnoop_deleter@socket_ops@detail@asio@boost@@@detail@boost@@UAEPAXI@Z	boost/asio/detail/impl/resolver_service_base.ipp	boost	done	MATCH	100	100	100	0	45		14f87227c988	
 ??_G?$stream_socket_service@Vtcp@ip@asio@boost@@@asio@boost@@UAEPAXI@Z	boost/asio/stream_socket_service.hpp	boost	done	MATCH	100	100	100	0	46		440cb9692a74	
 ??_G?$timer_queue@U?$time_traits@Vptime@posix_time@boost@@@asio@boost@@@detail@asio@boost@@UAEPAXI@Z	boost/function/function_base.hpp	boost	done	MATCH	100	100	100	0	69		7f0b3237e361	
 ??_G?$ui_text@Udynamic_text@ui@vostok@@@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_text_inline.h	ui	done	MATCH	100	100	100	0	45	f	a9dfb89fe6ec	
@@ -8204,7 +8204,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_GLoaderInfo@fl_display@Instances@AS3@GFx@Scaleform@@UAEPAXI@Z	src/gfx/as3/obj/display/as3_obj_display_loader.cpp	gfx	done	MATCH	100	100	100	0	35	f		
 ??_GLoaderTask@GFx@Scaleform@@UAEPAXI@Z	src/gfx/gfx_loaderimpl.cpp	gfx	inprogress	MATCH	99.9583	99.9583	100	0	73	f		
 ??_GLocalFrame@AS2@GFx@Scaleform@@UAEPAXI@Z	src/gfx/as2/as2_object.h	gfx	done	MATCH	100	100	100	0	35	f		
-??_GLog@Scaleform@@UAEPAXI@Z	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	35	f	69dc1e412363	
+??_GLog@Scaleform@@UAEPAXI@Z	vostok/scaleform/sources/factory.cpp	scaleform	done	MATCH	100	100	100	0	35	f	166eaf38855f	
 ??_GLogState@GFx@Scaleform@@UAEPAXI@Z	src/kernel/sf_stackmempool.h	gfx	done	MATCH	100	100	100	0	75	f		
 ??_GLongFormatter@Scaleform@@UAEPAXI@Z	src/kernel/sf_msgformat.cpp	gfx	done	MATCH	100	100	100	0	38	f		
 ??_GMappedTextureBase@Render@Scaleform@@UAEPAXI@Z	vostok/scaleform/sources/d3d1x_texture.h	scaleform	done	MATCH	100	100	100	1	83	f	89371b3edb16	strict rich-index instruction stream proves exact across objdiff COMDAT attribution gap
@@ -8560,7 +8560,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gcook_base@resources@vostok@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	31	f	cc7f3508c105	
 ??_Gcustom_operation_query@fs_new@vostok@@UAEPAXI@Z	vostok/fs/asynchronous_device_commands.h	fs	done	MATCH	100	100	100	1	86		3b50fdf84a5a	Compiler-generated deleting destructor: target inlines query_custom_operation_args cleanup while base calls its destructor; no source body exists to steer.
 ??_Gdamage_model@survarium@@UAEPAXI@Z	vostok/game_core/damage_model.h	game_core	done	MATCH	100	100	100	1	44		5c62c0421744	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
-??_Gdamage_protector@survarium@@UAEPAXI@Z	vostok/game_core/damage_model.h	game_core	done	MATCH	100	100	100	1	46		6fab404a4606	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
+??_Gdamage_protector@survarium@@UAEPAXI@Z	vostok/game_core/damage_model.h	game_core	done	MATCH	100	100	100	1	46		5c62c0421744	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
 ??_Gdamage_sensor@sensors@ai@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	44		e442b1e87dca	
 ??_Gdamage_zone@survarium@@UAEPAXI@Z	vostok/game_core/hit_initiator.h	game_core	done	MATCH	100	100	100	0	30	f	63b6bf2b29a1	
 ??_Gdamage_zone_core@survarium@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	44		3b189dbadffe	
@@ -8601,7 +8601,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Ginput_world@input@vostok@@UAEPAXI@Z	stlport/stl/_vector.h	stlport	done	MATCH	100	100	100	0	65	f	112db7bcc1ea	
 ??_Ginteraction_sensor@sensors@ai@vostok@@UAEPAXI@Z	vostok/vectora.h	vostok	done	MATCH	100	100	100	0	47		77f19322ccf9	
 ??_Ginventory@survarium@@UAEPAXI@Z	boost/utility/addressof.hpp	boost	done	MATCH	100	100	100	0	46		112db7bcc1ea	
-??_Ginventory_cook@survarium@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	44		1310d5d88106	
+??_Ginventory_cook@survarium@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	44		3b189dbadffe	
 ??_Ginventory_holder@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	69		440cb9692a74	
 ??_Ginventory_item@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	58		440cb9692a74	
 ??_Gitems_cook@survarium@@UAEPAXI@Z	boost/bind/bind_mf_cc.hpp	boost	done	MATCH	100	100	100	0	55		3b189dbadffe	
@@ -8612,7 +8612,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gladder_cook@survarium@@UAEPAXI@Z	boost/utility/addressof.hpp	boost	done	MATCH	100	100	100	0	44		9d0ed3edd0dc	
 ??_Glanding_point@survarium@@QAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	1	68		440cb9692a74	auto: at 100% ceiling, demoted from queue
 ??_Globby_menu@survarium@@UAEPAXI@Z	vostok/game/sources/lobby_menu.h	game	done	MATCH	100	100	100	0	30	f	c1ea07b99461	
-??_Globby_menu_external_handler@survarium@@UAEPAXI@Z	vostok/game/sources/lobby_menu_ui.cpp	game	done	MATCH	100	100	100	0	46	f	222f641982b5	
+??_Globby_menu_external_handler@survarium@@UAEPAXI@Z	vostok/game/sources/lobby_menu_ui.cpp	game	done	MATCH	100	100	100	0	46	f	440cb9692a74	
 ??_Glogic_error@stlp_std@@UAEPAXI@Z	boost/asio/detail/impl/win_iocp_socket_service_base.ipp	boost	done			100	100	0	44		3067a5ecca62	
 ??_Glogin_menu@survarium@@UAEPAXI@Z	vostok/game/sources/login_menu.h	game	done			100	100	0	30	f	662fa0d761de	
 ??_Gloose_oct_tree@collision@vostok@@UAEPAXI@Z	vostok/collision/sources/loose_oct_tree.cpp	collision	done	MATCH	100	100	100	0	63	f	600d7e8362b9	
@@ -8635,7 +8635,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gobject_particle_visual@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	74	f	03b7c39b74f2	
 ??_Gobject_query_callback@?1??object_query@bullet_physics_world@physics@vostok@@UAEXQAVbt_collision_shape@34@ABVfloat4x4@math@4@1AAV?$vectora@Uclosest_ray_result@physics@vostok@@@4@GG@Z@UAEPAXI@Z	bullet/bulletcollision/narrowphasecollision/btconvexcast.h	bullet	done	MATCH	100	100	100	0	31	f	450cd624e6c4	
 ??_Gobject_sky@survarium@@UAEPAXI@Z	boost/bind/bind.hpp	boost	done	MATCH	100	100	100	0	80	f	440cb9692a74	
-??_Gobject_sound@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	30	f	1310d5d88106	
+??_Gobject_sound@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	30	f	440cb9692a74	
 ??_Gobject_volume_fog@survarium@@UAEPAXI@Z	vostok/render/facade/volume_fog_parameters.h	render	done	MATCH	100	100	100	0	36	f	42ffc2a95baf	
 ??_Gobject_weapon@survarium@@UAEPAXI@Z	vostok/game/sources/object_weapon.h	game	parked	MATCH	37.931	37.931	43.7586	1	91	f	32850e793749	Compiler-generated zero-local/zero-source-statement wrapper: target inlines the faithful out-of-line destructor (7 blocks), while base calls it (3 blocks). This is an LTCG inline boundary, not missing source.
 ??_Gobject_wire@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	30	f	03b7c39b74f2	
@@ -8663,7 +8663,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gparticle_event_on_play@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_actions.h	particle	done	MATCH	100	100	100	1	56		cc109bcc5a0a	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gparticle_system@particle@vostok@@UAEPAXI@Z	vostok/particle/sources/particle_system_cook.h	particle	done	MATCH	100	100	100	1	44		5801674ee7ff	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gparticle_system_instance_cook@particle@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	64		3b189dbadffe	
-??_Gparticle_system_instance_impl@particle@vostok@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	44		37f2d0fd908a	
+??_Gparticle_system_instance_impl@particle@vostok@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	44		2f4cb894c8fb	
 ??_Gparticle_system_wrapper_cook@particle@vostok@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	64		f79a730fba56	
 ??_Gparticle_world@particle@vostok@@UAEPAXI@Z	vostok/particle/base_particle_inline.h	particle	done	MATCH	100	100	100	1	44		63cfa5b506e8	Compiler-generated ICF wall: scalar-deleting destructor structure and size match; residual instructions are only folded destructor/operator-delete relocation identities
 ??_Gphysical_path_mounter@vfs@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	44		d67c8139e8bd	
@@ -8698,7 +8698,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gsimple_game_project@survarium@@UAEPAXI@Z	vostok/vector_inline.h	vostok	done	MATCH	100	100	100	0	30	f	222f641982b5	
 ??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	vostok/game/sources/animations_search_service.h	game	parked	MATCH	91.6667	91.6667	91.6667	1	32	f	f756b6cc88bf	Generated wrapper has 0/0 PDB statements, no locals, identical destructor/delete callees, and the same three-block flow. Target retains a redundant pre-call mov eax, esi; base emits the 30-byte COMDAT under a different header owner. Revisit during Phase 4 fold convergence.
 ??_Gsingle_sound@sound@vostok@@UAEPAXI@Z	vostok/sound/single_sound.h	sound	done	MATCH	100	100	100	0	44		459e30b17911	
-??_Gsingle_sound_cook@sound@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	45		7f0b3237e361	
+??_Gsingle_sound_cook@sound@vostok@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done	MATCH	100	100	100	0	45		3b189dbadffe	
 ??_Gskeleton@animation@vostok@@UAEPAXI@Z	vostok/animation/skeleton_inline.h	animation	parked				100	2	36	f		Compiler-generated deleting-destructor presence/COMDAT residual.
 ??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	vostok/animation/anim_track_common.h	render	parked	MATCH	95	95	95	2	60	f	a24af8d556ed	Fresh audit confirms zero statements and identical five-block scalar-deleting-destructor flow, destructor call, conditional delete, and return. Target PDB ownership is an ICF misattribution to animation; the 60:62-byte residual is generated delete-argument scheduling.
 ??_Gskeleton_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/animation/anim_track_common.h	render	done	MATCH	100	100	100	1	30	f	a24af8d556ed	Non-animation symbol misattributed to animation by folded COMDAT/PDB ownership.
@@ -8719,7 +8719,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gspeed_tree_allocator@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/speedtree.cpp	render	parked				0	2	31	f		Fresh PDB/class audit confirms the implicit virtual destructor on the exact four-byte allocator and the 31-byte scalar deleting helper. Retail retains it beside the local static; current LTCG omits the unused standalone helper. An explicit destructor or delete anchor would add source absent from retail.
 ??_Gspeedtree_instance_impl@render@vostok@@UAEPAXI@Z	vostok/render/facade/model.h	render	done	MATCH	100	100	100	0	30	f	3a85f2d94fac	
 ??_Gspeedtree_tree@render@vostok@@UAEPAXI@Z	vostok/render/facade/model.h	render	done	MATCH	100	100	100	0	30	f	8e891861f544	
-??_Gspeedtree_tree_component@render@vostok@@UAEPAXI@Z	stlport/stl/_uninitialized.h	stlport	done	MATCH	100	100	100	0	30	f	3067a5ecca62	
+??_Gspeedtree_tree_component@render@vostok@@UAEPAXI@Z	stlport/stl/_uninitialized.h	stlport	done	MATCH	100	100	100	0	30	f	486e67259840	
 ??_Gstage@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/stage.h	render	done	MATCH	100	100	100	0	31	f	52de428e1e8b	
 ??_Gstage_ambient_lighting@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/effect_sky_ambient_occlusion.h	render	done	MATCH	100	100	100	0	30	f	2e34080254a0	
 ??_Gstage_ambient_occlusion@render@vostok@@UAEPAXI@Z	vostok/math_color.h	render	done	MATCH	100	100	100	1	30	f	897ff833e7ca	Target and base PDB headers both record a zero-source virtual destructor; cross-unit objdiff proves the destructor and scalar-deleting wrapper exact while the base rich index omits their function records. Reviewed ownership is stage_ambient_occlusion.h, so the exact COFF evidence is attributed without adding source.
@@ -8749,12 +8749,12 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gui_progress_bar@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_progress_bar.h	ui	done	MATCH	100	100	100	0	45	f	58175575d64c	
 ??_Gui_scroll_view@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_scroll_view.h	ui	done	MATCH	100	100	100	0	30	f	5f7f1e11112f	
 ??_Gui_text_edit@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_text_edit.h	ui	done	MATCH	100	100	100	0	30	f	cc2ee96cbd62	
-??_Gui_window@ui@vostok@@UAEPAXI@Z	stlport/stl/_algobase.c	stlport	done	MATCH	100	100	100	0	30	f	222f641982b5	
+??_Gui_window@ui@vostok@@UAEPAXI@Z	stlport/stl/_algobase.c	stlport	done	MATCH	100	100	100	0	30	f	112db7bcc1ea	
 ??_Gui_world@ui@vostok@@UAEPAXI@Z	vostok/ui/sources/ui_world.h	ui	done	MATCH	100	100	100	0	57	f	461534297c82	
 ??_Gunmanaged_resource@resources@vostok@@UAEPAXI@Z	boost/bind/storage.hpp	boost	done	MATCH	100	100	100	0	30	f	3fce0d7fb78b	
 ??_Gusable_object@survarium@@UAEPAXI@Z	vostok/game_core/ladder.h	game_core	done	MATCH	100	100	100	2	44		c46965147347	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
 ??_Guser_render_model_instance@render@vostok@@UAEPAXI@Z	vostok/render/engine/sources/render_model.h	render	done	MATCH	100	100	100	0	46	f	8f323fb37c1f	
-??_Gverify_callback_base@detail@ssl@asio@boost@@UAEPAXI@Z	boost/asio/ssl/detail/verify_callback.hpp	boost	done	MATCH	100	100	100	0	45		dca1fda47ead	
+??_Gverify_callback_base@detail@ssl@asio@boost@@UAEPAXI@Z	boost/asio/ssl/detail/verify_callback.hpp	boost	done	MATCH	100	100	100	0	45		8ec24053d698	
 ??_Gvfs_association@vfs@vostok@@UAEPAXI@Z	vostok/vfs/association.h	vfs	done	MATCH	100	100	100	1	45		39e3411db1d6	Target deleting destructor is an unretained COMDAT; ctor, dtor, and vtable source are present but no linked base caller keeps the association family.
 ??_Gvfs_sub_fat_resource@resources@vostok@@UAEPAXI@Z	vostok/core/sources/resources_hdd_manager.h	core	done	MATCH	100	100	100	0	85	f	2d8bd1eb3c1f	
 ??_Gvictory_item@survarium@@UAEPAXI@Z	vostok/game/sources/victory_item.h	game	done	MATCH	100	100	100	1	74	f	571dc10e264a	Phase 4 LTCG boundary: target inlines the zero-statement destructor into its scalar-delete wrapper and suppresses the regular symbol; base emits that destructor solely for the same wrapper.
@@ -8770,7 +8770,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ??_Gweapon_core_inactive_state@survarium@@UAEPAXI@Z	vostok/game_core/sources/weapon_core_inactive_state.h	game_core	done	MATCH	100	100	100	2	44		29c751dd24bd	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
 ??_Gweapon_core_inactive_state_cook@survarium@@UAEPAXI@Z	vostok/game_core/sources/weapon_core_inactive_state.h	game_core	done	MATCH	100	100	100	1	44		29c751dd24bd	game_core PDB topology audit: restored retail declaration/access/alias/enum structure and verified the fresh module sweep has zero real header or source divergences
 ??_Gweapon_core_shotgun_reload_start_substate@survarium@@UAEPAXI@Z	boost/bind/bind_template.hpp	boost	done	MATCH	100	100	100	0	46		3b189dbadffe	
-??_Gweapon_core_shotgun_reload_state@survarium@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	44		3b189dbadffe	
+??_Gweapon_core_shotgun_reload_state@survarium@@UAEPAXI@Z	vostok/memory_allocator_helper_inline.h	vostok	done	MATCH	100	100	100	0	44		2f4cb894c8fb	
 ??_Gweapon_core_shotgun_reload_state_cook@survarium@@UAEPAXI@Z	boost/function/function_template.hpp	boost	done			100	100	0	44		440cb9692a74	
 ??_Gweapon_core_show_state@survarium@@UAEPAXI@Z	vostok/animation/mixing_addition_lexeme_inline.h	game_core	done	MATCH	100	100	100	1	47		0784e1d430ef	Game-core deleting destructor misattributed to an animation header by folded COMDAT/PDB source ownership.
 ??_Gweapon_user_animations_container@survarium@@UAEPAXI@Z	boost/utility/addressof.hpp	boost	done			100	100	0	44		440cb9692a74	
@@ -16457,7 +16457,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?ReallocInPlace@Granulator@HeapPT@Scaleform@@QAE_NPAXIII@Z	src/kernel/heappt/heappt_granulator.cpp	gfx	done	MATCH	100	100	100	0	472	f		
 ?ReallocInPlace@SysAllocGranulator@HeapPT@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_root.cpp	gfx	done	MATCH	100	100	100	0	8	f		
 ?ReallocInPlace@SysAllocMapper@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocmapper.cpp	gfx	blocked				0	0	282	f		
-?ReallocInPlace@SysAllocPaged@Scaleform@@UAE_NPAXIII@Z	src/gfx/as2/as2_object.h	gfx	done			100	100	0	5	f		
+?ReallocInPlace@SysAllocPaged@Scaleform@@UAE_NPAXIII@Z	src/gfx/as2/as2_object.h	gfx	done	MATCH	100	100	100	0	5	f		
 ?ReallocInPlace@SysAllocStatic@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocstatic.cpp	gfx	done	MATCH	100	100	100	0	115	f		
 ?ReallocInPlace@SysAllocWinAPI@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_sysallocwinapi.cpp	gfx	blocked				0	0	10	f		
 ?ReallocInPlace@SysAllocWrapper@HeapPT@Scaleform@@UAE_NPAXIII@Z	src/kernel/heappt/heappt_root.cpp	gfx	done	MATCH	100	100	100	0	50	f		
@@ -30835,7 +30835,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?update_aabb@?$render_collision_object@Vrender_model_instance_impl@render@vostok@@@render@vostok@@UAE?AVaabb@math@3@ABVfloat4x4@53@@Z	vostok/render/engine/sources/render_collision_object.h	render	done	MATCH	100	100	100	0	66	f	32e3ef9ad636	
 ?update_aabb@aabb_object@collision@vostok@@EAE?AVaabb@math@3@ABVfloat4x4@53@@Z	vostok/collision/sources/aabb_object.cpp	collision	done	MATCH	100	100	100	0	81	f	e4fba0a373f8	
 ?update_aabb@collision_object@collision@vostok@@UAE?AVaabb@math@3@ABVfloat4x4@53@@Z	vostok/collision/sources/collision_object.cpp	collision	done	MATCH	100	100	100	1	39	f	1a1d31e3722c	auto: at 100% ceiling, demoted from queue
-?update_acknowledgements@udp_match_connection@network_core@vostok@@AAEXV?$sequence_number@G@23@0G@Z	vostok/network_core/sources/udp_match_connection.cpp	network_core	parked	SIZE	75.7738	75.7738	75.7738	1	1060		5404bd187792	[PARTIAL 59.47%] 33/33; the % floor is the three operator-<u16> statements the base inlines (0x51 each) where the target calls the kept COMDAT (0x1c) - the is_low_level_packet r<u16> wall - plus math::max the OTHER direction (base calls, target inlines branchless - the udp_match_client ctor precedent) and predicate-ctor fold scheduling. | network_core udp_match_connection: structure + named-locals MATCH the target (verified pdb_fetch --view structure-diff/info); byte residual is inline-vs-call codegen (packet serialize(pbyte&)/sequence_number operator=/append template/packet_reader r<>/asio handler inlined in LTCG target vs single-TU /Od base) - not source-steerable. See claude@NOTE + packet_reader_inline.h.
+?update_acknowledgements@udp_match_connection@network_core@vostok@@AAEXV?$sequence_number@G@23@0G@Z	vostok/network_core/sources/udp_match_connection.cpp	network_core	done	MATCH	100	100	100	2	1060		5404bd187792	Build c7afede9: 75.7738 to 100 without caller source change. Correct sequence subtraction restores three real helper calls, all 33 statement spans/1060B and eight named locals. The max-update 21B excess was seven long stack displacements, now gone; previous inline-wall explanation disproved.
 ?update_action@bt_character_controller@physics@vostok@@QAEXI@Z	vostok/physics/sources/character_controller.cpp	physics	done	MATCH	100	100	100	1	45	f	9e24dbe3bacf	auto: at 100% ceiling, demoted from queue
 ?update_affects@body_part_parameters@survarium@@AAEXI@Z	vostok/game_core/sources/body_part_parameters.cpp	game_core	done	MATCH	100	100	100	4	182		999d1ff64b05	auto: at 100% ceiling, demoted from queue
 ?update_ambient_volume@scene@render@vostok@@QAEXIABUambient_volume_properties@23@@Z	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	1	137	f	c8b42fd49325	Same nine statements and eight-block CFG; residual is retail stack-this ret 0x0c versus base register-this ret 0x08 LTCG convention.
