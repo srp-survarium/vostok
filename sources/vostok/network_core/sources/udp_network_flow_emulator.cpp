@@ -49,7 +49,7 @@ namespace network_core {
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 	udp_network_flow_emulator_options const&	options
 ) :
-	m_delayed_packets	( &allocator ),
+	m_delayed_packets	( allocator ),
 	m_lost_packets_random	( 0x995a34 ),
 	m_ping_random		( 0x995a35 ),
 	m_out_of_order_random	( 0x995a36 ),

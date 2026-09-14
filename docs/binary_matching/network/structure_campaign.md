@@ -535,6 +535,94 @@ per-function evidence and whole-scope regression controls. Parked status is
 not a completion criterion. Isolate variants only when measured failure or
 regression requires diagnosis, not by default for every small source change.
 
+### Combined module pass: baseline f333b5785 (measurement pending)
+
+`oneshot_audit.tsv` snapshots all 286 roster entries (159 network, 127
+network_core) before the combined build. It is a dated audit, not a replacement
+for the live ledger. The PDB comparator produces 1,441 raw findings: 99
+statement-structure, 60 relative-line-geometry, two locals, seven location and
+two statement-file mismatches, plus 13 target-only, ten base-only and eight
+ambiguous identity records. Counts are evidence-channel findings, not unique
+unfinished functions. The two-sided addressed diff was run for all 99 subjects
+flagged by structure/locals; the ambiguous destroy_client selector requires
+its known RVA. Many raw row mismatches collapse to aligned addressed spans.
+No-source/STUB grep finds no remaining no-source body or STATE[STUB] in either
+module; target-unobservable server surfaces remain explicitly qualified.
+
+This pass batches the following source hypotheses into one full measurement:
+
+- `handle_send`: singular success suppression in the existing target line103
+  gap, preserving the const bool local. At line113 retail stores buffer+4 in
+  a pointer temp and normalizes the low bit with neg/sbb/neg. The existing
+  pointer_cast helper plus an enum-valued packet-count ternary reproduces that
+  source hypothesis without a fabricated named local (base was17B short).
+- `fill_packet_header`: pointer_cast for the final word destination, matching
+  retail's otherwise missing pointer-value temp. The two12B-short serialize
+  reference-slot expansions are separate residuals, not silently declared fixed.
+- Flow-emulator constructor: allocator reference selects vectora's existing
+  allocator-value overload. Retail copies the allocator value directly; base
+  pointer overload added a returned-pointer store/reload and five bytes.
+- Statistics comparison: retail checks a constant true after the six stream
+  comparisons (mov1/test/je). Restore the final &&true expression, including
+  its branch-distance effect; do not invent scalar comparisons absent in bytes.
+- Login resolver: use the array-sized three-argument _itoa_s overload, as the
+  core async connector already does. Retail materializes the integer argument
+  in an unnamed slot before the four-argument CRT call (12B gap); keep its three
+  recorded locals, with no new port temporary.
+- Packet reallocate: add singular new_size suppression on the existing physical
+  line while retaining UNREACHABLE_CODE and its argument. This is explicitly
+  warning hygiene for an unobservable body, not proof of original placement.
+  The body-recovery question remains open. Counter suppression in
+  check_consistency is not invented in its consecutive addressed lines.
+
+No Boost/STL/allocator/cast helper bodies outside these modules are changed.
+The live previous_state review question now reflects the measured warning-only
+result. All original scores, raw findings and untouched functions remain
+controls for the single combined build. Recheck source/class declarations,
+statement geometry, local provenance, all module scores, global maxima and
+attribution changes after that build; no pre-build result constitutes closure.
+
+Fresh source indexing parses all25 scoped TUs and1,000 facts. The strict source
+comparison exits0 with734 MATCH,94 AMBIGUOUS and253 UNOBSERVABLE; no deterministic
+failure. Use the namespace scope `vostok::network` for compare-source (which
+includes network_core), not its filesystem indexing scope. The initial attempt
+used the latter and reported unsupported; the corrected invocation is the gate
+result above. Source/docs diff checks pass. Original target field variants and
+unobservable mutability remain represented, not coerced into apparent matches.
+
+## Measured partial batch: build 8f7907 (2026-09-14)
+
+The full build succeeded in14m06s. This is a partial two-module batch, not
+module closure. Flow-emulator construction (88.3276 to100), stats comparison
+(94.5455 to100), and login resolve (96 to100) now have matching addressed
+structure and total sizes. Their named-local sets also agree. handle_send
+improves96.9531 to99.8779 with19 statements/745 bytes on both sides and the
+same two locals including buffer's nested scope; rendered instruction streams
+are identical, but the remaining object-score difference is not yet explained.
+fill_packet_header improves71.0556 to74.6667; only its two serialize spans
+remain12 bytes short apiece (target160/base136 total).
+
+The success/new_size warnings are gone; the two check_consistency counters
+remain unused. The enum-valued ternary introduces C4244 on its byte store.
+Explicit narrowing is queued for the next measured pass, not silently included
+in this snapshot. External linker warnings and two Scaleform extraction skips
+remain. This checkpoint is not a warning-free or merge-ready closure claim.
+
+The strict source gate still passes. Fresh raw PDB channels report96 structure
+mismatches,60 geometry,2 locals,6 location,2 statement-file,17 target-only,
+10 base-only and6 ambiguous identities. These are overlapping raw findings,
+not unique unfinished-function counts. Global report:223 improvements,
+121 drops to zero,100 fold changes, no additions/removals. Neither module has
+a numeric score or banked-maximum drop. Three roster functions lose current
+attribution (channel destructor and order/response deleting destructors);
+their maxima remain. Lost attributions remain review work, not proven harmless.
+
+The packet_reader::r raw-local discrepancy is parameter provenance: target
+passes destination on the stack and returns with ret4; base promotes it to ECX
+and uses ret. Both perform the same copy and cursor advance; the6-byte gap is
+at that boundary. destination and size are parameters, not extra body locals.
+Do not invent or delete body locals to clear that comparator finding.
+
 ## Reproduction
 
 ```sh
@@ -552,7 +640,7 @@ Filter the uncapped class JSON by anchored namespace after extraction.
 an empty result is not a successful namespace audit. Raw captures live under
 `binaries/` or task scratch space, not as a second committed evidence database.
 
-Work proceeds one measured unit at a time. Build notifications trigger prompt
-return to the measured unit. Any next-unit preparation stays outside its build
+Work now proceeds in user-requested module-scale batches. Build notifications
+trigger prompt return to the measured batch. Any preparation stays outside its build
 inputs. No statement, local, type variant or one-sided procedure is deleted
 merely to make a counter reach zero.

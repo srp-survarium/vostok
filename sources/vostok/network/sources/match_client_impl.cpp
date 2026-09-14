@@ -47,8 +47,8 @@ match_client_impl::~match_client_impl( )
 // as a named [ebp-4] local. Tested: adding an ASSERT_U reader to "use" the dead
 // variable does NOT drop the symbol - it instead emits a real eater statement
 // (12th stmt, BASE_ONLY, % -> 2.7), a quantity regression - so the symbol-emission
-// sushi@TODO: Does the row-free unused-variable macro recover the target's
-// unnamed store? Retain it pending a measured macro/locals comparison.
+// sushi@TODO: The row-free unused macro preserves the store but does not explain
+// why retail omits its named local. Recover that source/projection distinction.
 // claude@NOTE: the original's __LINE__ immediate pins the LOG to physical line 56
 // (the `}` must have shared a line); we keep the natural layout and accept the
 // 1-byte immediate residual per the no-line-padding rule

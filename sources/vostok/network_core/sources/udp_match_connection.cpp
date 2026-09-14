@@ -83,7 +83,7 @@ void udp_match_connection::handle_send(
 
 	const bool	success	= m_outgoing_packets.erase( packet );
 	ASSERT				( UNKNOWN_EXPRESSION_T( success ) );
-
+	VOSTOK_UNREFERENCED_PARAMETER( success );
 	if ( !packet->is_reliable )
 		delete_udp_match_packet	( m_packets_allocator, packet );
 
@@ -93,7 +93,7 @@ void udp_match_connection::handle_send(
 
 	else {
 		pbyte	buffer	= packet->buffer_to_send( );
-		*buffer			= ( *reinterpret_cast< u16* >( buffer + 4 ) & 1 ) != 0;
+		*buffer			= ( *pointer_cast< u16* >( buffer + 4 ) & 1 ) ? udp_match_multiple_packets : udp_match_single_packet;
 		m_unacknowledged_packets.push_back( packet );
 	}
 
@@ -140,7 +140,7 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	packet.sequence_id.serialize( buffer );
 	m_remote_sequence_id.serialize( buffer );
 
-	*reinterpret_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
+	*pointer_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
 	buffer	+= 2;
 }
 

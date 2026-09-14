@@ -67,8 +67,8 @@ void login_client_impl::on_resolved(
 }
 // claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
 // schedule + the functor bind-copy lowering in the async_resolve bind; the
-// _itoa_s line also hoists m_host_port to an unnamed temp slot the base loads
-// inline (compiler temp-scheduling, not a source local)
+// array-sized _itoa_s overload materializes the port argument before the CRT
+// call; preserve the helper boundary without adding a named source local.
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )
 {
 	LOG_INFO		( "[LOGIN] resolving...\r\n" );
@@ -79,7 +79,7 @@ void login_client_impl::resolve( boost::function< void ( resolve_error_types_enu
 	boost::asio::ip::tcp::resolver* const resolver	= new boost::asio::ip::tcp::resolver( m_io_service );
 
 	char port[6];
-	_itoa_s			( m_host_port, port, sizeof( port ), 10 );
+	_itoa_s			( m_host_port, port, 10 );
 
 	boost::asio::ip::tcp::resolver::query query( boost::asio::ip::tcp::v4( ), m_host, port );
 	resolver->async_resolve	(
