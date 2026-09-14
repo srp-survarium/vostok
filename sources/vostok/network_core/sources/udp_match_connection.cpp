@@ -93,7 +93,7 @@ void udp_match_connection::handle_send(
 
 	else {
 		pbyte	buffer	= packet->buffer_to_send( );
-		*buffer			= ( *pointer_cast< u16* >( buffer + 4 ) & 1 ) ? udp_match_multiple_packets : udp_match_single_packet;
+		*buffer			= u8( ( *pointer_cast< u16* >( buffer + 4 ) & 1 ) ? udp_match_multiple_packets : udp_match_single_packet );
 		m_unacknowledged_packets.push_back( packet );
 	}
 

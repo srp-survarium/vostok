@@ -252,7 +252,7 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 	buffer					+= account_name_length;
 
 
-	char version[8]			= { 0 };
+	char version[8]			= { };
 	strings::copy			( version, "0.100b" );
 	memcpy					( buffer, version, sizeof( version ) );
 	buffer					+= sizeof( version );

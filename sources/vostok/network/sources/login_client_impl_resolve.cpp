@@ -65,10 +65,10 @@ void login_client_impl::on_resolved(
 	m_connection_state	= resolved;
 	functor			( successfully_resolved, iterator );
 }
-// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
-// schedule + the functor bind-copy lowering in the async_resolve bind; the
-// array-sized _itoa_s overload materializes the port argument before the CRT
-// call; preserve the helper boundary without adding a named source local.
+
+
+
+
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )
 {
 	LOG_INFO		( "[LOGIN] resolving...\r\n" );

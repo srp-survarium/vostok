@@ -623,6 +623,55 @@ and uses ret. Both perform the same copy and cursor advance; the6-byte gap is
 at that boundary. destination and size are parameters, not extra body locals.
 Do not invent or delete body locals to clear that comparator finding.
 
+## Follow-up preparation after c83a43d03
+
+Two source hypotheses are queued: explicitly narrow handle_send's enum-valued
+tag to u8, and use empty aggregate initialization for sign_in_on_connected's
+version[8]. Retail's line261 initializes the array with xor plus two dword
+stores (8 bytes); the current explicit first zero produces a byte store plus
+seven-byte remainder initialization (16 bytes). Both sides record exactly
+buffer:u8*, version:char[8], account_name_length:const u8. No initialization is
+removed and no local is introduced. The exact resolver's stale residual comment
+is removed without shifting any physical line. These are not measured results.
+
+Additional investigation: HTTP status find calls retain an out-of-line two-arg
+string overload in retail, whereas base expands length() and calls the three-arg
+overload. The current expression already invokes the right overload; no vendor
+helper change or alternate search algorithm is justified. Packet deletion's
+15-byte deficit is allocator-policy deallocate/decrement calls versus retail
+expansions. Enqueue-order destruction's14-byte excess is expanded intrusive_ptr
+dereference/assert versus the target's folded dereference call. These are
+concrete outstanding helper-boundary questions, not attributed to argument
+promotion and not closed. Serialization similarly retains its pbyte& signature
+but differs in materializing that reference at each inline site.
+
+Raw class audit of the latest measured image:50 identical,2 duplicate-record
+multiplicities,5 overlapping variant sets,2 missing classes,1 differing server
+class. The live sequence_number<u16> is identical with19 declarations; an older
+generated header omits/reorders information, so no order change is retained.
+Do not add artificial instantiations for missing sequence_number<u8> or the
+2048-packet arena. The server hook offset and alternate variants remain open.
+
+## Follow-up measurement: build08912eab
+
+Succeeded13m05s. The explicit narrowing removes the owned C4244;
+handle_send remains99.8779,19 spans745B with matching structure. Resolver
+comment cleanup is byte-neutral:100,7 spans623B. Empty aggregate initialization
+reproduces the target's8-byte initialization span; sign_in_on_connected
+improves current77.6519 to79.6296 with18 spans and the same3 locals. Its base
+total shrinks631 to623 bytes versus retail539. The remaining differences are
+callback expansion61B, buffer and strlen spans1B each, and async bind21B.
+
+Important: changing sign-in's body resets its banked max93.3481 to79.6296.
+This historical headroom remains unresolved; a better current score is not
+proof that the old banked peak was exceeded. Global current report has exactly
+one improvement and zero regressions/additions/removals/fold changes. All other
+network/network_core ledger scores and classes are unchanged.
+
+The two check_consistency C4189 counters remain. Existing dependent-module
+warnings,234 LNK4099,2 LNK4049 and2 Scaleform UnexpectedEof extraction skips
+also remain. No warning-free or complete-module claim is made.
+
 ## Reproduction
 
 ```sh
