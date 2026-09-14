@@ -426,6 +426,73 @@ earlier incremental TCP build: four C4701 and two C4715 outside this TU,
 unused/conversion/unreachable/assignment warnings, two LNK4049 and 234 LNK4099,
 plus the two known Scaleform extraction skips. Both network data gates are open-free.
 
+### Packet variant selected by emitted consumers
+
+The class comparator reported `udp_match_packet` as variant-overlap: the old
+source matched one complete type record, but not the variant used by the live
+procedures. The two target records both have size 0x12c and identical offsets
+and access. Type index 26566 has an eight-bit `sequence_id_type`/`sequence_id`
+and `packet_header_size=4`; index 464170 has sixteen-bit sequences and
+`packet_header_size=6`. Those three declaration differences must stay together.
+
+Retail constructor RVA `0xda900` stores a word at offset 0x24 (+0x51), not a byte.
+`fill_packet_header` RVA `0x545bc0` reads that word (+0x35) and advances by two;
+`send_packets_list` RVA `0x547180` copies a word from packet offset 0x24 (+0x138).
+The send queue's packet copies and by-value predicate argument also load words.
+The current connection already uses sixteen-bit sequence state and serializes
+three words into its six-byte transport header. These emitted uses identify the
+second complete variant; merely accepting an overlapping class record missed
+the incompatible field in the constructor.
+
+The source now selects that variant consistently (alias, field and enum), and
+the connection/predicate code directly accesses the correctly typed field.
+Eight lines of reinterpretation workarounds are removed. No object size, field
+offset, access, virtual status, declaration order or source-file ownership changes.
+The already-resolved acknowledgement inline-wall comment is also removed; its
+source-line effects will be included in the full build. Neither raw target type
+variant is deleted from the evidence or forced into an artificial runtime object.
+
+This is a header/consumer cluster, not a shared-helper inlining tweak. Recheck
+the packet constructor, header writer, both send paths, predicate expansions,
+acknowledgements, strict source/class gates and global measurements before closure.
+
+The fresh pre-build source index parses all 25 scoped translation units and
+records 1,000 facts. The strict gate passes with 734 `MATCH`, 94 `AMBIGUOUS`,
+253 `UNOBSERVABLE` and zero deterministic failures. This unchanged gate count
+does not erase the runtime difference between variants; consumer provenance
+supplies the selection evidence that the declaration gate alone cannot.
+
+Build `1af7e46ab1ab4b23b107a840680b3021` succeeds in 14m58s. The constructor
+improves from 81.4068 to 84.9831 and now initializes both sequence fields as
+words. Its two addressed spans match, but total size is still 179/191 bytes:
+the base packet constructor is inlined in base and called in retail. This
+zero-row initializer difference is not covered by the projected MATCH verdict.
+The three connection consumers retain 71.0556, 95.811 and 97.5688 respectively,
+with 7, 42 and 71 aligned spans and the previously observed SIZE residuals.
+Acknowledgements retain 100 and all 33 spans/1,060 bytes. The two expanded
+predicates retain the retail word loads, including remove_if offset 0x7d and
+all seven find_if loads; their total sizes remain 279 and 376 bytes.
+
+Rebuilt packet type index 32633 matches the complete sixteen-bit retail
+variant, including all 29 declarations and size 300. The class verdict remains
+variant-overlap because the other retail variant still exists; it is not erased.
+The pre-build strict source gate applies to the unchanged measured source.
+
+Global raw report: 246 improvements, 129 regressions (all to zero), 80 fold-churn
+entries, no additions/removals. No banked maximum or numeric current score in
+the derived ledger decreases. Thirty-two current attributions become absent:
+15 Boost, seven render, five GFx, two game_core, two Bullet and one Opcode;
+none belong to the network/network_core module roster. These measurement
+losses are retained as unresolved attribution evidence, not silently discarded.
+
+Both network modules recompiled. Packet truncation warnings C4305/C4309 are
+gone. Remaining owned warnings are new_size, registered_packets_count,
+allocated_count, success, and network's previous_state; OpenSSL contributes
+included-header deprecations. Four C4701 and two C4715 remain outside these
+modules, as do two LNK4049, 234 LNK4099 and two Scaleform extraction skips.
+Source/docs pass git diff --check; generated TSV empty final fields naturally
+trigger its trailing-tab diagnostic and are not hand-normalized.
+
 ## Reproduction
 
 ```sh

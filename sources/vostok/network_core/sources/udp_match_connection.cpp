@@ -137,7 +137,7 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( *buffer );
 	ASSERT( UNKNOWN_EXPRESSION_T( packet_type < 2 ) );
 
-	reinterpret_cast< sequence_number< u16 >& >( packet.sequence_id ).serialize( buffer );
+	packet.sequence_id.serialize( buffer );
 	m_remote_sequence_id.serialize( buffer );
 
 	*reinterpret_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
@@ -172,7 +172,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	ASSERT( UNKNOWN_EXPRESSION_T( packets_count > 1 ) );
 	udp_match_packet* const	packet_to_send	= new_udp_match_packet( m_packets_allocator );
 	packet_to_send->is_reliable				= 0;
-	reinterpret_cast< sequence_number< u16 >& >( packet_to_send->sequence_id )	= reinterpret_cast< sequence_number< u16 >& >( packets_list->sequence_id );
+	packet_to_send->sequence_id				= packets_list->sequence_id;
 	*packet_to_send->buffer_to_send( )		= udp_match_multiple_packets;
 	fill_packet_header				( *packet_to_send );
 
@@ -239,7 +239,7 @@ public:
 
 	inline	bool		operator( )					( vostok::network_core::udp_match_packet const* const packet ) const
 	{
-		return reinterpret_cast< vostok::network_core::sequence_number< u16 > const& >( packet->sequence_id ) == m_sequence_id;
+		return packet->sequence_id == m_sequence_id;
 	}
 
 private:
@@ -339,7 +339,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 		udp_match_packet* const	packet	= m_packets_to_send.pop_front( );
 		packet->next				= NULL;
 
-		reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id )	= m_local_sequence_id;
+		packet->sequence_id			= m_local_sequence_id;
 		packets.push_back			( packet );
 	}
 
@@ -365,7 +365,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 
 		packet->last_send_time_in_ms	= current_time_in_ms;
 		ASSERT						( UNKNOWN_EXPRESSION );
-		reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id )	= ++m_local_sequence_id;
+		packet->sequence_id			= ++m_local_sequence_id;
 		ASSERT						( UNKNOWN_EXPRESSION );
 		++packet->send_count;
 		u32	packets_count			= 1;
@@ -380,12 +380,12 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 					packet_list_tail		= *i;
 					( *i )->next			= NULL;
 					( *i )->last_send_time_in_ms	= current_time_in_ms;
-					reinterpret_cast< sequence_number< u16 >& >( ( *i )->sequence_id )	= reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id );
+					( *i )->sequence_id		= packet->sequence_id;
 					++( *i )->send_count;
 					++packets_count;
 				}
 
-			packets.erase			( std::remove_if( packets.begin( ), packets.end( ), packets_in_list_predicate( reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id ) ) ), packets.end( ) );
+			packets.erase			( std::remove_if( packets.begin( ), packets.end( ), packets_in_list_predicate( packet->sequence_id ) ), packets.end( ) );
 		}
 
 		m_last_send_time_in_ms		= current_time_in_ms;
@@ -453,7 +453,7 @@ public:
 
 	inline	bool	operator( )				( vostok::network_core::udp_match_packet* packet ) const
 	{
-		if ( reinterpret_cast< vostok::network_core::sequence_number< u16 >& >( packet->sequence_id ) != m_sequence_id )
+		if ( packet->sequence_id != m_sequence_id )
 			return false;
 
 		delete_udp_match_packet( m_packets_allocator, packet );
@@ -471,12 +471,6 @@ STATIC_SIZE_ASSERT(sequence_id_predicate, 0xC);
 namespace vostok {
 namespace network_core {
 
-// claude@NOTE: residual is an inline-vs-call wall. Statement count + the 8 named
-// locals match the target. The target keeps the free template operator-< u16 >( ) and
-// the implicit sequence_number assignment out-of-line (single `call`); the single-TU
-// base inlines the operator-'s first level (the operator<= branch) and the address
-// temps for the reference-arg serialize/operator= sites. Same root cause as
-// is_low_level_packet - not source-steerable here.
 void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		remote_sequence_id,
 	sequence_number< u16 >		local_sequence_id,
