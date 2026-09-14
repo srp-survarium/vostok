@@ -66,9 +66,7 @@ void login_client_impl::on_resolved(
 	functor			( successfully_resolved, iterator );
 }
 
-
-
-
+#line 72
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )
 {
 	LOG_INFO		( "[LOGIN] resolving...\r\n" );

@@ -77,7 +77,7 @@ void udp_match_connection::handle_send(
 
 	const bool	success	= m_outgoing_packets.erase( packet );
 	ASSERT				( UNKNOWN_EXPRESSION_T( success ) );
-	VOSTOK_UNREFERENCED_PARAMETER( success );
+	VOSTOK_UNREFERENCED_PARAMETER( success ); // sushi@TODO: The retail line gap permits, but does not identify, this macro.
 	if ( !packet->is_reliable )
 		delete_udp_match_packet	( m_packets_allocator, packet );
 

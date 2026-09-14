@@ -988,6 +988,51 @@ Twenty-five base S_COMPILE records match all25 retail records: frontend/backend
 15.0.30729.1,Cpp,Pentium3,LTCG enabled,security checks disabled. This metadata
 does not record the optimization/inlining switches or complete command line.
 
+## Review follow-up batch (build d178f08c)
+
+Local branch codex/network-review-followup-20260914 starts above measured
+4e1a18303 without rewriting PR579. Requested resolve cleanup replaces padding
+with #line72, preserving target brace73/log74. Callback uses #line43 and a
+single-line failure callback to align the body records; closing-brace location
+still differs and remains explicitly open. No arbitrary blank padding added.
+
+PR579 questions now have source TODOs plus review_todos rows for the constant
+true spelling and both suppression-placement questions. Raw PDB confirms both
+timestamp members are volatile long; the duplicate obsolete investigate row was
+removed while retaining the existing resolved record. Review notes for the send
+length and unreachable break are supported by the exact retail operand/edge.
+The old default grouping entered in d5d40dad1 and was corrected in bf09ac11b;
+the historical commit does not establish why that reconstruction was chosen.
+
+Prepared OFFSET diagnostics are integrated. Read-only matching with exact-name
+and file disambiguation finds no additional equal-total/equal-body-size but
+shifted-body cases in this snapshot. The ten differing-total cases remain open;
+the new diagnostic must not be presented as an engine matching gain.
+
+Full build d178f08cea324c1ab30413507ae807a0 succeeded in 13m05s. The callback
+improved from 99.9902 to 100 with eleven body spans, 383 bytes and zero named
+locals; its log is now at retail line 56. Closing line 63 versus 65 remains
+an open geometry question. No report regressions, additions, removals or fold
+churn were recorded. No warnings were attributed to either scoped module;
+the additional game recompilation emitted out-of-scope warnings, and the two
+known Scaleform extraction skips remain. The pre-build Rust suite passed 95 tests.
+
+The subsequent raw class audit covers 60 target names: 50 identical, two with
+record multiplicity only, five overlapping variant sets, two missing base
+records, and one different class (server container types embed differing session
+hook offsets). No declaration-order discrepancy was reported. In particular,
+sequence_number<u16> already has identical raw class structure: the proposed
+source overload swap was not justified and was never applied. The u8 complete
+record is absent from base. Source-definition comparison reports no scoped
+order inversion, subject to its existing pairing/line/symbol coverage limits.
+
+A fresh source AST audit covers 25 translation units and 1002 facts. Its 46
+reported declaration-order checks pass, but an independent Rust coverage audit
+finds 52 ambiguous-position and 236 unpaired qualified declaration names excluded
+from order comparison. These are exclusions, not 288 source bugs. Both sequence
+specializations are unpaired in that source view. Make these limitations explicit
+before interpreting a clean source-order summary as module-wide closure.
+
 ## Reproduction
 
 ```sh

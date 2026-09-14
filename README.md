@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,482 / 13,014 functions exact (80.54%) &middot; 11,081 / 13,014 functions exact-max (85.15%) &middot; 93.51% fuzzy &middot; 95.11% fuzzy-max.**
+**Overall: 10,483 / 13,014 functions exact (80.55%) &middot; 11,082 / 13,014 functions exact-max (85.15%) &middot; 93.51% fuzzy &middot; 95.11% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -32,7 +32,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `physics`       |    14 |     134 / 198 (67.7%) |     155 / 198 (78.3%) |  88.1% |     93.2% |
 | `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
 | `engine`        |    22 |     154 / 162 (95.1%) |     159 / 162 (98.1%) |  99.4% |     99.9% |
-| `network`       |    25 |      86 / 159 (54.1%) |      92 / 159 (57.9%) |  90.6% |     91.8% |
+| `network`       |    25 |      87 / 159 (54.7%) |      93 / 159 (58.5%) |  90.6% |     91.8% |
 | `network_core`  |    22 |      77 / 127 (60.6%) |      77 / 127 (60.6%) |  96.9% |     96.9% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
@@ -191,6 +191,7 @@ PDB `inspect --view structure-diff` compares projected body statements. It now
 flags whole-function `TOTAL SIZE` differences even when those statements agree,
 and reports `NO BODY STATEMENTS COMPARED` for an empty projection. A structure
 match alone does not certify initializer/frame bytes or byte equality.
+`OFFSET` diagnostics expose shifted body boundaries even when span sizes agree.
 
 To investigate linker/PDB ordering without rebuilding game sources, run the
 fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.

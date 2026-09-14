@@ -155,7 +155,7 @@ void udp_match_client::check_consistency( ) const
 	u32 const registered_packets_count	= m_packets_allocator.allocated_size( ) / sizeof( udp_match_packet );
 	u32 const allocated_count			= ( m_network_flow_emulator ? m_network_flow_emulator->delayed_packets_count( ) : 0 ) + m_connection.packets_count( );
 	ASSERT( UNKNOWN_EXPRESSION_T( registered_packets_count == allocated_count ) );
-	VOSTOK_UNREFERENCED_PARAMETER	( registered_packets_count );
+	VOSTOK_UNREFERENCED_PARAMETER	( registered_packets_count ); // sushi@TODO: Reconcile suppression placement with retail's consecutive source lines.
 	VOSTOK_UNREFERENCED_PARAMETER	( allocated_count );
 }
 

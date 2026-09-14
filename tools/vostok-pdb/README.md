@@ -14,6 +14,9 @@ An equal nonempty projection is explicitly qualified as not byte equality;
 inspect initializer/frame records, locals and assembly before claiming closure.
 Raw method attributes determine static/instance status even when a cached
 signature disagrees.
+Aligned statements also report `OFFSET` when their function-relative boundaries
+differ, including cases with identical body-span sizes and total function size.
+This is a machine-boundary diagnostic, not proof of different source ordering.
 
 ```text
 vostok-pdb index pdb --pdb FILE --exe FILE --database DB --side target

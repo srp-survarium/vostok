@@ -352,14 +352,11 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
     let mut ds: Vec<D> = Vec::new();
     for r in &rows {
         match r {
-            // Equal statements and blank-line gaps are not divergences - skip.
-            StructRow::Equal { .. }
-            | StructRow::EmptyEqual
-            | StructRow::EmptyOnlyTarget
-            | StructRow::EmptyOnlyBase => {}
+            // Blank-line gaps alone do not imply an instruction-boundary change.
+            StructRow::EmptyEqual | StructRow::EmptyOnlyTarget | StructRow::EmptyOnlyBase => {}
             // SIZE: same statement, different byte size. Anchor on the editable BASE
             // side (line/code); the target contributes its size (the goal).
-            StructRow::Changed { base: b, target: t } => {
+            StructRow::Changed { base: b, target: t } | StructRow::Equal { base: b, target: t } => {
                 if let (
                     Row::Stmt {
                         off: toff,
@@ -375,7 +372,19 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
                     },
                 ) = (t, b)
                 {
-                    let delta = signed_hex(*bs as i64 - *ts as i64);
+                    let mut tags = Vec::new();
+                    if bs != ts {
+                        tags.push(format!("SIZE {}", signed_hex(*bs as i64 - *ts as i64)));
+                    }
+                    if boff != toff {
+                        tags.push(format!(
+                            "OFFSET {}",
+                            signed_hex(*boff as i64 - *toff as i64)
+                        ));
+                    }
+                    if tags.is_empty() {
+                        continue;
+                    }
                     ds.push(D {
                         taddr: Some(va(target, *toff)),
                         baddr: Some(va(base, *boff)),
@@ -384,7 +393,7 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
                         tline: Some(*tline),
                         bline: Some(*line),
                         code: code_of(b, *line),
-                        tag: format!("SIZE {delta}"),
+                        tag: tags.join("; "),
                     });
                 }
             }
@@ -681,5 +690,21 @@ mod tests {
         assert!(diff.contains("TOTAL SIZE -0x4"));
         assert!(diff.contains("SIZE -0x4"));
         assert!(!diff.contains("STRUCTURE MATCH"));
+    }
+
+    #[test]
+    fn equal_total_and_body_sizes_do_not_hide_shifted_boundaries() {
+        let mut target = function(11, Some(8));
+        target.statements[2].size = 2;
+        let mut base = target.clone();
+        base.statements[0].size = 2;
+        base.statements[1].off = 2;
+        base.statements[2].off = 10;
+        base.statements[2].size = 1;
+        let diff = render_structure_diff(&base, &target);
+        assert!(diff.contains("OFFSET +0x1"));
+        assert!(!diff.contains("STRUCTURE MATCH"));
+        assert!(!diff.contains("TOTAL SIZE"));
+        assert!(render_structure_diff(&target, &base).contains("OFFSET -0x1"));
     }
 }

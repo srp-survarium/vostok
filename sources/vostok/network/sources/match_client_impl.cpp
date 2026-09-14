@@ -33,8 +33,8 @@ match_client_impl::~match_client_impl( )
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// sushi@TODO: Recover the remaining source-location gap before LOG_ERROR;
-// retain the distinct direct-empty and safe-bool callback guards.
+// sushi@TODO: Verify the pinned body locations and remaining closing-brace gap.
+#line 43
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	switch ( m_state ) {
@@ -50,12 +50,7 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 			} else {
 				LOG_ERROR				( "connection forbidden" );
 				if ( m_on_connected )
-					m_on_connected		(
-						successfully_connected,
-						successfully_handshaked,
-						no_socket_error,
-						invalid_session_id
-					);
+					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, invalid_session_id );
 			}
 			break;
 		default: NODEFAULT( );
