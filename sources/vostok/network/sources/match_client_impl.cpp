@@ -35,46 +35,34 @@ match_client_impl::~match_client_impl( )
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// claude@NOTE: structure matches 11/11; residuals are all per-call-site
-// inline-vs-call: base inlines packet_reader::eof inside the ASSERT_U eater,
-// function2::operator= (set_on_packet_received) and function4::operator() (both
-// m_on_connected calls) where the target calls the COMDATs, and picks the and-form
-// safe-bool at the first `if(m_on_connected)` where the target uses operator!+test
-// (a per-site compiler choice - the second site IS the and-form on both). Not
-// source-steerable.
-// claude@NOTE: the target records ZERO named locals here while previous_state's
-// line-45 store survives in a [ebp-2B4h] temp-region slot; our /GL build emits it
-// as a named [ebp-4] local. Tested: adding an ASSERT_U reader to "use" the dead
-// variable does NOT drop the symbol - it instead emits a real eater statement
-// (12th stmt, BASE_ONLY, % -> 2.7), a quantity regression - so the symbol-emission
-// sushi@TODO: The row-free unused macro preserves the store but does not explain
-// why retail omits its named local. Recover that source/projection distinction.
-// claude@NOTE: the original's __LINE__ immediate pins the LOG to physical line 56
-// (the `}` must have shared a line); we keep the natural layout and accept the
-// 1-byte immediate residual per the no-line-padding rule
+// sushi@TODO: Verify single-state dispatch against the unnamed selector store
+// and zero-local target record; callback lowering remains a separate question.
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
-	state const previous_state	= m_state;
-	VOSTOK_UNREFERENCED_PARAMETER( previous_state );
-	if ( message_type == set_status_ready_for_battle ) {
-		ASSERT_U			( reader.eof( ) );
-		m_state				= handshaked;
-		m_client.set_on_packet_received( m_on_packet_received );
+	switch ( m_state ) {
+		case waiting_for_permission:
+			if ( message_type == set_status_ready_for_battle ) {
+				ASSERT_U			( reader.eof( ) );
+				m_state				= handshaked;
+				m_client.set_on_packet_received( m_on_packet_received );
 
-		if ( m_on_connected )
-			m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
+				if ( m_on_connected )
+					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
 
-		return;
+				return;
+			}
+
+			LOG_ERROR				( "connection forbidden" );
+			if ( m_on_connected )
+				m_on_connected		(
+					successfully_connected,
+					successfully_handshaked,
+					no_socket_error,
+					invalid_session_id
+				);
+			break;
+		default: NODEFAULT( );
 	}
-
-	LOG_ERROR				( "connection forbidden" );
-	if ( m_on_connected )
-		m_on_connected		(
-			successfully_connected,
-			successfully_handshaked,
-			no_socket_error,
-			invalid_session_id
-		);
 }
 
 // claude@NOTE: structure matches 2/2, the clone/connect statement byte-aligned;

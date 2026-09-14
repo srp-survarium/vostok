@@ -62,8 +62,8 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );
 
-	reader.r< u16 >( );
-	reader.r< u16 >( );
+	sequence_number< u16 >::deserialize( reader );
+	sequence_number< u16 >::deserialize( reader );
 	const u16	bits	= reader.r< u16 >( );
 
 	if ( ( bits & 1 ) == 0 )
@@ -530,7 +530,6 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 {
 	switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
 		case low_level_message_type_initiate_disconnection :
-		default :
 			if ( m_state != connected )
 			{
 				break;
@@ -555,6 +554,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 
 		case low_level_message_type_continuous_flow :
 			break;
+		default : NODEFAULT( );
 	}
 }
 

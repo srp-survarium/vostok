@@ -669,6 +669,23 @@ pub fn compare(
         }
         .cloned()
         .unwrap_or_default();
+        if candidates.is_empty() {
+            // An ICF group can select a different decorated representative while
+            // retaining the same full procedure signature. Keep the identity
+            // discrepancy below; pairing is not evidence of symbol equality.
+            candidates = by_name
+                .get(target_fn.name.as_str())
+                .cloned()
+                .unwrap_or_default();
+        }
+        let same_name: Vec<_> = candidates
+            .iter()
+            .copied()
+            .filter(|(_, b)| b.name == target_fn.name)
+            .collect();
+        if !same_name.is_empty() {
+            candidates = same_name;
+        }
         let same_file: Vec<_> = candidates
             .iter()
             .copied()
@@ -701,6 +718,18 @@ pub fn compare(
         }
         let (index, base_fn) = candidates[0];
         consumed.insert(index);
+        if target_fn.mangled != base_fn.mangled {
+            findings.push(Finding {
+                category: "identity".into(),
+                subject: subject.clone(),
+                verdict: Verdict::Mismatch,
+                origin: Origin::Correlated,
+                detail: format!(
+                    "paired exact full signature {}; decorated representatives differ: target={} base={}",
+                    target_fn.name, target_fn.mangled, base_fn.mangled
+                ),
+            });
+        }
         let locals = |entry: &FunctionEntry| {
             let mut rows: Vec<_> = entry
                 .locals
@@ -912,6 +941,54 @@ mod tests {
                 .all(|f| f.verdict == Verdict::StaleInput)
         );
         assert!(Verdict::StaleInput.fails_strict());
+    }
+
+    #[test]
+    fn alias_signature_pairing_preserves_identity_and_location_differences() {
+        let fixture = Fixture::new();
+        let pdb = fixture.file("input.pdb", "pdb");
+        let exe = fixture.file("input.exe", "exe");
+        let target = fixture.0.join("target.sqlite");
+        let base = fixture.0.join("base.sqlite");
+        let mut t = entry("void a::execute()");
+        let mut b = t.clone();
+        t.mangled = "target_representative".into();
+        b.mangled = "base_representative".into();
+        b.file = "other.cpp".into();
+        write_database(&target, "target", &pdb, &exe, &[t]).unwrap();
+        write_database(&base, "base", &pdb, &exe, &[b]).unwrap();
+        let findings = compare(&target, &base, None, None).unwrap();
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.category == "identity" && f.verdict == Verdict::Mismatch)
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.category == "location" && f.verdict == Verdict::Mismatch)
+        );
+        assert!(findings.iter().any(|f| f.category == "locals"));
+        assert!(!findings.iter().any(|f| f.category == "presence"));
+    }
+
+    #[test]
+    fn shared_representative_does_not_make_distinct_signatures_ambiguous() {
+        let fixture = Fixture::new();
+        let pdb = fixture.file("input.pdb", "pdb");
+        let exe = fixture.file("input.exe", "exe");
+        let target = fixture.0.join("target.sqlite");
+        let base = fixture.0.join("base.sqlite");
+        let mut first = entry("void a::execute()");
+        first.mangled = "shared".into();
+        let mut second = first.clone();
+        second.name = "void b::execute()".into();
+        let entries = [first, second];
+        write_database(&target, "target", &pdb, &exe, &entries).unwrap();
+        write_database(&base, "base", &pdb, &exe, &entries).unwrap();
+        let findings = compare(&target, &base, None, None).unwrap();
+        assert!(findings.iter().all(|f| f.verdict == Verdict::Match));
+        assert_eq!(findings.len(), 10);
     }
 
     #[test]

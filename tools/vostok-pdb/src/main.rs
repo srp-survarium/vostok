@@ -422,10 +422,6 @@ fn inspect(args: Inspect) -> vostok_pdb::Result<()> {
     let Some(function) = selected else {
         return vostok_pdb::error!("no function matched");
     };
-    if args.json {
-        println!("{}", serde_json::to_string_pretty(function)?);
-        return Ok(());
-    }
     let mut base = match &args.base {
         Some(path) => {
             let exact = evidence::search(path, None, Some(&function.mangled), None, None)?;
@@ -448,6 +444,11 @@ fn inspect(args: Inspect) -> vostok_pdb::Result<()> {
             "ambiguous base selection ({} procedures); inspect the base with an exact --rva",
             base.len()
         );
+    }
+    if args.json {
+        let selected = json_inspect_record(&args.view, function, &base)?;
+        println!("{}", serde_json::to_string_pretty(selected)?);
+        return Ok(());
     }
     match args.view.as_str() {
         "listing" | "target" => render_selected(function, &args),
@@ -477,6 +478,65 @@ fn inspect(args: Inspect) -> vostok_pdb::Result<()> {
         other => return vostok_pdb::error!("unknown view {other}"),
     }
     Ok(())
+}
+
+fn json_inspect_record<'a>(
+    view: &str,
+    target: &'a vostok_pdb::rich_context::FunctionEntry,
+    base: &'a [vostok_pdb::rich_context::FunctionEntry],
+) -> vostok_pdb::Result<&'a vostok_pdb::rich_context::FunctionEntry> {
+    match view {
+        "listing" | "target" | "structure" | "info" => Ok(target),
+        "base" => match base {
+            [record] => Ok(record),
+            [] => vostok_pdb::error!("no base function matched"),
+            _ => vostok_pdb::error!("ambiguous base selection"),
+        },
+        "diff" | "structure-diff" => {
+            vostok_pdb::error!("JSON comparison views are unsupported; use compare pdb --json")
+        }
+        other => vostok_pdb::error!("unknown view {other}"),
+    }
+}
+
+#[cfg(test)]
+mod inspect_tests {
+    use super::json_inspect_record;
+    use vostok_pdb::rich_context::FunctionEntry;
+
+    fn record(rva: u32) -> FunctionEntry {
+        serde_json::from_value(serde_json::json!({
+            "name": "test", "mangled": "?test@@", "rva": rva,
+            "size": rva, "file": "test.cpp", "statements": [], "instructions": []
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn json_base_selects_candidate_not_target() {
+        let target = record(1);
+        let base = [record(2)];
+        assert_eq!(json_inspect_record("base", &target, &base).unwrap().rva, 2);
+        assert_eq!(
+            json_inspect_record("target", &target, &base).unwrap().rva,
+            1
+        );
+    }
+
+    #[test]
+    fn json_base_does_not_hide_missing_or_ambiguous_candidates() {
+        let target = record(1);
+        assert!(json_inspect_record("base", &target, &[]).is_err());
+        assert!(json_inspect_record("base", &target, &[record(2), record(3)]).is_err());
+    }
+
+    #[test]
+    fn json_diffs_do_not_masquerade_as_target_records() {
+        let target = record(1);
+        for view in ["diff", "structure-diff", "typo"] {
+            assert!(json_inspect_record(view, &target, &[]).is_err());
+        }
+    }
 }
 
 fn render_selected(function: &vostok_pdb::rich_context::FunctionEntry, args: &Inspect) {

@@ -2,6 +2,43 @@
 
 # Network / network-core structural closure
 
+## Measurement f8aff026 (2026-09-14)
+
+Full game build succeeded in 11m15s. `is_low_level_packet` now has eight
+matching spans, 120 bytes, and 100% current/banked score: the sequence wrapper
+deserializations recover the missing word copies. `process_low_level_message`
+now has twelve matching spans and 283 bytes, rising to 99.9873%; the default
+`NODEFAULT` restores the three enum comparisons. Its logging line immediate
+still differs (base 544, target 591), so this is not byte-exact closure.
+
+`match_client_impl::on_packet_received` now has zero named locals on both sides.
+Its unnamed state selector matches the target shape; eleven spans remain,
+383 target / 392 base bytes, with a nine-byte first callback-check residual.
+Current/banked score rises from 95.8333 to 95.8726. No module score decreased.
+
+A fresh 286-row inspection pass using the isolated, tested exact-signature
+candidate selector reports network: 107 addressed matches, 48 differences,
+4 selector failures; network_core: 93 matches, 24 differences, 10 selector
+failures. Selector failures include target-side folded aliases and genuinely
+missing base records; none are counted as matches. These totals are not
+whole-function byte closure or a substitute for declaration/class verification.
+
+The build emits the existing two `udp_match_client` C4189 warnings for
+`registered_packets_count` and `allocated_count`, but none in the edited
+functions. External/linker warnings and two Scaleform UnexpectedEof extraction
+skips remain. Incremental warning counts cannot establish whole-tree cleanliness.
+
+Global report review remains open: 100 reported drops, 218 improvements,
+95 fold-churn entries, no additions/removals. Final report/cross-unit scores
+recover at least the prior score for 71 drops; the change list is generated
+before cross-unit scoring. The remaining 29 entries cover 25 unique symbols:
+five rendered-instruction matches, seven call-name-only differences, two
+instruction/operand differences, eleven unresolved selectors. Preserve these
+findings rather than calling every zero harmless. `render_model` has an ESI/EDI
+difference; `DIPixelProvider` has a vtable-symbol difference requiring data-alias
+verification. Unchanged source outside the two edited engine files does not by
+itself prove all emitted code is unchanged.
+
 This campaign covers both modules. A module is not complete merely because
 the byte score is high or a declaration gate passes. Every observable source
 defect must be corrected and measured; unresolved compiler, type-provenance,
@@ -671,6 +708,78 @@ network/network_core ledger scores and classes are unchanged.
 The two check_consistency C4189 counters remain. Existing dependent-module
 warnings,234 LNK4099,2 LNK4049 and2 Scaleform UnexpectedEof extraction skips
 also remain. No warning-free or complete-module claim is made.
+
+## Full-pass checkpoint at f9b1819ae (not yet built)
+
+All286 ledger selectors were swept against the fresh databases:270 were
+directly pairable,196 of those report addressed STRUCTURE MATCH,74 retain an
+addressed diff. Sixteen selectors need alias/RVA or missing-base handling;
+pinning recovers the unsigned-int append and folded functor/string execution
+comparisons, and both destroy_client overloads. The scratch per-function
+capture is /tmp/vostok-network-full-pass-f9b1819.tsv. These are inspection
+counts, not closure counts. No full game build has been launched for this pass.
+
+The sweep exposed an inspect CLI defect: --view base --json returned the
+target record before resolving the candidate. Earlier assertions of identical
+rendered instructions using paired JSON inspection are invalid. The text
+structure comparisons, raw class comparisons and objdiff scores are unaffected.
+The Rust fix selects the base first, rejects missing/ambiguous candidates, and
+rejects unsupported JSON diff views instead of returning misleading records.
+All76 Rust tests pass, including3 new JSON-selection regression tests.
+
+Independent rerun using --database separately for each side yields270 paired
+records,59 identical rendered instruction streams and two differing local
+sets: previous_state and the packet-reader destination parameter already
+tracked above. In particular handle_send is NOT instruction-identical: target
+frame0xdc versus base0xcc, shifted temporary slots, differing folded call names,
+and LOG line immediates119/125 versus101/107 remain despite equal19 spans745B.
+Its local set does agree. Do not attribute those frame differences to argument
+promotion or describe the function as fully closed.
+
+Queued engine hypotheses, to be measured only after the complete module pass:
+- is_low_level_packet: consume the two sequence fields through existing
+  sequence_number<u16>::deserialize rather than discarding two raw u16 reads.
+  Retail emits a u16 reader call plus two word copies per field (20B) while
+  base discards each result (8B). The helper constructs the sequence wrapper
+  without introducing a named caller local; keep reader and bits only.
+- process_low_level_message: separate the unreachable default from case zero.
+  Retail compares against0,1,2; current case0/default merging removes the first
+  comparison. NODEFAULT is a hypothesis for the retail fall-through dispatch,
+  not yet a measured reconstruction. Do not change the recorded bool read or
+  invent a reachable default action.
+- match_client_impl::on_packet_received: a single-state switch is now queued
+  instead of the reconstructed previous_state local. The target copies m_state
+  to an unnamed selector-region slot at line45 and starts the message guard at
+  line47, with no named locals. waiting_for_permission is the callback's initial
+  state; the success path replaces this callback before entering normal packet
+  processing. Test the sole-state dispatch plus unreachable default without
+  inventing another local. This is not yet proven; its source TODO and external
+  review row remain open, and its callback paths must be measured intact.
+
+The presence pass also found that folded representatives could differ while
+their full demangled signatures still agreed. Comparator pairing now narrows
+shared representatives by full signature, and falls back to exact signatures
+when the decorated key is absent. Such fallback preserves an explicit correlated
+identity mismatch with both names; it does not suppress source-location or body
+differences. Two new tests cover signature disambiguation and preservation of
+identity/location discrepancies. All78 Rust tests pass. Refreshed raw findings:
+13 target-only,7 base-only,4 correlated identity mismatches; zero ambiguous
+identity findings. The explicit identity mismatches preserve representative
+differences rather than hiding them as matches. Location now has11 mismatches,
+statement-files4, locals2, statement-structure97 and geometry62. Newly paired
+bodies explain the increased comparison coverage; these are not engine gains.
+
+The total-size audit additionally identifies ten functions whose addressed
+spans match but total sizes do not: async_connector ctor128/134,
+match_client ctor1046/1082, network tcp_packet_client ctor339/345,
+udp_match_connection ctor553/546, udp_match_packet ctor179/191,
+login_client dtor315/313, match_client_impl dtor104/113,
+client_destroyer deleting dtor46/44, packet_reader::r24/18,
+login_client::sign_in_impl201/199 (target/base bytes). Initializer and epilogue
+differences remain work even when the addressed renderer says STRUCTURE MATCH.
+The async_connector ctor6B excess is an extra this-pointer temporary around
+the m_on_error default-construction call; the declared member and operation
+already agree. Do not add an assertion or fabricated local to compensate.
 
 ## Reproduction
 

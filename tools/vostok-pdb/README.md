@@ -28,6 +28,18 @@ vostok-pdb divergence --target-pdb TARGET_PDB --base-pdb BASE_PDB \
 Every fact carries an origin (`OBSERVED`, `CORRELATED`, `INFERRED`, or
 `REVIEWED`). Comparison verdicts are `MATCH`, `MISMATCH`, `TARGET_ONLY`,
 `BASE_ONLY`, `AMBIGUOUS`, `UNOBSERVABLE`, `UNSUPPORTED`, or `STALE_INPUT`.
+
+`inspect --view base --json` selects the paired candidate record and rejects
+missing or ambiguous candidates. JSON `diff`/`structure-diff` views are not
+implemented: use the text views or `compare pdb --json`. Earlier versions
+incorrectly returned the target record for all JSON views; target-vs-base
+instruction/local comparisons made that way must be rerun.
+
+PDB comparison first narrows shared decorated representatives by full signature.
+If the decorated representative is absent, an exact full-signature candidate
+can still be compared. Such a pairing retains a correlated `identity:MISMATCH`
+with both representative names; source-location differences remain independent.
+It does not prove byte equality or canonical ownership of an ICF group.
 Inferences and reviewed hypotheses never become `MATCH`.
 
 Comparisons validate the indexed PDB/EXE hashes. Source comparison also checks
