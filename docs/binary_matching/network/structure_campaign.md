@@ -875,6 +875,49 @@ enum consumer retains11/11 spans and383/392 bytes, with the same first-guard9B
 residual. No new score changes are attributed to this batch. Earlier-build
 global unresolved findings are not erased by this empty delta report.
 
+## Next batch after c0dd
+
+First handshake success guard now tests !m_on_connected.empty(). Retail calls
+the empty-result alias atRVA1dd0 then directly tests the returned bool; failure
+guard retains safe-bool neg/sbb/not/and and stays unchanged. Broad callback
+inspection found no other justified direct-empty replacement, including both
+TCP size-receive template specializations. This remains unmeasured source work.
+
+Prepared generator changes now integrated: preserve raw overload-list order,
+extract static fields without instance offsets, retain supported field/method
+interleaving and access transitions.89 isolated tests passed, including a mixed
+declaration-order fixture. Retail generation succeeded: predicate copy then
+ordinary constructor; private fields before public destructor; async_connector
+fields before destructor; protected static resource_class in a validation class.
+Nested declarations remain outside this renderer's order guarantee. No engine
+class is reordered from generated output alone.
+
+## Build c2f22d02cdf346919eefae52d65b5953 verification
+
+Full game build succeeded in10m35s. The direct-empty success guard closes the
+nine-byte excess: on_packet_received now has11 addressed spans and383 bytes on
+both sides, zero named locals, and cur/max99.9902 (previous95.87255). The failure
+guard retains its safe-bool conversion. The instruction diff still shows the
+LOG_ERROR line immediate53 versus retail56; this is not byte-exact closure.
+Folded call names differ and must not be confused with different callees solely
+from their displayed aliases. Original guard spelling is not uniquely recoverable
+from this folded empty-result test. Its pending source TODO will be cleaned up
+in the next measured source batch, retaining the remaining geometry question.
+
+report-changes has one improvement and zero regressions, added, removed or
+fold-churn entries. No network/network_core warnings, including the two requested
+unused locals. Other warnings persist:18 C4995,2 C4715,5 C4702,4 C4701,2 C4706,
+2 LNK4049 and234 LNK4099; two Scaleform module reads still report UnexpectedEof.
+The previous broader f195 regression audit remains open despite this zero-delta
+regression report. Generator batch passed89 tests before this measured build.
+
+Independent retail source-checksum audit confirms boost/array.hpp is identical
+to the repository content modulo LF/CRLF: all232 recorded checksums, including
+match_client_impl.obj, are82302fcac1308c4e8c761a8e69b43f3e, exactly our CRLF MD5.
+Thus clone_packet's unresolved accessor-call residual does not justify changing
+the shared Boost array accessor body. Prepared verifier improvements remain
+outside this measured source state.
+
 ## Reproduction
 
 ```sh

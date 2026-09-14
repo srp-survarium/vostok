@@ -52,6 +52,11 @@ them compiler-generated; a missing standalone body alone is not sufficient.
 It does not infer `explicit` from a constructor's argument count. Generated
 declarations remain reconstruction inputs, not proof of unobservable syntax.
 Enum rendering preserves signed minima and the full unsigned 64-bit range.
+Static fields retain their recorded type and access with no instance offset.
+Supported fields and methods are emitted in field-list traversal order, including
+overload-list order, rather than grouped by static/instance category. This does
+not recover ordering of unsupported nested declarations or undo CodeView's own
+overload grouping; use the raw topology channel to audit those limitations.
 Focused type-order JSON includes both sides' raw module-reference lists, even
 when their comparison has no differences; these references do not establish
 ownership of a particular same-name complete class variant.

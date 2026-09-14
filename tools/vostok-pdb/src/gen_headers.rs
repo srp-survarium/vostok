@@ -242,10 +242,18 @@ struct Class<'p> {
     fields: Vec<Field<'p>>,
     instance_methods: Vec<Method>,
     static_methods: Vec<Method>,
+    declaration_order: Vec<DeclarationIndex>,
     // A union reuses the class renderer: same member list, but emitted with the
     // `union` keyword and no base classes. `kind` is set to Struct so members
     // print public.
     is_union: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DeclarationIndex {
+    Field(usize),
+    InstanceMethod(usize),
+    StaticMethod(usize),
 }
 
 struct BaseClass {
@@ -271,7 +279,8 @@ struct Field<'p> {
     type_name: Type,
     name: pdb::RawString<'p>,
     array: String,
-    offset: u64,
+    // Static members have no instance offset.
+    offset: Option<u64>,
     // CV_access_t: 0=unspecified, 1=private, 2=protected, 3=public.
     access: u8,
 }
@@ -467,6 +476,7 @@ impl<'pdb> Data<'pdb> {
                     base_classes: Vec::new(),
                     instance_methods: Vec::new(),
                     static_methods: Vec::new(),
+                    declaration_order: Vec::new(),
                     is_union: false,
                 };
 
@@ -551,6 +561,7 @@ impl<'pdb> Data<'pdb> {
                     base_classes: Vec::new(),
                     instance_methods: Vec::new(),
                     static_methods: Vec::new(),
+                    declaration_order: Vec::new(),
                     is_union: true,
                 };
 
@@ -634,6 +645,8 @@ impl<'p> Class<'p> {
     ) -> crate::Result<()> {
         match *field {
             pdb::TypeData::Member(ref data) => {
+                self.declaration_order
+                    .push(DeclarationIndex::Field(self.fields.len()));
                 self.fields.push(Field::build(
                     type_name(
                         formatter,
@@ -643,7 +656,24 @@ impl<'p> Class<'p> {
                         &self.namespace,
                     )?,
                     data.name,
-                    data.offset,
+                    Some(data.offset),
+                    data.attributes.access(),
+                ));
+            }
+
+            pdb::TypeData::StaticMember(ref data) => {
+                self.declaration_order
+                    .push(DeclarationIndex::Field(self.fields.len()));
+                self.fields.push(Field::build(
+                    type_name(
+                        formatter,
+                        type_finder,
+                        data.field_type,
+                        needed_types,
+                        &self.namespace,
+                    )?,
+                    data.name,
+                    None,
                     data.attributes.access(),
                 ));
             }
@@ -663,16 +693,12 @@ impl<'p> Class<'p> {
                 // find the method list
                 match type_finder.find(data.method_list)?.parse()? {
                     pdb::TypeData::MethodList(method_list) => {
-                        // let mut methods = method_list.methods.clone();
-                        // methods.sort_by_key(|method| method.vtable_offset);
-
                         for pdb::MethodListEntry {
                             attributes,
                             method_type,
                             ..
-                        } in method_list.methods.into_iter().rev()
+                        } in method_list.methods
                         {
-                            // hooray
                             self.add_method(
                                 formatter,
                                 cache,
@@ -799,8 +825,14 @@ impl<'p> Class<'p> {
         }
 
         if data_attributes.is_static() {
+            self.declaration_order
+                .push(DeclarationIndex::StaticMethod(self.static_methods.len()));
             self.static_methods.push(method);
         } else {
+            self.declaration_order
+                .push(DeclarationIndex::InstanceMethod(
+                    self.instance_methods.len(),
+                ));
             self.instance_methods.push(method);
         }
 
@@ -906,7 +938,12 @@ impl<'p> Enum<'p> {
 }
 
 impl<'p> Field<'p> {
-    pub fn build(mut type_name: Type, name: pdb::RawString<'p>, offset: u64, access: u8) -> Self {
+    pub fn build(
+        mut type_name: Type,
+        name: pdb::RawString<'p>,
+        offset: Option<u64>,
+        access: u8,
+    ) -> Self {
         let mut array = String::new();
         if let Some(pos) = type_name.0.find('[') {
             array = type_name.0.split_at(pos).1.to_string();
@@ -920,6 +957,19 @@ impl<'p> Field<'p> {
             offset,
             access,
         }
+    }
+
+    fn write_declaration(
+        &self,
+        f: &mut impl io::Write,
+        max_type_name_len: usize,
+    ) -> io::Result<()> {
+        match self.offset {
+            Some(offset) => write!(f, "\t/* 0x{offset:04x} */\t{}", self.type_name)?,
+            None => write!(f, "\tstatic\t{}", self.type_name)?,
+        }
+        formatter::pad_spaces_t(f, self.type_name.len(), max_type_name_len)?;
+        writeln!(f, "\t{}{};", self.name.to_string(), self.array)
     }
 }
 
@@ -1207,91 +1257,46 @@ impl Class<'_> {
         // kind=Struct, so it starts public like a struct.
         let mut current_access = default_access(self.kind);
 
-        if !self.instance_methods.is_empty() || !self.static_methods.is_empty() {
-            let max_return_type_len = self.max_return_type_len();
-            let max_method_name_len = self.max_method_name_len();
-
-            if !self.instance_methods.is_empty() {
-                let mut prev_name = "";
-
-                for method in &self.instance_methods {
-                    let name = method.fn_t().name.as_str();
-                    #[rustfmt::skip]
-                    match (prev_name, name) {
-                        ("", _) => (),
-                        // Overloads should be grouped
-                        (lhs, rhs) if lhs == rhs => (),
-                        // Constructor and destructor should be grouped
-                        (lhs, rhs) if lhs == &rhs[1..] => (),
-                        // get_, on_, register_, unregister_, etc.
-                        (lhs, rhs) if starts_with_equal_group(lhs, rhs) => (),
-                        // _subscriber, _affect, _callback
-                        (lhs, rhs) if ends_with_equal_group(lhs, rhs) => (),
-
-                        // Known pairs to be grouped
-                        ("serialize",  "deserialize") => (),
-                        ("initialize", "finalize") => (),
-                        ("initialize", "destroy") => (),
-                        ("insert",     "remove") => (),
-                        ("subscribe",  "unsubscribe") => (),
-                        ("from",        "to") => (),
-
-                        _ => writeln!(f)?,
-                    };
-
-                    emit_access_label(f, &mut current_access, method.access())?;
-
-                    method.fmt(
-                        f,
-                        &self.namespace,
-                        self.has_inline_methods(),
-                        max_return_type_len,
-                        max_method_name_len,
-                    )?;
-
-                    prev_name = name;
-                }
-            }
-
-            if !self.static_methods.is_empty() {
-                writeln!(f)?;
-
-                for method in &self.static_methods {
-                    emit_access_label(f, &mut current_access, method.access())?;
-
-                    method.fmt(
-                        f,
-                        &self.namespace,
-                        false,
-                        max_return_type_len,
-                        max_method_name_len,
-                    )?;
-                }
-            }
+        for base in &self.base_classes {
+            writeln!(f, "\t/* 0x{:04x} */\t/* {} */", base.offset, base.type_name)?;
         }
 
-        if !self.fields.is_empty() {
-            writeln!(f)?;
-
-            for base in &self.base_classes {
-                writeln!(f, "\t/* 0x{:04x} */\t/* {} */", base.offset, base.type_name)?;
-            }
-
-            let max_type_name_len = self.max_type_name_len();
-            for Field {
-                type_name,
-                name,
-                array,
-                offset,
-                access,
-            } in &self.fields
+        let max_return_type_len = self.max_return_type_len();
+        let max_method_name_len = self.max_method_name_len();
+        let max_type_name_len = self.max_type_name_len();
+        let mut previous_method = "";
+        for declaration in &self.declaration_order {
+            let (method, has_inline) = match *declaration {
+                DeclarationIndex::Field(index) => {
+                    let field = &self.fields[index];
+                    emit_access_label(f, &mut current_access, field.access)?;
+                    field.write_declaration(f, max_type_name_len)?;
+                    previous_method = "";
+                    continue;
+                }
+                DeclarationIndex::InstanceMethod(index) => {
+                    (&self.instance_methods[index], self.has_inline_methods())
+                }
+                DeclarationIndex::StaticMethod(index) => (&self.static_methods[index], false),
+            };
+            let method_name = method.fn_t().name.as_str();
+            if !previous_method.is_empty()
+                && previous_method != method_name
+                && method_name.strip_prefix('~') != Some(previous_method)
+                && !starts_with_equal_group(previous_method, method_name)
+                && !ends_with_equal_group(previous_method, method_name)
             {
-                emit_access_label(f, &mut current_access, *access)?;
-
-                write!(f, "\t/* 0x{offset:04x} */\t{type_name}")?;
-                formatter::pad_spaces_t(f, type_name.len(), max_type_name_len)?;
-                writeln!(f, "\t{}{};", name.to_string(), array)?;
+                writeln!(f)?;
             }
+            emit_access_label(f, &mut current_access, method.access())?;
+            method.fmt(
+                f,
+                &self.namespace,
+                has_inline,
+                max_return_type_len,
+                max_method_name_len,
+            )?;
+            previous_method = method_name;
         }
 
         writeln!(f, "}}; // {kind} {name}")?;
@@ -1720,6 +1725,105 @@ fn suppress_implicit_copy(
 #[cfg(test)]
 mod copy_declaration_tests {
     use super::suppress_implicit_copy;
+
+    #[test]
+    fn mixed_declarations_keep_recorded_order_and_access_transitions() {
+        use super::*;
+        let method = |name: &str, attrs, access| Method::FromHeaderFile {
+            fn_t: type_parser::Function {
+                return_type: ReturnType::Type("void".into()),
+                name: name.into(),
+                arg_types: vec![],
+                attrs,
+            },
+            access,
+        };
+        let class = Class {
+            namespace: Namespace::default(),
+            kind: pdb::ClassKind::Class,
+            orig_name: "example".into(),
+            name: Type("example".into()),
+            size: 8,
+            base_classes: vec![],
+            is_union: false,
+            fields: vec![
+                Field::build(
+                    Type("u32".into()),
+                    pdb::RawString::from("first_field"),
+                    Some(0),
+                    1,
+                ),
+                Field::build(
+                    Type("const u32".into()),
+                    pdb::RawString::from("static_field"),
+                    None,
+                    2,
+                ),
+            ],
+            instance_methods: vec![method("instance_method", AttributeFlags::empty(), 3)],
+            static_methods: vec![method("static_method", AttributeFlags::IS_STATIC, 1)],
+            declaration_order: vec![
+                DeclarationIndex::Field(0),
+                DeclarationIndex::StaticMethod(0),
+                DeclarationIndex::Field(1),
+                DeclarationIndex::InstanceMethod(0),
+            ],
+        };
+        let mut output = Vec::new();
+        class.fmt(&mut output).unwrap();
+        let output = String::from_utf8(output).unwrap();
+        let positions: Vec<_> = [
+            "first_field",
+            "static_method",
+            "static_field",
+            "instance_method",
+        ]
+        .iter()
+        .map(|name| output.find(name).unwrap())
+        .collect();
+        assert!(positions.windows(2).all(|p| p[0] < p[1]), "{output}");
+        assert!(
+            output.find("protected:").unwrap() < positions[2],
+            "{output}"
+        );
+        assert!(output.find("public:").unwrap() > positions[2], "{output}");
+    }
+
+    #[test]
+    fn static_fields_keep_const_array_type_without_instance_offset() {
+        let field = super::Field::build(
+            crate::Type("const u32[4]".into()),
+            pdb::RawString::from("counts"),
+            None,
+            1,
+        );
+        let mut output = Vec::new();
+        let mut access = 3;
+        super::emit_access_label(&mut output, &mut access, field.access).unwrap();
+        field
+            .write_declaration(&mut output, field.type_name.len())
+            .unwrap();
+        let output = String::from_utf8(output).unwrap();
+        assert!(output.contains("private:"));
+        assert!(output.contains("static\tconst u32"));
+        assert!(output.contains("counts[4];"));
+        assert!(!output.contains("0x"));
+    }
+
+    #[test]
+    fn instance_field_retains_offset_and_is_not_static() {
+        let field = super::Field::build(
+            crate::Type("u32".into()),
+            pdb::RawString::from("count"),
+            Some(4),
+            3,
+        );
+        let mut output = Vec::new();
+        field.write_declaration(&mut output, 3).unwrap();
+        let output = String::from_utf8(output).unwrap();
+        assert!(output.contains("/* 0x0004 */"));
+        assert!(!output.contains("static"));
+    }
 
     #[test]
     fn inheritance_preserves_access_and_virtual_status() {

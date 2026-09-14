@@ -33,8 +33,8 @@ match_client_impl::~match_client_impl( )
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// sushi@TODO: Recover the first callback guard's source form; its safe-bool
-// conversion still differs from the target's direct negation test.
+// sushi@TODO: Verify the first guard's direct empty test against retail;
+// the failure-path guard intentionally retains its safe-bool conversion.
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
 	switch ( m_state ) {
@@ -44,7 +44,7 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 				m_state				= handshaked;
 				m_client.set_on_packet_received( m_on_packet_received );
 
-				if ( m_on_connected )
+				if ( !m_on_connected.empty( ) )
 					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
 
 				return;
