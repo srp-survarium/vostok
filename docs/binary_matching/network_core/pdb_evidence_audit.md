@@ -63,8 +63,12 @@ class-structure mismatch.
 
 The procedure audit identified three concrete qualifier discrepancies. Retail
 records `packet<udp_match_packet>::append`'s `buffer_size` and
-`packet_reader::r`'s `size` as `const u32`; their value-parameter declarations
-and definitions now retain that qualification. In `buffer_to_send`, retail
+`packet_reader::r`'s `size` as `const u32`; their definitions retain that
+qualification. The initial fix also qualified the header declarations, but
+the subsequent full-class audit found that retail's class method records use
+non-const value parameters. The two header declarations are restored separately
+from the const definitions; see the [closure campaign](../network/structure_campaign.md).
+In `buffer_to_send`, retail
 records `buffer_size` as `const u32` and `buffer` as `u8* const`: the pointer
 itself is fixed, but the packet header it addresses remains writable.
 

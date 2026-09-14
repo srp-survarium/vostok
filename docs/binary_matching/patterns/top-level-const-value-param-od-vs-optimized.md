@@ -10,8 +10,13 @@ identical), so adding it is what makes those two entries pair.
 In a **/Od** (unoptimized) translation unit, adding the `const` produces byte-identical
 object code: the param still gets its own stack slot, the prologue/epilogue and every
 instruction are unchanged. game_core is /Od (498+ byte-exact matches prove it), so
-const-qualifying its value params is free and faithful. Apply to BOTH the header
-declaration AND the definition (a divergent def or decl shows up alone otherwise).
+const-qualifying a value parameter can be faithful when the target records it.
+Check the declaration and definition independently: a const procedure local
+proves the definition's qualification, not the header declaration's spelling.
+Retail network packet `append` and `packet_reader::r` record non-const value
+parameters in the class method type but const parameters in their procedure
+locals. Preserve that distinction. Qualifying both introduced three raw class
+signature differences while the narrower source-qualifier gate still passed.
 
 Watch the **east-const** form: a def written `u32 const x` / `float const x` is ALREADY
 top-level const (semantically `const u32 x`); do NOT prepend another `const` (you get the

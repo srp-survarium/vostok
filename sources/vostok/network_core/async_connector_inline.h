@@ -16,7 +16,7 @@ inline void async_connector::resolve( pcstr const host, const u32 port_number )
 	boost::asio::ip::tcp::resolver* const resolver	= VOSTOK_NEW_IMPL( g_allocator, boost::asio::ip::tcp::resolver )( m_socket->get_io_service( ) );
 	char port[ 6 ];
 	_itoa_s							( port_number, port, 10 );
-	boost::asio::ip::tcp::resolver::query query( host, port );
+	boost::asio::ip::tcp::resolver::query query( boost::asio::ip::tcp::v4( ), host, port );
 	resolver->async_resolve			(
 		query,
 		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::iterator )

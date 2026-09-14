@@ -7,6 +7,17 @@ their paired PE images, and scoped candidate C++ source. The normal build writes
 uncommitted SQLite databases at `binaries/pdb/{target,base}/evidence.sqlite`;
 candidate source is indexed only when explicitly requested.
 
+The `structure-diff` view compares a body-statement projection, not all bytes.
+It reports a signed `TOTAL SIZE` difference even when that projection agrees,
+and `NO BODY STATEMENTS COMPARED` when neither side supplies projected rows.
+An equal nonempty projection is explicitly qualified as not byte equality;
+inspect initializer/frame records, locals and assembly before claiming closure.
+Raw method attributes determine static/instance status even when a cached
+signature disagrees.
+Aligned statements also report `OFFSET` when their function-relative boundaries
+differ, including cases with identical body-span sizes and total function size.
+This is a machine-boundary diagnostic, not proof of different source ordering.
+
 ```text
 vostok-pdb index pdb --pdb FILE --exe FILE --database DB --side target
 vostok-pdb index source --compile-commands compile_commands.json \
@@ -28,7 +39,38 @@ vostok-pdb divergence --target-pdb TARGET_PDB --base-pdb BASE_PDB \
 Every fact carries an origin (`OBSERVED`, `CORRELATED`, `INFERRED`, or
 `REVIEWED`). Comparison verdicts are `MATCH`, `MISMATCH`, `TARGET_ONLY`,
 `BASE_ONLY`, `AMBIGUOUS`, `UNOBSERVABLE`, `UNSUPPORTED`, or `STALE_INPUT`.
+
+Inspection prefers an exact full signature among shared decorated aliases
+before source-file preference, but retains true duplicate ambiguity. A missing
+paired function is reported separately from an omitted `--base` argument.
+
+`inspect --view base --json` selects the paired candidate record and rejects
+missing or ambiguous candidates. JSON `diff`/`structure-diff` views are not
+implemented: use the text views or `compare pdb --json`. Earlier versions
+incorrectly returned the target record for all JSON views; target-vs-base
+instruction/local comparisons made that way must be rerun.
+
+PDB comparison first narrows shared decorated representatives by full signature.
+If the decorated representative is absent, an exact full-signature candidate
+can still be compared. Such a pairing retains a correlated `identity:MISMATCH`
+with both representative names; source-location differences remain independent.
+It does not prove byte equality or canonical ownership of an ICF group.
 Inferences and reviewed hypotheses never become `MATCH`.
+
+Carcass generation preserves recorded base-class access and virtual inheritance.
+It suppresses unobserved copy constructors/assignments only when CodeView marks
+them compiler-generated; a missing standalone body alone is not sufficient.
+It does not infer `explicit` from a constructor's argument count. Generated
+declarations remain reconstruction inputs, not proof of unobservable syntax.
+Enum rendering preserves signed minima and the full unsigned 64-bit range.
+Static fields retain their recorded type and access with no instance offset.
+Supported fields and methods are emitted in field-list traversal order, including
+overload-list order, rather than grouped by static/instance category. This does
+not recover ordering of unsupported nested declarations or undo CodeView's own
+overload grouping; use the raw topology channel to audit those limitations.
+Focused type-order JSON includes both sides' raw module-reference lists, even
+when their comparison has no differences; these references do not establish
+ownership of a particular same-name complete class variant.
 
 Comparisons validate the indexed PDB/EXE hashes. Source comparison also checks
 the compile-command hash and scoped source-file snapshot (including new and

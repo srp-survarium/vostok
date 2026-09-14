@@ -49,7 +49,7 @@ namespace network_core {
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
 	udp_network_flow_emulator_options const&	options
 ) :
-	m_delayed_packets	( &allocator ),
+	m_delayed_packets	( allocator ),
 	m_lost_packets_random	( 0x995a34 ),
 	m_ping_random		( 0x995a35 ),
 	m_out_of_order_random	( 0x995a36 ),
@@ -63,7 +63,7 @@ namespace network_core {
 
  udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
-	while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
+	while ( !m_delayed_packets.empty( ) ) {
 		delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );
 		m_delayed_packets.pop_back( );
 	}
@@ -150,9 +150,9 @@ void udp_network_flow_emulator::add_packet(
 	const u16		remote_sequence_id			= reader.r< u16 >( );
 
 	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
-	packet->last_send_time_in_ms	= m_ping_random( m_max_ping_time_in_ms - m_min_ping_time_in_ms ) + m_min_ping_time_in_ms + time_in_ms;
+	packet->last_send_time_in_ms	= m_ping_random.random( m_min_ping_time_in_ms, m_max_ping_time_in_ms ) + time_in_ms;
 
-	if ( m_delayed_packets.size( ) + unacknowledged_packets_count >= m_packets_allocator.total_size( ) / 4 - 1 )
+	if ( unacknowledged_packets_count + m_delayed_packets.size( ) >= m_packets_allocator.total_size( ) / 4 - 1 )
 		packet->last_send_time_in_ms	= time_in_ms;
 
 	memory::copy( packet->m_buffer.data( ), 6, buffer, 6 );

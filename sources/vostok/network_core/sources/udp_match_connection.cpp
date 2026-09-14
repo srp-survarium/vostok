@@ -52,18 +52,12 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 {
 }
 
-// claude@NOTE: PARKED on an inline-vs-call wall. Statement count + the named-local
-// set (reader, bits) match the target. The LTCG target keeps packet_reader::r<u16>()
-// out-of-line (a `call` returning the value in ax); the single-TU base inlines the
-// `inline`-marked template into the r(void*,u32,u32) form (push 2; push 2; lea slot;
-// push; call). That byte divergence is why objdiff reports this unpaired. Not
-// source-steerable without de-inlining the template at every other call site.
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 {
 	packet_reader	reader( packet );
 
-	reader.r< u16 >( );
-	reader.r< u16 >( );
+	sequence_number< u16 >::deserialize( reader );
+	sequence_number< u16 >::deserialize( reader );
 	const u16	bits	= reader.r< u16 >( );
 
 	if ( ( bits & 1 ) == 0 )
@@ -83,7 +77,7 @@ void udp_match_connection::handle_send(
 
 	const bool	success	= m_outgoing_packets.erase( packet );
 	ASSERT				( UNKNOWN_EXPRESSION_T( success ) );
-
+	VOSTOK_UNREFERENCED_PARAMETER( success ); // sushi@TODO: The retail line gap permits, but does not identify, this macro.
 	if ( !packet->is_reliable )
 		delete_udp_match_packet	( m_packets_allocator, packet );
 
@@ -93,7 +87,7 @@ void udp_match_connection::handle_send(
 
 	else {
 		pbyte	buffer	= packet->buffer_to_send( );
-		*buffer			= ( *reinterpret_cast< u16* >( buffer + 4 ) & 1 ) != 0;
+		*buffer			= u8( ( *pointer_cast< u16* >( buffer + 4 ) & 1 ) ? udp_match_multiple_packets : udp_match_single_packet );
 		m_unacknowledged_packets.push_back( packet );
 	}
 
@@ -137,10 +131,10 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( *buffer );
 	ASSERT( UNKNOWN_EXPRESSION_T( packet_type < 2 ) );
 
-	reinterpret_cast< sequence_number< u16 >& >( packet.sequence_id ).serialize( buffer );
+	packet.sequence_id.serialize( buffer );
 	m_remote_sequence_id.serialize( buffer );
 
-	*reinterpret_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
+	*pointer_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
 	buffer	+= 2;
 }
 
@@ -172,7 +166,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	ASSERT( UNKNOWN_EXPRESSION_T( packets_count > 1 ) );
 	udp_match_packet* const	packet_to_send	= new_udp_match_packet( m_packets_allocator );
 	packet_to_send->is_reliable				= 0;
-	reinterpret_cast< sequence_number< u16 >& >( packet_to_send->sequence_id )	= reinterpret_cast< sequence_number< u16 >& >( packets_list->sequence_id );
+	packet_to_send->sequence_id				= packets_list->sequence_id;
 	*packet_to_send->buffer_to_send( )		= udp_match_multiple_packets;
 	fill_packet_header				( *packet_to_send );
 
@@ -239,7 +233,7 @@ public:
 
 	inline	bool		operator( )					( vostok::network_core::udp_match_packet const* const packet ) const
 	{
-		return reinterpret_cast< vostok::network_core::sequence_number< u16 > const& >( packet->sequence_id ) == m_sequence_id;
+		return packet->sequence_id == m_sequence_id;
 	}
 
 private:
@@ -339,7 +333,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 		udp_match_packet* const	packet	= m_packets_to_send.pop_front( );
 		packet->next				= NULL;
 
-		reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id )	= m_local_sequence_id;
+		packet->sequence_id			= m_local_sequence_id;
 		packets.push_back			( packet );
 	}
 
@@ -365,7 +359,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 
 		packet->last_send_time_in_ms	= current_time_in_ms;
 		ASSERT						( UNKNOWN_EXPRESSION );
-		reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id )	= ++m_local_sequence_id;
+		packet->sequence_id			= ++m_local_sequence_id;
 		ASSERT						( UNKNOWN_EXPRESSION );
 		++packet->send_count;
 		u32	packets_count			= 1;
@@ -380,12 +374,12 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 					packet_list_tail		= *i;
 					( *i )->next			= NULL;
 					( *i )->last_send_time_in_ms	= current_time_in_ms;
-					reinterpret_cast< sequence_number< u16 >& >( ( *i )->sequence_id )	= reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id );
+					( *i )->sequence_id		= packet->sequence_id;
 					++( *i )->send_count;
 					++packets_count;
 				}
 
-			packets.erase			( std::remove_if( packets.begin( ), packets.end( ), packets_in_list_predicate( reinterpret_cast< sequence_number< u16 >& >( packet->sequence_id ) ) ), packets.end( ) );
+			packets.erase			( std::remove_if( packets.begin( ), packets.end( ), packets_in_list_predicate( packet->sequence_id ) ), packets.end( ) );
 		}
 
 		m_last_send_time_in_ms		= current_time_in_ms;
@@ -453,7 +447,7 @@ public:
 
 	inline	bool	operator( )				( vostok::network_core::udp_match_packet* packet ) const
 	{
-		if ( reinterpret_cast< vostok::network_core::sequence_number< u16 >& >( packet->sequence_id ) != m_sequence_id )
+		if ( packet->sequence_id != m_sequence_id )
 			return false;
 
 		delete_udp_match_packet( m_packets_allocator, packet );
@@ -471,12 +465,6 @@ STATIC_SIZE_ASSERT(sequence_id_predicate, 0xC);
 namespace vostok {
 namespace network_core {
 
-// claude@NOTE: residual is an inline-vs-call wall. Statement count + the 8 named
-// locals match the target. The target keeps the free template operator-< u16 >( ) and
-// the implicit sequence_number assignment out-of-line (single `call`); the single-TU
-// base inlines the operator-'s first level (the operator<= branch) and the address
-// temps for the reference-arg serialize/operator= sites. Same root cause as
-// is_low_level_packet - not source-steerable here.
 void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		remote_sequence_id,
 	sequence_number< u16 >		local_sequence_id,
@@ -536,7 +524,6 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 {
 	switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
 		case low_level_message_type_initiate_disconnection :
-		default :
 			if ( m_state != connected )
 			{
 				break;
@@ -561,6 +548,7 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 
 		case low_level_message_type_continuous_flow :
 			break;
+		default : NODEFAULT( );
 	}
 }
 

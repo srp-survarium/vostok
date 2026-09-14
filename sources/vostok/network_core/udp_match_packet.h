@@ -43,12 +43,12 @@ inline void delete_udp_match_packet(
 class udp_match_packet : public packet< udp_match_packet > {
 public:
 	typedef u16					acknowledgement_bits_type;
-	typedef sequence_number< u8 >	sequence_id_type;
+	typedef sequence_number< u16 >	sequence_id_type;
 	typedef sequence_number< u16 >	order_id_type;
 	enum
 	{
 		max_message_size	= 256,
-		packet_header_size	= 4,
+		packet_header_size	= 6,
 	};
 
 private:
@@ -108,7 +108,7 @@ public:
 private:
 	friend	class		packet< udp_match_packet >;
 
-	inline	void		reallocate			( const u32 new_size ) { UNREACHABLE_CODE( new_size ); }
+	inline	void		reallocate			( const u32 new_size ) { VOSTOK_UNREFERENCED_PARAMETER( new_size ); UNREACHABLE_CODE( new_size ); }
 	void				operator=			( udp_match_packet const& other );
 
 	// the placement-new factory constructs through the private default ctor.
@@ -124,7 +124,7 @@ public:
 	/* 0x0018 */	udp_match_client_session*		client_session;
 	/* 0x001c */	udp_match_packet*				next;
 	/* 0x0020 */	u32								last_send_time_in_ms;
-	/* 0x0024 */	sequence_number< u8 >			sequence_id;
+	/* 0x0024 */	sequence_number< u16 >			sequence_id;
 	/* 0x0026 */	sequence_number< u16 >			order_id;
 	/* 0x0028 */	u8								message_type;
 	/* 0x0029 */	u8								send_count;

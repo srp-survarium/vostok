@@ -16,3 +16,11 @@ if ( b ) { ...; return; }
 return;                     // drop the else keywords
 ```
 Evidence: game_core/player_logic_base_state::movement_animation_index (None -> 100%).
+
+With live RAII locals, the return statement can be much larger than a jump.
+Retail network_core::http_client::handle_read_status_line (RVA `0x77a3e0`)
+has two separate 24-byte cleanup-and-exit statements at offsets `0x19d` and
+`0x271`: string deallocation, stream destruction, jump to epilogue. A nested
+else chain instead joins before one shared cleanup tail. Keep the locals in
+their observed outer scope and restore the two explicit returns; equal total
+statement counts alone do not distinguish these shapes.

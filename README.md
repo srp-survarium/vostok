@@ -10,16 +10,16 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,473 / 13,014 functions exact (80.47%) &middot; 11,069 / 13,014 functions exact-max (85.05%) &middot; 93.50% fuzzy &middot; 95.09% fuzzy-max.**
+**Overall: 10,483 / 13,014 functions exact (80.55%) &middot; 11,082 / 13,014 functions exact-max (85.15%) &middot; 93.51% fuzzy &middot; 95.11% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
-| `render`        |   351 | 2,035 / 2,734 (74.4%) | 2,256 / 2,734 (82.5%) |  91.5% |     93.6% |
-| `game`          |   141 |   979 / 1,528 (64.1%) | 1,111 / 1,528 (72.7%) |  85.6% |     88.7% |
+| `render`        |   351 | 2,032 / 2,734 (74.3%) | 2,256 / 2,734 (82.5%) |  91.5% |     93.6% |
+| `game`          |   141 |   980 / 1,528 (64.1%) | 1,111 / 1,528 (72.7%) |  85.6% |     88.7% |
 | `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.2% |     98.6% |
-| `vostok`        |   112 | 1,093 / 1,250 (87.4%) | 1,114 / 1,250 (89.1%) |  97.0% |     97.8% |
+| `vostok`        |   112 | 1,090 / 1,250 (87.2%) | 1,114 / 1,250 (89.1%) |  96.9% |     97.8% |
 | `game_core`     |   189 |   828 / 1,181 (70.1%) |   857 / 1,181 (72.6%) |  93.6% |     95.7% |
 | `animation`     |   102 |     590 / 727 (81.2%) |     612 / 727 (84.2%) |  92.6% |     93.2% |
 | `ai`            |   124 |     645 / 691 (93.3%) |     658 / 691 (95.2%) |  99.3% |     99.6% |
@@ -29,18 +29,18 @@ _All figures come from the ledger over every target function (paired plus inline
 | `particle`      |    25 |     389 / 400 (97.2%) |     397 / 400 (99.2%) |  99.6% |    100.0% |
 | `vfs`           |    71 |     318 / 390 (81.5%) |     318 / 390 (81.5%) |  98.2% |     98.3% |
 | `ui`            |    27 |     221 / 227 (97.4%) |     222 / 227 (97.8%) |  99.5% |     99.9% |
-| `physics`       |    14 |     135 / 198 (68.2%) |     155 / 198 (78.3%) |  88.3% |     93.2% |
+| `physics`       |    14 |     134 / 198 (67.7%) |     155 / 198 (78.3%) |  88.1% |     93.2% |
 | `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
 | `engine`        |    22 |     154 / 162 (95.1%) |     159 / 162 (98.1%) |  99.4% |     99.9% |
-| `network`       |    25 |      85 / 159 (53.5%) |      91 / 159 (57.2%) |  90.5% |     91.8% |
-| `network_core`  |    22 |      63 / 127 (49.6%) |      66 / 127 (52.0%) |  94.6% |     95.2% |
+| `network`       |    25 |      87 / 159 (54.7%) |      93 / 159 (58.5%) |  90.6% |     91.8% |
+| `network_core`  |    22 |      77 / 127 (60.6%) |      77 / 127 (60.6%) |  96.9% |     96.9% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-09-13 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-09-14 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -48,13 +48,13 @@ _Updated 2026-09-13 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,805 / 71,536,291) &middot; matched projected copies: 66.10% (17,437,367 / 26,379,803).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,087,947 / 71,536,291) &middot; matched projected copies: 66.10% (17,436,743 / 26,377,975).**
 
-_The projection has 15,280 paired copies across 1,701 units and 30,851 unresolved blockers. Strict relocation comparison exposes 1,474 otherwise-exact functions (574,966 code bytes) with referent debt._
+_The projection has 15,039 paired copies across 1,701 units and 31,092 unresolved blockers. Strict relocation comparison exposes 1,468 otherwise-exact functions (569,795 code bytes) with referent debt._
 
-_The linked-image audit is 4.01% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11270 / 12787 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.01% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11273 / 12789 definitions). Integrity ratchet: armed._
 
-_Updated 2026-09-13._
+_Updated 2026-09-14._
 <!-- data-match:end -->
 
 ## Requirements
@@ -158,6 +158,10 @@ The check prints exact qualifier and declaration-order verdicts. PDB-unobservabl
 properties such as `mutable`, source expressions, and the physical home of an
 unexpanded inline body stay explicit instead of being promoted to matches.
 
+Paired JSON inspection honors `--view base`; unsupported JSON diff views fail
+explicitly. Full-signature pairing across different folded symbol representatives
+retains an identity mismatch rather than silently treating the symbols as equal.
+
 ## Layout
 
 - `sources/vostok/` - the engine, one module per directory; `sources/<lib>/` -
@@ -182,6 +186,12 @@ python3 -m vostok tool clangd def   <file> <line> [col]   # definition; also ref
 ```
 
 clang is a reader here; the Wine build is the only verdict on correctness.
+
+PDB `inspect --view structure-diff` compares projected body statements. It now
+flags whole-function `TOTAL SIZE` differences even when those statements agree,
+and reports `NO BODY STATEMENTS COMPARED` for an empty projection. A structure
+match alone does not certify initializer/frame bytes or byte equality.
+`OFFSET` diagnostics expose shifted body boundaries even when span sizes agree.
 
 To investigate linker/PDB ordering without rebuilding game sources, run the
 fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.

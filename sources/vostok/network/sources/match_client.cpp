@@ -75,6 +75,7 @@ void match_client::create_responses_packets_allocator( )
 			static_cast_checked<network_world&>(world).orders_allocator( )
 		)
 	),
+	m_response_packets_allocator ( 0 ),
 	m_packets_orderer	( packets_orderer ),
 	m_world				( static_cast_checked<network_world&>(world) ),
 	m_client			( VOSTOK_NEW_IMPL( static_cast_checked<network_world&>(world).orders_allocator( ), match_client_impl* ) )

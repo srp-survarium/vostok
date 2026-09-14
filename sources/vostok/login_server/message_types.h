@@ -76,15 +76,6 @@ enum lobby_server_message_types_enum {
 	lobby_server_invalid_message_type				= 63,
 }; // enum lobby_server_message_types_enum
 
-// sushi@TODO: NOT a lobby_server message (PDB extraction above has no 128); it is
-// the match server's first packet byte (match_client_impl::on_packet_received,
-// target cmp 0x80) - the real enum is likely vostok::match_server_message_types_enum
-// (type attested via survarium::network_packets_orderer's template args, enumerators
-// not extracted); name is a guess, value pinned by the target immediate
-enum {
-	set_status_ready_for_battle						= 128,
-};
-
 enum socket_error_types_enum {
 	no_socket_error									= 0,
 	unable_to_write_to_socket						= 1,

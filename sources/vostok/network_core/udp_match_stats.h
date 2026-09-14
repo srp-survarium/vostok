@@ -171,7 +171,8 @@ inline bool operator>=( udp_match_stats const& left, udp_match_stats const& righ
 		&& left.received >= right.received
 		&& left.received_duplicated >= right.received_duplicated
 		&& left.sent_low_level >= right.sent_low_level
-		&& left.received_low_level >= right.received_low_level;
+		&& left.received_low_level >= right.received_low_level
+		&& true; // sushi@TODO: Was retail's constant test a macro expansion?
 }
 
 inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_match_items_stats const& right )

@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "match_client_impl.h"
+#include <vostok/network/message_types.h>
 #include <vostok/network_core/udp_network_flow_emulator.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/packet_reader.h>
@@ -27,54 +28,33 @@ namespace network {
 	m_client.set_on_disconnect		( boost::bind( &match_client_impl::on_disconnect, this, _1 ) );
 }
 
-// claude@NOTE: structure matches 1/1 (the g_allocator strip_pointer call is kept
-// by BOTH sides); residual is the compiler-emitted member clears' folded-COMDAT
-// this-convention (esi in target vs ecx in base) - an LTCG artifact, not steerable.
 match_client_impl::~match_client_impl( )
 {
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// claude@NOTE: structure matches 11/11; residuals are all per-call-site
-// inline-vs-call: base inlines packet_reader::eof inside the ASSERT_U eater,
-// function2::operator= (set_on_packet_received) and function4::operator() (both
-// m_on_connected calls) where the target calls the COMDATs, and picks the and-form
-// safe-bool at the first `if(m_on_connected)` where the target uses operator!+test
-// (a per-site compiler choice - the second site IS the and-form on both). Not
-// source-steerable.
-// claude@NOTE: the target records ZERO named locals here while previous_state's
-// line-45 store survives in a [ebp-2B4h] temp-region slot; our /GL build emits it
-// as a named [ebp-4] local. Tested: adding an ASSERT_U reader to "use" the dead
-// variable does NOT drop the symbol - it instead emits a real eater statement
-// (12th stmt, BASE_ONLY, % -> 2.7), a quantity regression - so the symbol-emission
-// gap is a target-side LTCG/PDB artifact, not source-steerable. previous_state is
-// authentic source (its store is in the target); we keep the natural shape.
-// claude@NOTE: the original's __LINE__ immediate pins the LOG to physical line 56
-// (the `}` must have shared a line); we keep the natural layout and accept the
-// 1-byte immediate residual per the no-line-padding rule
+// sushi@TODO: Verify the pinned body locations and remaining closing-brace gap.
+#line 43
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
-	state const previous_state	= m_state;
+	switch ( m_state ) {
+		case waiting_for_permission:
+			if ( message_type == match_server_connection_successful ) {
+				ASSERT_U			( reader.eof( ) );
+				m_state				= handshaked;
+				m_client.set_on_packet_received( m_on_packet_received );
 
-	if ( message_type == set_status_ready_for_battle ) {
-		ASSERT_U			( reader.eof( ) );
-		m_state				= handshaked;
-		m_client.set_on_packet_received( m_on_packet_received );
+				if ( !m_on_connected.empty( ) )
+					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
 
-		if ( m_on_connected )
-			m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, connection_successful );
-
-		return;
+			} else {
+				LOG_ERROR				( "connection forbidden" );
+				if ( m_on_connected )
+					m_on_connected	( successfully_connected, successfully_handshaked, no_socket_error, invalid_session_id );
+			}
+			break;
+		default: NODEFAULT( );
 	}
-
-	LOG_ERROR				( "connection forbidden" );
-	if ( m_on_connected )
-		m_on_connected		(
-			successfully_connected,
-			successfully_handshaked,
-			no_socket_error,
-			invalid_session_id
-		);
 }
 
 // claude@NOTE: structure matches 2/2, the clone/connect statement byte-aligned;
@@ -105,10 +85,6 @@ void match_client_impl::set_on_packet_received(
 		m_client.set_on_packet_received( m_on_packet_received );
 }
 
-// claude@NOTE: structure matches 9/9 (field copies byte-aligned); residuals are
-// base inlining packet_reader::pointer() at the append site and m_buffer[0]'s
-// boost::array operator[] on the source side (target keeps both as folded calls),
-// plus append's LTCG arg convention at the call boundary - inline-vs-call wall.
 network_core::udp_match_packet* match_client_impl::clone_packet( network_core::udp_match_packet const& packet )
 {
 	network_core::udp_match_packet* const result	= network_core::new_udp_match_packet( m_packets_allocator );
@@ -117,7 +93,7 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	result->channel_id		= packet.channel_id;
 	result->is_reliable		= packet.is_reliable;
 	result->is_ordered		= packet.is_ordered;
-	result->m_buffer[ 0 ]	= packet.m_buffer[ 0 ];
+	result->m_buffer[ 0 ]	= packet.m_buffer.data( )[ 0 ];
 	result->append			( reader.pointer( ), reader.size_to_eof( ) );
 	return					result;
 }
