@@ -55,7 +55,9 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 			break;
 		default: NODEFAULT( );
 	}
+#line 65
 }
+#line 64
 
 // claude@NOTE: structure matches 2/2, the clone/connect statement byte-aligned;
 // residual is `m_on_connected = on_connected` (base inlines copy-swap-clear,

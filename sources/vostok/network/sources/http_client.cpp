@@ -37,6 +37,7 @@ static void destroy_http_client( network_core::http_client* client_to_destroy )
 }
 
 http_client::~http_client( )
+#line 41
 {
 	m_busy	= true;
 
@@ -44,6 +45,7 @@ http_client::~http_client( )
 		VOSTOK_NEW_IMPL( m_world.orders_allocator(), functor_order ) (
 			boost::bind( &destroy_http_client, m_client )
 		)
+#line 47
 	);
 }
 
@@ -70,8 +72,10 @@ void http_client::get( pcstr const server, pcstr const path, boost::function< vo
 			server,
 			path
 		)
+#line 68
 	);
 }
+#line 75
 
 void http_client::on_content_downloaded_impl( pcstr const content )
 {
@@ -85,6 +89,7 @@ void http_client::on_content_downloaded_impl( pcstr const content )
 // vs base 0x6C) plus the home-slot rename riding on it - the string_order-ctor
 // ghost-dword LTCG class. Not steerable from this TU.
 void http_client::on_content_downloaded( )
+#line 80
 {
 	m_world.add_response	(
 		VOSTOK_NEW_IMPL( m_world.responses_allocator(), string_response ) (
@@ -92,8 +97,11 @@ void http_client::on_content_downloaded( )
 			boost::bind( &http_client::on_content_downloaded_impl, this, _1 ),
 			m_client->result_content( ).c_str( )
 		)
+#line 86
 	);
+#line 88
 }
+#line 97
 
 void http_client::get_impl( pcstr const server, pcstr const path )
 {

@@ -39,6 +39,7 @@ void tcp_packet_client::on_connected( )
 }
 
 void tcp_packet_client::connect( pcstr host, u16 port )
+#line 45
 {
 	m_async_connector.connect(
 		m_socket,
@@ -46,40 +47,53 @@ void tcp_packet_client::connect( pcstr host, u16 port )
 		port,
 		boost::bind( &tcp_packet_client::on_connected, this ),
 		m_on_error
+#line 46
 	);
 }
+#line 51
 
 void tcp_packet_client::disconnect( )
+#line 50
 {
 	m_packet_socket.stop_receiving( );
 
+#line 52
 	if ( m_socket.is_open( ) )
 		close_connection( );
 }
+#line 59
 
 void tcp_packet_client::close_connection( )
+#line 57
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_socket.is_open( ) ) );
 
+#line 59
 	boost::system::error_code	ec;
 	m_socket.shutdown( boost::asio::ip::tcp::socket::shutdown_both, ec );
 	m_socket.close( );
 
+#line 62
 	m_async_connector.reset( );
 }
+#line 70
 
 void tcp_packet_client::send( tcp_packet const& packet )
+#line 66
 {
 	m_packet_socket.send( packet );
 }
 
 void tcp_packet_client::on_error( client_error_codes_enum client_error_code, boost::system::error_code error_code )
+#line 71
 {
 	m_async_connector.reset( );
 
+#line 73
 	if ( m_on_error )
 		m_on_error( client_error_code, error_code );
 }
+#line 83
 
 } // namespace network_core
 } // namespace vostok

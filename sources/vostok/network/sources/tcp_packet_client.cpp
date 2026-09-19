@@ -41,11 +41,13 @@ tcp_packet_client::tcp_packet_client( vostok::network::world& world ) :
 // claude@MATCH: GLOBAL-scope static - the target symbol is the unmangled
 // PDB-private name `destroy_client` (no namespaces), not a mangled export
 static void destroy_client( vostok::network_core::tcp_packet_client* client_to_destroy )
+#line 35
 {
 	VOSTOK_DELETE_IMPL				( vostok::network::g_allocator, client_to_destroy );
 }
 
 tcp_packet_client::~tcp_packet_client( )
+#line 40
 {
 	m_world.add_order				(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator(), functor_order ) (
@@ -60,6 +62,7 @@ tcp_packet_client::~tcp_packet_client( )
 // wall, driven by network_core's compilation (a different module). Same boost::
 // function ICF class, not steerable from this TU.
 void tcp_packet_client::create_client( )
+#line 49
 {
 	ASSERT							( !m_client );
 	m_client						= NEW ( vostok::network_core::tcp_packet_client ) ( m_world.io_service() );
@@ -70,11 +73,13 @@ void tcp_packet_client::create_client( )
 }
 
 void tcp_packet_client::connect_impl	( pcstr const host, u16 const port )
+#line 59
 {
 	m_client->connect				( host, port );
 }
 
 void tcp_packet_client::connect		( pcstr const host, u16 const port )
+#line 64
 {
 	// claude@MATCH: the bind converts implicitly (ctor arity disambiguates the
 	// string_order overloads); an explicit boost::function<...>( ... ) wrap makes
@@ -86,8 +91,10 @@ void tcp_packet_client::connect		( pcstr const host, u16 const port )
 			boost::bind( &tcp_packet_client::connect_impl, this, _1, port ),
 			host
 		)
+#line 71
 	);
 }
+#line 91
 
 void tcp_packet_client::disconnect	( )
 {

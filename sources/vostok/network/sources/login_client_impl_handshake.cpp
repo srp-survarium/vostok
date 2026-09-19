@@ -54,11 +54,13 @@ void login_client_impl::on_handshaked(
 	functor			( successfully_handshaked );
 }
 void login_client_impl::handshake( boost::function< void ( handshaking_error_types_enum ) > const& functor, const u32 retry_count, const bool stop_timer )
+#line 58
 {
 	if ( m_connection_state == handshaked ) {
 		functor		( successfully_handshaked );
 		return;
 	}
+#line 64
 	LOG_INFO		( "[LOGIN] handshaking...\r\n" );
 
 	ASSERT			( UNKNOWN_EXPRESSION_T( m_connection_state == connected ) );
@@ -75,7 +77,9 @@ void login_client_impl::handshake( boost::function< void ( handshaking_error_typ
 			stop_timer
 		)
 	);
+#line 85
 }
+#line 79
 
 // LOG_INFO must remain at target source line 64; its retained __LINE__ value
 // controls the exact callback schedule (log-callback-ctor-schedule.md).

@@ -12,8 +12,10 @@ void login_client_impl::on_ping_sent(
 		const u32							try_count,
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred )
+#line 17
 {
 
+#line 18
 	if ( error_code ) {
 		ping		( try_count - 1 );
 		LOG_ERROR	( "[LOGIN] ping: error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
@@ -28,6 +30,7 @@ void login_client_impl::on_ping_sent(
 	m_ping_timer.expires_from_now	( boost::posix_time::seconds( 1 ) );
 	m_ping_timer.async_wait			( boost::bind( &login_client_impl::ping, this, ping_retry_count ) );
 }
+#line 31
 
 void login_client_impl::ping( const u32 retry_count )
 {

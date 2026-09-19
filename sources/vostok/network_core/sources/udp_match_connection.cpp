@@ -53,6 +53,7 @@ void udp_match_connection::on_error( client_error_codes_enum, boost::system::err
 }
 
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
+#line 84
 {
 	packet_reader	reader( packet );
 
@@ -60,18 +61,21 @@ bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 	sequence_number< u16 >::deserialize( reader );
 	const u16	bits	= reader.r< u16 >( );
 
+#line 90
 	if ( ( bits & 1 ) == 0 )
 		return false;
 
 	reader.advance( reader.r< bool >( ) );
 	return reader.eof( );
 }
+#line 69
 
 void udp_match_connection::handle_send(
 	udp_match_packet*					packet,
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
 )
+#line 98
 {
 	--m_pending_operations_count;
 
@@ -91,6 +95,7 @@ void udp_match_connection::handle_send(
 		m_unacknowledged_packets.push_back( packet );
 	}
 
+#line 118
 	if ( error_code ) {
 		LOG_ERROR	( "error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		on_error	( unable_to_write_to_socket, error_code );
@@ -101,7 +106,9 @@ void udp_match_connection::handle_send(
 		LOG_ERROR	( "unable to write to socket\r\n" );
 		on_error	( unable_to_write_to_socket, error_code );
 	}
+#line 129
 }
+#line 105
 
 void udp_match_connection::send( udp_match_packet* const packet )
 {
@@ -205,9 +212,12 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 }
 
 void udp_match_connection::dump( pcstr const caption, const u32 current_time_in_ms )
+#line 239
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( caption, current_time_in_ms );
+#line 252
 }
+#line 211
 
 } // namespace network_core
 } // namespace vostok
@@ -390,16 +400,21 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 }
 
 void udp_match_connection::connect( udp_match_packet* const packet )
+#line 457
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_state == disconnected ) );
 
+#line 459
 	m_state	= connected;
 
+#line 460
 	if ( packet )
 		enqueue_impl( packet );
 }
+#line 401
 
 void udp_match_connection::enqueue_impl( udp_match_packet* packet )
+#line 465
 {
 	if ( packet->is_ordered )
 	{
@@ -417,15 +432,19 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 }
 
 void udp_match_connection::enqueue( udp_match_packet* packet )
+#line 481
 {
 	if ( m_state == connected )
 		enqueue_impl( packet );
 	else
 	{
+#line 487
 		ASSERT( UNKNOWN_EXPRESSION_T( m_state != connected ) );
 		delete_udp_match_packet( m_packets_allocator, packet );
 	}
+#line 489
 }
+#line 429
 
 } // namespace network_core
 } // namespace vostok
@@ -470,6 +489,7 @@ void udp_match_connection::update_acknowledgements(
 	sequence_number< u16 >		local_sequence_id,
 	const u16					local_acknowledgement_bits
 )
+#line 520
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_remote_sequence_id < remote_sequence_id ) );
 	const u32	remote_sequence_difference	= remote_sequence_id - m_remote_sequence_id;
@@ -489,6 +509,7 @@ void udp_match_connection::update_acknowledgements(
 			if ( difference <= 15 )
 				m_received_local_acknowledgement_bits	|= 1 << ( 15 - difference );
 
+#line 541
 			const u32	unacknowledged_packets_size	= m_unacknowledged_packets.size( );
 			m_unacknowledged_packets.remove_if	( sequence_id_predicate( m_packets_allocator, local_sequence_id, m_logging_id ) );
 			m_stats.unacknowledged_packets		-= unacknowledged_packets_size - m_unacknowledged_packets.size( );
@@ -518,22 +539,28 @@ void udp_match_connection::update_acknowledgements(
 			m_unacknowledged_packets.remove_if	( sequence_id_predicate( m_packets_allocator, sequence_id, m_logging_id ) );
 			m_stats.unacknowledged_packets		-= unacknowledged_packets_size - m_unacknowledged_packets.size( );
 		}
+#line 571
 }
+#line 522
 
 void udp_match_connection::process_low_level_message( packet_reader& reader, const u32 time_in_ms )
+#line 574
 {
 	switch ( low_level_message_type_enum message_type = low_level_message_type_enum( reader.r< bool >( ) ) ) {
 		case low_level_message_type_initiate_disconnection :
+#line 578
 			if ( m_state != connected )
 			{
 				break;
 			}
 
+#line 584
 			m_state	= confirming_disconnection;
 			m_disconnection_receive_time_in_ms	= time_in_ms;
 			break;
 
 		case low_level_message_type_confirm_disconnection :
+#line 590
 			if ( m_state == connected ) {
 				LOG_ERROR( "processing low level packet: skip confirming disconnection - we didn't initiated it" );
 				break;
@@ -550,7 +577,9 @@ void udp_match_connection::process_low_level_message( packet_reader& reader, con
 			break;
 		default : NODEFAULT( );
 	}
+#line 618
 }
+#line 554
 
 } // namespace network_core
 } // namespace vostok
@@ -591,6 +620,7 @@ namespace vostok {
 namespace network_core {
 
 void udp_match_connection::instant_disconnect( disconnect_event_types_enum type )
+#line 648
 {
 	m_state								= disconnected;
 
@@ -620,11 +650,14 @@ void udp_match_connection::instant_disconnect( disconnect_event_types_enum type 
 		channel.reset					( );
 	}
 
+#line 678
 	if ( m_on_disconnect )
 		m_on_disconnect( type );
 }
+#line 626
 
 void udp_match_connection::disconnect( )
+#line 683
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_state == connected ) );
 
@@ -633,6 +666,7 @@ void udp_match_connection::disconnect( )
 	sequence_number< u16 >	test	( m_local_sequence_id );
 	if ( ++test <= m_received_local_sequence_id )
 	{
+#line 690
 		instant_disconnect			( disconnected_by_initiator );
 		return;
 	}
@@ -652,8 +686,10 @@ void udp_match_connection::disconnect( )
 	m_disconnection_local_sequence_id	= m_local_sequence_id;
 	++m_disconnection_local_sequence_id;
 }
+#line 655
 
 u32 udp_match_connection::packets_count( ) const
+#line 711
 {
 	u32 result	= m_packets_to_send.size( ) + m_outgoing_packets.size( ) + m_unacknowledged_packets.size( );
 

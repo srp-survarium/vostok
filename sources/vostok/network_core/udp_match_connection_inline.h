@@ -26,6 +26,7 @@ inline void udp_match_connection::construct_packet(
 
 template < typename Predicate >
 inline void udp_match_connection::call_predicate( Predicate const& predicate, packet_reader& reader )
+#line 45
 {
 	const u8	message_type		= reader.r< u8 >( );
 	udp_match_message_type_info const&	info	= m_packets_orderer.get_received_message_info( message_type );
@@ -39,16 +40,19 @@ inline void udp_match_connection::call_predicate( Predicate const& predicate, pa
 
 	channel&	channel				= m_channels[ info.channel_id ];
 
+#line 59
 	if ( order_id <= channel.received_order_id )
 	{
 		return;
 	}
 
+#line 65
 	if ( channel.packets.find( order_id, comparer( ) ) != channel.packets.end( ) )
 	{
 		return;
 	}
 
+#line 71
 	udp_match_packet&	packet		= *new_udp_match_packet( m_packets_allocator );
 	packet.message_type				= message_type;
 	packet.order_id					= order_id;
@@ -59,6 +63,7 @@ inline void udp_match_connection::call_predicate( Predicate const& predicate, pa
 	++next_order_id;
 	while ( !channel.packets.empty( ) && channel.packets.begin( )->order_id == next_order_id )
 	{
+#line 80
 		udp_match_packet*	packet	= &*channel.packets.begin( );
 		channel.packets.erase		( *packet );
 		packet_reader	reader		( *packet );
@@ -69,9 +74,11 @@ inline void udp_match_connection::call_predicate( Predicate const& predicate, pa
 		delete_udp_match_packet		( m_packets_allocator, packet );
 	}
 }
+#line 72
 
 template < typename Predicate >
 inline void udp_match_connection::process_incoming_packet( packet_reader& reader, Predicate const& predicate )
+#line 93
 {
 	dump							( "before process_incoming   ", 0 );
 
@@ -89,13 +96,16 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 	const u16	bits				= reader.r< u16 >( );
 	const u16	local_acknowledgement_bits	= u16( ( bits >> 1 ) | 0x8000 );
 
+#line 112
 	if ( m_remote_sequence_id == remote_sequence_id )
 	{
+#line 113
 		++m_stats.received_duplicated.packets.count;
 		m_stats.received_duplicated.packets.bytes	+= packet_bytes;
 
 		m_stats.received_duplicated.messages.bytes	+= message_bytes;
 
+#line 119
 		dump						( "after  process_incoming   ", 0 );
 		return;
 	}
@@ -106,6 +116,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( ( bits & 1 ) != 0 );
 	if ( packet_type == udp_match_single_packet )
 	{
+#line 128
 		++m_stats.received.messages.count;
 		m_stats.received.data_bytes	+= message_bytes;
 
@@ -116,6 +127,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 
 	for ( u32 i = 0; !reader.eof( ); ++i )
 	{
+#line 137
 		++m_stats.received.messages.count;
 		const u8	subpacket_size	= reader.r< u8 >( );
 		m_stats.received.data_bytes	+= subpacket_size;
@@ -123,9 +135,12 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 		packet_reader	subpacket_reader( base_packet( pbyte( reader.pointer( ) ), subpacket_size ) );
 		reader.advance				( subpacket_size );
 		if ( i || !reader.eof( ) )
+#line 146
 			call_predicate			( predicate, subpacket_reader );
+#line 148
 		else
 		{
+#line 149
 			++m_stats.received_low_level.packets.count;
 			m_stats.received_low_level.packets.bytes	+= packet_bytes;
 			++m_stats.received_low_level.messages.count;
@@ -137,6 +152,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 
 	dump							( "after  process_incoming   ", 0 );
 }
+#line 140
 
 } // namespace network_core
 } // namespace vostok

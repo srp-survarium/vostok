@@ -58,10 +58,13 @@ namespace network_core {
 	m_lost_packet_probability	( options.lost_packet_probability ),
 	m_min_ping_time_in_ms	( options.min_ping_time_in_ms ),
 	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
+#line 28
 {
+#line 30
 }
 
  udp_network_flow_emulator::~udp_network_flow_emulator( )
+#line 33
 {
 	while ( !m_delayed_packets.empty( ) ) {
 		delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );
@@ -75,6 +78,7 @@ namespace network_core {
 bool delayed_packets_predicate::operator()(
 	std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const&	message
 ) const
+#line 48
 {
 	if ( m_time_in_ms < message.first->last_send_time_in_ms )
 		return false;
@@ -92,6 +96,7 @@ void udp_network_flow_emulator::tick(
 	const u32		time_in_ms,
 	boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
 )
+#line 62
 {
 	if ( m_delayed_packets.empty( ) )
 		return;
@@ -99,6 +104,7 @@ void udp_network_flow_emulator::tick(
 	buffer_vector< flow_emulator_packet_pair >	delayed_packets_to_appear(
 		ALLOCA( m_delayed_packets.size( ) * sizeof( flow_emulator_packet_pair ) ),
 		m_delayed_packets.size( )
+#line 66
 	);
 
 	m_delayed_packets.erase(
@@ -108,6 +114,7 @@ void udp_network_flow_emulator::tick(
 			delayed_packets_predicate( delayed_packets_to_appear, time_in_ms )
 		),
 		m_delayed_packets.end( )
+#line 74
 	);
 
 	if ( delayed_packets_to_appear.empty( ) )
@@ -117,11 +124,14 @@ void udp_network_flow_emulator::tick(
 		delayed_packets_to_appear.begin( ),
 		delayed_packets_to_appear.end( ),
 		m_out_of_order_random
+#line 79
 	);
 
+#line 80
 	for ( flow_emulator_packet_pair* i = delayed_packets_to_appear.begin( ), * e = delayed_packets_to_appear.end( ); i != e; ++i ) {
 		{
 			packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+#line 84
 			const u16		received_local_sequence_id	= reader.r< u16 >( );
 			const u16		remote_sequence_id			= reader.r< u16 >( );
 
@@ -129,12 +139,15 @@ void udp_network_flow_emulator::tick(
 			VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
 		}
 
+#line 89
 		packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
 		functor( reader, i->second );
 
+#line 91
 		delete_udp_match_packet( m_packets_allocator, i->first );
 	}
 }
+#line 138
 
 void udp_network_flow_emulator::add_packet(
 	pbyte const		buffer,
@@ -143,12 +156,14 @@ void udp_network_flow_emulator::add_packet(
 	const u32		time_in_ms,
 	const u32		unacknowledged_packets_count
 )
+#line 102
 {
 	packet_reader	reader( base_packet( buffer, buffer_size ) );
 
 	const u16		received_local_sequence_id	= reader.r< u16 >( );
 	const u16		remote_sequence_id			= reader.r< u16 >( );
 
+#line 109
 	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
 	packet->last_send_time_in_ms	= m_ping_random.random( m_min_ping_time_in_ms, m_max_ping_time_in_ms ) + time_in_ms;
 
@@ -158,23 +173,29 @@ void udp_network_flow_emulator::add_packet(
 	memory::copy( packet->m_buffer.data( ), 6, buffer, 6 );
 	packet->append( buffer + 6, buffer_size - 6 );
 
+#line 117
 	m_delayed_packets.push_back( std::make_pair( packet, endpoint ) );
 
 	VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
 	VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
+#line 118
 }
+#line 166
 
 void udp_network_flow_emulator::make_packet_lost(
 	pbyte const		buffer,
 	const u32		buffer_size,
 	boost::asio::ip::udp::endpoint const&	endpoint
 )
+#line 121
 {
 	VOSTOK_UNREFERENCED_PARAMETER( endpoint );
 
 	const bool	is_low_level_packet	= udp_match_connection::is_low_level_packet( base_packet( buffer, buffer_size ) );
 	VOSTOK_UNREFERENCED_PARAMETER( is_low_level_packet );
+#line 155
 }
+#line 178
 
 void udp_network_flow_emulator::on_packet_received(
 	pbyte const		buffer,

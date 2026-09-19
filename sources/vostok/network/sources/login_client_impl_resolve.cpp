@@ -19,6 +19,7 @@ void login_client_impl::on_resolved(
 	)
 {
 
+#line 21
 	ASSERT			( UNKNOWN_EXPRESSION_T( resolver ) );
 
 	if ( error_code ) {
@@ -51,6 +52,7 @@ void login_client_impl::on_resolved(
 				}
 			}
 
+#line 54
 		delete		resolver;
 		functor		( cannot_resolve, iterator );
 		LOG_INFO	( "[LOGIN] can't resolve endpoints: %s\r\n", error_code.message( ).c_str( ) );
@@ -58,13 +60,16 @@ void login_client_impl::on_resolved(
 		return;
 	}
 
+#line 62
 	delete			resolver;
 
 	LOG_INFO		( "[LOGIN] resolved!\r\n" );
 
+#line 68
 	m_connection_state	= resolved;
 	functor			( successfully_resolved, iterator );
 }
+#line 68
 
 #line 72
 void login_client_impl::resolve( boost::function< void ( resolve_error_types_enum, boost::asio::ip::tcp::resolver::iterator ) > const& functor, const u32 retry_count )

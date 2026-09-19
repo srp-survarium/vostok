@@ -16,8 +16,10 @@ void login_client_impl::on_connected(
 		boost::system::error_code const&		error_code,
 		boost::asio::ip::tcp::resolver::iterator	iterator
 	)
+#line 20
 {
 
+#line 21
 	ASSERT			( UNKNOWN_EXPRESSION_T( m_connection_state == connecting ) );
 
 	if ( error_code ) {

@@ -27,7 +27,9 @@ network_world::network_world					( vostok::network::engine& engine, vostok::memo
 network_world::~network_world					( )
 {
 	m_channel.responses.owner_finalize	( );
+#line 31
 }
+#line 31
 
 void network_world::initialize					( )
 {

@@ -17,30 +17,38 @@ void async_connector::on_connected(
 	boost::system::error_code const&	error_code,
 	boost::asio::ip::tcp::resolver::iterator	iterator
 )
+#line 23
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == connection_is_being_established ) );
+#line 26
 	if ( error_code )
 	{
+#line 27
 		m_connection_state	= host_name_is_unresolved;
 		if ( m_on_error )
 			m_on_error( server_cannot_be_connected, error_code );
 		return;
 	}
+#line 33
 	LOG_INFO( "connection_has_been_established!" );
 	m_connection_state	= connection_has_been_established;
 
 	if ( m_on_connected )
 		m_on_connected( );
 }
+#line 35
 
 void async_connector::connect( boost::asio::ip::tcp::resolver::iterator const& iterator )
+#line 41
 {
 	m_connection_state	= connection_is_being_established;
 	boost::asio::async_connect(
 		*m_socket,
 		iterator,
+#line 52
 		boost::bind( &async_connector::on_connected, this, _1, _2 ) );
 }
+#line 44
 
 void async_connector::on_resolved(
 	// the header declares this `* const` (target mangles QAV); the definition drops the
@@ -83,7 +91,7 @@ void async_connector::on_resolved(
 	LOG_INFO( "host name has been resolved!" );
 	m_connection_state	= host_name_has_been_resolved;
 	m_host				= iterator;
-	connect( m_host );
+	connect( iterator );
 }
 
 void async_connector::connect(

@@ -15,9 +15,11 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 	boost::system::error_code const&	error_code,
 	u32									bytes_transferred
 )
+#line 15
 {
 	if ( error_code )
 	{
+#line 17
 		if ( error_code == boost::asio::error::operation_aborted )
 			return;
 
@@ -31,6 +33,7 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 
 	if ( bytes_transferred != packet->allocated_size( ) )
 	{
+#line 29
 		LOG_ERROR( "unable to read from socket\r\n" );
 		if ( m_on_error )
 			m_on_error( unable_to_read_from_socket, error_code );
@@ -39,13 +42,16 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 		return;
 	}
 
+#line 39
 	if ( m_on_packet_received )
 		m_on_packet_received( *packet );
 
 	delete_packet( packet );
 
+#line 43
 	start_receiving( );
 }
+#line 49
 
 template < typename Socket >
 template < typename T >
@@ -141,16 +147,21 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
+#line 153
 {
 	tcp_packet*	cloned_packet	= new_packet( );
 	cloned_packet->clone( packet );
 
+#line 179
 	boost::asio::const_buffers_1 const&	buffer	= buffer_to_send( *cloned_packet );
 	boost::system::error_code	error_code;
+#line 186
 	boost::asio::write( m_socket, buffer, boost::asio::transfer_all( ), error_code );
 
+#line 187
 	on_packet_has_been_sent( cloned_packet, error_code, boost::asio::buffer_size( buffer ) );
 }
+#line 154
 
 template < typename Socket >
 inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
