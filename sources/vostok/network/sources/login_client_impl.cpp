@@ -22,8 +22,10 @@ login_client_impl::login_client_impl( boost::asio::io_service& io_service ) :
 	m_session_id		( 0 ),
 	m_host_port			( 0xffff ),
 	m_in_destructor		( false )
+#line 29
 {
 
+#line 30
 	m_server_browser_address[0]			= 0;
 	m_server_browser_initial_query[0]	= 0;
 
@@ -42,6 +44,7 @@ login_client_impl::login_client_impl( boost::asio::io_service& io_service ) :
 	m_host[0]		= 0;
 	m_host_ip[0]	= 0;
 }
+#line 45
 
 // claude@NOTE: structure + locals match (do/switch with the folded case-breaks
 // verified); residual = +0x3 at each sign_out( boost::function<...>( ) ) temp -
@@ -66,7 +69,9 @@ login_client_impl::~login_client_impl( )
 						sign_out			( boost::function< void (	connection_error_types_enum,
 																		handshaking_error_types_enum,
 																		socket_error_types_enum,
+#line 66
 																		login_server_message_types_enum ) >( ) );
+#line 70
 				}
 				break;
 			case handshaked :
@@ -81,7 +86,9 @@ login_client_impl::~login_client_impl( )
 						sign_out			( boost::function< void (	connection_error_types_enum,
 																		handshaking_error_types_enum,
 																		socket_error_types_enum,
+#line 81
 																		login_server_message_types_enum ) >( ) );
+#line 85
 				}
 		}
 
@@ -90,6 +97,7 @@ login_client_impl::~login_client_impl( )
 }
 
 bool login_client_impl::verify_ssl_certificate( const bool preverified, boost::asio::ssl::verify_context& verify_context )
+#line 94
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( verify_context );
 
@@ -109,6 +117,7 @@ bool login_client_impl::verify_ssl_certificate( const bool preverified, boost::a
 }
 
 void login_client_impl::establish_connection( boost::function< void ( connection_error_types_enum ) > const& functor, const u32 resolve_retry_count, const u32 reconnect_retry_count )
+#line 114
 {
 	if ( m_connection_state == unresolved )
 		resolve	(
@@ -122,17 +131,22 @@ void login_client_impl::establish_connection( boost::function< void ( connection
 			),
 			resolve_retry_count
 		);
+#line 129
 }
+#line 126
 
 // LOG_INFO must remain at target source line 133; its retained __LINE__ value
 // affects callback construction (log-callback-ctor-schedule.md).
 void login_client_impl::close_connection( const bool stop_ping_timer )
+#line 132
 {
 	LOG_INFO				( "[LOGIN] closed connection\r\n" );
 
+#line 137
 	if ( stop_ping_timer )
 		m_ping_timer.cancel	( );
 
+#line 141
 	m_ssl_stream.~stream	( );
 	new ( &m_ssl_stream ) boost::asio::ssl::stream< boost::asio::ip::tcp::socket& >( m_socket, m_ssl_context );
 
@@ -140,6 +154,7 @@ void login_client_impl::close_connection( const bool stop_ping_timer )
 	m_socket.close			( );
 	m_connection_state		= unresolved;
 }
+#line 143
 
 } // namespace network
 } // namespace vostok

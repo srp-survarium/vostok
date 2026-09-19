@@ -33,14 +33,19 @@ udp_match_client::udp_match_client(
 	m_network_flow_emulator	( network_flow_emulator ),
 	m_time_in_ms		( 0 ),
 	m_is_receiving		( false )
+#line 39
 {
 	m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
 }
 void udp_match_client::on_error( const client_error_codes_enum, const boost::system::error_code )
+#line 47
 {
+#line 49
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }
+#line 43
 void udp_match_client::process_incoming_packet( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint )
+#line 77
 {
 	ASSERT_U( endpoint == m_server_endpoint );
 	if ( m_network_flow_emulator && m_connection.is_disconnected( ) )
@@ -51,6 +56,7 @@ void udp_match_client::process_incoming_packet( packet_reader& reader, boost::as
 }
 
 void udp_match_client::handle_receive( boost::system::error_code const& error_code, const u32 bytes_transferred )
+#line 87
 {
 	check_consistency		( );
 
@@ -77,6 +83,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 		on_error			( unable_to_read_from_socket, error_code );
 		return;
 	}
+#line 114
 	if ( m_network_flow_emulator ) {
 		m_network_flow_emulator->on_packet_received( m_receive_buffer.c_array( ), bytes_transferred, m_remote_endpoint, m_time_in_ms, m_connection.unacknowledged_packets_count( ) );
 	}
@@ -84,10 +91,13 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 		packet_reader	reader( base_packet( m_receive_buffer.c_array( ), bytes_transferred ) );
 		process_incoming_packet( reader, m_remote_endpoint );
 	}
+#line 122
 	check_consistency		( );
+#line 124
 	if ( !m_connection.is_disconnected( ) )
 		start_receiving		( );
 }
+#line 128
 void udp_match_client::start_receiving( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_is_receiving ) );
@@ -99,31 +109,41 @@ void udp_match_client::start_receiving( )
 			m_handler_allocator,
 			boost::bind( &udp_match_client::handle_receive, this, _1, _2 )
 		)
+#line 140
 	);
 }
+#line 104
 void udp_match_client::connect(
 	pcstr const					host,
 	const u16					port,
 	udp_match_packet* const		packet,
 	const u32					current_time_in_ms
 )
+#line 144
 {
 	if ( m_socket.is_open( ) )
 		m_socket.close		( );
 	m_socket.open			( boost::asio::ip::udp::v4( ) );
 	m_socket.bind			( boost::asio::ip::udp::endpoint( ) );
+#line 150
 	m_server_endpoint		= boost::asio::ip::udp::endpoint( boost::asio::ip::address::from_string( host ), port );
+#line 152
 	m_connection.connect	( packet );
+#line 154
 	check_consistency		( );
 	start_receiving			( );
+#line 157
 	m_connection.send_queued_packets( current_time_in_ms );
 	check_consistency		( );
 }
+#line 122
 void udp_match_client::disconnect( )
+#line 162
 {
 	m_connection.disconnect( );
 }
 void udp_match_client::enqueue( udp_match_packet* packet )
+#line 167
 {
 	if ( m_connection.is_connected( ) ) {
 		m_connection.enqueue		( packet );
@@ -136,9 +156,11 @@ void udp_match_client::enqueue( udp_match_packet* packet )
 }
 
 void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
+#line 179
 {
 	if ( m_network_flow_emulator ) {
 		// claude@MATCH: tick gets the OLD m_time_in_ms - the member is updated only after this block
+#line 181
 		m_network_flow_emulator->tick( m_time_in_ms, boost::bind( &udp_match_client::process_incoming_packet, this, _1, _2 ) );
 		if ( m_connection.is_disconnected( ) )
 			return;
@@ -149,22 +171,29 @@ void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 	m_connection.send_queued_packets	( current_time_in_ms );
 	check_consistency					( );
 }
+#line 152
 
 void udp_match_client::check_consistency( ) const
+// sushi@TODO: Verify the assertion macro spelling; ASSERT_U accounts for both assertion-only locals.
+#line 193
 {
 	u32 const registered_packets_count	= m_packets_allocator.allocated_size( ) / sizeof( udp_match_packet );
 	u32 const allocated_count			= ( m_network_flow_emulator ? m_network_flow_emulator->delayed_packets_count( ) : 0 ) + m_connection.packets_count( );
-	ASSERT( UNKNOWN_EXPRESSION_T( registered_packets_count == allocated_count ) );
+	ASSERT_U( UNKNOWN_EXPRESSION_T( registered_packets_count == allocated_count ) );
 }
+#line 161
 
 void udp_match_client::on_disconnect( const disconnect_event_types_enum disconnect_type )
+#line 200
 {
 	if ( m_is_receiving )
 		m_socket.cancel( );
 
+#line 205
 	if ( m_on_disconnect )
 		m_on_disconnect( disconnect_type );
 }
+#line 170
 
 
 } // namespace network_core

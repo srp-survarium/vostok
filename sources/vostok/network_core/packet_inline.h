@@ -8,6 +8,7 @@ namespace network_core {
 
 template < typename T >
 inline packet< T >::packet( )
+#line 15
 {
 }
 

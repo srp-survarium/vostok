@@ -45,8 +45,9 @@ inline void sequence_number< T >::serialize( udp_match_packet& packet )
 template < typename T >
 inline void sequence_number< T >::serialize( pbyte& pointer )
 {
-	*reinterpret_cast< T* >( pointer )	= m_number;
-	pointer			+= sizeof( T );
+	sequence_number_type*&	stream	= reinterpret_cast< sequence_number_type*& >( pointer );
+	*stream	= m_number;
+	++stream;
 }
 
 template < typename T >
@@ -67,17 +68,25 @@ inline bool sequence_number< T >::operator!=( sequence_number const& other ) con
 // in the strictness of the first comparison ( < vs <= ), matching the target.
 template < typename T >
 inline bool sequence_number< T >::operator<( sequence_number const& other ) const
+#line 65
 {
 	return ( m_number < other.m_number && u32( m_number ) + 0x8000 > other.m_number ) ||
+#line 66
 		( other.m_number < m_number && u32( other.m_number ) + 0x8000 <= m_number );
+#line 68
 }
+#line 74
 
 template < typename T >
 inline bool sequence_number< T >::operator<=( sequence_number const& other ) const
+#line 72
 {
 	return ( m_number <= other.m_number && u32( m_number ) + 0x8000 > other.m_number ) ||
+#line 73
 		( other.m_number < m_number && u32( other.m_number ) + 0x8000 <= m_number );
+#line 75
 }
+#line 81
 
 template < typename T >
 inline bool sequence_number< T >::operator>( sequence_number const& other ) const
@@ -128,16 +137,18 @@ inline sequence_number< T > sequence_number< T >::deserialize( packet_reader& re
 	return sequence_number( reader.r< T >( ) );
 }
 
-// operator-: signed serial-number distance. When right does not precede left we take
-// the direct 16-bit wrapped difference; otherwise the negated mirror distance.
 template < typename T >
 inline s32 operator- ( sequence_number< T > const& left, sequence_number< T > const& right )
+#line 121
 {
 	if ( right <= left )
-		return s16( left.m_number - right.m_number );
+		return ( left.m_number + sequence_number< T >::max_sequence_number - right.m_number ) %
+#line 123
+			sequence_number< T >::max_sequence_number;
 
 	return -( right - left );
 }
+#line 140
 
 } // namespace network_core
 } // namespace vostok

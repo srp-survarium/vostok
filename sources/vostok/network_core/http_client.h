@@ -28,7 +28,9 @@ public:
 
 			void					get						( pcstr server, pcstr path, boost::function< void() > const& callback );
 
+#line 22
 	inline	void					set_on_error			( on_error_type const& callback ) { m_on_error = callback; }
+#line 32
 
 	inline	std::string const&		result_content			( ) const { return m_result_content; }
 
@@ -65,16 +67,6 @@ STATIC_SIZE_ASSERT(http_client, 0x108);
 
 // free helper defined in http_client.cpp
 VOSTOK_NETWORK_CORE_API void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff );
-
-// delink unit "vostok/network_core/http_client.h" (5 target fns, all unpaired) diagnosis:
-// - set_on_error: mangle matches our declaration exactly (QAEXABV function<void(error_code)>),
-//   but no reconstructed real caller currently emits a base COMDAT.
-// - network::order::order() + the order/response/functor_order scalar-deleting dtors (line-0
-//   synthesized) are emitted by the UNWRITTEN legacy vostok::network http_client unit; the
-//   target attributes them to THIS header (the original defined the legacy glue classes here),
-//   while our port defines them under vostok/network/sources/*.h with a smaller functor_order
-//   dtor (0x38 vs 0x43) - pends the legacy network::http_client reconstruction; not fixable
-//   from network_core.
 
 } // namespace network_core
 } // namespace vostok

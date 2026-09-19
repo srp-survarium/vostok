@@ -1,0 +1,20 @@
+module	unit	function	parameter	difference	target_variable_type	state
+network_core	async_connector.cpp	connect(socket,...)	host	add top-level const	1036 const pointer	applied; build dbfa79b0 verified
+network_core	async_connector.cpp	connect(socket,...)	host_port	add const	1479 const u16	applied; build dbfa79b0 verified
+network_core	tcp_packet_client.cpp	connect	host	add top-level const	1036 const pointer	applied; not rebuilt
+network_core	tcp_packet_client.cpp	connect	port	add const	1479 const u16	applied; not rebuilt
+network_core	udp_match_client.cpp	on_disconnect	disconnect_type	preserve source const	18f55 plain enum	rejected removal; existing const source already emits plain base enum
+network_core	network_core_entry_point.cpp	get_connection_info_from_string	dest_host	remove top-level const	470 plain char pointer	applied; not rebuilt
+network	tcp_packet_client.cpp	on_error_impl	client_error_code	preserve source const	1872a plain enum	rejected removal; existing const source already emits plain base enum
+network	tcp_packet_client.cpp	on_error_impl	error_code	preserve source const	2940 plain class	rejected removal; existing const source already emits plain base class
+network	tcp_packet_client.cpp	on_error	client_error_code	preserve source const	1872a plain enum	rejected removal; existing const source already emits plain base enum
+network	tcp_packet_client.cpp	on_error	error_code	preserve source const	2940 plain class	rejected removal; existing const source already emits plain base class
+network	network_world.cpp	add_order	order	add top-level const	2766 const pointer	applied; not rebuilt
+network	network_world.cpp	add_response	response	add top-level const	2761 const pointer	applied; not rebuilt
+network	http_client.cpp	get	server	remove top-level const	1023 plain pointer to const char	applied; not rebuilt
+network	http_client.cpp	get	path	remove top-level const	1023 plain pointer to const char	applied; not rebuilt
+network	http_client.cpp	get_impl	server	remove top-level const	1023 plain pointer to const char	applied; not rebuilt
+network	http_client.cpp	get_impl	path	remove top-level const	1023 plain pointer to const char	applied; not rebuilt
+network	http_client.cpp	on_content_downloaded_impl	content	remove top-level const	1023 plain pointer to const char	applied; not rebuilt
+network	http_client.cpp	on_error_impl	error_code	preserve source const	2940 plain class	rejected removal; existing const source already emits plain base class
+network	http_client.cpp	on_error	error_code	preserve source const	2940 plain class	rejected removal; existing const source already emits plain base class

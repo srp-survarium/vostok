@@ -9,6 +9,7 @@ namespace vostok {
 namespace network_core {
 
 boost::asio::const_buffers_1 buffer_to_send( tcp_packet& packet )
+#line 13
 {
 	u32 const buffer_size = packet.buffer_size( );
 	pbyte const buffer	= packet.buffer();

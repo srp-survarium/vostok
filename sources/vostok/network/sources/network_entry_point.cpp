@@ -17,6 +17,7 @@
 using vostok::network::network_world;
 
 // The PDB and object index use different names for this initializer thunk.
+#line 13
 static vostok::uninitialized_reference<network_world>	s_world;
 vostok::network::allocator_type*	vostok::network::g_allocator = 0;
 

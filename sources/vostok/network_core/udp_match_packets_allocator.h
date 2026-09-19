@@ -19,6 +19,7 @@ public:
 		single_size_buffer_allocator< 300, threading::single_threading_policy >( arena, arena_size ),
 		m_allocator			( allocator ),
 		m_reference_count	( 0 )
+#line 21
 	{
 	}
 

@@ -89,8 +89,10 @@ struct udp_match_stats {
 	inline			udp_match_stats	( ) :
 		max_local_sequence_difference	( 0 ),
 		unacknowledged_packets			( 0 )
+#line 96
 	{
 	}
+#line 94
 
 	inline	void	dump			( pcstr const title ) const
 	{
@@ -158,21 +160,28 @@ inline bool operator>=( udp_match_items_stats const& left, udp_match_items_stats
 }
 
 inline bool operator>=( udp_match_stream_stats const& left, udp_match_stream_stats const& right )
+#line 164
 {
 	return left.packets >= right.packets
 		&& left.messages >= right.messages
+#line 168
 		&& left.data_bytes >= right.data_bytes;
 }
+#line 166
 
 inline bool operator>=( udp_match_stats const& left, udp_match_stats const& right )
+#line 172
 {
 	return left.sent >= right.sent
 		&& left.resent >= right.resent
 		&& left.received >= right.received
 		&& left.received_duplicated >= right.received_duplicated
 		&& left.sent_low_level >= right.sent_low_level
-		&& left.received_low_level >= right.received_low_level;
+		&& left.received_low_level >= right.received_low_level
+#line 180
+		&& true; // sushi@TODO: Was retail's constant test a macro expansion?
 }
+#line 177
 
 inline udp_match_items_stats operator-( udp_match_items_stats const& left, udp_match_items_stats const& right )
 {
@@ -192,7 +201,9 @@ inline udp_match_stream_stats operator-( udp_match_stream_stats const& left, udp
 }
 
 inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats const& right )
+#line 209
 {
+#line 212
 	udp_match_stats	result;
 
 	result.sent					= left.sent - right.sent;
@@ -207,6 +218,7 @@ inline udp_match_stats operator-( udp_match_stats const& left, udp_match_stats c
 
 	return			result;
 }
+#line 211
 
 } // namespace network_core
 } // namespace vostok

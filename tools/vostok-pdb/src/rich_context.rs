@@ -217,7 +217,8 @@ pub fn extract_rich_context(
         let symbols = Rc::new(build_symbol_maps(&mut pdb, &address_map)?);
 
         let mut entries: Vec<FunctionEntry> = Vec::new();
-        let mut source_cache: HashMap<String, Option<Vec<String>>> = HashMap::new();
+        let mut source_cache: HashMap<String, Option<HashMap<u32, Option<String>>>> =
+            HashMap::new();
 
         let dbi = pdb.debug_information()?;
         let mut modules = dbi.modules()?;
@@ -290,14 +291,14 @@ pub fn extract_rich_context(
                                         let source_lines =
                                             source_cache.entry(rel.clone()).or_insert_with(|| {
                                                 let path = root.join(rel.replace('\\', "/"));
-                                                std::fs::read_to_string(path).ok().map(|s| {
-                                                    s.lines().map(str::to_string).collect()
-                                                })
+                                                std::fs::read_to_string(path)
+                                                    .ok()
+                                                    .map(|s| logical_source_lines(&s, rel))
                                             });
                                         source_lines
                                             .as_ref()
                                             .and_then(|lines| {
-                                                lines.get((li.line_start as usize).wrapping_sub(1))
+                                                lines.get(&li.line_start).and_then(Option::as_ref)
                                             })
                                             .map(|s| strip_carcass_comment(s).to_string())
                                             .filter(|s| !s.is_empty())
@@ -544,6 +545,284 @@ fn push_local(
 fn strip_carcass_comment(line: &str) -> &str {
     let cut = line.find("// <").unwrap_or(line.len());
     line[..cut].trim_end()
+}
+
+/// Map literal line directives without pretending to run the preprocessor.
+/// Repeated logical locations are ambiguous, even when the text is identical.
+/// Macro-valued/conditional directives suppress attribution until a subsequent
+/// literal directive outside feature conditionals establishes it again. A
+/// conventional whole-file include guard is not a feature conditional.
+fn logical_source_lines(source: &str, file: &str) -> HashMap<u32, Option<String>> {
+    // Translation-phase line splicing precedes comment recognition. Until it
+    // is modeled, omit text for the whole file rather than invent directives.
+    if source.lines().any(|line| line.ends_with('\\')) {
+        return HashMap::new();
+    }
+    let mut result = HashMap::new();
+    let mut logical = Some(1u32);
+    let expected_file = file.replace('\\', "/").to_lowercase();
+    let mut current_file = Some(expected_file.clone());
+    let mut conditional_depth = 0u32;
+    let mut block_comment = false;
+    let mut visible_lines = Vec::new();
+    for line in source.lines() {
+        // Only recognize preprocessing tokens outside comments and literals.
+        let mut visible = String::new();
+        let mut chars = line.chars().peekable();
+        let mut quote = None;
+        while let Some(ch) = chars.next() {
+            if block_comment {
+                if ch == '*' && chars.peek() == Some(&'/') {
+                    chars.next();
+                    block_comment = false;
+                    visible.push(' ');
+                }
+            } else if let Some(delimiter) = quote {
+                visible.push(ch);
+                if ch == '\\' {
+                    if let Some(escaped) = chars.next() {
+                        visible.push(escaped);
+                    }
+                } else if ch == delimiter {
+                    quote = None;
+                }
+            } else if ch == '/' && chars.peek() == Some(&'*') {
+                chars.next();
+                block_comment = true;
+                visible.push(' ');
+            } else if ch == '/' && chars.peek() == Some(&'/') {
+                break;
+            } else {
+                visible.push(ch);
+                if ch == '"' || ch == '\'' {
+                    quote = Some(ch);
+                }
+            }
+        }
+        visible_lines.push((line, visible));
+    }
+    let guard_depth = u32::from(conventional_include_guard(&visible_lines));
+    for (line, visible) in visible_lines {
+        if let Some((name, rest)) = preprocessing_directive(&visible) {
+            match name {
+                "if" | "ifdef" | "ifndef" => conditional_depth += 1,
+                "endif" => conditional_depth = conditional_depth.saturating_sub(1),
+                "line" => {
+                    let rest = rest.trim();
+                    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+                    let (number, filename) = rest.split_at(end);
+                    let parsed_number = number.parse::<u32>().ok().filter(|n| *n > 0);
+                    logical = if conditional_depth <= guard_depth {
+                        parsed_number
+                    } else {
+                        None
+                    };
+                    let filename = filename.trim();
+                    if !filename.is_empty() {
+                        if conditional_depth > guard_depth {
+                            current_file = None;
+                        } else if let Some(filename) =
+                            filename.strip_prefix('"').and_then(|s| s.strip_suffix('"'))
+                        {
+                            current_file = Some(
+                                filename
+                                    .replace("\\\\", "\\")
+                                    .replace('\\', "/")
+                                    .to_lowercase(),
+                            );
+                        } else {
+                            logical = None;
+                            current_file = None;
+                        }
+                    }
+                    // A macro can expand to both the number and a filename.
+                    if parsed_number.is_none() {
+                        current_file = None;
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+        }
+        if let Some(number) = logical {
+            if current_file.as_ref().is_some_and(|file| {
+                file == &expected_file || file.ends_with(&format!("/{expected_file}"))
+            }) {
+                result
+                    .entry(number)
+                    .and_modify(|entry| *entry = None)
+                    .or_insert_with(|| Some(line.to_string()));
+            }
+            logical = number.checked_add(1);
+        }
+    }
+    result
+}
+
+fn preprocessing_directive(line: &str) -> Option<(&str, &str)> {
+    let directive = line.trim_start().strip_prefix('#')?.trim_start();
+    let end = directive
+        .find(|c: char| !c.is_ascii_alphabetic() && c != '_')
+        .unwrap_or(directive.len());
+    Some(directive.split_at(end))
+}
+
+// A source location inside a conventional whole-file guard necessarily came
+// from its active body. This says nothing about nested feature conditionals.
+fn conventional_include_guard(lines: &[(&str, String)]) -> bool {
+    let visible: Vec<_> = lines
+        .iter()
+        .map(|(_, line)| line.trim())
+        .filter(|line| !line.is_empty())
+        .collect();
+    if visible.len() < 3 || visible.iter().any(|line| line.ends_with('\\')) {
+        return false;
+    }
+    let words = |line: &str| -> Vec<String> {
+        preprocessing_directive(line)
+            .map(|(name, rest)| {
+                std::iter::once(name)
+                    .chain(rest.split_whitespace())
+                    .map(str::to_owned)
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    let first = words(visible[0]);
+    if first.len() != 2 || first[0] != "ifndef" {
+        return false;
+    }
+    let guard = &first[1];
+    if !guard
+        .chars()
+        .enumerate()
+        .all(|(i, c)| c == '_' || c.is_ascii_alphabetic() || (i > 0 && c.is_ascii_digit()))
+        || words(visible[1]) != ["define", guard.as_str()]
+    {
+        return false;
+    }
+    let mut depth = 0u32;
+    for (i, line) in visible.iter().enumerate() {
+        let tokens = words(line);
+        match tokens.first().map(String::as_str) {
+            Some("if" | "ifdef" | "ifndef") => depth += 1,
+            Some("else" | "elif") if depth == 1 => return false,
+            Some("undef") if tokens.get(1) == Some(guard) => return false,
+            Some("endif") => {
+                let Some(next) = depth.checked_sub(1) else {
+                    return false;
+                };
+                depth = next;
+                if depth == 0 && (i + 1 != visible.len() || tokens.len() != 1) {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0
+}
+
+#[cfg(test)]
+mod source_line_tests {
+    use super::logical_source_lines;
+
+    #[test]
+    fn macro_line_directive_can_change_both_number_and_filename() {
+        let lines = logical_source_lines(
+            "#define LOCATION 10 \"other.h\"\n#line LOCATION\n#line 100\nunknown\n#line 200 \"header.h\"\nknown",
+            "header.h",
+        );
+        assert!(!lines.contains_key(&100));
+        assert_eq!(lines[&200].as_deref(), Some("known"));
+    }
+
+    #[test]
+    fn raw_line_splicing_is_not_mistaken_for_active_directives() {
+        let source = "#ifndef H\n#define H\n// continued comment \\\n#line 80\nbody\n#endif\n";
+        assert!(logical_source_lines(source, "header.h").is_empty());
+    }
+
+    #[test]
+    fn unknown_conditional_filename_needs_explicit_recovery() {
+        let source = "#ifndef H\n#define H\n#line 10 \"other.h\"\n#if FLAG\n#line 80 \"header.h\"\n#endif\n#line 100\nunknown\n#line 200 \"header.h\"\nknown\n#endif\n";
+        let lines = logical_source_lines(source, "header.h");
+        assert!(!lines.contains_key(&100));
+        assert_eq!(lines[&200].as_deref(), Some("known"));
+    }
+
+    #[test]
+    fn feature_directives_do_not_require_whitespace_before_expression() {
+        let lines = logical_source_lines(
+            "#ifndef H\n#define H\n#if(FLAG)\n#line 80\nunknown\n#endif\n#line 100\nknown\n#endif\n",
+            "header.h",
+        );
+        assert!(!lines.contains_key(&80));
+        assert_eq!(lines[&100].as_deref(), Some("known"));
+    }
+
+    #[test]
+    fn include_guard_does_not_hide_literal_header_locations() {
+        let lines = logical_source_lines(
+            "// banner\n#ifndef HEADER_H\n#define HEADER_H\n#line 65\nbody\n#endif // HEADER_H\n",
+            "header.h",
+        );
+        assert_eq!(lines[&65].as_deref(), Some("body"));
+    }
+
+    #[test]
+    fn include_guard_does_not_authorize_nested_feature_pins() {
+        let lines = logical_source_lines(
+            "#ifndef H\n#define H\n#if FLAG\n#line 80\nfeature\n#endif\nunknown\n#line 100\nknown\n#endif\n",
+            "header.h",
+        );
+        assert!(!lines.contains_key(&80));
+        assert_eq!(lines[&100].as_deref(), Some("known"));
+    }
+
+    #[test]
+    fn conditional_headers_with_alternatives_or_undef_are_not_guards() {
+        for source in [
+            "#ifndef H\n#define H\n#line 80\none\n#else\ntwo\n#endif\n",
+            "#ifndef H\n#define H\n#undef H\n#line 80\none\n#endif\n",
+            "#ifndef H\n#define H\n#line 80\none\n#endif\nafter\n",
+        ] {
+            assert!(!logical_source_lines(source, "header.h").contains_key(&80));
+        }
+    }
+
+    #[test]
+    fn line_directive_applies_to_next_line_and_keeps_physical_prefix() {
+        let lines = logical_source_lines("before\n#line 43\nfunction\n{\nlog\n", "sample.cpp");
+        assert_eq!(lines[&1].as_deref(), Some("before"));
+        assert_eq!(lines[&43].as_deref(), Some("function"));
+        assert_eq!(lines[&45].as_deref(), Some("log"));
+        assert!(!lines.contains_key(&2));
+    }
+
+    #[test]
+    fn duplicate_locations_and_unknown_directives_do_not_guess() {
+        let lines = logical_source_lines(
+            "a\n#line 1\nb\n#line MACRO\nunknown\n#line 30\nstill_unknown\n#line 40 \"sample.cpp\"\nknown",
+            "sample.cpp",
+        );
+        assert_eq!(lines[&1], None);
+        assert!(!lines.contains_key(&30));
+        assert_eq!(lines[&40].as_deref(), Some("known"));
+        assert_eq!(lines.len(), 2);
+    }
+
+    #[test]
+    fn comments_conditional_pins_and_other_files_are_not_misattributed() {
+        let lines = logical_source_lines(
+            "/*\n#line 50\n*/\n#if FLAG\n#line 80\n#endif\nunknown\n#line 90 \"elsewhere.cpp\"\nother\n#line 100 \"sample.cpp\"\nknown",
+            "sample.cpp",
+        );
+        assert!(!lines.contains_key(&50));
+        assert!(!lines.contains_key(&80));
+        assert!(!lines.contains_key(&90));
+        assert_eq!(lines[&100].as_deref(), Some("known"));
+    }
 }
 
 /// Build RVA -> name maps for call/data target annotation. Module symbols

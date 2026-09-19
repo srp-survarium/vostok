@@ -29,6 +29,7 @@ public:
 		m_string1	( NULL ),
 		m_string2	( NULL ),
 		m_allocator	( allocator )
+#line 29
 	{
 	}
 
@@ -46,6 +47,7 @@ public:
 		m_string1	( strings::duplicate( allocator, string1 ) ),
 		m_string2	( NULL ),
 		m_allocator	( allocator )
+#line 38
 	{
 	}
 
@@ -64,10 +66,12 @@ public:
 		m_string1	( strings::duplicate( allocator, string1 ) ),
 		m_string2	( strings::duplicate( allocator, string2 ) ),
 		m_allocator	( allocator )
+#line 47
 	{
 	}
 
 	virtual			~string_order	( )
+#line 50
 	{
 		pstr temp			= m_string0;
 		VOSTOK_FREE_IMPL	( m_allocator, temp );
@@ -80,6 +84,7 @@ public:
 	}
 
 	virtual	void	execute			( )
+#line 61
 	{
 		if ( m_string1 )
 			if ( m_string2 )

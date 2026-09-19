@@ -44,16 +44,19 @@ private:
 STATIC_SIZE_ASSERT(client_destroyer, 0x14);
 
 void match_client::create_client( vostok::network_core::udp_network_flow_emulator_options const* options )
+#line 45
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( !*m_client ) );
 	match_client_impl* const temp	= VOSTOK_NEW_IMPL( m_world.responses_allocator( ), match_client_impl ) (
 		m_world.io_service( ), m_packets_orderer, options );
+#line 52
 	vostok::threading::interlocked_exchange_pointer( (pvoid&)*m_client, temp );
 	( *m_client )->set_on_packet_received	( boost::bind( &match_client::on_packet_received, this, _1, _2 ) );
 	( *m_client )->set_on_disconnect		( boost::bind( &match_client::on_disconnect, this, _1 ) );
 }
 
 void match_client::create_responses_packets_allocator( )
+#line 58
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( !m_response_packets_allocator ) );
 
@@ -75,9 +78,11 @@ void match_client::create_responses_packets_allocator( )
 			static_cast_checked<network_world&>(world).orders_allocator( )
 		)
 	),
+	m_response_packets_allocator ( 0 ),
 	m_packets_orderer	( packets_orderer ),
 	m_world				( static_cast_checked<network_world&>(world) ),
 	m_client			( VOSTOK_NEW_IMPL( static_cast_checked<network_world&>(world).orders_allocator( ), match_client_impl* ) )
+#line 89
 {
 	*m_client			= 0;
 	m_world.add_order	(
@@ -93,6 +98,7 @@ void match_client::create_responses_packets_allocator( )
 }
 
 client_destroyer::~client_destroyer( )
+#line 117
 {
 	VOSTOK_DELETE_IMPL		( m_orders_allocator, m_client );
 }
@@ -104,6 +110,7 @@ void client_destroyer::execute( )
 }
 
  match_client::~match_client( )
+#line 135
 {
 	order* const order		= VOSTOK_NEW_IMPL( m_world.orders_allocator( ), client_destroyer ) (
 		m_response_packets_allocator,
@@ -173,6 +180,7 @@ static void enqueue_impl(
 		match_client_impl** const					client,
 		vostok::network_core::udp_match_packet&		packet
 	)
+#line 200
 {
 	( *client )->enqueue	( ( *client )->clone_packet( packet ) );
 }
@@ -210,7 +218,7 @@ void match_client::on_packet_received_impl( const u8 message_type, vostok::netwo
 void match_client::on_packet_received( const u8 message_type, vostok::network_core::packet_reader& reader )
 {
 	if ( m_on_packet_received ) {
-		network_core::udp_match_packet* const packet	= network_core::new_udp_match_packet( *m_response_packets_allocator );
+		network_core::udp_match_packet* const packet	= new_response_packet( );
 		packet->append		( reader.pointer( ), reader.size_to_eof( ) );
 		m_world.add_response	(
 			VOSTOK_NEW_IMPL( m_world.responses_allocator( ), receive_udp_response ) (

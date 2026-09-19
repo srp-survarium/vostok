@@ -42,6 +42,7 @@ public:
 	// (with its ASSERT eater) and the member ~intrusive_ptr (base inlines both,
 	// target calls them out-of-line) - the inline-vs-call wall, not steerable.
 	virtual			~receive_udp_response	( )
+#line 43
 	{
 		udp_match_packet* temp	= &m_packet;
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
@@ -51,6 +52,7 @@ public:
 	// inside the packet_reader-ctor expansion where the target calls the COMDAT
 	// (same wall as receive_response::execute); the if/copy stats tail is byte-equal.
 	virtual	void	execute					( )
+#line 49
 	{
 		network_core::packet_reader	reader( m_packet );
 		m_receiver				( reader );

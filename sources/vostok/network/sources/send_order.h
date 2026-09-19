@@ -30,12 +30,14 @@ public:
 	}
 
 	virtual				~send_order	( )
+#line 38
 	{
 		network_core::tcp_packet const* temp	= &m_packet;
 		VOSTOK_DELETE_IMPL	( m_allocator, temp );
 	}
 
 	virtual	void		execute		( )
+#line 44
 	{
 		m_sender			( m_packet );
 	}

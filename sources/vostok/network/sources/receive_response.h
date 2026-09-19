@@ -37,6 +37,7 @@ public:
 	// LTCG this-convention (esi in target, ecx in base) and the 8-byte frame slack
 	// riding on it - not source-steerable.
 	virtual			~receive_response	( )
+#line 36
 	{
 		network_core::tcp_packet const* temp	= &m_packet;
 		VOSTOK_DELETE_IMPL		( m_allocator, temp );
@@ -46,6 +47,7 @@ public:
 	// inside the packet_reader-ctor expansion where the target calls the COMDAT -
 	// the inline-vs-call wall, not source-steerable.
 	virtual	void	execute				( )
+#line 42
 	{
 		network_core::packet_reader	reader( m_packet );
 		m_receiver				( reader );

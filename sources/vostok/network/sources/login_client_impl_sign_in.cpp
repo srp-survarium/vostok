@@ -12,9 +12,8 @@ void login_client_impl::on_sign_in_answer_received(
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred
 	)
+#line 19
 {
-
-
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
 
 	if ( error_code || !bytes_transferred ) {
@@ -76,6 +75,7 @@ void login_client_impl::on_sign_in_answer_received(
 			if ( !m_in_destructor )
 				callback		( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )*buffer );
 	}
+#line 83
 }
 
 void login_client_impl::on_sign_in_password_written(
@@ -83,8 +83,8 @@ void login_client_impl::on_sign_in_password_written(
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred
 	)
+#line 90
 {
-
 	if ( error_code ) {
 		m_client_state		= signed_out;
 		close_connection	( false );
@@ -120,6 +120,7 @@ void login_client_impl::on_sign_in_password_written(
 	);
 }
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
+#line 127
 {
 	if ( error == cannot_handshake ) {
 		m_client_state		= signed_out;
@@ -150,6 +151,7 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 }
 // Unknown messages return instead of falling through to the handshake.
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
+#line 157
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
 
@@ -200,6 +202,7 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 	);
 }
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
+#line 208
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
 
@@ -233,6 +236,7 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 	);
 }
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
+#line 242
 {
 	if ( connection_result ) {
 		m_client_state		= signed_out;
@@ -252,7 +256,7 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 	buffer					+= account_name_length;
 
 
-	char version[8]			= { 0 };
+	char version[8]			= { };
 	strings::copy			( version, "0.100b" );
 	memcpy					( buffer, version, sizeof( version ) );
 	buffer					+= sizeof( version );
@@ -272,6 +276,7 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 	);
 }
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
+#line 282
 {
 	LOG_INFO				( "signing in to LOGIN Server: host[%s], port[%d], account[%s], password[%s]", host, port, account_name, password );
 

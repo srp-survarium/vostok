@@ -33,6 +33,7 @@ public:
 		m_string1	( NULL ),
 		m_string2	( NULL ),
 		m_allocator	( allocator )
+#line 31
 	{
 	}
 
@@ -73,6 +74,7 @@ public:
 	}
 
 	virtual			~string_response( )
+#line 52
 	{
 		pstr temp			= m_string0;
 		VOSTOK_FREE_IMPL	( m_allocator, temp );

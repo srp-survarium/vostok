@@ -15,8 +15,8 @@ void login_client_impl::on_sign_out_password_written(
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred
 	)
+#line 18
 {
-
 	if ( error_code ) {
 		m_client_state		= signed_out;
 		close_connection	( true );
@@ -42,6 +42,7 @@ void login_client_impl::on_sign_out_password_written(
 // claude@NOTE: STRUCTURE MATCH (13/13). Residual = function4::operator() inline-vs-call wall
 // x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::on_sign_out_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
+#line 43
 {
 	if ( error == cannot_handshake ) {
 		m_client_state		= signed_out;
@@ -74,6 +75,7 @@ void login_client_impl::on_sign_out_handshaked( boost::function< void ( connecti
 // claude@NOTE: STRUCTURE MATCH (16/16). Residual = function4::operator() inline-vs-call wall
 // x2 + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_out_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
+#line 74
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_out ) );
 
@@ -110,6 +112,7 @@ void login_client_impl::on_sign_out_written( boost::function< void ( connection_
 // claude@NOTE: STRUCTURE MATCH (12/12). Residual = function4::operator() inline-vs-call wall
 // x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::sign_out_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
+#line 109
 {
 	if ( connection_result ) {
 		m_client_state		= signed_out;
@@ -144,6 +147,7 @@ void login_client_impl::sign_out_on_connected( connection_error_types_enum conne
 // claude@NOTE: STRUCTURE MATCH (11/11). Residual = the function1(bind_t) conversion lowering
 // at the establish_connection boundary + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::sign_out( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
+#line 142
 {
 	boost::function< void ( connection_error_types_enum ) > const& sign_out_functor	=
 		boost::bind(

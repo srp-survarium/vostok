@@ -352,14 +352,11 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
     let mut ds: Vec<D> = Vec::new();
     for r in &rows {
         match r {
-            // Equal statements and blank-line gaps are not divergences - skip.
-            StructRow::Equal { .. }
-            | StructRow::EmptyEqual
-            | StructRow::EmptyOnlyTarget
-            | StructRow::EmptyOnlyBase => {}
+            // Blank-line gaps alone do not imply an instruction-boundary change.
+            StructRow::EmptyEqual | StructRow::EmptyOnlyTarget | StructRow::EmptyOnlyBase => {}
             // SIZE: same statement, different byte size. Anchor on the editable BASE
             // side (line/code); the target contributes its size (the goal).
-            StructRow::Changed { base: b, target: t } => {
+            StructRow::Changed { base: b, target: t } | StructRow::Equal { base: b, target: t } => {
                 if let (
                     Row::Stmt {
                         off: toff,
@@ -375,7 +372,19 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
                     },
                 ) = (t, b)
                 {
-                    let delta = signed_hex(*bs as i64 - *ts as i64);
+                    let mut tags = Vec::new();
+                    if bs != ts {
+                        tags.push(format!("SIZE {}", signed_hex(*bs as i64 - *ts as i64)));
+                    }
+                    if boff != toff {
+                        tags.push(format!(
+                            "OFFSET {}",
+                            signed_hex(*boff as i64 - *toff as i64)
+                        ));
+                    }
+                    if tags.is_empty() {
+                        continue;
+                    }
                     ds.push(D {
                         taddr: Some(va(target, *toff)),
                         baddr: Some(va(base, *boff)),
@@ -384,7 +393,7 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
                         tline: Some(*tline),
                         bline: Some(*line),
                         code: code_of(b, *line),
-                        tag: format!("SIZE {delta}"),
+                        tag: tags.join("; "),
                     });
                 }
             }
@@ -427,10 +436,6 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
     }
 
     let mut out = String::new();
-    // A clean match has no diverging rows - say so explicitly (the table would be empty).
-    if ds.is_empty() {
-        let _ = writeln!(out, "; STRUCTURE MATCH");
-    }
     // Then per-side stats, signature, and a braced body - same shape as the
     // single-side `--view structure`.
     let tstmts = target_rows
@@ -441,6 +446,30 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
         .iter()
         .filter(|r| matches!(r, Row::Stmt { .. }))
         .count();
+    // The body projection excludes frame/initializer records. An empty diff
+    // cannot certify those bytes, or a function with no projected body rows.
+    if tstmts == 0 && bstmts == 0 {
+        let _ = writeln!(
+            out,
+            "; NO BODY STATEMENTS COMPARED; inspect frame records and assembly"
+        );
+    } else if ds.is_empty() {
+        if base.size == target.size {
+            let _ = writeln!(
+                out,
+                "; STRUCTURE MATCH (body projection; not byte equality)"
+            );
+        } else {
+            let _ = writeln!(out, "; BODY PROJECTION MATCH; whole-function size differs");
+        }
+    }
+    if base.size != target.size {
+        let _ = writeln!(
+            out,
+            "; TOTAL SIZE {} (base minus target; includes records outside body projection)",
+            signed_hex(i64::from(base.size) - i64::from(target.size))
+        );
+    }
     let _ = writeln!(
         out,
         "; target va=0x{:x} rva=0x{:x}  {} stmts  0x{:x} bytes",
@@ -594,4 +623,88 @@ pub fn render_structure_diff(base: &FunctionEntry, target: &FunctionEntry) -> St
     }
     let _ = writeln!(out, "}}");
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rich_context::Statement;
+
+    fn function(size: u32, body_size: Option<u32>) -> FunctionEntry {
+        let mut f = FunctionEntry {
+            name: "fixture()".into(),
+            mangled: "fixture".into(),
+            rva: 0,
+            image_base: 0,
+            size,
+            file: "fixture.cpp".into(),
+            statements: Vec::new(),
+            instructions: Vec::new(),
+            locals: Vec::new(),
+            skipped_blocks: Vec::new(),
+        };
+        if let Some(body) = body_size {
+            for (off, span, line) in [(0, 1, 1), (1, body, 2), (1 + body, 1, 3)] {
+                f.statements.push(Statement {
+                    off,
+                    size: span,
+                    line,
+                    file: f.file.clone(),
+                    depth: 0,
+                    source: None,
+                });
+            }
+        }
+        f
+    }
+
+    #[test]
+    fn equal_body_does_not_hide_total_size_difference() {
+        let diff = render_structure_diff(&function(14, Some(8)), &function(10, Some(8)));
+        assert!(diff.contains("BODY PROJECTION MATCH"));
+        assert!(diff.contains("TOTAL SIZE +0x4"));
+        assert!(!diff.contains("STRUCTURE MATCH"));
+    }
+
+    #[test]
+    fn no_body_rows_are_not_a_structure_match() {
+        for base_size in [63, 72] {
+            let diff = render_structure_diff(&function(base_size, None), &function(63, None));
+            assert!(diff.contains("NO BODY STATEMENTS COMPARED"));
+            assert!(!diff.contains("STRUCTURE MATCH"));
+            assert_eq!(diff.contains("TOTAL SIZE"), base_size != 63);
+        }
+    }
+
+    #[test]
+    fn equal_projection_and_size_retains_qualified_match() {
+        let f = function(10, Some(8));
+        let diff = render_structure_diff(&f, &f);
+        assert!(diff.contains("STRUCTURE MATCH (body projection; not byte equality)"));
+        assert!(!diff.contains("TOTAL SIZE"));
+    }
+
+    #[test]
+    fn body_divergence_also_reports_signed_total_delta() {
+        let diff = render_structure_diff(&function(10, Some(8)), &function(14, Some(12)));
+        assert!(diff.contains("TOTAL SIZE -0x4"));
+        assert!(diff.contains("SIZE -0x4"));
+        assert!(!diff.contains("STRUCTURE MATCH"));
+    }
+
+    #[test]
+    fn equal_total_and_body_sizes_do_not_hide_shifted_boundaries() {
+        let mut target = function(11, Some(8));
+        target.statements[2].size = 2;
+        let mut base = target.clone();
+        base.statements[0].size = 2;
+        base.statements[1].off = 2;
+        base.statements[2].off = 10;
+        base.statements[2].size = 1;
+        let diff = render_structure_diff(&base, &target);
+        assert!(diff.contains("OFFSET +0x1"));
+        assert!(!diff.contains("STRUCTURE MATCH"));
+        assert!(!diff.contains("TOTAL SIZE"));
+        assert!(render_structure_diff(&target, &base).contains("OFFSET -0x1"));
+    }
 }

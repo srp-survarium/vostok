@@ -3,6 +3,7 @@
 #![feature(trim_prefix_suffix)]
 #![expect(clippy::len_without_is_empty)]
 
+pub mod attributed_order;
 pub mod divergence;
 pub mod dump_pdb;
 pub mod evidence;

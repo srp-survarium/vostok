@@ -76,7 +76,7 @@ location as `UNOBSERVABLE`.
 
 | Declaration | Source home | Recovered behavior | Evidence |
 |---|---|---|---|
-| `async_connector::resolve` | `async_connector_inline.h` | allocate the resolver, create the query, and start `async_resolve` | ancestor and live `connect`/`on_resolved` path; source home reviewed inference |
+| `async_connector::resolve` | `async_connector_inline.h` | allocate the resolver, create an IPv4 query, and start `async_resolve` | ancestor and live `connect`/`on_resolved` path; IPv4 protocol proven in live `connect`, consistency applied to this unexpanded helper; source home reviewed inference |
 | `async_connector::close_connection` | `async_connector_inline.h` | shutdown and close the socket | ancestor and live `reset`/connection teardown; source home reviewed inference |
 | `async_connector::on_error` | `async_connector_inline.h` | reset state and invoke the stored error callback | ancestor and live connector error branches; source home reviewed inference |
 

@@ -10,6 +10,7 @@ async_connector::async_connector( ) :
 	m_host				( ),
 	m_socket			( NULL ),
 	m_connection_state	( host_name_is_unresolved )
+#line 16
 {
 }
 
@@ -17,30 +18,38 @@ void async_connector::on_connected(
 	boost::system::error_code const&	error_code,
 	boost::asio::ip::tcp::resolver::iterator	iterator
 )
+#line 23
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == connection_is_being_established ) );
+#line 26
 	if ( error_code )
 	{
+#line 27
 		m_connection_state	= host_name_is_unresolved;
 		if ( m_on_error )
 			m_on_error( server_cannot_be_connected, error_code );
 		return;
 	}
+#line 33
 	LOG_INFO( "connection_has_been_established!" );
 	m_connection_state	= connection_has_been_established;
 
 	if ( m_on_connected )
 		m_on_connected( );
 }
+#line 35
 
 void async_connector::connect( boost::asio::ip::tcp::resolver::iterator const& iterator )
+#line 41
 {
 	m_connection_state	= connection_is_being_established;
 	boost::asio::async_connect(
 		*m_socket,
 		iterator,
-		boost::bind( &async_connector::on_connected, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
+#line 52
+		boost::bind( &async_connector::on_connected, this, _1, _2 ) );
 }
+#line 44
 
 void async_connector::on_resolved(
 	// the header declares this `* const` (target mangles QAV); the definition drops the
@@ -49,6 +58,7 @@ void async_connector::on_resolved(
 	boost::system::error_code const&	error_code,
 	boost::asio::ip::tcp::resolver::iterator	iterator
 )
+#line 60
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == host_name_is_being_resolved ) );
 
@@ -83,13 +93,13 @@ void async_connector::on_resolved(
 	LOG_INFO( "host name has been resolved!" );
 	m_connection_state	= host_name_has_been_resolved;
 	m_host				= iterator;
-	connect( m_host );
+	connect( iterator );
 }
 
 void async_connector::connect(
 	boost::asio::ip::tcp::socket&		socket,
-	pcstr								host,
-	u16									host_port,
+	pcstr const						host,
+	u16 const							host_port,
 	boost::function< void() > const&	on_connected,
 	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	on_error
 )
@@ -97,21 +107,22 @@ void async_connector::connect(
 	m_socket			= &socket;
 	m_connection_state	= host_name_is_unresolved;
 	m_on_connected		= on_connected;
-	// claude@NOTE: structure + local set (3, resolver now * const) match. m_on_error = on_error
-	// residual is the boost::function operator= form: the target binds a direct in-place assign,
-	// our boost headers expand the copy-construct-temp + swap + clear idiom (+0x26). boost::function
-	// header-version wall; the resolver/query line-attribution + async_resolve boost::bind are the
-	// usual completion-handler inline-vs-call.
 	m_on_error			= on_error;
+#line 110
 	LOG_INFO( "host name is being resolved..." );
+#line 112
 	ASSERT( UNKNOWN_EXPRESSION_T( host ) );
 	m_connection_state	= host_name_is_being_resolved;
+#line 115
 	boost::asio::ip::tcp::resolver* const	resolver	= NEW( boost::asio::ip::tcp::resolver )( m_socket->get_io_service( ) );
 	char	port[ 6 ];
+#line 118
 	_itoa_s( host_port, port, 10 );
-	boost::asio::ip::tcp::resolver::query	query( host, port );
+#line 120
+	boost::asio::ip::tcp::resolver::query	query( boost::asio::ip::tcp::v4( ), host, port );
 	resolver->async_resolve(
 		query,
+#line 130
 		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
 }
 

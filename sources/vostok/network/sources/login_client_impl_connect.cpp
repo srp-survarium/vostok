@@ -16,8 +16,10 @@ void login_client_impl::on_connected(
 		boost::system::error_code const&		error_code,
 		boost::asio::ip::tcp::resolver::iterator	iterator
 	)
+#line 20
 {
 
+#line 21
 	ASSERT			( UNKNOWN_EXPRESSION_T( m_connection_state == connecting ) );
 
 	if ( error_code ) {
@@ -49,6 +51,7 @@ void login_client_impl::connect(
 		boost::asio::ip::tcp::resolver::iterator	iterator,
 		const u32					retry_count,
 		boost::function< void ( connection_error_types_enum ) > const&	functor )
+#line 51
 {
 	ASSERT			( UNKNOWN_EXPRESSION_T( m_connection_state == resolved ) );
 
@@ -61,6 +64,7 @@ void login_client_impl::connect(
 	LOG_INFO		( "[LOGIN] connecting...\r\n" );
 	strcpy_s		( m_host_ip, sizeof( m_host_ip ), iterator->endpoint( ).address( ).to_string( ).c_str( ) );
 
+#line 67
 	m_connection_state	= connecting;
 	boost::asio::async_connect	(
 		m_socket,

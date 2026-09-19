@@ -13,7 +13,7 @@ enum udp_match_packets_count_enum
 	udp_match_single_packet		= 0x0,
 	udp_match_multiple_packets	= 0x1,
 }; // enum udp_match_packets_count_enum
-
+#pragma pack( push, 1 )
 struct udp_match_message_type_info {
 	inline	udp_match_message_type_info	( const bool reliable, const bool ordered, const u8 channel ) :
 		channel_id	( channel ),
@@ -27,7 +27,7 @@ public:
 	/* 0x0000 */	u8		is_reliable	: 1;
 	/* 0x0000 */	u8		is_ordered	: 1;
 }; // struct udp_match_message_type_info
-
+#pragma pack( pop )
 STATIC_SIZE_ASSERT(udp_match_message_type_info, 0x1);
 
 struct udp_match_packets_orderer {

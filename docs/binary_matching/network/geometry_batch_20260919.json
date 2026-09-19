@@ -1,0 +1,195 @@
+{
+  "baseline": "a87cfce055af4209a71b715a19db09a8",
+  "status": "measured; all 56 selected raw line maps and offset/size spans agree; module closure remains open",
+  "verification": {
+    "build": "857613fc9c48428392dffe4aa5bd02c8",
+    "exit_code": 0,
+    "elapsed": "14m37s",
+    "selected_functions": 56,
+    "exact_file_line_arrays": 56,
+    "exact_offset_size_arrays": 56,
+    "byte_score_improvements": 10,
+    "reported_regressions": 0,
+    "remaining_raw_header_order_inversions": 4,
+    "limitation": "Observed line maps are not proof of original source text or complete module fidelity."
+  },
+  "selection": "Unique mangled-name pair, same source file, identical ordered (offset,size) spans; all candidate source lines checked against HEAD; relative line geometry differs.",
+  "files": [
+    {
+      "file": "vostok/network/sources/http_client.cpp",
+      "functions": [
+        "void vostok::network::http_client::~http_client()",
+        "void vostok::network::http_client::on_content_downloaded()",
+        "void vostok::network::http_client::get(char const*, char const*, boost::function<void __cdecl(char const *)> const&)"
+      ],
+      "directives": 8
+    },
+    {
+      "file": "vostok/network/sources/login_client_impl.cpp",
+      "functions": [
+        "vostok::network::login_client_impl::login_client_impl(boost::asio::io_service&)",
+        "void vostok::network::login_client_impl::close_connection(bool)",
+        "void vostok::network::login_client_impl::establish_connection(boost::function<void __cdecl(enum vostok::connection_error_types_enum)> const&, const unsigned int, const unsigned int)"
+      ],
+      "directives": 10
+    },
+    {
+      "file": "vostok/network/sources/login_client_impl_connect.cpp",
+      "functions": [
+        "void vostok::network::login_client_impl::on_connected(const unsigned int, boost::function<void __cdecl(enum vostok::connection_error_types_enum)> const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>, boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)"
+      ],
+      "directives": 2
+    },
+    {
+      "file": "vostok/network/sources/login_client_impl_handshake.cpp",
+      "functions": [
+        "void vostok::network::login_client_impl::handshake(boost::function<void __cdecl(enum vostok::handshaking_error_types_enum)> const&, unsigned int, bool)"
+      ],
+      "directives": 4
+    },
+    {
+      "file": "vostok/network/sources/login_client_impl_ping.cpp",
+      "functions": [
+        "void vostok::network::login_client_impl::on_ping_sent(const unsigned int, boost::system::error_code const&, const unsigned int)"
+      ],
+      "directives": 3
+    },
+    {
+      "file": "vostok/network/sources/login_client_impl_resolve.cpp",
+      "functions": [
+        "void vostok::network::login_client_impl::on_resolved(boost::asio::ip::basic_resolver<boost::asio::ip::tcp,boost::asio::ip::resolver_service<boost::asio::ip::tcp> >* const, const unsigned int, boost::function<void __cdecl(enum vostok::resolve_error_types_enum,boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)> const&, boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)"
+      ],
+      "directives": 5
+    },
+    {
+      "file": "vostok/network/sources/match_client_impl.cpp",
+      "functions": [
+        "void vostok::network::match_client_impl::on_packet_received(unsigned char, vostok::network_core::packet_reader&)"
+      ],
+      "directives": 2
+    },
+    {
+      "file": "vostok/network/sources/network_world.cpp",
+      "functions": [
+        "void vostok::network::network_world::~network_world()"
+      ],
+      "directives": 2
+    },
+    {
+      "file": "vostok/network/sources/tcp_packet_client.cpp",
+      "functions": [
+        "void vostok::network::tcp_packet_client::connect(char const*, unsigned short)"
+      ],
+      "directives": 3
+    },
+    {
+      "file": "vostok/network_core/sequence_number_inline.h",
+      "functions": [
+        "bool vostok::network_core::sequence_number<unsigned short>::operator<=(vostok::network_core::sequence_number<unsigned short> const&) const",
+        "bool vostok::network_core::sequence_number<unsigned short>::operator<(vostok::network_core::sequence_number<unsigned short> const&) const",
+        "int vostok::network_core::operator-<unsigned short>(vostok::network_core::sequence_number<unsigned short> const&, vostok::network_core::sequence_number<unsigned short> const&)"
+      ],
+      "directives": 11
+    },
+    {
+      "file": "vostok/network_core/sources/async_connector.cpp",
+      "functions": [
+        "void vostok::network_core::async_connector::on_connected(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)",
+        "void vostok::network_core::async_connector::connect(boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp> const&)"
+      ],
+      "directives": 8
+    },
+    {
+      "file": "vostok/network_core/sources/http_client.cpp",
+      "functions": [
+        "bool vostok::network_core::http_client::add_result_content()",
+        "void vostok::network_core::read_lines_from_stream(char const*, boost::asio::basic_streambuf<stlp_std::allocator<char> >&)",
+        "void vostok::network_core::http_client::handle_read_content(boost::system::error_code const&)",
+        "void vostok::network_core::http_client::handle_write_request(boost::system::error_code const&)",
+        "void vostok::network_core::http_client::handle_connect(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)",
+        "void vostok::network_core::http_client::handle_resolve(boost::system::error_code const&, boost::asio::ip::basic_resolver_iterator<boost::asio::ip::tcp>)",
+        "void vostok::network_core::http_client::get(char const*, char const*, boost::function<void __cdecl(void)> const&)"
+      ],
+      "directives": 23
+    },
+    {
+      "file": "vostok/network_core/sources/network_core_entry_point.cpp",
+      "functions": [
+        "bool vostok::network_core::get_connection_info_from_string(char const*, char*, unsigned short&)",
+        "stlp_std::basic_string<char,stlp_std::char_traits<char>,stlp_std::allocator<char> > vostok::network_core::get_ip_address(boost::asio::io_service&)"
+      ],
+      "directives": 9
+    },
+    {
+      "file": "vostok/network_core/sources/tcp_packet_client.cpp",
+      "functions": [
+        "void vostok::network_core::tcp_packet_client::on_error(vostok::network_core::client_error_codes_enum, boost::system::error_code)",
+        "void vostok::network_core::tcp_packet_client::close_connection()",
+        "void vostok::network_core::tcp_packet_client::disconnect()",
+        "void vostok::network_core::tcp_packet_client::connect(char const*, unsigned short)"
+      ],
+      "directives": 13
+    },
+    {
+      "file": "vostok/network_core/sources/udp_match_client.cpp",
+      "functions": [
+        "void vostok::network_core::udp_match_client::check_consistency() const",
+        "void vostok::network_core::udp_match_client::on_error(const vostok::network_core::client_error_codes_enum, const boost::system::error_code)",
+        "void vostok::network_core::udp_match_client::on_disconnect(const vostok::network_core::disconnect_event_types_enum)",
+        "void vostok::network_core::udp_match_client::handle_receive(boost::system::error_code const&, const unsigned int)",
+        "void vostok::network_core::udp_match_client::send_queued_packets(unsigned int)",
+        "void vostok::network_core::udp_match_client::connect(char const*, unsigned short, vostok::network_core::udp_match_packet*, unsigned int)"
+      ],
+      "directives": 23
+    },
+    {
+      "file": "vostok/network_core/sources/udp_match_connection.cpp",
+      "functions": [
+        "void vostok::network_core::udp_match_connection::dump(char const* const, const unsigned int)",
+        "void vostok::network_core::udp_match_connection::connect(vostok::network_core::udp_match_packet*)",
+        "void vostok::network_core::udp_match_connection::enqueue(vostok::network_core::udp_match_packet*)",
+        "void vostok::network_core::udp_match_connection::update_acknowledgements(vostok::network_core::sequence_number<unsigned short>, vostok::network_core::sequence_number<unsigned short>, unsigned short)",
+        "static bool vostok::network_core::udp_match_connection::is_low_level_packet(vostok::network_core::base_packet const&)",
+        "void vostok::network_core::udp_match_connection::instant_disconnect(vostok::network_core::disconnect_event_types_enum)",
+        "void vostok::network_core::udp_match_connection::disconnect()",
+        "void vostok::network_core::udp_match_connection::process_low_level_message(vostok::network_core::packet_reader&, const unsigned int)",
+        "void vostok::network_core::udp_match_connection::handle_send(vostok::network_core::udp_match_packet*, boost::system::error_code const&, unsigned int)"
+      ],
+      "directives": 34
+    },
+    {
+      "file": "vostok/network_core/sources/udp_network_flow_emulator.cpp",
+      "functions": [
+        "void vostok::network_core::udp_network_flow_emulator::make_packet_lost(unsigned char*, unsigned int, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&)",
+        "void vostok::network_core::udp_network_flow_emulator::tick(unsigned int, boost::function<void __cdecl(vostok::network_core::packet_reader &,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const &)> const&)",
+        "void vostok::network_core::udp_network_flow_emulator::add_packet(unsigned char*, unsigned int, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&, unsigned int, unsigned int)"
+      ],
+      "directives": 17
+    },
+    {
+      "file": "vostok/network_core/tcp_packet_socket_inline.h",
+      "functions": [
+        "void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::send(vostok::network_core::tcp_packet const&)",
+        "void vostok::network_core::tcp_packet_socket<boost::asio::basic_stream_socket<boost::asio::ip::tcp,boost::asio::stream_socket_service<boost::asio::ip::tcp> > >::on_packet_received(vostok::network_core::tcp_packet const*, boost::system::error_code const&, unsigned int)"
+      ],
+      "directives": 11
+    },
+    {
+      "file": "vostok/network_core/udp_match_connection_inline.h",
+      "functions": [
+        "void vostok::network_core::udp_match_connection::call_predicate<vostok::network_core::process_packet_predicate>(vostok::network_core::process_packet_predicate const&, vostok::network_core::packet_reader&)",
+        "void vostok::network_core::udp_match_connection::process_incoming_packet<vostok::network_core::process_packet_predicate>(vostok::network_core::packet_reader&, vostok::network_core::process_packet_predicate const&)"
+      ],
+      "directives": 16
+    },
+    {
+      "file": "vostok/network_core/udp_match_stats.h",
+      "functions": [
+        "bool vostok::network_core::operator>=(vostok::network_core::udp_match_stream_stats const&, vostok::network_core::udp_match_stream_stats const&)",
+        "bool vostok::network_core::operator>=(vostok::network_core::udp_match_stats const&, vostok::network_core::udp_match_stats const&)",
+        "vostok::network_core::udp_match_stats vostok::network_core::operator-(vostok::network_core::udp_match_stats const&, vostok::network_core::udp_match_stats const&)"
+      ],
+      "directives": 9
+    }
+  ]
+}

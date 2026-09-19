@@ -1,9 +1,9 @@
 use pdb_addr2line::type_parser;
 use pdb_addr2line::type_parser::AttributeFlags;
 
-use pdb_addr2line::{ContextPdbData as Data, TypeFormatterFlags as Flags, pdb::PDB as Pdb};
+use pdb_addr2line::{pdb::PDB as Pdb, ContextPdbData as Data, TypeFormatterFlags as Flags};
 use pdb_addr2line_orig::{
-    ContextPdbData as DataOrig, TypeFormatterFlags as FlagsOrig, pdb::PDB as PdbOrig,
+    pdb::PDB as PdbOrig, ContextPdbData as DataOrig, TypeFormatterFlags as FlagsOrig,
 };
 
 use crate::{Namespace, Type};
@@ -150,9 +150,16 @@ pub fn set_method_attributes(
     _found_body: bool,
 ) {
     let attrs = method_attributes::MyFieldAttributes::extract(attrs);
+    apply_recorded_method_attributes(fn_t, attrs);
+}
 
+fn apply_recorded_method_attributes(
+    fn_t: &mut type_parser::Function,
+    attrs: method_attributes::MyFieldAttributes,
+) {
     #[rustfmt::skip]
     {
+        fn_t.attrs.set(AttributeFlags::IS_STATIC,   attrs.is_static());
         fn_t.attrs.set(AttributeFlags::IS_VIRTUAL,  attrs.is_virtual());
         fn_t.attrs.set(AttributeFlags::IS_OVERRIDE, attrs.is_override());
         fn_t.attrs.set(AttributeFlags::IS_PURE,     attrs.is_pure());
@@ -166,6 +173,28 @@ pub fn set_method_attributes(
         );
 
     };
+}
+
+#[cfg(test)]
+mod recorded_method_tests {
+    use super::*;
+
+    #[test]
+    fn raw_static_status_overrides_cached_signature_in_both_directions() {
+        let mut function = type_parser::Function {
+            return_type: type_parser::ReturnType::Type("void".into()),
+            name: "method".into(),
+            arg_types: vec![],
+            attrs: AttributeFlags::IS_CONST | AttributeFlags::IS_INLINE,
+        };
+        apply_recorded_method_attributes(&mut function, method_attributes::MyFieldAttributes(0x0b));
+        assert!(function.attrs.contains(AttributeFlags::IS_STATIC));
+        apply_recorded_method_attributes(&mut function, method_attributes::MyFieldAttributes(0x03));
+        assert!(!function.attrs.contains(AttributeFlags::IS_STATIC));
+        assert!(function
+            .attrs
+            .contains(AttributeFlags::IS_CONST | AttributeFlags::IS_INLINE));
+    }
 }
 
 mod method_attributes {
@@ -187,6 +216,10 @@ mod method_attributes {
         #[must_use]
         fn method_properties(self) -> u8 {
             ((self.0 & 0x001c) >> 2) as u8
+        }
+
+        pub fn is_static(self) -> bool {
+            self.method_properties() == 0x02
         }
 
         #[inline]
