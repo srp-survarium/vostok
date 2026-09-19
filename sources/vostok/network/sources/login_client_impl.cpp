@@ -69,7 +69,9 @@ login_client_impl::~login_client_impl( )
 						sign_out			( boost::function< void (	connection_error_types_enum,
 																		handshaking_error_types_enum,
 																		socket_error_types_enum,
+#line 66
 																		login_server_message_types_enum ) >( ) );
+#line 70
 				}
 				break;
 			case handshaked :
@@ -84,7 +86,9 @@ login_client_impl::~login_client_impl( )
 						sign_out			( boost::function< void (	connection_error_types_enum,
 																		handshaking_error_types_enum,
 																		socket_error_types_enum,
+#line 81
 																		login_server_message_types_enum ) >( ) );
+#line 85
 				}
 		}
 
@@ -93,6 +97,7 @@ login_client_impl::~login_client_impl( )
 }
 
 bool login_client_impl::verify_ssl_certificate( const bool preverified, boost::asio::ssl::verify_context& verify_context )
+#line 94
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( verify_context );
 

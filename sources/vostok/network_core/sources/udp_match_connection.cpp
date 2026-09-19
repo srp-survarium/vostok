@@ -41,16 +41,22 @@ namespace network_core {
 	m_remote_sequence_id			( 0xFFFF ),
 	m_received_local_sequence_id	( 0xFFFF ),
 	m_disconnection_local_sequence_id	( 0xFFFF )
+#line 49
 {
 }
+#line 46
 
  udp_match_connection::~udp_match_connection( )
+#line 53
 {
 }
+#line 50
 
 void udp_match_connection::on_error( client_error_codes_enum, boost::system::error_code )
+#line 80
 {
 }
+#line 54
 
 bool udp_match_connection::is_low_level_packet( base_packet const& packet )
 #line 84
@@ -111,6 +117,7 @@ void udp_match_connection::handle_send(
 #line 105
 
 void udp_match_connection::send( udp_match_packet* const packet )
+#line 132
 {
 	++m_stats.sent.packets.count;
 	m_stats.sent.messages.bytes	+= packet->buffer_to_send_size( );
@@ -128,10 +135,13 @@ void udp_match_connection::send( udp_match_packet* const packet )
 			m_handler_allocator,
 			boost::bind( &udp_match_connection::handle_send, this, packet, _1, _2 )
 		)
+#line 151
 	);
 }
+#line 126
 
 void udp_match_connection::fill_packet_header( udp_match_packet& packet )
+#line 155
 {
 	pbyte	buffer	= packet.m_buffer.data( );
 
@@ -144,8 +154,10 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	*pointer_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
 	buffer	+= 2;
 }
+#line 140
 
 void udp_match_connection::send_packets_list( udp_match_packet* const packets_list, const u32 packets_count )
+#line 169
 {
 	m_stats.sent.messages.count	+= packets_count;
 
@@ -170,6 +182,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 		return;
 	}
 
+#line 194
 	ASSERT( UNKNOWN_EXPRESSION_T( packets_count > 1 ) );
 	udp_match_packet* const	packet_to_send	= new_udp_match_packet( m_packets_allocator );
 	packet_to_send->is_reliable				= 0;
@@ -177,11 +190,13 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	*packet_to_send->buffer_to_send( )		= udp_match_multiple_packets;
 	fill_packet_header				( *packet_to_send );
 
+#line 202
 	buffer_vector< udp_match_packet* >	packets( ALLOCA( packets_count * sizeof( udp_match_packet* ) ), packets_count );
 
 	for ( udp_match_packet* i = packets_list; i; i = i->next ) {
 		ASSERT						( UNKNOWN_EXPRESSION_T( i->buffer_size( ) < 256 ) );
 
+#line 208
 		m_stats.sent.data_bytes		+= i->buffer_size( );
 
 		if ( i->send_count > 1 ) {
@@ -193,6 +208,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 			m_stats.resent.data_bytes		+= i->buffer_size( );
 		}
 
+#line 220
 		packets.push_back			( i );
 		packet_to_send->append		( u8( i->buffer_size( ) ) );
 		packet_to_send->append		( i->buffer( ), i->buffer_size( ) );
@@ -210,6 +226,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 			delete_udp_match_packet	( m_packets_allocator, *i );
 	}
 }
+#line 206
 
 void udp_match_connection::dump( pcstr const caption, const u32 current_time_in_ms )
 #line 239
@@ -254,6 +271,7 @@ namespace vostok {
 namespace network_core {
 
 udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_type )
+#line 294
 {
 	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
 	*packet->buffer_to_send( )		= udp_match_multiple_packets;
@@ -268,26 +286,34 @@ udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_t
 		case low_level_message_type_initiate_disconnection :	message_id_string	= "initiatie disconnection";
 										break;
 
+#line 309
 		case low_level_message_type_confirm_disconnection :	message_id_string	= "confirm disconnection";
 										break;
 
+#line 313
 		case low_level_message_type_continuous_flow :		message_id_string	= "continuous flow";
 										break;
 
+#line 317
 		default :						message_id_string	= "<unknown low level message type>";
 	}
 
+#line 322
 	++m_stats.sent_low_level.packets.count;
 	m_stats.sent_low_level.packets.bytes	+= packet->buffer_to_send_size( ) + 46;
 	++m_stats.sent_low_level.messages.count;
 	m_stats.sent_low_level.messages.bytes	+= packet->buffer_to_send_size( );
 	++m_stats.sent_low_level.data_bytes;
 
+#line 329
 	return							packet;
 }
+#line 278
 
 void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
+#line 333
 {
+#line 336
 	threading::interlocked_exchange	( m_last_send_attempt_time_in_ms, current_time_in_ms );
 
 	switch ( m_state ) {
@@ -307,6 +333,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 
 		case confirming_disconnection :
 			if ( m_disconnection_receive_time_in_ms + m_max_packet_wait_time_in_ms <= current_time_in_ms ) {
+#line 356
 				instant_disconnect	( disconnected_by_initiator );
 				return;
 			}
@@ -322,6 +349,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 			NODEFAULT				( );
 	}
 
+#line 370
 	m_unacknowledged_packets.remove_if	( move_to_list_predicate( m_packets_to_send, m_logging_id, current_time_in_ms, m_max_packet_wait_time_in_ms ) );
 
 	u32	packets_count	= m_packets_to_send.size( );
@@ -335,14 +363,17 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 		packets_count	= 1;
 	}
 
+#line 384
 	dump							( "before send_queued_packets", current_time_in_ms );
 
 	buffer_vector< udp_match_packet* >	packets( ALLOCA( packets_count * sizeof( udp_match_packet* ) ), packets_count );
 
+#line 387
 	while ( !m_packets_to_send.empty( ) ) {
 		udp_match_packet* const	packet	= m_packets_to_send.pop_front( );
 		packet->next				= NULL;
 
+#line 392
 		packet->sequence_id			= m_local_sequence_id;
 		packets.push_back			( packet );
 	}
@@ -352,10 +383,12 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 	while ( !packets.empty( ) ) {
 		sequence_number< u16 >	test( m_local_sequence_id );
 		if ( ++test <= m_received_local_sequence_id ) {
+#line 402
 			for ( udp_match_packet** i = packets.begin( ), **e = packets.end( ) ; i != e ; ++i ) {
 				if ( ( *i )->is_reliable )
 					m_packets_to_send.push_back( *i );
 
+#line 405
 				else
 					delete_udp_match_packet( m_packets_allocator, *i );
 			}
@@ -387,8 +420,10 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 					( *i )->sequence_id		= packet->sequence_id;
 					++( *i )->send_count;
 					++packets_count;
+#line 437
 				}
 
+#line 446
 			packets.erase			( std::remove_if( packets.begin( ), packets.end( ), packets_in_list_predicate( packet->sequence_id ) ), packets.end( ) );
 		}
 
@@ -398,6 +433,7 @@ void udp_match_connection::send_queued_packets( const u32 current_time_in_ms )
 
 	dump							( "after  send_queued_packets", current_time_in_ms );
 }
+#line 391
 
 void udp_match_connection::connect( udp_match_packet* const packet )
 #line 457
@@ -418,6 +454,7 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 {
 	if ( packet->is_ordered )
 	{
+#line 467
 		sequence_number< u16 >&	sent_order_id	= m_channels[ packet->channel_id ].sent_order_id;
 		packet->order_id	= sent_order_id;
 		pbyte	stream		= packet->buffer( ) + 1;
@@ -430,6 +467,7 @@ void udp_match_connection::enqueue_impl( udp_match_packet* packet )
 
 	m_packets_to_send.push_back( packet );
 }
+#line 480
 
 void udp_match_connection::enqueue( udp_match_packet* packet )
 #line 481

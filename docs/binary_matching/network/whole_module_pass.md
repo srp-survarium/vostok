@@ -343,3 +343,35 @@ HTTP's two string-find wrapper expansions are expected to remain; callback
 assignment/construction expansions in login/async and intrusive-pointer helper
 expansions in the two destructors remain open. Line attribution is not evidence
 of exact original whitespace and does not close those byte discrepancies.
+
+## UDP and login implementation batch after db4562e45
+
+Integrated three prepared files; all non-directive C++ is unchanged. UDP connection
+maps170 observed records across constructor, destructor, on_error,
+fill_packet_header, enqueue_impl, new_low_level_packet, send, send_packets_list
+and send_queued_packets. Function-scoped lookup resolves repeated logical lines
+caused by backward directives; already-correct neighboring functions are restored
+to their baseline attribution. No named locals or artificial scopes were added.
+
+Login implementation maps destructor callback closing lines66/81, certificate
+verifier opening94/return109/closing110, and connect opening51/state67/callback
+closing80/closing81. Twelve ledger attempts are recorded, preserving prior notes.
+
+The full build checks raw line maps, statement sizes, locals,
+observable definition order and global regressions. The seven
+UDP size-residual procedures remain constructor, fill_packet_header, enqueue_impl,
+new_low_level_packet, send, send_packets_list and send_queued_packets. Serializer
+reference-slot propagation and accessor/scalar append retention are unresolved;
+the candidate does not pretend line directives implement those missing codegen
+properties. Login callback construction size residuals also remain open.
+
+Build b95c6bdbb1dd440bac31d7a2530b4819 succeeded in10m18s. Zero warnings
+owned by network/network_core;31 compiler and236 linker warnings elsewhere,
+plus two known Scaleform parser skips. Both module data gates OPEN=0.
+Zero reported regressions, no added/removed/fold-churn entries; login connect
+improves97.96135 to97.971016. All26 paired procedures across the three files
+(UDP19, login implementation5, login connect2) now have equal raw source-line
+maps and serialized locals, including neighboring functions not changed in the
+batch. Byte residuals above remain open; no semantic closure is claimed.
+Attributed-order coverage remains37MATCH/33UNOBSERVABLE/23AMBIGUOUS, with no
+observed inversions. Source diff-check passes; no physical definitions moved.
