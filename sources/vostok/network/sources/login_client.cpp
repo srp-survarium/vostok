@@ -18,16 +18,19 @@ char	s_net_client_account_password_[128];
 static vostok::console_commands::cc_string s_net_client_account_name_cc(
 	"account_name", s_net_client_account_name,
 	sizeof( s_net_client_account_name ), true,
+#line 23
 	vostok::console_commands::command_type_user_specific );
 static vostok::console_commands::cc_string s_net_client_account_password_cc(
 	"account_password", s_net_client_account_password_,
 	sizeof( s_net_client_account_password_ ), true,
+#line 24
 	vostok::console_commands::command_type_user_specific );
 
 namespace vostok {
 namespace network {
 
 pcstr login_client::account_name( ) const
+#line 29
 {
 	return				s_net_client_account_name;
 }
@@ -40,6 +43,7 @@ pcstr login_client::account_password( ) const
 // claude@NOTE: residual = the out-of-line strings::copy<128> COMDAT takes its
 // args via esi/eax with a 3-byte reg-shuffle delta (LTCG call-boundary arg passing)
 void login_client::store_user_password_in_settings( )
+#line 39
 {
 	strings::copy		( s_net_client_account_password_, m_net_client_account_password );
 }
@@ -52,6 +56,7 @@ void login_client::reset_user_password_in_settings( )
 // claude@NOTE: residual = 1-instruction reg rename at the inlined
 // ip_address.c_str( ) read (LTCG slot choice after the get_ip_address sret)
 void login_client::create_client( )
+#line 49
 {
 	ASSERT				( UNKNOWN_EXPRESSION_T( !m_client ) );
 	m_client			= NEW( login_client_impl ) ( m_world.io_service( ) );
@@ -67,6 +72,7 @@ login_client::login_client( world& world ) :
 	m_world				( static_cast_checked<network_world&>(world) ),
 	m_client			( 0 ),
 	m_client_state		( signed_out )
+#line 60
 {
 	strings::copy		( m_net_client_account_password, s_net_client_account_password_ );
 
@@ -76,6 +82,7 @@ login_client::login_client( world& world ) :
 		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
 			boost::bind( &login_client::create_client, this )
 		)
+#line 68
 	);
 }
 
@@ -88,6 +95,7 @@ login_client::login_client( world& world ) :
 // claude@MATCH: GLOBAL-scope static - the target symbol is the unmangled
 // PDB-private name `destroy_client` (no namespaces), the tcp_packet_client idiom
 static void destroy_client( vostok::network::login_client_impl* client_to_destroy )
+#line 72
 {
 	VOSTOK_DELETE_IMPL	( vostok::network::g_allocator, client_to_destroy );
 }
@@ -98,6 +106,7 @@ namespace network {
 // claude@NOTE: residual = the function0(bind_t) copy lowering inside the
 // destroy_client functor_order (boost::function ctor inline-vs-call wall)
 login_client::~login_client( )
+#line 77
 {
 	m_world.add_order	(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator( ), functor_order ) (
@@ -118,6 +127,7 @@ void login_client::on_signed_up(
 		login_server_message_types_enum		login_error,
 		sign_up_info const&					sign_up_info
 	)
+#line 92
 {
 	m_client_state		= signed_out;
 
@@ -140,7 +150,9 @@ void login_client::on_signed_in(
 		socket_error_types_enum				socket_error,
 		login_server_message_types_enum		login_error
 	)
+#line 132
 {
+#line 138
 	if ( !connection_error && !handshaking_error && !socket_error && ( login_error == servers_connection_info_message_type ) )
 		m_client_state	= signed_in;
 	else
@@ -164,6 +176,7 @@ void login_client::sign_in_impl(
 		pcstr const		account_name,
 		pcstr const		password
 	)
+#line 154
 {
 	m_client->sign_in	( host, port, account_name, password, boost::bind( &login_client::on_signed_in, this, _1, _2, _3, _4 ) );
 }
@@ -193,6 +206,7 @@ void login_client::sign_in(
 		pcstr			password,
 		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 	)
+#line 159
 {
 	strings::copy		( m_server_host, host );
 	m_server_port		= port;
@@ -217,6 +231,7 @@ void login_client::sign_in(
 			s_net_client_account_name,
 			m_net_client_account_password
 		)
+#line 182
 	);
 }
 
@@ -228,6 +243,7 @@ void login_client::on_signed_out(
 		socket_error_types_enum				socket_error,
 		login_server_message_types_enum		login_error
 	)
+#line 191
 {
 	m_client_state		= signed_out;
 
@@ -248,6 +264,7 @@ void login_client::on_signed_out(
 void login_client::sign_out(
 		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 	)
+#line 205
 {
 	m_on_sign_out		= callback;
 	boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& on_signed_out	= boost::bind( &login_client::on_signed_out, this, _1, _2, _3, _4 );
@@ -260,6 +277,7 @@ void login_client::sign_out(
 				on_signed_out
 			)
 		)
+#line 216
 	);
 }
 

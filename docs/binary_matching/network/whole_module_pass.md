@@ -311,3 +311,35 @@ report-changes.json now preserves unit and decorated symbol for each category.
 The effective-map proof rejects multiple target/base addresses, missing bodies,
 and differing nonempty instruction streams; raw-public/manual proofs above are
 not silently generalized into that automated classifier.
+
+## Five-file attribution batch after6d0fb1cde
+
+Prepared patches integrated together: login_client.cpp (80 observed raw line
+records across20 procedures), async_connector.cpp (on_resolved, public connect
+and reset), HTTP handle_read_status_line, connect_order and enqueue_order
+destructor/execute locations. Source comparisons confirm unchanged C++ statements,
+types and scopes; only literal line directives and stale order-header matching
+comments changed. No assertions, guards or helper bodies were fabricated.
+
+Build78bbcf703a8a4a2c9bd128fdc2bb2dd6 succeeded in10m44s. No network or
+network_core-owned warnings;31 compiler warnings outside those modules and236
+linker warnings, plus the two known Scaleform PDB parser skips. Report changes:
+zero regressions, three improvements, no added/removed functions or fold churn.
+Both module data gates remain OPEN=0.
+
+All28 selected procedures now have equal target/base raw source-line maps.
+All43 paired procedures in the five files have equal serialized locals.
+The three unselected location residuals are async_connector's constructor and
+HTTP's constructor/close_connection. on_resolved reaches100% in the byte report,
+with equal1520B extent, all raw offset/size/line tuples equal, and20 matching
+body statements. Other remaining size differences are not closed by attribution.
+Independent assembly checks confirm the eight affected logging line operands:
+async on_resolved64/65/83/84/91, public connect110 and HTTP status132/138.
+Verbosity literals also agree (INFO4, ERROR2). Attributed-order audit remains
+37MATCH/33UNOBSERVABLE/23AMBIGUOUS with no observed inversions. Physical source
+definition order is unchanged by this directive-only batch. The only diff-check
+warning is the generated ledger's empty final TSV field; it was not hand-edited.
+HTTP's two string-find wrapper expansions are expected to remain; callback
+assignment/construction expansions in login/async and intrusive-pointer helper
+expansions in the two destructors remain open. Line attribution is not evidence
+of exact original whitespace and does not close those byte discrepancies.

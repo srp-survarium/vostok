@@ -36,13 +36,8 @@ public:
 	{
 	}
 
-	// claude@NOTE: statements/slots verified (two same-named PDB locals = two
-	// disjoint braced scopes, [ebp-4]/[ebp-8]); structure matches 4/4. Residual is
-	// base inlining intrusive_ptr<udp_match_packets_allocator>::operator* and the
-	// member ~intrusive_ptr where the target keeps out-of-line calls (the inlined
-	// operator* body carries intrusive_ptr_inline.h's compiled-out ASSERT byte) -
-	// the per-call-site inline-vs-call wall, not source-steerable.
 	virtual			~connect_order	( )
+#line 39
 	{
 		{
 			pstr temp			= m_host;
@@ -50,6 +45,7 @@ public:
 		}
 		{
 			udp_match_packet* temp	= const_cast< udp_match_packet* >( m_packet );
+#line 47
 			network_core::delete_udp_match_packet	( *m_packets_allocator, temp );
 		}
 	}

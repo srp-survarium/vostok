@@ -35,17 +35,14 @@ public:
 	{
 	}
 
-	// claude@NOTE: statements/slots verified (temp local [ebp-4], same 0x50 frame);
-	// structure matches 4/4. Residual is base inlining
-	// intrusive_ptr<udp_match_packets_allocator>::operator* and the member
-	// ~intrusive_ptr where the target keeps out-of-line calls - same per-call-site
-	// inline-vs-call wall as ~connect_order, not source-steerable.
 	virtual			~enqueue_order	( )
+#line 41
 	{
 		udp_match_packet* temp	= &m_packet;
 
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
 
+#line 47
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats	= m_copied_stats;
 	}

@@ -131,11 +131,14 @@ void http_client::handle_write_request( boost::system::error_code const& err )
 #line 114
 
 void http_client::handle_read_status_line( boost::system::error_code const& err )
+#line 118
 {
 	if ( !err )
 	{
+#line 122
 		std::istream response_stream( &m_response_buff );
 
+#line 127
 		std::string status_message;
 		std::getline( response_stream, status_message );
 		s32	found = status_message.find( "HTTP/" );
@@ -145,6 +148,7 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 			return;
 		}
 
+#line 135
 		found = status_message.find( "200" );
 		if ( found == status_message.npos )
 		{
@@ -152,6 +156,7 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 			return;
 		}
 
+#line 141
 		read_lines_from_stream( "read_status_line", m_response_buff );
 
 		boost::asio::async_read(
@@ -159,10 +164,14 @@ void http_client::handle_read_status_line( boost::system::error_code const& err 
 			m_response_buff,
 			boost::asio::transfer_at_least( 1 ),
 			boost::bind( &http_client::handle_read_content, this, boost::asio::placeholders::error )
+#line 151
 		);
 	} else
+#line 154
 		on_error( err );
+#line 156
 }
+#line 148
 
 bool http_client::add_result_content( )
 #line 159

@@ -57,6 +57,7 @@ void async_connector::on_resolved(
 	boost::system::error_code const&	error_code,
 	boost::asio::ip::tcp::resolver::iterator	iterator
 )
+#line 60
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_connection_state == host_name_is_being_resolved ) );
 
@@ -106,15 +107,21 @@ void async_connector::connect(
 	m_connection_state	= host_name_is_unresolved;
 	m_on_connected		= on_connected;
 	m_on_error			= on_error;
+#line 110
 	LOG_INFO( "host name is being resolved..." );
+#line 112
 	ASSERT( UNKNOWN_EXPRESSION_T( host ) );
 	m_connection_state	= host_name_is_being_resolved;
+#line 115
 	boost::asio::ip::tcp::resolver* const	resolver	= NEW( boost::asio::ip::tcp::resolver )( m_socket->get_io_service( ) );
 	char	port[ 6 ];
+#line 118
 	_itoa_s( host_port, port, 10 );
+#line 120
 	boost::asio::ip::tcp::resolver::query	query( boost::asio::ip::tcp::v4( ), host, port );
 	resolver->async_resolve(
 		query,
+#line 130
 		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
 }
 
