@@ -428,3 +428,24 @@ preserves 811 bytes, all raw records and locals, but its frame changes from reta
 extent but exhibits that same twelve-byte frame deficit. This shared frame
 residual needs further source-family investigation before batch closure;
 symbolically different folded callees are not independently certified here.
+
+## TCP size-callback and receive attribution after dbf6ccda2
+
+Both size-callback specializations now have matching byte spans and locals.
+Their remaining non-relocation immediate mismatches are the logging line numbers:
+base 59/67, retail 54/61, at offsets 0x125/0x207 in both procedures. Restore
+the observed source anchors for the complete callback, TCP start_receiving, and
+UDP client start_receiving. Preserve neighboring methods' previous attribution
+with explicit resets. No expression, guard, local or helper changes are part of
+this attribution pass; it does not address the TCP twelve-byte frame residual.
+Predict equal raw records/lines in four emitted procedures and matching logging
+immediates in the two callback specializations. Full build and neighbor checks
+are required before this candidate is measured.
+
+Build7f6afe2fea0344268c37eedbf61a3d13 succeeded in10m10s: zero reported
+regressions, two improvements, no added/removed functions. Both TCP size callbacks
+now score100%; their raw off/size/line records and locals match retail, with
+LOG operands0x36/0x3D at0x125/0x207. TCP and UDP start_receiving raw records
+and locals also match. No network-owned warnings;31 external compiler warnings,
+236 linker warnings and two known Scaleform parser skips. The existing TCP
+frame discrepancy remains; attribution corrections do not resolve it.

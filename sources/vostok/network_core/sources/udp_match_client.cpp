@@ -96,7 +96,7 @@ void udp_match_client::handle_receive( boost::system::error_code const& error_co
 	if ( !m_connection.is_disconnected( ) )
 		start_receiving		( );
 }
-#line 91
+#line 128
 void udp_match_client::start_receiving( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_is_receiving ) );
@@ -108,8 +108,10 @@ void udp_match_client::start_receiving( )
 			m_handler_allocator,
 			boost::bind( &udp_match_client::handle_receive, this, _1, _2 )
 		)
+#line 140
 	);
 }
+#line 104
 void udp_match_client::connect(
 	pcstr const					host,
 	const u16					port,

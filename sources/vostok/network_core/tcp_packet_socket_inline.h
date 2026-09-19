@@ -51,7 +51,7 @@ inline void tcp_packet_socket< Socket >::on_packet_received(
 #line 43
 	start_receiving( );
 }
-#line 49
+#line 45
 
 template < typename Socket >
 template < typename T >
@@ -59,6 +59,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 {
 	if ( error_code )
 	{
+#line 51
 		if ( error_code == boost::asio::error::operation_aborted )
 			return;
 
@@ -70,6 +71,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 
 	if ( bytes_transferred != sizeof( T ) )
 	{
+#line 61
 		LOG_ERROR( "unable to read from socket\r\n" );
 		if ( m_on_error )
 			m_on_error( unable_to_read_from_socket, error_code );
@@ -79,6 +81,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 	T const buffer_size	= *static_cast< T const* >( static_cast< pcvoid >( &m_header_buffer ) );
 	if ( buffer_size )
 	{
+#line 69
 		tcp_packet* const	packet	= new_packet( );
 		packet->resize( buffer_size );
 
@@ -89,6 +92,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 				m_allocator,
 				boost::bind( &tcp_packet_socket::on_packet_received, this, packet, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
 			)
+#line 85
 		);
 		return;
 	}
@@ -101,6 +105,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 				m_allocator,
 				boost::bind( &tcp_packet_socket::on_packet_size_received< u16 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
 			)
+#line 102
 		);
 	else
 		ASSERT( sizeof( T ) < sizeof( u16 ) );
@@ -108,6 +113,7 @@ inline void tcp_packet_socket< Socket >::on_packet_size_received( boost::system:
 
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::start_receiving( )
+#line 109
 {
 	boost::asio::async_read(
 		m_socket,
@@ -116,8 +122,10 @@ inline void tcp_packet_socket< Socket >::start_receiving( )
 			m_allocator,
 			boost::bind( &tcp_packet_socket::on_packet_size_received< u8 >, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred )
 		)
+#line 122
 	);
 }
+#line 115
 
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
