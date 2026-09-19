@@ -775,7 +775,9 @@ pub fn compare(
         findings.push(Finding {
             category: "statement_structure".into(),
             subject: subject.clone(),
-            verdict: if structure_match {
+            verdict: if target_rows.is_empty() && base_rows.is_empty() {
+                Verdict::Unobservable
+            } else if structure_match {
                 Verdict::Match
             } else {
                 Verdict::Mismatch
@@ -787,19 +789,35 @@ pub fn compare(
                 base_rows.len()
             ),
         });
-        let target_files = statement_files(&target_fn);
-        let base_files = statement_files(base_fn);
         findings.push(Finding {
-            category: "statement_files".into(),
+            category: "function_size".into(),
             subject: subject.clone(),
-            verdict: if target_files == base_files {
+            verdict: if target_fn.size == base_fn.size {
                 Verdict::Match
             } else {
                 Verdict::Mismatch
             },
             origin: Origin::Observed,
             detail: format!(
-                "target={} base={} per-statement file records",
+                "target={} base={} bytes (whole procedure, including frame code)",
+                target_fn.size, base_fn.size
+            ),
+        });
+        let target_files = statement_files(&target_fn);
+        let base_files = statement_files(base_fn);
+        findings.push(Finding {
+            category: "statement_files".into(),
+            subject: subject.clone(),
+            verdict: if target_files.is_empty() || base_files.is_empty() {
+                Verdict::Unobservable
+            } else if target_files == base_files {
+                Verdict::Match
+            } else {
+                Verdict::Mismatch
+            },
+            origin: Origin::Observed,
+            detail: format!(
+                "target={} base={} observed file runs (all positive-line records; independent of statement packing)",
                 target_files.len(),
                 base_files.len()
             ),
@@ -808,8 +826,10 @@ pub fn compare(
         let base_lines = relative_statement_lines(base_fn);
         findings.push(Finding {
             category: "statement_line_geometry".into(),
-            subject,
-            verdict: if target_lines == base_lines {
+            subject: subject.clone(),
+            verdict: if target_lines.is_empty() && base_lines.is_empty() {
+                Verdict::Unobservable
+            } else if target_lines == base_lines {
                 Verdict::Match
             } else {
                 Verdict::Mismatch
@@ -820,6 +840,21 @@ pub fn compare(
                 target_lines.len(),
                 base_lines.len()
             ),
+        });
+        let target_raw = raw_line_records(&target_fn);
+        let base_raw = raw_line_records(base_fn);
+        findings.push(Finding {
+            category: "raw_line_records".into(),
+            subject,
+            verdict: if target_raw.is_empty() || base_raw.is_empty() {
+                Verdict::Unobservable
+            } else if target_raw == base_raw {
+                Verdict::Match
+            } else {
+                Verdict::Mismatch
+            },
+            origin: Origin::Observed,
+            detail: format!("target={} base={} observed (offset,size,file,relative line) records including boundaries; not byte equality", target_raw.len(), base_raw.len()),
         });
     }
     for (index, base_fn) in bases.iter().enumerate() {
@@ -854,10 +889,16 @@ fn normalize_file(file: &str) -> String {
 }
 
 fn statement_files(entry: &FunctionEntry) -> Vec<String> {
-    body_statements(entry)
+    // A singleton can cover the entire procedure. Dropping prologue/epilogue
+    // rows here would turn a line-packing difference into a false file change.
+    let mut files: Vec<_> = entry
+        .statements
         .iter()
+        .filter(|statement| statement.line != 0 && !statement.file.is_empty())
         .map(|statement| normalize_file(&statement.file))
-        .collect()
+        .collect();
+    files.dedup();
+    files
 }
 
 fn relative_statement_lines(entry: &FunctionEntry) -> Vec<(String, i64)> {
@@ -868,6 +909,20 @@ fn relative_statement_lines(entry: &FunctionEntry) -> Vec<(String, i64)> {
             let file = normalize_file(&statement.file);
             let origin = origins.entry(file.clone()).or_insert(statement.line);
             (file, i64::from(statement.line) - i64::from(*origin))
+        })
+        .collect()
+}
+
+fn raw_line_records(entry: &FunctionEntry) -> Vec<(u32, u32, String, i64)> {
+    let mut origins = std::collections::BTreeMap::<String, u32>::new();
+    entry
+        .statements
+        .iter()
+        .filter(|s| s.line != 0 && !s.file.is_empty())
+        .map(|s| {
+            let file = normalize_file(&s.file);
+            let origin = origins.entry(file.clone()).or_insert(s.line);
+            (s.off, s.size, file, i64::from(s.line) - i64::from(*origin))
         })
         .collect()
 }
@@ -987,8 +1042,19 @@ mod tests {
         write_database(&target, "target", &pdb, &exe, &entries).unwrap();
         write_database(&base, "base", &pdb, &exe, &entries).unwrap();
         let findings = compare(&target, &base, None, None).unwrap();
-        assert!(findings.iter().all(|f| f.verdict == Verdict::Match));
-        assert_eq!(findings.len(), 10);
+        assert!(findings.iter().all(|f| f.verdict
+            == if matches!(
+                f.category.as_str(),
+                "statement_files"
+                    | "statement_structure"
+                    | "statement_line_geometry"
+                    | "raw_line_records"
+            ) {
+                Verdict::Unobservable // This identity-only fixture has no line records.
+            } else {
+                Verdict::Match
+            }));
+        assert_eq!(findings.len(), 14);
     }
 
     #[test]
@@ -1022,6 +1088,132 @@ mod tests {
         save();
         std::fs::write(commands, "[{}]").unwrap();
         assert_eq!(freshness(&db).unwrap()[0].verdict, Verdict::StaleInput);
+    }
+
+    #[test]
+    fn empty_body_does_not_hide_size_or_raw_boundary_changes() {
+        let fixture = Fixture::new();
+        let pdb = fixture.file("input.pdb", "pdb");
+        let exe = fixture.file("input.exe", "exe");
+        let target = fixture.0.join("target.sqlite");
+        let base = fixture.0.join("base.sqlite");
+        let mut t = entry("constructor");
+        t.statements = serde_json::from_value(serde_json::json!([
+            {"file":"unit.cpp","line":10,"off":0,"size":7},
+            {"file":"unit.cpp","line":12,"off":7,"size":1}
+        ]))
+        .unwrap();
+        let mut b = t.clone();
+        b.size = 9;
+        b.statements[0].size = 8;
+        b.statements[1].off = 8;
+        b.statements[1].line = 11;
+        write_database(&target, "target", &pdb, &exe, &[t]).unwrap();
+        write_database(&base, "base", &pdb, &exe, &[b]).unwrap();
+        let findings = compare(&target, &base, None, None).unwrap();
+        for category in ["function_size", "raw_line_records"] {
+            assert_eq!(
+                findings
+                    .iter()
+                    .find(|f| f.category == category)
+                    .unwrap()
+                    .verdict,
+                Verdict::Mismatch
+            );
+        }
+        for category in ["statement_structure", "statement_line_geometry"] {
+            assert_eq!(
+                findings
+                    .iter()
+                    .find(|f| f.category == category)
+                    .unwrap()
+                    .verdict,
+                Verdict::Unobservable
+            );
+        }
+    }
+
+    #[test]
+    fn raw_line_records_keep_equal_size_shifted_boundaries_and_closing_gaps() {
+        let mut t = entry("raw");
+        t.statements = serde_json::from_value(serde_json::json!([
+            {"file":"unit.cpp","line":10,"off":0,"size":1},
+            {"file":"unit.cpp","line":11,"off":1,"size":6},
+            {"file":"unit.cpp","line":20,"off":7,"size":1}
+        ]))
+        .unwrap();
+        let mut b = t.clone();
+        b.statements[0].size = 2;
+        b.statements[1].off = 2;
+        b.statements[2].size = 0;
+        assert_ne!(raw_line_records(&t), raw_line_records(&b));
+        b = t.clone();
+        b.statements[2].line = 12;
+        assert_eq!(relative_statement_lines(&t), relative_statement_lines(&b));
+        assert_ne!(raw_line_records(&t), raw_line_records(&b));
+        b = t.clone();
+        for s in &mut b.statements {
+            s.line += 100;
+        }
+        assert_eq!(raw_line_records(&t), raw_line_records(&b));
+    }
+
+    #[test]
+    fn file_provenance_is_independent_of_line_packing() {
+        let mut singleton = entry("packed");
+        singleton.statements = serde_json::from_value(serde_json::json!([
+            {"file":"Packet.h","line":46,"off":0,"size":56}
+        ]))
+        .unwrap();
+        let mut split = entry("packed");
+        split.statements = serde_json::from_value(serde_json::json!([
+            {"file":"packet.h","line":50,"off":0,"size":1},
+            {"file":"packet.h","line":51,"off":1,"size":54},
+            {"file":"packet.h","line":52,"off":55,"size":1}
+        ]))
+        .unwrap();
+        assert_eq!(statement_files(&singleton), vec!["packet.h"]);
+        assert_eq!(statement_files(&singleton), statement_files(&split));
+        assert_ne!(
+            relative_statement_lines(&singleton),
+            relative_statement_lines(&split)
+        );
+    }
+
+    #[test]
+    fn file_provenance_preserves_returning_to_an_earlier_header() {
+        let mut function = entry("switches");
+        function.statements = serde_json::from_value(serde_json::json!([
+            {"file":"a.h","line":10,"off":0,"size":1},
+            {"file":"b.h","line":20,"off":1,"size":1},
+            {"file":"b.h","line":21,"off":2,"size":1},
+            {"file":"a.h","line":11,"off":3,"size":1}
+        ]))
+        .unwrap();
+        assert_eq!(statement_files(&function), vec!["a.h", "b.h", "a.h"]);
+    }
+
+    #[test]
+    fn synthetic_file_attribution_is_not_observed_provenance() {
+        let fixture = Fixture::new();
+        let pdb = fixture.file("input.pdb", "pdb");
+        let exe = fixture.file("input.exe", "exe");
+        let target = fixture.0.join("target.sqlite");
+        let base = fixture.0.join("base.sqlite");
+        let mut function = entry("synthetic");
+        function.statements = serde_json::from_value(serde_json::json!([
+            {"file":"unit.cpp","line":0,"off":0,"size":8}
+        ]))
+        .unwrap();
+        assert!(statement_files(&function).is_empty());
+        write_database(&target, "target", &pdb, &exe, &[function.clone()]).unwrap();
+        write_database(&base, "base", &pdb, &exe, &[function]).unwrap();
+        let findings = compare(&target, &base, None, None).unwrap();
+        let finding = findings
+            .iter()
+            .find(|f| f.category == "statement_files")
+            .unwrap();
+        assert_eq!(finding.verdict, Verdict::Unobservable);
     }
 
     #[test]

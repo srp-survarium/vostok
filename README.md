@@ -195,6 +195,13 @@ match alone does not certify initializer/frame bytes or byte equality.
 Candidate source text honors literal `#line` mappings; ambiguous mappings omit
 text. Source-order comparison explicitly reports unpaired and ambiguous names
 as `declaration_order_coverage`, rather than hiding them behind subset matches.
+PDB comparison separately checks whole-function size and raw line boundaries;
+empty body evidence is `UNOBSERVABLE`, not a match. File provenance compares
+observed file runs independently of statement packing. Source-text lookup
+recognizes conventional include guards but remains conservative about feature
+conditions, unknown filenames, and backslash-continued files. The current
+`divergence` definition-order channel excludes header procedures; a clean
+source-compiland result is not whole-module order closure.
 
 To investigate linker/PDB ordering without rebuilding game sources, run the
 fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.

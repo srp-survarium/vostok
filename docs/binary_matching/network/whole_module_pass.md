@@ -194,3 +194,45 @@ This pass still must finish per-file source coverage and triage remaining
 location/geometry/statement, presence, class-variant, and header-order findings.
 Literal line mappings are reconstruction scaffolding: matching their records
 does not prove recovery of original whitespace, guards, or unobserved code.
+
+## Following comparator batch: c5cb89c1
+
+The previously isolated `evidence.rs` and `rich_context.rs` corrections are now
+integrated. All 113 Rust tests pass (107 library, six binary), including twelve
+new regression tests. Whole-procedure size and raw boundary rows are separate
+channels; missing body evidence is not counted as agreement. File runs retain
+singleton header provenance without hiding line-packing differences.
+
+Comparison against the unchanged 857613fc databases now reports whole size
+216 MATCH / 78 MISMATCH; raw rows 188 MATCH / 87 MISMATCH / 19 UNOBSERVABLE;
+body structure 168 / 69 / 57; and body geometry 215 / 22 / 57. The unchanged
+69 and 22 mismatch totals are important: removing empty-evidence MATCH results
+does not repair source. File runs give 271 / 4 / 19; the four remaining records
+are the previously identified functor execute aliases (two), string execute
+alias, and Boost bind list3 alias. The two singleton packing cases no longer
+pretend to be different-file bodies. These counts use the new channel semantics
+and are not directly interchangeable with the preceding baseline table.
+
+Holista's source-reader review drove four conservative safeguards: reject text
+attribution for backslash-continued files, track uncertain filenames separately
+from line numbers, require an explicit filename after macro/conditional filename
+changes, and recognize `#if(FLAG)` without whitespace. Conventional whole-file
+guards permit lookup; nested feature conditions still do not. This modifies
+tool interpretation, not engine guards or retail behavior.
+
+Full build `c5cb89c18956434db77c9fae7e744792` succeeded in10m44s. The refreshed
+report has zero regressions, improvements, additions, removals or fold churn;
+the generated ledger is unchanged from a6aab4917. Network was recompiled and
+has only18 third-party OpenSSL C4995 diagnostics. No network/network_core-owned
+warning appears; network_core was not recompiled in this batch. The remaining
+log contains13 out-of-scope compiler diagnostics, two LNK4049,234 LNK4099,
+and the two previously recorded Scaleform UnexpectedEof skips. Both network
+data gates remain OPEN=0; whole-project open data rows remain14.
+
+The resolved `match_client_impl::on_packet_received` location TODO is removed,
+preserving its physical line with a blank. Header-order implementation remains
+queued separately: do not reorder the UDP packet's method declarations simply
+to move its helper body. Both target class variants declare nested `helper`
+before the accessors, while the observed helper body follows `header_size`.
+A forward declaration with a later nested-class definition is a candidate to
+test; moving method declarations would contradict that evidence.

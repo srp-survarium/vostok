@@ -20,7 +20,12 @@ This is a machine-boundary diagnostic, not proof of different source ordering.
 Candidate statement text follows literal `#line` mappings instead of indexing
 physical file lines. Reused logical locations are ambiguous and have no attached
 text. Macro-valued or conditional line directives suppress attribution until an
-unconditional literal directive restores it; this lookup does not preprocess C++.
+unconditional literal directive restores it. If the filename is also uncertain,
+recovery requires an explicit literal filename. Conventional whole-file
+`#ifndef`/`#define` include guards permit literal mappings inside their active
+body; nested feature conditions remain unknown. Files with backslash-continued
+physical lines have no source-text attribution until line splicing is supported.
+This conservative lookup does not preprocess C++.
 Filename redirects attach text only when they identify the indexed source file.
 Re-index existing candidate PDB databases to refresh previously captured text.
 
@@ -87,7 +92,15 @@ source after changing shared dependencies or the compiler environment.
 an exact mangled identity or `--rva` to select a procedure.
 
 `compare pdb` covers procedure presence, source location, statement partition,
-relative line geometry, and recorded local names/types/scopes. Its scoped views
+relative line geometry, and recorded local names/types/scopes. `function_size`
+compares the entire procedure, including frame code. `raw_line_records` compares
+all positive-line offset/size/file/relative-line tuples, including boundaries;
+each file has its own relative origin. `statement_files` compares consecutive
+file runs independently of line packing, preserving A-to-B-to-A transitions.
+Missing raw/file evidence is `UNOBSERVABLE`; two empty body projections also
+produce `UNOBSERVABLE`, not a vacuous `MATCH`. One empty versus one nonempty
+body projection remains a mismatch. None of these channels proves byte equality.
+Its scoped views
 retain candidate-only procedures, and an empty target selector is not a clean
 match. `topology --classes` is the type-stream view for duplicate-preserving
 class variants, field offsets/access, method access/static/virtual/const status,
@@ -103,6 +116,9 @@ order is not itself proof of original source declaration order.
 `divergence` supplies the broader normalized enum, class, source-definition
 order, constant, and out-of-line-presence views; `--headers` and `--sources`
 restrict its channels, while the default runs both.
+The current `divergence` definition-order channel excludes header procedures
+and requires both line order and same-compiland procedure-symbol order to
+invert. A clean result does not certify inline-header definition order.
 
 The PDB parser was imported from
 `srp-survarium/vostok-pdb-parser@6262ce150b12729b865a7eca6d82ad563256ba20`

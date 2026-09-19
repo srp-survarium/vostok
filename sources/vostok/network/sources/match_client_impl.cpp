@@ -33,7 +33,7 @@ match_client_impl::~match_client_impl( )
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
 
-// sushi@TODO: Verify the pinned body locations and remaining closing-brace gap.
+
 #line 43
 void match_client_impl::on_packet_received( const u8 message_type, network_core::packet_reader& reader )
 {
