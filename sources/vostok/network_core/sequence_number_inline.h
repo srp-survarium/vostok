@@ -45,8 +45,9 @@ inline void sequence_number< T >::serialize( udp_match_packet& packet )
 template < typename T >
 inline void sequence_number< T >::serialize( pbyte& pointer )
 {
-	*reinterpret_cast< T* >( pointer )	= m_number;
-	pointer			+= sizeof( T );
+	sequence_number_type*&	stream	= reinterpret_cast< sequence_number_type*& >( pointer );
+	*stream	= m_number;
+	++stream;
 }
 
 template < typename T >

@@ -375,3 +375,56 @@ maps and serialized locals, including neighboring functions not changed in the
 batch. Byte residuals above remain open; no semantic closure is claimed.
 Attributed-order coverage remains37MATCH/33UNOBSERVABLE/23AMBIGUOUS, with no
 observed inversions. Source diff-check passes; no physical definitions moved.
+
+## Source-family experiment after a4e9cfa30
+
+Holista's typed-cursor serializer candidate binds sequence_number_type*& to the
+byte cursor, writes m_number, then increments the typed cursor. This expresses
+write-through cursor ownership inside the existing helper, without adding caller
+locals or changing its PDB-confirmed interface. It predicts one preserved reference
+slot in each of fill_packet_header's two expansions and enqueue_impl's expansion.
+An isolated C++03 host probe passed u8/u16 writes, repeated cursor advancement and
+surrounding-byte checks with strict aliasing disabled. This is not proof of retail
+compiler behavior or portable aliasing; full-build verification is required.
+
+UDP send now binds Asio error/bytes_transferred placeholder references. Retail
+instructions at offsets0xA0/0xAA load those named reference globals and dereference
+their argument objects, unlike the previous global _1/_2 expressions. Controls
+start_receiving and async_connector::connect(iterator) retain _1/_2 because their
+retail loads are direct. Expect unchanged five body statements and zero locals;
+handler-copy residuals are a separate question. No blanket placeholder rewrite.
+
+The same batch restores the handler factory's direct constructed return instead
+of a named const result. Retail send constructs the16-byte wrapper in returned
+storage; base additionally copies four words from a separate local. The analogous
+start_receiving expansion copies three extra words. Direct return predicts removal
+of those copies and frame reductions0x108->0xF8 and0xDC->0xD0 respectively, while
+preserving the later copies into Asio's operation object. The legacy handler
+factory independently has the direct-return spelling. These predictions must be
+checked against the full build; helper identity and all consumers remain in scope.
+
+Build e33c1398feb749c8aa33673ecd01de33 succeeded in 13m23s. No warnings
+originate in network/network_core source; network compilation includes 18 OpenSSL
+C4995 diagnostics. This broader recompile emits 11,348 compiler warning occurrences
+overall, 236 linker warnings (234 LNK4099, two LNK4049), and the two known
+Scaleform UnexpectedEof skips. These totals are occurrences, not unique findings.
+
+Seven functions improve; none are added or removed. fill_packet_header reaches
+100% with all nine raw records, line numbers and locals equal. UDP send reaches
+100%, 427 bytes and frame 0xF8, with raw records and locals equal. UDP client
+start_receiving reaches 100%, 244 bytes and frame 0xD0; source-line geometry is
+still different. Both TCP size callbacks reach 99.99%, matching retail extents
+1106/1108 and frame 0x394; their byte spans and locals agree but line attribution
+still differs. enqueue_impl reaches 96% and remains three bytes short at an
+earlier accessor span, not at the now-correct serializer expansion. The two send
+controls retain their original extents, raw records and locals.
+
+Two reported regressions remain open, not dismissed as compiler noise:
+tcp_packet_client::start_reading 100 -> 99.70 and TCP on_packet_received
+100 -> 99.94. The former differs only in frame/this-slot operands (0xFC -> 0xF0)
+against retail, preserving all ten instructions and statement extents. The latter
+preserves 811 bytes, all raw records and locals, but its frame changes from retail
+0x4B0 to 0x4A4. TCP start_receiving improves to 99.88% and matches the 159-byte
+extent but exhibits that same twelve-byte frame deficit. This shared frame
+residual needs further source-family investigation before batch closure;
+symbolically different folded callees are not independently certified here.

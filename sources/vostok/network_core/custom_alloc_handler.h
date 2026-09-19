@@ -58,8 +58,7 @@ inline custom_alloc_handler< Handler >::custom_alloc_handler( handler_allocator&
 template < typename Handler >
 inline custom_alloc_handler< Handler > make_custom_alloc_handler( handler_allocator& allocator, Handler handler )
 {
-	custom_alloc_handler< Handler > const result( allocator, handler );
-	return result;
+	return custom_alloc_handler< Handler >( allocator, handler );
 }
 
 } // namespace network_core
