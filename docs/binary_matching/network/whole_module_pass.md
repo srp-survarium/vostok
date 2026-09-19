@@ -541,3 +541,20 @@ The last supplementary regression remains open, alongside the prior constructor
 batch's two small regressions. No canonical scores were overwritten. No
 network-owned warnings;31 other compiler warnings,236 linker warnings and two
 known Scaleform parser skips. Keep review open; this is not regression-free closure.
+
+## Handler allocator initialization after e04cfc2ac
+
+Build 483a4f0c92ba4e1c89445e66725a2994 passed in 10m27s. Moving the
+in_use_ initialization into the constructor initializer list restores the empty
+body supported independently by the archived allocator source. The raw target
+and base records now both read (offset,size,line) (0,25,29), (25,7,30), rather
+than a separate base assignment record. Both have no named locals and a 32-byte
+extent; the ledger changes QUANTITY to MATCH while retaining 100% bytes.
+The condensed diff compares no interior statements, so the raw frame records
+are the evidence for closure, not an empty condensed verdict.
+
+The global report contains zero improvements, regressions, added/removed
+symbols or fold-churn entries; consumer scores are unchanged. No network-owned
+compiler warnings; 31 elsewhere, 236 linker warnings and two known Scaleform
+parser skips remain. Prior batches' open supplemental regressions remain open.
+This closes the constructor's initialization discrepancy, not the modules.
