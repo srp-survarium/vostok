@@ -133,11 +133,13 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 	boost::system::error_code const&	error_code,
 	u32									bytes_transferred
 )
+#line 131
 {
 	delete_packet( packet_being_sent );
 
 	if ( error_code )
 	{
+#line 135
 		LOG_ERROR( "error during writing to socket: %s\r\n", error_code.message( ).c_str( ) );
 		if ( m_on_error )
 			m_on_error( unable_to_write_to_socket, error_code );
@@ -146,12 +148,15 @@ inline void tcp_packet_socket< Socket >::on_packet_has_been_sent(
 
 	if ( !bytes_transferred )
 	{
+#line 142
 		LOG_ERROR( "unable to write to socket\r\n" );
 		if ( m_on_error )
 			m_on_error( unable_to_write_to_socket, error_code );
 		return;
 	}
+#line 149
 }
+#line 141
 
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
@@ -173,16 +178,20 @@ inline void tcp_packet_socket< Socket >::send( tcp_packet const& packet )
 
 template < typename Socket >
 inline tcp_packet* tcp_packet_socket< Socket >::new_packet( )
+#line 192
 {
 	return VOSTOK_NEW_IMPL( m_packet_allocator, tcp_packet )( m_packet_allocator );
 }
+#line 160
 
 template < typename Socket >
 inline void tcp_packet_socket< Socket >::stop_receiving( )
+#line 204
 {
 	boost::system::error_code	error_code;
 	m_socket.cancel( error_code );
 }
+#line 167
 
 } // namespace network_core
 } // namespace vostok

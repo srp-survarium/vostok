@@ -489,3 +489,22 @@ original target objects and current defining base objects recover:
 The latter two small supplementary-score regressions remain explicitly open;
 do not call this a regression-free build or treat their zero primary scores as
 missing runtime functions. No engine changes were made to those consumers.
+
+## TCP send-completion attribution after65727ec70
+
+Build b6e734833439431aa076cd1d2a9b9a77 succeeded in10m20s. Restoring the
+observed LOG source lines135/142 changes the immediates to87h/8Eh. The first
+push grows from2B to5B, accounting for the callback's missing3B: now538B,
+100%, STRUCTURE MATCH, with all raw off/size/line records and locals equal.
+The report has one improvement, zero regressions, zero added/removed functions,
+and zero fold-churn entries. Prior constructor-batch open regressions remain.
+
+All eight emitted header procedures were checked: seven have identical raw
+off/size/line maps; all eight have identical named locals. new_packet attribution
+now agrees. stop_receiving lines204..207 agree but its extent remains92B versus
+retail83B, from the previously identified stack-address encodings. send's slot
+differences and the receive family's twelve-byte frame discrepancy remain open.
+No behavior, locals, declaration order, access or helper boundaries changed.
+No network-owned warnings;31 other compiler warnings,236 linker warnings and
+two known Scaleform parser skips. Source anchors use the requested #line style,
+not blank-line padding.
