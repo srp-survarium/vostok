@@ -211,7 +211,7 @@ void match_client::on_packet_received_impl( const u8 message_type, vostok::netwo
 void match_client::on_packet_received( const u8 message_type, vostok::network_core::packet_reader& reader )
 {
 	if ( m_on_packet_received ) {
-		network_core::udp_match_packet* const packet	= network_core::new_udp_match_packet( *m_response_packets_allocator );
+		network_core::udp_match_packet* const packet	= new_response_packet( );
 		packet->append		( reader.pointer( ), reader.size_to_eof( ) );
 		m_world.add_response	(
 			VOSTOK_NEW_IMPL( m_world.responses_allocator( ), receive_udp_response ) (

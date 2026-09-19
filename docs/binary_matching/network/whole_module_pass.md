@@ -508,3 +508,36 @@ No behavior, locals, declaration order, access or helper boundaries changed.
 No network-owned warnings;31 other compiler warnings,236 linker warnings and
 two known Scaleform parser skips. Source anchors use the requested #line style,
 not blank-line padding.
+
+## Response packet helper call after2d18c0add
+
+Holista N02 routes match_client::on_packet_received through its existing private
+new_response_packet helper, recorded in raw complete class variants. It uses the
+same response-side allocator and preserves packet ownership, guard and locals.
+This is a coherent source model, not proof of original call spelling. The owning
+receive_udp_response retains its allocator until after packet deletion; raw field
+order and destructor assembly agree with that lifetime.
+
+Build3cbb4234104a452d98d96f90bc4b0f5a passed in10m41s. Reported callback score
+remains78.187. Its allocation span still39B versus retail23B: the desired retained
+intrusive_ptr dereference was not recovered. Response construction becomes307B
+from313B versus retail360B; full callback441B versus retail474B. Six raw records
+and recorded locals are preserved. All20 named TU procedure records pair uniquely
+with matching locals;21 ledger entries including the generated destructor retain
+their previous scores. This does not close the allocation/response-constructor
+differences, and no inline controls or invented temporaries were added.
+
+Global report:221 improvements,78 regressions to zero,0added/removed,
+146 separately recorded fold-churn entries. All78 regressed public symbols remain
+present. Conservative linked-body comparison proves73 still agree with target
+after public-identity control-transfer/vtable normalization. Direct cross-object
+comparisons of the other five recover:
+- speedtree_data constructor:100, unchanged;
+- query_mount_arguments copy constructor:96.666664, unchanged;
+- game_options deleting destructor:91.666664, unchanged;
+- stage_light_propagation_volumes deleting destructor:91.666664, unchanged;
+- Scaleform RefCountNTSImplCore deleting destructor:99.85294 versus prior100.
+The last supplementary regression remains open, alongside the prior constructor
+batch's two small regressions. No canonical scores were overwritten. No
+network-owned warnings;31 other compiler warnings,236 linker warnings and two
+known Scaleform parser skips. Keep review open; this is not regression-free closure.
