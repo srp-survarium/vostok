@@ -120,6 +120,17 @@ The current `divergence` definition-order channel excludes header procedures
 and requires both line order and same-compiland procedure-symbol order to
 invert. A clean result does not certify inline-header definition order.
 
+`compare pdb --attributed-order-only` separately checks relative minimum
+positive-line order, including headers. Each inversion names both functions
+and both pairs of line numbers. `attributed_line_order_coverage` reports
+duplicate signatures, shared-RVA aliases (including aliases outside the selected
+scope), missing exact-signature pairs, differing files, and absent/mixed-file/
+out-of-bounds line evidence. Same-line pairs are excluded and counted; fewer
+than two comparable procedures cannot receive MATCH. Per-file subset results
+never certify excluded procedures. The command validates PDB/EXE freshness.
+Line directives and optimized attribution can change this order without
+changing syntax: an inversion is a diagnostic, not proof of physical order.
+
 The PDB parser was imported from
 `srp-survarium/vostok-pdb-parser@6262ce150b12729b865a7eca6d82ad563256ba20`
 and includes the former Vostok focused-type-order patch. It now preserves each

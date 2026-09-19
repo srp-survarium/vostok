@@ -2530,6 +2530,24 @@ class ReportChangesTests(unittest.TestCase):
         changes = self._changes(set())
         self.assertEqual(len(changes["regressed"]), 1)
         self.assertEqual(changes["fold_churn"], [])
+        self.assertEqual(changes["regressed"][0]["unit"], "module/header.h")
+        self.assertEqual(changes["regressed"][0]["symbol"], "?function@@YAXXZ")
+
+    def test_mapped_exact_symbols_reject_ambiguity_and_changed_code(self):
+        from vostok.build.generate_delink import _mapped_exact_symbols
+        target = {"name": "void f()", "mangled": "raw", "rva": 10, "size": 1,
+                  "instructions": [{"off": 0, "len": 1, "text": "ret"}]}
+        base = dict(target, mangled="base_alias", rva=20)
+        mapping = [("raw", "object_symbol")]
+        def prove(ts, bs):
+            return _mapped_exact_symbols(ts, bs, mapping)
+        self.assertEqual(prove([target], [base]), {"object_symbol"})
+        self.assertEqual(prove([target, dict(target, rva=11)], [base]), set())
+        self.assertEqual(prove([target], [base, dict(base, rva=21)]), set())
+        self.assertEqual(prove([target], [dict(base, instructions=[])]), set())
+        changed = dict(base, instructions=[{"off": 0, "len": 1, "text": "nop"}])
+        self.assertEqual(prove([target], [changed]), set())
+        self.assertEqual(prove([target], []), set())
 
     def test_zero_change_skips_rich_index_scan(self):
         from vostok.build import generate_delink as G

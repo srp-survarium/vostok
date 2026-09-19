@@ -24,12 +24,12 @@ struct single_threading_single_size_allocator_policy
 
 	typedef u32		counter_type;
 
-	static void		initialize	( free_list_type& free_list_head );
-	static	T*		allocate	( free_list_type& free_list_head );
-	static	void	deallocate	( free_list_type& free_list_head, free_list_type& freeing_node );
+	static inline void	initialize	( free_list_type& free_list_head );
+	static inline T*	allocate	( free_list_type& free_list_head );
+	static inline void	deallocate	( free_list_type& free_list_head, free_list_type& freeing_node );
 
-	static	void	increment	( counter_type& operand );
-	static	void	decrement	( counter_type& operand );
+	static inline void	increment	( counter_type& operand );
+	static inline void	decrement	( counter_type& operand );
 }; // struct single_threading_single_size_allocator_policy
 
 } // namespace memory

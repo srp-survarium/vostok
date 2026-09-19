@@ -236,3 +236,78 @@ to move its helper body. Both target class variants declare nested `helper`
 before the accessors, while the observed helper body follows `header_size`.
 A forward declaration with a later nested-class definition is a candidate to
 test; moving method declarations would contradict that evidence.
+
+## Header/helper batch (builds4777534b and274b78eb)
+
+Baseline: measured commit6b04d7231. The chosen UDP helper reconstruction keeps
+the nested class and its private static inline declarations in place and moves
+only its method bodies after the enclosing class. This preserves the observed
+nested declaration slot while restoring the helper body's later order. The
+equally plausible forward-class alternative is not claimed as recovered source.
+header_size is written on one line, matching its single8B retail line record;
+its arithmetic is unchanged. Constructor/factory/disposer locations are mapped
+without claiming their remaining unequal spans are repaired.
+
+packet_reader_inline.h now places eof/pointer/advance/size_to_eof before the
+string-reader definitions. One opening-line anchor20 then reproduces the
+observed r<T>31..35, eof38..40, pointer43..45, advance48..54, size_to_eof57..59,
+and string-template72..74 sequence using ordinary spacing. The non-template
+string reader fits the intervening gap; its exact position and get_packet's
+later position are inferred, not separately observed. Bodies and header member
+declarations are unchanged.
+
+The shared single-threading allocator policy receives ordinary inline on all
+five static declarations/definitions. This is a whole-helper-family hypothesis,
+not a caller-side implementation or forced-inlining workaround. Target retains
+eight allocate specializations and none of the four small policy operations;
+base retains all40. All eight allocate controls currently have equal spans
+and serialized locals (DataSize44/300:221B;136/28/44200/8/16/108:214B). Preserve
+those controls and audit all consumers outside network too. The original
+inline spelling is unobserved; compiler context remains an alternative cause.
+
+The new optional Rust attributed-order diagnostic reproduces four inversions
+on the baseline across257 unique paired procedures and1253 comparable pairs;
+eight tied pairs and46 procedures are explicitly excluded. Six regression
+tests cover singleton headers, ties, folds outside scope, missing/ambiguous
+evidence, invalid spans, and shifted lines. It does not replace syntax-order,
+presence, or class-variant verification.
+
+The full4777534b build succeeded in15m54s. All four observed header inversions
+disappeared; the diagnostic reports37 MATCH,33 UNOBSERVABLE and23 AMBIGUOUS
+coverage entries. This is not whole-module closure. The allocator policy now
+retains exactly the same eight procedures as retail, with all eight sizes,
+raw offset/size arrays and serialized locals preserved. No ledger max dropped;
+50 rose. No network/network_core-owned warnings were emitted. Broad dependency
+compilation emitted11521 compiler and237 linker warnings plus the two known
+Scaleform extraction skips.
+
+The final274b78eb build succeeded in8m28s after the Python audit-tool changes;
+Ninja had no source work. No compiler/linker warnings or score changes; the two
+Scaleform extraction skips persist. Rust119 tests and Python144 tests pass,
+and ruff passes. Generated-ledger trailing empty TSV columns are preserved.
+
+Regression audit retains the pre477 snapshot report-20260919-172140.json rather
+than allowing the unchanged final build to erase history. Of143 initially
+reported zero-score drops,75 are proven by the new conservative map-aware
+instruction check. Raw public-symbol/PE inspection accounts for another64:
+53 unique bodies with verified relocation/branch references, nine rows whose
+multiple candidate addresses all have equivalent checked bodies, one exact
+five-byte indirect vcall thunk, and AcquireInterface's scalar/array-delete
+reference difference. For the latter, base array delete atRVA0x17c09f is
+8bff558bec5de9d2daffff: it restores its frame and tail-jumps to scalar delete
+atRVA0x179b7c. This is a verified CRT forwarding distinction, not literal
+same-reference code. These manual classifications do not alter ledger scores.
+
+Four pre-existing partial matches remain open: game_options and
+stage_light_propagation_volumes deleting destructors (previous91.666664 each),
+streaming_ready_texture::operator= (54.94737), and npc_statistics constructor
+(48.366665). Their raw object scores became unscored, not newly nonexact from
+100. The current bodies remain unequal; streaming/npc historical body identity
+is not proven by the archived score alone. No source edits were made in those
+units, and no hash-scoped max regressed. Preserve this limitation; do not report
+global current-byte equality or module completion from this checkpoint.
+
+report-changes.json now preserves unit and decorated symbol for each category.
+The effective-map proof rejects multiple target/base addresses, missing bodies,
+and differing nonempty instruction streams; raw-public/manual proofs above are
+not silently generalized into that automated classifier.

@@ -117,6 +117,9 @@ struct ComparePdb {
     /// Restrict target procedures to a normalized source-file substring.
     #[arg(long)]
     file: Option<String>,
+    /// Compare attributed line order (including headers), not physical syntax order.
+    #[arg(long)]
+    attributed_order_only: bool,
     #[arg(long)]
     json: bool,
     /// Exit nonzero when a deterministic mismatch is present.
@@ -264,6 +267,7 @@ fn run(cli: Cli) -> vostok_pdb::Result<()> {
                 &args.base,
                 args.function.as_deref(),
                 args.file.as_deref(),
+                args.attributed_order_only,
                 args.json,
                 args.strict,
             ),
@@ -359,10 +363,15 @@ fn compare_databases(
     base: &std::path::Path,
     function: Option<&str>,
     file: Option<&str>,
+    attributed_order_only: bool,
     json: bool,
     strict: bool,
 ) -> vostok_pdb::Result<()> {
-    let findings = evidence::compare(target, base, function, file)?;
+    let findings = if attributed_order_only {
+        vostok_pdb::attributed_order::compare(target, base, function, file)?
+    } else {
+        evidence::compare(target, base, function, file)?
+    };
     if json {
         println!("{}", serde_json::to_string_pretty(&findings)?);
     } else {

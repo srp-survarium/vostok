@@ -61,6 +61,7 @@ private:
 		channel_id				( 0x3F ),
 		is_reliable				( 0 ),
 		is_ordered				( 0 )
+#line 47
 	{
 		base_packet::m_buffer	= m_buffer.elems + 6;
 		m_buffer.elems[0]		= 0;
@@ -74,15 +75,8 @@ private:
 public:
 	class helper {
 	private:
-		static	inline	void	call_constructor	( udp_match_packet& packet )
-		{
-			new( &packet ) udp_match_packet( );
-		}
-
-		static	inline	void	call_destructor		( udp_match_packet& packet )
-		{
-			packet.~udp_match_packet( );
-		}
+		static	inline	void	call_constructor	( udp_match_packet& packet );
+		static	inline	void	call_destructor		( udp_match_packet& packet );
 
 		friend	udp_match_packet* ::vostok::network_core::new_udp_match_packet(
 			memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
@@ -99,10 +93,8 @@ public:
 	inline	pcbyte		buffer_to_send		( ) const { return m_buffer.elems; }
 	inline	pbyte		buffer_to_send		( ) { return m_buffer.elems; }
 
-	inline	u8			header_size			( ) const
-	{
-		return				(u8)( base_packet::m_buffer - m_buffer.elems );
-	}
+#line 62
+	inline	u8			header_size			( ) const { return (u8)( base_packet::m_buffer - m_buffer.elems ); }
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
 private:
@@ -139,9 +131,21 @@ private:
 STATIC_SIZE_ASSERT(udp_match_packet, 0x12C);
 STATIC_SIZE_ASSERT(udp_match_packet::helper, 0x1);
 
+inline void udp_match_packet::helper::call_constructor( udp_match_packet& packet )
+{
+	new( &packet ) udp_match_packet( );
+}
+
+inline void udp_match_packet::helper::call_destructor( udp_match_packet& packet )
+#line 111
+{
+	packet.~udp_match_packet( );
+}
+
 inline udp_match_packet* new_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator
 )
+#line 117
 {
 	udp_match_packet* const	result	= (udp_match_packet*)allocator.allocate( );
 	udp_match_packet::helper::call_constructor( *result );
@@ -152,6 +156,7 @@ inline void delete_udp_match_packet(
 	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	allocator,
 	udp_match_packet*&		packet
 )
+#line 124
 {
 	udp_match_packet::helper::call_destructor( *packet );
 	void*					buffer	= packet;

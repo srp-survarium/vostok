@@ -150,6 +150,32 @@ def _symbol_operand_aliases(records):
     return rvas_by_operand, operands_by_rva
 
 
+def _mapped_exact_symbols(target_records, base_records, mapping, alias_equivalent=None):
+    """Prove object identities through the delink map, rejecting address ambiguity."""
+    target_by_symbol, base_by_name = {}, {}
+    for rec in target_records:
+        target_by_symbol.setdefault(rec["mangled"], []).append(rec)
+    for rec in base_records:
+        base_by_name.setdefault(rec["name"], []).append(rec)
+    grouped = {}
+    for source, destination in mapping:
+        grouped.setdefault(destination, set()).add(source)
+    exact = set()
+    for destination, sources in grouped.items():
+        targets = [rec for source in sources | {destination}
+                   for rec in target_by_symbol.get(source, [])]
+        if not targets or len({rec["rva"] for rec in targets}) != 1:
+            continue
+        pairs = [(target, base) for target in targets
+                 for base in base_by_name.get(target["name"], [])]
+        if not pairs or len({base["rva"] for _, base in pairs}) != 1:
+            continue
+        if all(instruction_stream_exact(target, base, alias_equivalent)
+               for target, base in pairs):
+            exact.add(destination)
+    return exact
+
+
 def _strict_current_exact_symbols() -> set[str]:
     """Return same-identity functions proven exact by current rich streams.
 
@@ -237,6 +263,12 @@ def _strict_current_exact_symbols() -> set[str]:
         compiler_name = normalize_objdiff_symbols.compiler_name(mangled)
         if compiler_name:
             exact.add(compiler_name)
+    if EFFECTIVE_SYMBOL_MAP.is_file():
+        mapping = [fields for _, fields in tsv.read(EFFECTIVE_SYMBOL_MAP)]
+        if all(len(fields) == 2 for fields in mapping):
+            exact.update(_mapped_exact_symbols(
+                target_records, base_records, mapping, symbol_alias_equivalent,
+            ))
     return exact
 
 
@@ -405,17 +437,17 @@ def _report_changes(previous: Path, current: Path) -> None:
             if not best_did_not_drop and strict_current_exact is None:
                 strict_current_exact = _strict_current_exact_symbols()
             if best_did_not_drop or sym in strict_current_exact:
-                fold_churn.append((was, now, name))
+                fold_churn.append((was, now, name, key))
             else:
-                regressed.append((was, now, name))
+                regressed.append((was, now, name, key))
         elif now > was + 1e-6:
-            improved.append((was, now, name))
+            improved.append((was, now, name, key))
 
     # Keys in only one report (signature change, inlining, deletion). A matched
     # function that vanished is effectively a regression; a new low-match one
     # drags the score down.
-    removed = sorted((before[k] for k in before.keys() - after.keys()), reverse=True)
-    added = sorted(after[k] for k in after.keys() - before.keys())
+    removed = sorted(((*before[k], k) for k in before.keys() - after.keys()), reverse=True)
+    added = sorted((*after[k], k) for k in after.keys() - before.keys())
 
     pm, cm = prev.get("measures", {}), cur.get("measures", {})
 
@@ -439,33 +471,38 @@ def _report_changes(previous: Path, current: Path) -> None:
         len(regressed), len(improved), len(removed), len(added),
         f", {len(fold_churn)} fold-churn (not regressions)" if fold_churn else ""))
     limit = 10
-    for was, now, name in regressed[:limit]:
+    for was, now, name, _key in regressed[:limit]:
         log(f"  regressed {was:6.2f}% -> {now:6.2f}%  {name}")
     if len(regressed) > limit:
         log(f"  ... and {len(regressed) - limit} more regressed")
-    for was, now, name in improved[:limit]:
+    for was, now, name, _key in improved[:limit]:
         log(f"  improved  {was:6.2f}% -> {now:6.2f}%  {name}")
     if len(improved) > limit:
         log(f"  ... and {len(improved) - limit} more improved")
-    for pct, name in removed[:limit]:
+    for pct, name, _key in removed[:limit]:
         log(f"  removed   (was {pct:6.2f}%)  {name}")
     if len(removed) > limit:
         log(f"  ... and {len(removed) - limit} more removed")
-    for pct, name in added[:limit]:
+    for pct, name, _key in added[:limit]:
         log(f"  added     (now {pct:6.2f}%)  {name}")
     if len(added) > limit:
         log(f"  ... and {len(added) - limit} more added")
 
     changes = OBJDIFF_DIR / "report-changes.json"
     changes.write_text(json.dumps({
-        "regressed": [{"function": n, "from": a, "to": b} for a, b, n in regressed],
-        "improved": [{"function": n, "from": a, "to": b} for a, b, n in improved],
-        "removed": [{"function": n, "from": p} for p, n in removed],
-        "added": [{"function": n, "to": p} for p, n in added],
+        "regressed": [{"function": n, "unit": k[0], "symbol": k[1], "from": a, "to": b}
+                      for a, b, n, k in regressed],
+        "improved": [{"function": n, "unit": k[0], "symbol": k[1], "from": a, "to": b}
+                     for a, b, n, k in improved],
+        "removed": [{"function": n, "unit": k[0], "symbol": k[1], "from": p}
+                    for p, n, k in removed],
+        "added": [{"function": n, "unit": k[0], "symbol": k[1], "to": p}
+                  for p, n, k in added],
         # Bucketed OUT of `regressed` on purpose: either the same symbol's best
         # score merely moved between units, or current rich streams prove the
         # raw unscored copy remains instruction-exact after an ICF owner swap.
-        "fold_churn": [{"function": n, "from": a, "to": b} for a, b, n in fold_churn],
+        "fold_churn": [{"function": n, "unit": k[0], "symbol": k[1], "from": a, "to": b}
+                       for a, b, n, k in fold_churn],
     }, indent=2) + "\n")
     log(f"Changes: {changes} (previous report kept at {previous})")
 

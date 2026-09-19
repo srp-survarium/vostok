@@ -11,13 +11,13 @@ namespace vostok {
 namespace memory {
 
 template < typename T >
-void single_threading_single_size_allocator_policy< T >::initialize	( free_list_type& free_list_head )
+inline void single_threading_single_size_allocator_policy< T >::initialize	( free_list_type& free_list_head )
 {
 	free_list_head.set_pointer	( 0 );
 }
 	
 template < typename T >
-T* single_threading_single_size_allocator_policy< T >::allocate		( free_list_type& free_list_head )
+inline T* single_threading_single_size_allocator_policy< T >::allocate		( free_list_type& free_list_head )
 {
 	T* allocated_node			= free_list_head.get_pointer();
 	CURE_ASSERT					( allocated_node, return 0, "single_size_buffer_allocator - out of memory!");
@@ -26,7 +26,7 @@ T* single_threading_single_size_allocator_policy< T >::allocate		( free_list_typ
 }
 
 template < typename T >
-void single_threading_single_size_allocator_policy< T >::deallocate	(
+inline void single_threading_single_size_allocator_policy< T >::deallocate	(
 		free_list_type& free_list_head,
 		free_list_type& freeing_node
 	)
@@ -36,13 +36,13 @@ void single_threading_single_size_allocator_policy< T >::deallocate	(
 }
 
 template < typename T >
-void single_threading_single_size_allocator_policy< T >::increment	( counter_type& operand )
+inline void single_threading_single_size_allocator_policy< T >::increment	( counter_type& operand )
 {
 	++operand;
 }
 
 template < typename T >
-void single_threading_single_size_allocator_policy< T >::decrement	( counter_type& operand )
+inline void single_threading_single_size_allocator_policy< T >::decrement	( counter_type& operand )
 {
 	--operand;
 }
