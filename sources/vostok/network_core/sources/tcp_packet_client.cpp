@@ -11,8 +11,8 @@ namespace network_core {
 tcp_packet_client::tcp_packet_client( boost::asio::io_service& io_service ) :
 	m_socket		( io_service ),
 	m_packet_socket	( m_socket, *g_allocator ),
-	m_io_service	( io_service ),
-	m_first_packet	( NULL )
+	m_io_service	( io_service )
+#line 16
 {
 	m_packet_socket.set_on_error( boost::bind( &tcp_packet_client::on_error, this, _1, _2 ) );
 }

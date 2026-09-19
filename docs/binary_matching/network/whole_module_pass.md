@@ -449,3 +449,43 @@ LOG operands0x36/0x3D at0x125/0x207. TCP and UDP start_receiving raw records
 and locals also match. No network-owned warnings;31 external compiler warnings,
 236 linker warnings and two known Scaleform parser skips. The existing TCP
 frame discrepancy remains; attribution corrections do not resolve it.
+
+## TCP constructor model after8085c24c8
+
+Holista N01 removes m_header_buffer(0) and m_first_packet(NULL), preserving fields,
+offsets and sizes. Retail ctor stores neither; this absence alone does not prove
+the original initializer spelling. Independent whole-source access audit supports
+testing the model: m_header_buffer is written by async_read for exactly u8/u16
+bytes and read as the same type only after error/length guards. m_first_packet
+has no reads or writes except the removed initializer. Preserve subsequent source
+attribution with line resets so this experiment isolates constructor semantics.
+
+Prediction: remove the added stores and potentially recover retail's expanded
+packet-socket construction. Callback source spelling remains unchanged; neither
+the Boost assignment boundary nor the twelve-byte TCP receive frame residual is
+claimed solved. Full constructor-family and global regression checks required.
+
+Build dacf09d613a44785a3985e8480455589 succeeded in10m20s. The constructor
+improves66.02273->83.46591; packet-socket construction now expands and neither
+extra initialization store remains. Base333B versus retail301B: initializer
+prefix+6B, callback assignment+27B, epilogue-1B. The callback and TCP frame
+residuals remain open. No network-owned warnings;31 other compiler warnings,
+236 linker warnings and two known Scaleform parser skips.
+
+Global report:234 improvements,40 regressions to zero,0added/removed,
+153 separately classified fold-churn entries. All40 zero-score symbols remain
+public in both linked PDBs. Direct image inspection confirms37 previously-exact
+bodies still agree instruction-for-instruction after public-identity relocation
+and internal-branch normalization. Their per-unit comparison ownership was lost;
+the generated reports were not overwritten to suppress these findings.
+
+The other3 moved base COFF owners. Supplemental objdiff comparisons using their
+original target objects and current defining base objects recover:
+- stage_visibility deleting destructor:97.72727, unchanged, now stl/_alloc.h;
+- query_mount_arguments::operator=:96.525925 versus prior96.67407, now
+  fs/virtual_path_string.h;
+- login sign_up Boost storage3 copy constructor:84.73913 versus prior84.95652,
+  now _msvc_internal/boost and asio/detail/impl/win_iocp_io_service.hpp.
+The latter two small supplementary-score regressions remain explicitly open;
+do not call this a regression-free build or treat their zero primary scores as
+missing runtime functions. No engine changes were made to those consumers.

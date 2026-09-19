@@ -25,8 +25,8 @@ class tcp_packet_socket : private core::noncopyable {
 public:
 	inline								tcp_packet_socket		( Socket& socket, memory::base_allocator& packet_allocator ) :
 		m_packet_allocator	( packet_allocator ),
-		m_socket			( socket ),
-		m_header_buffer		( 0 )
+		m_socket			( socket )
+#line 30
 	{
 	}
 
