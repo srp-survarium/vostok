@@ -217,7 +217,8 @@ pub fn extract_rich_context(
         let symbols = Rc::new(build_symbol_maps(&mut pdb, &address_map)?);
 
         let mut entries: Vec<FunctionEntry> = Vec::new();
-        let mut source_cache: HashMap<String, Option<Vec<String>>> = HashMap::new();
+        let mut source_cache: HashMap<String, Option<HashMap<u32, Option<String>>>> =
+            HashMap::new();
 
         let dbi = pdb.debug_information()?;
         let mut modules = dbi.modules()?;
@@ -290,14 +291,14 @@ pub fn extract_rich_context(
                                         let source_lines =
                                             source_cache.entry(rel.clone()).or_insert_with(|| {
                                                 let path = root.join(rel.replace('\\', "/"));
-                                                std::fs::read_to_string(path).ok().map(|s| {
-                                                    s.lines().map(str::to_string).collect()
-                                                })
+                                                std::fs::read_to_string(path)
+                                                    .ok()
+                                                    .map(|s| logical_source_lines(&s, rel))
                                             });
                                         source_lines
                                             .as_ref()
                                             .and_then(|lines| {
-                                                lines.get((li.line_start as usize).wrapping_sub(1))
+                                                lines.get(&li.line_start).and_then(Option::as_ref)
                                             })
                                             .map(|s| strip_carcass_comment(s).to_string())
                                             .filter(|s| !s.is_empty())
@@ -544,6 +545,138 @@ fn push_local(
 fn strip_carcass_comment(line: &str) -> &str {
     let cut = line.find("// <").unwrap_or(line.len());
     line[..cut].trim_end()
+}
+
+/// Map literal line directives without pretending to run the preprocessor.
+/// Repeated logical locations are ambiguous, even when the text is identical.
+/// Macro-valued/conditional directives suppress attribution until a subsequent
+/// unconditional literal directive establishes it again.
+fn logical_source_lines(source: &str, file: &str) -> HashMap<u32, Option<String>> {
+    let mut result = HashMap::new();
+    let mut logical = Some(1u32);
+    let mut current_file = file.replace('\\', "/").to_lowercase();
+    let expected_file = current_file.clone();
+    let mut conditional_depth = 0u32;
+    let mut block_comment = false;
+    for line in source.lines() {
+        // Only recognize preprocessing tokens outside comments and literals.
+        let mut visible = String::new();
+        let mut chars = line.chars().peekable();
+        let mut quote = None;
+        while let Some(ch) = chars.next() {
+            if block_comment {
+                if ch == '*' && chars.peek() == Some(&'/') {
+                    chars.next();
+                    block_comment = false;
+                    visible.push(' ');
+                }
+            } else if let Some(delimiter) = quote {
+                visible.push(ch);
+                if ch == '\\' {
+                    if let Some(escaped) = chars.next() {
+                        visible.push(escaped);
+                    }
+                } else if ch == delimiter {
+                    quote = None;
+                }
+            } else if ch == '/' && chars.peek() == Some(&'*') {
+                chars.next();
+                block_comment = true;
+                visible.push(' ');
+            } else if ch == '/' && chars.peek() == Some(&'/') {
+                break;
+            } else {
+                visible.push(ch);
+                if ch == '"' || ch == '\'' {
+                    quote = Some(ch);
+                }
+            }
+        }
+        if let Some(directive) = visible.trim_start().strip_prefix('#') {
+            let directive = directive.trim_start();
+            let end = directive
+                .find(char::is_whitespace)
+                .unwrap_or(directive.len());
+            let (name, rest) = directive.split_at(end);
+            match name {
+                "if" | "ifdef" | "ifndef" => conditional_depth += 1,
+                "endif" => conditional_depth = conditional_depth.saturating_sub(1),
+                "line" => {
+                    let rest = rest.trim();
+                    let end = rest.find(char::is_whitespace).unwrap_or(rest.len());
+                    let (number, filename) = rest.split_at(end);
+                    logical = if conditional_depth == 0 {
+                        number.parse::<u32>().ok().filter(|n| *n > 0)
+                    } else {
+                        None
+                    };
+                    let filename = filename.trim();
+                    if !filename.is_empty() {
+                        if let Some(filename) =
+                            filename.strip_prefix('"').and_then(|s| s.strip_suffix('"'))
+                        {
+                            current_file = filename
+                                .replace("\\\\", "\\")
+                                .replace('\\', "/")
+                                .to_lowercase();
+                        } else {
+                            logical = None;
+                        }
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+        }
+        if let Some(number) = logical {
+            if current_file == expected_file || current_file.ends_with(&format!("/{expected_file}"))
+            {
+                result
+                    .entry(number)
+                    .and_modify(|entry| *entry = None)
+                    .or_insert_with(|| Some(line.to_string()));
+            }
+            logical = number.checked_add(1);
+        }
+    }
+    result
+}
+
+#[cfg(test)]
+mod source_line_tests {
+    use super::logical_source_lines;
+
+    #[test]
+    fn line_directive_applies_to_next_line_and_keeps_physical_prefix() {
+        let lines = logical_source_lines("before\n#line 43\nfunction\n{\nlog\n", "sample.cpp");
+        assert_eq!(lines[&1].as_deref(), Some("before"));
+        assert_eq!(lines[&43].as_deref(), Some("function"));
+        assert_eq!(lines[&45].as_deref(), Some("log"));
+        assert!(!lines.contains_key(&2));
+    }
+
+    #[test]
+    fn duplicate_locations_and_unknown_directives_do_not_guess() {
+        let lines = logical_source_lines(
+            "a\n#line 1\nb\n#line MACRO\nunknown\n#line 30\nknown",
+            "sample.cpp",
+        );
+        assert_eq!(lines[&1], None);
+        assert_eq!(lines[&30].as_deref(), Some("known"));
+        assert_eq!(lines.len(), 2);
+    }
+
+    #[test]
+    fn comments_conditional_pins_and_other_files_are_not_misattributed() {
+        let lines = logical_source_lines(
+            "/*\n#line 50\n*/\n#if FLAG\n#line 80\n#endif\nunknown\n#line 90 \"elsewhere.cpp\"\nother\n#line 100 \"sample.cpp\"\nknown",
+            "sample.cpp",
+        );
+        assert!(!lines.contains_key(&50));
+        assert!(!lines.contains_key(&80));
+        assert!(!lines.contains_key(&90));
+        assert_eq!(lines[&100].as_deref(), Some("known"));
+    }
 }
 
 /// Build RVA -> name maps for call/data target annotation. Module symbols

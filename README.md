@@ -192,6 +192,9 @@ flags whole-function `TOTAL SIZE` differences even when those statements agree,
 and reports `NO BODY STATEMENTS COMPARED` for an empty projection. A structure
 match alone does not certify initializer/frame bytes or byte equality.
 `OFFSET` diagnostics expose shifted body boundaries even when span sizes agree.
+Candidate source text honors literal `#line` mappings; ambiguous mappings omit
+text. Source-order comparison explicitly reports unpaired and ambiguous names
+as `declaration_order_coverage`, rather than hiding them behind subset matches.
 
 To investigate linker/PDB ordering without rebuilding game sources, run the
 fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.

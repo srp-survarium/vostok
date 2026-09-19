@@ -17,6 +17,12 @@ signature disagrees.
 Aligned statements also report `OFFSET` when their function-relative boundaries
 differ, including cases with identical body-span sizes and total function size.
 This is a machine-boundary diagnostic, not proof of different source ordering.
+Candidate statement text follows literal `#line` mappings instead of indexing
+physical file lines. Reused logical locations are ambiguous and have no attached
+text. Macro-valued or conditional line directives suppress attribution until an
+unconditional literal directive restores it; this lookup does not preprocess C++.
+Filename redirects attach text only when they identify the indexed source file.
+Re-index existing candidate PDB databases to refresh previously captured text.
 
 ```text
 vostok-pdb index pdb --pdb FILE --exe FILE --database DB --side target
@@ -88,6 +94,12 @@ class variants, field offsets/access, method access/static/virtual/const status,
 and relative declaration order. Candidate-source comparison treats facts that
 CodeView cannot express reliably (notably mutable and pure-virtual source
 syntax) as `UNOBSERVABLE`, never as a guessed match.
+Source declaration-order checks report excluded names separately as
+`declaration_order_coverage`: unpaired names are `UNOBSERVABLE`, and multiple
+positions (overloads or class variants) are `AMBIGUOUS`. Owners with fewer than
+two comparable names cannot receive an order `MATCH`. A match of the remaining
+subset does not certify the excluded declarations. Raw overload serialization
+order is not itself proof of original source declaration order.
 `divergence` supplies the broader normalized enum, class, source-definition
 order, constant, and out-of-line-presence views; `--headers` and `--sources`
 restrict its channels, while the default runs both.

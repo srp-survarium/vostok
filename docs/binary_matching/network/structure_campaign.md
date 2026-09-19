@@ -1035,6 +1035,33 @@ before interpreting a clean source-order summary as module-wide closure.
 
 ## Reproduction
 
+### Measured follow-up: reliable source text and order coverage
+
+The source-order comparer now exposes excluded names and owners with fewer than
+two comparable declarations. The real scoped query reports 46 subset matches,
+62 unobservable owner comparisons, 52 ambiguous-position names and 236 unpaired
+names. These diagnostics retain uncertainty rather than inventing source errors.
+
+Candidate PDB source-text lookup now follows literal #line directives. Previously
+on_packet_received's logical line44 displayed the physical line44 assignment,
+not the opening brace. Duplicate logical locations and unsupported conditional
+or macro-valued directives withhold text. Re-indexing is required to refresh
+existing databases; build a87cfce055af4209a71b715a19db09a8 refreshed them. The Rust suite passed
+101 tests before formatting, including six new coverage/mapping regressions.
+
+That full build succeeded in 7m48s, with no compilation needed and no report
+changes. The regenerated callback record now displays the opening brace at
+logical44, switch at45 and log at56 correctly. EGL warnings and the two known
+Scaleform extraction skips remain; no compiler/linker warnings were emitted.
+
+The two current QUANTITY rows were rechecked against raw retail records:
+send_queued_packets has one whole-function line54/53B record; packet<tcp_packet>
+reallocate has one line46/56B record. Base exposes two and one projected interior
+statements respectively. The retail operations remain present in source and the
+bytes score100. Do not delete the guard or wrapper call to force an empty body
+projection. The attribution differences remain open, not silently classified
+as complete because the byte score is exact.
+
 ```sh
 vostok-pdb compare pdb --target binaries/pdb/target/evidence.sqlite \
   --base binaries/pdb/base/evidence.sqlite --file vostok/network --json

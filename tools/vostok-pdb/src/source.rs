@@ -764,9 +764,31 @@ fn compare_declaration_order(target: &[SourceFact], candidate: &[SourceFact]) ->
     let candidate = positions(candidate);
     let mut findings = Vec::new();
     for (owner, target_members) in target {
-        let Some(candidate_members) = candidate.get(&owner) else {
-            continue;
-        };
+        let empty = BTreeMap::new();
+        let candidate_members = candidate.get(&owner).unwrap_or(&empty);
+        for (subject, target_order) in &target_members {
+            let candidate_order = candidate_members.get(subject);
+            let (verdict, detail) = match candidate_order {
+                None => (
+                    Verdict::Unobservable,
+                    "no paired candidate declaration name; source order was not compared (including unmaterialized template specializations)".into(),
+                ),
+                Some(candidate_order) if target_order.len() != 1 || candidate_order.len() != 1 => (
+                    Verdict::Ambiguous,
+                    format!(
+                        "target positions {target_order:?}, candidate positions {candidate_order:?}; overloads or class variants cannot be ordered by name alone; inspect signature-paired raw topology"
+                    ),
+                ),
+                Some(_) => continue,
+            };
+            findings.push(Finding {
+                category: "declaration_order_coverage".into(),
+                subject: subject.clone(),
+                verdict,
+                origin: Origin::Observed,
+                detail,
+            });
+        }
         let common: Vec<_> = target_members
             .iter()
             .filter_map(|(subject, target_order)| {
@@ -781,6 +803,16 @@ fn compare_declaration_order(target: &[SourceFact], candidate: &[SourceFact]) ->
             })
             .collect();
         if common.len() < 2 {
+            findings.push(Finding {
+                category: "declaration_order".into(),
+                subject: owner,
+                verdict: Verdict::Unobservable,
+                origin: Origin::Observed,
+                detail: format!(
+                    "{} common uniquely-positioned declarations; at least two are required to compare relative order",
+                    common.len()
+                ),
+            });
             continue;
         }
         let mut inversions = Vec::new();
@@ -803,7 +835,7 @@ fn compare_declaration_order(target: &[SourceFact], candidate: &[SourceFact]) ->
             },
             origin: Origin::Observed,
             detail: if inversions.is_empty() {
-                format!("{} common uniquely-positioned declarations", common.len())
+                format!("{} common uniquely-positioned declarations; excluded names are reported separately as declaration_order_coverage", common.len())
             } else {
                 format!(
                     "{} relative-order inversions: {}",
@@ -898,5 +930,60 @@ mod tests {
         assert_eq!(verdict, Verdict::Mismatch);
         assert!(detail.contains("access"));
         assert!(detail.contains("static"));
+    }
+
+    fn ordered(subject: &str, order: u64) -> SourceFact {
+        let mut value = fact("function", json!({"order":order}));
+        value.subject = subject.into();
+        value
+    }
+
+    #[test]
+    fn order_coverage_does_not_hide_overloads_behind_matching_fields() {
+        let target = vec![
+            ordered("sample::f", 0),
+            ordered("sample::f", 1),
+            ordered("sample::a", 2),
+            ordered("sample::b", 3),
+        ];
+        let findings = compare_declaration_order(&target, &target);
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.category == "declaration_order_coverage"
+                    && f.subject == "sample::f"
+                    && f.verdict == Verdict::Ambiguous)
+        );
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.category == "declaration_order" && f.verdict == Verdict::Match)
+        );
+    }
+
+    #[test]
+    fn unpaired_specialization_order_is_not_silently_omitted() {
+        let target = vec![ordered("sample<unsigned short>::serialize", 0)];
+        let candidate = vec![ordered("sample<T>::serialize", 0)];
+        let findings = compare_declaration_order(&target, &candidate);
+        assert_eq!(findings.len(), 2);
+        assert!(findings.iter().all(|f| f.verdict == Verdict::Unobservable));
+        assert!(
+            findings
+                .iter()
+                .any(|f| f.category == "declaration_order_coverage")
+        );
+        assert!(findings.iter().any(|f| f.category == "declaration_order"));
+    }
+
+    #[test]
+    fn order_coverage_preserves_real_inversion_and_rejects_singletons() {
+        let target = vec![ordered("sample::a", 0), ordered("sample::b", 1)];
+        let candidate = vec![ordered("sample::a", 1), ordered("sample::b", 0)];
+        let findings = compare_declaration_order(&target, &candidate);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].verdict, Verdict::Mismatch);
+        let findings = compare_declaration_order(&target[..1], &target[..1]);
+        assert_eq!(findings[0].verdict, Verdict::Unobservable);
     }
 }
