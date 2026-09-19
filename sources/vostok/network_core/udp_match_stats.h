@@ -89,8 +89,10 @@ struct udp_match_stats {
 	inline			udp_match_stats	( ) :
 		max_local_sequence_difference	( 0 ),
 		unacknowledged_packets			( 0 )
+#line 96
 	{
 	}
+#line 94
 
 	inline	void	dump			( pcstr const title ) const
 	{

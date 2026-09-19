@@ -23,12 +23,14 @@ namespace network {
 	m_network_flow_emulator	( options ? NEW( network_core::udp_network_flow_emulator )( *g_allocator, m_packets_allocator, *options ) : 0 ),
 	m_client				( io_service, m_packets_allocator, packets_orderer, m_network_flow_emulator ),
 	m_state					( waiting_for_permission )
+#line 33
 {
 	m_client.set_on_packet_received	( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
 	m_client.set_on_disconnect		( boost::bind( &match_client_impl::on_disconnect, this, _1 ) );
 }
 
 match_client_impl::~match_client_impl( )
+#line 39
 {
 	VOSTOK_DELETE_IMPL		( g_allocator, m_network_flow_emulator );
 }
@@ -70,6 +72,7 @@ void match_client_impl::connect(
 	network_core::udp_match_packet const* const	packet,
 	boost::function< void( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) > const&	on_connected
 )
+#line 74
 {
 	m_on_connected			= on_connected;
 	m_client.connect		( host, port, packet ? clone_packet( *packet ) : 0, current_time_in_ms );
@@ -81,6 +84,7 @@ void match_client_impl::connect(
 void match_client_impl::set_on_packet_received(
 	boost::function< void ( u8, network_core::packet_reader& ) > const&	on_packet_received
 )
+#line 80
 {
 	m_on_packet_received	= on_packet_received;
 	if ( m_state == handshaked )
@@ -88,6 +92,7 @@ void match_client_impl::set_on_packet_received(
 }
 
 network_core::udp_match_packet* match_client_impl::clone_packet( network_core::udp_match_packet const& packet )
+#line 87
 {
 	network_core::udp_match_packet* const result	= network_core::new_udp_match_packet( m_packets_allocator );
 	network_core::packet_reader	reader( packet );
@@ -104,6 +109,7 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 // register/slot renames inside the set_on_packet_received bind expansion - an
 // LTCG artifact, not source-steerable.
 void match_client_impl::disconnect( )
+#line 100
 {
 	m_state					= waiting_for_permission;
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );
@@ -116,6 +122,7 @@ void match_client_impl::disconnect( )
 void match_client_impl::on_disconnect(
 	const network_core::disconnect_event_types_enum	disconnect_type
 )
+#line 107
 {
 	m_state					= waiting_for_permission;
 	m_client.set_on_packet_received( boost::bind( &match_client_impl::on_packet_received, this, _1, _2 ) );

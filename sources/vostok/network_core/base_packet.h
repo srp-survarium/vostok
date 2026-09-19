@@ -10,13 +10,17 @@ namespace network_core {
 
 class base_packet {
 public:
+#line 15
 	inline				base_packet	( ) : m_buffer( NULL ), m_buffer_size( 0 ) { }
 	inline				base_packet	( pbyte const buffer, const u32 buffer_size ) : m_buffer( buffer ), m_buffer_size( buffer_size ) { }
 
+#line 21
 	inline	pcbyte		buffer		( ) const { return m_buffer; }
 	inline	pbyte		buffer		( ) { return m_buffer; }
 
+#line 23
 	inline	u32			buffer_size	( ) const { return m_buffer_size; }
+#line 20
 
 protected:
 	/* 0x0000 */	pbyte		m_buffer;

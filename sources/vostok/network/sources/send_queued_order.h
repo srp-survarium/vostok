@@ -29,12 +29,14 @@ public:
 	}
 
 	virtual			~send_queued_order	( )
+#line 36
 	{
 		if ( m_copied_stats >= m_target_stats )
 			m_target_stats	= m_copied_stats;
 	}
 
 	virtual	void	execute				( )
+#line 42
 	{
 		m_functor			( );
 

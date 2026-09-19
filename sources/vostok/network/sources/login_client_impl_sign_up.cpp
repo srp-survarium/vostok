@@ -16,8 +16,8 @@ void login_client_impl::on_sign_up_answer_received(
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred
 	)
+#line 20
 {
-
 	if ( error_code ) {
 		m_client_state		= signed_out;
 		close_connection	( false );
@@ -49,6 +49,7 @@ void login_client_impl::on_sign_up_info_written(
 		sign_up_info const&					sign_up_info,
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred )
+#line 50
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_up ) );
 
@@ -89,6 +90,7 @@ void login_client_impl::sign_up_on_handshaked(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
 		const handshaking_error_types_enum	handshaking_result )
+#line 88
 {
 	if ( handshaking_result ) {
 		m_client_state		= signed_out;
@@ -135,6 +137,7 @@ void login_client_impl::on_sign_up_account_answer_received(
 		sign_up_info const&					sign_up_info,
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred )
+#line 131
 {
 	if ( error_code ) {
 		m_client_state		= signed_out;
@@ -194,6 +197,7 @@ void login_client_impl::on_sign_up_written(
 		sign_up_info const&					sign_up_info,
 		boost::system::error_code const&	error_code,
 		const u32							bytes_transferred )
+#line 188
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_up ) );
 
@@ -234,6 +238,7 @@ void login_client_impl::sign_up_on_connected(
 		const connection_error_types_enum	connection_result,
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info )
+#line 226
 {
 	if ( connection_result ) {
 		m_client_state		= signed_out;
@@ -271,6 +276,7 @@ void login_client_impl::sign_up_on_connected(
 // the establish_connection boundary (the bind carries the function5 copy + boost::ref slot);
 // global boost-header knob (see note above).
 void login_client_impl::sign_up( pcstr host, u16 port, sign_up_info const& sign_up_info, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const& callback )
+#line 261
 {
 	m_host_port				= port;
 	strncpy_s				( m_host, sizeof( m_host ), host, sizeof( m_host ) - 1 );

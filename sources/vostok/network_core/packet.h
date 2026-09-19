@@ -13,10 +13,9 @@ class packet : public base_packet {
 public:
 	inline				packet			( );
 
-	inline	u32			allocated_size	( ) const
-	{
-		return implementation( ).allocated_size( );
-	}
+#line 19
+	inline	u32			allocated_size	( ) const { return implementation( ).allocated_size( ); }
+#line 20
 
 	inline	void		clear			( );
 
@@ -44,12 +43,9 @@ private:
 	inline	T const&	implementation	( ) const;
 	inline	T&			implementation	( );
 
-	// target mangles AAE (private) - ?reallocate@?$packet@Vtcp_packet..@@AAEXI@Z; only
-	// reserve/resize call it, so the original kept it private.
-	inline	void		reallocate		( u32 new_size )
-	{
-		implementation( ).reallocate( new_size );
-	}
+#line 46
+	inline	void		reallocate		( u32 new_size ) { implementation( ).reallocate( new_size ); }
+#line 53
 }; // class packet
 
 } // namespace network_core

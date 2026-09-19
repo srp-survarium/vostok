@@ -185,10 +185,12 @@ private:
 		inline			channel	( ) :
 			received_order_id	( 0xFFFF ),
 			sent_order_id		( 0 )
-		{
-		}
+#line 153
+		{ }
+#line 190
 
 		inline	void	reset	( )
+#line 155
 		{
 			ASSERT( UNKNOWN_EXPRESSION_T( packets.empty( ) ) );
 			packets.clear		( );

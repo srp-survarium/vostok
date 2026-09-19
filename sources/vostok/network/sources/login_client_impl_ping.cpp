@@ -33,6 +33,7 @@ void login_client_impl::on_ping_sent(
 #line 31
 
 void login_client_impl::ping( const u32 retry_count )
+#line 34
 {
 	if ( m_client_state != signed_in )
 		return;

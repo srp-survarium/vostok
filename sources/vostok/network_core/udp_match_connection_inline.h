@@ -11,6 +11,7 @@ inline void udp_match_connection::construct_packet(
 	udp_match_packet&				packet,
 	u8								message_type
 )
+#line 21
 {
 	packet.message_type				= message_type;
 	packet.append					( message_type );
@@ -22,6 +23,7 @@ inline void udp_match_connection::construct_packet(
 
 	if ( packet.is_ordered )
 		packet.append				( u16( 0xFFFF ) );
+#line 36
 }
 
 template < typename Predicate >

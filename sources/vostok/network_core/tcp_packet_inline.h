@@ -9,6 +9,7 @@ namespace network_core {
 inline tcp_packet::tcp_packet( memory::base_allocator& allocator ) :
 	m_allocator			( allocator ),
 	m_allocated_size	( 0 )
+#line 16
 {
 }
 

@@ -19,6 +19,7 @@ memory::base_allocator*	g_allocator	= NULL;
 typedef boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>	query_type;
 
 void memory_allocator( memory::base_allocator& allocator )
+#line 17
 {
 	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call empty_stub`, delinker-misnamed finalize_impl)
 	g_allocator = &allocator;
@@ -47,7 +48,7 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> > get_ip_addr
 }
 #line 44
 
-bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port )
+bool get_connection_info_from_string( pcstr buffer, char* dest_host, u16& dest_port )
 #line 156
 {
 	pcstr	delim	= strchr( buffer, ':' );

@@ -81,13 +81,14 @@ void udp_match_connection::handle_send(
 	boost::system::error_code const&	error_code,
 	const u32							bytes_transferred
 )
+// sushi@TODO: Verify the assertion macro spelling; ASSERT_U references the erase-result local.
 #line 98
 {
 	--m_pending_operations_count;
 
 	const bool	success	= m_outgoing_packets.erase( packet );
-	ASSERT				( UNKNOWN_EXPRESSION_T( success ) );
-	VOSTOK_UNREFERENCED_PARAMETER( success ); // sushi@TODO: The retail line gap permits, but does not identify, this macro.
+	ASSERT_U			( UNKNOWN_EXPRESSION_T( success ) );
+
 	if ( !packet->is_reliable )
 		delete_udp_match_packet	( m_packets_allocator, packet );
 

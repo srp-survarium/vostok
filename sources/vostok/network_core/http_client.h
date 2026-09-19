@@ -28,7 +28,9 @@ public:
 
 			void					get						( pcstr server, pcstr path, boost::function< void() > const& callback );
 
+#line 22
 	inline	void					set_on_error			( on_error_type const& callback ) { m_on_error = callback; }
+#line 32
 
 	inline	std::string const&		result_content			( ) const { return m_result_content; }
 

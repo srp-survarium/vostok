@@ -36,9 +36,6 @@ private:
 	/* 0x0004 */	const u32	m_time_in_ms;
 }; // class delayed_packets_predicate
 
-// sushi@review: the size verifier swept only headers, so this .cpp-local class
-// (and its ctor) was missed. Its size is 0x8 (ref + const u32). The ctor + operator()
-// emit no standalone symbol until tick's remove_if instantiates them (see STATE below).
 STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 
 namespace vostok {
@@ -204,6 +201,7 @@ void udp_network_flow_emulator::on_packet_received(
 	const u32		time_in_ms,
 	const u32		unacknowledged_packets_count
 )
+#line 164
 {
 	if ( m_lost_packets_random.random_f( 1.f ) > m_lost_packet_probability )
 		add_packet( buffer, buffer_size, endpoint, time_in_ms, unacknowledged_packets_count );

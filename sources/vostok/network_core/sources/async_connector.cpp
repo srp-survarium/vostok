@@ -10,6 +10,7 @@ async_connector::async_connector( ) :
 	m_host				( ),
 	m_socket			( NULL ),
 	m_connection_state	( host_name_is_unresolved )
+#line 16
 {
 }
 
@@ -97,8 +98,8 @@ void async_connector::on_resolved(
 
 void async_connector::connect(
 	boost::asio::ip::tcp::socket&		socket,
-	pcstr								host,
-	u16									host_port,
+	pcstr const						host,
+	u16 const							host_port,
 	boost::function< void() > const&	on_connected,
 	boost::function< void( enum client_error_codes_enum, boost::system::error_code ) > const&	on_error
 )

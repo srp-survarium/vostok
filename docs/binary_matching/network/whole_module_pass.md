@@ -558,3 +558,44 @@ symbols or fold-churn entries; consumer scores are unchanged. No network-owned
 compiler warnings; 31 elsewhere, 236 linker warnings and two known Scaleform
 parser skips remain. Prior batches' open supplemental regressions remain open.
 This closes the constructor's initialization discrepancy, not the modules.
+
+## Pending packet wrapper structure batch
+
+Applied the existing allocated_size/reallocate single-expression forwarding
+wrappers as one-line inline definitions at target lines19/46. Target TCP
+reallocate has one56B record; measured base had1/54/1B records despite identical
+bytes. The expression, helper calls, access and declaration order are unchanged.
+This is an unbuilt source-layout hypothesis, not evidence of recovered behavior
+or exact original spelling. Verify raw records and packet consumers in the next
+substantive batch build. Removed the inaccurate comment that only reserve/resize
+call reallocate: append also does.
+
+The other remaining QUANTITY row, match_client_impl::send_queued_packets, is
+not missing its guard: target assembly tests disconnection and jumps over the
+send call. Preserve that behavior despite its single whole-function line record.
+Do not claim semantic closure by deleting the guard or treating the body
+projection's zero statements as an empty retail function.
+
+Integrated the previously prepared source-location corrections together: world
+empty helper/destructor and subsequent definitions, flow on_packet_received,
+core HTTP close_connection, both TCP packet-buffer helpers, and stats constructor.
+These preserve operations, qualifiers, the intentional predicate copy bug and
+all live review questions. They are unbuilt attribution corrections, not claimed
+solutions to callback expansion, stack-layout or other semantic residuals.
+The flow class's obsolete no-standalone/STATE comment was removed; its size
+assertion and class remain. Current qualifier changes are separately tracked in
+parameter_differences.tsv; later measurements must cover the whole combined tree.
+
+Integrated TCP wrapper's prepared definition anchors across its20 source
+procedures, targeting15 observed attribution drifts. Removed stale blanket
+STRUCTURE MATCH/non-steerability commentary while preserving concrete allocator
+ownership explanations. All C++ tokens are identical to HEAD after excluding
+comments and#line directives: specifically the rejected enum/class qualifier
+removals are not included. Prior size differences in construction, destruction,
+client creation and callback assignment remain open; this batch is unbuilt.
+
+Added the prepared network entry-point global#line13 anchor, correcting the
+six procedures' uniform seven-line shift. Existing sign_up linker retention
+pragma is unchanged and remains an open source-fidelity question; neither a
+new runtime caller nor removal of the retained retail function was fabricated.
+The combined batch is ready for one full structure/consumer/regression build.

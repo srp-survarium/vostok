@@ -33,8 +33,8 @@ http_client::http_client( boost::asio::io_service& io_service ) :
 	m_on_content_downloaded	( ),
 	m_on_error				( )
 #line 28
-{
-}
+{ }
+#line 30
 
 void http_client::get( pcstr server, pcstr path, boost::function<void()> const& callback )
 #line 31
@@ -190,6 +190,7 @@ bool http_client::add_result_content( )
 #line 161
 
 void http_client::close_connection( )
+#line 173
 {
 	if ( m_socket.is_open( ) )
 		m_socket.close( );

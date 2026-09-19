@@ -12,6 +12,7 @@
 
 using vostok::network::network_world;
 
+#line 16
 static void empty_function ( ) { }
 
 network_world::network_world					( vostok::network::engine& engine, vostok::memory::base_allocator& orders_allocator ) :
@@ -25,11 +26,12 @@ network_world::network_world					( vostok::network::engine& engine, vostok::memo
 
 // claude@NOTE: the target never deletes m_io_service - a faithful leak, do not "fix"
 network_world::~network_world					( )
+#line 28
 {
 	m_channel.responses.owner_finalize	( );
 #line 31
 }
-#line 31
+#line 32
 
 void network_world::initialize					( )
 {
@@ -52,12 +54,12 @@ void network_world::tick						( bool single_threaded )
 		m_io_service->poll				( );
 }
 
-void network_world::add_order					( vostok::network::order* order )
+void network_world::add_order					( vostok::network::order* const order )
 {
 	m_channel.orders.owner_push_back	( order );
 }
 
-void network_world::add_response				( vostok::network::response* response )
+void network_world::add_response				( vostok::network::response* const response )
 {
 	m_channel.responses.owner_push_back	( response );
 }
