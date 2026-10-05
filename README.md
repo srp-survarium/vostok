@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,612 / 13,014 functions exact (81.54%) &middot; 11,198 / 13,014 functions exact-max (86.05%) &middot; 93.70% fuzzy &middot; 95.26% fuzzy-max.**
+**Overall: 10,606 / 13,014 functions exact (81.50%) &middot; 11,198 / 13,014 functions exact-max (86.05%) &middot; 93.67% fuzzy &middot; 95.27% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -19,7 +19,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `render`        |   351 | 2,037 / 2,734 (74.5%) | 2,257 / 2,734 (82.6%) |  91.5% |     93.6% |
 | `game`          |   141 |   994 / 1,528 (65.1%) | 1,125 / 1,528 (73.6%) |  85.7% |     88.9% |
 | `core`          |   136 | 1,177 / 1,325 (88.8%) | 1,264 / 1,325 (95.4%) |  97.2% |     98.6% |
-| `vostok`        |   112 | 1,122 / 1,250 (89.8%) | 1,144 / 1,250 (91.5%) |  97.4% |     98.2% |
+| `vostok`        |   112 | 1,119 / 1,250 (89.5%) | 1,144 / 1,250 (91.5%) |  96.9% |     98.2% |
 | `game_core`     |   189 |   847 / 1,181 (71.7%) |   876 / 1,181 (74.2%) |  94.6% |     96.7% |
 | `animation`     |   102 |     590 / 727 (81.2%) |     612 / 727 (84.2%) |  92.6% |     93.2% |
 | `ai`            |   124 |     647 / 691 (93.6%) |     659 / 691 (95.4%) |  99.3% |     99.6% |
@@ -27,13 +27,13 @@ _All figures come from the ledger over every target function (paired plus inline
 | `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) |  98.4% |     98.7% |
 | `scaleform`     |    47 |     419 / 454 (92.3%) |     424 / 454 (93.4%) |  96.7% |     96.9% |
 | `particle`      |    25 |     390 / 400 (97.5%) |     397 / 400 (99.2%) |  99.7% |    100.0% |
-| `vfs`           |    71 |     325 / 390 (83.3%) |     325 / 390 (83.3%) |  98.3% |     98.3% |
+| `vfs`           |    71 |     325 / 390 (83.3%) |     325 / 390 (83.3%) |  98.4% |     98.5% |
 | `ui`            |    27 |     221 / 227 (97.4%) |     222 / 227 (97.8%) |  99.5% |     99.9% |
 | `physics`       |    14 |     137 / 198 (69.2%) |     156 / 198 (78.8%) |  88.5% |     93.4% |
 | `fs`            |    25 |     152 / 165 (92.1%) |     154 / 165 (93.3%) |  98.8% |     99.2% |
 | `engine`        |    22 |     154 / 162 (95.1%) |     159 / 162 (98.1%) |  99.4% |     99.9% |
 | `network`       |    25 |      90 / 159 (56.6%) |      93 / 159 (58.5%) |  90.6% |     91.3% |
-| `network_core`  |    22 |      94 / 127 (74.0%) |      96 / 127 (75.6%) |  97.8% |     97.8% |
+| `network_core`  |    22 |      91 / 127 (71.7%) |      96 / 127 (75.6%) |  97.3% |     97.8% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
@@ -48,11 +48,11 @@ _Updated 2026-10-05 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,907 / 71,536,291) &middot; matched projected copies: 66.10% (17,437,139 / 26,379,879).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,090,283 / 71,536,291) &middot; matched projected copies: 66.11% (17,444,075 / 26,385,735).**
 
-_The projection has 15,041 paired copies across 1,701 units and 31,090 unresolved blockers. Strict relocation comparison exposes 1,478 otherwise-exact functions (578,206 code bytes) with referent debt._
+_The projection has 15,048 paired copies across 1,701 units and 31,083 unresolved blockers. Strict relocation comparison exposes 1,461 otherwise-exact functions (569,505 code bytes) with referent debt._
 
-_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11275 / 12792 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11276 / 12793 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-05._
 <!-- data-match:end -->
