@@ -50,9 +50,7 @@ protected:
 public:
 	virtual	void		initialize						( ) override { }
 	virtual	void		execute							( ) override { m_animation_playback_state->reset( ); }
-	virtual	void		finalize						( ) override {
-		ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
-	}
+	virtual	void		finalize						( ) override { ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( ); }
 			animation::mixing::expression
 					weapon_and_hands_expression			(
 						mutable_buffer&							buffer,

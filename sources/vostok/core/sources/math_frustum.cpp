@@ -87,18 +87,11 @@ bool vostok::math::get_frustum_vertices( frustum const& f, float3 (&vertices)[8]
 
 	for ( u32 i = 0; i < 8; ++i )
 	{
-		float3 b(
-			-f.planes( )[plane_itersections[i * 3 + 0]].plane.d,
+		float3 b( -f.planes( )[plane_itersections[i * 3 + 0]].plane.d,
 			-f.planes( )[plane_itersections[i * 3 + 1]].plane.d,
 			-f.planes( )[plane_itersections[i * 3 + 2]].plane.d
 		);
-		if ( !try_solve_linear_equations_system(
-			f.planes( )[plane_itersections[i * 3 + 0]].plane.normal,
-			f.planes( )[plane_itersections[i * 3 + 1]].plane.normal,
-			f.planes( )[plane_itersections[i * 3 + 2]].plane.normal,
-			b,
-			vertices[i]
-		) )
+		if ( !try_solve_linear_equations_system( f.planes( )[plane_itersections[i * 3 + 0]].plane.normal, f.planes( )[plane_itersections[i * 3 + 1]].plane.normal, f.planes( )[plane_itersections[i * 3 + 2]].plane.normal, b, vertices[i] ) )
 			return false;
 	}
 	return true;

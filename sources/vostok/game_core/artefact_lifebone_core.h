@@ -55,17 +55,7 @@ private:
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
-												) override {
-													VOSTOK_UNREFERENCED_PARAMETERS(
-														user_skeleton,
-														user_matrices,
-														user_matrices_count,
-														current_time_in_ms,
-														character_head_transform,
-														character_transform,
-														& animation_player
-													);
-												}
+																) override { VOSTOK_UNREFERENCED_PARAMETERS( user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, & animation_player ); }
 
 	virtual	void								serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize					( network_core::packet_reader& arg_0 ) override { /* no source */ }
