@@ -49,7 +49,8 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_animation_playback_state->reset( );
 	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
 }
 

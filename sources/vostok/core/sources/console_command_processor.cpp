@@ -195,10 +195,10 @@ void save( pcstr name, command_type const command_type, memory::base_allocator& 
 			break;
 		}
 		case command_type_user_specific : {
-			save		( name ? name : "user.cfg", core::user_data_directory( ), command_type_user_specific, a );
+			save		( "user.cfg", core::user_data_directory( ), command_type_user_specific, a );
 			break;
 		}
-		default : NODEFAULT();
+		default : break;
 	}
 }
 

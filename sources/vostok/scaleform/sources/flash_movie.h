@@ -64,6 +64,12 @@ struct flash_movie {
 			m_last_keyb_hold_time	( 0 ),
 			m_priority				( 0 )
 	{}
+	inline			~flash_movie			( )
+	{
+		m_movie_def	= NULL;
+		m_movie		= NULL;
+		m_handle	= NULL;
+	}
 			void	SetViewport			( u32 arg_0, u32 arg_1 );
 
 			void	Advance				( const float arg_0, const u32 arg_1 );

@@ -52,19 +52,16 @@ typename HASH_MULTISET::iterator
 		return *this; // end
 
 	m_value			= get_next_of_object(m_value);
+	if ( m_value )
+		return *this;
 
-	if ( !m_value )
-	{
-		Value ** const begin	= m_container->m_buffer;
-		Value ** it			= begin + m_index + 1;
-		Value ** const end	= begin + SizePolicy::fixed_size;
-		while ( !*it && it != end )
-			++it;
+	Value ** const begin	= m_container->m_buffer;
+	Value ** const end	= begin + SizePolicy::fixed_size;
+	Value ** it			= begin + m_index + 1;
+	for ( ; !*it && it != end; ++it ) ;
 
-		m_index			= int( it - begin );
-		m_value			= it != end ? *it : NULL;
-	}
-
+	m_index			= int( it - begin );
+	m_value			= it != end ? *it : NULL;
 	return *this;
 }
 

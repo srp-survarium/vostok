@@ -208,9 +208,9 @@ void bullet_physics_world::debug_draw_world( )
 		btCollisionObject* obj = objects[ i ];
 
 		btVector3 object_colors[3];
-		object_colors[0] = btVector3( 0.3f, 0, 0.3f );
-		object_colors[1] = btVector3( 0.3f, 0.3f, 0 );
-		object_colors[2] = btVector3( 0, 0.3f, 0.3f );
+		object_colors[0].setValue( 0.3f, 0, 0.3f );
+		object_colors[1].setValue( 0.3f, 0.3f, 0 );
+		object_colors[2].setValue( 0, 0.3f, 0.3f );
 
 		s16 group = obj->getBroadphaseHandle( )->m_collisionFilterGroup;
 		int color_idx = -1;
@@ -220,7 +220,8 @@ void bullet_physics_world::debug_draw_world( )
 			color_idx = 1;
 		if ( s_debug_draw_sensor && ( group & 0x81 ) )
 			color_idx = 2;
-		else if ( color_idx == -1 )
+
+		if ( color_idx == -1 )
 			continue;
 
 		m_dynamicsWorld->debugDrawObject( obj->getWorldTransform( ), obj->getCollisionShape( ), object_colors[ color_idx ] );
@@ -339,7 +340,9 @@ closest_ray_result bullet_physics_world::ray_test(
 	btVector3 to = from_vostok( ray_from + ray_dir * ray_length );
 
 	closest_ray_result_callback cb( from, to );
-	cb.m_collisionFilterGroup = filter_group; cb.m_collisionFilterMask = filter_mask; cb.m_flags |= 1 << 1;
+	cb.m_flags |= 1 << 1;
+	cb.m_collisionFilterGroup = filter_group;
+	cb.m_collisionFilterMask = filter_mask;
 
 	m_dynamicsWorld->rayTest( from, to, cb );
 

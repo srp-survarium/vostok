@@ -199,14 +199,7 @@ void bullet_character_controller::player_step( float dt )
 
 	m_has_updates = true;
 	m_was_on_ground = on_ground( );
-
-	if ( m_jumping )
-		m_vertical_velocity = m_walk_vector.y( ) / dt;
-	else
-	{
-		float fall_speed = m_vertical_velocity - m_gravity * dt;
-		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
-	}
+	m_vertical_velocity = m_jumping ? m_walk_vector.y( ) / dt : math::clamp_r( m_vertical_velocity - m_gravity * dt, -m_max_fall_speed, m_jump_speed );
 
 	btVector3 step_up_correction;
 	step_up_correction.setZero( );
@@ -239,7 +232,8 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = math::abs( m_shape_offset.y( ) ); btManifoldArray manifold_array;
+	btManifoldArray manifold_array;
+	float shape_y = math::abs( m_shape_offset.y( ) );
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{
@@ -375,7 +369,8 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 	BT_PROFILE("step_down");
 
 	btTransform start;
-	start.setIdentity( );	start.setOrigin( m_current_pos );
+	start.setIdentity( );
+	start.setOrigin( m_current_pos );
 
 	float step_height = m_vertical_velocity < 0.f ? -m_vertical_velocity * dt : 0.f;
 	if ( s_step_height > step_height && m_was_on_ground )
@@ -488,21 +483,19 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;
 	m_in_crouch = crouch;
-    float shape_y;
-    if ( crouch )
-    {
-    	m_current_shape_dim = m_crouch_shape_dim;
+	if ( crouch )
+	{
+		m_current_shape_dim = m_crouch_shape_dim;
 		setup_shape_dim( m_current_shape_dim );
-        shape_y = m_crouch_shape_dim.y;
-    }
-    else
-    {
-        m_current_shape_dim = m_stand_shape_dim;
+		m_shape_offset.setValue( 0.f, m_crouch_shape_dim.y * 0.5f, 0.f );
+	}
+	else
+	{
+		m_current_shape_dim = m_stand_shape_dim;
 		setup_shape_dim( m_current_shape_dim );
-        shape_y = m_stand_shape_dim.y;
-    }
-	m_shape_offset.setZero( );
-	m_shape_offset.setY( shape_y * 0.5f );
+		m_shape_offset.setValue( 0.f, m_stand_shape_dim.y * 0.5f, 0.f );
+	}
+
 
 	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( );
 	orign -= prev_shape_offset - m_shape_offset;

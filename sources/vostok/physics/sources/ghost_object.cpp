@@ -15,7 +15,7 @@ bt_ghost_object::bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGho
 	m_shape			( shape ),
 	m_bt_object		( obj )
 {
-	obj->setUserPointer( this );
+	m_bt_object->setUserPointer( this );
 }
 
 bt_ghost_object::~bt_ghost_object( )
@@ -56,7 +56,8 @@ bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 con
 
 void destroy_ghost_object( bt_ghost_object* obj )
 {
-	bt_collision_shape* shape = obj->m_shape.c_ptr( ); VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );
+	bt_collision_shape* shape = obj->m_shape.c_ptr( );
+	VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );
 	VOSTOK_DELETE_IMPL( *g_ph_allocator, obj );
 }
 
@@ -118,7 +119,8 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );
-	get_non_compound_shapes_centers( m_shape->get_bt_shape( ), transform, centres_results );
+	btCollisionShape* const bt_shape = m_shape->get_bt_shape( );
+	get_non_compound_shapes_centers( bt_shape, transform, centres_results );
 }
 
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
