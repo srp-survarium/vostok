@@ -146,13 +146,13 @@ bool lobby_menu::on_mouse_move(
 	float scroll_delta = z * ( 1.f / 120.f ); m_cursor_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
 	get_game( ).get_chat_handler( ).get_movie( )->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
 
-	if ( m_is_connected_to_lobby )
-	{
-		if ( m_is_in_match_making )
-			m_match_making_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
-		else
-			m_lobby_menu_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
-	}
+	if ( !m_is_connected_to_lobby )
+		return true;
+
+	if ( m_is_in_match_making )
+		m_match_making_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
+	else
+		m_lobby_menu_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
 
 	return true;
 }

@@ -44,11 +44,7 @@ void object_environment_probe::load(
 	m_texture_name			= pcstr( t["texture"] );
 	m_clip_by_normal		= t["clip_by_normal"];
 	m_with_shadows			= t["with_shadows"];
-
-	if ( t.value_exists( "geometry" ) )
-		m_geometry = t["geometry"];
-	else
-		m_geometry = 0;
+	m_geometry				= t.value_exists( "geometry" ) ? (u32)t["geometry"] : 0;
 
 	cb( *this );
 }
@@ -58,6 +54,7 @@ void object_environment_probe::insert( )
 	render::environment_probe_properties properties;
 	properties.transform			= m_transform;
 	properties.location				= m_transform.c.xyz( );
+
 	properties.texture_name			= m_texture_name;
 	properties.texture_invalidated	= true;
 	properties.radius				= m_radius;

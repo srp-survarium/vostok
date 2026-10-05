@@ -24,33 +24,24 @@ void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 		m_current_time = current_time_in_ms;
 		return;
 	}
-
 	if ( m_current_time >= current_time_in_ms )
 		return;
-
 	const float dt = (float)( current_time_in_ms - m_current_time ) * 0.001f;
 
 	m_current_time = current_time_in_ms;
-
 	m_target_coeff = math::max( m_target_coeff - m_aiming_speed * dt, 0.0f );
 
-	// claude@NOTE: target has an extra statement at line 42 - the outer if-body's
-	//   scope exit emitted as two adjacent `jmp short .6` at label .3 (the && short-
-	//   circuit-false skip and the inner else-if fall-through, /Od keeps them separate;
-	//   14 stmts). Base /Od merges both into the if-condition's `jnp .4` (13 stmts).
-	//   Byte content is identical; tried brace-less and Allman inner if/else-if (both
-	//   byte-neutral, neither splits the jmp). /Od jump-fold quirk on the && + braced
-	//   body, not steerable by brace placement here.
-	if ( dt != 0.0f && m_current_coeff != m_target_coeff )
+
+	if ( dt == 0.0f || m_current_coeff == m_target_coeff )
+		return;
+	else if ( m_current_coeff > m_target_coeff )
 	{
-		if ( m_current_coeff > m_target_coeff )
-		{
-			m_current_coeff = math::max( m_current_coeff - m_aiming_speed * dt, m_target_coeff );
-		}
-		else if ( m_current_coeff < m_target_coeff )
-		{
-			m_current_coeff = math::min( m_current_coeff + m_growth_speed * dt, m_target_coeff );
-		}
+		m_current_coeff = math::max( m_target_coeff, m_current_coeff - m_aiming_speed * dt );
+	}
+
+	else if ( m_current_coeff < m_target_coeff )
+	{
+		m_current_coeff = math::min( m_current_coeff + m_growth_speed * dt, m_target_coeff );
 	}
 }
 

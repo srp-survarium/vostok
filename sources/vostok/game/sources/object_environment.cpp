@@ -22,10 +22,7 @@ object_environment::~object_environment( )
 {
 }
 
-// claude@NOTE: structure faithful (same query_resources idiom as STRUCTURE-MATCH sibling
-// object_particle_visual, ~80% ceiling). QUANTITY is the target optimizer folding the
-// 1-element request r[] init into the query_resources call (drops the r named local); our
-// Master Gold base keeps it as its own statement. Not a source shape diff.
+#line 20
 void object_environment::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -34,23 +31,12 @@ void object_environment::load(
 {
 	pcstr post_effect_name = pcstr( t["post_effect"] );
 
-	resources::request r[] =
-	{
-		{ post_effect_name, resources::material_class },
-	};
-
-	resources::query_resources(
-		r,
-		1,
-		boost::bind( &object_environment::material_ready, this, _1, cb ),
-		g_allocator
-	);
+	resources::query_resource( post_effect_name, resources::material_class, boost::bind( &object_environment::material_ready, this, _1, cb ), g_allocator );
 }
 
 void object_environment::material_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
 	m_postprocess = data[0].get_unmanaged_resource();
-
 	cb( *this );
 }
 
