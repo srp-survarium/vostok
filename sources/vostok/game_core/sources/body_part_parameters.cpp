@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/body_part_parameters.h>
 
 #include <vostok/game_core/affects_applying_type_enum.h>
