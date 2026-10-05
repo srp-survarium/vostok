@@ -48,11 +48,11 @@ _Updated 2026-10-05 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,090,283 / 71,536,291) &middot; matched projected copies: 66.11% (17,444,075 / 26,385,735).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,907 / 71,536,291) &middot; matched projected copies: 69.87% (18,432,939 / 26,379,879).**
 
-_The projection has 15,048 paired copies across 1,701 units and 31,083 unresolved blockers. Strict relocation comparison exposes 1,461 otherwise-exact functions (569,505 code bytes) with referent debt._
+_The projection has 15,041 paired copies across 1,701 units and 31,090 unresolved blockers. Strict relocation comparison exposes 1,453 otherwise-exact functions (569,630 code bytes) with referent debt._
 
-_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11276 / 12793 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.59% exact and covers 98.57% by PDB type extent, with 99.16% paired-only fidelity (12358 / 12793 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-05._
 <!-- data-match:end -->
