@@ -14,6 +14,7 @@
 * [materials.md](materials.md) — recovered SDK material authoring, runtime material/effect/shader interaction, and the map-porting workflow.
 * [shaders.md](shaders.md) — shipped shader cache format, permutation recovery, and byte-exact roundtrip validation.
 * [build/toolchain-build.md](build/toolchain-build.md) — how the vostok-toolchain is built on Linux/Wine (mspdb DLLs, SP1 via `PATCH=`) and why Wine must be **staging** (cl `/Zi` → C1902 on wine-10.0 stable).
+* [build/windows-native.md](build/windows-native.md) — native Windows build of the exe (`scripts/windows/`), standalone or mirroring a WSL2 checkout: setup, the build loop, the native ninja graph, the LTCG link-stall watchdog, and the native scoring preview (`score.ps1`).
 * [build-flags.md](build-flags.md) — per-project compiler-flag comparison (target vs. base) recovered from the PDBs, and which vcproj were built with/without optimizations.
 * [target-vs-base.md](target-vs-base.md) — synthesis of every target-vs-base comparison the PDB/EXE tooling makes (PE/Rich header, flags, link order, RTTI): what's the same, what's different, and which differences are actionable.
 

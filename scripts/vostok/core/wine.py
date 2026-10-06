@@ -5,6 +5,7 @@ r"""vostok.core.wine - the three spellings of a native path on the Wine side.
 what MSVC under Wine records in a PDB (`z:\a\b`, lowercased); `winepath_w` asks
 Wine itself, for paths that may live outside the Z: mapping.
 """
+import os
 import subprocess
 from pathlib import Path
 
@@ -18,7 +19,19 @@ def pdb_path(p: Path) -> str:
     r"""Render a native absolute path as MSVC-under-Wine records it in a PDB:
     on the Z: drive (Wine maps ``/`` -> ``Z:``), lowercased, ``\``-separated.
     e.g. /home/u/Proj/vostok/sources -> z:\home\u\proj\vostok\sources
+
+    Native Windows builds (scripts/windows/) compile through the
+    paths.NATIVE_BUILD_ROOT junction, so checkout paths are recorded there:
+    F:\checkout\sources -> c:\survarium\sources.
     """
+    if os.name == "nt":
+        from vostok.core import paths
+        try:
+            rel = Path(p).resolve().relative_to(paths.REPO)
+            p = Path(paths.NATIVE_BUILD_ROOT) / rel
+        except ValueError:
+            pass
+        return str(p).replace("/", "\\").lower()
     return "z:" + str(p).replace("/", "\\").lower()
 
 

@@ -14,6 +14,7 @@ the main report's unit totals.
 
 from __future__ import annotations
 
+import os
 import filecmp
 import json
 import shutil
@@ -147,6 +148,10 @@ def generate(
             continue
         target_paths = target_owners.get(target, [])
         base_paths = base_owners.get(base_coff, [])
+        if base_owners.get(target) and os.name == "nt":
+            # The aliases record what the Wine link folds; the native link (the
+            # scripts/windows scoring preview) can keep the function on its own.
+            continue
         if base_owners.get(target):
             raise RuntimeError(
                 f"reviewed fold alias {target} already has a same-name base owner"

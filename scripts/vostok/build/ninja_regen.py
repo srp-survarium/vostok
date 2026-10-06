@@ -144,6 +144,38 @@ RETAIL_ARCHIVE_MEMBER_ORDERS = {
 
 log = logger("regen-ninja")
 
+# Native Windows (scripts/windows/): vcproj2ninja runs without Wine against the
+# C:\survarium junction, so every graph path is rooted there instead of Z:.
+NATIVE = os.name == "nt"
+
+
+def _host_path(p: Path) -> str:
+    """The spelling vcproj2ninja gives a checkout path in the graph."""
+    if NATIVE:
+        rel = p.relative_to(VOSTOK_DIR).as_posix()
+        root = paths.NATIVE_BUILD_ROOT.replace("\\", "/")
+        return root if rel == "." else f"{root}/{rel}"
+    return "Z:" + str(p)
+
+
+def _read(p: Path) -> str:
+    """Universal newlines, as read_text gives on Linux: vcproj2ninja ends some rsp
+    lines CRLF and the graph has always been written LF."""
+    text = p.read_bytes().decode()
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _write(p: Path, text: str) -> None:
+    # bytes, not write_text: Windows text mode would write the LF graph back as CRLF
+    p.write_bytes(text.encode())
+
+
+def _host_drive_path(p: Path) -> str:
+    """The backslashed form cl/ninja are handed (rsp @-references)."""
+    if NATIVE:
+        return _host_path(p).replace("/", "\\")
+    return drive_path(p)
+
 
 def _normalize_link_rsp_paths(
     text: str,
@@ -157,8 +189,8 @@ def _normalize_link_rsp_paths(
     adjacent .exp file.  Restrict this correction to link response files so
     compile command lines and their PDB identity remain untouched.
     """
-    source = "Z:" + str(solution_dir)
-    root = "Z:" + str(repo_dir) + "/"
+    source = _host_path(solution_dir)
+    root = _host_path(repo_dir) + "/"
     return text.replace(source + r"\../", root).replace(source + r"\/../", root)
 
 
@@ -172,7 +204,7 @@ def _normalize_compile_rsp_source_root(
     on the worktree's Z: path; rewriting the source-root substring globally
     would redirect ``sources\\../binaries`` outside the build tree.
     """
-    local = "Z:" + str(repo_dir / "sources")
+    local = _host_path(repo_dir / "sources")
     retail = paths.RETAIL_INCLUDE_SOURCE_PREFIX.replace("\\", "/")
     return text.replace(f'/I "{local}', f'/I "{retail}')
 
@@ -188,7 +220,7 @@ def _normalize_compile_working_source_root(
     relative to the real checkout, so the ``lib`` and ``link`` rules must keep
     using ``proj_dir`` on Z:.
     """
-    local = "Z:" + str(repo_dir / "sources")
+    local = _host_path(repo_dir / "sources")
     retail = paths.RETAIL_SOURCE_PREFIX.replace("\\", "/")
     marker = f"proj_dir = {local}"
     if marker not in text:
@@ -276,17 +308,24 @@ def _normalize_archive_member_order(text: str, order: tuple[str, ...]) -> str:
 def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
     exe = os.environ.get("VCPROJ2NINJA_EXE")
     if not exe:
-        sys.exit("[regen-ninja] VCPROJ2NINJA_EXE not set - run from `nix develop`")
+        sys.exit("[regen-ninja] VCPROJ2NINJA_EXE not set - run from `nix develop`"
+                 " (natively: scripts/windows/build.ps1 sets it)")
     if not SLN_PATH.is_file():
         sys.exit(f"[regen-ninja] solution not found: {SLN_PATH}")
     out_dir.mkdir(parents=True, exist_ok=True)
     # vcproj2ninja sometimes exits non-zero under wine even on success; trust the
     # produced output over the return code (same as vostok.tool.toolchain).
+    if NATIVE:
+        command = [exe, "--target", target, "--sln-path",
+                   _host_drive_path(SLN_PATH)]
+    else:
+        command = ["wine", exe, "--wine", "--target", target, "--sln-path",
+                   str(SLN_PATH)]
     subprocess.run(
-        ["wine", exe, "--wine", "--target", target, "--sln-path", str(SLN_PATH),
-         "--configuration-platform", "Master Gold|Win32",
-         "--output-dir", str(out_dir),
-         "--project-name", "survarium - PC - DirectX 11"],
+        command + [
+            "--configuration-platform", "Master Gold|Win32",
+            "--output-dir", str(out_dir),
+            "--project-name", "survarium - PC - DirectX 11"],
         check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     probe = "build.ninja" if target == "ninja" else "compile_commands.json"
@@ -304,19 +343,24 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
     (e.g. after a flags-only .vcproj edit, which this trigger can't see)."""
     changed: list[str] = []
     tu_set_changed = False
-    with tempfile.TemporaryDirectory(prefix="ninja_regen_") as tmp:
+    # natively, keep the scratch output on the build drive
+    tmp_root = paths.BINARIES if NATIVE else None
+    with tempfile.TemporaryDirectory(prefix="ninja_regen_", dir=tmp_root) as tmp:
         tmp_dir = Path(tmp)
         gen_fresh(tmp_dir)
 
         # The temp path appears in two spellings: raw in `flags = @...` lines,
         # ninja-escaped (`:` -> `$:`) in the rsp implicit-input dep lines.
-        raw_t, raw_b = drive_path(tmp_dir), drive_path(BUILD_DIR)
+        # Natively it is emitted '/'-separated, then `\` before the rsp file name.
+        raw_t, raw_b = drive_path(tmp_dir), _host_drive_path(BUILD_DIR)
+        if NATIVE:
+            raw_t, raw_b = tmp_dir.as_posix() + "/", raw_b + "\\"
         esc_t, esc_b = raw_t.replace(":", "$:"), raw_b.replace(":", "$:")
 
         fresh = sorted(p for p in tmp_dir.rglob("*") if p.is_file())
         for fp in fresh:
             rel = fp.relative_to(tmp_dir)
-            text = fp.read_text().replace(raw_t, raw_b).replace(esc_t, esc_b)
+            text = _read(fp).replace(raw_t, raw_b).replace(esc_t, esc_b)
             if fp.name.endswith("_link.rsp"):
                 text = _normalize_link_rsp_paths(text)
                 text = _normalize_link_rsp_library_order(text)
@@ -329,7 +373,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             elif fp.suffix == ".ninja":
                 text = _normalize_compile_working_source_root(text)
             dst = BUILD_DIR / rel
-            if dst.is_file() and dst.read_text() == text:
+            if dst.is_file() and _read(dst) == text:
                 continue
             if not dst.is_file():
                 # A brand-new .ninja/.rsp means a module/group/TU appeared -
@@ -339,7 +383,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
             changed.append(str(rel))
             if not dry_run:
                 dst.parent.mkdir(parents=True, exist_ok=True)
-                dst.write_text(text)
+                _write(dst, text)
 
         # Generated files no longer produced (module removed/renamed). Report
         # only: BUILD_DIR also holds ninja state (.ninja_log) we must not touch.
@@ -358,6 +402,9 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
     for rel in changed:
         log(f"  {rel}")
 
+    if NATIVE:
+        # the clangd overlay is a --wine output; the native build needs only the graph
+        return changed
     compdb_missing = not all((VOSTOK_DIR / n).is_file() for n in COMPDB_FILES)
     if compdb or tu_set_changed or compdb_missing:
         reason = ("forced" if compdb

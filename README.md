@@ -64,6 +64,10 @@ Linux x86_64 with [Nix](https://nixos.org/download) and flakes enabled
 compiler, the Windows and DirectX SDKs, Wine, ninja, the Rust tools, the game
 binaries and the third-party libs - comes from the flake.
 
+A faster native Windows build of the exe (no Wine; not scored) runs either standalone
+(no WSL: the toolchain and libs come from the pinned release archives) or mirroring a WSL2
+checkout: see [docs/build/windows-native.md](docs/build/windows-native.md).
+
 ## Quickstart
 
 Target branches use version-only names: `v0.10b` for the Survarium v0.100b
@@ -257,6 +261,7 @@ the loop is [`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agenti
 - [docs/binary_matching/matching_guide.md](docs/binary_matching/matching_guide.md) - how to actually match assembly.
 - [docs/index.md](docs/index.md) - index of build and per-module matching notes.
 - [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine.
+- [docs/build/windows-native.md](docs/build/windows-native.md) - building the exe natively on Windows (`scripts/windows/`), with an optional fast scoring preview.
 
 ## License
 

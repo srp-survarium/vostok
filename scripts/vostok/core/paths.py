@@ -77,6 +77,9 @@ COMPILE_COMMANDS = REPO / "compile_commands.json"
 # used an upper-case one; MSVC preserves both spellings in __FILE__.
 RETAIL_SOURCE_PREFIX = r"c:\survarium\sources"
 RETAIL_INCLUDE_SOURCE_PREFIX = r"C:\survarium\sources"
+# Native Windows builds (scripts/windows/) reach the checkout through this
+# junction, so the graph names the retail root without Wine's Z: drive.
+NATIVE_BUILD_ROOT = r"C:\survarium"
 
 # --- generated artifacts (binaries/, gitignored) ---------------------------
 BINARIES = REPO / "binaries"
