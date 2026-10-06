@@ -226,7 +226,7 @@ static ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 
 	if (type == D3D11_RESOURCE_DIMENSION_TEXTURE2D)
 	{
-		ID3D11Query*			out_empty_query_ptr;
+		ID3D11Query*			out_empty_query_ptr = NULL;
 		D3D11_QUERY_DESC		query_desc;
 		query_desc.MiscFlags	= 0;
 		query_desc.Query		= D3D11_QUERY_EVENT;
@@ -249,7 +249,7 @@ static ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 	}
 	else
 	{
-		R_ASSERT				(0, "sRGB for 3d and 1d types not implemented yet.");
+		LOG_WARNING				("sRGB for 3d and 1d types not implemented yet.");
 		return					in_texture;
 	}
 }
@@ -341,32 +341,32 @@ res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 
 res_xs_hw<vs_data>* resource_manager::create_vs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<vs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<vs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<gs_data>* resource_manager::create_gs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<gs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<gs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<ps_data>* resource_manager::create_ps_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<ps_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<ps_data>( name, shader_config, include_getter, shader_sources );
 }
 
 void resource_manager::bind_samplers_to_shaders( )
@@ -437,11 +437,6 @@ pcstr get_textures_path2( )
 static ID3D11CommandList* s_command_lists[1000];
 
 resource_manager::resource_manager( configs::binary_config_ptr const& in_config ) :
-	sh_created					( 0),
-	sh_returned					( 0),
-	tl_created					( 0),
-	cb_created					( 0),
-	sl_created					( 0),
 	m_deferred_context			( NULL),
 	m_render_target_video_memory( 0),
 	shader_name_to_mask_config	( in_config),
@@ -456,6 +451,12 @@ resource_manager::resource_manager( configs::binary_config_ptr const& in_config 
 	m_compile_error_handler		( NULL)
 {
 	memset( s_command_lists, 0, sizeof( s_command_lists));
+
+	sh_returned = 0;
+	sh_created = 0;
+	tl_created = 0;
+	cb_created = 0;
+	sl_created = 0;
 
 	static shader_binary_source_cook shader_binary_source_cooker;
 	resources::register_cook(&shader_binary_source_cooker);
@@ -551,7 +552,7 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 	data.SysMemPitch		= data_size / (size * size);
 
 	return					resource_manager::ref().create_texture3d(
-		"$user$color_grading_base_3d_lut",
+		"$user$test3d",
 		size,
 		size,
 		size,
@@ -608,14 +609,16 @@ shader_constant_table* resource_manager::create_const_table(
 	new_table.apply_bindings( m_const_bindings);
 
 	const_tables_type::iterator const found = m_const_tables.find( &new_table );
+	shader_constant_table* result;
 	if( found != m_const_tables.end( ) )
-		return *found;
+		result = *found;
+	else
+	{
+		result = *m_const_tables.insert( NEW( shader_constant_table)( new_table)).first;
+		result->mark_registered();
+	}
 
-	shader_constant_table* const created_table = NEW( shader_constant_table)( new_table);
-	m_const_tables.insert( created_table);
-	created_table->mark_registered();
-
-	return created_table;
+	return result;
 }
 
 void resource_manager::release( shader_constant_table const* const_table )
@@ -755,9 +758,11 @@ void resource_manager::on_texture_loaded(
 	resources::managed_resource_ptr managed_ptr = data;
 	resources::pinned_ptr_const< texture_data_resource > managed_typed_ptr( managed_ptr );
 
-	pcbyte const dds_ptr = static_cast< pcbyte >( managed_typed_ptr->buffer( ).c_ptr( ) );
-	u32 dds_size = managed_typed_ptr->buffer( ).size( );
-	bool is_srgb_option = !s_no_srgb_textures_result && read_srgb_flag( dds_ptr, dds_size );
+	texture_data_resource const* texture_data = managed_typed_ptr.c_ptr( );
+
+	pcbyte const dds_ptr = static_cast< pcbyte >( texture_data->buffer( ).c_ptr( ) );
+	u32 dds_size = texture_data->buffer( ).size( );
+	bool is_srgb_option = s_no_srgb_textures_result ? false : read_srgb_flag( dds_ptr, dds_size );
 	--dds_size;
 
 	D3DX_IMAGE_INFO dds_info = { 0 };
@@ -773,10 +778,8 @@ void resource_manager::on_texture_loaded(
 
 	if ( dds_info.Format == DXGI_FORMAT_R8G8B8A8_UNORM )
 		dds_info.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-
-	if ( (dds_info.Format == DXGI_FORMAT_R8G8B8A8_UNORM ||
-		  dds_info.Format == DXGI_FORMAT_B8G8R8A8_UNORM) &&
-		 dds_size == dds_info.Width * dds_info.Height + sizeof(dds_header) )
+	else if ( dds_info.Format == DXGI_FORMAT_B8G8R8A8_UNORM &&
+			  dds_size == dds_info.Width * dds_info.Height + sizeof(dds_header) )
 	{
 		dds_info.Format = DXGI_FORMAT_R8_UNORM;
 	}
@@ -801,22 +804,25 @@ void resource_manager::on_texture_loaded(
 				texture_quality = weapon_or_flora ? 2 : 1;
 		}
 	}
-
+	// sushi@TODO: Recover the mip-cut source shape across the max call; target keeps the condition in a register.
+	bool const can_cut_mips = dds_info.Depth == 1 && texture_quality < 2;
 	u32 mip_level_cut = 0;
 	if ( min_dimension > 128 )
-		mip_level_cut = 2 - texture_quality;
+		mip_level_cut = 2 - math::max( u32(0), texture_quality );
 
 	if ( dds_info.ArraySize == 1 &&
 		 dds_info.MipLevels > mip_level_cut &&
-		 dds_info.Depth == 1 &&
-		 texture_quality < 2 )
+		 can_cut_mips )
 	{
 		for ( u32 mip_index = 0; mip_index < mip_level_cut; ++mip_index )
 		{
+			u32 const mip_width = math::max( dds_info.Width >> mip_index, block_size );
+			u32 const mip_height = math::max( dds_info.Height >> mip_index, block_size );
+
 			u32 const width_in_blocks =
-				(math::max( dds_info.Width >> mip_index, block_size ) + block_size - 1) / block_size;
+				(mip_width + block_size - 1) / block_size;
 			u32 const height_in_blocks =
-				(math::max( dds_info.Height >> mip_index, block_size ) + block_size - 1) / block_size;
+				(mip_height + block_size - 1) / block_size;
 			copy_ptr += width_in_blocks * height_in_blocks * block_bytes;
 		}
 
@@ -828,7 +834,7 @@ void resource_manager::on_texture_loaded(
 
 	bool const use_cutting =
 		(dds_info.Format == DXGI_FORMAT_BC1_UNORM || dds_info.Format == DXGI_FORMAT_BC3_UNORM) &&
-		num_last_mips_used != u32(-1) &&
+		num_last_mips_used < u32(-1) &&
 		num_last_mips_used < dds_info.MipLevels &&
 		dds_info.Depth == 1;
 
@@ -851,6 +857,7 @@ void resource_manager::on_texture_loaded(
 		D3D11_TEXTURE2D_DESC desc;
 		ZeroMemory( &desc, sizeof(desc) );
 		desc.ArraySize = dds_info.ArraySize;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		desc.Format = is_srgb_option ? find_srgb_format( dds_info.Format, true ) : dds_info.Format;
 		desc.Width = dds_info.Width;
 		desc.Height = dds_info.Height;
@@ -859,7 +866,6 @@ void resource_manager::on_texture_loaded(
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 		desc.CPUAccessFlags = 0;
-		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		desc.Usage = D3D11_USAGE_DEFAULT;
 
 		if ( dds_info.ArraySize == 1 )
@@ -874,10 +880,12 @@ void resource_manager::on_texture_loaded(
 			{
 				for ( u32 mip_index = 0; mip_index < num_orig_mips; ++mip_index )
 				{
+					u32 const mip_width = math::max( orig_width >> mip_index, block_size );
 					u32 const width_in_blocks =
-						(math::max( orig_width >> mip_index, block_size ) + block_size - 1) / block_size;
+						(mip_width + block_size - 1) / block_size;
+					u32 const mip_height = math::max( orig_height >> mip_index, block_size );
 					u32 const height_in_blocks =
-						(math::max( orig_height >> mip_index, block_size ) + block_size - 1) / block_size;
+						(mip_height + block_size - 1) / block_size;
 					u32 const mip_size = width_in_blocks * height_in_blocks * block_bytes;
 					u32 const row_pitch = width_in_blocks * block_bytes;
 
@@ -916,10 +924,12 @@ void resource_manager::on_texture_loaded(
 			{
 				for ( u32 mip_index = 0; mip_index < num_orig_mips; ++mip_index )
 				{
+					u32 const mip_width = math::max( orig_width >> mip_index, block_size );
 					u32 const width_in_blocks =
-						(math::max( orig_width >> mip_index, block_size ) + block_size - 1) / block_size;
+						(mip_width + block_size - 1) / block_size;
+					u32 const mip_height = math::max( orig_height >> mip_index, block_size );
 					u32 const height_in_blocks =
-						(math::max( orig_height >> mip_index, block_size ) + block_size - 1) / block_size;
+						(mip_height + block_size - 1) / block_size;
 					u32 const mip_size = width_in_blocks * height_in_blocks * block_bytes;
 					u32 const row_pitch = width_in_blocks * block_bytes;
 
@@ -945,9 +955,9 @@ void resource_manager::on_texture_loaded(
 	else
 	{
 		D3D11_TEXTURE3D_DESC desc;
-		desc.Format = is_srgb_option ? find_srgb_format( dds_info.Format, true ) : dds_info.Format;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		desc.CPUAccessFlags = 0;
+		desc.Format = is_srgb_option ? find_srgb_format( dds_info.Format, true ) : dds_info.Format;
 		desc.Width = dds_info.Width;
 		desc.Height = dds_info.Height;
 		desc.Depth = dds_info.Depth;
@@ -1087,9 +1097,9 @@ u32 resource_manager::get_texture_video_memory_size( )
 }
 
 void resource_manager::on_texture_loaded_staging(
-	resources::queries_result&,
-	u32,
-	bool
+	resources::queries_result& data,
+	u32 mip_level_cut,
+	bool use_converter
 )
 {
 }

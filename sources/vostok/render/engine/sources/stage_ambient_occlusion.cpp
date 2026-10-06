@@ -64,7 +64,7 @@ static void fill_surface( render_target_ptr surf, renderer_context* context, boo
 	float z = 0.0f;
 	backend::ref().set_render_targets( &*surf, 0, 0, 0);
 	backend::ref().set_depth_stencil_target(0);
-	backend::ref().clear_render_targets( vostok::math::color( float3(0.5f, 0.5f, 1.0f)));
+	backend::ref().clear_render_targets( vostok::math::color( float3(0.5f, 0.5f, 0.5f)));
 
 	float2	p0( 0,0);
 	float2	p1( 1,1);
@@ -91,7 +91,7 @@ static void fill_surface( render_target_ptr surf, renderer_context* context, boo
 void stage_ambient_occlusion::execute_disabled( )
 {
 	backend::ref().set_render_targets( &*m_context->get_rt( rt_ssao_accumulator_full_x ), 0, 0, 0);
-	backend::ref().clear_render_targets( vostok::math::color( float3( 0.0f, 0.0f, 1.0f ) ) * 1.0f );
+	backend::ref().clear_render_targets( vostok::math::color( float3( 1.0f, 0.0f, 1.0f ) ) * 1.0f );
 }
 
 void stage_ambient_occlusion::execute( )
@@ -127,7 +127,7 @@ void stage_ambient_occlusion::execute( )
 	END_CPUGPU_TIMER;
 	static float4x4 prev_view = float4x4( ).identity( );
 
-	backend::ref( ).flush_rt_shader_resources( );
+	backend::ref( ).reset_depth_stencil_target( );
 
 	BEGIN_CPUGPU_TIMER(statistics::ref( ).ssao_stat_group.ssao_blurring_time);
 	if ( options::ref( ).current.m_ssao_use_filtering )

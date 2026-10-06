@@ -22,3 +22,24 @@ void f( int n ) { void* p = _alloca( n ); use( p ); }
   8d 65 f8  lea  esp, DWORD PTR [ebp-8]    ; reclaimed implicitly by frame teardown
 ```
 Wall-ish: a `call __alloca_probe_16`/`__chkstk` with the count in `eax` and the result taken from `esp` = `_alloca`/`ALLOCA` — write the `ALLOCA` macro, never a heap alloc. Distinct from `VOSTOK_NEW`/`VOSTOK_MALLOC` (vostok-memory-macros.md), which `call` real helpers.
+
+Multiple probes also expose source allocation order. Follow each adjusted `esp`
+into its consumers, not just the saved stack-slot number: placement-constructor
+field offsets and loop strides identify the array element type. In render's
+`effect_manager::recompile_shaders_async`, the target allocates a pointer table,
+then `user_data_variant` storage, then `creation_request` storage. Their byte
+counts are `4*n`, `48*n`, and `16*n`; variant initialization at offsets `0x28`
+and `0x2c` and the `0x30` versus `0x10` strides confirm which buffer is which.
+Reversing the last two declarations changes actual stack movement and instruction
+scheduling despite preserving the logical contents of all three arrays. Match
+that raw-storage declaration order without moving placement construction or
+introducing individual frees.
+
+The count's lifetime is separate evidence. A count stored before the probes and
+reloaded after the construction loop represents a cached value; spelling
+`vector.size()` again at the query can instead recompute it. A direct size-test
+early return followed by the cached-count declaration lets the optimizer hoist
+the shared calculation into the guard while retaining that value for the query.
+In this example the optimized PDB omits the cached local in that source shape,
+even though the assembly preserves its value. Do not infer that the source had
+no such local solely from its absence in the optimized PDB.

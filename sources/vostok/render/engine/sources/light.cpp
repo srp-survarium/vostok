@@ -115,11 +115,11 @@ void light::destroy_impl( ) const
 	DELETE					( this_ptr );
 }
 
-void light::set_position( float3 const& value )
+void light::set_position( float3 const& P )
 {
 	float	eps					=	math::epsilon_7;	//_max	(range*0.001f,EPS_L);
-	if (position.is_similar(value,eps))return	;
-	position = (value);
+	if (position.is_similar(P,eps))return	;
+	position = (P);
 }
 
 void light::set_color( math::color const& c, float const value )
@@ -131,11 +131,9 @@ void light::set_color( math::color const& c, float const value )
 	intensity		= value;
 }
 
-void light::set_range( float value )
+void light::set_range( float R )
 {
-//	float	eps					=	std::max	(range*0.1f, math::epsilon_7);
-//	if (math::is_similar(range,R,eps))	return	;
-	range						= value	;
+	range						= R	;
 }
 
 void light::set_orientation(
@@ -161,6 +159,25 @@ void light::on_properties_changed( )
 	float4x4 transform;
 	m_aabb.zero					( );
 	m_aabb						+= 1.f;
+
+	float3 L_dir, L_up, L_right;
+	L_dir = direction;
+	if ( right.squared_length() > math::epsilon_5 )
+	{
+		L_right = right; L_right.normalize();
+		L_up = math::cross_product(L_dir, L_right); L_up.normalize();
+		L_right = math::cross_product(L_up, L_dir); L_right.normalize();
+	} else {
+		L_up.set(0, 1, 0); if (abs(math::dot_product(L_up, L_dir)) > .99f) L_up.set(0, 0, 1);
+		L_right = math::cross_product(L_up, L_dir); L_right.normalize();
+		L_up = math::cross_product(L_dir, L_right); L_up.normalize();
+	}
+
+	float4x4 rotation_X_translation;
+	rotation_X_translation.i.xyz() = L_right; rotation_X_translation.e03 = 0.f;
+	rotation_X_translation.j.xyz() = L_up; rotation_X_translation.e13 = 0.f;
+	rotation_X_translation.k.xyz() = L_dir; rotation_X_translation.e23 = 0.f;
+	rotation_X_translation.c.xyz() = position; rotation_X_translation.e33 = 1.f;
 
 	switch ( flags.type ) {
 		case light_type_parallel:
@@ -189,14 +206,14 @@ void light::on_properties_changed( )
 			);
 			transform			=
 				math::create_scale( box_half_length ) *
-				math::create_rotation( m_xform.get_angles_xyz() ) *
+				math::create_rotation( rotation_X_translation.get_angles_xyz() ) *
 				math::create_translation( position + direction * range/2.f );
 
 			m_collision_object	=
 				&*collision::new_collision_object(
 					g_allocator,
 					1,
-					m_collision_geometry = &*collision::new_box_geometry_instance( g_allocator, transform ),
+					m_collision_geometry = &*collision::new_box_geometry_instance( g_allocator, math::create_scale( float3( 1.f, 1.f, 1.f ) ) ),
 					this
 			);
 
@@ -367,9 +384,9 @@ void light::set_attenuation_power( float value )
 	attenuation_power	= value;
 }
 
-void light::set_scale( float3 const& value )
+void light::set_scale( float3 const& scale )
 {
-	scale			= value;
+	this->scale		= scale;
 }
 
 } // namespace render

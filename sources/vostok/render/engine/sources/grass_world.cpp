@@ -73,7 +73,7 @@ void grass_world::set_trample_parameters( trample_desc& desc )
 	backend::ref( ).set_ps_constant( m_trample_parameters, desc.multiplier );
 }
 
-void grass_world::set_shadow_parameters( u32 const )
+void grass_world::set_shadow_parameters( u32 const cascade_index )
 {
 	backend::ref( ).set_ps_constant( m_shadow_cascade_index_parameter, 0 );
 }
@@ -84,10 +84,10 @@ grass_world::~grass_world( )
 	collision::delete_space_partitioning_tree		(m_patches_tree);
 }
 
-u32 grass_world::add_template( grass_render_model_ptr const& render_model )
+u32 grass_world::add_template( grass_render_model_ptr const& in_render_model )
 {
 	u32 const id = ++g_template_counter;
-	m_templates.push_back( NEW( grass_template )( id, render_model ) );
+	m_templates.push_back( NEW( grass_template )( id, in_render_model ) );
 	return id;
 }
 
@@ -97,22 +97,22 @@ void grass_world::add_trample( trample_desc const& desc )
 }
 
 u32 grass_world::add_instance(
-	u32 const template_id,
-	math::color const& color,
-	float4x4 const& transform,
-	u8 const layer,
-	float const wind_scale
+	u32 const in_template_id,
+	math::color const& in_color,
+	float4x4 const& in_transform,
+	u8 const in_layer,
+	float const in_wind_scale
 )
 {
-	grass_template* templ = id_to_template( template_id );
+	grass_template* templ = id_to_template( in_template_id );
 	u32 const id = ++g_instance_counter;
 	grass_instance* instance = NEW( grass_instance )(
 		id,
 		templ,
-		color,
-		transform,
-		layer,
-		wind_scale
+		in_color,
+		in_transform,
+		in_layer,
+		in_wind_scale
 	);
 	templ->m_instances.push_back( instance );
 	return id;
@@ -152,10 +152,11 @@ grass_template* grass_world::id_to_template( u32 const id ) const
 
 	for (; it != end; ++it)
 	{
-		result										=	(*it);
-
-		if (result->m_index == id)
+		if ((*it)->m_index == id)
+		{
+			result									=	*it;
 			break;
+		}
 	}
 
 	return result;
@@ -168,9 +169,11 @@ grass_template* grass_world::find_template( grass_render_model_ptr const& model 
 	grass_templates_type::const_iterator end = m_templates.end( );
 	for ( ; it != end; ++it )
 	{
-		result = *it;
-		if ( result->m_render_model == model )
+		if ( (*it)->m_render_model == model )
+		{
+			result = *it;
 			break;
+		}
 	}
 
 	return result;
@@ -236,7 +239,7 @@ void grass_world::populate( float const patch_size_ground )
 				math::floor( origin.z / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f
 			);
 
-			grass_patch* new_patch		=	find_patch( origin_aligned );
+			grass_patch* new_patch		=	find_patch( origin );
 			if ( !new_patch )
 			{
 				new_patch					=	NEW( grass_patch )(
@@ -246,8 +249,12 @@ void grass_world::populate( float const patch_size_ground )
 					patch_size_ground
 				);
 				m_patches.push_back		( new_patch );
+				new_patch->m_instances.push_back( instance );
 			}
-			new_patch->m_instances.push_back( instance );
+			else
+			{
+				new_patch->m_instances.push_back( instance );
+			}
 		}
 	}
 
@@ -264,7 +271,7 @@ void grass_world::merge_patches( )
 		patch->merge_instances( );
 	}
 }
-
+// sushi@TODO: Recover the debug color-construction partition and first-vertex position source.
 // claude@NOTE: the grass debug guard is partial-inlined only in the base.
 void grass_world::render_debug( renderer_context* context )
 {
@@ -374,7 +381,8 @@ void grass_world::process_culling( renderer_context* context, float const first_
 			continue;
 
 		patch->m_current_lod_index						=	0;
-		float const distance							=	math::sqrt( to_aabb_center_squared ); if ( distance > options::ref( ).current.m_grass_lod1_distance )
+		float const distance							=	math::sqrt( to_aabb_center_squared );
+		if ( distance > options::ref( ).current.m_grass_lod1_distance )
 			patch->m_current_lod_index					=	1;
 		else if ( distance > options::ref( ).current.m_grass_lod2_distance )
 			patch->m_current_lod_index					=	2;
@@ -390,7 +398,7 @@ void grass_world::process_culling( renderer_context* context, float const first_
 		!( context->scene_view( )->get_render_frame_index( ) & 31 )
 	);
 }
-
+// sushi@TODO: Recover the trample patch capture and iterator-record projection.
 void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* in_context )
 {
 	grass_patch* const* it_patch			= m_visible_patches.begin( );
@@ -426,7 +434,7 @@ void grass_world::render(
 	enum_render_stage_type	stage_type,
 	u32 const				tech_index,
 	float const				draw_distance,
-	bool,
+	bool					stencil_mask,
 	res_effect*				debug_effect,
 	bool					shadow_pass,
 	u32 const				cascade_index
@@ -493,7 +501,7 @@ void grass_world::update_grass_layer(
 {
 	if ( is_set )
 	{
-		u8 const models_count = (u8)desc->models_list.size( );
+		u32 const models_count = desc->models_list.size( );
 		buffer_vector<resources::request> r( ALLOCA( sizeof( resources::request ) * models_count ), models_count );
 		r.resize( models_count );
 		for ( u8 i = 0; i < models_count; ++i )
@@ -560,7 +568,7 @@ void grass_world::clear( )
 	m_templates.clear( );
 }
 
-void grass_world::remove_grass_layer( u8 id, bool )
+void grass_world::remove_grass_layer( u8 id, bool do_populate )
 {
 	grass_templates_type::iterator it = m_templates.begin( );
 	grass_templates_type::iterator end = m_templates.end( );
@@ -603,7 +611,7 @@ void setup_seed_clk( )
 
 u8 select_model_template( float* values, float sum, u8 const count )
 {
-	float const p = model_index_random.random_f( sum );
+	float p = model_index_random.random_f( sum );
 	for ( u8 i = 0; i < count; ++i )
 	{
 		if ( values[i] > p )
@@ -661,7 +669,7 @@ void grass_world::grass_layer_resources_ready_from_cook(
 	DELETE( desc );
 	DELETE( layer_data );
 }
-
+// sushi@TODO: Recover the selected-model scale and random-scale statement partition.
 void grass_world::grass_layer_resources_ready(
 	resources::queries_result& data,
 	grass_layer_desc* desc,
@@ -706,10 +714,8 @@ void grass_world::grass_layer_resources_ready(
 			m.i.xyz( ) = math::cross_product( m.j.xyz( ), m.k.xyz( ) );
 		}
 
-		float const scale = select_model_scale(
-			desc->random_scale,
-			desc->models_list[model_index].scale
-		);
+		float scale = desc->models_list[model_index].scale;
+		scale = select_model_scale( desc->random_scale, scale );
 		m.set_scale( float3( scale, scale, scale ) );
 		add_instance( model_ids[model_index], clr, m, desc->id, desc->wind_factor );
 	}
@@ -720,12 +726,12 @@ void grass_world::grass_layer_resources_ready(
 }
 
 void grass_world::remove_layer_instances(
-	u8 layer_id,
-	float2 const& cell_pos_lt,
-	float2 const& cell_pos_rb
+	u8 id,
+	float2 const& cell_lt,
+	float2 const& cell_rb
 )
 {
-	float3 pt( cell_pos_lt.x + 0.5f, 0.f, cell_pos_lt.y + 0.5f );
+	float3 pt( cell_lt.x + 0.5f, 0.f, cell_lt.y + 0.5f );
 	grass_patch* patch = find_patch( pt );
 	if ( !patch )
 		return;
@@ -736,15 +742,15 @@ void grass_world::remove_layer_instances(
 	for ( ; it != end; ++it )
 	{
 		grass_instance* instance = *it;
-		if ( instance->m_layer_id != layer_id )
+		if ( instance->m_layer_id != id )
 			continue;
 
 		float3 p = instance->m_transform.c.xyz( );
 		if (
-			p.x > cell_pos_lt.x &&
-			p.z > cell_pos_lt.y &&
-			p.x < cell_pos_rb.x &&
-			p.z < cell_pos_rb.y
+			p.x > cell_lt.x &&
+			p.z > cell_lt.y &&
+			p.x < cell_rb.x &&
+			p.z < cell_rb.y
 		)
 			instances_to_remove.push_back( instance->m_index );
 	}

@@ -158,7 +158,7 @@ private:
 	}
 
 	void merge_patches( );
-	u32 add_template( grass_render_model_ptr const& render_model );
+	u32 add_template( grass_render_model_ptr const& in_render_model );
 
 	void remove_template( u32 const in_id )
 	{
@@ -183,11 +183,11 @@ private:
 	}
 
 	u32 add_instance(
-		u32 const template_id,
-		math::color const& color,
-		float4x4 const& transform,
-		u8 const layer,
-		float const wind_scale
+		u32 const in_template_id,
+		math::color const& in_color,
+		float4x4 const& in_transform,
+		u8 const in_layer,
+		float const in_wind_scale
 	);
 
 	void remove_instance( u32 const id );

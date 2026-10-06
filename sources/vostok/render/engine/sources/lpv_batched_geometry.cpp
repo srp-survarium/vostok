@@ -39,18 +39,16 @@ void lpv_batched_geometry::build(
 
 	invalidate( );
 
-	surface_matrices_type matrices;
 	surfaces_type surfaces;
+	surface_matrices_type matrices;
 	render_model_instance_impl_ptr* it = model_instances.begin( );
-	render_model_instance_impl_ptr* end = model_instances.end( );
-	for ( ; it != end; ++it )
+	for ( render_model_instance_impl_ptr* end = model_instances.end( ); it != end; ++it )
 	{
 		vector<render_surface_instance*> model_surfaces;
 		( *it )->get_surfaces( NULL, NULL, model_surfaces, false, 0, 3 );
 
 		render_surface_instance** it_surf = model_surfaces.begin( );
-		render_surface_instance** end_surf = model_surfaces.end( );
-		for ( ; it_surf != end_surf; ++it_surf )
+		for ( render_surface_instance** end_surf = model_surfaces.end( ); it_surf != end_surf; ++it_surf )
 		{
 			surfaces.push_back( ( *it_surf )->m_render_surface );
 			matrices.push_back( *( *it_surf )->m_transform );
@@ -60,7 +58,7 @@ void lpv_batched_geometry::build(
 	render_surface** surface = surfaces.begin( );
 	float4x4* matrix = matrices.begin( );
 	for ( ; surface != surfaces.end( ); ++surface, ++matrix )
-		( *surface )->fill_lpv_vertex_color( this, *matrix );
+		( *surface )->fill_lpv_vertex_color( NULL, *matrix );
 
 	finalize_batch( );
 }

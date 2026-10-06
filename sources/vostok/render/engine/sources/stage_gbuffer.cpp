@@ -316,7 +316,7 @@ void stage_gbuffer::execute( )
 		0
 	);
 	backend::ref().clear_render_targets(
-		math::color(1.f, .5f, .5f, 1.f), math::color(0.f, 0.f, 0.f, 0.f),
+		math::color(.5f, .5f, 1.f, 1.f), math::color(0.f, 0.f, 0.f, 0.f),
 		math::color(1.f, 1.f, 1.f, 1.f), math::color(0.f, 0.f, 0.f, 0.f)
 	);
 	backend::ref().reset_depth_stencil_target();
@@ -396,7 +396,10 @@ void stage_gbuffer::execute( )
 	if (m_fill_view_space_depth)
 	{
 		backend::ref().set_render_targets(&*m_context->get_rt(rt_position), 0, 0, 0);
-		backend::ref().clear_render_targets(math::color(0.f, 0.f, 0.f, 0.f));
+		backend::ref().clear_render_targets(
+			math::color(0.f, 0.f, 0.f, 0.f), math::color(0.f, 0.f, 0.f, 0.f),
+			math::color(0.f, 0.f, 0.f, 0.f), math::color(0.f, 0.f, 0.f, 0.f)
+		);
 
 		backend::ref().reset_depth_stencil_target();
 		backend::ref().clear_depth_stencil(
@@ -413,11 +416,12 @@ void stage_gbuffer::execute( )
 
 			render_surface* surface = instance.m_render_surface;
 
+			bool const is_static = surface->get_vertex_input_type() == static_mesh_vertex_input_type;
 			material_effects& effects = surface->get_material_effects();
 			if (!effects.m_effects[gbuffer_render_stage].c_ptr())
 				continue;
 
-			if (surface->get_vertex_input_type() == static_mesh_vertex_input_type)
+			if (is_static)
 				continue;
 
 			if (!surface->m_render_geometry.geom.c_ptr())

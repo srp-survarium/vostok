@@ -183,18 +183,24 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 		for ( u32 i = 0; i < temp_count; ++i )
 		{
 			float const distance = f.planes( )[plane_id].plane.classify( temp[i] );
-			if ( math::is_zero( distance ) || distance > 0.f )
+			if ( math::is_zero( distance ) ||
+				f.planes( )[plane_id].plane.classify( temp[i] ) > 0.f )
 				pos.push_back( temp[i] );
 			float3 intersection_position;
-			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) &&
-				( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) ) )
-				pos.push_back( intersection_position );
+			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) )
+			{
+				if ( pos.empty( ) || !intersection_position.is_similar( pos.back( ) ) )
+					pos.push_back( intersection_position );
+			}
 		}
 		if ( pos.size( ) < 3 )
 			return false;
 		temp.clear( );
 		std::copy( pos.begin( ), pos.end( ), std::back_inserter( temp ) );
 	}
+
+	if ( pos.size( ) < 3 )
+		return false;
 
 	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
 	u32 longest_edge_id = 0;
@@ -221,9 +227,9 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	world_to_local.try_invert( local_to_world );
 	wm_vertices_2d_buffer_type wm_vertices_2d( ALLOCA( pos.size( ) * sizeof( wm_vertex_2d ) ), pos.size( ) );
 
-	for ( u32 i = 0; i < pos.size( ); ++i )
+	for ( vertices_buffer_type::const_iterator i = pos.begin( ); i != pos.end( ); ++i )
 	{
-		float3 const local_position = world_to_local.transform_position( pos[i] );
+		float3 const local_position = world_to_local.transform_position( *i );
 		wm_vertices_2d.push_back( wm_vertex_2d( local_position.x, local_position.y ) );
 	}
 	Wm4::Box2< float > min_box = Wm4::ContMinBox( wm_vertices_2d.size( ), &wm_vertices_2d.front( ), 0.f, Wm4::Query::QT_REAL, false );
@@ -394,7 +400,7 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 	if ( !cull_points_by_frustum( frustum, points ) )
 		return;
 	float3 const edge0 = points[2] - points[1], edge1 = points[1] - points[0];
-	if ( math::is_zero( edge0.length( ) * edge1.length( ), math::epsilon_3 ) )
+	if ( math::is_zero( edge1.length( ) * edge0.length( ), math::epsilon_3 ) )
 		return;
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_points_for_frustum( points, next_sector_id ) )
@@ -487,7 +493,7 @@ void portal_sector_system::process_portal_in_screen_space(
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
 	aab_rect limited_portal_rect = portals_rects[portal_id];
 	if ( !limiting_rect.contains( portals_rects[portal_id] ) &&
-		!portal_screen_rect_to_four_points( portals_rects[portal_id], far_plane, inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
+		!portal_screen_rect_to_four_points( portals_rects[portal_id], p.get_plane( ), inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
 		return;
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_ss_aab_rect( limited_portal_rect, next_sector_id ) )
@@ -551,11 +557,11 @@ void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
 void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 {
 	portals_type::const_iterator const portals_end = m_structure->get_portals( ).end( );
-	for ( portals_type::const_iterator i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
+	for ( portals_type::const_iterator it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
 	{
-		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
-		float const radius = math::max( math::max( math::squared_length( i->get_points( )[0] - center ), math::squared_length( i->get_points( )[1] - center ) ), math::max( math::squared_length( i->get_points( )[2] - center ), math::squared_length( i->get_points( )[3] - center ) ) );
-		m_occlusion_bounds.push_back( float4( center, math::sqrt( radius ) ) );
+		float3 const center = std::accumulate( &it->get_points( )[0], &it->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
+		float const sqr_radius = math::max( math::max( math::squared_length( it->get_points( )[0] - center ), math::squared_length( it->get_points( )[1] - center ) ), math::max( math::squared_length( it->get_points( )[2] - center ), math::squared_length( it->get_points( )[3] - center ) ) );
+		m_occlusion_bounds.push_back( float4( center, math::sqrt( sqr_radius ) ) );
 	}
 	std::fill( m_occlusion_results.begin( ), m_occlusion_results.end( ), u8( -1 ) );
 }
@@ -661,15 +667,13 @@ u32 get_aabb_furthest_vertex_id( float3 const view_dir )
 void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
 	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
-	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
+	buffer_vector< float3 > furthest_vertices( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ), m_structure->get_sectors( ).size( ) );
 	sectors_type::const_iterator const sectors_end = m_structure->get_sectors( ).end( );
-	float3* output = furthest_vertices;
-	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i )
 	{
-		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id );
-		new ( output ) float3( furthest_vertex );
+		furthest_vertices.push_back( i->get_aabb( ).vertex( furthest_vertex_id ) );
 	}
-	m_preventer->make_frustum_images( furthest_vertices );
+	m_preventer->make_frustum_images( furthest_vertices.begin( ) );
 }
 
 } // namespace culling
