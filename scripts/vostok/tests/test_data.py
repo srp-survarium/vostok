@@ -28,10 +28,14 @@ from vostok.data.missing import (
     load_symbols,
 )
 from vostok.data.manifest import (
+    ConsumerRow,
     _canonical_name,
     _classify_function_refs,
+    _consumer_code_pairs,
     _direct_consumers,
+    _projection_name,
     _section_properties,
+    _write_manifest_side,
 )
 from vostok.data.pe import PEImage
 from vostok.data.pipeline import (
@@ -54,6 +58,7 @@ from vostok.data.pipeline import (
     _load_function_symbols,
     _ordinal_local,
     _physical_allocations,
+    _relocation_signature,
     _relocation_signatures_match,
     _transfer_target_extents,
     compare,
@@ -803,6 +808,100 @@ class DataPipelineTests(unittest.TestCase):
                 (20, "derived-rtti-type-descriptor"),
             )
 
+    def test_vtable_extent_stops_at_next_pdb_symbol(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<III", data, 0x320, 0x11000, 0x11000, 0x11000)
+            path.write_bytes(data)
+            image = PEImage(path)
+            first = dataclasses.replace(
+                self._symbol(0x2020, b"??_7first@@6B@"),
+                scope="external", size=None, type_index=0,
+            )
+            second = dataclasses.replace(
+                self._symbol(0x2028, b"??_7second@@6B@"),
+                scope="external", size=None, type_index=0,
+            )
+            with mock.patch(
+                "vostok.data.missing.load_pdb_extents", return_value=[]
+            ), mock.patch.object(
+                image, "base_relocations", return_value=(0x2020, 0x2024, 0x2028)
+            ):
+                bounded = _apply_target_extents([first, second], image)
+            self.assertEqual(
+                [(row.size, row.size_kind) for row in bounded],
+                [(8, "derived-vtable"), (4, "derived-vtable")],
+            )
+
+    def test_import_cells_compare_by_public_identity_not_linker_address(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into("<I", data, 0x300, 0x12345678)
+            path.write_bytes(data)
+            image = PEImage(path)
+            symbol = dataclasses.replace(
+                self._symbol(0x2000, b"__imp__CreateFileA@28"),
+                scope="external",
+                public_name=b"__imp__CreateFileA@28",
+                identity="E:__imp__CreateFileA@28",
+            )
+            signature, normalized = _relocation_signature(
+                symbol, image, (), AddressResolver([symbol], [])
+            )
+            self.assertEqual(
+                signature,
+                [(0, frozenset(("IMPORT:E:__imp__CreateFileA@28",)))],
+            )
+            self.assertEqual(normalized, bytes(4))
+
+    def test_delay_descriptor_normalizes_its_rva_fields(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            struct.pack_into(
+                "<IIIIIIII", data, 0x300,
+                1, 0x2100, 0x2200, 0x2300, 0x2400, 0, 0, 0,
+            )
+            path.write_bytes(data)
+            image = PEImage(path)
+            symbol = dataclasses.replace(
+                self._symbol(0x2000, b"__DELAY_IMPORT_DESCRIPTOR_USER32_dll"),
+                size=32,
+                scope="external",
+                public_name=b"__DELAY_IMPORT_DESCRIPTOR_USER32_dll",
+                identity="E:__DELAY_IMPORT_DESCRIPTOR_USER32_dll",
+            )
+            signature, normalized = _relocation_signature(
+                symbol, image, (), AddressResolver([symbol], [])
+            )
+            self.assertEqual([offset for offset, _ in signature], [4, 8, 12, 16])
+            self.assertEqual(normalized, struct.pack("<IIIIIIII", 1, 0, 0, 0, 0, 0, 0, 0))
+
+    def test_rtti_alignment_padding_is_not_semantic_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "test.exe"
+            _synthetic_pe(path)
+            data = bytearray(path.read_bytes())
+            data[0x308:0x314] = b".?AVtype@@\0\xaa"
+            path.write_bytes(data)
+            image = PEImage(path)
+            symbol = dataclasses.replace(
+                self._symbol(0x2000, b"??_R0?AVtype@@@8"),
+                size=20,
+                scope="external",
+                public_name=b"??_R0?AVtype@@@8",
+                identity="E:??_R0?AVtype@@@8",
+            )
+            _, normalized = _relocation_signature(
+                symbol, image, (), AddressResolver([symbol], [])
+            )
+            self.assertEqual(normalized[-1], 0)
+
     def test_fixed_abi_public_symbol_extents_are_derived_by_class(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.exe"
@@ -824,6 +923,13 @@ class DataPipelineTests(unittest.TestCase):
                              (8, "derived-boost-function-vtable"))
             self.assertEqual(extent(b"?error@placeholders@@3U?$arg@$00@boost@@A"),
                              (1, "derived-boost-placeholder"))
+            self.assertEqual(
+                extent(
+                    b"?result@?1??get@?$placeholder@$01@detail@placeholders@"
+                    b"asio@boost@@SAAAU?$arg@$01@6@XZ@4U76@A"
+                ),
+                (1, "derived-boost-placeholder"),
+            )
             self.assertEqual(
                 extent(
                     b"??_7?$verify_callback@V?$bind_t@_NVowner@@"
@@ -949,7 +1055,7 @@ class DataPipelineTests(unittest.TestCase):
             )
         self.assertEqual([row.rva for row in inferred], [0x2020])
 
-    def test_code_xref_does_not_replace_exact_candidate_pdb_datum(self):
+    def test_code_xref_adds_alias_without_replacing_candidate_pdb_datum(self):
         target = self._symbol(0x2000, b"retail_value")
         candidate = dataclasses.replace(
             self._symbol(0x2020, b"candidate_value"),
@@ -969,7 +1075,53 @@ class DataPipelineTests(unittest.TestCase):
             inferred = _infer_base_symbols_from_code_xrefs(
                 [target], [candidate], PEImage(path), [row]
             )
-        self.assertEqual(inferred, [])
+        self.assertEqual(len(inferred), 1)
+        self.assertEqual(
+            (inferred[0].rva, inferred[0].identity, inferred[0].size_kind),
+            (0x2020, target.identity, "retail-code-xref"),
+        )
+        self.assertEqual(candidate.identity, "L:module:unit.obj:value")
+
+    def test_consumer_projection_selects_candidate_alias_per_unit(self):
+        target = self._symbol(0x2000, b"value")
+        rows = [
+            {
+                "pair_status": "PAIRED",
+                "access_status": "EXACT",
+                "unit": unit,
+                "target_datum_rva": "0x2000",
+                "inferred_base_datum_rva": candidate,
+            }
+            for unit, candidate in (("a.cpp", "0x2020"), ("b.cpp", "0x2030"))
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            pairs = _consumer_code_pairs([target], PEImage(path), rows)
+        self.assertEqual(
+            {key: value.rva for key, value in pairs.items()},
+            {("a.cpp", 0x2000): 0x2020, ("b.cpp", 0x2000): 0x2030},
+        )
+
+    def test_consumer_projection_rejects_partial_relocation_cell(self):
+        target = self._symbol(0x2000, b"value")
+        target = dataclasses.replace(target, size=0x11)
+        rows = [{
+            "pair_status": "PAIRED",
+            "access_status": "EXACT",
+            "unit": "a.cpp",
+            "target_datum_rva": "0x2000",
+            "inferred_base_datum_rva": "0x2020",
+        }]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "base.exe"
+            _synthetic_pe(path)
+            image = PEImage(path)
+            with mock.patch.object(
+                image, "base_relocations", return_value=(0x2030,)
+            ):
+                pairs = _consumer_code_pairs([target], image, rows)
+        self.assertEqual(pairs, {})
 
     def test_code_xref_prefers_function_offset_over_sequence_vote(self):
         target = self._symbol(0x2000, b"value")
@@ -2078,6 +2230,43 @@ class ConsumerManifestTests(unittest.TestCase):
     def test_external_projection_preserves_pdb_identity(self):
         self.assertEqual(_canonical_name(self._symbol("external", "E:?g_value@@3HA")),
                          "?g_value@@3HA")
+
+    def test_split_projection_gets_distinct_external_comdat_leaders(self):
+        target = self._symbol("external", "E:?g_value@@3HA")
+        first = ConsumerRow(
+            "render/first.cpp", target,
+            dataclasses.replace(target, rva=0x2020), True,
+        )
+        second = ConsumerRow(
+            "render/second.cpp", target,
+            dataclasses.replace(target, rva=0x2030), True,
+        )
+        self.assertNotEqual(
+            _projection_name(first, {"?g_value@@3HA"}),
+            _projection_name(second, {"?g_value@@3HA"}),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.tsv"
+            sections = root / "sections.tsv"
+            with (
+                mock.patch(
+                    "vostok.data.manifest.paths.DELINK_DATA_MANIFEST",
+                    manifest,
+                ),
+                mock.patch(
+                    "vostok.data.manifest.paths.DELINK_DATA_SECTION_MANIFEST",
+                    sections,
+                ),
+            ):
+                _write_manifest_side([first, second], "target")
+            rows = [
+                line.split("\t")
+                for line in manifest.read_text(encoding="utf-8").splitlines()[1:]
+            ]
+        self.assertEqual(len({row[0] for row in rows}), 2)
+        self.assertTrue(all(row[0].startswith("?g_value@@3HA$vostok_projection$") for row in rows))
+        self.assertTrue(all(row[8] == "external" for row in rows))
 
     def test_projection_sections_are_one_byte_aligned_comdats(self):
         for storage in ("rdata", "data", "bss"):
