@@ -155,7 +155,7 @@ void player_cook::on_subresources_loaded(
 		damage_cfg->get_root( ), params->character_model->m_skeleton, g_allocator );
 
 	fs_new::virtual_path_string							hit_params_config_path;
-	hit_params_config_path.assignf						( "resources/gameplay/hit_params/%s", (pcstr)settings_cfg->get_root( )["hit_params"] );
+	hit_params_config_path.assignf						( "resources/gameplay/hit_params/%s.options", (pcstr)settings_cfg->get_root( )["hit_params"] );
 
 
 	affects_applying_type_enum const affects_applying_type = params->initial_info.profile->is_local ? type_apply_directly : type_read_only;

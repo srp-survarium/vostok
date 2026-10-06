@@ -18,11 +18,7 @@ void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
 static u32	ambient_volume_ids	= 0;
 
-// claude@NOTE: clear_value file-static float; init value is not encoded in the
-// load asm (referenced only by address) and cannot be recovered from the
-// disassembly. Guessed 0.0f - does not affect load's codegen, only the unmatched
-// data initializer.
-static float clear_value = 0.0f;
+static float clear_value = 1.0f;
 
  object_ambient_volume::object_ambient_volume( base_game_scene& w ) :
 	game_object_static( w )

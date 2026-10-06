@@ -1,0 +1,91 @@
+diff --git a/src/function_index.rs b/src/function_index.rs
+new file mode 100644
+index 0000000..d3aed84
+--- /dev/null
++++ b/src/function_index.rs
+@@ -0,0 +1,51 @@
++use crate::pdb_symbols::PdbSymbols;
++
++use std::fmt::Write as _;
++use std::path::Path;
++
++const HEADER: &str = "rva\tsize\tname_hex\n";
++
++pub fn write(symbols: &PdbSymbols, path: &Path) -> anyhow::Result<()> {
++    let aliases = symbols.functions.values().map(Vec::len).sum::<usize>();
++    let mut output = String::with_capacity(aliases * 80);
++    output.push_str(HEADER);
++    for (rva, names) in &symbols.functions {
++        let size = symbols
++            .function_sizes
++            .get(rva)
++            .map(|value| value.to_string())
++            .unwrap_or_else(|| "-".to_owned());
++        for name in names {
++            write!(output, "{rva:#x}\t{size}\t")?;
++            for byte in name.as_bytes() {
++                write!(output, "{byte:02x}")?;
++            }
++            output.push('\n');
++        }
++    }
++    if let Some(parent) = path.parent() {
++        std::fs::create_dir_all(parent)?;
++    }
++    std::fs::write(path, output)?;
++    eprintln!(
++        "[function-index] wrote {} PDB function aliases at {} starts -> {}",
++        aliases,
++        symbols.functions.len(),
++        path.display()
++    );
++    Ok(())
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn empty_index_has_only_the_stable_header() {
++        let symbols = PdbSymbols::default();
++        let mut output = String::new();
++        output.push_str(HEADER);
++        assert_eq!(output, "rva\tsize\tname_hex\n");
++        assert!(symbols.functions.is_empty());
++    }
++}
+diff --git a/src/main.rs b/src/main.rs
+index a21472c..72d8730 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -6,0 +7 @@ mod data_section_manifest;
++mod function_index;
+@@ -35 +36 @@ pub struct Cli {
+-        required_unless_present_any = ["write_data_index", "write_missing_data_index"]
++        required_unless_present_any = ["write_data_index", "write_function_index", "write_missing_data_index"]
+@@ -98,0 +100,5 @@ pub struct Cli {
++    /// Export every PDB function start and alias, including procedures omitted
++    /// by source-oriented rich indexes, then exit without producing objects.
++    #[arg(long, value_hint = clap::ValueHint::FilePath)]
++    pub write_function_index: Option<std::path::PathBuf>,
++
+@@ -138,0 +145 @@ fn main() -> anyhow::Result<()> {
++        write_function_index,
+@@ -176,0 +184 @@ fn main() -> anyhow::Result<()> {
++        write_function_index.as_deref(),
+@@ -198,0 +207 @@ fn process_executable<S: pdb2::Source<'static> + 'static>(
++    write_function_index: Option<&std::path::Path>,
+@@ -203,0 +213 @@ fn process_executable<S: pdb2::Source<'static> + 'static>(
++    let mut exported = false;
+@@ -206 +216,5 @@ fn process_executable<S: pdb2::Source<'static> + 'static>(
+-        return Ok(());
++        exported = true;
++    }
++    if let Some(path) = write_function_index {
++        function_index::write(&pdb_symbols, path)?;
++        exported = true;
+@@ -209,0 +224,3 @@ fn process_executable<S: pdb2::Source<'static> + 'static>(
++        exported = true;
++    }
++    if exported {

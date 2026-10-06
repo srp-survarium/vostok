@@ -942,12 +942,12 @@ void particle_action_velocity_over_lifetime::load_binary(vostok::mutable_buffer&
 void particle_action_gravity::set_defaults( bool mt_alloc )
 {
 	particle_modifier::set_defaults(mt_alloc);
-	m_force = 9.8f;
+	m_force = 0.0f;
 }
 
 void particle_action_gravity::init( particle_emitter_instance* /*instance*/, base_particle* P, float /*time*/ )
 {
-	P->gravity = 9.8f;
+	P->gravity = 0.0f;
 }
 
 void particle_action_gravity::update( particle_emitter_instance* instance, base_particle* P, float time )

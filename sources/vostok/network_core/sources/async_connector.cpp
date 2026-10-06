@@ -74,7 +74,7 @@ void async_connector::on_resolved(
 					this,
 					resolver,
 					boost::asio::placeholders::error,
-					boost::asio::placeholders::iterator
+					boost::asio::placeholders::bytes_transferred
 				)
 			);
 			return;
@@ -123,7 +123,7 @@ void async_connector::connect(
 	resolver->async_resolve(
 		query,
 #line 130
-		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::iterator ) );
+		boost::bind( &async_connector::on_resolved, this, resolver, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred ) );
 }
 
 void async_connector::reset( )

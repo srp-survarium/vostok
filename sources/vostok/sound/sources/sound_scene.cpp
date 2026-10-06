@@ -243,7 +243,7 @@ struct receiver_unconditional_erasing_predicate : private noncopyable
 {
 	inline void operator()	( receiver_collision* receiver_container ) const
 	{
-		DELETE				( receiver_container );
+		VOSTOK_DELETE_IMPL	( g_allocator, receiver_container );
 	}	
 };
 

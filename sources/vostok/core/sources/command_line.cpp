@@ -331,7 +331,7 @@ struct checker
 		{
 			LOGFD_FORCED			(logging::info, logging::format_message, core::log_to_console, "\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
 
-			debug::terminate			("Command line argument '%s' has not been registered", key_name);
+			debug::terminate			("Command line argument '%s' has not been registered\n\nUse -help to see list of available commands", key_name);
 		}
 	}
 };

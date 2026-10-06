@@ -372,7 +372,7 @@ void brain_unit::stop_attack			( npc const* const target, weapon const* const gu
 
 bool brain_unit::is_at_position			( movement_target const* const target ) const
 {
-	return math::length					( target->target_position - m_npc.get_position( float3( 0.f, 0.f, 0.f ) ) ) <= 0.3f;//math::epsilon_3;
+	return math::length					( target->target_position - m_npc.get_position( float3( 0.f, 0.f, 0.f ) ) ) <= 1.3f;//math::epsilon_3;
 }
 
 void brain_unit::move_to_point			( movement_target const* const target )
