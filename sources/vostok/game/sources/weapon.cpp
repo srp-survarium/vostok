@@ -212,10 +212,11 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	VOSTOK_UNREFERENCED_PARAMETER( weapon_parameters );
 
 	// first-view animations lead the trailing array, third-view ones follow
-	u32 const death_animation_index =
-		is_third_view
-			? m_weapon.first_view_death_animations_count( ) + m_random.random( m_weapon.third_view_death_animations_count( ) )
-			: m_random.random( m_weapon.first_view_death_animations_count( ) );
+	u32 death_animation_index;
+	if ( is_third_view )
+		death_animation_index = m_weapon.first_view_death_animations_count( ) + m_random.random( m_weapon.third_view_death_animations_count( ) );
+	else
+		death_animation_index = m_random.random( m_weapon.first_view_death_animations_count( ) );
 
 	animation::mixing::animation_lexeme	death_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -231,11 +232,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 		.time_scale			( 0.5f )
 		.animated_object		( m_user )
 	);
-
-	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
-		death_lexeme,
-		death_lexeme
-	);
+	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >( death_lexeme, death_lexeme );
 }
 
 bool weapon_user_dead_state::is_ready_for_transition( ) const
@@ -256,28 +253,22 @@ void weapon::load_weapon(
 
 	player_logic_base_state* const dead = VOSTOK_NEW_IMPL( g_allocator, weapon_user_dead_state )( *this );
 
+
+
 	m_user_animations_selector.logic( ).add_state( dead );
 
-	for ( ai::fsm_state* i = m_user_animations_selector.logic( ).states( ).front( ); i; i = i->next )
-	{
+	for ( ai::fsm_state* i = m_user_animations_selector.logic( ).states( ).front( ); i; i = i->next ) {
 		m_user_animations_selector.logic( ).add_transition( i, dead, boost::bind( &is_dead, boost::ref( m_user ) ) );
 		m_user_animations_selector.logic( ).add_transition( dead, i, boost::bind( &is_alive, boost::ref( m_user ) ) );
 	}
 
-	player_logic_base_state* const preview = VOSTOK_NEW_IMPL( g_allocator, player_logic_preview_state )(
-		( resources::managed_resource_ptr* )( this + 1 ) + m_first_view_death_animations_count + m_third_view_death_animations_count,
-		m_preview_animations_count,
-		m_user_animations_selector
-	);
+	u32 const first_view_count = m_first_view_death_animations_count, third_view_count = m_third_view_death_animations_count;
+	player_logic_base_state* const preview = VOSTOK_NEW_IMPL( g_allocator, player_logic_preview_state )( ( resources::managed_resource_ptr* )( this + 1 ) + first_view_count + third_view_count, m_preview_animations_count, m_user_animations_selector );
 	m_user_animations_selector.logic( ).add_state( preview );
 }
 
-// claude@NOTE: structure faithful (static add, if-guard, the two returns exactly as the target
-// records lines 290/292/293/296+298+296). The target keeps BOTH return paths fully expanded with
-// duplicated epilogues (frame sub esp,0xC8, a float4x4 stack temp per branch) so each return body
-// + its `}` epilogue is a distinct statement (6 stmts); our build cross-jump/tail-merges the two
-// returns through a shared final mul4x3 (`jmp short .3`) into a tighter frame (sub esp,0x80),
-// collapsing to 4 statements. Tail-merge / epilogue-sharing codegen difference, not source-steerable.
+// The float4x4 operators, not nested mul4x3 calls: they make the compiler finish the inner
+// product before pushing the outer operands, which keeps retail's two return epilogues.
 float4x4 weapon::calculate_locator(
 	render::model_locator_item const&		locator,
 	float4x4 const*							matrices,
@@ -287,10 +278,10 @@ float4x4 weapon::calculate_locator(
 	static float4x4 add = math::create_rotation_y( math::pi );
 
 	if ( locator.m_bone == 0xffff )
-		return math::mul4x3( math::mul4x3( add, locator.m_offset ), get_transform( ) );
+		return add * locator.m_offset * get_transform( );
 
-	return math::mul4x3( math::mul4x3( math::mul4x3( add, locator.m_offset ), matrices[ locator.m_bone ] ),
-		get_transform( ) );
+	return add * locator.m_offset * matrices[ locator.m_bone ] *
+		get_transform( );
 
 }
 
@@ -298,22 +289,18 @@ void weapon::on_show( )
 {
 	m_is_in_scene = true;
 	render::scene_ptr scene = get_game_scene( )->render_scene( );
-
 	get_game_scene( )->renderer( ).scene( ).add_model( scene, model->m_render_model, get_transform( ) );
-
 	if ( m_rifle_scope )
 		get_game_scene( )->renderer( ).scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, get_transform( ) );
 
 	if ( m_game_ui )
 	{
-		m_game_ui->set_ammo_type( (u8)( m_ammo_slot != get_ammo_slot( first_ammo ) ) + 1 );
+		m_game_ui->set_ammo_type( (u8)( ammo_slot( ) != get_ammo_slot( first_ammo ) ) + 1 );
 		m_game_ui->set_fire_queue_size( m_weapon_fire_queue_types[ m_fire_queue_type ] );
 		m_game_ui->show_ammo_indicator( true );
-
-		if ( m_game_ui )
-			m_game_ui->show_crosshair( true );
-
+		show_crosshair( );
 		set_ui_ammo( true );
+
 		user( ).get_input_handler( ).set_key_binder_context( 1 );
 	}
 }
@@ -323,85 +310,56 @@ void weapon::on_hide( )
 	m_is_in_scene = false;
 	render::scene_ptr scene = get_game_scene( )->render_scene( );
 
-	if ( !( m_is_scope_aimed && m_rifle_scope && m_rifle_scope->hide_weapon_on_aim( ) ) )
+	if ( !( m_is_scope_aimed && m_rifle_scope.c_ptr( ) && m_rifle_scope->hide_weapon_on_aim( ) ) )
 		get_game_scene( )->renderer( ).scene( ).remove_model( scene, model->m_render_model );
 
 	if ( m_rifle_scope )
-		get_game_scene( )->renderer( ).scene( ).remove_model(
-			scene,
-			( m_is_scope_aimed
-				? m_rifle_scope->aimed_model( )
-				: m_rifle_scope->idle_model( ) )->m_render_model
-		);
+		if ( m_is_scope_aimed )
+			get_game_scene( )->renderer( ).scene( ).remove_model( scene, m_rifle_scope->aimed_model( )->m_render_model );
+		else
+			get_game_scene( )->renderer( ).scene( ).remove_model( scene, m_rifle_scope->idle_model( )->m_render_model );
 
 	m_is_scope_aimed = false;
-	if ( m_game_ui )
-		m_game_ui->show_crosshair( false );
 
+
+	hide_crosshair( );
 	if ( m_game_ui )
 		m_game_ui->show_ammo_indicator( false );
 }
 
-// claude@NOTE: structure matched (8 stmts, 0 named locals). Capped by inline-vs-call: the target
-// INLINES inventory::item_in_slot (direct m_slots[slot].item access) and the inventory_item_ptr
-// addref/release, but item_in_slot is parked out-of-line (STATE[STUB] in inventory.h, LTCG custom
-// convention) so our base CALLs it + the resource_ptr copy-ctor. Also the set_ammo_in_magazine arg
-// is register-passed (16-bit add) target-side vs our push. Both are cross-unit LTCG walls.
 void weapon::set_ui_ammo( bool update_total_count )
 {
-	if ( m_game_ui && m_inventory )
-	{
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	if ( !m_game_ui || !m_inventory )
+		return;
 
-		if ( update_total_count )
-		{
-			inventory& inv = *m_inventory;
+	u16 const ammo_in_magazine = ( m_is_round_chambered != 0 ) + m_ammo_in_magazine;
+	m_game_ui->set_ammo_in_magazine( ammo_in_magazine );
 
-			inventory_item_ptr ammo1 = inv.item_in_slot( get_ammo_slot( first_ammo ) );
-			inventory_item_ptr ammo2 = inv.item_in_slot( get_ammo_slot( second_ammo ) );
+	if ( !update_total_count )
+		return;
 
-			m_game_ui->set_ammo_total_count(
-				ammo1 ? ( *ammo1 ).amount( ) : 0,
-				ammo2 ? ( *ammo2 ).amount( ) : 0
-			);
-		}
-	}
+	inventory& inv = *m_inventory;
+	inventory_item_ptr ammo1 = inv.item_in_slot( get_ammo_slot( first_ammo ) );
+	inventory_item_ptr ammo2 = inv.item_in_slot( get_ammo_slot( second_ammo ) );
+
+	m_game_ui->set_ammo_total_count( ammo1 == NULL ? 0 : ( *ammo1 ).amount( ), ammo2 == NULL ? 0 : ( *ammo2 ).amount( ) );
 }
 
-// claude@NOTE: structure correct (single statement = set_ui_ammo( true )). The target emits
-// `mov eax,ecx; push 1; call set_ui_ammo` because its set_ui_ammo takes `this` in eax (LTCG
-// custom convention); our set_ui_ammo is standard __thiscall (this in ecx) so we skip the
-// `mov eax,ecx` and the call lands in tail position (attributed to no line). Calling-convention
-// LTCG wall on the set_ui_ammo callee, not source-steerable.
 void weapon::on_reload( )
 {
 	set_ui_ammo( true );
 }
 
-// claude@NOTE: structure correct. Target records 0 line records (ICF-folded COMDAT) and tail-jmps
-// set_ammo_in_magazine with a 16-bit `add ax,[47A]` register-arg; our base does the 32-bit add +
-// push/call/ret (no tail-call). LTCG call-convention cap, not source-steerable.
 void weapon::on_chamber_a_round( )
 {
-	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	set_ui_ammo( false );
 }
 
 void weapon::on_unload_chambered_round( )
 {
-	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	set_ui_ammo( false );
 }
 
-// claude@NOTE: show_crosshair/hide_crosshair structure correct (the if-guard + the inner call).
-// The target shows 2 statements (if-line + call-line) because its game_world_ui::show_crosshair
-// uses an LTCG custom register convention (`this` in edx, bool in al, plain `ret`) which makes the
-// weapon wrapper reserve a frame (`push ecx`/`pop ecx`), and that frame splits the prologue `{`
-// from the if-test (giving the if its own line record). Our build's game_world_ui::show_crosshair
-// is standard __thiscall (this in ecx, bool pushed, `ret 4`), so our wrapper is leaf-minimal (no
-// frame) and the `{`/if-test collapse to one statement. game_world_ui::show_crosshair is a
-// non-trivial out-of-line Invoke wrapper in another TU; its convention is whole-program-chosen.
-// Inline/calling-convention LTCG wall, not source-steerable.
 void weapon::show_crosshair( )
 {
 	if ( m_game_ui )
@@ -418,10 +376,6 @@ void weapon::on_before_fire( )
 {
 }
 
-// claude@NOTE: the 2nd guard is ONE statement target-side (if+body on one line); split
-// across two lines it emitted a spurious BASE_ONLY body row (4/5). Residual is the same
-// set_ammo_in_magazine LTCG register-arg / tail-jmp wall as on_chamber_a_round (16-bit
-// `add ax,[47A]` + tail-call vs our 32-bit add + push/call); not source-steerable.
 void weapon::on_after_fire( )
 {
 	if ( m_game_ui )
@@ -429,38 +383,25 @@ void weapon::on_after_fire( )
 
 	play_weapon_fire_pfx( );
 
-	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	set_ui_ammo( false );
 }
 
-// claude@NOTE: structure correct - both sides emit 9 statements (the ledger's SPLIT class is a
-// line-number-shift artifact, not a count mismatch; --view structure-diff pairs every statement
-// with only SIZE deltas). Residual is codegen: the target aligns the stack (`and esp,0FFFFFFF8h`
-// + a reserved slot) and uses ebx as `this`, our build uses ebp with no alignment, plus minor
-// register-allocation differences across the add_light/remove_light arg-eval. old_target is a real
-// source local that the optimizer register-allocates into esi (its name drops in the optimized
-// game-module PDB - do not delete it). Codegen/frame difference, not source-steerable.
 void weapon::set_target( const weapon_targets new_target )
 {
-	weapon_targets old_target = m_target;
-
+	weapon_targets const old_target = m_target;
 	weapon_core::set_target( new_target );
+	weapon_targets const current_target = m_target;
 
-	if ( m_target == weapon_target_fire )
+	if ( current_target == weapon_target_fire && old_target != current_target )
 	{
-		if ( old_target != m_target )
-		{
-			m_weapon_fire_light_props.transform = m_barrel_transform;
-			get_game_scene( )->renderer( ).scene( ).add_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, &m_weapon_fire_light_props );
-			m_firing_light_added = true;
-		}
+		m_weapon_fire_light_props.transform = m_barrel_transform;
+		get_game_scene( )->renderer( ).scene( ).add_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, &m_weapon_fire_light_props );
+		m_firing_light_added = true;
 	}
-	else if ( old_target == weapon_target_fire )
+	else if ( current_target != weapon_target_fire && old_target == weapon_target_fire && m_firing_light_added )
 	{
-		if ( m_firing_light_added )
-		{
-			get_game_scene( )->renderer( ).scene( ).remove_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id );
-			m_firing_light_added = false;
-		}
+		get_game_scene( )->renderer( ).scene( ).remove_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id );
+		m_firing_light_added = false;
 	}
 }
 
@@ -525,7 +466,7 @@ void weapon::set_next_ammo_type( )
 	weapon_core::set_next_ammo_type( );
 
 	if ( m_game_ui )
-		m_game_ui->set_ammo_type( (u8)( m_ammo_slot != get_ammo_slot( first_ammo ) ) + 1 );
+		m_game_ui->set_ammo_type( (u8)( ammo_slot( ) != get_ammo_slot( first_ammo ) ) + 1 );
 }
 
 void weapon::on_reload_started( )
@@ -541,11 +482,13 @@ void weapon::on_ammo_empty( )
 void weapon::activate( base_player& user, engine& engine )
 {
 	if ( static_cast< player& >( user ).is_demo_player( ) )
+	{
 		m_user_animations_selector.set_player_logic_initial_state(
-			static_cast_checked< player_logic_base_state* >( m_user_animations_selector.logic( ).states( ).back( ) )
-		);
+			static_cast_checked< player_logic_base_state* >( m_user_animations_selector.logic( ).states( ).back( ) ) );
+	}
 
 	m_game_scene = static_cast< base_game_scene* >( &engine );
+
 	weapon_core::activate( user, engine );
 
 	m_left_toe_bone_index = user.skeleton( ).get_bone_index( "LeftFoot" ) - user.skeleton( ).get_root_bones_count( );
@@ -611,80 +554,70 @@ void weapon::on_skeleton_matrices_changed(
 			m_current_fire_light_anim_time = 0;
 		}
 		else
-			m_weapon_fire_light_props.range =
-				( m_fire_light_anim_length - m_current_fire_light_anim_time ) * 5.f /
-				m_fire_light_anim_length;
+			m_weapon_fire_light_props.range = ( m_fire_light_anim_length - m_current_fire_light_anim_time ) * 5.f / m_fire_light_anim_length;
 
-		get_game_scene( )->renderer( ).scene( ).update_light(
-			get_game_scene( )->render_scene( ),
-			m_weapon_fire_light_id,
-			&m_weapon_fire_light_props
-		);
+		get_game_scene( )->renderer( ).scene( ).update_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, &m_weapon_fire_light_props );
 	}
 
 	u32 const weapon_matrices_count = weapon_matrices_end - weapon_matrices_begin;
+
 	m_left_toe_transform = math::mul4x3( user_matrices_begin[ m_left_toe_bone_index ], user_transform );
 	m_right_toe_transform = math::mul4x3( user_matrices_begin[ m_right_toe_bone_index ], user_transform );
+
 	m_barrel_transform = calculate_locator( m_barrel_locator, weapon_matrices_begin, weapon_matrices_count );
+
 	m_scope_transform = calculate_locator( m_scope_locator, weapon_matrices_begin, weapon_matrices_count );
+
 	update_pfx_transform( );
 
 	render::base_scene_ptr scene = get_game_scene( )->render_scene( );
 	render::game::renderer& renderer = get_game_scene( )->renderer( );
+
 	if ( s_draw_fire_point )
 		renderer.debug( ).draw_origin( scene, m_barrel_transform, 0.5f, false );
 
-	if ( !m_is_third_view && m_aimed )
-	{
-		if ( !m_is_scope_aimed && m_rifle_scope )
-		{
+	if ( !m_is_third_view && m_aimed ) {
+		if ( !m_is_scope_aimed && m_rifle_scope ) {
 			float const scope_fov_factor = m_rifle_scope->fov_factor( );
 			float const fov_factor = user( ).fov_factor( current_time_in_ms );
-			if ( ( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) >= m_rifle_scope->change_scope_factor( ) )
-			{
+			if ( ( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) >= m_rifle_scope->change_scope_factor( ) ) {
 				m_is_scope_aimed = true;
-				renderer.scene( ).remove_model( scene, m_rifle_scope->idle_model( )->m_render_model );
-				renderer.scene( ).add_model( scene, m_rifle_scope->aimed_model( )->m_render_model, m_scope_transform );
-				if ( m_rifle_scope->hide_weapon_on_aim( ) )
-				{
-					renderer.scene( ).remove_model( scene, model->m_render_model );
-					renderer.scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 2 );
+				get_game_scene( )->renderer( ).scene( ).remove_model( scene, m_rifle_scope->idle_model( )->m_render_model );
+				get_game_scene( )->renderer( ).scene( ).add_model( scene, m_rifle_scope->aimed_model( )->m_render_model, m_scope_transform );
+
+				if ( m_rifle_scope->hide_weapon_on_aim( ) ) {
+					get_game_scene( )->renderer( ).scene( ).remove_model( scene, model->m_render_model );
+					get_game_scene( )->renderer( ).scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 2 );
 				}
 			}
 		}
+
 	}
-	else if ( ( !m_is_third_view || !user( ).is_alive( ) ) && m_is_scope_aimed && m_rifle_scope )
-	{
+	else if ( ( !m_is_third_view || !user( ).is_alive( ) ) && m_is_scope_aimed && m_rifle_scope ) {
 		float const scope_fov_factor = m_rifle_scope->fov_factor( );
 		float const fov_factor = user( ).fov_factor( current_time_in_ms );
-		if ( m_rifle_scope->change_scope_factor( ) >
-			( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) ||
-			!user( ).is_alive( ) )
-		{
+		if ( m_rifle_scope->change_scope_factor( ) > ( 1.f - fov_factor ) / ( 1.f - scope_fov_factor ) || !user( ).is_alive( ) ) {
 			m_is_scope_aimed = false;
-			renderer.scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, m_scope_transform );
-			renderer.scene( ).remove_model( scene, m_rifle_scope->aimed_model( )->m_render_model );
-			if ( m_rifle_scope->hide_weapon_on_aim( ) )
-			{
-				renderer.scene( ).add_model( scene, model->m_render_model, weapon_core::m_transform );
-				renderer.scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 3 );
+			get_game_scene( )->renderer( ).scene( ).add_model( scene, m_rifle_scope->idle_model( )->m_render_model, m_scope_transform );
+			get_game_scene( )->renderer( ).scene( ).remove_model( scene, m_rifle_scope->aimed_model( )->m_render_model );
+			if ( m_rifle_scope->hide_weapon_on_aim( ) ) {
+				get_game_scene( )->renderer( ).scene( ).add_model( scene, model->m_render_model, get_transform( ) );
+				get_game_scene( )->renderer( ).scene( ).set_model_visible( user( ).get_current( ).model->m_render_model, 1, 3 );
 			}
 		}
 	}
 
-	if ( !( m_is_scope_aimed && m_rifle_scope.c_ptr( ) && m_rifle_scope->hide_weapon_on_aim( ) ) )
-	{
+
+	if ( !( m_is_scope_aimed && m_rifle_scope.c_ptr( ) && m_rifle_scope->hide_weapon_on_aim( ) ) ) {
 		renderer.scene( ).update_model( scene, model->m_render_model, weapon_transform );
 		renderer.scene( ).update_skeleton( model->m_render_model, weapon_matrices_begin, weapon_matrices_count );
 	}
 
 	if ( m_rifle_scope )
-	{
 		if ( m_is_scope_aimed )
 			renderer.scene( ).update_model( scene, m_rifle_scope->aimed_model( )->m_render_model, m_scope_transform );
 		else
 			renderer.scene( ).update_model( scene, m_rifle_scope->idle_model( )->m_render_model, m_scope_transform );
-	}
 
 	VOSTOK_UNREFERENCED_PARAMETER( user_matrices_end );
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
@@ -727,27 +660,18 @@ void weapon::update_dispersion_visual_representation( )
 	if ( m_game_ui )
 	{
 		m_game_ui->show_crosshair( !( s_hide_crosshair_on_aim_value && m_aimed ) );
-
-		const float crosshair_size = s_dispersion_gui_scale_coef_value / default_vertical_fov
-			* get_dispersion( );
+		const float crosshair_size = s_dispersion_gui_scale_coef_value / default_vertical_fov * get_dispersion( );
 		m_game_ui->set_crosshair_size( crosshair_size );
 	}
 }
 
-// claude@NOTE: structure correct (base call + 2 inlined activate_hand). The target records a
-// separate statement (line 705) that hoists the left hand's is_active (`m_is_double_handed ||
-// !user_is_sprinting`) into al up front, then reuses al/cl across both inlined activate_hand
-// stores; our build computes each is_active just-in-time inside its own activate_hand body.
-// Tried spreading the left call across source lines to coax the arg onto its own statement -
-// did not split (the `||` short-circuit + inlined `if` schedule as one statement regardless).
-// Pure CSE/code-motion scheduling difference, no named local on either side - not source-steerable.
 void weapon::on_user_sprint( const bool user_is_sprinting )
 {
 	weapon_core::on_user_sprint( user_is_sprinting );
-
 	bool const left_hand_active = m_is_double_handed || !user_is_sprinting;
-	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left,  left_hand_active,   m_last_tick_time_in_ms );
-	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, !user_is_sprinting, m_last_tick_time_in_ms );
+	bool const right_hand_active = !user_is_sprinting;
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left,  left_hand_active,  m_last_tick_time_in_ms );
+	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, right_hand_active, m_last_tick_time_in_ms );
 }
 
 } // namespace survarium
