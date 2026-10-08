@@ -66,38 +66,25 @@ void render_output_window::set_size(
 	bool			force_resize
 )
 {
+
+	// sushi@TODO: Recover retail resize guard and member-store attribution.
 	if ( !width || !height )
 		return;
-
 	bool const windowed = !fullscreen;
-	if (
-		!force_resize &&
-		width == m_current_size.x &&
-		height == m_current_size.y &&
-		windowed == m_windowed
-	)
+	if ( !force_resize && width == m_current_size.x && height == m_current_size.y && windowed == m_windowed )
 		return;
 
-	m_current_size = math::uint2( width, height );
+
 	m_windowed = windowed;
+
+	m_current_size = math::uint2( width, height );
 	m_targets.resize( m_current_size, force_resize );
 	m_output->set_size( width, height, fullscreen, force_resize );
-
 	if ( m_flash_renderer )
 	{
-		backend::ref().set_render_targets	(
-			&*m_targets.m_family[rt_generic_1].target,
-			&*m_targets.m_family[rt_generic_0].target,
-			0,
-			0
-		);
-		backend::ref().flush				( );
-		m_flash_renderer->on_reset_device(
-			m_current_size.x,
-			m_current_size.y,
-			device::ref().d3d_device(),
-			device::ref().d3d_context()
-		);
+		backend::ref().set_render_targets( &*m_targets.m_family[rt_generic_1].target, &*m_targets.m_family[rt_generic_0].target, 0, 0 );
+		backend::ref().flush( );
+		m_flash_renderer->on_reset_device( m_current_size.x, m_current_size.y, device::ref().d3d_device(), device::ref().d3d_context() );
 	}
 }
 
