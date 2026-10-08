@@ -188,8 +188,15 @@ void stage_clouds::fill_cloud_texture( u32 index )
 	if ( data )
 	{
 
+
+
+
+		// sushi@TODO: Verify cloud upload source extent and mapped texture pitches.
+
 		memory::copy( data, data_size, index == 0 ? m_context->scene( )->get_clouds( )->m_cloud_simulation_0->get_voxels( ) : m_context->scene( )->get_clouds( )->m_cloud_simulation_1->get_voxels( ), data_size );
 	}
+
+
 
 	m_3d_clouds_density_texture[index]->unmap3D( 0 );
 }
