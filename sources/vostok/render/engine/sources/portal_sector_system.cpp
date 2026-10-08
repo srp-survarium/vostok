@@ -657,17 +657,15 @@ u32 get_aabb_furthest_vertex_id( float3 const view_dir )
 		return view_dir.z >= 0.f ? 2 : 3;
 	return view_dir.z >= 0.f ? 1 : 0;
 }
-
+// sushi@TODO: Recover frustum-image loop and placement-copy statement attribution.
 void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
 	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
 	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
 	sectors_type::const_iterator const sectors_end = m_structure->get_sectors( ).end( );
-	float3* output = furthest_vertices;
-	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	float3* output = furthest_vertices; for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
 	{
-		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id );
-		new ( output ) float3( furthest_vertex );
+		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id ); new ( output ) float3( furthest_vertex );
 	}
 	m_preventer->make_frustum_images( furthest_vertices );
 }
