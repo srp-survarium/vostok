@@ -146,16 +146,18 @@ void grass_world::remove_instance( u32 const in_id )
 
 grass_template* grass_world::id_to_template( u32 const id ) const
 {
-	grass_template* result							=	NULL;
-	grass_templates_type::const_iterator	it		=	m_templates.begin();
-	grass_templates_type::const_iterator	end		=	m_templates.end();
+	grass_template* result = NULL;
+	grass_templates_type::const_iterator it = m_templates.begin( );
+	grass_templates_type::const_iterator end = m_templates.end( );
 
-	for (; it != end; ++it)
+	for ( ; it != end; ++it )
 	{
-		result										=	(*it);
-
-		if (result->m_index == id)
+		// sushi@TODO: Verify invalid template IDs reaching instance creation.
+		if ( ( *it )->m_index == id )
+		{
+			result = *it;
 			break;
+		}
 	}
 
 	return result;
@@ -166,13 +168,15 @@ grass_template* grass_world::find_template( grass_render_model_ptr const& model 
 	grass_template* result = NULL;
 	grass_templates_type::const_iterator it = m_templates.begin( );
 	grass_templates_type::const_iterator end = m_templates.end( );
+
 	for ( ; it != end; ++it )
 	{
-		result = *it;
-		if ( result->m_render_model == model )
+		if ( ( *it )->m_render_model == model )
+		{
+			result = *it;
 			break;
+		}
 	}
-
 	return result;
 }
 
