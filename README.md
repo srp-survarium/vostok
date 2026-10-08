@@ -10,7 +10,7 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,639 / 13,014 functions exact (81.75%) &middot; 11,222 / 13,014 functions exact-max (86.23%) &middot; 93.93% fuzzy &middot; 95.45% fuzzy-max.**
+**Overall: 10,639 / 13,014 functions exact (81.75%) &middot; 11,222 / 13,014 functions exact-max (86.23%) &middot; 93.94% fuzzy &middot; 95.46% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-10-06 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-10-08 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -48,13 +48,13 @@ _Updated 2026-10-06 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,089,803 / 71,536,291) &middot; matched projected copies: 66.08% (17,435,179 / 26,383,551).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,947 / 71,536,291) &middot; matched projected copies: 66.07% (17,432,127 / 26,382,699).**
 
-_The projection has 15,048 paired copies across 1,701 units and 31,083 unresolved blockers. Strict relocation comparison exposes 1,502 otherwise-exact functions (599,835 code bytes) with referent debt._
+_The projection has 15,047 paired copies across 1,701 units and 31,084 unresolved blockers. Strict relocation comparison exposes 1,505 otherwise-exact functions (602,368 code bytes) with referent debt._
 
-_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11278 / 12795 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.67% paired-only fidelity (11276 / 12794 definitions). Integrity ratchet: armed._
 
-_Updated 2026-10-06._
+_Updated 2026-10-08._
 <!-- data-match:end -->
 
 ## Requirements
