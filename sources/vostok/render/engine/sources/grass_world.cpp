@@ -216,8 +216,21 @@ void grass_world::populate( float const patch_size_ground )
 {
 	remove_patches( );
 
+	// sushi@TODO: Recover grass population statement attribution and call expansion.
+
+
+
+
+
+
+
+
+
+
 	grass_template** it					=	m_templates.begin( );
 	grass_template** end				=	m_templates.end( );
+
+
 
 	for ( ; it != end; ++it )
 	{
@@ -226,10 +239,13 @@ void grass_world::populate( float const patch_size_ground )
 		grass_instance** it_instance	=	templ->m_instances.begin( );
 		grass_instance** end_instance	=	templ->m_instances.end( );
 
+
+
 		for ( ; it_instance != end_instance; ++it_instance )
 		{
 			grass_instance* instance	=	*it_instance;
 			float3 origin				=	instance->m_transform.c.xyz( );
+
 			float3 origin_aligned		=	float3(
 				math::floor( origin.x / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f,
 				0.f,
@@ -239,15 +255,22 @@ void grass_world::populate( float const patch_size_ground )
 			grass_patch* new_patch		=	find_patch( origin_aligned );
 			if ( !new_patch )
 			{
+
 				new_patch					=	NEW( grass_patch )(
 					m_patches_tree,
 					templ,
 					origin_aligned,
 					patch_size_ground
 				);
+
 				m_patches.push_back		( new_patch );
+
+				new_patch->m_instances.push_back( instance );
 			}
-			new_patch->m_instances.push_back( instance );
+			else
+			{
+				new_patch->m_instances.push_back( instance );
+			}
 		}
 	}
 
