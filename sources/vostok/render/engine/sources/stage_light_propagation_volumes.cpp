@@ -694,19 +694,19 @@ void stage_light_propagation_volumes::render_quad( )
 	u32	offset;
 
 	screen_vertex* pv = (screen_vertex*)backend::ref().vertex.lock(4, sizeof(screen_vertex), offset);
-	pv->set(float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f));
-	pv++;
-	pv->set(float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f));
-	pv++;
-	pv->set(float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f));
-	pv++;
-	pv->set(float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f));
-	pv++;
+	pv->set(float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f)); pv++;
+	pv->set(float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f)); pv++;
+	pv->set(float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f)); pv++;
+	pv->set(float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f)); pv++;
 	backend::ref().vertex.unlock			();
 
 	m_screen_vertex_geometry->apply			();
 	backend::ref().render_indexed			(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 2*3, 0, offset);
 }
+
+
+
+
 void stage_light_propagation_volumes::downsample_rsm( float3 const& light_direction, float3 const& grid_origin, float grid_scale, u32 const cascade_index )
 {
 	m_downsample_rsm_effect->apply( 0, 0 );
@@ -1150,6 +1150,8 @@ void stage_light_propagation_volumes::execute_disabled( )
 
 void stage_light_propagation_volumes::execute( )
 {
+
+
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -1161,22 +1163,59 @@ void stage_light_propagation_volumes::execute( )
 
 	if ( s_use_smooothed_lpv_value )
 	{
-		u32 const num_render_stages = options::ref( ).current.m_num_propagate_iterations + 3;
 
-		u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages;
-		u32 propagation_step_index = 0;
+
+
+
+		u32 const num_render_stages = options::ref( ).current.m_num_propagate_iterations + 3; u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages; u32 propagation_step_index = 0;
 
 		if ( render_stage_index > 2 )
 			propagation_step_index = render_stage_index - 3;
+
+
 		for ( u32 cascade_index = 0; cascade_index < m_num_cascades; ++cascade_index )
-		{
-			execute_smoothed_impl( cascade_index, render_stage_index, propagation_step_index, render_stage_index, num_render_stages );
-		}
+		{ execute_smoothed_impl( cascade_index, render_stage_index, propagation_step_index, render_stage_index, num_render_stages ); }
 	}
 	else
-	{
-		execute_impl( );
-	}
+	{ execute_impl( ); }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 void stage_light_propagation_volumes::draw_debug( )
