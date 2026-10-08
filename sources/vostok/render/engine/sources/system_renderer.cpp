@@ -398,8 +398,8 @@ void system_renderer::draw_3D_point(
 	if ( !is_effects_ready( ) )
 		return;
 
+	// sushi@TODO: Recover debug-point normalization allocation and optimized local attribution.
 	VOSTOK_UNREFERENCED_PARAMETER( use_depth );
-
 	u32 screen_width	= backend::ref( ).target_width( );
 
 	float4x4 view_matrix = m_renderer_context->get_v( ),
@@ -408,16 +408,18 @@ void system_renderer::draw_3D_point(
 	float4x4 inv_view_proj_matrix = math::mul4x4( view_matrix, proj_matrix );
 
 	inv_view_proj_matrix.try_invert( inv_view_proj_matrix );
-
 	float4x4 inv_view_matrix = view_matrix;
 
 	inv_view_matrix.try_invert( inv_view_matrix );
 
+
 	float dist = ( float3( inv_view_matrix.e30, inv_view_matrix.e31, inv_view_matrix.e32 ) - position ).length( );
+
+
 	float3 offset_by_x = inv_view_proj_matrix.transform_direction( float3( 1000, 0, 0 ) ).normalize( ) * 1.0f / (float)screen_width * width * 0.5f * dist,
 		   offset_by_y = inv_view_proj_matrix.transform_direction( float3( 0, -1000, 0 ) ).normalize( ) * 1.0f / (float)screen_width * width * 0.5f * dist;
-
-	float3 quad_position[4] = {
+	float3 quad_position[4] =
+	{
 		position - offset_by_x - offset_by_y,
 		position - offset_by_x + offset_by_y,
 		position + offset_by_x + offset_by_y,
@@ -434,12 +436,8 @@ void system_renderer::draw_3D_point(
 		vertices.push_back	( vertex_colored( quad_position[i], color ) );
 
 	// Setup indices.
-	indices.push_back(2);
-	indices.push_back(1);
-	indices.push_back(0);
-	indices.push_back(3);
-	indices.push_back(2);
-	indices.push_back(0);
+	indices.push_back(2); indices.push_back(1); indices.push_back(0);
+	indices.push_back(3); indices.push_back(2); indices.push_back(0);
 	draw_triangles(
 		&*vertices.begin( ),
 		&*vertices.end( ),
@@ -448,6 +446,8 @@ void system_renderer::draw_3D_point(
 		false
 	);
 }
+
+
 
 void system_renderer::fill_surface(
 	render_target_ptr		surface0,
