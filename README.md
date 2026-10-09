@@ -48,11 +48,11 @@ _Updated 2026-10-09 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,091,819 / 71,536,291) &middot; matched projected copies: 66.09% (17,438,619 / 26,384,447).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,503 / 71,536,291) &middot; matched projected copies: 66.09% (17,446,967 / 26,397,507).**
 
-_The projection has 15,045 paired copies across 1,701 units and 31,086 unresolved blockers. Strict relocation comparison exposes 1,498 otherwise-exact functions (595,888 code bytes) with referent debt._
+_The projection has 15,305 paired copies across 1,701 units and 30,824 unresolved blockers. Strict relocation comparison exposes 1,498 otherwise-exact functions (595,888 code bytes) with referent debt._
 
-_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.69% paired-only fidelity (11280 / 12797 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11288 / 12806 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-09._
 <!-- data-match:end -->
@@ -146,6 +146,14 @@ subprocesses, symbol inspection, and each module's data audit. Durations use a
 monotonic clock and include failures; nested/parallel timings are not additive.
 Data preparation runs once per build and its successful result feeds the later
 image-data refresh. Standalone `vostok data refresh` still prepares its inputs.
+The data-index exporter resolves duplicate PDB declarations for the same linked
+symbol before measuring its extent. A unique positive declared extent supersedes
+incomplete zero/unknown declarations and retains the complete record’s type
+provenance; conflicting positive extents remain unknown. Sizes are not inferred
+from neighboring addresses, and data/relocation comparisons remain unchanged.
+Retail inventory reuse requires provenance matching the exporter binary and
+arguments, retail PE/PDB hashes, and inventory hash. Missing, stale or corrupt
+provenance triggers export; a failed export leaves no reusable provenance.
 Symbol normalization inspects objects in bounded batches; audit fingerprints
 and content keys are shared only within that build, with no persistent cache.
 Deferred performance ideas and their safety requirements are tracked in

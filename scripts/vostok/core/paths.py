@@ -132,6 +132,7 @@ BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 # binaries/gen. The image audit remains separate from objdiff until the two
 # delink manifests below actually enroll target COFF data.
 DATA_TARGET_INDEX = GEN_DIR / "target_data_index.tsv"
+DATA_TARGET_INDEX_PROVENANCE = GEN_DIR / "target_data_index_provenance.json"
 DATA_BASE_INDEX = GEN_DIR / "base_data_index.tsv"
 DATA_TARGET_ACCESS = GEN_DIR / "data_access_map.tsv"
 DATA_BASE_ACCESS = GEN_DIR / "base_data_access_map.tsv"

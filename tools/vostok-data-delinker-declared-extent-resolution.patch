@@ -1,0 +1,180 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+--- a/src/data_index.rs
++++ b/src/data_index.rs
+@@ -137,12 +137,7 @@
+             row.public_name.clone_from(name);
+         }
+     }
+-    rows.sort_unstable_by(|left, right| {
+-        (left.rva, &left.module, &left.name).cmp(&(right.rva, &right.module, &right.name))
+-    });
+-    rows.dedup_by(|left, right| {
+-        left.rva == right.rva && left.module == right.module && left.name == right.name
+-    });
++    rows = deduplicate_rows(rows);
+ 
+     let mut output = String::with_capacity(rows.len() * 160);
+     output.push_str(HEADER);
+@@ -183,6 +178,63 @@
+     Ok(())
+ }
+ 
++// Multiple declarations of the same linked datum can carry incomplete arrays.
++// Keep a complete declaration only when all positive extents agree.
++fn unique_declared_extent(sizes: impl Iterator<Item = Option<u64>>) -> Option<u64> {
++    let mut positive = None;
++    let mut has_zero = false;
++    for size in sizes {
++        match size {
++            Some(0) => has_zero = true,
++            Some(size) => match positive {
++                Some(previous) if previous != size => return None,
++                _ => positive = Some(size),
++            },
++            None => {}
++        }
++    }
++    positive.or(if has_zero { Some(0) } else { None })
++}
++
++fn deduplicate_rows(rows: Vec<Row>) -> Vec<Row> {
++    let mut groups: BTreeMap<(usize, Vec<u8>, Vec<u8>), Vec<Row>> = BTreeMap::new();
++    for row in rows {
++        groups
++            .entry((row.rva, row.module.clone(), row.name.clone()))
++            .or_default()
++            .push(row);
++    }
++    groups
++        .into_values()
++        .map(|mut group| {
++            let size = unique_declared_extent(group.iter().map(|row| row.size));
++            group.sort_unstable_by(|left, right| {
++                (
++                    left.size != size,
++                    left.type_index.0,
++                    &left.archive,
++                    left.scope,
++                    left.section,
++                    left.storage,
++                    &left.public_name,
++                )
++                    .cmp(&(
++                        right.size != size,
++                        right.type_index.0,
++                        &right.archive,
++                        right.scope,
++                        right.section,
++                        right.storage,
++                        &right.public_name,
++                    ))
++            });
++            let mut row = group.remove(0);
++            row.size = size;
++            row
++        })
++        .collect()
++}
++
+ fn remember_complete_size(
+     sizes: &mut HashMap<Vec<u8>, u64>,
+     name: RawString<'_>,
+@@ -299,3 +351,98 @@
+     }
+     result
+ }
++
++#[cfg(test)]
++mod extent_resolution_tests {
++    use super::*;
++
++    fn row(rva: usize, module: &[u8], name: &[u8], size: Option<u64>, ti: u32) -> Row {
++        Row {
++            rva,
++            section: ".rdata",
++            storage: "rdata",
++            size,
++            type_index: TypeIndex(ti),
++            scope: "external",
++            module: module.to_vec(),
++            archive: Vec::new(),
++            name: name.to_vec(),
++            public_name: name.to_vec(),
++        }
++    }
++
++    #[test]
++    fn complete_and_incomplete_arrays_preserve_complete_record_in_both_orders() {
++        let complete = row(0x84c948, b"", b"rsa_asn1_meths", Some(192), 0x51ba6);
++        let incomplete = row(0x84c948, b"", b"rsa_asn1_meths", Some(0), 0x52226);
++        for input in [
++            vec![complete.clone(), incomplete.clone()],
++            vec![incomplete, complete],
++        ] {
++            let out = deduplicate_rows(input);
++            assert_eq!(out.len(), 1);
++            assert_eq!(out[0].size, Some(192));
++            assert_eq!(out[0].type_index.0, 0x51ba6);
++        }
++    }
++
++    #[test]
++    fn unknown_declaration_cannot_displace_the_unique_positive_record() {
++        let out = deduplicate_rows(vec![
++            row(1, b"a", b"x", None, 1),
++            row(1, b"a", b"x", Some(348), 2),
++        ]);
++        assert_eq!(out[0].size, Some(348));
++        assert_eq!(out[0].type_index.0, 2);
++    }
++
++    #[test]
++    fn positive_conflict_remains_unknown_even_with_more_matching_records() {
++        let input = vec![
++            row(1, b"a", b"x", Some(24), 2),
++            row(1, b"a", b"x", Some(32), 1),
++            row(1, b"a", b"x", Some(0), 3),
++            row(1, b"a", b"x", Some(32), 4),
++        ];
++        let out = deduplicate_rows(input.clone());
++        let reversed = deduplicate_rows(input.into_iter().rev().collect());
++        assert_eq!(out[0].size, None);
++        assert_eq!(reversed[0].size, None);
++        assert_eq!(out[0].type_index.0, reversed[0].type_index.0);
++    }
++
++    #[test]
++    fn all_unknown_and_only_zero_extents_do_not_invent_an_extent() {
++        assert_eq!(unique_declared_extent([None, None].into_iter()), None);
++        assert_eq!(unique_declared_extent([Some(0), None].into_iter()), Some(0));
++        assert_eq!(
++            unique_declared_extent([Some(0), Some(0)].into_iter()),
++            Some(0)
++        );
++    }
++
++    #[test]
++    fn repeated_complete_records_choose_deterministic_type_provenance() {
++        let input = vec![
++            row(1, b"a", b"x", Some(24), 9),
++            row(1, b"a", b"x", Some(24), 7),
++        ];
++        for rows in [input.clone(), input.into_iter().rev().collect()] {
++            let out = deduplicate_rows(rows);
++            assert_eq!(out[0].size, Some(24));
++            assert_eq!(out[0].type_index.0, 7);
++        }
++    }
++
++    #[test]
++    fn module_name_and_rva_distinctions_are_not_collapsed() {
++        let out = deduplicate_rows(vec![
++            row(1, b"a", b"x", Some(24), 1),
++            row(1, b"b", b"x", Some(32), 2),
++            row(1, b"a", b"y", Some(64), 3),
++            row(2, b"a", b"x", Some(96), 4),
++        ]);
++        assert_eq!(out.len(), 4);
++        assert!(out.iter().all(|r| r.size.is_some()));
++    }
++}
