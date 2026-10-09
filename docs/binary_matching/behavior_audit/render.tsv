@@ -46,6 +46,7 @@ mangled	verdict	evidence
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??Aeffect_options_descriptor@render@vostok@@QAEAAU012@PBD@Z	EQUIVALENT	identical after regalloc
+??Mrender@vostok@@YA_NABUbinary_shader_key_type@01@0@Z	EQUIVALENT	retail inlines identity accessors (ICF reps in base)
 ??Rconstant_buffer_predicate@resource_manager@render@vostok@@QBE_NQBVshader_constant_buffer@23@0@Z	EQUIVALENT	branch inversion and setne vs jne tail; same comparison order
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
 ??Rremove_model_skeletal_filter_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	identical after regalloc
@@ -62,6 +63,7 @@ mangled	verdict	evidence
 ?allocate_resource@renderer_cook@render@vostok@@UAE?AVmutable_buffer@3@AAVquery_result_for_cook@resources@3@Vconst_buffer@3@_N@Z	EQUIVALENT	ICF ctor representative; unused frame alignment in retail
 ?apply@?$res_xs@Ups_data@render@vostok@@@render@vostok@@QBEXXZ	EQUIVALENT	regalloc
 ?apply@?$res_xs@Uvs_data@render@vostok@@@render@vostok@@QBEXXZ	EQUIVALENT	retail inlines backend::set_vs (dirty flag/refcount); same state
+?apply@res_effect@render@vostok@@QAE_NII@Z	EQUIVALENT	identical after regalloc
 ?arrange_surfaces_by_lod@render@vostok@@YAXPAUcook_intermediate_data@12@AAPAUmodel_lods_descriptor@12@@Z	EQUIVALENT	retail inlines NEW_ARRAY<u8> header (count, marker); log __LINE__ only (absolute line drift)
 ?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
 ?build_from_config@render@vostok@@YAXAAV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAUskeleton_combined_cook_data@12@@Z	EQUIVALENT	iterator register offset by 4 bytes; same members
