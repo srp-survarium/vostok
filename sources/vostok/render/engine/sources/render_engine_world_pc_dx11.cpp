@@ -432,9 +432,9 @@ static void query_materials_and_wait( vector< fs_new::virtual_path_string > cons
 		assert_on_fail_true
 	);
 
-	FREE( user_data_variants_ptrs );
-	FREE( user_data_variants );
 	FREE( requests );
+	FREE( user_data_variants );
+	FREE( user_data_variants_ptrs );
 
 	while ( waiting_for )
 	{
