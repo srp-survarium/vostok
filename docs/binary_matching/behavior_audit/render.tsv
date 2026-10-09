@@ -43,6 +43,7 @@ mangled	verdict	evidence
 ??1stage_decals_accumulate@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_forward@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
+??1stage_pre_rain@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_rain@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -83,6 +84,7 @@ mangled	verdict	evidence
 ?compile@effect_editor_wireframe_accumulation@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	command-line key guard at shifted address
 ?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
 ?compile@effect_gstage_default_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	ICF reps; inline copy of get_stencil_mask matches retail including the range check
+?compute_aligment@stage_pre_rain@render@vostok@@AAE?AVfloat3@math@3@ABV453@ABVfloat4x4@53@M@Z	EQUIVALENT	retail CSEs a repeated zero-coefficient product inside viewport.transform; same values
 ?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
 ?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
