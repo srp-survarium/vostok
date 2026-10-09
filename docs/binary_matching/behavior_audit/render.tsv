@@ -9,6 +9,7 @@ mangled	verdict	evidence
 ??0debug_statistics_group@render@vostok@@QAE@PBD@Z	EQUIVALENT	buffer_string append inlined vs called
 ??0environment_temp@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
+??0hw_hiz_occlusion_manager@render@vostok@@QAE@_NII@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
@@ -72,6 +73,7 @@ mangled	verdict	evidence
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
 ?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
 ?copy_from@cloud_simulation@render@vostok@@QAEXABV123@@Z	EQUIVALENT	LTCG conv (this/other registers); same memcpy(this, other, size)
+?copy_scene_depth@hw_hiz_occlusion_manager@render@vostok@@AAEXXZ	EQUIVALENT	identical after regalloc
 ?create_const_table@resource_manager@render@vostok@@QAEPAVshader_constant_table@23@ABV423@@Z	EQUIVALENT	regalloc; same descriptor lookup/insert
 ?create_constant_buffer@resource_manager@render@vostok@@QAEPAVshader_constant_buffer@23@ABV?$fixed_string@$0EA@@3@W4enum_shader_type@23@W4_D3D_CBUFFER_TYPE@@I@Z	EQUIVALENT	retail calls ICF ~shader_constant_buffer rep; base inlines same release/free
 ?create_declaration@resource_manager@render@vostok@@QAEPAVres_declaration@23@PBUD3D11_INPUT_ELEMENT_DESC@@I@Z	EQUIVALENT	retail inlines res_declaration ctor; same range init and lookup
@@ -90,6 +92,7 @@ mangled	verdict	evidence
 ?debug_render@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?debug_render@stage_lights@render@vostok@@UAEXXZ	EQUIVALENT	unrolled constant cube transform (debug draw): fp:fast CSE of shared partial sums differs; same source expression
 ?debug_render@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?downsample_occlusion_buffer@hw_hiz_occlusion_manager@render@vostok@@AAEXXZ	EQUIVALENT	int conversion from stack copy vs member
 ?downsample_rsm@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
 ?draw_3D_point@system_renderer@render@vostok@@QAEXABVfloat3@math@3@MABVcolor@53@_N@Z	EQUIVALENT	identical after regalloc
 ?draw_aabb@system_renderer@render@vostok@@QAEXABVaabb@math@3@ABVcolor@53@@Z	EQUIVALENT	push order only
@@ -199,14 +202,17 @@ mangled	verdict	evidence
 ?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
 ?render@renderer@0vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$rectangle@Vfloat2@math@vostok@@@math@2@ABV?$function@$$A6AX_N@Z@boost@@_NPBUfont@ui@2@@Z	FIXED	info->dips used signed max(s32); retail +0x8d6 calls max(u32,u32). Also flash present arg: retail +0x79a passes empty()?0:begin
 ?render_debug@grass_world@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	debug-only draw: x87 operand order; same products
+?render_debug@hw_hiz_occlusion_manager@render@vostok@@QAEXPAVrenderer_context@23@PBVfloat4@math@3@PBEI@Z	EQUIVALENT	LTCG conv
 ?render_dynamic_models@stage_shadow_direct@render@vostok@@QAEXIIABVfloat3@math@3@@Z	EQUIVALENT	empty body; LTCG conv (ret 8 vs ret)
 ?render_environment_probe_preview@stage_debug@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
 ?render_forward_models@stage_forward@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@I@Z	EQUIVALENT	identical after regalloc
 ?render_light@stage_lights@render@vostok@@AAEXPAVlight@23@_N@Z	EQUIVALENT	retail inlines set_constant<float> (set_memory) and res_effect::apply (apply_pass); same constants and passes
 ?render_lines@scene@render@vostok@@AAEX_N@Z	EQUIVALENT	LTCG conv at draw_lines (one arg in eax)
+?render_model_bounds@hw_hiz_occlusion_manager@render@vostok@@AAEXPAVrenderer_context@23@PBVfloat4@math@3@I@Z	EQUIVALENT	identical after regalloc
 ?render_model_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant<float>/<float4x4> via set_memory; same float op count
 ?render_model_probe_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAUenvironment_probe@23@M@Z	EQUIVALENT	regalloc
 ?render_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@II@Z	EQUIVALENT	retail drops redundant it_d!=end_d test on the index-exhausted exit; ICF reps
+?render_occluders@hw_hiz_occlusion_manager@render@vostok@@AAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
 ?render_opaque_models@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	RT slot clears via immediate vs register zero
 ?render_particle_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAVlight@23@I@Z	EQUIVALENT	retail inlines get_view2shadow switch and set_constant<float>; same float op multiset
 ?render_particle_probe_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAUenvironment_probe@23@I@Z	EQUIVALENT	addressing only
