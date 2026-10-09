@@ -48,9 +48,9 @@ _Updated 2026-10-09 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,307 / 71,536,291) &middot; matched projected copies: 66.10% (17,436,883 / 26,378,315).**
+**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,088,947 / 71,536,291) &middot; matched projected copies: 66.10% (17,439,379 / 26,382,699).**
 
-_The projection has 15,040 paired copies across 1,701 units and 31,091 unresolved blockers. Strict relocation comparison exposes 1,497 otherwise-exact functions (596,635 code bytes) with referent debt._
+_The projection has 15,047 paired copies across 1,701 units and 31,084 unresolved blockers. Strict relocation comparison exposes 1,498 otherwise-exact functions (596,650 code bytes) with referent debt._
 
 _The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11276 / 12792 definitions). Integrity ratchet: armed._
 
@@ -83,6 +83,11 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) with the
 config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
 `target` (the original game). Every build also refreshes the committed ledger
 `config/match_state.tsv` and the score block at the top of this README.
+The DX11 game dependency graph excludes the texture compressor and its
+NVTT/FreeImage dependencies. They remain available to the editor and
+texture tools; a solution build-order dependency must not make offline
+asset tools prerequisites of the shipping executable.
+
 The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
