@@ -133,8 +133,8 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 		0.1f,
 		float( m_shadow_map_size ) * 1.41421f + 200.0f
 	);
-	float4x4 shadow_full_transform = math::mul4x3( shadow_view_transform, shadow_projection_transform );
-	float3 adjastment = compute_aligment( float3( 0.0f, 0.0f, 0.0f ), shadow_full_transform, float( m_shadow_map_size ) );
+	float3 adjastment = compute_aligment( float3( 0.0f, 0.0f, 0.0f ),
+		math::mul4x3( shadow_view_transform, shadow_projection_transform ), float( m_shadow_map_size ) );
 	shadow_view_transform = math::create_camera_direction(
 		position + adjastment, direction, float3( 1.0f, 0.0f, 0.0f ) );
 
@@ -186,6 +186,8 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 			m_context->set_w( *instance.m_transform );
 			backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0 );
 		}
+
+	float4x4 shadow_full_transform = m_context->get_vp( );
 
 	m_context->pop_v( );
 
