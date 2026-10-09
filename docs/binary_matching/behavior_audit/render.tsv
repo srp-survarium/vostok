@@ -7,6 +7,7 @@ mangled	verdict	evidence
 ??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
 ??0backend@render@vostok@@QAE@XZ	EQUIVALENT	flag stored from register holding 1 vs immediate
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
+??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
@@ -16,6 +17,7 @@ mangled	verdict	evidence
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
 ??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
 ??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
+??1portal_sector_structure@culling@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
@@ -99,6 +101,7 @@ mangled	verdict	evidence
 ?init_collision@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	random offset: retail rounds the x87 product to float then SSE (rnd-0.25)+pos, base keeps x87 extended; same expression
 ?inject_occluders@stage_light_propagation_volumes@render@vostok@@AAEXIABVfloat3@math@3@0V?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?is_playing@scene_renderer@render@vostok@@QAE_NABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@3@@Z	EQUIVALENT	base body inlined into callers; retail forwards to particle::is_playing as source
+?load@portal_sector_structure@culling@render@vostok@@QAEXPAVbinary_config_value@configs@4@@Z	EQUIVALENT	schedule only; same aabb compares
 ?load@static_render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	ICF alloc_proxy rep; log __LINE__ only (absolute line drift)
 ?make_frustum_images@portal_sector_system@culling@render@vostok@@AAEXABVfloat3@math@4@@Z	EQUIVALENT	identical after regalloc
 ?make_plane_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	stack-slot layout and schedule; same direction/position arithmetic
@@ -179,6 +182,7 @@ mangled	verdict	evidence
 ?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
 ?update_light@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@IPAUlight_props@34@@Z	EQUIVALENT	retail inlines lights_db::update_light
 ?update_model_vertex_buffer@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$vectora@Ubuffer_fragment@render@vostok@@@4@@Z	EQUIVALENT	identical after regalloc
+?update_portals_visability@portal_sector_structure@culling@render@vostok@@QAEXABVfrustum@math@4@PBE@Z	EQUIVALENT	identical after regalloc
 ?update_targets@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
