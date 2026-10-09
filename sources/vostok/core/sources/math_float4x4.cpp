@@ -182,13 +182,13 @@ float3 float4x4::get_angles_xyz				( ) const
 	ASSERT( !math::is_zero( j.xyz().length( ) ), "vector 'j' is 0 !" );
 	ASSERT( !math::is_zero( k.xyz().length( ) ), "vector 'k' is 0 !" );
 
-	float inv_scale_x		=	1 / i.xyz().length( );
+	float inv_scale_x		=	1 / sqrt( sqr( i.x ) + sqr( i.y ) + sqr( i.z ) );
 
 	float3 result;
 	float const iz_wo_scale	=	i.z * inv_scale_x;
 	if ( iz_wo_scale < 1.f ) {
 		if ( iz_wo_scale > -1.f ) {
-			result.x = atan2(-j.z * (1 / j.xyz().length( )), k.z * (1 / k.xyz().length( )));
+			result.x = atan2(-j.z * (1 / j.xyz().length( )), k.z * (1 / sqrt( sqr( k.x ) + sqr( k.y ) + sqr( k.z ) )));
 			result.y = asin(iz_wo_scale);
 
 			result.z = atan2(-i.y, i.x);

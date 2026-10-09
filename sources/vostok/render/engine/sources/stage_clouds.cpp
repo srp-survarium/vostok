@@ -242,7 +242,7 @@ void stage_clouds::execute( )
 
 	cloud_key_parameters interp_key = m_context->scene( )->get_clouds( )->m_interp_key;
 	float4x4 sphere_to_clouds_matrix;
-
+	// sushi@TODO: Recover retail cloud-scale multiplication order.
 	math::try_invert4x4(
 		math::create_scale(
 			float3(
