@@ -143,6 +143,7 @@ mangled	verdict	evidence
 ?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
 ?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
+?get_model_type@model_factory@render@vostok@@YAGAAVchunk_reader@memory@3@@Z	EQUIVALENT	identical after regalloc
 ?get_results_and_prepare_bounds_ambient_volumes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
 ?get_results_and_prepare_bounds_decals@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
 ?get_results_and_prepare_bounds_env_probes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
