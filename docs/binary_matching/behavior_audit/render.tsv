@@ -18,6 +18,7 @@ mangled	verdict	evidence
 ??0skeleton_mesh_gpu_skinning_2weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_3weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0sphere_geometry@render@vostok@@QAE@II@Z	EQUIVALENT	retail transforms side vertices as positions (xyz, w stored as 1.0) where base runs the full float4 transform with w=1; identical for the rotation matrix used
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
 ??0stage_clouds@render@vostok@@QAE@PAVrenderer@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@PAVrenderer_context@12@@Z	EQUIVALENT	commutative multiply operand placement
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
