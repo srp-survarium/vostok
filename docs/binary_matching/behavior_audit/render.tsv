@@ -54,7 +54,9 @@ mangled	verdict	evidence
 ?apply@?$res_xs@Uvs_data@render@vostok@@@render@vostok@@QBEXXZ	EQUIVALENT	retail inlines backend::set_vs (dirty flag/refcount); same state
 ?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
 ?build_from_config@render@vostok@@YAXAAV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAUskeleton_combined_cook_data@12@@Z	EQUIVALENT	iterator register offset by 4 bytes; same members
+?calculate_needed_texture_mip_levels@render@vostok@@YAHABVfloat4x4@math@2@ABVfloat3@42@ABVsphere@42@IIMAAM@Z	EQUIVALENT	max(sx, sy) compared in SSE on stored floats (retail) vs x87 (base); same expression and clamp
 ?calculate_portal_rects_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXABVfloat4x4@math@4@MAAV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@AAV?$buffer_vector@M@4@@Z	EQUIVALENT	same float op multiset (divss/mulss operand spill location only)
+?calculate_streaming_texture_factor@render@vostok@@YAMPBVfloat3@math@2@PBVfloat2@42@IIPBGI@Z	EQUIVALENT	index loads from pre- vs post-incremented pointer; same triangle math
 ?compare@?$res_xs@Ups_data@render@vostok@@@render@vostok@@QBEHABV?$xs_descriptor@Ups_data@render@vostok@@@23@@Z	EQUIVALENT	LTCG conv (ret 8 vs ret 4)
 ?compare@render@vostok@@YAHABV?$res_xs@Ugs_data@render@vostok@@@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
