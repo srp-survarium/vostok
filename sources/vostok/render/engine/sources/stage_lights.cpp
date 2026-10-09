@@ -1530,11 +1530,13 @@ void stage_lights::execute( )
 
 			if (bbox.extents().squared_length() > 2.0f)
 			{
-				if (probe->m_properties.radius <= max_rad)
-					continue;
 
-				max_rad = probe->m_properties.radius;
-				found_probe = probe;
+				if (probe->m_properties.radius > max_rad)
+				{
+					max_rad = probe->m_properties.radius;
+					found_probe = probe;
+				}
+
 				continue;
 			}
 
@@ -1549,14 +1551,14 @@ void stage_lights::execute( )
 			else
 				LOG_ERROR("invalid probe->m_properties.transform");
 
-			if (probe->m_properties.radius * 0.45f + model_max_scale < model_probe_sqdist)
-				continue;
-
-			if (min_dist <= model_probe_sqdist)
-				continue;
-
-			min_dist = model_probe_sqdist;
-			found_probe = probe;
+			if (model_probe_sqdist <= probe->m_properties.radius * 0.45f + model_max_scale)
+			{
+				if (model_probe_sqdist < min_dist)
+				{
+					min_dist = model_probe_sqdist;
+					found_probe = probe;
+				}
+			}
 		}
 
 		if (found_probe)
@@ -1650,11 +1652,11 @@ void stage_lights::execute( )
 			math::aabb bbox = instance->get_aabb();
 			bbox.modify(instance->transform());
 
-			if (probe->m_properties.radius <= max_rad)
-				continue;
-
-			max_rad = probe->m_properties.radius;
-			found_probe = probe;
+			if (probe->m_properties.radius > max_rad)
+			{
+				max_rad = probe->m_properties.radius;
+				found_probe = probe;
+			}
 		}
 
 		if (found_probe)
