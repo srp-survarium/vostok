@@ -14,6 +14,19 @@ from vostok.derive import maxima
 COLUMNS = ("unit", "function", "target_owner_rva", "kind", "operand_offset",
            "table_offset", "size", "evidence")
 _CASE_OFFSETS = tuple(range(14, 62, 6))
+_SURFACE_LOAD = (
+    "vostok/render/engine/sources/render_model.cpp",
+    "?load@render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z",
+)
+_SURFACE_CASE_OFFSETS = (336, 351, 366, 381, 396, 411, 418)
+
+
+def _surface_profile(rows):
+    return (rows[0]["unit"], rows[0]["function"]) == _SURFACE_LOAD
+
+
+def _case_offsets(rows):
+    return _SURFACE_CASE_OFFSETS if _surface_profile(rows) else _CASE_OFFSETS
 
 
 def registrations():
@@ -22,8 +35,15 @@ def registrations():
         if tuple(reader.fieldnames or ()) != COLUMNS:
             raise ValueError("unexpected reviewed compiler-table columns")
         rows = list(reader)
-    if len(rows) != 4 or len({(row["unit"], row["function"]) for row in rows}) != 2:
-        raise ValueError("reviewed mesh enrollment must retain both four-table owners")
+    expected = {
+        ("vostok/render/engine/sources/render_model_cooker.cpp",
+         "vostok::render::mesh_type_to_vertex_input_type"),
+        ("vostok/render/engine/sources/combined_model_cooker.cpp",
+         "vostok::render::mesh_type_to_vertex_input_type"),
+        _SURFACE_LOAD,
+    }
+    if len(rows) != 6 or {(row["unit"], row["function"]) for row in rows} != expected:
+        raise ValueError("reviewed enrollment must retain both mesh owners and surface load")
     seen = set()
     for row in rows:
         identity = row["unit"], row["function"], row["kind"]
@@ -48,7 +68,58 @@ def _owner(records, rows, *, target):
     return next(iter(candidates.values()))
 
 
+def _validate_surface_load(image, owner, rows):
+    """Only the observed member-store/RET8 surface-load profile, not arbitrary code."""
+    start, size = owner["rva"], owner["size"]
+    facts = {row["kind"]: row for row in rows}
+    expected = {"selector": (325, 456, 48), "jump": (332, 428, 28)}
+    if len(rows) != 2 or set(facts) != set(expected):
+        raise ValueError("incomplete reviewed surface selector/jump pair")
+    for kind, row in facts.items():
+        if ((row["unit"], row["function"]) != _SURFACE_LOAD
+                or row["target_owner_rva"] != 0x62C060
+                or tuple(row[key] for key in ("operand_offset", "table_offset", "size"))
+                != expected[kind]):
+            raise ValueError("unsupported reviewed surface table geometry/identity")
+    text = image.section_at(start)
+    if size != 504 or text is None or text.name != ".text" or not text.contains(start, size):
+        raise ValueError("reviewed surface procedure extent changed")
+    raw = image.read_rva(start, size)
+    if (raw[:9] != bytes.fromhex("83ec2456578b7c2430")
+            or raw[14:16] != bytes.fromhex("8bf1")
+            or raw[304:325] != bytes.fromhex("0fb7000fb7c0c746040000000083f82f77600fb688")
+            or raw[329:332] != bytes.fromhex("ff248d")):
+        raise ValueError("reviewed surface dispatch/unsigned default encoding changed")
+    epilogue = bytes.fromhex("5f5e83c424c20800")
+    for offset, value in zip(_SURFACE_CASE_OFFSETS[:-1], (6, 5, 4, 3, 1, 2)):
+        if (raw[offset:offset + 3] != bytes.fromhex("c74604")
+                or image.u32_rva(start + offset + 3) != value
+                or raw[offset + 7:offset + 15] != epilogue):
+            raise ValueError("reviewed surface member-store case/epilogue changed")
+    if raw[418:426] != epilogue or raw[426:428] != bytes.fromhex("8bff"):
+        raise ValueError("reviewed surface default/padding boundary changed")
+    relocs = set(image.base_relocations())
+    roots = {start + 325, start + 332} | set(range(start + 428, start + 456, 4))
+    if {site for site in relocs if start + 304 <= site < start + 504} != roots:
+        raise ValueError("reviewed surface dispatch/table relocation roots changed")
+    for row in rows:
+        if image.u32_rva(start + row["operand_offset"]) != image.image_base + start + row["table_offset"]:
+            raise ValueError("reviewed surface operand/table destination changed")
+    if max(raw[456:504]) >= 7:
+        raise ValueError("surface selector leaves registered jump extent")
+    for offset in range(428, 456, 4):
+        if image.u32_rva(start + offset) - image.image_base - start not in _SURFACE_CASE_OFFSETS:
+            raise ValueError("surface jump entry is not a reviewed case boundary")
+    return raw
+
+
 def _validate(image, owner, rows):
+    if rows and _surface_profile(rows):
+        return _validate_surface_load(image, owner, rows)
+    return _validate_mesh(image, owner, rows)
+
+
+def _validate_mesh(image, owner, rows):
     """Validate only the reviewed two-instruction MSVC mesh dispatch family."""
     start, size = owner["rva"], owner["size"]
     if {row["kind"] for row in rows} != {"selector", "jump"} or len(rows) != 2:
@@ -123,7 +194,7 @@ def audit(module, pairs, target_image, base_image, ledger, *, facts=None):
             def resolve_all(self, rva):
                 if self.owner_record is not None:
                     offset = rva - self.owner_record["rva"]
-                    if offset in _CASE_OFFSETS:
+                    if offset in _case_offsets(rows):
                         return frozenset((f"OWNER:{identity}+{offset:#x}",))
                 return super().resolve_all(rva)
 
@@ -146,7 +217,7 @@ def audit(module, pairs, target_image, base_image, ledger, *, facts=None):
             selector = row["kind"] == "selector"
             access = reloc.Access(
                 site=owner["rva"] + row["operand_offset"],
-                instruction=owner["rva"] + (0 if selector else 7),
+                instruction=owner["rva"] + row["operand_offset"] - 3,
                 target=owner["rva"] + row["table_offset"], access="read",
                 width="byte" if selector else "dword", form="indexed" if selector else "indcall",
                 scale=1 if selector else 4, identity=f"N:{identity}:{row['kind']}",

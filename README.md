@@ -168,8 +168,11 @@ reads, including LLVM Intel syntax with a single memory operand. FST/FSTP and
 integer/control-state stores remain writes. Regenerate the full data lane after
 updating this classifier; existing access-map artifacts retain their old roles.
 
-The direct datum gate also checks the four reviewed embedded mesh dispatch
-arrays in `config/retail/compiler_tables.tsv`. Their exact TU owners, physical
+The direct datum gate also checks six reviewed embedded dispatch arrays in
+`config/retail/compiler_tables.tsv`: two mesh-mapper pairs and the
+`render_surface::load` selector/jump pair. The latter has its own exact504B
+member-store/RET8 profile; it does not widen the existing301B mapper profile.
+Their exact TU owners, physical
 operand relocations and table bounds are validated independently of PDB data
 symbols. Jump referents use owner-relative case offsets; selector bytes and null
 slots remain literal data. Missing, ambiguous or changed candidate evidence stays

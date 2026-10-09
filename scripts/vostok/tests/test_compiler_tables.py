@@ -194,5 +194,114 @@ class CompilerTableTests(unittest.TestCase):
             self.audit()
 
 
+class SurfaceLoadImage:
+    """Retail selector/case bytes, relocated onto an isolated physical fixture."""
+    suffix = bytes.fromhex(
+        "0fb7000fb7c0c746040000000083f82f77600fb68828c26300ff248d0cc26300"
+        "c74604060000005f5e83c424c20800c74604050000005f5e83c424c20800"
+        "c74604040000005f5e83c424c20800c74604030000005f5e83c424c20800"
+        "c74604010000005f5e83c424c20800c74604020000005f5e83c424c20800"
+        "8bffecc16300fbc16300b0c16300bfc16300cec16300ddc1630002c26300"
+        "000001060606060606060606060606060606060606060606060606060606060606060606060606060606060602030405"
+    )
+
+    def __init__(self, start=0x62C060, *, omitted_static_mesh=False):
+        self.start = start
+        self.image_base = 0x10000
+        self.data = bytearray(304) + bytearray(self.suffix)
+        self.data[:9] = bytes.fromhex("83ec2456578b7c2430")
+        self.data[14:16] = bytes.fromhex("8bf1")
+        assert len(self.data) == 504
+        self.text = Section(".text", start, 504, 0, 504, 0x60000020)
+        for operand, table in ((325, 456), (332, 428)):
+            struct.pack_into("<I", self.data, operand, self.image_base + start + table)
+        for slot, offset in enumerate((396, 411, 336, 351, 366, 381, 418)):
+            struct.pack_into("<I", self.data, 428 + slot * 4, self.image_base + start + offset)
+        self.relocs = {start + 325, start + 332} | set(range(start + 428, start + 456, 4))
+        if omitted_static_mesh:
+            self.data[457] = 6
+
+    def read_rva(self, start, size):
+        if not self.text.contains(start, size):
+            raise ValueError("surface fixture read outside extent")
+        return bytes(self.data[start - self.start:start - self.start + size])
+
+    def u32_rva(self, start):
+        return struct.unpack("<I", self.read_rva(start, 4))[0]
+
+    def base_relocations(self):
+        return sorted(self.relocs)
+
+    def section_at(self, rva):
+        return self.text if self.text.contains(rva) else None
+
+
+class SurfaceLoadCompilerTableTests(unittest.TestCase):
+    def setUp(self):
+        self.unit, self.function = compiler_tables._SURFACE_LOAD
+        self.facts = [dict(unit=self.unit, function=self.function,
+                           target_owner_rva=0x62C060, kind=kind,
+                           operand_offset=operand, table_offset=table, size=size,
+                           evidence="retail physical member-store/RET8 fixture")
+                      for kind, operand, table, size in (
+                          ("selector", 325, 456, 48), ("jump", 332, 428, 28))]
+        self.target = SurfaceLoadImage()
+        self.base = SurfaceLoadImage(0x645650)
+        self.owner = dict(file=self.unit, mangled=self.function, rva=0x62C060, size=504)
+        self.base_owner = dict(self.owner, rva=0x645650)
+
+    def audit(self):
+        pairs = SimpleNamespace(target_records=[self.owner], base_records=[self.base_owner])
+        with mock.patch.object(compiler_tables.maxima, "whole_source_file_hash", return_value="source"):
+            return compiler_tables.audit("render", pairs, self.target, self.base,
+                                         {self.function: dict(cur=100, max=100)}, facts=self.facts)
+
+    def test_retail_case_selector_and_relocated_equivalent_are_exact(self):
+        raw = compiler_tables._validate(self.target, self.owner, self.facts)
+        self.assertEqual(raw[457], 0)
+        audit, gates = self.audit()
+        self.assertEqual([r["datum_status"] for r in audit], ["EXACT", "EXACT"])
+        self.assertEqual(gates[0]["resolution"], "EXACT")
+
+    def test_actual_old_candidate_missing_type1_is_bytes_debt_at_code100(self):
+        self.base = SurfaceLoadImage(0x645650, omitted_static_mesh=True)
+        compiler_tables._validate(self.base, self.base_owner, self.facts)
+        audit, gates = self.audit()
+        self.assertEqual([r["datum_status"] for r in audit].count("BYTES"), 1)
+        self.assertEqual(gates[0]["resolution"], "OPEN")
+
+    def test_changed_member_store_default_padding_and_relocations_fail_closed(self):
+        for offset in (0, 14, 304, 310, 317, 336, 339, 418, 426):
+            with self.subTest(offset=offset):
+                self.base = SurfaceLoadImage(0x645650)
+                self.base.data[offset] ^= 1
+                _, gates = self.audit()
+                self.assertEqual(gates[0]["resolution"], "OPEN")
+        for site in (325, 332, 428, 452):
+            with self.subTest(site=site):
+                self.base = SurfaceLoadImage(0x645650)
+                self.base.relocs.remove(self.base.start + site)
+                _, gates = self.audit()
+                self.assertEqual(gates[0]["resolution"], "OPEN")
+
+    def test_new_profile_cannot_enroll_another_identity_or_extent(self):
+        facts = copy.deepcopy(self.facts)
+        facts[1]["unit"] = "unreviewed.cpp"
+        with self.assertRaises(ValueError):
+            compiler_tables._validate(self.target, self.owner, facts)
+        self.base_owner["size"] = 503
+        _, gates = self.audit()
+        self.assertEqual(gates[0]["resolution"], "OPEN")
+
+    def test_selector_out_of_range_and_nonboundary_jump_fail_closed(self):
+        self.base.data[457] = 7
+        _, gates = self.audit()
+        self.assertEqual(gates[0]["resolution"], "OPEN")
+        self.base = SurfaceLoadImage(0x645650)
+        struct.pack_into("<I", self.base.data, 428, self.base.image_base + self.base.start + 397)
+        _, gates = self.audit()
+        self.assertEqual(gates[0]["resolution"], "OPEN")
+
+
 if __name__ == "__main__":
     unittest.main()
