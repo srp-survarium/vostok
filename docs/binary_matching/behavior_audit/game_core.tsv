@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+?tick@weapon_recoil_calculator@survarium@@QAEXIM@Z	FIXED	koef interpolation + process_compensation ran only while additive timer!=0; retail 0xd5 jnp/0xfe jmp -> 0x29c interpolation. Also FP order side*force*mult (0x14d)
+?fire@weapon_recoil_calculator@survarium@@QAEXXZ	FIXED	FP association: retail (choice*force_koef)*m_player_recoil_multiplier at 0xa1 and 0x19a, ours multiplied mult*force*choice
