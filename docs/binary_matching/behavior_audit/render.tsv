@@ -39,6 +39,7 @@ mangled	verdict	evidence
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
 ?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
 ?get_texture_video_memory_size@resource_manager@render@vostok@@QAEIXZ	EQUIVALENT	iterator != end materialised as setne/test in base; same loop and >>20
+?goto_fullscreen@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
 ?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
 ?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
@@ -46,6 +47,7 @@ mangled	verdict	evidence
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@PBDI@Z	EQUIVALENT	inline vs call of max<u32>/mutable_buffer helpers, ICF reps, CSE; log __LINE__ only (absolute line drift)
 ?on_texture_loaded@scene@render@vostok@@QAEXAAVqueries_result@resources@3@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@IM@Z	EQUIVALENT	buffer_string assign inlined in retail vs operator+= call
 ?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
+?present@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
 ?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Ugs_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Ups_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
@@ -67,16 +69,20 @@ mangled	verdict	evidence
 ?render_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@II@Z	EQUIVALENT	retail drops redundant it_d!=end_d test on the index-exhausted exit; ICF reps
 ?reset@backend@render@vostok@@QAEXXZ	EQUIVALENT	flush_rt_views inlined in retail
 ?reset_renderer@world@engine@render@vostok@@QAEX_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?resize@res_render_output@render@vostok@@QAEX_NII0@Z	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
 ?resize_render_output_window@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II_N@Z	EQUIVALENT	base body not emitted (no callers); source set_size(width,height,fullscreen,false) matches retail call
 ?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?set_model_material@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVvirtual_path_string@fs_new@4@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@64@@Z	EQUIVALENT	boost assign_to call vs inline; ICF reps
 ?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?set_size@res_render_output@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	math::max inlined in retail (cmp/sbb select); GetSystemMetrics via register in base
 ?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
+?update_depth_stencil_buffer@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
 ?update_light@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@IPAUlight_props@34@@Z	EQUIVALENT	retail inlines lights_db::update_light
 ?update_model_vertex_buffer@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$vectora@Ubuffer_fragment@render@vostok@@@4@@Z	EQUIVALENT	identical after regalloc
+?update_targets@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
 `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
