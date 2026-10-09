@@ -15,6 +15,7 @@ mangled	verdict	evidence
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
 ??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
+??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
@@ -23,6 +24,7 @@ mangled	verdict	evidence
 ??Rconstant_buffer_predicate@resource_manager@render@vostok@@QBE_NQBVshader_constant_buffer@23@0@Z	EQUIVALENT	branch inversion and setne vs jne tail; same comparison order
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
+?accumulate_trample@grass_world@render@vostok@@QAEXPAVrenderer@23@PAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
 ?add_data@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
 ?add_data@?$batched_geometry@Ushadow_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
@@ -92,6 +94,7 @@ mangled	verdict	evidence
 ?get_surfaces@static_render_model_instance@render@vostok@@UAEXPBVfloat4x4@math@3@PBVfloat3@53@AAV?$vector@PAUrender_surface_instance@render@vostok@@@23@_NEI@Z	FIXED	the LOD fallback walk ran for caller-supplied lod_id; retail +0x0d jne skips straight to the 0xaa test, so it walks only after select_lod
 ?get_texture_video_memory_size@resource_manager@render@vostok@@QAEIXZ	EQUIVALENT	iterator != end materialised as setne/test in base; same loop and >>20
 ?goto_fullscreen@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
+?grass_layer_resources_ready@grass_world@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N@Z	EQUIVALENT	same float ops (x87 operand order)
 ?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
 ?init_collision@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	random offset: retail rounds the x87 product to float then SSE (rnd-0.25)+pos, base keeps x87 extended; same expression
 ?inject_occluders@stage_light_propagation_volumes@render@vostok@@AAEXIABVfloat3@math@3@0V?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	schedule only
@@ -109,10 +112,12 @@ mangled	verdict	evidence
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@PBDI@Z	EQUIVALENT	inline vs call of max<u32>/mutable_buffer helpers, ICF reps, CSE; log __LINE__ only (absolute line drift)
 ?on_texture_loaded@scene@render@vostok@@QAEXAAVqueries_result@resources@3@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@IM@Z	EQUIVALENT	buffer_string assign inlined in retail vs operator+= call
 ?parse@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflection@@W4enum_shader_type@23@@Z	EQUIVALENT	ICF copy reps; log __LINE__ only (absolute line drift)
+?populate@grass_world@render@vostok@@QAEXM@Z	EQUIVALENT	push_back realloc tails merged in retail
 ?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	retail has 10 more addss inside the eight inlined float4x4::transform calls; retail math_float4x4_inline.h checksum differs from every in-repo blob (prior audit)
 ?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
 ?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
 ?present@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?process_culling@grass_world@render@vostok@@QAEXPAVrenderer_context@23@M@Z	EQUIVALENT	ICF reps; min+max vs max+min commutative
 ?process_portal_by_frustum_intersection@portal_sector_system@culling@render@vostok@@AAEXIABVfrustum@math@4@IABVfloat3@64@@Z	EQUIVALENT	operand order of subtractions from memory vs register; same multiset
 ?process_portal_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXIIABV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@ABVfloat3@math@4@ABVplane@74@ABVfloat4x4@74@3ABVaab_rect@234@@Z	EQUIVALENT	multiplicands from stack copy vs memory; same products
 ?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
@@ -132,7 +137,9 @@ mangled	verdict	evidence
 ?release@resource_manager@render@vostok@@QAEXPBVshader_constant_table@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?remove_environment_probe@scene@render@vostok@@QAEXI@Z	EQUIVALENT	retail DELETE omits dead null store into the slot erased next
 ?render@grass_patch@0vostok@@QAEXPAUgrass_world@02@PAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IMPAVres_effect@02@I@Z	EQUIVALENT	immediate via register
+?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
 ?render@renderer@0vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$rectangle@Vfloat2@math@vostok@@@math@2@ABV?$function@$$A6AX_N@Z@boost@@_NPBUfont@ui@2@@Z	FIXED	info->dips used signed max(s32); retail +0x8d6 calls max(u32,u32). Also flash present arg: retail +0x79a passes empty()?0:begin
+?render_debug@grass_world@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	debug-only draw: x87 operand order; same products
 ?render_dynamic_models@stage_shadow_direct@render@vostok@@QAEXIIABVfloat3@math@3@@Z	EQUIVALENT	empty body; LTCG conv (ret 8 vs ret)
 ?render_environment_probe_preview@stage_debug@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
 ?render_light@stage_lights@render@vostok@@AAEXPAVlight@23@_N@Z	EQUIVALENT	retail inlines set_constant<float> (set_memory) and res_effect::apply (apply_pass); same constants and passes
@@ -168,6 +175,7 @@ mangled	verdict	evidence
 ?translate_query@skeleton_combined_render_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
 ?try_accumulate_trample@grass_patch@render@vostok@@QAEXAAUtrample_desc@23@PAUgrass_world@23@PAVrenderer@23@PAVrenderer_context@23@@Z	EQUIVALENT	opposite inline choices (apply_pass/set_constant vs set_trample_parameters); LTCG conv
 ?update_depth_stencil_buffer@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?update_grass_layer@grass_world@render@vostok@@QAEXPAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N22@Z	FIXED	models_count was truncated to u8; retail +0x2a..+0x31 keeps the full size() (alloca edi*8, cmp movzx(i), edi)
 ?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
 ?update_light@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@IPAUlight_props@34@@Z	EQUIVALENT	retail inlines lights_db::update_light
 ?update_model_vertex_buffer@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$vectora@Ubuffer_fragment@render@vostok@@@4@@Z	EQUIVALENT	identical after regalloc
