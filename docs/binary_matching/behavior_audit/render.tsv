@@ -91,6 +91,7 @@ mangled	verdict	evidence
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
 `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
+vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::static_vertex0,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
 vostok::render::draw_text_shadowed	EQUIVALENT	inline-vs-call of color_rgba(0,0,0,1); LTCG conv for font arg
 vostok::render::on_fs_iterator_materials_ready	EQUIVALENT	log __LINE__ only (absolute line drift)
 vostok::render::on_fs_iterator_materials_ready_children	EQUIVALENT	file_type_pointer bool inlined in retail; separate vs shared path buffers on stack
