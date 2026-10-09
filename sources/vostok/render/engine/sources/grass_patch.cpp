@@ -152,10 +152,10 @@ void grass_patch::try_accumulate_trample(
 
 
 
-	if (
-		position.x < 0.f || position.y < -.25f || position.z < 0.f ||
-		position.x > 1.f || position.y > 1.f || position.z > 1.f
-	)
+	if ( !(
+		position.x >= 0.f && position.y >= -.25f && position.z >= 0.f &&
+		position.x <= 1.f && position.y <= 1.f && position.z <= 1.f
+	) )
 		return;
 	in_renderer->get_grass_trample_effect( )->apply( 0, 0 );
 	in_grass_world->set_trample_parameters( desc );
