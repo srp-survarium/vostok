@@ -191,6 +191,7 @@ mangled	verdict	evidence
 ?process_portal_by_frustum_intersection@portal_sector_system@culling@render@vostok@@AAEXIABVfrustum@math@4@IABVfloat3@64@@Z	EQUIVALENT	operand order of subtractions from memory vs register; same multiset
 ?process_portal_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXIIABV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@ABVfloat3@math@4@ABVplane@74@ABVfloat4x4@74@3ABVaab_rect@234@@Z	EQUIVALENT	multiplicands from stack copy vs memory; same products
 ?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
+?push_jittering@temporal_projection_matrix_modifier@render@vostok@@QAEXXZ	EQUIVALENT	multiplicands from stack vs register
 ?query_effects@material_effects_instance_cook@render@vostok@@QAEXAAVquery_result_for_cook@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	ICF reps and resource_ptr dtor inline choices
 ?query_resources_by_data@skeleton_combined_model_cook@render@vostok@@AAEXPAVquery_result_for_cook@resources@3@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	request fields initialised in different order, same values
 ?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Ugs_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
