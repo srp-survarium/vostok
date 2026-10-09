@@ -34,6 +34,7 @@ mangled	verdict	evidence
 ??1stage_clouds@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep; LTCG conv
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_decals_accumulate@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_forward@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -42,6 +43,7 @@ mangled	verdict	evidence
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
 ?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
+?accumulate_local_reflections@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
 ?accumulate_trample@grass_world@render@vostok@@QAEXPAVrenderer@23@PAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
 ?add_data@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
@@ -110,6 +112,7 @@ mangled	verdict	evidence
 ?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (get_rt, intrusive_ptr dtor, res_effect::apply)
+?execute@stage_forward@render@vostok@@UAEXXZ	EQUIVALENT	retail frees a temp buffer out of line / inc vs add 1; same calls
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
@@ -194,11 +197,13 @@ mangled	verdict	evidence
 ?render_debug@grass_world@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	debug-only draw: x87 operand order; same products
 ?render_dynamic_models@stage_shadow_direct@render@vostok@@QAEXIIABVfloat3@math@3@@Z	EQUIVALENT	empty body; LTCG conv (ret 8 vs ret)
 ?render_environment_probe_preview@stage_debug@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
+?render_forward_models@stage_forward@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@I@Z	EQUIVALENT	identical after regalloc
 ?render_light@stage_lights@render@vostok@@AAEXPAVlight@23@_N@Z	EQUIVALENT	retail inlines set_constant<float> (set_memory) and res_effect::apply (apply_pass); same constants and passes
 ?render_lines@scene@render@vostok@@AAEX_N@Z	EQUIVALENT	LTCG conv at draw_lines (one arg in eax)
 ?render_model_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant<float>/<float4x4> via set_memory; same float op count
 ?render_model_probe_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAUenvironment_probe@23@M@Z	EQUIVALENT	regalloc
 ?render_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@II@Z	EQUIVALENT	retail drops redundant it_d!=end_d test on the index-exhausted exit; ICF reps
+?render_opaque_models@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	RT slot clears via immediate vs register zero
 ?render_particle_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAVlight@23@I@Z	EQUIVALENT	retail inlines get_view2shadow switch and set_constant<float>; same float op multiset
 ?render_particle_probe_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAUenvironment_probe@23@I@Z	EQUIVALENT	addressing only
 ?render_shadowed_light@stage_lights@render@vostok@@AAEXPAVlight@23@@Z	EQUIVALENT	view_matrix_parameters table addressed at same relative offsets; operand order of commutative adds only
