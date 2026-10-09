@@ -155,7 +155,7 @@ float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order )
 		if ( ky_wo_scale > -1.f ) {
 			result.x = asin(ky_wo_scale);
 			float inv_scale_y = 1 / sqrt(j.xyz().squared_length( ));
-			float inv_scale_x = 1 / sqrt(i.xyz().squared_length( ));
+			float inv_scale_x = 1 / sqrt( (sqr( i.y ) + sqr( i.x )) + sqr( i.z ) );
 			result.y = atan2(-k.x, k.z);
 			result.z = atan2(-i.y * inv_scale_x, j.y * inv_scale_y);
 		}
