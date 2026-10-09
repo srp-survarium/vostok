@@ -37,7 +37,7 @@ mangled	verdict	evidence
 ?dump_scene_statistics@scene@render@vostok@@QBEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
-?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	OPEN	align mult: retail +0x154 fld1/fdivrp then fmul mults[i] = (1/pow)*m; base folds to m/pow. Source lever unknown; s32 vs u32 loop counters (jl vs jb)
+?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	FIXED	align mult folded to mult/pow; retail +0x154 fld1/fdivrp then +0x177 fmul mults[i] = (1/pow)*mult; explicit parenthesised reciprocal reproduces it
 ?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
 ?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout

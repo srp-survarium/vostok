@@ -413,7 +413,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	if ( size < math::epsilon_7 )
 		return;
-	float current_cascade_align_mult = 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) * cascade_align_mults[cascade_index];
+	float current_cascade_align_mult = ( 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) ) * cascade_align_mults[cascade_index];
 	float current_cascade_offset = cascade_offsets[cascade_index];
 	if ( options::ref( ).current.m_update_shadows_every_frame )
 	{
