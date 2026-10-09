@@ -70,9 +70,13 @@ mangled	verdict	evidence
 ?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
 ?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
+?get_results_and_prepare_bounds_ambient_volumes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_decals@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_env_probes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
 ?get_results_and_prepare_bounds_grass@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	instance pointer offset folded into addressing (base) vs lea (retail)
 ?get_results_and_prepare_bounds_lights@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	addressing only
 ?get_results_and_prepare_bounds_models@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	addressing only
+?get_results_and_prepare_bounds_particles@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
 ?get_surfaces@static_render_model_instance@render@vostok@@UAEXPBVfloat4x4@math@3@PBVfloat3@53@AAV?$vector@PAUrender_surface_instance@render@vostok@@@23@_NEI@Z	FIXED	the LOD fallback walk ran for caller-supplied lod_id; retail +0x0d jne skips straight to the 0xaa test, so it walks only after select_lod
 ?get_texture_video_memory_size@resource_manager@render@vostok@@QAEIXZ	EQUIVALENT	iterator != end materialised as setne/test in base; same loop and >>20
 ?goto_fullscreen@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
