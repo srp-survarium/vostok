@@ -6,6 +6,7 @@ mangled	verdict	evidence
 ??0?$statistics_value@H@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	regalloc
 ??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
 ??0backend@render@vostok@@QAE@XZ	EQUIVALENT	flag stored from register holding 1 vs immediate
+??0debug_statistics_group@render@vostok@@QAE@PBD@Z	EQUIVALENT	buffer_string append inlined vs called
 ??0environment_temp@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
@@ -172,6 +173,7 @@ mangled	verdict	evidence
 ?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
 ?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
 ?present@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?print@statistics_int@render@vostok@@UAEXAAVvirtual_path_string@fs_new@3@@Z	EQUIVALENT	push order only
 ?print_speedtree_errors@render@vostok@@YAXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?process_culling@grass_world@render@vostok@@QAEXPAVrenderer_context@23@M@Z	EQUIVALENT	ICF reps; min+max vs max+min commutative
 ?process_portal_by_frustum_intersection@portal_sector_system@culling@render@vostok@@AAEXIABVfrustum@math@4@IABVfloat3@64@@Z	EQUIVALENT	operand order of subtractions from memory vs register; same multiset
