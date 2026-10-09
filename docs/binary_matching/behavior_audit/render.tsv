@@ -9,6 +9,7 @@ mangled	verdict	evidence
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
+??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
@@ -191,6 +192,7 @@ mangled	verdict	evidence
 ?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?set_size@render_output_window@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	base set_size constprop-specialised for force_resize=true (only caller passing false is unreferenced); retail generic guard matches source
 ?set_size@res_render_output@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	math::max inlined in retail (cmp/sbb select); GetSystemMetrics via register in base
+?set_target_context@renderer_context@render@vostok@@QAEXPBVrenderer_context_targets@23@_N@Z	EQUIVALENT	retail reads size from targets_context, base from the just-copied m_current_size (same values); per-iteration m_targets reload
 ?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
