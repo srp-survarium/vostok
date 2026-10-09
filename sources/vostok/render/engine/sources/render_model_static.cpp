@@ -728,15 +728,16 @@ void static_render_model_instance::get_surfaces(
 )
 {
 	if (lod_id == u8(-1))
-
+	{
 		lod_id = select_lod(*mat_vp, *view_pos);
 
-	if (lod_id != 0xaa)
-	{
-		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id]) {
-			if (!lod_id)
-				break;
-			--lod_id;
+		if (lod_id != 0xaa)
+		{
+			while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id]) {
+				if (!lod_id)
+					break;
+				--lod_id;
+			}
 		}
 	}
 	if (lod_id == 0xaa)

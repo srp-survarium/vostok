@@ -5,6 +5,7 @@ mangled	verdict	evidence
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
+??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
 ??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -12,7 +13,9 @@ mangled	verdict	evidence
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
+?add_shadow_vertices@static_render_surface@render@vostok@@UAEXPAUbatched_geometry_interface@23@ABVfloat4x4@math@3@@Z	EQUIVALENT	regalloc
 ?allocate_resource@renderer_cook@render@vostok@@UAE?AVmutable_buffer@3@AAVquery_result_for_cook@resources@3@Vconst_buffer@3@_N@Z	EQUIVALENT	ICF ctor representative; unused frame alignment in retail
+?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
 ?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
@@ -25,6 +28,7 @@ mangled	verdict	evidence
 ?create_declaration@resource_manager@render@vostok@@QAEPAVres_declaration@23@PBUD3D11_INPUT_ELEMENT_DESC@@I@Z	EQUIVALENT	retail inlines res_declaration ctor; same range init and lookup
 ?create_input_layout@resource_manager@render@vostok@@QAEPAVres_input_layout@23@PBVres_declaration@23@PBVres_signature@23@@Z	EQUIVALENT	retail calls ICF ~res_input_layout rep for stack descriptor; base inlines same releases
 ?create_resource@renderer_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	frame/stack layout; ICF intrusive_ptr::set rep
+?create_shadow_pass_geometry@static_render_surface@render@vostok@@QAEXPBEII@Z	EQUIVALENT	LTCG conv (ret 0Ch vs ret 8)
 ?create_signature@resource_manager@render@vostok@@QAEPAVres_signature@23@PAUID3D10Blob@@@Z	FIXED	res_signature ctor guarded AddRef with a null test; retail +0x07 and +0x8f call [vtbl+4] unconditionally (no test)
 ?create_texture2d@resource_manager@render@vostok@@QAEPAVres_texture@23@PBDIIPBUD3D11_SUBRESOURCE_DATA@@W4DXGI_FORMAT@@W4D3D11_USAGE@@II_N@Z	EQUIVALENT	register swap only
 ?create_texture2d_impl@resource_manager@render@vostok@@AAEPAVres_texture@23@IIPBUD3D11_SUBRESOURCE_DATA@@W4DXGI_FORMAT@@W4D3D11_USAGE@@II_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
@@ -42,9 +46,11 @@ mangled	verdict	evidence
 ?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
 ?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
+?get_surfaces@static_render_model_instance@render@vostok@@UAEXPBVfloat4x4@math@3@PBVfloat3@53@AAV?$vector@PAUrender_surface_instance@render@vostok@@@23@_NEI@Z	FIXED	the LOD fallback walk ran for caller-supplied lod_id; retail +0x0d jne skips straight to the 0xaa test, so it walks only after select_lod
 ?get_texture_video_memory_size@resource_manager@render@vostok@@QAEIXZ	EQUIVALENT	iterator != end materialised as setne/test in base; same loop and >>20
 ?goto_fullscreen@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
 ?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
+?load@static_render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	ICF alloc_proxy rep; log __LINE__ only (absolute line drift)
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
 ?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXAAVqueries_result@resources@3@I_NI@Z	EQUIVALENT	ICF reps (_Destroy, pinned_ptr dtor); log __LINE__ only (absolute line drift)
@@ -75,6 +81,7 @@ mangled	verdict	evidence
 ?reset_renderer@world@engine@render@vostok@@QAEX_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?resize@res_render_output@render@vostok@@QAEX_NII0@Z	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
 ?resize_render_output_window@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II_N@Z	EQUIVALENT	base body not emitted (no callers); source set_size(width,height,fullscreen,false) matches retail call
+?select_lod@static_render_model_instance@render@vostok@@IAEEABVfloat4x4@math@3@ABVfloat3@53@@Z	EQUIVALENT	regalloc+schedule; same arithmetic sequence
 ?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?set_model_material@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVvirtual_path_string@fs_new@4@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@64@@Z	EQUIVALENT	boost assign_to call vs inline; ICF reps
 ?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
@@ -91,11 +98,19 @@ mangled	verdict	evidence
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
 `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
+vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::colored_static_vertex,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`3'::colored_opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
 vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::static_vertex0,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
 vostok::render::draw_text_shadowed	EQUIVALENT	inline-vs-call of color_rgba(0,0,0,1); LTCG conv for font arg
+vostok::render::fill_source_vertices	EQUIVALENT	regalloc
+vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::colored_static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping (+0..+20, tangent/binormal 0)
+vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping
+vostok::render::fill_static_lpv_vertex_color<`vostok::render::static_render_surface::fill_lpv_vertex_color'::`2'::colored_static_vertex>	EQUIVALENT	pointer-difference vs direct addressing in the copy loop; same interpolated_color args (dst+18h, dst+1Ch); zeros pushed from register
+vostok::render::fill_static_lpv_vertex_color<`vostok::render::static_render_surface::fill_lpv_vertex_color'::`2'::static_vertex0>	EQUIVALENT	same as the static_vertex instantiation: addressing only; zeros pushed from register
+vostok::render::interpolated_color<64>	EQUIVALENT	regalloc+schedule; same arithmetic sequence
 vostok::render::on_fs_iterator_materials_ready	EQUIVALENT	log __LINE__ only (absolute line drift)
 vostok::render::on_fs_iterator_materials_ready_children	EQUIVALENT	file_type_pointer bool inlined in retail; separate vs shared path buffers on stack
 vostok::render::on_material_loaded	EQUIVALENT	log __LINE__ only (absolute line drift)
 vostok::render::query_materials_and_wait	FIXED	FREE order was ptrs,variants,requests; retail +0x212..+0x24a frees requests (esi), variants ([esp+2Ch]), ptrs ([esp+10h])
+vostok::render::read_diffuse_colors<64>	EQUIVALENT	regalloc+schedule; same arithmetic sequence
 vostok::render::screen_factor	EQUIVALENT	regalloc+schedule; same ((dz2+dy2)+dx2) sum, max/clamp with identical NaN outcome
 vostok::render::speedtree_subsurface_name_to_vertex_input_type	EQUIVALENT	branch layout; any name match returns 0x10 else 0
