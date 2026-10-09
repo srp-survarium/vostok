@@ -122,6 +122,7 @@ mangled	verdict	evidence
 ?make_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	schedule only; same float op multiset
 ?merge_instances@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	resource_ptr temp zero-init and dead null store after FREE; same float op multiset
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
+?on_layers_loaded@grass_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_cook_data@23@@Z	EQUIVALENT	stack realignment and addressing
 ?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
 ?on_resources_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	data[2+i*3] walked via base+0x5F0 step 0x2D0 vs base+0x99C-0x2D4; same elements
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXAAVqueries_result@resources@3@I_NI@Z	EQUIVALENT	ICF reps (_Destroy, pinned_ptr dtor); log __LINE__ only (absolute line drift)
@@ -187,6 +188,7 @@ mangled	verdict	evidence
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
 ?sort_instances@grass_patch@render@vostok@@QAEXABVfloat3@math@3@@Z	EQUIVALENT	identical after regalloc
 ?start@?$statistics_value@H@render@vostok@@UAEXXZ	EQUIVALENT	retail calls max(int,int) out of line; base inlines signed max
+?translate_query@grass_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	1.f/u32(count) for a u8 count: retail x87 unsigned convert, base cvtsi2ss (same value)
 ?translate_query@skeleton_combined_model_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
 ?translate_query@skeleton_combined_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail inlines user_data_variant::set (destroy-old check on empty ud); ICF assign_to reps
 ?translate_query@skeleton_combined_render_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
