@@ -12,6 +12,7 @@ mangled	verdict	evidence
 ??0hw_hiz_occlusion_manager@render@vostok@@QAE@_NII@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0possible_sectors_holder@culling@render@vostok@@QAE@Vbinary_config_value@configs@3@@Z	EQUIVALENT	schedule only
+??0post_process_parameters@render@vostok@@QAE@XZ	EQUIVALENT	xmm0/xmm1 constant registers swapped; same field values
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
 ??0res_sampler_list@render@vostok@@QAE@ABV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@2@@Z	EQUIVALENT	retail calls vector::resize where base inlines it
