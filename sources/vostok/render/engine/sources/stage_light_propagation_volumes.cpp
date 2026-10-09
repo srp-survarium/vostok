@@ -761,7 +761,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 	u32 const render_stage_index,
 	u32 const num_render_stages
 	) {
-	light_ptr sun = m_context->scene( )->lights( ).get_sun( );
+	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 	m_has_indirect_lighting = false;
 	if ( sun && sun->use_with_lpv )
 		m_has_indirect_lighting = true;
@@ -799,7 +799,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 				start_render_eye_position = m_context->get_view_pos( );
 			if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
-				render_to_sun_rms_smoothed( sun.c_ptr( ), current_cascade_index, box_occluder_transforms, render_stage_index, num_render_stages );
+				render_to_sun_rms_smoothed( sun, current_cascade_index, box_occluder_transforms, render_stage_index, num_render_stages );
 			if ( stage_index == 0 )
 			{
 
