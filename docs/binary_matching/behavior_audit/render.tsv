@@ -265,6 +265,7 @@ mangled	verdict	evidence
 ?set_target_context@renderer_context@render@vostok@@QAEXPBVrenderer_context_targets@23@_N@Z	EQUIVALENT	retail reads size from targets_context, base from the just-copied m_current_size (same values); per-iteration m_targets reload
 ?set_texture@effect_compiler@render@vostok@@QAEAAV123@PBD0PAV?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@_NI@Z	EQUIVALENT	ICF fixed_string operator= rep; base partially inlines callee guard
 ?set_texture@effect_compiler@render@vostok@@QAEAAV123@PBDPAVres_texture@23@_NI@Z	EQUIVALENT	base partially inlines the m_shaders_cache_mode guard into the caller; same guards
+?set_time@clouds@render@vostok@@QAEXM@Z	EQUIVALENT	ICF boost::function clear rep; compare operand from stack vs register
 ?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
