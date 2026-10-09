@@ -1538,7 +1538,7 @@ void stage_lights::execute( )
 				continue;
 			}
 
-			float const model_probe_sqdist = (model_location - probe->m_properties.location).length();
+			float const model_probe_sqdist = math::sqrt((math::sqr(model_location.x - probe->m_properties.location.x) + math::sqr(model_location.z - probe->m_properties.location.z)) + math::sqr(model_location.y - probe->m_properties.location.y));
 
 			if (
 				probe->m_properties.transform.i.xyz().squared_length() &&
