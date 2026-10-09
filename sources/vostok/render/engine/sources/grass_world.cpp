@@ -256,7 +256,7 @@ void grass_world::populate( float const patch_size_ground )
 				math::floor( origin.z / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f
 			);
 
-			grass_patch* new_patch		=	find_patch( origin_aligned );
+			grass_patch* new_patch		=	find_patch( origin );
 			if ( !new_patch )
 			{
 
