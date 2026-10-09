@@ -2,6 +2,10 @@ mangled	verdict	evidence
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
+?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
+?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
+?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
+?copy_from@cloud_simulation@render@vostok@@QAEXABV123@@Z	EQUIVALENT	LTCG conv (this/other registers); same memcpy(this, other, size)
 ?draw_debug@renderer@render@vostok@@QAEXPAVscene@23@PAVscene_view@23@MPBUfont@ui@3@@Z	EQUIVALENT	grass_world::render_debug guard partial-inlined in base; cvtps2pd scheduling
 ?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	EQUIVALENT	regalloc+x87 stack order; same scales, colors (0,1,0,1)/(0.5,0.5,0.7,1) via color_rgba call in retail
 ?draw_luminance_picker_info@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	EQUIVALENT	retail calls color_rgba for rgbl_colors (same r,g,b,a args), inlines draw_text_shadowed; same strings/positions
@@ -9,6 +13,8 @@ mangled	verdict	evidence
 ?dump_scene_statistics@scene@render@vostok@@QBEXXZ	OPEN	log __LINE__ arg 0x434 vs retail 0x4E2: scene.cpp absolute line geometry ~174 lines short; needs file-level line pinning
 ?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
+?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
+?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
 ?on_texture_loaded@scene@render@vostok@@QAEXAAVqueries_result@resources@3@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@IM@Z	EQUIVALENT	buffer_string assign inlined in retail vs operator+= call
 ?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
@@ -17,6 +23,7 @@ mangled	verdict	evidence
 ?render_lines@scene@render@vostok@@AAEX_N@Z	EQUIVALENT	LTCG conv at draw_lines (one arg in eax)
 ?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
+?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
 ?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
