@@ -69,6 +69,7 @@ mangled	verdict	evidence
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
 ?compare@shader_constant_table@render@vostok@@QBEHABV123@@Z	EQUIVALENT	branch layout only
+?compile@depth_accumulate_material_effect@render@vostok@@EAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	wind_scale set_constant branches merged into one call site in retail; same values
 ?compile@effect_editor_wireframe_accumulation@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	command-line key guard at shifted address
 ?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
 ?compile@effect_gstage_default_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	ICF reps; inline copy of get_stencil_mask matches retail including the range check
