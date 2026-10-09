@@ -35,6 +35,7 @@ mangled	verdict	evidence
 ?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
+?compare@shader_constant_table@render@vostok@@QBEHABV123@@Z	EQUIVALENT	branch layout only
 ?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
 ?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
@@ -106,6 +107,7 @@ mangled	verdict	evidence
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXAAVqueries_result@resources@3@I_NI@Z	EQUIVALENT	ICF reps (_Destroy, pinned_ptr dtor); log __LINE__ only (absolute line drift)
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@PBDI@Z	EQUIVALENT	inline vs call of max<u32>/mutable_buffer helpers, ICF reps, CSE; log __LINE__ only (absolute line drift)
 ?on_texture_loaded@scene@render@vostok@@QAEXAAVqueries_result@resources@3@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@IM@Z	EQUIVALENT	buffer_string assign inlined in retail vs operator+= call
+?parse@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflection@@W4enum_shader_type@23@@Z	EQUIVALENT	ICF copy reps; log __LINE__ only (absolute line drift)
 ?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	retail has 10 more addss inside the eight inlined float4x4::transform calls; retail math_float4x4_inline.h checksum differs from every in-repo blob (prior audit)
 ?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
 ?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
