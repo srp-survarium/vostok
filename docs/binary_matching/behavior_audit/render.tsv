@@ -10,6 +10,7 @@ mangled	verdict	evidence
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
+??0res_sampler_list@render@vostok@@QAE@ABV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@2@@Z	EQUIVALENT	retail calls vector::resize where base inlines it
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
@@ -44,6 +45,7 @@ mangled	verdict	evidence
 ?compare@render@vostok@@YAHABV?$res_xs@Ugs_data@render@vostok@@@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
 ?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@res_sampler_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	ICF identity begin/end reps
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
 ?compare@shader_constant_table@render@vostok@@QBEHABV123@@Z	EQUIVALENT	branch layout only
