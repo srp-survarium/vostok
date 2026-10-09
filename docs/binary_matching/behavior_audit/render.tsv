@@ -7,6 +7,7 @@ mangled	verdict	evidence
 ??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
+??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
@@ -22,6 +23,7 @@ mangled	verdict	evidence
 ?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
 ?calculate_portal_rects_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXABVfloat4x4@math@4@MAAV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@AAV?$buffer_vector@M@4@@Z	EQUIVALENT	same float op multiset (divss/mulss operand spill location only)
 ?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
+?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
 ?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
