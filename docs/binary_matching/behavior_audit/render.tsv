@@ -6,6 +6,7 @@ mangled	verdict	evidence
 ??0?$statistics_value@H@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	regalloc
 ??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
 ??0backend@render@vostok@@QAE@XZ	EQUIVALENT	flag stored from register holding 1 vs immediate
+??0environment_temp@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
@@ -18,6 +19,7 @@ mangled	verdict	evidence
 ??0skeleton_mesh_gpu_skinning_3weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
+??0stage_clouds@render@vostok@@QAE@PAVrenderer@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@PAVrenderer_context@12@@Z	EQUIVALENT	commutative multiply operand placement
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
@@ -27,6 +29,7 @@ mangled	verdict	evidence
 ??1render_model@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??1stage_apply_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_clouds@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep; LTCG conv
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -97,6 +100,7 @@ mangled	verdict	evidence
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
 ?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
