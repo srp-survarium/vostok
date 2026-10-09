@@ -62,15 +62,22 @@ mangled	verdict	evidence
 ?debug_render@stage_lights@render@vostok@@UAEXXZ	EQUIVALENT	unrolled constant cube transform (debug draw): fp:fast CSE of shared partial sums differs; same source expression
 ?debug_render@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?downsample_rsm@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
+?draw_3D_point@system_renderer@render@vostok@@QAEXABVfloat3@math@3@MABVcolor@53@_N@Z	EQUIVALENT	identical after regalloc
+?draw_aabb@system_renderer@render@vostok@@QAEXABVaabb@math@3@ABVcolor@53@@Z	EQUIVALENT	push order only
 ?draw_cylinder_solid@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	use_depth constant-propagated (push 1) in retail; LTCG conv
 ?draw_debug@renderer@render@vostok@@QAEXPAVscene@23@PAVscene_view@23@MPBUfont@ui@3@@Z	EQUIVALENT	grass_world::render_debug guard partial-inlined in base; cvtps2pd scheduling
 ?draw_ellipsoid@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	base body not emitted standalone; retail draw_lines(ellipsoid vertices 0x72, pairs 0x150) matches source; use_depth constprop true
 ?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	EQUIVALENT	regalloc+x87 stack order; same scales, colors (0,1,0,1)/(0.5,0.5,0.7,1) via color_rgba call in retail
 ?draw_line@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat3@math@4@1ABVcolor@84@_N@Z	EQUIVALENT	regalloc
+?draw_lines@system_renderer@render@vostok@@QAEXQBUvertex_colored@23@0QBG1_N@Z	EQUIVALENT	LTCG conv
 ?draw_luminance_picker_info@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	EQUIVALENT	retail calls color_rgba for rgbl_colors (same r,g,b,a args), inlines draw_text_shadowed; same strings/positions
 ?draw_quads@portal_sector_system@culling@render@vostok@@AAEXAAVsystem_renderer@34@@Z	EQUIVALENT	identical after regalloc
+?draw_render_models_selection@system_renderer@render@vostok@@QAEXAAV?$vector@V?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@Z	EQUIVALENT	x87 commutative multiply order
+?draw_screen_lines@system_renderer@render@vostok@@QAEXPBVfloat3@math@3@IABVcolor@53@MI_N2@Z	EQUIVALENT	identical after regalloc
 ?draw_solid_capsule@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	retail inlines draw_cylinder_solid (memset/mul4x3/draw_primitive_solid); same float op multiset
 ?draw_stages_stats@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	FIXED	even-row stage colour was (0.5,0.75,1,1); retail +0x175..0x20c folds floor(255),floor(127.5),floor(191.25) to 0xFF7FBFFF = color_rgba(1,0.75,0.5,1)
+?draw_triangles@system_renderer@render@vostok@@QAEXQBUvertex_colored@23@0QBG1_N@Z	EQUIVALENT	push order only
+?draw_ui_vertices@system_renderer@render@vostok@@QAEXPBUTL@vertex_formats@23@ABIHH@Z	EQUIVALENT	identical after regalloc
 ?dump_scene_statistics@scene@render@vostok@@QBEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
@@ -82,6 +89,7 @@ mangled	verdict	evidence
 ?execute_impl@stage_light_propagation_volumes@render@vostok@@QAEXXZ	EQUIVALENT	opposite inline choices; same RT dirty flags
 ?execute_smoothed_impl@stage_light_propagation_volumes@render@vostok@@QAEXIIIII@Z	EQUIVALENT	set_constant inlined/called oppositely; same RT dirty flags
 ?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
+?fill_surface@system_renderer@render@vostok@@QAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0000_NPAUD3D11_VIEWPORT@@MMMM@Z	EQUIVALENT	schedule only
 ?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
 ?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
