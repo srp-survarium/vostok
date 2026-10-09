@@ -177,6 +177,21 @@ void res_render_output::set_size( const u32 in_width, const u32 in_height, const
 	u32 const screen_width = GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_height = GetSystemMetrics( SM_CYSCREEN );
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// sushi@TODO: Recover retail centering expression attribution.
 	u32 const pos_x = ( math::max( screen_width, in_width ) - in_width ) / 2;
 	u32 const pos_y = ( math::max( screen_height, in_height ) - in_height ) / 2;
 
@@ -187,6 +202,10 @@ void res_render_output::set_size( const u32 in_width, const u32 in_height, const
 
 	if ( !in_fullscreen )
 		set_client_rect( m_window, pos_x, pos_y, in_width, in_height );
+
+
+
+
 
 }
 

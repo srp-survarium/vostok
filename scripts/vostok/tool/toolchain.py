@@ -39,6 +39,7 @@ Required env vars (set automatically by flake.nix devShell):
 """
 
 import argparse
+import fcntl
 import os
 import subprocess
 import functools
@@ -265,24 +266,11 @@ def ensure_gfx_alias(parent: Path, name: str, target: Path) -> None:
     log(f"GFx tree alias: C:\\survarium\\{name} -> {target}")
 
 
-def generate_ninja(vcproj_exe: Path) -> None:
-    # Pass native Linux paths for I/O (vcproj2ninja reads/writes them directly),
-    # and --wine so the *emitted* build graph uses the drive-rooted `Z:\...` form
-    # that ninja.exe/cl.exe resolve under Wine. The .exe sometimes exits non-zero
-    # under wine even on success, so we trust build.ninja's presence over the code.
-    BUILD_DIR.mkdir(parents=True, exist_ok=True)
-    log(f"Generating ninja files in {BUILD_DIR} via vcproj2ninja ...")
-    subprocess.run([
-        "wine", str(vcproj_exe),
-        "--wine",
-        "--sln-path", str(SLN_PATH),
-        "--configuration-platform", "Master Gold|Win32",
-        "--output-dir", str(BUILD_DIR),
-        "--project-name", "survarium - PC - DirectX 11",
-    ], check=False)
-    if not (BUILD_DIR / "build.ninja").is_file():
-        die(f"vcproj2ninja did not produce {BUILD_DIR}/build.ninja")
-    log("Ninja files generated.")
+def generate_ninja() -> None:
+    """Merge normalized graph changes without dirtying unchanged compile inputs."""
+    log(f"Refreshing ninja files in {BUILD_DIR} via vcproj2ninja ...")
+    ninja_regen.regenerate(compdb=True)
+    log("Ninja files refreshed.")
 
 
 def ensure_compdb(force: bool = False) -> None:
@@ -312,8 +300,8 @@ def parse_force(argv) -> set:
     return set(STAGES) if "all" in forced else set(forced)
 
 
-def main() -> None:
-    force = parse_force(sys.argv[1:])
+def setup(force: set[str]) -> None:
+    """Set up under the caller-owned worktree build lock."""
     msvc_dir   = Path(require_env("MSVC_DIR"))
     winsdk_dir = Path(require_env("WINSDK_DIR"))
     dxsdk_dir  = Path(require_env("DXSDK_DIR"))
@@ -392,8 +380,7 @@ def main() -> None:
         log("Configuring Wine environment (PATH, INCLUDE, LIB) ...")
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
     if not setup_current or "ninja" in force:
-        generate_ninja(vcproj_exe)
-        ensure_compdb(force=True)
+        generate_ninja()
 
     # Record the fingerprint so the next plain run short-circuits.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
@@ -412,6 +399,18 @@ def main() -> None:
         log(f"  Build:   {BUILD_DIR}/")
         log("")
         log(f"To build:  (cd {BUILD_DIR} && wine {ninja_dir}/ninja.exe)")
+
+
+def main() -> None:
+    force = parse_force(sys.argv[1:])
+    paths.BUILD_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    with paths.BUILD_LOCK.open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            die("another build or setup owns this worktree; setup refused",
+                "For read-only tools: VOSTOK_SKIP_SETUP=1 nix develop --command ...")
+        setup(force)
 
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ void lpv_batched_geometry::build(
 	render_surface** surface = surfaces.begin( );
 	float4x4* matrix = matrices.begin( );
 	for ( ; surface != surfaces.end( ); ++surface, ++matrix )
-		( *surface )->fill_lpv_vertex_color( this, *matrix );
+		( *surface )->fill_lpv_vertex_color( NULL, *matrix );
 
 	finalize_batch( );
 }

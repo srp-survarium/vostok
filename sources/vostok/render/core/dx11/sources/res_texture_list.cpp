@@ -25,7 +25,7 @@ void res_texture_list::destroy_impl	() const
 	resource_manager::ref().release( this );
 }
 
-// claude@NOTE: the two compare residuals are LTCG calling-convention differences.
+// sushi@TODO: Recover comparator line attribution and register allocation.
 s32 res_texture_list::compare( res_texture_list const& base ) const
 {
 	for ( u32 size = std::min( m_container.size( ), base.m_container.size( ) ), cmp = 0; cmp < size; ++cmp )
@@ -41,6 +41,9 @@ s32 res_texture_list::compare( res_texture_list const& base ) const
 		return -1;
 
 	return base.m_container.size( ) < m_container.size( ) ? 1 : 0;
+
+
+
 }
 
 s32 res_texture_list::compare(
@@ -60,6 +63,9 @@ s32 res_texture_list::compare(
 		return -1;
 
 	return base.size( ) < m_container.size( ) ? 1 : 0;
+
+
+
 }
 
 } // namespace render

@@ -557,13 +557,13 @@ static enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum typ
 			return static_mesh_vertex_input_type;
 		case mt_static_submesh_colored:
 			return static_mesh_vertex_colored_input_type;
+		case mt_skinned_mesh:
 		case mt_skinned_submesh_1w:
 			return skeletal_1_bones_mesh_vertex_input_type;
 		case mt_skinned_submesh_2w:
 			return skeletal_2_bones_mesh_vertex_input_type;
 		case mt_skinned_submesh_3w:
 			return skeletal_3_bones_mesh_vertex_input_type;
-		case mt_skinned_mesh:
 		case mt_skinned_submesh_4w:
 			return skeletal_4_bones_mesh_vertex_input_type;
 		case mt_user_mesh_wire:

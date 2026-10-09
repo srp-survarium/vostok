@@ -669,7 +669,7 @@ static float screen_factor( float3 const& view_position, math::aabb bbox, float4
 	return						( math::clamp_r( math::max( extents.x, math::max( extents.y, extents.z ) )/math::max( math::squared_length( view_position - center ), math::epsilon_6 ), 0.f, 1.f ) );
 }
 
-// claude@NOTE: screen_factor and strip_pointer have inverse target/base inline choices here.
+// sushi@TODO: Recover caller distance arithmetic that crosses the shader LOD threshold.
 void renderer::fill_opaque_models( )
 {
 	if ( !options::ref( ).current.m_use_shader_lods ) {

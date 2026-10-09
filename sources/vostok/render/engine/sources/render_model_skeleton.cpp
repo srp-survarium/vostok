@@ -170,6 +170,7 @@ void skeleton_render_model_instance::update( )
 
 void skeleton_render_model_instance::set_constants( )
 {
+	// sushi@TODO: Verify bone vector lengths against the reflected upload array size.
 	u32 const max_bones_count		= 64;
 	R_ASSERT_CMP					( m_bones_matrices.size( ), <=, max_bones_count );
 	backend::ref().set_vs_constant	( m_original->m_bones_matrices_shader_constant, &*m_bones_matrices.begin(), max_bones_count );

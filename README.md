@@ -10,37 +10,37 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,639 / 13,014 functions exact (81.75%) &middot; 11,222 / 13,014 functions exact-max (86.23%) &middot; 93.93% fuzzy &middot; 95.45% fuzzy-max.**
+**Overall: 10,645 / 13,014 functions exact (81.80%) &middot; 11,227 / 13,014 functions exact-max (86.27%) &middot; 94.11% fuzzy &middot; 95.63% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
-| `render`        |   351 | 2,054 / 2,734 (75.1%) | 2,273 / 2,734 (83.1%) |  91.8% |     93.8% |
+| `render`        |   351 | 2,058 / 2,734 (75.3%) | 2,278 / 2,734 (83.3%) |  92.3% |     94.4% |
 | `game`          |   141 |   998 / 1,528 (65.3%) | 1,129 / 1,528 (73.9%) |  86.2% |     89.4% |
 | `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.2% |     98.6% |
-| `vostok`        |   112 | 1,132 / 1,250 (90.6%) | 1,147 / 1,250 (91.8%) |  98.0% |     98.5% |
-| `game_core`     |   189 |   853 / 1,181 (72.2%) |   880 / 1,181 (74.5%) |  94.6% |     96.3% |
+| `vostok`        |   112 | 1,131 / 1,250 (90.5%) | 1,147 / 1,250 (91.8%) |  98.0% |     98.5% |
+| `game_core`     |   189 |   852 / 1,181 (72.1%) |   880 / 1,181 (74.5%) |  94.6% |     96.3% |
 | `animation`     |   102 |     603 / 727 (82.9%) |     626 / 727 (86.1%) |  93.6% |     94.2% |
 | `ai`            |   124 |     647 / 691 (93.6%) |     659 / 691 (95.4%) |  99.3% |     99.6% |
 | `sound`         |    69 |     499 / 510 (97.8%) |     500 / 510 (98.0%) |  99.8% |     99.9% |
 | `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) |  98.4% |     98.7% |
 | `scaleform`     |    47 |     420 / 454 (92.5%) |     425 / 454 (93.6%) |  96.7% |     96.9% |
-| `particle`      |    25 |     390 / 400 (97.5%) |     398 / 400 (99.5%) |  99.6% |    100.0% |
+| `particle`      |    25 |     391 / 400 (97.8%) |     398 / 400 (99.5%) |  99.7% |    100.0% |
 | `vfs`           |    71 |     319 / 390 (81.8%) |     319 / 390 (81.8%) |  98.4% |     98.5% |
 | `ui`            |    27 |     221 / 227 (97.4%) |     222 / 227 (97.8%) |  99.5% |     99.9% |
 | `physics`       |    14 |     137 / 198 (69.2%) |     158 / 198 (79.8%) |  89.9% |     95.0% |
 | `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
 | `engine`        |    22 |     155 / 162 (95.7%) |     160 / 162 (98.8%) |  99.5% |    100.0% |
 | `network`       |    25 |      90 / 159 (56.6%) |      93 / 159 (58.5%) |  90.6% |     91.3% |
-| `network_core`  |    22 |      92 / 127 (72.4%) |      97 / 127 (76.4%) |  97.7% |     98.2% |
+| `network_core`  |    22 |      95 / 127 (74.8%) |      97 / 127 (76.4%) |  98.2% |     98.2% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
 | `logging`       |    10 |       52 / 72 (72.2%) |       59 / 72 (81.9%) |  97.0% |     99.4% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-10-06 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-10-09 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -48,13 +48,13 @@ _Updated 2026-10-06 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,204,079 / 71,536,291 unique bytes) &middot; paired for comparison: 4.32% (3,089,803 / 71,536,291) &middot; matched projected copies: 66.08% (17,435,179 / 26,383,551).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,503 / 71,536,291) &middot; matched projected copies: 66.09% (17,446,967 / 26,397,507).**
 
-_The projection has 15,048 paired copies across 1,701 units and 31,083 unresolved blockers. Strict relocation comparison exposes 1,502 otherwise-exact functions (599,835 code bytes) with referent debt._
+_The projection has 15,305 paired copies across 1,701 units and 30,824 unresolved blockers. Strict relocation comparison exposes 1,498 otherwise-exact functions (595,888 code bytes) with referent debt._
 
-_The linked-image audit is 4.02% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11278 / 12795 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11288 / 12806 definitions). Integrity ratchet: armed._
 
-_Updated 2026-10-06._
+_Updated 2026-10-09._
 <!-- data-match:end -->
 
 ## Requirements
@@ -83,9 +83,32 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) with the
 config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
 `target` (the original game). Every build also refreshes the committed ledger
 `config/match_state.tsv` and the score block at the top of this README.
+The DX11 game dependency graph excludes the texture compressor and its
+NVTT/FreeImage dependencies. They remain available to the editor and
+texture tools; a solution build-order dependency must not make offline
+asset tools prerequisites of the shipping executable.
+
+Prebuilt library staging compares file contents in bounded chunks. Identical
+regular files retain their inode, mtime and mode; changed files and symlinks are
+replaced atomically with writable copies. Repeating setup does not dirty
+unchanged library inputs.
+
 The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
+Before a hard-timeout cleanup, the supervisor logs its observed CPU rate,
+worker states and final output readiness to distinguish incomplete compilation
+from a stalled output or process. The timeout and success gates are unchanged.
+
+For read-only helpers during a build, enter the flake environment without
+setup: `VOSTOK_SKIP_SETUP=1 nix develop --command python3 -m vostok ...`.
+This skips shell-entry gcroot writes, Wine setup, library staging and graph
+generation. Ordinary shell entry still prepares the worktree, but refuses to
+run setup while its build lock is held. The canonical build runs required
+setup under that same lock, including when entered through the read-only shell.
+Setup and builds use the same normalized graph merge: unchanged Ninja, response
+and clangd files retain their mtimes, so a setup refresh rebuilds only affected
+inputs.
 
 Codex builds on Linux with a systemd user manager are notification-driven by
 default whenever `CODEX_THREAD_ID` is set:
@@ -123,6 +146,14 @@ subprocesses, symbol inspection, and each module's data audit. Durations use a
 monotonic clock and include failures; nested/parallel timings are not additive.
 Data preparation runs once per build and its successful result feeds the later
 image-data refresh. Standalone `vostok data refresh` still prepares its inputs.
+The data-index exporter resolves duplicate PDB declarations for the same linked
+symbol before measuring its extent. A unique positive declared extent supersedes
+incomplete zero/unknown declarations and retains the complete record’s type
+provenance; conflicting positive extents remain unknown. Sizes are not inferred
+from neighboring addresses, and data/relocation comparisons remain unchanged.
+Retail inventory reuse requires provenance matching the exporter binary and
+arguments, retail PE/PDB hashes, and inventory hash. Missing, stale or corrupt
+provenance triggers export; a failed export leaves no reusable provenance.
 Symbol normalization inspects objects in bounded batches; audit fingerprints
 and content keys are shared only within that build, with no persistent cache.
 Deferred performance ideas and their safety requirements are tracked in
@@ -140,6 +171,33 @@ force-stopping the service can prevent notification. To stop a job, use
 `journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
 until the job finishes.
 
+The data access map classifies x87 memory arithmetic and load operands as
+reads, including LLVM Intel syntax with a single memory operand. FST/FSTP and
+integer/control-state stores remain writes. Regenerate the full data lane after
+updating this classifier; existing access-map artifacts retain their old roles.
+
+The direct datum gate also checks six reviewed embedded dispatch arrays in
+`config/retail/compiler_tables.tsv`: two mesh-mapper pairs and the
+`render_surface::load` selector/jump pair. The latter has its own exact504B
+member-store/RET8 profile; it does not widen the existing301B mapper profile.
+Their exact TU owners, physical
+operand relocations and table bounds are validated independently of PDB data
+symbols. Jump referents use owner-relative case offsets; selector bytes and null
+slots remain literal data. Missing, ambiguous or changed candidate evidence stays
+OPEN even with a code score of100 or a datum wall review. These rows use a stable
+TU-qualified compiler-table identity; they do not add PDB symbols or COFF data
+manifest entries. Other `.text` data still requires separate reviewed evidence.
+
+`vostok sema xref FUNCTION --pointers` verifies the PE/PDB hash and prints the
+physical procedure span plus HIGHLOW words pointing to that exact RVA. Vtable
+labels appear only when the data report binds both this PE and the exact current
+data-index bytes; otherwise they are omitted. Labels annotate reference
+candidates and do not prove runtime reachability.
+On the base side, the view flags possible stale base-stripping claims in ledger
+notes. Empty direct caller output does not exclude virtual dispatch: verify
+constructor storage, slot contents and the actual indirect caller before
+closing that question.
+
 The full-engine structural/byte campaign queue includes `game`, `game_core`,
 `render`, named-local differences and unpaired frameless procedures:
 
@@ -155,6 +213,12 @@ last; approximate statement classes, local-record differences and missing pairs
 remain triage evidence requiring target inspection. Whole-PDB class variants,
 enum and definition order are separate checks described in
 [`divergence_queue.md`](docs/binary_matching/divergence_queue.md).
+
+Ledger derivation warns when an identical decorated name and signature has
+distinct bodies in several translation units. The ledger selects one canonical
+owner; its score does not establish closure of the other bodies. Inspect each
+owner with `vostok pdb inspect --list`, then `--file` or an exact `--rva`, and
+verify the actual referenced datum when a behavior depends on a literal or table.
 
 Class access, static/instance and virtual qualifiers, declaration order, and
 candidate-source declarations are checked against retail PDB evidence:

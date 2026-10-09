@@ -48,6 +48,10 @@ void cloud_simulation::set_voxel(
 	u32 const z
 ) {
 	m_voxels[(z * m_clouds_size_y + y) * m_clouds_size_x + x] = v;
+
+
+
+
 }
 
 cloud_simulation::voxel const& cloud_simulation::get_voxel(
@@ -57,6 +61,10 @@ cloud_simulation::voxel const& cloud_simulation::get_voxel(
 ) const
 {
 	return m_voxels[(z * m_clouds_size_y + y) * m_clouds_size_x + x];
+
+
+
+
 }
 
 void cloud_simulation::compute_cloud_density( )
@@ -76,7 +84,6 @@ void cloud_simulation::compute_cloud_density( )
 					continue;
 				}
 				float accumulated = 0.0f;
-
 				float num = 0.0f;
 				for ( s32 x0 = -2; x0 <= 2; ++x0 )
 				{
@@ -84,19 +91,30 @@ void cloud_simulation::compute_cloud_density( )
 					{
 						for ( s32 z0 = -2; z0 <= 2; ++z0 )
 						{
+
+
 							++num;
 
-							u32 sample_x = x + x0; u32 const sample_y = y + y0; u32 sample_z = z + z0;
-
-							if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) {
+							u32 sample_x = x + x0;
+							u32 const sample_y = y + y0;
+							u32 sample_z = z + z0;
+							if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) )
+							{
 								sample_x %= m_clouds_size_x;
-
 								sample_z %= m_clouds_size_z;
 							}
-							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
+							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) )
+								accumulated +=
+									get_voxel(
+										sample_x,
+										sample_y,
+										sample_z
+									).x /
+									255.0f;
 						}
 					}
 				}
+
 				if ( num > 0.0f )
 					out_density = accumulated / num;
 				else
@@ -124,6 +142,12 @@ void cloud_simulation::smooth_transparency( ) {
 			for ( u32 y = 1; y < m_clouds_size_y - 1; ++y )
 			{
 				voxel v = get_voxel( x, y, z );
+
+
+
+
+
+
 				float transparency = static_cast<float>( v.x );
 
 				if ( x - 1 < m_clouds_size_x && in_grid( y, z, x - 1 ) && is_empty( x - 1, y, z ) )
@@ -156,6 +180,8 @@ void cloud_simulation::compute_direct_light(
 	cloud_key_parameters const& init_key
 )
 {
+
+
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
@@ -175,6 +201,12 @@ void cloud_simulation::compute_indirect_light(
 	cloud_key_parameters const& init_key
 )
 {
+
+
+
+
+
+
 	float const vertical_direction = math::clamp_r( math::abs( sun_direction | float3( 0.0f, 1.0f, 0.0f ) ), 0.0f, 1.0f );
 
 	u32 num = static_cast<u32>( (1.0f - vertical_direction) * static_cast<float>( m_clouds_size_y * 6 ) + vertical_direction * static_cast<float>( m_clouds_size_y ) );
@@ -191,40 +223,34 @@ void cloud_simulation::compute_indirect_light(
 				{
 					float accumulated = 0.0f;
 
+
+
+
+
 					for ( u32 i = 0; i < num; ++i )
 					{
 						float3 coord =
 							float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) +
 							sun_direction * static_cast<float>( i + 1 );
 
-						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x ||
-							!in_grid(
-								static_cast<u32>( math::max( coord.y, 0.0f ) ),
-								static_cast<u32>( math::max( coord.z, 0.0f ) ),
-								static_cast<u32>( math::max( coord.x, 0.0f ) )
-							)
-						)
+						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x || !in_grid( static_cast<u32>( math::max( coord.y, 0.0f ) ), static_cast<u32>( math::max( coord.z, 0.0f ) ), static_cast<u32>( math::max( coord.x, 0.0f ) ) ) )
 						{
-							if ( static_cast<u32>( coord.x ) < m_clouds_size_x &&
-								static_cast<u32>( coord.y ) > m_clouds_size_y &&
-								static_cast<u32>( coord.z ) < m_clouds_size_z )
+
+							if ( static_cast<u32>( coord.x ) < m_clouds_size_x && static_cast<u32>( coord.y ) > m_clouds_size_y && static_cast<u32>( coord.z ) < m_clouds_size_z )
 							{
+
 								accumulated += 1.0f;
 								continue;
 							}
 
+
 							coord.x = static_cast<float>( math::floor( coord.x ) % m_clouds_size_x );
 							coord.z = static_cast<float>( math::floor( coord.z ) % m_clouds_size_z );
 						}
-
-						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x ||
-							!in_grid(
-								static_cast<u32>( math::max( coord.y, 0.0f ) ),
-								static_cast<u32>( math::max( coord.z, 0.0f ) ),
-								static_cast<u32>( math::max( coord.x, 0.0f ) )
-							)
-						)
+						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x || !in_grid( static_cast<u32>( math::max( coord.y, 0.0f ) ), static_cast<u32>( math::max( coord.z, 0.0f ) ), static_cast<u32>( math::max( coord.x, 0.0f ) ) ) )
 							break;
+
+
 
 						if ( is_empty(
 							static_cast<u32>( math::max( coord.x, 0.0f ) ),
@@ -233,25 +259,92 @@ void cloud_simulation::compute_indirect_light(
 						) )
 							break;
 
+
+
 						accumulated += 1.0f;
 					}
+
 
 					accumulated /= static_cast<float>( num );
 
 					accumulated = math::clamp_r( accumulated, 0.0f, 1.0f );
 
 					v.y = static_cast<u8>(
-						math::clamp_r(
-							math::pow( 1.0f - accumulated, init_key.extinction ),
-							0.0f,
-							1.0f
-						) * 255.0f
+						math::clamp_r( math::pow( 1.0f - accumulated, init_key.extinction ), 0.0f, 1.0f )
+						* 255.0f
 					);
 					set_voxel( v, x, y, z );
 				}
 			}
 		}
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 void cloud_simulation::smooth_voxels_around( )
@@ -260,10 +353,8 @@ void cloud_simulation::smooth_voxels_around( )
 
 void cloud_simulation::fill_default_volume( )
 {
-	memory::zero(
-		m_voxels,
-		m_clouds_size_x * m_clouds_size_y * m_clouds_size_z * sizeof(voxel)
-	);
+
+	memory::zero( m_voxels, m_clouds_size_x * m_clouds_size_y * m_clouds_size_z * sizeof(voxel) );
 
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
@@ -272,10 +363,12 @@ void cloud_simulation::fill_default_volume( )
 			for ( u32 y = 0; y < m_clouds_size_y; ++y )
 			{
 				voxel v;
+
 				v.x = 0;
 				v.y = 0;
 				v.z = 0;
 				v.w = 0;
+
 				set_voxel( v, x, y, z );
 			}
 		}
@@ -291,44 +384,66 @@ void cloud_simulation::generate(
 
 	fill_default_volume( );
 
-	float const cloudiness = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.05f, 0.0f, 1.0f );
-	float const cloudiness2 = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.1f, 0.0f, 1.0f );
-	u32 const num_octaves = math::floor( init_key.cloud_generate_octaves );
 	float const cloudiness3 = 1.0f - init_key.cloud_generate_cloudiness;
+	float const cloudiness = math::clamp_r( cloudiness3 + 0.05f, 0.0f, 1.0f );
+	float const cloudiness2 = math::clamp_r( cloudiness3 + 0.1f, 0.0f, 1.0f );
+	u32 const num_octaves = math::floor( init_key.cloud_generate_octaves );
 
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
 		{
-			float const noise = cloud_noise::evaluate( static_cast<float>( z ) / static_cast<float>( m_clouds_size_z ), static_cast<float>( x ) / static_cast<float>( m_clouds_size_x ), num_octaves );
+			float const noise = cloud_noise::evaluate( static_cast<float>( z ) / static_cast<float>( m_clouds_size_z ),
+				static_cast<float>( x ) / static_cast<float>( m_clouds_size_x ),
+
+				num_octaves );
+
 			u32 min_y = 1, max_y = 1;
+			// sushi@TODO: Recover retail threshold and height statement attribution.
+
+
+
+
+
+
 
 			if ( noise - cloudiness2 > 0.0f )
 			{
-				max_y = m_clouds_size_y;
+				max_y = m_clouds_size_y - 1;
 			}
 			else if ( noise - cloudiness > 0.0f )
 			{
+
 				min_y = 2;
-				max_y = m_clouds_size_y - 2;
+				max_y = m_clouds_size_y - 3;
 			}
 			else if ( noise - cloudiness3 > 0.0f )
 			{
+
 				min_y = 3;
-				max_y = m_clouds_size_y - 3;
+				max_y = m_clouds_size_y - 4;
 			}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 			if ( max_y - min_y > 1 && min_y < max_y )
-			{
 				for ( u32 y = min_y; y < max_y; ++y )
 				{
 					voxel v = get_voxel( x, y, z );
-					v.x = static_cast<u8>(
-						math::clamp_r( 1.0f - init_key.diffusivity, 0.0f, 1.0f ) * 255.0f
-					);
+					v.x = static_cast<u8>( math::clamp_r( 1.0f - init_key.diffusivity, 0.0f, 1.0f ) * 255.0f );
 					set_voxel( v, x, y, z );
 				}
-			}
 		}
 	}
 
@@ -337,6 +452,8 @@ void cloud_simulation::generate(
 		compute_cloud_density( );
 		compute_indirect_light( to_sun_direction, init_key );
 		compute_direct_light( sun_direction, init_key );
+
+
 		smooth_transparency( );
 	}
 }

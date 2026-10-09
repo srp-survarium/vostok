@@ -154,7 +154,7 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 	data.SysMemPitch = data_size / ( size * size );
 
 	return resource_manager::ref( ).create_texture3d(
-		"$user$test3d",
+		"$user$color_grading_base_3d_lut",
 		size,
 		size,
 		size,
@@ -468,14 +468,10 @@ void stage_postprocess::fill_surface2( render_target_ptr surf )
 	u32		offset;
 
 	screen_vertex* pv = (screen_vertex*)backend::ref().vertex.lock(4, sizeof(screen_vertex), offset);
-	pv->set( float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f));
-	pv++;
-	pv->set( float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f));
-	pv++;
-	pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f));
-	pv++;
-	pv->set( float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f));
-	pv++;
+	pv->set( float4(-1.0f, -1.0f, 0.0f, 1.0f), float2(0.0f, 1.0f)); pv++;
+	pv->set( float4(-1.0f,  1.0f, 0.0f, 1.0f), float2(0.0f, 0.0f)); pv++;
+	pv->set( float4( 1.0f, -1.0f, 0.0f, 1.0f), float2(1.0f, 1.0f)); pv++;
+	pv->set( float4( 1.0f,  1.0f, 0.0f, 1.0f), float2(1.0f, 0.0f)); pv++;
 	backend::ref().vertex.unlock();
 
 	m_screen_vertex_geometry->apply( );
@@ -496,6 +492,10 @@ void stage_postprocess::fill_surface2( render_target_ptr surf )
 
 	backend::ref( ).set_viewport( orig_viewport );
 }
+
+
+
+
 
 void stage_postprocess::clear_surface( render_target_ptr surf )
 {

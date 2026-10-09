@@ -130,21 +130,33 @@ void grass_patch::try_accumulate_trample(
 	trample_desc& desc,
 	grass_world* in_grass_world,
 	renderer* in_renderer,
-	renderer_context*
+	renderer_context* in_context
 )
 {
+
+	// sushi@TODO: Recover retail trample statement attribution and call expansion.
 	if ( !options::ref( ).current.m_use_vegetation_trample )
 		return;
 
+
+
+
+
+
+
+
 	float3 const position				= (desc.position - (m_origin - float3( 8.f, 8.f, 8.f ))) * (1.f / 16.f) - float3( 1.f / 63.f, 1.f / 63.f, 1.f / 63.f );
-	float const linear_radius		= desc.radius * (1.f / 16.f);
+	float linear_radius		= desc.radius * (1.f / 16.f);
 
-	if (
-		position.x < 0.f || position.y < -.25f || position.z < 0.f ||
-		position.x > 1.f || position.y > 1.f || position.z > 1.f
-	)
+
+
+
+
+	if ( !(
+		position.x >= 0.f && position.y >= -.25f && position.z >= 0.f &&
+		position.x <= 1.f && position.y <= 1.f && position.z <= 1.f
+	) )
 		return;
-
 	in_renderer->get_grass_trample_effect( )->apply( 0, 0 );
 	in_grass_world->set_trample_parameters( desc );
 
@@ -169,6 +181,7 @@ void grass_patch::try_accumulate_trample(
 		linear_radius + linear_radius,
 		linear_radius + linear_radius
 	);
+
 }
 
 grass_patch::~grass_patch( )
@@ -287,23 +300,26 @@ void grass_patch::render(
 	);
 	++statistics::ref( ).grass_stat_group.num_rendered_patches.value;
 }
-
+// sushi@TODO: Recover grass-sort statement sizes and line attribution.
 void grass_patch::sort_instances( float3 const& view_position )
 {
 	u32 const lod_index = m_current_lod_index;
+
+
+
 	std::sort(
 		m_sort_info[lod_index],
 		m_sort_info[lod_index] + m_instances.size( ) - 1,
 		sort_indices_predicate( this, view_position )
 	);
 
-	u16* merged_indices_copy = ALLOC(
-		u16,
-		m_num_merged_indices[lod_index]
-	);
+	u16* merged_indices_copy = ALLOC( u16, m_num_merged_indices[lod_index] );
+
 	u16* merged_indices_copy_it = merged_indices_copy;
-	for ( u32 i = 0; i < m_instances.size( ); ++i ) {
+	for ( u32 i = 0; i < m_instances.size( ); ++i )
+	{
 		sort_info const& info = m_sort_info[lod_index][i];
+
 		memcpy(
 			merged_indices_copy_it,
 			m_merged_indices[lod_index] + info.index_offset,
@@ -317,9 +333,9 @@ void grass_patch::sort_instances( float3 const& view_position )
 		0,
 		0,
 		merged_indices_copy,
-		0,
-		0
+		0, 0
 	);
+
 	FREE( merged_indices_copy );
 }
 

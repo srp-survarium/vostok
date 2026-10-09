@@ -156,19 +156,15 @@ void renderer_context_targets::new_lt(
 	math::uint2 const			in_size
 )
 {
-	render_target_instance& instance = m_family[index];
-	instance.orig_name = rt_index_to_name( index );
-
-	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
-	instance.target = 0;
-	instance.texture = resource_manager::ref().create_texture2d(
-		instance.name.get_buffer(),
-		in_size.x,
-		in_size.y,
+	m_family[index].orig_name = rt_index_to_name( index );
+	m_family[index].name.assignf( "%s_%d", m_family[index].orig_name.c_str(), m_id );
+	m_family[index].target = 0;
+	m_family[index].texture = resource_manager::ref().create_texture2d(
+		m_family[index].name.get_buffer(), in_size.x, in_size.y,
 		0,
 		in_format,
 		D3D_USAGE_STAGING,
-		0,
+		1,
 		1,
 		false
 	);
