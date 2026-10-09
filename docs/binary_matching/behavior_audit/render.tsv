@@ -8,6 +8,9 @@ mangled	verdict	evidence
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
 ?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
 ?copy_from@cloud_simulation@render@vostok@@QAEXABV123@@Z	EQUIVALENT	LTCG conv (this/other registers); same memcpy(this, other, size)
+?create_constant_buffer@resource_manager@render@vostok@@QAEPAVshader_constant_buffer@23@ABV?$fixed_string@$0EA@@3@W4enum_shader_type@23@W4_D3D_CBUFFER_TYPE@@I@Z	EQUIVALENT	retail calls ICF ~shader_constant_buffer rep; base inlines same release/free
+?create_declaration@resource_manager@render@vostok@@QAEPAVres_declaration@23@PBUD3D11_INPUT_ELEMENT_DESC@@I@Z	EQUIVALENT	retail inlines res_declaration ctor; same range init and lookup
+?create_input_layout@resource_manager@render@vostok@@QAEPAVres_input_layout@23@PBVres_declaration@23@PBVres_signature@23@@Z	EQUIVALENT	retail calls ICF ~res_input_layout rep for stack descriptor; base inlines same releases
 ?create_resource@renderer_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	frame/stack layout; ICF intrusive_ptr::set rep
 ?draw_debug@renderer@render@vostok@@QAEXPAVscene@23@PAVscene_view@23@MPBUfont@ui@3@@Z	EQUIVALENT	grass_world::render_debug guard partial-inlined in base; cvtps2pd scheduling
 ?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	EQUIVALENT	regalloc+x87 stack order; same scales, colors (0,1,0,1)/(0.5,0.5,0.7,1) via color_rgba call in retail
