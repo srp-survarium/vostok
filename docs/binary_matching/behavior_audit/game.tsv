@@ -53,10 +53,10 @@ mangled	verdict	evidence
 ?kill@player@survarium@@QAEXI@Z	EQUIVALENT	call+ret vs tail jump to select_animations, m_game_ui reload; same calls/args
 ?load_weapon@weapon@survarium@@AAEXABV?$resource_ptr@Vskeleton_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@ABV?$resource_ptr@Vrifle_scope@survarium@@Vunmanaged_resource@resources@vostok@@@45@@Z	EQUIVALENT	boost::function ICF helper names; same calls/offsets
 ?notify_actions_subscribers@player@survarium@@AAEXXZ	FIXED	NaN movement skipped subscribers: ours abs(m)>=eps (comiss |m|,eps; jb), retail 0x9c comiss eps,|m|; ja skip (NaN notifies). Rest: STLport for_each inline-vs-call
-?on_after_fire@weapon@survarium@@EAEXXZ	FIXED	magazine count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx) before set_ammo_in_magazine. Truncates only at 65535 rounds (second call)
+?on_after_fire@weapon@survarium@@EAEXXZ	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535 (second call)
 ?on_ammo_empty@weapon@survarium@@EAEXXZ	EQUIVALENT	same calls/offsets
 ?on_before_active_object_changed@player@survarium@@EBEXABV?$resource_ptr@Vinteractive_object@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@0@Z	EQUIVALENT	retail keeps the safe-bool c_ptr test (constant true); same assign_game_ui calls/args
-?on_chamber_a_round@weapon@survarium@@EAEXXZ	FIXED	magazine count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx) before set_ammo_in_magazine. Truncates only at 65535 rounds
+?on_chamber_a_round@weapon@survarium@@EAEXXZ	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535
 ?on_client_status_received@lobby_menu@survarium@@QAEXW4query_info_types@lobby@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift, -2); same case handlers and calls; lobby_client() inline-vs-call
 ?on_collision_and_visuals_loaded@project_cooker_simple@survarium@@AAEXAAVqueries_result@resources@vostok@@PAVsimple_game_project@2@@Z	EQUIVALENT	same loops/refcounts/offsets; base builds the resource_ptr arg via an extra temp (+1/-1), net refcount identical
 ?on_connected_to_lobby@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	base inlines it into callers; retail body = query_lobby_info, then if !connected set flag + show_disconnected_message(false)
@@ -85,7 +85,7 @@ mangled	verdict	evidence
 ?on_skeleton_matrices_changed@weapon@survarium@@EAEXIABVfloat4x4@math@vostok@@QBV345@10QAV345@20@Z	EQUIVALENT	base tail-merges the two set_model_visible calls (push 2 / push 3, shared call); same calls and FP order
 ?on_slot_restrictions_arrived@lobby_menu@survarium@@AAEXXZ	FIXED	count was cached in a u8 local (truncated); retail cmp u8 i vs u32 [client+850h] each pass, no count local. Loop init folded into the for (record +6)
 ?on_stats_message_arrived@lobby_menu@survarium@@QAEXPB_W0W4message_channel_enum@messaging@@@Z	EQUIVALENT	CRT ICF naming; same wcsstr/wcsncpy offsets (9/0x12, 4/8, 5/0xA), statuses 7/8, store +0x110
-?on_unload_chambered_round@weapon@survarium@@EAEXXZ	FIXED	magazine count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx) before set_ammo_in_magazine. Truncates only at 65535 rounds
+?on_unload_chambered_round@weapon@survarium@@EAEXXZ	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535
 ?on_user_sprint@weapon@survarium@@EAEX_N@Z	EQUIVALENT	same calls/offsets; frame only
 ?play_weapon_fire_pfx@weapon@survarium@@AAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
 ?play_weapon_shell_pfx@weapon@survarium@@QAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
@@ -104,7 +104,7 @@ mangled	verdict	evidence
 ?set_character_transform@player@survarium@@QAEXABVfloat3@math@vostok@@MM@Z	EQUIVALENT	math temporary scheduling/frame; same calls/offsets
 ?set_next_ammo_type@weapon@survarium@@EAEXXZ	EQUIVALENT	same compare/offsets; register use
 ?set_target@weapon@survarium@@EAEXW4weapon_targets@2@@Z	EQUIVALENT	same add_light/remove_light flow and offsets; register use
-?set_ui_ammo@weapon@survarium@@AAEX_N@Z	FIXED	magazine count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx) before set_ammo_in_magazine. Truncates only at 65535 rounds. Base drops the update_total_count test (both callers pass true, LTCG)
+?set_ui_ammo@weapon@survarium@@AAEX_N@Z	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535. Base drops the update_total_count test (both callers pass true, LTCG)
 ?show_crosshair@weapon@survarium@@AAEXXZ	EQUIVALENT	base inlines it into callers; retail body = if m_game_ui show_crosshair(true)
 ?show_disconnected_message@lobby_menu@survarium@@AAEX_N@Z	EQUIVALENT	argument stack slot only; same calls/literals
 ?show_match_making@lobby_menu@survarium@@QAEX_N@Z	EQUIVALENT	Scaleform SetString/SetStringW/operator= inline-vs-call; retail reuses the L"0 sec" pointer; same literals/Invokes/offsets
