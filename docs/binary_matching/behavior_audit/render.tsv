@@ -3,6 +3,8 @@ mangled	verdict	evidence
 ??$create_xs_hw_impl@Ups_data@render@vostok@@@resource_manager@render@vostok@@AAEPAV?$res_xs_hw@Ups_data@render@vostok@@@12@PBDUshader_configuration@12@PAUshader_include_getter@12@PAV?$associative_vector@Ubinary_shader_key_type@render@vostok@@V?$resource_ptr@Ubinary_shader_source@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@Vvector@23@U?$less@Ubinary_shader_key_type@render@vostok@@@stlp_std@@@@@Z	EQUIVALENT	ICF reps (res_xs_hw ctor, boost function clear); log __LINE__ only (absolute line drift)
 ??$create_xs_hw_impl@Uvs_data@render@vostok@@@resource_manager@render@vostok@@AAEPAV?$res_xs_hw@Uvs_data@render@vostok@@@12@PBDUshader_configuration@12@PAUshader_include_getter@12@PAV?$associative_vector@Ubinary_shader_key_type@render@vostok@@V?$resource_ptr@Ubinary_shader_source@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@Vvector@23@U?$less@Ubinary_shader_key_type@render@vostok@@@stlp_std@@@@@Z	EQUIVALENT	ICF reps (res_xs_hw ctor, boost function clear); log __LINE__ only (absolute line drift)
 ??$load_props_impl@Vbinary_config_value@configs@vostok@@@render@vostok@@YAXAAUlight_props@01@ABVbinary_config_value@configs@1@@Z	EQUIVALENT	create_translation evaluated before create_rotation in base; pure calls
+??0?$statistics_value@H@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	regalloc
+??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
@@ -110,6 +112,7 @@ mangled	verdict	evidence
 ?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
+?start@?$statistics_value@H@render@vostok@@UAEXXZ	EQUIVALENT	retail calls max(int,int) out of line; base inlines signed max
 ?update_depth_stencil_buffer@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
 ?update_light@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@IPAUlight_props@34@@Z	EQUIVALENT	retail inlines lights_db::update_light
