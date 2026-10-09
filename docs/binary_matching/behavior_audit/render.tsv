@@ -35,6 +35,7 @@ mangled	verdict	evidence
 ?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
 ?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
+?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
 ?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
 ?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
