@@ -77,7 +77,7 @@ void relocate_item_func::call( flash_function_handler_params& params )
 	vector< relocate_item_descr > descriptions;
 	lobby_client& lobby = m_game.get_network_client( )->lobby_client( );
 
-	for ( u8 i = 0; i < params.pArgs[ 0 ].GetArraySize( ); ++i )
+	for ( u8 i = 0, count = ( u8 )params.pArgs[ 0 ].GetArraySize( ); i < count; ++i )
 	{
 		flash_value descr_value;
 		params.pArgs[ 0 ].GetElement( i, &descr_value );
@@ -818,11 +818,9 @@ void lobby_menu::on_items_compatibility_arrived( )
 
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
-
-	u8 const item_compatibilities_count	= client.item_compatibilities_count( );
 	flash_value items_compatibility_item_property;
-	u8 i = 0;
-	for ( ; i < item_compatibilities_count; ++i )
+	u8 i;
+	for ( i = 0; i < client.item_compatibilities_count( ); ++i )
 	{
 		flash_value items_compatibility_item;
 		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
@@ -845,11 +843,9 @@ void lobby_menu::on_slot_restrictions_arrived( )
 
 	flash_value slot_restrictions_array;
 	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
-
-	u8 const slot_restrictions_count	= client.slot_restrictions_count( );
 	flash_value slot_restriction_item_property;
-	u8 i = 0;
-	for ( ; i < slot_restrictions_count; ++i )
+	u8 i;
+	for ( i = 0; i < client.slot_restrictions_count( ); ++i )
 	{
 		flash_value slot_restriction_item;
 		m_lobby_menu_ui->movie->CreateObject( &slot_restriction_item );
