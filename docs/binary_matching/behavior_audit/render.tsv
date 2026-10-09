@@ -29,6 +29,7 @@ mangled	verdict	evidence
 ??1render_model@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
 ??1stage_apply_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_atmosphere@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor reps; LTCG conv
 ??1stage_clouds@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep; LTCG conv
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
@@ -102,6 +103,7 @@ mangled	verdict	evidence
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
 ?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_atmosphere@render@vostok@@UAEXXZ	OPEN	angle_in_rad: retail multiplies by 1/180 then by the math::pi memory constant (+0x67d, +0x684); base folds pi/180 into one constant. Same source; math::pi declaration differs (header)
 ?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
@@ -112,6 +114,7 @@ mangled	verdict	evidence
 ?execute_smoothed_impl@stage_light_propagation_volumes@render@vostok@@QAEXIIIII@Z	EQUIVALENT	set_constant inlined/called oppositely; same RT dirty flags
 ?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
 ?fill_surface@system_renderer@render@vostok@@QAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0000_NPAUD3D11_VIEWPORT@@MMMM@Z	EQUIVALENT	schedule only
+?fill_surfaces@stage_atmosphere@render@vostok@@QAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0_N@Z	EQUIVALENT	identical after regalloc
 ?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
 ?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
