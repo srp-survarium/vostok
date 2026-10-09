@@ -126,6 +126,7 @@ mangled	verdict	evidence
 ?draw_triangles@system_renderer@render@vostok@@QAEXQBUvertex_colored@23@0QBG1_N@Z	EQUIVALENT	push order only
 ?draw_ui_vertices@system_renderer@render@vostok@@QAEXPBUTL@vertex_formats@23@ABIHH@Z	EQUIVALENT	identical after regalloc
 ?dump_scene_statistics@scene@render@vostok@@QBEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?end_render_options_changing@options@render@vostok@@QAE?AW4enum_options_changes_result@23@AAV?$vector@Vvirtual_path_string@fs_new@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
 ?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
@@ -258,6 +259,7 @@ mangled	verdict	evidence
 ?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?set_children@grass_render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	same fallthrough switch over lods
 ?set_children@render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	schedule only
+?set_default_values@options@render@vostok@@QAEXXZ	EQUIVALENT	immediate store vs register
 ?set_model_material@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVvirtual_path_string@fs_new@4@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@64@@Z	EQUIVALENT	boost assign_to call vs inline; ICF reps
 ?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?set_size@render_output_window@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	base set_size constprop-specialised for force_resize=true (only caller passing false is unreferenced); retail generic guard matches source
@@ -301,6 +303,7 @@ vostok::render::interpolated_color<64>	EQUIVALENT	regalloc+schedule; same arithm
 vostok::render::on_fs_iterator_materials_ready	EQUIVALENT	log __LINE__ only (absolute line drift)
 vostok::render::on_fs_iterator_materials_ready_children	EQUIVALENT	file_type_pointer bool inlined in retail; separate vs shared path buffers on stack
 vostok::render::on_material_loaded	EQUIVALENT	log __LINE__ only (absolute line drift)
+vostok::render::parse_resolution	EQUIVALENT	atoi import thunk name
 vostok::render::query_materials_and_wait	FIXED	FREE order was ptrs,variants,requests; retail +0x212..+0x24a frees requests (esi), variants ([esp+2Ch]), ptrs ([esp+10h])
 vostok::render::read_diffuse_colors<64>	EQUIVALENT	regalloc+schedule; same arithmetic sequence
 vostok::render::screen_factor	EQUIVALENT	regalloc+schedule; same ((dz2+dy2)+dx2) sum, max/clamp with identical NaN outcome
