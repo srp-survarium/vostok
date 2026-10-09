@@ -16,6 +16,7 @@ mangled	verdict	evidence
 ??0skeleton_mesh_gpu_skinning_1weight@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_2weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_3weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
