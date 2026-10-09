@@ -509,23 +509,26 @@
           # The heavy ~1.5 GiB packed resources and ~1.6 GiB unpacked tree are
           # deliberately NOT realized/pinned here - they're opt-in via the
           # `with-resources` shell (`nix develop .#with-resources`).
-          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
-          for pair in \
-              "vostok-toolchain:${vostok-toolchain}" \
-              "vostok-libs:${vostok-libs}" \
-              "vcproj2ninja:${vcproj2ninja}" \
-              "survarium-game:${survarium}" \
-              "survarium-keys:${survarium.keys}" \
-              "bullet-2.79-source:${bullet-2_79-src}" \
-              "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
-            name="''${pair%%:*}"
-            path="''${pair#*:}"
-            nix-store -r "$path" \
-              --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
-              --indirect >/dev/null
-          done
+          # Read-only tools need the flake environment without worktree setup.
+          if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
+            mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+            for pair in \
+                "vostok-toolchain:${vostok-toolchain}" \
+                "vostok-libs:${vostok-libs}" \
+                "vcproj2ninja:${vcproj2ninja}" \
+                "survarium-game:${survarium}" \
+                "survarium-keys:${survarium.keys}" \
+                "bullet-2.79-source:${bullet-2_79-src}" \
+                "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
+              name="''${pair%%:*}"
+              path="''${pair#*:}"
+              nix-store -r "$path" \
+                --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
+                --indirect >/dev/null
+            done
 
-          python3 -m vostok.tool.toolchain
+            python3 -m vostok.tool.toolchain || exit $?
+          fi
 
         '';
       };
@@ -548,16 +551,18 @@
           export VOSTOK_RESOURCES_UNPACKED="${survarium-resources-unpacked}"
 
           # Pin the heavy resource outputs so `nix-store --gc` keeps them.
-          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
-          for pair in \
-              "survarium-resources:${survarium.resources}" \
-              "survarium-resources-unpacked:${survarium-resources-unpacked}"; do
-            name="''${pair%%:*}"
-            path="''${pair#*:}"
-            nix-store -r "$path" \
-              --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
-              --indirect >/dev/null
-          done
+          if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
+            mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+            for pair in \
+                "survarium-resources:${survarium.resources}" \
+                "survarium-resources-unpacked:${survarium-resources-unpacked}"; do
+              name="''${pair%%:*}"
+              path="''${pair#*:}"
+              nix-store -r "$path" \
+                --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
+                --indirect >/dev/null
+            done
+          fi
 
           echo "[vostok] resources  : REALIZED -> VOSTOK_RESOURCES_DIR + VOSTOK_RESOURCES_UNPACKED (opt-in shell)." >&2
         '';
@@ -574,10 +579,12 @@
         inputsFrom = [ defaultDevShell ];
         shellHook = ''
           export SCALEFORM_SDK="${scaleform-sdk}"
-          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
-          nix-store -r "${scaleform-sdk}" \
-            --add-root "$VOSTOK_DIR/binaries/nix-store/scaleform-sdk" \
-            --indirect >/dev/null
+          if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
+            mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+            nix-store -r "${scaleform-sdk}" \
+              --add-root "$VOSTOK_DIR/binaries/nix-store/scaleform-sdk" \
+              --indirect >/dev/null
+          fi
           echo "[vostok] scaleform  : REALIZED -> SCALEFORM_SDK (opt-in shell)." >&2
         '';
       };

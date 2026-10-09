@@ -749,6 +749,14 @@ def _access_kind(instruction: str, absolute_value: int | None = None) -> tuple[s
         return "address", width
     if mnemonic == "lea" or "[" not in operands:
         return "address", width
+    # LLVM Intel syntax prints x87 memory inputs as a single first operand.
+    # Arithmetic updates ST, not the addressed datum; stores retain WRITE below.
+    if mnemonic in {
+        "fadd", "fsub", "fsubr", "fmul", "fdiv", "fdivr", "fcom", "fcomp",
+        "fiadd", "fisub", "fisubr", "fimul", "fidiv", "fidivr", "ficom", "ficomp",
+        "fld", "fild", "fbld", "fldcw", "fldenv", "frstor",
+    }:
+        return "read", width
     if selected is not None and selected > 0:
         return "read", width
     if "[" in first:

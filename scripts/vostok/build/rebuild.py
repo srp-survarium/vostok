@@ -216,7 +216,8 @@ def _acquire_build_lock():
     # A stale lock is therefore not possible, which a PID file or a timestamp
     # lockfile could not promise. The file itself is never cleaned up and does
     # not need to be; it carries no state.
-    lock = open(paths.BINARIES / ".build.lock", "w")
+    paths.BUILD_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    lock = open(paths.BUILD_LOCK, "a")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -275,6 +276,8 @@ def main() -> None:
     start = time.monotonic()
     modules: set[str] = set()
     try:
+        from vostok.tool import toolchain
+        _log.timed("toolchain setup", lambda: toolchain.setup(set()))
         log("Refreshing ninja graph from the .vcprojs ...")
         _log.timed("ninja graph", ninja_regen.regenerate)
 

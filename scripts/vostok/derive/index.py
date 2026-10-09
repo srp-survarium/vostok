@@ -44,6 +44,20 @@ def overload_key(mangled, name):
     return f"{mangled}@@pdb-overload:{digest}"
 
 
+def same_name_distinct_bodies(records):
+    """Expose same-signature identities represented by several TU-owned bodies."""
+    groups = {}
+    for record in records:
+        identity = record["mangled"], record["name"]
+        groups.setdefault(identity, []).append(record)
+    return {
+        identity: sorted(group, key=lambda record: (record["rva"], record["file"]))
+        for identity, group in groups.items()
+        if len({record["rva"] for record in group}) > 1
+        and len({record["file"] for record in group}) > 1
+    }
+
+
 def index_by_mangled(records, preferred_files=None, preferred_signatures=None):
     """Collapse rich records by PDB identity, preferring the other side's owner.
 

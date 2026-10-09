@@ -32,6 +32,7 @@ retargeted branches. See `contract`.
     python3 -m vostok sema rva      <fn>                  # address/source/match dossier
     python3 -m vostok sema xref     <fn> --callees        # root -> direct callees
     python3 -m vostok sema xref     <fn>                  # direct callers
+    python3 -m vostok sema xref     <fn> --pointers       # physical address-taken candidates
     python3 -m vostok sema strings  <fn>                  # referenced string literals
     python3 -m vostok sema strings  --find <text>         # reverse literal lookup
     python3 -m vostok sema blocks   <fn> --diff --lite    # THE VERDICT VIEW
@@ -114,7 +115,10 @@ def main():
     p.set_defaults(func=cmd_rva)
     p = sub.add_parser("xref", help="direct target/base caller-callee graph")
     p.add_argument("fn", help=_FN_HELP)
-    p.add_argument("--callees", action="store_true", help="show outgoing calls")
+    direction = p.add_mutually_exclusive_group()
+    direction.add_argument("--callees", action="store_true", help="show outgoing calls")
+    direction.add_argument("--pointers", action="store_true",
+                           help="physical HIGHLOW code-pointer words and vtable candidates")
     p.add_argument("--base", action="store_true", help="read the base side")
     p.add_argument("--raw", action="store_true", help="show every call site")
     p.set_defaults(func=cmd_xref)

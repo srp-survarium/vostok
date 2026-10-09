@@ -88,9 +88,27 @@ NVTT/FreeImage dependencies. They remain available to the editor and
 texture tools; a solution build-order dependency must not make offline
 asset tools prerequisites of the shipping executable.
 
+Prebuilt library staging compares file contents in bounded chunks. Identical
+regular files retain their inode, mtime and mode; changed files and symlinks are
+replaced atomically with writable copies. Repeating setup does not dirty
+unchanged library inputs.
+
 The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
+Before a hard-timeout cleanup, the supervisor logs its observed CPU rate,
+worker states and final output readiness to distinguish incomplete compilation
+from a stalled output or process. The timeout and success gates are unchanged.
+
+For read-only helpers during a build, enter the flake environment without
+setup: `VOSTOK_SKIP_SETUP=1 nix develop --command python3 -m vostok ...`.
+This skips shell-entry gcroot writes, Wine setup, library staging and graph
+generation. Ordinary shell entry still prepares the worktree, but refuses to
+run setup while its build lock is held. The canonical build runs required
+setup under that same lock, including when entered through the read-only shell.
+Setup and builds use the same normalized graph merge: unchanged Ninja, response
+and clangd files retain their mtimes, so a setup refresh rebuilds only affected
+inputs.
 
 Codex builds on Linux with a systemd user manager are notification-driven by
 default whenever `CODEX_THREAD_ID` is set:
@@ -145,6 +163,30 @@ force-stopping the service can prevent notification. To stop a job, use
 `journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
 until the job finishes.
 
+The data access map classifies x87 memory arithmetic and load operands as
+reads, including LLVM Intel syntax with a single memory operand. FST/FSTP and
+integer/control-state stores remain writes. Regenerate the full data lane after
+updating this classifier; existing access-map artifacts retain their old roles.
+
+The direct datum gate also checks the four reviewed embedded mesh dispatch
+arrays in `config/retail/compiler_tables.tsv`. Their exact TU owners, physical
+operand relocations and table bounds are validated independently of PDB data
+symbols. Jump referents use owner-relative case offsets; selector bytes and null
+slots remain literal data. Missing, ambiguous or changed candidate evidence stays
+OPEN even with a code score of100 or a datum wall review. These rows use a stable
+TU-qualified compiler-table identity; they do not add PDB symbols or COFF data
+manifest entries. Other `.text` data still requires separate reviewed evidence.
+
+`vostok sema xref FUNCTION --pointers` verifies the PE/PDB hash and prints the
+physical procedure span plus HIGHLOW words pointing to that exact RVA. Vtable
+labels appear only when the data report binds both this PE and the exact current
+data-index bytes; otherwise they are omitted. Labels annotate reference
+candidates and do not prove runtime reachability.
+On the base side, the view flags possible stale base-stripping claims in ledger
+notes. Empty direct caller output does not exclude virtual dispatch: verify
+constructor storage, slot contents and the actual indirect caller before
+closing that question.
+
 The full-engine structural/byte campaign queue includes `game`, `game_core`,
 `render`, named-local differences and unpaired frameless procedures:
 
@@ -160,6 +202,12 @@ last; approximate statement classes, local-record differences and missing pairs
 remain triage evidence requiring target inspection. Whole-PDB class variants,
 enum and definition order are separate checks described in
 [`divergence_queue.md`](docs/binary_matching/divergence_queue.md).
+
+Ledger derivation warns when an identical decorated name and signature has
+distinct bodies in several translation units. The ledger selects one canonical
+owner; its score does not establish closure of the other bodies. Inspect each
+owner with `vostok pdb inspect --list`, then `--file` or an exact `--rva`, and
+verify the actual referenced datum when a behavior depends on a literal or table.
 
 Class access, static/instance and virtual qualifiers, declaration order, and
 candidate-source declarations are checked against retail PDB evidence:

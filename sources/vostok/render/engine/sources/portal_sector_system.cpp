@@ -168,7 +168,7 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	typedef buffer_vector< Wm4::Vector2< float > > wm_vertices_2d_buffer_type;
 	typedef buffer_vector< float3 > vertices_buffer_type;
 	typedef Wm4::Vector2< float > wm_vertex_2d;
-
+	// sushi@TODO: Recover inlined segment arithmetic that changes the clipped point buffer.
 	float3 const normal = math::normalize( ( io_points[1] - io_points[0] ) ^ ( io_points[2] - io_points[0] ) );
 
 	vertices_buffer_type temp( ALLOCA( 16 * sizeof( float3 ) ), 16 );

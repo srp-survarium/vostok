@@ -93,6 +93,7 @@ NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
+BUILD_LOCK = BINARIES / ".build.lock"
 
 # Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
 # regenerable from resources.db + fxc, so it lives with the other artifacts.
@@ -318,6 +319,7 @@ USAGE_LOG = _main_worktree() / "binaries" / "vostok_usage.log"
 DOCS_MATCHING = REPO / "docs" / "binary_matching"
 DOCS_DATA_MATCHING = DOCS / "data_matching"
 RETAIL_CONFIG = CONFIG / "retail"
+RETAIL_COMPILER_TABLES = RETAIL_CONFIG / "compiler_tables.tsv"
 CLEANLINESS_CONFIG = CONFIG / "cleanliness"
 MATCH_STATE = CONFIG / "match_state.tsv"
 EXACT_FOLD_ALIASES = CONFIG / "exact_fold_aliases.tsv"
