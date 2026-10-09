@@ -18,6 +18,8 @@ mangled	verdict	evidence
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
 ?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
+?add_data@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
+?add_data@?$batched_geometry@Ushadow_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
 ?add_shadow_vertices@static_render_surface@render@vostok@@UAEXPAUbatched_geometry_interface@23@ABVfloat4x4@math@3@@Z	EQUIVALENT	regalloc
 ?allocate_resource@renderer_cook@render@vostok@@UAE?AVmutable_buffer@3@AAVquery_result_for_cook@resources@3@Vconst_buffer@3@_N@Z	EQUIVALENT	ICF ctor representative; unused frame alignment in retail
 ?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
@@ -60,6 +62,7 @@ mangled	verdict	evidence
 ?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	FIXED	align mult folded to mult/pow; retail +0x154 fld1/fdivrp then +0x177 fmul mults[i] = (1/pow)*mult; explicit parenthesised reciprocal reproduces it
 ?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
 ?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
+?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
 ?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
 ?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
 ?get_surfaces@static_render_model_instance@render@vostok@@UAEXPBVfloat4x4@math@3@PBVfloat3@53@AAV?$vector@PAUrender_surface_instance@render@vostok@@@23@_NEI@Z	FIXED	the LOD fallback walk ran for caller-supplied lod_id; retail +0x0d jne skips straight to the 0xaa test, so it walks only after select_lod
