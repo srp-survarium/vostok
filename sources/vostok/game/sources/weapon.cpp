@@ -351,7 +351,7 @@ void weapon::set_ui_ammo( bool update_total_count )
 {
 	if ( m_game_ui && m_inventory )
 	{
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 
 		if ( update_total_count )
 		{
@@ -384,13 +384,13 @@ void weapon::on_reload( )
 void weapon::on_chamber_a_round( )
 {
 	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 void weapon::on_unload_chambered_round( )
 {
 	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 // claude@NOTE: show_crosshair/hide_crosshair structure correct (the if-guard + the inner call).
@@ -429,7 +429,7 @@ void weapon::on_after_fire( )
 
 	play_weapon_fire_pfx( );
 
-	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 // claude@NOTE: structure correct - both sides emit 9 statements (the ledger's SPLIT class is a
