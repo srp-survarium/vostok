@@ -129,6 +129,7 @@ mangled	verdict	evidence
 ?end_render_options_changing@options@render@vostok@@QAE?AW4enum_options_changes_result@23@AAV?$vector@Vvirtual_path_string@fs_new@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
+?execute@stage_ambient_occlusion@render@vostok@@UAEXXZ	EQUIVALENT	retail merges the two final fill_surface call sites; same arguments per path
 ?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_atmosphere@render@vostok@@UAEXXZ	OPEN	angle_in_rad: retail multiplies by 1/180 then by the math::pi memory constant (+0x67d, +0x684); base folds pi/180 into one constant. Same source; math::pi declaration differs (header)
 ?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
