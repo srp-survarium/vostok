@@ -289,7 +289,7 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 	}
 }
 // claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
-#line 302
+#line 299
 void lobby_menu::on_friendship_status_recivied(
 	const messaging::friendship_actions_enum	type
 )
@@ -297,6 +297,8 @@ void lobby_menu::on_friendship_status_recivied(
 	switch ( type )
 	{
 	case messaging::query_friend_list:
+	case messaging::update_friends_status:
+
 		LOG_INFO( "[R] friend_list" );
 		fill_friend_list( );
 
