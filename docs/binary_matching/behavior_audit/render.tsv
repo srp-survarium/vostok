@@ -19,6 +19,7 @@ mangled	verdict	evidence
 ??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
 ??1portal_sector_structure@culling@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
+??1stage_apply_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -81,6 +82,7 @@ mangled	verdict	evidence
 ?dump_scene_statistics@scene@render@vostok@@QBEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
+?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
