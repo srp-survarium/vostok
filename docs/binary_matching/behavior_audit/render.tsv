@@ -14,6 +14,7 @@ mangled	verdict	evidence
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
 ??0skeleton_mesh_gpu_skinning_1weight@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0skeleton_mesh_gpu_skinning_2weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
