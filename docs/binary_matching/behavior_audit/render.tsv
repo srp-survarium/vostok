@@ -33,6 +33,7 @@ mangled	verdict	evidence
 ??1stage_atmosphere@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor reps; LTCG conv
 ??1stage_clouds@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep; LTCG conv
 ??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
+??1stage_decals_accumulate@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -81,6 +82,7 @@ mangled	verdict	evidence
 ?create_texture_list@resource_manager@render@vostok@@QAEPAVres_texture_list@23@ABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	identical after regalloc
 ?create_world@render@vostok@@YAPAVworld@12@AAVbase_allocator@memory@2@PAV452@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	s_world construction flag at shifted address; LTCG conv
 ?cull_points_by_frustum@culling@render@vostok@@YA_NABVfrustum@math@3@AAY03Vfloat3@53@@Z	OPEN	inline segment numerator association differs (prior audit: planar quad keeps 3 retail vs 4 base points under some inputs); no faithful source lever found
+?debug_render@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?debug_render@stage_lights@render@vostok@@UAEXXZ	EQUIVALENT	unrolled constant cube transform (debug draw): fp:fast CSE of shared partial sums differs; same source expression
 ?debug_render@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?downsample_rsm@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
@@ -107,6 +109,7 @@ mangled	verdict	evidence
 ?execute@stage_atmosphere@render@vostok@@UAEXXZ	OPEN	angle_in_rad: retail multiplies by 1/180 then by the math::pi memory constant (+0x67d, +0x684); base folds pi/180 into one constant. Same source; math::pi declaration differs (header)
 ?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (get_rt, intrusive_ptr dtor, res_effect::apply)
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
