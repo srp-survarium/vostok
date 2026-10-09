@@ -142,6 +142,8 @@ mangled	verdict	evidence
 ?load@portal_sector_structure@culling@render@vostok@@QAEXPAVbinary_config_value@configs@4@@Z	EQUIVALENT	schedule only; same aabb compares
 ?load@render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	min+max vs max+min commutative
 ?load@static_render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	ICF alloc_proxy rep; log __LINE__ only (absolute line drift)
+?load_from_chunk_data@user_render_surface_editable@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	constants via register vs immediate
+?load_from_chunk_data@user_render_surface_wire@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	ctor inlined in retail; stack layout; same float op multiset modulo operand location
 ?make_frustum_images@portal_sector_system@culling@render@vostok@@AAEXABVfloat3@math@4@@Z	EQUIVALENT	identical after regalloc
 ?make_plane_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	stack-slot layout and schedule; same direction/position arithmetic
 ?make_skin_scattering_texture@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail constants_handler<1>::set_constant vs base backend::set_ps_constant wrapper; ICF push reps
