@@ -154,6 +154,7 @@ mangled	verdict	evidence
 ?load_from_chunk_data@user_render_surface_editable@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	constants via register vs immediate
 ?load_from_chunk_data@user_render_surface_wire@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	ctor inlined in retail; stack layout; same float op multiset modulo operand location
 ?make_frustum_images@portal_sector_system@culling@render@vostok@@AAEXABVfloat3@math@4@@Z	EQUIVALENT	identical after regalloc
+?make_frustum_images@sector_double_query_preventer@culling@render@vostok@@QAEXPBVfloat3@math@4@@Z	EQUIVALENT	multiply operands from memory vs register; same products
 ?make_plane_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	stack-slot layout and schedule; same direction/position arithmetic
 ?make_skin_scattering_texture@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail constants_handler<1>::set_constant vs base backend::set_ps_constant wrapper; ICF push reps
 ?make_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	schedule only; same float op multiset
@@ -201,6 +202,7 @@ mangled	verdict	evidence
 ?render@grass_patch@0vostok@@QAEXPAUgrass_world@02@PAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IMPAVres_effect@02@I@Z	EQUIVALENT	immediate via register
 ?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
 ?render@renderer@0vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$rectangle@Vfloat2@math@vostok@@@math@2@ABV?$function@$$A6AX_N@Z@boost@@_NPBUfont@ui@2@@Z	FIXED	info->dips used signed max(s32); retail +0x8d6 calls max(u32,u32). Also flash present arg: retail +0x79a passes empty()?0:begin
+?render@sector_double_query_preventer@culling@0vostok@@QAEXAAVsystem_renderer@03@@Z	EQUIVALENT	identical after regalloc
 ?render_debug@grass_world@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	debug-only draw: x87 operand order; same products
 ?render_debug@hw_hiz_occlusion_manager@render@vostok@@QAEXPAVrenderer_context@23@PBVfloat4@math@3@PBEI@Z	EQUIVALENT	LTCG conv
 ?render_dynamic_models@stage_shadow_direct@render@vostok@@QAEXIIABVfloat3@math@3@@Z	EQUIVALENT	empty body; LTCG conv (ret 8 vs ret)
