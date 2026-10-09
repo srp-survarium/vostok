@@ -5,6 +5,7 @@ mangled	verdict	evidence
 ??$load_props_impl@Vbinary_config_value@configs@vostok@@@render@vostok@@YAXAAUlight_props@01@ABVbinary_config_value@configs@1@@Z	EQUIVALENT	create_translation evaluated before create_rotation in base; pure calls
 ??0?$statistics_value@H@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	regalloc
 ??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
+??0backend@render@vostok@@QAE@XZ	EQUIVALENT	flag stored from register holding 1 vs immediate
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
 ??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
