@@ -130,6 +130,7 @@ mangled	verdict	evidence
 ?draw_luminance_picker_info@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	EQUIVALENT	retail calls color_rgba for rgbl_colors (same r,g,b,a args), inlines draw_text_shadowed; same strings/positions
 ?draw_quads@portal_sector_system@culling@render@vostok@@AAEXAAVsystem_renderer@34@@Z	EQUIVALENT	identical after regalloc
 ?draw_render_models_selection@system_renderer@render@vostok@@QAEXAAV?$vector@V?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@Z	EQUIVALENT	x87 commutative multiply order
+?draw_scene_impl@renderer@game@render@vostok@@AAEXABUdraw_scene_params@1234@@Z	EQUIVALENT	null test folded differently
 ?draw_screen_lines@system_renderer@render@vostok@@QAEXPBVfloat3@math@3@IABVcolor@53@MI_N2@Z	EQUIVALENT	identical after regalloc
 ?draw_solid_capsule@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	retail inlines draw_cylinder_solid (memset/mul4x3/draw_primitive_solid); same float op multiset
 ?draw_stages_stats@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	FIXED	even-row stage colour was (0.5,0.75,1,1); retail +0x175..0x20c folds floor(255),floor(127.5),floor(191.25) to 0xFF7FBFFF = color_rgba(1,0.75,0.5,1)
@@ -296,6 +297,7 @@ mangled	verdict	evidence
 ?set_time@clouds@render@vostok@@QAEXM@Z	EQUIVALENT	ICF boost::function clear rep; compare operand from stack vs register
 ?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
 ?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
+?show_movie@renderer@game@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Uflash_movie_resource@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@64@@Z	EQUIVALENT	ICF boost::function ctor rep; stack alignment
 ?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
 ?sort_instances@grass_patch@render@vostok@@QAEXABVfloat3@math@3@@Z	EQUIVALENT	identical after regalloc
 ?start@?$statistics_value@H@render@vostok@@UAEXXZ	EQUIVALENT	retail calls max(int,int) out of line; base inlines signed max
