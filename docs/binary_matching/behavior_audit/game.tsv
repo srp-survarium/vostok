@@ -1,4 +1,5 @@
 mangled	verdict	evidence
+??0animations_selector@survarium@@QAE@AAVanimation_player@animation@vostok@@ABV?$resource_ptr@Vanimation_space_graph@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@4@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@64@ABUworld@navigation@ai@4@ABVgame_world@1@AAVhuman_npc@1@@Z	FIXED	subscribe animated_object: retail 0x8e push ebx (NULL), ours passed this. Rest: temp managed_resource_ptr release order
 ??0game_world@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	STRUCTURE MATCH; atexit ICF naming
 ??0lobby_client@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	fixed_string<32> ctor inline-vs-call; same member init
 ??0lobby_menu@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	retail clears only m_active of both scheduler identifiers (and 7FFFFFFFh), base zeroes the dword; m_id is unread until register sets it
@@ -220,6 +221,7 @@ mangled	verdict	evidence
 ?request_friends_status_from_server@lobby_menu@survarium@@AAEXI@Z	EQUIVALENT	LTCG hoists the m_in_destroying guard into the caller (on_friendship_status_recivied 0x178); same register_object args
 ?request_status_from_server@lobby_menu@survarium@@AAEXI@Z	EQUIVALENT	STRUCTURE MATCH; same calls/offsets; register/scheduling only
 ?reset_account_money@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	CRT ICF naming; Scaleform constant materialization
+?reset_animation_controller@animations_selector@survarium@@AAEXI@Z	EQUIVALENT	tail-merged set_animation_player_target calls sharing one expression slot; inline-vs-call make_stack_buffer
 ?reset_bindings@game_options@survarium@@AAEX_N@Z	EQUIVALENT	same 33-entry key_bind_descriptions walk, dik lookup, keyboards table search; image-layout addresses
 ?revert@options_monitor_index_selector@survarium@@UAEXXZ	EQUIVALENT	calls refill_resolutions_data (inlined); fixed there
 ?select_animations@player@survarium@@AAEXI@Z	EQUIVALENT	retail passes 0x4000 to make_stack_buffer (ICF name storage2), base folds it; same calls/offsets
@@ -227,6 +229,7 @@ mangled	verdict	evidence
 ?selected_animations@weapon_user_dead_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	animation_lexeme_parameters accessors inline-vs-call; same FP and stores
 ?send_local_player_input@network_client@survarium@@UAEXABUplayer_input@2@IABVfloat4x4@math@vostok@@M@Z	EQUIVALENT	retail push_backs a default update then fills back() (input, transform, pitch +0x54, time +0x58); same final element
 ?send_player_inputs@network_client@survarium@@AAEXXZ	EQUIVALENT	same calls; addressing only
+?set_animation_player_target@animations_selector@survarium@@AAEXABVexpression@mixing@animation@vostok@@I@Z	EQUIVALENT	inline-vs-call make_stack_buffer; regalloc
 ?set_attributes@human_npc@survarium@@QAEXAAUnpc_game_attributes@12@@Z	EQUIVALENT	regalloc/size only
 ?set_base_capture_progress@game_world_ui@survarium@@QAEXII@Z	EQUIVALENT	retail tail-merges the two branches into one SetString/Invoke; same args per branch (owner/3, buff/"", percent)
 ?set_broken_connection_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; scheduling
