@@ -1,0 +1,15 @@
+mangled	verdict	evidence
+??0bullet_physics_world@physics@vostok@@QAE@AAVbase_allocator@memory@2@AAUengine@12@@Z	EQUIVALENT	schedule only
+?adjust_foot_transform@bullet_physics_world@physics@vostok@@QAE_NABVfloat3@math@3@00MMAAVfloat4x4@53@@Z	FIXED	hit-fraction and angle tests: retail +0x259/+0x3a3 comiss eps,|x|; ja skip (NaN proceeds); source now !math::is_zero(x)
+?contact_pair_test@bullet_physics_world@physics@vostok@@QAEXAAUcontact_test_predicate@23@PAVbtCollisionObject@@1@Z	OPEN	no base instance: uncalled in our build so not emitted; source body reads identical to the retail asm
+?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	retail rebuilds the 3-colour table per iteration, base copies a hoisted copy; same 0.3/0 values
+?destroy@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	call register only
+?initialize@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?log_cb@physics@vostok@@YAXPAD@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?notify_about_contact@bullet_physics_world@physics@vostok@@AAEXXZ	FIXED	contact test lost retail NaN order: retail +0x4a comiss 0,[dist]; ja (NaN distance skipped); source now !(d < 0)
+?ray_test@bullet_physics_world@physics@vostok@@UAE?AUclosest_ray_result@23@ABVfloat3@math@3@0MGG@Z	EQUIVALENT	identical after regalloc
+?recover_from_penetrations@bullet_physics_world@physics@vostok@@UAE_NQAVbt_collision_shape@23@ABVfloat4x4@math@3@AAV563@GG@Z	EQUIVALENT	cvtps2pd vs cvtss2sd on the same scalar; log __LINE__ only (absolute line drift)
+`dynamic initializer for 's_dump_statistics''	FIXED	dump_physics_profiler registered user_specific; retail +0x6c/+0x66 store command_type 0 at +0x10 (engine_internal)
+`dynamic initializer for 's_reset_statistics''	FIXED	reset_physics_profiler registered user_specific; retail +0x66 stores command_type 0 at +0x10 (engine_internal)
+`vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	EQUIVALENT	symbolic store comparison equal
+vostok::physics::dimensions_from_bullet_shape	FIXED	sphere dimensions were (r, r, 0); retail sphere case stores r, then 0 to both y and z; now float3(radius, 0, 0)
