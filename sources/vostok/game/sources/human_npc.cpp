@@ -598,7 +598,7 @@ void human_npc::up_to_terrain( )
 	if ( m_feet_target != position )
 	{
 		float3 const offset		= m_feet_target - position;
-		float const factor		= math::min( m_game_world.get_game().last_frame_time() / ( length( offset ) / m_feet_adjustment_speed ), 1.f );
+		float const factor		= math::min( 1.f, m_game_world.get_game().last_frame_time() / ( length( offset ) / m_feet_adjustment_speed ) );
 		set_translation			( create_translation( position + offset * factor ) );
 	}
 }
