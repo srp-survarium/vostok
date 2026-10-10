@@ -22,6 +22,7 @@ mangled	verdict	evidence
 ?clone@fermi_interpolator@animation@vostok@@UBEPAV123@AAVn_ary_tree_transition_tree_constructor@mixing@23@@Z	EQUIVALENT	LTCG/prologue only
 ?clone@instant_interpolator@animation@vostok@@UBEPAV123@AAVn_ary_tree_transition_tree_constructor@mixing@23@@Z	EQUIVALENT	LTCG/prologue only
 ?clone@linear_interpolator@animation@vostok@@UBEPAV123@AAVn_ary_tree_transition_tree_constructor@mixing@23@@Z	EQUIVALENT	LTCG/prologue only
+?cloned_modified_lexeme@weight_lexeme@mixing@animation@vostok@@QBEAAV1234@M@Z	EQUIVALENT	identical after regalloc
 ?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
 ?compute_bones_local_matrices@bone_matrices_computer@animation@vostok@@QBEXPAVfloat4x4@math@3@0PBI@Z	EQUIVALENT	addressing only
 ?compute_bones_matrices@bone_matrices_computer@animation@vostok@@QBEXPAVfloat4x4@math@3@0PBI@Z	EQUIVALENT	addressing only
