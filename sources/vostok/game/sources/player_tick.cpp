@@ -422,10 +422,10 @@ void player::tick( const u32 current_time_in_ms )
 		{
 			const float near_plane = m_game.get_game_world( ).get_camera_director( ).get_active_camera( )->get_near_plane( );
 			const float font_size = math::max(
-				s_player_name_max_font_size -
-					( ( m_character_head_transform.c.xyz( ) - m_game.get_game_world( ).get_camera_director( ).get_inverted_view_matrix( ).c.xyz( ) ).length( ) - near_plane ) /
-					( m_game.get_game_world( ).get_camera_director( ).get_active_camera( )->get_far_plane( ) - near_plane ) * 1000.f * s_player_name_decrease_koef,
-				s_player_name_min_font_size );
+				s_player_name_min_font_size,
+				s_player_name_max_font_size - s_player_name_decrease_koef *
+					( ( ( m_character_head_transform.c.xyz( ) - m_game.get_game_world( ).get_camera_director( ).get_inverted_view_matrix( ).c.xyz( ) ).length( ) - near_plane ) /
+					( m_game.get_game_world( ).get_camera_director( ).get_active_camera( )->get_far_plane( ) - near_plane ) * 1000.f ) );
 			if( !m_text.visible )
 				m_text.set_visible( true );
 			m_text.set_font_size( font_size );
