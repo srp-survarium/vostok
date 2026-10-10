@@ -153,7 +153,9 @@ void vostok::core::initialize			(
 		debug::postinitialize	( );
 
 	// for language-dependent strings
-	setlocale				( LC_CTYPE, "" );
+	// Retail ran on Russian Windows, where "" is code page 1251; under an English Wine locale
+	// (needed for a working keyboard layout) the game's cp1251 text must still convert.
+	setlocale				( LC_CTYPE, ".1251" );
 
 	threading::set_thread_name	( debug_thread_id, debug_thread_id );
 	threading::initialize	( );

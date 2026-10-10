@@ -65,7 +65,7 @@ void lobby_menu::on_activate( )
 {
 	base_game_scene::on_activate( );
 	get_game( ).input_world( ).add_handler( *this );
-	if ( lobby_client( ).net_connected( ) )
+	if ( lobby_client( ).net_connected( ) && get_game( ).get_network_client( )->has_bandwidth( ) )
 		query_lobby_info( );
 	get_game( ).get_chat_handler( ).set_mode( false );
 }
@@ -195,7 +195,7 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 				get_game( ).switch_to_lobby( );
 			}
 
-			if ( !lobby_client( ).profiles_count( ) )
+			if ( !lobby_client( ).profiles_count( ) || !get_game( ).get_network_client( )->has_bandwidth( ) )
 				query_account_data( );
 
 			if ( !get_game( ).get_game_world( ).is_loading( ) ) {
@@ -223,6 +223,12 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 
 
 	case lobby::q_enumerate_profiles:	// 1
+		if ( !get_game( ).get_network_client( )->has_bandwidth( ) )
+		{
+			fill_profiles( );
+			on_profile_changed( 0 );
+			break;
+		}
 		LOG_INFO( "[R] enumerate_profiles" );
 		for ( u8 i = 0; i < lobby_client( ).profiles_count( ); ++i )
 		{

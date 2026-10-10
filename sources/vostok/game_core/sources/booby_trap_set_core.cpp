@@ -45,7 +45,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	m_traps_buffer = (booby_trap_core_ptr*)VOSTOK_MALLOC_IMPL( g_allocator, sizeof( booby_trap_core_ptr* ) * amount( ), "traps_buffer" );
-	m_traps = buffer_vector< booby_trap_core_ptr >( m_traps_buffer, amount( ) );
+	new ( &m_traps ) booby_traps_type( m_traps_buffer, amount( ) );
 
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -81,7 +81,7 @@ void booby_trap_set_core::load( configs::binary_config_value const& config )
 
 	const u32 							count		= apply_dmg.size( );
 	m_damage_parameters.clear( );	// sushi@NOTE: Interesting how we didn't free the previous one.
-	m_damage_parameters	= buffer_vector< apply_damage >( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( apply_damage ) * count, "damage_parameters" ), count );
+	new ( &m_damage_parameters ) damage_parameters_type( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( apply_damage ) * count, "damage_parameters" ), count );
 
 	for ( u32 i = 0 ; i < count ; ++i )
 	{

@@ -405,7 +405,7 @@ collision_result bullet::check_collision( float3 start_position, float start_tim
 
 		float3 triangle_normal		= ray_result.hit_normal_world;
 		float cos_alpha				= triangle_normal | direction;
-		triangle_orientation orientation	= (triangle_orientation)( 0.0f <= cos_alpha ); // sushi@MATCH: <0x5928de> Somehow done in reverse. Maybe with some inlined function.
+		triangle_orientation orientation	= cos_alpha < 0.0f ? triangle_orientation_front_face : triangle_orientation_back_face;
 		bool const ignorable_object_was_hit	= m_ignorable_object && ray_result.object->user_data && ray_result.object->user_data->cast_to_hit_receiver( ) == m_ignorable_object;
 
 		if ( ignorable_object_was_hit || orientation == triangle_orientation_back_face )
@@ -434,7 +434,7 @@ collision_result bullet::process_ray_query(
 	float collision_time				= start_time + distance_to_hit_point / distance * ( current_time - start_time );
 
 	float cos_alpha						= triangle_normal | fly_direction;
-	triangle_orientation orientation	= ( triangle_orientation )( cos_alpha >= 0.0f ); // sushi@MATCH: This again
+	triangle_orientation orientation	= cos_alpha < 0.0f ? triangle_orientation_front_face : triangle_orientation_back_face;
 
 	if ( orientation == triangle_orientation_back_face )
 		return collision_result_no_collision;

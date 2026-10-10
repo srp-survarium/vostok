@@ -68,6 +68,9 @@ public:
 														const u32		arg_0 /* u32 profile_id */
 													);
 
+			void									initialize_offline				( pcstr player_name, u16 weapon_id, u16 ammo_id );
+			void									set_offline_compatibilities	( items_compatibility const* pairs, u32 count );
+
 			void									discard_playing_order				( );
 			void									discard_playing_order_on_connected	( );
 

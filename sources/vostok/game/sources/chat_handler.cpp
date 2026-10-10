@@ -7,6 +7,7 @@
 #include "base_game_scene.h"
 #include "base_network_client.h"
 #include "network_client.h"
+#include "offline_client.h"
 #include "messaging_client.h"
 #include "lobby_menu.h"
 #include "key_binder.h"
@@ -79,6 +80,8 @@ void chat_handler::call( flash_function_handler_params& params )
 
 	if( m_game.get_network_client( )->has_bandwidth( ) )
 		m_game.get_network_client( )->messaging_client( ).on_message_typed( w_text.GetStringW( ), ( messaging::message_channel_enum )params.pArgs[ 1 ].GetUInt( ) );
+	else
+		static_cast< offline_client* >( m_game.get_network_client( ) )->choose_map_from_chat( w_text.GetStringW( ) );
 }
 
 void chat_handler::callback(
@@ -159,6 +162,8 @@ void chat_handler::on_message_typed( wchar_t const* text, messaging::message_cha
 {
 	if( m_game.get_network_client( )->has_bandwidth( ) )
 		m_game.get_network_client( )->messaging_client( ).on_message_typed( text, message_chanel );
+	else
+		static_cast< offline_client* >( m_game.get_network_client( ) )->choose_map_from_chat( text );
 }
 
 void chat_handler::add_message(
@@ -309,9 +314,8 @@ void chat_handler::set_local_player_name( pcstr account_name )
 
 void chat_handler::focus( bool b_focused )
 {
-	if( !m_game.get_network_client( )->has_bandwidth( ) )
-		return;
-
+	// Retail ignores focus until connected (no bandwidth); offline the chat picks the map,
+	// so it must still take the keyboard or typed keys fall through to the lobby bindings.
 	if( m_focused == b_focused )
 		return;
 

@@ -92,15 +92,15 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 				m_additive_recoil_timer = 0.0f;
 				m_back_koef				= std::max( m_back_koef - additive_dispersion_amount, 0.0f );
 			}
-
-			float interpolated_value			= m_interpolator.interpolated_value( m_time_since_last_dispersion_change );
-			float one_minus_interpolated_value	= 1.0f - interpolated_value;
-			m_vertical_koef		= ( m_target_vertical_koef * interpolated_value )	+ m_vertical_koef * one_minus_interpolated_value;
-			m_horizontal_koef	= ( m_target_horizontal_koef * interpolated_value ) + m_horizontal_koef * one_minus_interpolated_value;
-			m_back_koef			= ( m_target_recoil_koef * interpolated_value )		+ m_back_koef * one_minus_interpolated_value;
-
-			process_compensation( dt_sec );
 		}
+
+		float interpolated_value			= m_interpolator.interpolated_value( m_time_since_last_dispersion_change );
+		float one_minus_interpolated_value	= 1.0f - interpolated_value;
+		m_vertical_koef		= ( m_target_vertical_koef * interpolated_value )	+ m_vertical_koef * one_minus_interpolated_value;
+		m_horizontal_koef	= ( m_target_horizontal_koef * interpolated_value ) + m_horizontal_koef * one_minus_interpolated_value;
+		m_back_koef			= ( m_target_recoil_koef * interpolated_value )		+ m_back_koef * one_minus_interpolated_value;
+
+		process_compensation( dt_sec );
 	}
 }
 

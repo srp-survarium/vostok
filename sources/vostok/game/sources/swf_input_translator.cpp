@@ -137,8 +137,15 @@ wchar_t swf_input_translator::translate_key_action( input::world* input_world, b
 
 	static _locale_t current_locale = _create_locale( LC_ALL, "" );
 
-	if ( !input_world->get_keyboard( )->get_dik_unicode( current.key, buff, sizeof( buff ) ) )
+	// Windows names letter keys with one character. Wine may return no name, or (Wayland
+	// driver) an XKB keysym name such as "Cyrillic_ef"; a letter's Flash scan code is its
+	// virtual-key code, which is the uppercase Latin character.
+	if ( !input_world->get_keyboard( )->get_dik_unicode( current.key, buff, sizeof( buff ) ) || wcslen( buff ) != 1 )
+	{
+		if ( !result && current.scan >= L'A' && current.scan <= L'Z' )
+			return is_shift_now ? wchar_t( current.scan ) : wchar_t( current.scan - L'A' + L'a' );
 		return result;
+	}
 
 	if ( is_shift_now )
 	{

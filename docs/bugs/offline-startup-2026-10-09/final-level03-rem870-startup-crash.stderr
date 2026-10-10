@@ -1,0 +1,48 @@
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+pci id for fd 40: 10de:2489, driver (null)
+pci id for fd 41: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+pci id for fd 40: 10de:2489, driver (null)
+pci id for fd 41: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+pci id for fd 42: 10de:2489, driver (null)
+pci id for fd 43: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+pci id for fd 42: 10de:2489, driver (null)
+pci id for fd 43: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+pci id for fd 43: 10de:2489, driver (null)
+pci id for fd 44: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+pci id for fd 43: 10de:2489, driver (null)
+pci id for fd 44: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+libEGL warning: pci id for fd 46: 10de:2489, driver (null)
+
+pci id for fd 47: 10de:2489, driver (null)
+pci id for fd 48: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 46: 10de:2489, driver (null)
+
+pci id for fd 47: 10de:2489, driver (null)
+pci id for fd 48: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 46: 10de:2489, driver (null)
+

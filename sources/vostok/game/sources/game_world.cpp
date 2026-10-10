@@ -271,8 +271,7 @@ void game_world::on_project_loaded(
 	if ( is_active( ) )
 		m_game.get_sound_world( ).get_logic_world_user( ).set_active_sound_scene( m_sound_scene, 1000, 0 );
 
-	if ( m_game.get_network_client( )->has_bandwidth( ) )
-		game_ui.initialize( m_game.get_network_client( )->match_client( ).get_match_options( ) );
+	game_ui.initialize( m_game.get_network_client( )->match_client( ).get_match_options( ) );
 
 	variant< 32 > user_data;
 	user_data.set( m_game_project->m_config );
@@ -466,8 +465,8 @@ void game_world::on_activate( )
 		get_game( ).get_sound_world( ).get_logic_world_user( ).set_active_sound_scene(
 			reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ), 0, 0 );
 
-	if ( get_game( ).get_network_client( )->has_bandwidth( ) )
-		get_game( ).get_chat_handler( ).set_mode( true );
+	// Offline has no bandwidth but still needs the in-match chat mode instead of the lobby panel.
+	get_game( ).get_chat_handler( ).set_mode( true );
 }
 
 void game_world::on_deactivate( )
@@ -489,8 +488,8 @@ void game_world::show_ui( bool b_show )
 	if ( b_show )
 	{
 		show_movie( game_ui.get_ui( ) );
-		if ( get_game( ).get_network_client( )->has_bandwidth( ) )
-			get_game( ).get_chat_handler( ).show( this );
+		// Offline: the lobby leaves the chat active, so hide below must find it in this view too.
+		get_game( ).get_chat_handler( ).show( this );
 	}
 	else
 	{
