@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+??Rcompare_nodes@logging@vostok@@QBE_NABVnode_base@12@0@Z	EQUIVALENT	confirms pass 5: retail inlines buffer_string operator< (strcmp_s == -1); base calls it; ICF reps
+?set@node@logging@vostok@@QAEXPBDHIPAVbase_allocator@memory@3@1@Z	EQUIVALENT	confirms pass 5: base inlines a fixed_string operator= self-check that cannot trigger; ICF reps
