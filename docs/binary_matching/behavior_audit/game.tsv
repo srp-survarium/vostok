@@ -14,6 +14,7 @@ mangled	verdict	evidence
 ??1options_tab@survarium@@QAE@XZ	EQUIVALENT	strip_pointer out-of-line in retail; same frees
 ??1player@survarium@@UAE@XZ	EQUIVALENT	same calls/offsets; partition-only residual
 ??1simple_game_project@survarium@@UAE@XZ	EQUIVALENT	inline-vs-call strip_pointer (identity); ICF representative names
+??1single_position_animation_controller@survarium@@UAE@XZ	EQUIVALENT	scheduling only
 ??1weapon@survarium@@UAE@XZ	EQUIVALENT	same calls/offsets
 ??4npc_game_attributes@human_npc@survarium@@QAEAAU012@AAU012@@Z	EQUIVALENT	inline-vs-call fixed_string<32>::operator= (self-check, clear, memcpy)
 ??_Gobject_weapon@survarium@@UAEPAXI@Z	EQUIVALENT	base calls ~object_weapon out of line; retail inlines the same body (shared string release, pt3free)
@@ -50,6 +51,7 @@ mangled	verdict	evidence
 ?create_game_objects@project_cooker_simple@survarium@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@PAVquery_result_for_cook@45@@Z	FIXED	empty collision/visual arrays stayed allocated; retail 0x14b/0x1d7 je on count==0 stores NULL. Rest: same calls/strings; boost::function dtor inline-vs-call
 ?create_slot_value@game_world_ui@survarium@@AAEXW4profile_slot_enum@2@AAUinventory_item_props@2@AAUflash_value@2@@Z	EQUIVALENT	key_binder::get_action_dik inline-vs-call; same action ids 0x30..0x35 and hotkey selection
 ?deactivate@weapon@survarium@@EAEXXZ	EQUIVALENT	weapon_core::remove_animation_callback inline-vs-call (x4)
+?debug_draw@single_position_animation_controller@survarium@@UBEXAAVrenderer@game@render@vostok@@ABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@6@@Z	FIXED	retail 0x40 create_matrix(m_target_vertex->rotation, 0) = create_rotation(target rotation); ours passed quaternion() + position
 ?delete_resource@animation_space_graph_cook@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	inline-vs-call strip_pointer (identity)
 ?delete_resource@human_npc_cook@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	inline-vs-call strip_pointer; same dynamic_cast top pointer, dtor, free
 ?delete_resource@project_cooker_simple@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	same containers/offsets/dtor slots/frees; base adds dead null-back stores into containers freed right after (retail deletes via copies); layout-blocked partition
@@ -244,6 +246,7 @@ mangled	verdict	evidence
 ?revert@options_monitor_index_selector@survarium@@UAEXXZ	EQUIVALENT	calls refill_resolutions_data (inlined); fixed there
 ?select_animations@player@survarium@@AAEXI@Z	EQUIVALENT	retail passes 0x4000 to make_stack_buffer (ICF name storage2), base folds it; same calls/offsets
 ?select_new_goal@human_npc@survarium@@QAEXXZ	EQUIVALENT	base fully inlined at callers; retail body = by-value m_brain_unit copy + m_ai_world vcall +54h, same as inlined base
+?selected_animations@single_position_animation_controller@survarium@@UAE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@@Z	FIXED	retail 0xa4 compares/copies params.position (this+8), path search only on change; 0x510 start vertex at npc pos; 0x5e6 loop keeps target_position; 0x6c5/0x829 reset to params
 ?selected_animations@weapon_user_dead_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	animation_lexeme_parameters accessors inline-vs-call; same FP and stores
 ?send_local_player_input@network_client@survarium@@UAEXABUplayer_input@2@IABVfloat4x4@math@vostok@@M@Z	EQUIVALENT	retail push_backs a default update then fills back() (input, transform, pitch +0x54, time +0x58); same final element
 ?send_player_inputs@network_client@survarium@@AAEXXZ	EQUIVALENT	same calls; addressing only
