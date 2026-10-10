@@ -1,0 +1,14 @@
+mangled	verdict	evidence
+??$calculate_count_of_nodes@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@_N1@Z	EQUIVALENT	is_link() call vs inline flags&300h test
+??$get_compressed_file_size@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	assert __LINE__/ICF helper names; retail inlines the get_raw_file_size fast path (plain archive -> size_in_db), same value as the impl branch; is_link/ICF helper names
+??$get_file_hash@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	assert helper ICF names only
+??$get_file_offs@$00@vfs@vostok@@YA_KPBV?$base_node@$00@01@@Z	EQUIVALENT	assert helper ICF names only
+??$get_file_size@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+??$get_inline_data@$00@vfs@vostok@@YA_NPBV?$base_node@$00@01@PAVconst_buffer@1@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+??$get_raw_file_size_impl@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	recursion through the forwarding wrapper; retail inlines the get_raw_file_size fast path (plain archive -> size_in_db), same value as the impl branch; is_link/ICF helper names
+??$node_cast@Varchive_file_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$archive_file_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+??$node_cast@Verased_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$erased_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	erased-node cast helper out-of-line; same pointer
+??$set_inline_data@$00@vfs@vostok@@YA_NPAV?$base_node@$00@01@ABVconst_buffer@1@@Z	EQUIVALENT	assert __LINE__ only (230h vs 1DEh); assert helper ICF name
+?get_raw_file_size@vfs_iterator@vfs@vostok@@QBEIXZ	EQUIVALENT	retail inlines the get_raw_file_size fast path (plain archive -> size_in_db), same value as the impl branch; is_link/ICF helper names
+?reverse_bytes_for_final_class@?$base_node@$00@vfs@vostok@@QAEXW4reverse_direction_enum@23@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+?sizeof_with_name@?$base_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	is_link() call vs inline flags&300h test

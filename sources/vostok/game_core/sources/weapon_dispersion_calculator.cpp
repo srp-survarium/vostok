@@ -45,11 +45,11 @@ void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 	{
 		if ( m_current_coeff > m_target_coeff )
 		{
-			m_current_coeff = math::max( m_current_coeff - m_aiming_speed * dt, m_target_coeff );
+			m_current_coeff = math::max( m_target_coeff, m_current_coeff - m_aiming_speed * dt );
 		}
 		else if ( m_current_coeff < m_target_coeff )
 		{
-			m_current_coeff = math::min( m_current_coeff + m_growth_speed * dt, m_target_coeff );
+			m_current_coeff = math::min( m_target_coeff, m_current_coeff + m_growth_speed * dt );
 		}
 	}
 }

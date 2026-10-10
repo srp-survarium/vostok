@@ -2,8 +2,10 @@ mangled	verdict	evidence
 ??0artefact_lifebone_core@survarium@@QAE@XZ	EQUIVALENT	ICF names of boost::function helpers only
 ??0base_player@survarium@@QAE@ABUbase_player_creation_params@1@AAVscheduler@1@@Z	EQUIVALENT	same calls, stores and immediates
 ??0body_part_parameters@survarium@@QAE@PBDMMM_NAAVdamage_model@1@E@Z	EQUIVALENT	identical calls, FP and stores
+??0booster_damage_protector@survarium@@QAE@PBDMM@Z	EQUIVALENT	ICF names of boost::function helpers; structure match
 ??0bullet@survarium@@QAE@AAVbullet_manager@1@ABVfloat3@math@vostok@@1IMABV?$resource_ptr@Vweapon_ammunition@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@5@ABVweapon_core@1@QBUhit_initiator@1@QBUhit_receiver@1@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ??0hit_info@survarium@@QAE@EEQBD0MMQAVbullet@1@@Z	EQUIVALENT	identical calls and stores
+??0hit_type_parameters@survarium@@QAE@PBDMMMI@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ??0player_logic_sprint_state@survarium@@QAE@AAVweapon_user_animations_selector@1@@Z	FIXED	player_stamina_subscriber() left subscription_callback default and next uninitialised; retail 0x3f-0x4c constructs function(0) and stores 0 to next ([+0x88])
 ??0weapon_core@survarium@@QAE@XZ	EQUIVALENT	ICF names for fixed_vector/boost::function ctors and dtors; same stores
 ??1base_project@survarium@@UAE@XZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
@@ -15,6 +17,7 @@ mangled	verdict	evidence
 ?action@inventory@survarium@@QAE_NW4profile_slot_enum@2@_N@Z	EQUIVALENT	explicit case 0 break vs default; same dispatch
 ?action@medkit@survarium@@UAEX_N@Z	EQUIVALENT	inline set_amount store vs call
 ?activate@damage_zone_core@survarium@@UAEXPAUzone_group@2@PAUworld@physics@vostok@@AAVscheduler@2@@Z	EQUIVALENT	ICF names for boost::function helpers; structure match
+?activate@generic_anomaly_core@survarium@@UAEXPAUworld@physics@vostok@@AAVscheduler@2@@Z	EQUIVALENT	vector size()/uncv_ptr helpers out-of-line vs inline; boost::function names; same calls
 ?activate@leg_params@legs_ik_processor@survarium@@QAEXABVskeleton@animation@vostok@@PBD@Z	EQUIVALENT	skeleton::get_bone inlined (root + 0x14*idx) vs call
 ?activate@legs_ik_processor@survarium@@QAEXABVskeleton@animation@vostok@@@Z	EQUIVALENT	skeleton::get_bone inlined (root + 0x14*idx) vs call
 ?activate@weapon_core@survarium@@UAEXAAUbase_player@2@AAUengine@2@@Z	EQUIVALENT	ICF names for boost::function/bind helpers, temporaries destroyed in different order; set(addref) inline vs call; same calls and args
@@ -42,9 +45,12 @@ mangled	verdict	evidence
 ?could_be_used@weapon_core@survarium@@QBE_NABUbase_player@2@@Z	EQUIVALENT	is_double_handed call vs inline [+48Ah] read; intrusive_ptr operator* deref vs inline
 ?create_game_material_pairs@game_material_manager_cook@survarium@@AAEXAAVquery_result_for_cook@resources@vostok@@QAVgame_material_manager@2@ABVbinary_config_value@configs@5@@Z	EQUIVALENT	ICF names for tree/vector helpers; same calls and stores
 ?create_game_materials@game_material_manager_cook@survarium@@AAEXQAVgame_material_manager@2@ABVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	memory::zero ICF name (same 128-byte clear)
+?create_resource@weapon_core_shotgun_reload_state_cook@survarium@@UAEXAAVquery_result_for_cook@resources@vostok@@Vconst_buffer@5@Vmutable_buffer@5@@Z	EQUIVALENT	ICF name for boost::function clear; structure match
 ?deactivate@jump_logic@survarium@@QAEXXZ	EQUIVALENT	structure match; same calls and operands
 ?deactivate@weapon_core@survarium@@UAEXXZ	EQUIVALENT	same meaningful calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?deactivate@weapon_user_animations_selector@survarium@@QAEXXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; stack slots only
+?delete_materials@game_material_manager@survarium@@AAEXXZ	EQUIVALENT	delete_helper_impl ICF name; same destruction
+?delete_pairs@game_material_manager@survarium@@AAEXXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?delete_resource@damage_model_cook@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	free_helper instantiation (void vs resource_base) on the same pointer; operator delete spelling
 ?delete_resource@game_material_manager_cook@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	delete_helper_impl ICF name; same destruction
 ?delete_resource@weapon_user_animations_container_cook@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	delete_helper ICF name; same pointer freed
@@ -52,13 +58,16 @@ mangled	verdict	evidence
 ?deserialize@damage_model@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?deserialize@hit_info@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	fixed_string operator= reached through a self-assignment-checked wrapper (never equal); ICF-shared operator=(pcstr) name differs only
 ?deserialize@player_input@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	argument setup order only
+?deserialize@player_profile@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	mode tests ==2||==0 / ==2||==1 vs !=1 / !=0: same for table modes {0,2}; differ only for out-of-range slot index (UB)
 ?deserialize@player_state@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	ICF identity helper name; stack slots
 ?deserialize@weapon_core@survarium@@EAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	pointer-to-bool via setne vs direct test; get_inventory inline; same calls
 ?deserialize@weapon_core_shotgun_reload_state@survarium@@UAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	structure match; identical code
 ?deserialize@weapon_user_animations_selector@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	structure match; identical code
 ?destroy_bullet@bullet_manager@survarium@@AAEXABQAPAVbullet@2@@Z	EQUIVALENT	structure match; same calls and operands
 ?execute@weapon_core_aimed_fire_state_base@survarium@@MAEXXZ	EQUIVALENT	structure match; same calls and operands
-?fill_stats@damage_model@survarium@@QBEXAAUnpc_statistics@ai@vostok@@I@Z	FIXED	pushed the damage caption into selectors_state (+13CCh); retail 0x2e adds 2798h: body_state (resolves the sushi@TODO)
+?execute@weapon_core_fire_state_base@survarium@@MAEXXZ	EQUIVALENT	structure match; same calls and operands
+?fill_stats@damage_model@survarium@@QBEXAAUnpc_statistics@ai@vostok@@I@Z	FIXED	pushed into selectors_state (+13CCh); retail 0x2e adds 2798h (body_state). cur 92.43 before and after: caption= inlines fixed_string::operator=(pcstr) vs retail call
+?finalize@weapon_core_shotgun_reload_finish_substate@survarium@@MAEXXZ	EQUIVALENT	structure match; same calls and operands
 ?finish_reload_predicate@weapon_core_shotgun_reload_state@survarium@@ABE_NXZ	EQUIVALENT	inline-vs-call swap (ammo/chambered vs get_target); retail sums in u16, differs only at 65535 rounds (unreachable)
 ?fire@weapon_recoil_calculator@survarium@@QAEXXZ	FIXED	FP association: retail (choice*force_koef)*m_player_recoil_multiplier at 0xa1 and 0x19a, ours multiplied mult*force*choice
 ?free_bullet@bullet_manager@survarium@@QAEXPAVbullet@2@@Z	EQUIVALENT	delete_helper vs delete_helper_impl (same free)
@@ -79,12 +88,23 @@ mangled	verdict	evidence
 ?get_user_hands_expression@double_barreled_weapon_core_reload_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	structure match; same calls and operands
 ?get_user_hands_expression@pistol_weapon_core_aimed_fire_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr, scheduler/end); structure match
 ?get_user_hands_expression@pistol_weapon_core_fire_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr, scheduler/end); structure match
+?get_user_hands_expression@pistol_weapon_core_hide_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr); same calls
 ?get_user_hands_expression@pistol_weapon_core_reload_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	structure match; same calls and operands
 ?get_user_hands_expression@weapon_core_aimed_fire_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr, scheduler/end); structure match
 ?get_user_hands_expression@weapon_core_fire_state@survarium@@IBE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr, scheduler/end); structure match
+?get_user_hands_expression@weapon_core_hide_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVanimation_lexeme@456@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@0@Z	EQUIVALENT	ICF names only (simple_lock/ClosurePtr); same calls
 ?get_visible_place_transform@booby_trap_set_core@survarium@@IAE_NAAVfloat4x4@math@vostok@@@Z	FIXED	slope test inverted: ours rejected flat ground (slope_cos >= max); retail 0x1e5 comiss max,slope / jbe rejects when max_slope_cos > slope_cos
+?get_weapon_lexeme_pair@double_barreled_weapon_core_aimed_idle_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@double_barreled_weapon_core_hide_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@double_barreled_weapon_core_idle_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
 ?get_weapon_lexeme_pair@double_barreled_weapon_core_reload_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@double_barreled_weapon_core_show_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@pistol_weapon_core_aimed_idle_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@pistol_weapon_core_hide_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@pistol_weapon_core_idle_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
 ?get_weapon_lexeme_pair@pistol_weapon_core_reload_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair@pistol_weapon_core_show_state@survarium@@ABE?AUweapon_lexeme_pair@2@AAVmutable_buffer@vostok@@_NW4weapon_user_state_enum@2@@Z	EQUIVALENT	structure match; same calls and operands
+?get_weapon_lexeme_pair_impl@survarium@@YA?AUweapon_lexeme_pair@1@AAVmutable_buffer@vostok@@PBDABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@PBXABUanimation_playback_state@animation@4@IMW4playback_enum@mixing@84@ABUbase_interpolator@84@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?hit_on_enter@damage_zone_core@survarium@@AAEXII@Z	EQUIVALENT	ICF vector helper names; same calls
 ?hit_on_inside@damage_zone_core@survarium@@AAEXII@Z	EQUIVALENT	math::lerp (shared header) inlined vs call; ICF vector helper names
 ?hit_on_motion_inside@damage_zone_core@survarium@@AAEXII@Z	EQUIVALENT	math::lerp (shared header) inlined vs call; same a+(b-a)*t; ICF vector helper names
@@ -94,7 +114,9 @@ mangled	verdict	evidence
 ?initialize@pistol_weapon_core_aimed_fire_state@survarium@@MAEXXZ	EQUIVALENT	structure match; same calls and operands
 ?initialize@pistol_weapon_core_fire_state@survarium@@MAEXXZ	EQUIVALENT	structure match; same calls and operands
 ?initialize@weapon_core_aimed_fire_state_base@survarium@@MAEXXZ	EQUIVALENT	boost::function assign_to inlined vs call, ICF dtor names; same set_animation_callback args and setle
+?initialize@weapon_core_fire_state_base@survarium@@MAEXXZ	EQUIVALENT	boost::function helper names; structure match
 ?initialize@weapon_core_reload_state_base@survarium@@MAEXXZ	EQUIVALENT	structure match; identical code
+?initialize@weapon_core_shotgun_reload_start_substate@survarium@@MAEXXZ	EQUIVALENT	boost::function assign_to inline vs call; same callbacks
 ?initialize@weapon_core_shotgun_reload_state@survarium@@UAEXXZ	EQUIVALENT	structure match; identical code
 ?initialize_logic@jump_logic@survarium@@AAEXXZ	EQUIVALENT	boost::function assign_to inline vs call, ICF names; same transitions registered
 ?initialize_logic@weapon_core_shotgun_reload_state@survarium@@AAEXPAVweapon_core_shotgun_reload_base_substate@2@00@Z	EQUIVALENT	ICF names of boost::function helpers only
@@ -106,13 +128,16 @@ mangled	verdict	evidence
 ?is_weapon_toggling@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	structure match; identical code
 ?jump_predicate@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; stack slots only
 ?load@booby_trap_set_core@survarium@@IAEXABVbinary_config_value@configs@vostok@@@Z	FIXED	buffer_vector operator= kept old storage (crash on push_back/back); retail dtor+placement new: 0xa1 new(8,&m_traps) [eax]=buf, 0x3d1 for m_damage_parameters; 0x45 amount()?malloc:NULL
+?load@collision_geometry@survarium@@QAEXABVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	LOG __LINE__ only (2Dh vs 2Bh); fixed_string operator= overload ICF; boost::function names
 ?load@damage_zone_core@survarium@@UAEXABVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	fixed_string operator=<binary_config_value> vs operator=(pcstr) on the same value
+?load@hittable_object@survarium@@QAEXABVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?load@medkit@survarium@@AAEXVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	ICF names of boost::function helpers only
 ?load@oxygen_tank@survarium@@AAEXVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	ICF names of boost::function helpers only
 ?load_ammo@weapon_core@survarium@@AAEXXZ	EQUIVALENT	resource_ptr deref copies (balanced addref/release) and inline set_amount store vs call; same checks and arithmetic
 ?load_core@artefact_lifebone_core@survarium@@QAEXVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	inline set_amount store vs call
 ?load_from_config@game_material@survarium@@QAEXABVbinary_config_value@configs@vostok@@@Z	EQUIVALENT	buffer_string vs fixed_string operator= ICF name; same assignment
 ?load_magazine@weapon_core@survarium@@QAEXXZ	EQUIVALENT	resource_ptr deref copies (balanced addref/release) and inline set_amount store vs call; same checks and arithmetic
+?load_weapon_parameters@weapon_core_cook@survarium@@IAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@PAVweapon_core@2@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?look_expression@player_logic_crouch_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@I_N1ABUweapon_animation_parameters@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?look_expression@player_logic_stand_state@survarium@@ABE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@I_N1ABUweapon_animation_parameters@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?look_time_factor@weapon_user_animations_selector@survarium@@QBEMXZ	FIXED	math::min args swapped: retail passes 1-eps as right (xmm0) and pitch term as left; ours swapped, NaN/equal differ; now min(pitch/2+.5, 1-eps), byte-exact
@@ -131,27 +156,38 @@ mangled	verdict	evidence
 ?new_object@?$weapon_core_state_cook_template@Vweapon_core_reload_state@survarium@@@survarium@@AAEPAVweapon_core_reload_state@2@Vmutable_buffer@vostok@@PBUweapon_state_creation_params@2@PBV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@5@I@Z	EQUIVALENT	no base symbol: explicit new_object specialization unreferenced in retail (no callers/pointers) and stripped in ours; the sound-events cook wrapper is the live path
 ?notify_and_add_incoming_objects@collision_sensor@survarium@@AAEXAAV?$buffer_vector@PAVbase_physics_object@physics@vostok@@@vostok@@@Z	EQUIVALENT	vector helpers out-of-line vs inline; ICF names; same find, push_back, on_enter flow
 ?notify_objects_inside@collision_sensor@survarium@@AAEXXZ	EQUIVALENT	vector size()/begin()/end() helpers out-of-line vs inline; ICF names; same find/push_back/on_leave flow
+?on_animation_end@weapon_core_animation_end_aware_state@survarium@@IAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+?on_animation_end@weapon_core_shotgun_reload_finish_substate@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+?on_animation_end@weapon_core_shotgun_reload_one_round_substate@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+?on_animation_end@weapon_core_shotgun_reload_start_substate@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?on_animations_loaded@ladder_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@ABVbinary_config_value@configs@5@@Z	EQUIVALENT	landing_point ctor out-of-line; animation getters return by value (balanced refcounts) vs reference; same checks and calls
 ?on_animations_loaded@weapon_user_animations_container_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	get_animations_from_request_results<N> instances are ICF-identical (representative name differs); same counts 27/6/2/100
 ?on_config_loaded@weapon_user_animations_container_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	ICF name for boost::function clear; zero stored via register
+?on_config_ready@booby_trap_set_core_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@Ubooby_trap_set_cook_data@2@@Z	EQUIVALENT	inline set_amount store vs call; ICF names
 ?on_decals_loaded@game_material_manager_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@PAV?$vector@Uquery_ext_data@game_material_manager_cook@survarium@@@2@@Z	EQUIVALENT	LOG __LINE__ only (E8h vs E0h); ICF names
 ?on_enter@booby_trap_core@survarium@@EAEXABV?$buffer_vector@PAVbase_physics_object@physics@vostok@@@vostok@@@Z	EQUIVALENT	get_inventory inlined ([+10Ch]) vs call
+?on_frame@scheduler@survarium@@AAEXAAUrecord@12@II@Z	EQUIVALENT	boost::function operator() ICF names; structure match
+?on_frame@scheduler@survarium@@QAEXII@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?on_hit_params_received@damage_model_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	push_back inlined (construct call) vs call; ICF names
 ?on_interval_end@jump_logic_state_landing@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	structure match; same calls and operands
 ?on_interval_end@jump_logic_state_start@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	structure match; same calls and operands
 ?on_items_dictionary_config_loaded@items_dictionary_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	fixed_string operator=<binary_config_value> vs operator=(pcstr); ICF names; same calls
 ?on_shot_event@weapon_core_aimed_fire_state_base@survarium@@MAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	LOG __LINE__ only (53h vs 50h); ICF names
+?on_shot_event@weapon_core_fire_state_base@survarium@@MAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	LOG __LINE__ only (52h vs 3Fh); ICF names
 ?on_specific_event@weapon_core_inactive_state@survarium@@EAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@I@Z	EQUIVALENT	both bodies are UNREFERENCED_PARAMETERS no-ops (ours tests an identity helper first)
 ?on_sprint_animation_ended@weapon_core@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	same meaningful calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?on_state_timer_finished@booby_trap_core@survarium@@AAEXXZ	EQUIVALENT	m_trap_state compared directly vs via local copy
 ?on_subresources_loaded@inventory_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@PAUinventory_cooker_data@2@@Z	EQUIVALENT	inline set_amount store vs call; ICF names
 ?on_subresources_loaded@items_dictionary_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@PAVitems_dictionary@2@PAI@Z	EQUIVALENT	ICF names (const_buffer/uint2 ctor); same calls
+?on_subresources_ready@weapon_core_shotgun_reload_state_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@Vmutable_buffer@5@PBUweapon_state_creation_params@2@@Z	EQUIVALENT	vector size() helper out-of-line vs inline; ICF names; same calls
 ?on_user_sprint@weapon_core@survarium@@MAEX_N@Z	EQUIVALENT	identical code
 ?process@hand_to_weapon_ik_processor@survarium@@QBEXIPBVfloat4x4@math@vostok@@PAV345@@Z	EQUIVALENT	skeleton::get_bone inlined vs call
 ?process@legs_ik_processor@survarium@@QAEXPAVfloat4x4@math@vostok@@ABV345@@Z	EQUIVALENT	same calls and FP ops
 ?process_hand@hand_to_weapon_ik_processor@survarium@@ABEXABUhand@12@ABVfloat4x4@math@vostok@@PAV456@@Z	EQUIVALENT	skeleton::get_bone inlined; float3 length ICF name
 ?process_leg@legs_ik_processor@survarium@@AAEXAAUleg_params@12@ABVfloat4x4@math@vostok@@1PAV456@1@Z	EQUIVALENT	zero stored via immediate vs register
+?query_weapon_states@weapon_core_cook@survarium@@AAEXQAVquery_result_for_cook@resources@vostok@@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@PAVweapon_core@2@@Z	EQUIVALENT	ICF names (const_buffer/uint2, buffer_vector[] helper); same calls
 ?rand_n@normal_random@survarium@@QAEMM@Z	EQUIVALENT	same calls and FP ops; stack slots only
+?ready_to_reload@weapon_core@survarium@@QBE_NXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?register_for_update@scheduler@survarium@@QAEXPAUidentifier@12@ABV?$function@$$A6AXII@Z@boost@@_NIII@Z	EQUIVALENT	same calls, stores and immediates; stack slots only
 ?register_object@scheduler@survarium@@AAEAAUrecord@12@PAUidentifier@12@ABV?$function@$$A6AXII@Z@boost@@_N@Z	EQUIVALENT	bool from pointer via setne vs direct test; same record setup
 ?register_on_frame@scheduler@survarium@@QAEXPAUidentifier@12@ABV?$function@$$A6AXII@Z@boost@@_N@Z	EQUIVALENT	same calls, stores and immediates; stack slots only
@@ -160,6 +196,7 @@ mangled	verdict	evidence
 ?remove_affects@medkit@survarium@@IAEXXZ	EQUIVALENT	same calls and stores; stack slots only
 ?remove_trap_impl@booby_trap_set_core@survarium@@AAEXAAVbooby_trap_core@2@@Z	EQUIVALENT	inventory_holder::scheduler ICF name; get_inventory inline
 ?reset_fire_queue@weapon_core@survarium@@QAEXXZ	EQUIVALENT	same meaningful calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
+?resolve_links@usable_object@survarium@@UAEXPAVbase_project@2@Vbinary_config_value@configs@vostok@@@Z	EQUIVALENT	structure match; same calls and operands
 ?selected_animations@jump_logic_state_landing@survarium@@EAE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@_NABV?$FastDelegate@$$A6AMMMIIIM@Z@fastdelegate@@ABUweapon_animation_parameters@2@@Z	EQUIVALENT	structure match; same calls and operands
 ?selected_animations@jump_logic_state_start@survarium@@EAE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@_NABV?$FastDelegate@$$A6AMMMIIIM@Z@fastdelegate@@ABUweapon_animation_parameters@2@@Z	EQUIVALENT	structure match; same calls and operands
 ?selected_animations@player_logic_crouch_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	expression ctor call order of independent temporaries
@@ -196,11 +233,13 @@ mangled	verdict	evidence
 ?setup_from_profile@inventory@survarium@@QAEXAAUplayer_profile@2@ABVitems_dictionary@2@@Z	FIXED	is_stack looked up item_by_id(slot enum); retail 0x19c passes slot->item.dict_id (u16 at +0Ch); also inline set_amount stores
 ?sprint_predicate@weapon_user_animations_selector@survarium@@QBE_NXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; stack slots only
 ?stand_predicate@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; stack slots only
+?state_prio@survarium@@YA_NPAUanomaly_state@1@0@Z	EQUIVALENT	cmp memory operand vs load; same comparison
 ?switch_passive_mode_impl@artefact_lifebone_core@survarium@@IAEX_N@Z	EQUIVALENT	same calls, stores and immediates
 ?tick@bullet@survarium@@QAEXI@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?tick@bullet_manager@survarium@@QAEXI@Z	EQUIVALENT	ICF name for boost::function clear
 ?tick@collision_sensor@survarium@@UAEXII@Z	EQUIVALENT	vector helpers out-of-line vs inline; ICF names; same calls and branches
 ?tick@weapon_core@survarium@@UAEXXZ	EQUIVALENT	pointer-to-bool via setne vs direct test; get_inventory inline; same calls
+?tick@weapon_dispersion_calculator@survarium@@QAEXI@Z	FIXED	max/min args swapped vs retail (NaN/equal cases): retail 0xe7 max(target, cur-aim*dt), 0x124 min(target, cur+growth*dt); swapped to retail order
 ?tick@weapon_recoil_calculator@survarium@@QAEXIM@Z	FIXED	koef interpolation + process_compensation ran only while additive timer!=0; retail 0xd5 jnp/0xfe jmp -> 0x29c interpolation. Also FP order side*force*mult (0x14d)
 ?tick_active_object@base_player@survarium@@IAEXXZ	EQUIVALENT	member address via lea vs load; same slot selection (7/10) and calls
 ?transfer_artefact@artefact_container_core@survarium@@IAEXPAVinventory_holder@2@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
@@ -225,6 +264,7 @@ mangled	verdict	evidence
 ?weapon_and_hands_expression@weapon_core_aimed_fire_state@survarium@@EBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?weapon_and_hands_expression@weapon_core_fire_state@survarium@@MBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	same calls, immediates, member offsets, FP ops and branch kinds; ICF helper names and /Od stack slots only
 ?weapon_and_hands_expression@weapon_core_inactive_state@survarium@@EBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	unreachable stub; extra immediate only
+?weapon_and_hands_expression@weapon_core_shotgun_reload_base_substate@survarium@@QBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	structure match; same calls and operands
 ?weapon_and_hands_expression@weapon_core_shotgun_reload_state@survarium@@EBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_NW4weapon_user_state_enum@2@AAVanimation_lexeme@456@@Z	EQUIVALENT	same calls and immediates
 survarium::`dynamic initializer for 's_enable_breath_vibration_cc''	EQUIVALENT	identical code
 survarium::`dynamic initializer for 's_ik_adjust_hip_position_cc''	EQUIVALENT	identical code
