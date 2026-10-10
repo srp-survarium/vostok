@@ -101,6 +101,7 @@ mangled	verdict	evidence
 ?calculate_streaming_texture_factor@render@vostok@@YAMPBVfloat3@math@2@PBVfloat2@42@IIPBGI@Z	EQUIVALENT	index loads from pre- vs post-incremented pointer; same triangle math
 ?compare@?$res_xs@Ups_data@render@vostok@@@render@vostok@@QBEHABV?$xs_descriptor@Ups_data@render@vostok@@@23@@Z	EQUIVALENT	LTCG conv (ret 8 vs ret 4)
 ?compare@render@vostok@@YAHABV?$res_xs@Ugs_data@render@vostok@@@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@render@vostok@@YAHABVres_declaration@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@render@vostok@@YAHABVres_shader_technique@12@0@Z	EQUIVALENT	identical after regalloc
 ?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
 ?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
