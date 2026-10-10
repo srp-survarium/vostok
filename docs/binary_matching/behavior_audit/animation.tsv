@@ -1,6 +1,7 @@
 mangled	verdict	evidence
 ??$propagate@Vn_ary_tree_animation_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
+??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDPBVanimation_interval@123@2QAVanimation_lexeme@123@3@Z	EQUIVALENT	ICF reps
 ??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z	EQUIVALENT	m_layers_count kept in a register; ICF animation_interval::animation rep; LTCG ret size
 ??0cubic_spline_skeleton_animation@animation@vostok@@AAE@ABVbi_spline_skeleton_animation_baked@12@@Z	EQUIVALENT	stack/LTCG param placement; same members, bone loop and channel setup
 ??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z	EQUIVALENT	LTCG constprop of the float argument; ret size
