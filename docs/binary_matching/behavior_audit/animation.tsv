@@ -1,4 +1,6 @@
 mangled	verdict	evidence
+??$propagate@Vn_ary_tree_animation_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
+??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
 ?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z	EQUIVALENT	event_channels/knots_count inlined in retail; pinned_ptr const-ness only; same interval math
 ?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z	EQUIVALENT	event_channels/knots_count inlined in retail; same intervals, tail and start-time clamp
@@ -10,3 +12,7 @@ mangled	verdict	evidence
 ?skip_time_if_needed@animation_player@animation@vostok@@AAEXI@Z	EQUIVALENT	LTCG conv for serialize_state; unsigned >0 tested as jbe vs je; log __LINE__ only (absolute line drift)
 ?subscribe@animation_player@animation@vostok@@QAEXPBDABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@EQBX@Z	EQUIVALENT	ICF reps (call_constructor, function ctor)
 ?unsubscribe@animation_player@animation@vostok@@QAEXPBDPBX@Z	EQUIVALENT	boost::function swap/move_assign inlined in base
+?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@EAEXAAVbinary_tree_animation_node@234@@Z	EQUIVALENT	schedule only
+?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_addition_node@234@@Z	EQUIVALENT	this-adjust form only
+?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	schedule only
+?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_multiplication_node@234@@Z	EQUIVALENT	this-adjust form only
