@@ -318,7 +318,7 @@ void lobby_menu::on_friendship_status_recivied(
 		break;
 	}
 }
-// claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
+// shop_action is permitted silently: retail's jump table sends it straight to the epilogue.
 #line 328
 void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enum op_type )
 {
@@ -329,10 +329,15 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 		request_status_from_server( 1000 );
 		break;
 	case inventory_action:
-	case shop_action:
-		lobby_client( ).query_profile_contents(
-			lobby_client( ).profile( m_selected_profile ).profile_id );
+		{
+			player_profile const& profile = lobby_client( ).profile( m_selected_profile );
+			lobby_client( ).query_profile_contents( profile.profile_id );
+		}
 		break;
+
+	case shop_action:
+		break;
+
 
 	case skills_tree_action:
 		lobby_client( ).query_client_status( lobby::q_player_skills );	// 8
