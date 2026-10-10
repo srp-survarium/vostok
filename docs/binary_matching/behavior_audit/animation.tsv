@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	retail calls free_helper_impl with a null test; base calls allocator free directly (res already dereferenced by the dtor call)
+?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z	EQUIVALENT	ICF reps for boost bind/function helpers
