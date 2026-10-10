@@ -1,5 +1,6 @@
 mangled	verdict	evidence
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	confirms pass 1: regalloc/store scheduling; same member stores
+??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	FIXED	m_is_editor_frame_ended/m_is_editor came from is_editor; retail +0x1a..+0x46 test editor_allocator (edi, test/sete/setne) instead
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	confirms pass 1: regalloc/schedule only (normalised op, constant, call, member and FP-expression multisets identical)
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	confirms pass 1: regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	confirms pass 1: regalloc/schedule only (normalised op, constant, call, member and FP-expression multisets identical)
