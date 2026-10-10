@@ -51,6 +51,7 @@ mangled	verdict	evidence
 ??1stage_forward@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_gbuffer@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
+??1stage_particles@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_pre_rain@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_rain@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
@@ -161,6 +162,7 @@ mangled	verdict	evidence
 ?execute@stage_forward@render@vostok@@UAEXXZ	EQUIVALENT	retail frees a temp buffer out of line / inc vs add 1; same calls
 ?execute@stage_gbuffer@render@vostok@@UAEXXZ	EQUIVALENT	ICF _Destroy reps
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
+?execute@stage_particles@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (set_ps_constant, apply, get_rt, set_ps_texture)
 ?execute@stage_pre_rain@render@vostok@@UAEXXZ	EQUIVALENT	retail set_w(float4x4().identity()) vs set_w_identity(); same world matrix
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
