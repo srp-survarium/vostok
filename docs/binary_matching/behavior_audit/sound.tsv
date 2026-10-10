@@ -1,2 +1,3 @@
 mangled	verdict	evidence
+?initialize_xaudio@sound_world@sound@vostok@@AAE_NXZ	EQUIVALENT	base inlines fixed_string<2048> operator= (self-check, clear, append); retail calls it; ICF reps
 ?update_window@sound_debug_stats@sound@vostok@@AAEXPAVtext_tree_item@strings@3@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	schedule only
