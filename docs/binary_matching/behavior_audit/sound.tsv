@@ -6,4 +6,5 @@ mangled	verdict	evidence
 ?init_allocators@sound_scene@sound@vostok@@AAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	stack-slot layout; ICF reps
 ?initialize_xaudio@sound_world@sound@vostok@@AAE_NXZ	EQUIVALENT	base inlines fixed_string<2048> operator= (self-check, clear, append); retail calls it; ICF reps
 ?notify_listener@sound_scene@sound@vostok@@AAEXABVsound_world@23@@Z	EQUIVALENT	stack-slot layout; ICF reps
+?on_environment_options_loaded@sound_environment_cook@sound@vostok@@AAEXAAVqueries_result@resources@3@PAVfloat4x4@math@3@@Z	EQUIVALENT	ICF reps (same call count and sequence)
 ?update_window@sound_debug_stats@sound@vostok@@AAEXPAVtext_tree_item@strings@3@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	schedule only
