@@ -1,7 +1,9 @@
 mangled	verdict	evidence
 ??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	EQUIVALENT	retail tail-duplicates the case blocks; same sqrt/sqrt_safe calls; tolerance tests via SSE (xmm return) vs x87
 ??1text_tree@strings@vostok@@QAE@XZ	EQUIVALENT	base inlines ~text_tree_item (clear + two DeleteCriticalSection)
+??1text_tree_item@strings@vostok@@QAE@XZ	EQUIVALENT	LTCG/prologue only
 ?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z	EQUIVALENT	LTCG ret size
+?clear@text_tree_item@strings@vostok@@QAEXXZ	EQUIVALENT	LTCG/prologue only
 ?debug_log_callback@core@vostok@@YAXPBD_N10@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?execute@console_commands@vostok@@YAXPBDW4execution_filter@12@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps; CRT strncpy_s import alias
 ?get_angles@float4x4@math@vostok@@QBE?AVfloat3@23@W4axis_rotation_order@23@@Z	EQUIVALENT	load order only
