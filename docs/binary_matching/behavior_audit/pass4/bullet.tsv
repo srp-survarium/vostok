@@ -1,2 +1,2 @@
 mangled	verdict	evidence
-?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	FIXED	compound shape without dbvt looped children; retail +0x15bf cmp esi,edi;je exits (scope closes line 909 after collideTV 907); loop now a dead duplicate isCompound branch; 54.3->79.3%
+?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	compound shape without dbvt: retail +0x15bf je skips the child loop; matching it needs the else branch removed (worker fix used a dead duplicate isCompound test, not integrated); never triggers: every compound has a dbvt
