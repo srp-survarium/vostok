@@ -1,2 +1,5 @@
 mangled	verdict	evidence
+?dispatch@intersection_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	EQUIVALENT	schedule only; same (x+z)+y dot and denominator, pointer advanced at a different point
+?line_line_intersect_non_parallel@collision@vostok@@YA_NABVfloat3@math@2@000AAV342@1AAM2@Z	EQUIVALENT	symbolic store comparison equal
 ?render@capsule_geometry_instance@collision@vostok@@EBEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@AAVrenderer@debug@03@ABVfloat4x4@math@3@ABVcolor@93@@Z	EQUIVALENT	stack realignment only; symbolic store comparison equal
+?segment_segment_intersect@collision@vostok@@YA_NABVfloat3@math@2@000M@Z	EQUIVALENT	symbolic store comparison equal
