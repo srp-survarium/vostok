@@ -151,6 +151,7 @@ mangled	verdict	evidence
 ?debug_render@stage_lights@render@vostok@@UAEXXZ	EQUIVALENT	unrolled constant cube transform (debug draw): fp:fast CSE of shared partial sums differs; same source expression
 ?debug_render@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?delete_pass@effect_manager@render@vostok@@QAEXPBVres_pass@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?delete_resource@texture_cook_wrapper@render@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?downsample_occlusion_buffer@hw_hiz_occlusion_manager@render@vostok@@AAEXXZ	EQUIVALENT	int conversion from stack copy vs member
 ?downsample_rsm@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
 ?draw_3D_point@system_renderer@render@vostok@@QAEXABVfloat3@math@3@MABVcolor@53@_N@Z	EQUIVALENT	identical after regalloc
