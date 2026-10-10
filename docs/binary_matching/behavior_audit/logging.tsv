@@ -3,6 +3,9 @@ mangled	verdict	evidence
 ??Rlogger@logging@vostok@@QAEXQBDQAD@Z	EQUIVALENT	stack frame size only (0x103C vs 0x104C); ICF reps
 ?append@logging@vostok@@YAXABV?$function@$$A6AXPAXPBDI11W4verbosity@logging@vostok@@1IW4callback_flag@23@@Z@boost@@QAXABVformat_specifier@12@PBDI33W4verbosity@12@3ZZ	EQUIVALENT	retail frame reserves 0x1034 extra bytes of unused stack (_chkstk); same calls and copies; ICF reps
 ?append@logging@vostok@@YAXABV?$function@$$A6AXPAXPBDI11W4verbosity@logging@vostok@@1IW4callback_flag@23@@Z@boost@@QAXPBUlog_format@12@PBDI33W4verbosity@12@3ZZ	EQUIVALENT	retail frame reserves 0x1034 extra bytes of unused stack (_chkstk); same calls and copies; ICF reps
+?save_to@logging_filters_console_command@logging@vostok@@UBEXAAVsave_storage@console_commands@3@PAVbase_allocator@memory@3@@Z	EQUIVALENT	ICF reps; stack-slot layout
 ?set@node@logging@vostok@@QAEXPBDHIPAVbase_allocator@memory@3@1@Z	EQUIVALENT	base inlines fixed_string operator= self-assignment check (cannot trigger: local buffer); ICF reps
+?string_to_verbosity@logging@vostok@@YA?AW4verbosity@12@PBD@Z	EQUIVALENT	identical after regalloc
+?verbosity_to_string@logging@vostok@@YAPBDW4verbosity@12@@Z	EQUIVALENT	jump table data only
 fill_log_string	EQUIVALENT	stack frame size only (0x1034 vs 0x1030)
 vostok::logging::`dynamic initializer for 's_log_callback''	EQUIVALENT	ICF reps; CRT atexit import alias
