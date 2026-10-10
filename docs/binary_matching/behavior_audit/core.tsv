@@ -13,9 +13,11 @@ mangled	verdict	evidence
 ?get_physical_path_info@resources@vostok@@YA?AVphysical_path_info@fs_new@2@ABVvfs_iterator@vfs@2@@Z	EQUIVALENT	ICF reps
 ?get_similar@console_commands@vostok@@YAIPBDPAPAVconsole_command@12@I@Z	EQUIVALENT	branch layout only
 ?get_thread_local_data@resources_manager@resources@vostok@@QAEPAVthread_local_data@23@I_N@Z	EQUIVALENT	retail inlines intrusive-tree find and fixed_string append; same thread-name refresh
+?late_set_fat_it@query_result@resources@vostok@@AAEXVvfs_iterator@vfs@3@@Z	EQUIVALENT	interlocked_or LTCG conv (register args)
 ?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	same (b-a)*t+a per component with pointer registers swapped
 ?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z	EQUIVALENT	CRT mbstowcs_s import alias
 ?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	call order of independent getters only; ICF reps
+?on_request_iterator_ready@query_result@resources@vostok@@AAEXAAVvfs_iterator@vfs@3@_N@Z	EQUIVALENT	interlocked_or LTCG conv (register args)
 ?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	LTCG/prologue only
 ?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	LTCG ret size
 ?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	branch layout only
