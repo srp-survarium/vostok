@@ -6,6 +6,7 @@ mangled	verdict	evidence
 ??0n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@ABVn_ary_tree@123@1IIIAAPAUsubscribed_channel@23@ABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	LTCG param placement; same members stored (extra zero stores later overwritten)
 ??Mmixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
 ??Omixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
+??Ranimation_less_predicate@@QBE_NABVbinary_tree_animation_node@mixing@animation@vostok@@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
 ?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z	OPEN	inlined quaternion operator* (frame*conj(prev)): retail sums x/y terms in another order (fp:fast); 1-ulp in object movement rotation; no TU-local source lever
 ?add_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@QAV5234@@Z	EQUIVALENT	LTCG param placement for new_animation; same clone/compare loop
 ?add_animation_node@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@PBUanimation_state@234@IM_N@Z	EQUIVALENT	identical after regalloc
@@ -18,6 +19,7 @@ mangled	verdict	evidence
 ?compute_bones_matrices@bone_matrices_computer@animation@vostok@@QBEXPAVfloat4x4@math@3@0PBI@Z	EQUIVALENT	addressing only
 ?compute_skeleton_branch@bone_matrices_computer@animation@vostok@@ABEXABVskeleton_bone@23@PAVfloat4x4@math@3@ABV563@PBI3@Z	EQUIVALENT	loop alignment only
 ?computed_operands_count@mixing@animation@vostok@@YA?AU?$pair@II@stlp_std@@AAVn_ary_tree_animation_node@123@0@Z	EQUIVALENT	compare operand form only
+?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z	EQUIVALENT	time ratio computed before vs after the placement-new null check; same values and calls
 ?convert_skeleton_branch@bone_matrices_computer@animation@vostok@@ABEXABVskeleton_bone@23@PAVfloat4x4@math@3@ABV563@@Z	EQUIVALENT	identical after regalloc
 ?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z	EQUIVALENT	event_channels/knots_count inlined in retail; pinned_ptr const-ness only; same interval math
 ?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z	EQUIVALENT	event_channels/knots_count inlined in retail; same intervals, tail and start-time clamp
@@ -25,6 +27,7 @@ mangled	verdict	evidence
 ?deserialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	computed_tree and get_next_buffer inlined in base; same buffer toggle and tree assignment
 ?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	OPEN	NaN routing differs: retail +0x38f jb/+0x3da jae/+0x3f3 ja vs base jbe/jbe/jb (3 knot ternaries); inverting the source conditions compiles identically under fp:fast
 ?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z	EQUIVALENT	base constprops the 1.0 argument (fld1) where retail reads it; LTCG ret size
+?fix_weight_driving_animations_with_null_weights@n_ary_tree_converter@mixing@animation@vostok@@AAEXABVexpression@234@@Z	EQUIVALENT	compare form/push order only
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
 ?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	OPEN	NaN-only: knot wrap test retail comiss len,cur/ja (+0x222) vs base comiss cur,len/jb; rest equal
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
@@ -36,6 +39,7 @@ mangled	verdict	evidence
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0@Z	EQUIVALENT	LTCG ret size
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@@Z	EQUIVALENT	LTCG register params and stack layout; same new_animation args, clone loop, sort and add_animation_node
 ?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z	EQUIVALENT	symbolic store comparison equal up to commutative operand order; ICF reps
+?process_interpolators@n_ary_tree_converter@mixing@animation@vostok@@AAEXQAUbinary_tree_base_node@234@IAAVmutable_buffer@4@@Z	EQUIVALENT	identical after regalloc
 ?remove_animation@n_ary_tree@mixing@animation@vostok@@AAEXAAPAVn_ary_tree_animation_node@234@PAV5234@@Z	EQUIVALENT	time-list unlink via pointer-to-link vs prev pointer; same unlink, LTCG ret size
 ?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z	EQUIVALENT	ICF reps for buffer_vector/sort helpers
 ?remove_transition@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_time_scale_transition_node@234@@Z	EQUIVALENT	operand shift-down as inline loop vs memmove (same count); same clamp
@@ -51,6 +55,7 @@ mangled	verdict	evidence
 ?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z	EQUIVALENT	event_type kept in a register vs reloaded; ICF animation_interval::animation rep
 ?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z	EQUIVALENT	is_time_scale flag re-tested per iteration vs hoisted; same scale choice, same min/max clamp; LTCG ret size
 ?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z	EQUIVALENT	identical after regalloc
+?visit@binary_tree_weight_driving_animation_getter@@EAEXAAVbinary_tree_animation_node@mixing@animation@vostok@@@Z	EQUIVALENT	identical after regalloc
 ?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_node@234@@Z	EQUIVALENT	x87 operand order only
 ?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_transition_node@234@@Z	EQUIVALENT	branch layout only
 ?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@EAEXAAVbinary_tree_animation_node@234@@Z	EQUIVALENT	schedule only
