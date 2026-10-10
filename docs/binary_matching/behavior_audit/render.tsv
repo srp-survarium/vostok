@@ -254,6 +254,7 @@ mangled	verdict	evidence
 ?on_properties_changed@light@render@vostok@@QAEXXZ	EQUIVALENT	collision setup per light type with tail merging/inline differences; same transforms and calls per case
 ?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
 ?on_resources_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	data[2+i*3] walked via base+0x5F0 step 0x2D0 vs base+0x99C-0x2D4; same elements
+?on_skeleton_config_loaded@animated_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@Z	EQUIVALENT	ICF intrusive_ptr::set rep
 ?on_skeleton_config_loaded@skeleton_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUskeleton_model_instance_cook_data@23@@Z	EQUIVALENT	ICF intrusive_ptr::set rep
 ?on_subresources_loaded@static_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@@Z	EQUIVALENT	retail keeps an extra static_cast_resource_ptr temporary for the sound environment (balanced addref/release)
 ?on_texture_loaded@resource_manager@render@vostok@@QAEXAAVqueries_result@resources@3@I_NI@Z	EQUIVALENT	ICF reps (_Destroy, pinned_ptr dtor); log __LINE__ only (absolute line drift)
