@@ -10,6 +10,11 @@ mangled	verdict	evidence
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined plane dot term order: retail (x+z)+y, base (z+y)+x
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@intersection_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	EQUIVALENT	schedule only; same (x+z)+y dot and denominator, pointer advanced at a different point
+?get_closest_point_to@cylinder_geometry_instance@collision@vostok@@UBE?AVfloat3@math@3@ABV453@ABVfloat4x4@53@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 dot/squared_length term order in the closest-point math
+?get_random_surface_point@cylinder_geometry_instance@collision@vostok@@UBE?AVfloat3@math@3@AAVrandom32@53@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order; radius()/half_length() evaluated in swapped order
+?get_surface_area@cylinder_geometry_instance@collision@vostok@@UBEMXZ	EQUIVALENT	load order only; symbolic store comparison equal
 ?line_line_intersect_non_parallel@collision@vostok@@YA_NABVfloat3@math@2@000AAV342@1AAM2@Z	EQUIVALENT	symbolic store comparison equal
+?ray_test@cylinder_geometry_instance@collision@vostok@@UBE_NABVfloat3@math@3@0MAAM@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?render@capsule_geometry_instance@collision@vostok@@EBEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@AAVrenderer@debug@03@ABVfloat4x4@math@3@ABVcolor@93@@Z	EQUIVALENT	stack realignment only; symbolic store comparison equal
+?render@cylinder_geometry_instance@collision@vostok@@UBEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@AAVrenderer@debug@03@ABVfloat4x4@math@3@ABVcolor@93@@Z	EQUIVALENT	retail LTCG constant-propagates draw_cylinder_solid use_depth=true; base passes the same true explicitly
 ?segment_segment_intersect@collision@vostok@@YA_NABVfloat3@math@2@000M@Z	EQUIVALENT	symbolic store comparison equal
