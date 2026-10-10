@@ -67,6 +67,11 @@ offline_client::offline_client( game& game ) :
 	static console_commands::cc_delegate s_offline_load_command(
 		"offline_load", boost::bind( &offline_client::load_command, this, _1 ),
 		true, console_commands::command_type_engine_internal );
+	// Retail registers detach/attach only for spectators; offline the free-fly camera is
+	// toggled by this (the S.T.A.L.K.E.R. name) or by F6.
+	static console_commands::cc_delegate s_offline_free_camera_command(
+		"demo_record", boost::bind( &offline_client::toggle_free_camera, this ),
+		false, console_commands::command_type_engine_internal );
 }
 
 offline_client::~offline_client( )
@@ -173,6 +178,19 @@ void offline_client::show_maps( )
 	}
 	chat->movie->SetVariable( "root.chat.text_chat.text", "" );
 	print_map_list( );
+}
+
+void offline_client::toggle_free_camera( )
+{
+	if ( !m_player || !m_player->has_been_inserted( ) )
+		return;
+	if ( m_current_player )
+	{
+		detach_from_player( );
+		m_game.get_game_world( ).game_ui.show_crosshair( false );
+	}
+	else
+		attach_to_player( m_player );
 }
 
 void offline_client::open_map_chat( )

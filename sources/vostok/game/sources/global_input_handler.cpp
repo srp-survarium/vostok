@@ -4,6 +4,8 @@
 #include <vostok/game_core/game_net_defines.h>
 #include "global_input_handler.h"
 #include "game.h"
+#include "base_network_client.h"
+#include "offline_client.h"
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
 
@@ -35,6 +37,12 @@ bool global_input_handler::on_keyboard_action(
 				m_game.exit( "quit" );
 			else
 				return false;
+			break;
+
+		case input::key_f6:
+			if ( !m_game.get_network_client( ) || m_game.get_network_client( )->has_bandwidth( ) )
+				return false;
+			static_cast< offline_client* >( m_game.get_network_client( ) )->toggle_free_camera( );
 			break;
 
 		case input::key_grave:

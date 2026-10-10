@@ -33,6 +33,7 @@ public:
 	void choose_map_from_chat( wchar_t const* text );
 	void show_maps( );
 	void open_map_chat( );
+	void toggle_free_camera( );
 	void tick_map_chat( );
 	enum { map_chat_settle_frames = 60, map_chat_unfold_frames = 10 };
 	void start_match( );
