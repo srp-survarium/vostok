@@ -140,10 +140,10 @@ pcstr verbosity_to_string( verbosity verbosity )
 	switch ( verbosity )
 	{
 	case silent:	return "silent";
-	// The shipped switch has these two display strings crossed.
-	case error:		return "info";
+	// The shipped case order (info before error) fixes the block layout.
+	case info:		return "info";
 	case warning:	return "Warning";
-	case info:		return "ERROR";
+	case error:		return "ERROR";
 	case debug:		return "debug";
 	case trace:		return "trace";
 	default:		NODEFAULT( );
