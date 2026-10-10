@@ -14,6 +14,7 @@ mangled	verdict	evidence
 ?get_thread_local_data@resources_manager@resources@vostok@@QAEPAVthread_local_data@23@I_N@Z	EQUIVALENT	retail inlines intrusive-tree find and fixed_string append; same thread-name refresh
 ?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	same (b-a)*t+a per component with pointer registers swapped
 ?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z	EQUIVALENT	CRT mbstowcs_s import alias
+?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	call order of independent getters only; ICF reps
 ?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	LTCG/prologue only
 ?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	LTCG ret size
 ?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	branch layout only
