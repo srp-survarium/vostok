@@ -15,6 +15,7 @@ mangled	verdict	evidence
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0possible_sectors_holder@culling@render@vostok@@QAE@Vbinary_config_value@configs@3@@Z	EQUIVALENT	schedule only
 ??0post_process_parameters@render@vostok@@QAE@XZ	EQUIVALENT	xmm0/xmm1 constant registers swapped; same field values
+??0radiance_volume@render@vostok@@QAE@IIIMM@Z	EQUIVALENT	ICF/inline choices for intrusive_ptr assignment and shared_string construction
 ??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
 ??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
 ??0res_sampler_list@render@vostok@@QAE@ABV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@2@@Z	EQUIVALENT	retail calls vector::resize where base inlines it
@@ -178,6 +179,10 @@ mangled	verdict	evidence
 ?grass_layer_resources_ready@grass_world@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N@Z	EQUIVALENT	same float ops (x87 operand order)
 ?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
 ?init_collision@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	random offset: retail rounds the x87 product to float then SSE (rnd-0.25)+pos, base keeps x87 extended; same expression
+?inject_camera_occluders@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
+?inject_lighting@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
+?inject_occluder_geometry@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@ABVfloat3@math@3@1ABV?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
+?inject_occluders@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@ABVfloat3@math@3@1I@Z	EQUIVALENT	LTCG conv (ret 10h vs ret 8)
 ?inject_occluders@stage_light_propagation_volumes@render@vostok@@AAEXIABVfloat3@math@3@0V?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	schedule only
 ?is_effects_ready@stage_postprocess@render@vostok@@ABE_NXZ	EQUIVALENT	null checks via register zero; ICF safe-bool rep
 ?is_playing@scene_renderer@render@vostok@@QAE_NABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@3@@Z	EQUIVALENT	base body inlined into callers; retail forwards to particle::is_playing as source
@@ -211,6 +216,8 @@ mangled	verdict	evidence
 ?populate@grass_world@render@vostok@@QAEXM@Z	EQUIVALENT	push_back realloc tails merged in retail
 ?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	retail has 10 more addss inside the eight inlined float4x4::transform calls; retail math_float4x4_inline.h checksum differs from every in-repo blob (prior audit)
 ?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
+?prepare@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0M@Z	EQUIVALENT	retail drops the (view_direction.y=0)*scale*offset term; base adds 0*x to y (same for finite values)
+?prepare_final@radiance_volume@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
 ?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
 ?present@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?print@statistics_int@render@vostok@@UAEXAAVvirtual_path_string@fs_new@3@@Z	EQUIVALENT	push order only
@@ -220,6 +227,8 @@ mangled	verdict	evidence
 ?process_portal_by_frustum_intersection@portal_sector_system@culling@render@vostok@@AAEXIABVfrustum@math@4@IABVfloat3@64@@Z	EQUIVALENT	operand order of subtractions from memory vs register; same multiset
 ?process_portal_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXIIABV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@ABVfloat3@math@4@ABVplane@74@ABVfloat4x4@74@3ABVaab_rect@234@@Z	EQUIVALENT	multiplicands from stack copy vs memory; same products
 ?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
+?propagate_lighting@radiance_volume@render@vostok@@QAEXI@Z	EQUIVALENT	identical after regalloc
+?propagate_lighting_iter@radiance_volume@render@vostok@@QAEXII@Z	EQUIVALENT	identical after regalloc
 ?push_jittering@temporal_projection_matrix_modifier@render@vostok@@QAEXXZ	EQUIVALENT	multiplicands from stack vs register
 ?query_effects@material_effects_instance_cook@render@vostok@@QAEXAAVquery_result_for_cook@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	ICF reps and resource_ptr dtor inline choices
 ?query_resources_by_data@skeleton_combined_model_cook@render@vostok@@AAEXPAVquery_result_for_cook@resources@3@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	request fields initialised in different order, same values
