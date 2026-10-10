@@ -5,12 +5,27 @@ mangled	verdict	evidence
 ??$get_file_offs@$00@vfs@vostok@@YA_KPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: assert helper ICF names, assert __LINE__ only
 ??$get_file_size@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: same flag masks in different registers; ICF helper names
 ??$get_inline_data@$00@vfs@vostok@@YA_NPBV?$base_node@$00@01@PAVconst_buffer@1@@Z	EQUIVALENT	confirms pass 1: same flag masks (10h/40h) in different registers; ICF helper names
+??$get_node_physical_path@Vbase_node@vfs@vostok@@$00@vfs@vostok@@YA?AVnative_path_string@fs_new@1@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: ICF names (vector size/buffer_string length); same calls
+??$get_node_physical_path@Vphysical_file_node@vfs@vostok@@$00@vfs@vostok@@YA?AVnative_path_string@fs_new@1@PAV?$physical_file_node@$00@01@@Z	EQUIVALENT	confirms pass 1: ICF names (vector size/buffer_string length); same calls
 ??$get_raw_file_size_impl@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1 (full read): same link/universal/archive(inline,compressed)/physical branches; retail link branch inlines the plain-archive fast path, base recurses via wrapper
 ??$node_cast@Varchive_file_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$archive_file_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: ICF helper names and /Od stack slots only
 ??$node_cast@Verased_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$erased_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: erased-node cast helper out-of-line; same pointer
 ??$set_inline_data@$00@vfs@vostok@@YA_NPAV?$base_node@$00@01@ABVconst_buffer@1@@Z	EQUIVALENT	confirms pass 1: assert __LINE__ only (230h vs 1DEh); assert helper ICF name
+?create@?$physical_file_node@$00@vfs@vostok@@SAPAV123@PAVbase_allocator@memory@3@PAV?$mount_root_node_base@$00@23@ABVvirtual_path_string@fs_new@3@I@Z	EQUIVALENT	confirms pass 1: ICF names (vector size/buffer_string length); same calls
+?create@?$physical_folder_node@$00@vfs@vostok@@SAPAV123@PAVbase_allocator@memory@3@PAV?$mount_root_node_base@$00@23@ABVvirtual_path_string@fs_new@3@@Z	EQUIVALENT	confirms pass 1: ICF names (vector size/buffer_string length); same calls
+?find_async_expand_physical@vfs@vostok@@YAXPAV?$base_node@$00@12@0PAUasync_callbacks_data@12@W4recursive_bool@12@I@Z	EQUIVALENT	confirms pass 1: ICF names for path_string/boost::function helpers; same calls; structure match
 ?get_raw_file_size@vfs_iterator@vfs@vostok@@QBEIXZ	EQUIVALENT	confirms pass 1: retail inlines get_raw_file_size fast path ((f&51h)|(f&4))==4 -> [node-18h]; base forwards to impl, same archive_file_node size for such nodes
 ?is_inlined@?$base_node@$00@vfs@vostok@@QBE_NXZ	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?lock_node@vfs@vostok@@YA_NPAV?$base_node@$00@12@W4lock_type_enum@12@W4lock_operation_enum@12@@Z	EQUIVALENT	confirms pass 1: base_node::is_link() call vs inline flags&300h test
+?need_automatic_archive_mount@vfs@vostok@@YA_NPA_NPAV?$base_node@$00@12@PAVbase_allocator@memory@2@@Z	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?need_physical_mount@vfs@vostok@@YA_NPA_NPAV?$base_node@$00@12@W4find_enum@12@W4traverse_enum@12@PAVbase_allocator@memory@2@@Z	EQUIVALENT	confirms pass 1: base_node::is_link() call vs inline flags&300h test
+?need_physical_mount_or_async@vfs@vostok@@YA_NPAV?$base_node@$00@12@W4find_enum@12@W4traverse_enum@12@@Z	EQUIVALENT	confirms pass 1: base_node::is_link() call vs inline flags&300h test
 ?reverse_bytes_for_final_class@?$base_node@$00@vfs@vostok@@QAEXW4reverse_direction_enum@23@@Z	EQUIVALENT	confirms pass 1: same flag masks in different registers; ICF helper names
+?set_is_mounted@?$physical_file_node@$00@vfs@vostok@@QAEX_N@Z	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?set_is_scanned@?$physical_folder_node@$00@vfs@vostok@@QAE_N_N@Z	EQUIVALENT	confirms pass 1: interlocked_or inline cmpxchg loop vs call; same old-value test
 ?set_name@?$base_node@$00@vfs@vostok@@QAEXPBD@Z	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?sizeof_with_name@?$base_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	confirms pass 1: is_link() call vs inline flags&300h test
+?sizeof_with_name@?$physical_file_mount_root_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?sizeof_with_name@?$physical_folder_mount_root_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?unlock_node@vfs@vostok@@YAXPAV?$base_node@$00@12@W4lock_type_enum@12@@Z	EQUIVALENT	confirms pass 1: base_node::is_link() call vs inline flags&300h test
+?upgrade_node@vfs@vostok@@YAXPAV?$base_node@$00@12@W4lock_type_enum@12@1@Z	EQUIVALENT	confirms pass 1: base_node::is_link() call vs inline flags&300h test
