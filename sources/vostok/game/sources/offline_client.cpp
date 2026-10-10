@@ -10,10 +10,12 @@
 #include "lobby_client.h"
 #include "chat_handler.h"
 #include "lobby_menu.h"
+#include "camera_director.h"
 #include "flash_text_manager.h"
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <vostok/console_command.h>
 #include <vostok/configs_binary_config.h>
 #include <vostok/game_core/game_net_defines.h>
@@ -71,6 +73,10 @@ offline_client::offline_client( game& game ) :
 	// toggled by this (the S.T.A.L.K.E.R. name) or by F6.
 	static console_commands::cc_delegate s_offline_free_camera_command(
 		"demo_record", boost::bind( &offline_client::toggle_free_camera, this ),
+		false, console_commands::command_type_engine_internal );
+	// camera_pos is bound to the first (lobby) camera director, so it is stale in a match.
+	static console_commands::cc_delegate s_offline_where_command(
+		"where", boost::bind( &offline_client::print_where, this ),
 		false, console_commands::command_type_engine_internal );
 }
 
@@ -178,6 +184,26 @@ void offline_client::show_maps( )
 	}
 	chat->movie->SetVariable( "root.chat.text_chat.text", "" );
 	print_map_list( );
+}
+
+void offline_client::print_where( )
+{
+	if ( !m_player || !m_player->has_been_inserted( ) )
+		return;
+	float4x4 const& view = m_game.get_game_world( ).get_camera_director( ).get_inverted_view_matrix( );
+	fixed_string< 512 > message;
+	message.assignf( "map %s position %.2f %.2f %.2f direction %.2f %.2f %.2f", m_map_name.c_str( ),
+		view.c.x, view.c.y, view.c.z, view.k.x, view.k.y, view.k.z );
+	wchar_t wide[512];
+	mbstowcs_s( NULL, wide, 512, message.c_str( ), _TRUNCATE );
+	m_game.get_chat_handler( ).add_message( messaging::player_system_channel, wide, L"Offline" );
+	// Also appended next to resources.db, so a reported spot survives the session.
+	FILE* file = NULL;
+	if ( !fopen_s( &file, "../../where.txt", "a" ) && file )
+	{
+		fprintf( file, "%s\n", message.c_str( ) );
+		fclose( file );
+	}
 }
 
 void offline_client::toggle_free_camera( )
