@@ -73,6 +73,7 @@ mangled	verdict	evidence
 ??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gstage_forward@render@vostok@@UAEPAXI@Z	EQUIVALENT	base deleting dtor not emitted standalone (folded/inlined)
 ??_Gstage_pre_rain@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+??_Gstage_shadow_direct@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
 ?accumulate_local_reflections@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
@@ -109,6 +110,7 @@ mangled	verdict	evidence
 ?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
 ?compile@effect_gstage_default_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	ICF reps; inline copy of get_stencil_mask matches retail including the range check
 ?compute_aligment@stage_pre_rain@render@vostok@@AAE?AVfloat3@math@3@ABV453@ABVfloat4x4@53@M@Z	EQUIVALENT	retail CSEs a repeated zero-coefficient product inside viewport.transform; same values
+?compute_caster_model_fixed@shadow_cascade_volume@render@vostok@@QAEXAAV?$fixed_vector@Vplane@math@vostok@@$0BA@@3@AAVfloat3@math@3@M_N@Z	EQUIVALENT	identical after regalloc
 ?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
 ?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
 ?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
