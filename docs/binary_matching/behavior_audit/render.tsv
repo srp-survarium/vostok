@@ -312,6 +312,7 @@ mangled	verdict	evidence
 ?release@resource_manager@render@vostok@@QAEXPBVshader_constant_buffer@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?release@resource_manager@render@vostok@@QAEXPBVshader_constant_table@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?remove_environment_probe@scene@render@vostok@@QAEXI@Z	EQUIVALENT	retail DELETE omits dead null store into the slot erased next
+?remove_instance@speedtree_forest@render@vostok@@QAEXV?$resource_ptr@Vspeedtree_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	ICF vector helper reps
 ?render@decal_instance@0vostok@@AAEXPAVrenderer_context@02@W4enum_render_stage_type@02@@Z	EQUIVALENT	identical after regalloc
 ?render@grass_patch@0vostok@@QAEXPAUgrass_world@02@PAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IMPAVres_effect@02@I@Z	EQUIVALENT	immediate via register
 ?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
