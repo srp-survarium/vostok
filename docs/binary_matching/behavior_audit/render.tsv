@@ -10,6 +10,7 @@ mangled	verdict	evidence
 ??0debug_statistics_group@render@vostok@@QAE@PBD@Z	EQUIVALENT	buffer_string append inlined vs called
 ??0environment_temp@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
+??0grass_template@render@vostok@@QAE@IABV?$resource_ptr@Vgrass_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	identical after regalloc
 ??0hw_hiz_occlusion_manager@render@vostok@@QAE@_NII@Z	EQUIVALENT	ICF push reps
 ??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
 ??0possible_sectors_holder@culling@render@vostok@@QAE@Vbinary_config_value@configs@3@@Z	EQUIVALENT	schedule only
