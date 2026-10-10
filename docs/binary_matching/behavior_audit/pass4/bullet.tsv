@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	FIXED	compound shape without dbvt looped children; retail +0x15bf cmp esi,edi;je exits (scope closes line 909 after collideTV 907); loop now a dead duplicate isCompound branch; 54.3->79.3%

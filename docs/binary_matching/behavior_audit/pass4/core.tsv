@@ -1,0 +1,66 @@
+mangled	verdict	evidence
+??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	OPEN	FP-assoc in shared header, no TU lever: vector.normalize squared_length sums ((y2+z2)+x2)+w2 in retail (+0x5a8..0x5d3) vs ((x2+w2)+y2)+z2 in base; all 9 case paths/sqrt_safe args match
+??0thread_local_data@resources@vostok@@QAE@IPAVbase_allocator@memory@2@@Z	EQUIVALENT	confirms pass 3: retail inlines fixed_string<32> ctor (same stores to +230/+234/+238/+23C); base calls it
+??1action_logger@resources@vostok@@QAE@XZ	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+??1manager@shared@strings@vostok@@QAE@XZ	EQUIVALENT	confirms pass 3: branch encoding only
+??1text_tree@strings@vostok@@QAE@XZ	EQUIVALENT	confirms pass 3: base inlines ~text_tree_item (clear + two DeleteCriticalSection)
+??1text_tree_item@strings@vostok@@QAE@XZ	EQUIVALENT	confirms pass 3: LTCG/prologue only
+?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z	EQUIVALENT	confirms pass 3: LTCG ret size/constant via register
+?clear@text_tree_item@strings@vostok@@QAEXXZ	EQUIVALENT	confirms pass 3: LTCG/prologue only
+?create_queries_result@resources_manager@resources@vostok@@SAPAVqueries_result@23@ABUquery_resource_params@23@@Z	EQUIVALENT	confirms pass 3: inline boundary (math::max vs assert_on_fail) only
+?deallocate@managed_allocator@memory@vostok@@QAEXPAVmanaged_node@23@@Z	EQUIVALENT	confirms pass 3: __LINE__ only; global address relocation
+?debug_log_callback@core@vostok@@YAXPBD_N10@Z	EQUIVALENT	confirms pass 3: log __LINE__ only
+?dump_statistics@base_allocator@memory@vostok@@QBEXXZ	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?dump_statistics@memory@vostok@@YAX_N@Z	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?execute@console_commands@vostok@@YAXPBDW4execution_filter@12@@Z	EQUIVALENT	confirms pass 3: log __LINE__ only; ICF reps; strncpy_s import alias
+?finalize_name_registry@resources_manager@resources@vostok@@AAEXXZ	EQUIVALENT	confirms pass 3: regalloc/stack layout; global address relocation only
+?get_angles@float4x4@math@vostok@@QBE?AVfloat3@23@W4axis_rotation_order@23@@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?get_angles_xyz@float4x4@math@vostok@@QBE?AVfloat3@23@XZ	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?get_physical_path_info@resources@vostok@@YA?AVphysical_path_info@fs_new@2@ABVnative_path_string@42@_N@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?get_physical_path_info@resources@vostok@@YA?AVphysical_path_info@fs_new@2@ABVvfs_iterator@vfs@2@@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?get_similar@console_commands@vostok@@YAIPBDPAPAVconsole_command@12@I@Z	EQUIVALENT	confirms pass 3: branch layout only
+?get_thread_local_data@resources_manager@resources@vostok@@QAEPAVthread_local_data@23@I_N@Z	EQUIVALENT	confirms pass 3: retail inlines intrusive-tree find and fixed_string operator= (self-check, clear, +=); same thread-name refresh
+?initialize@build@vostok@@YAXPAUengine@core@2@@Z	EQUIVALENT	confirms pass 3: __LINE__ only
+?initialize@thread_pool@tasks@vostok@@QAEXXZ	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?key_is_set_impl@command_line@vostok@@YA_NPBD0@Z	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?late_set_fat_it@query_result@resources@vostok@@AAEXVvfs_iterator@vfs@3@@Z	EQUIVALENT	confirms pass 3: interlocked_or LTCG conv (register args); ICF getter rep
+?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	confirms pass 3: same (b-a)*t+a per translation component with pointer registers swapped; same slerp/get_angles args
+?link_child_resource@resource_children@resources@vostok@@MAEXPAVresource_base@23@I@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?log@thread_pool@tasks@vostok@@QAAXPAVthread_tls@23@PBDZZ	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?log_columns_header@thread_pool@tasks@vostok@@QAEXXZ	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?malloc_impl@doug_lea_allocator@memory@vostok@@QAEPAXI@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?on_create_resource_end@query_result@resources@vostok@@AAEXXZ	EQUIVALENT	confirms pass 3: push vs mov LTCG arg conv
+?on_exception@testing@vostok@@YAXW4assert_enum@2@PBDPAU_EXCEPTION_POINTERS@@_N@Z	EQUIVALENT	confirms pass 3: __LINE__ only; ICF reps; global address relocation
+?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	confirms pass 3: call order of independent pure getters only; ICF reps
+?on_query_processed@device_manager@resources@vostok@@AAEXPAVquery_result@23@_N@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?on_refered_query_ended@query_result@resources@vostok@@AAEXPAV123@@Z	EQUIVALENT	confirms pass 3: ICF ctor reps; interlocked_or flags via LTCG reg conv; the 0x200000 test is symbolised as a Scaleform address in base
+?on_request_iterator_ready@query_result@resources@vostok@@AAEXAAVvfs_iterator@vfs@3@_N@Z	EQUIVALENT	confirms pass 3: interlocked_or LTCG conv (register args); ICF getter rep
+?open_file@device_manager@resources@vostok@@AAE_NPAPAPAXPAVquery_result@23@ABVsynchronous_device_interface@fs_new@3@@Z	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?preinitialize@core@vostok@@YAXPAUengine@12@W4log_file_usage_enum@logging@2@PBDW4contains_application_bool@command_line@2@22@Z	EQUIVALENT	confirms pass 3: base calls the side-effect-free no_watcher_proxy ctor for a dead local; CRT import aliases; relocated global
+?process_request_path@query_result@resources@vostok@@AAE_N_N@Z	EQUIVALENT	confirms pass 3: ICF reps (boost function2/function0 clear); push vs mov LTCG arg conv
+?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	confirms pass 3: base body is an LTCG constprop clone (request name "" baked in, class id in edx); same request fields and call
+?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?release_sub_fat_from_parents@resource_freeing_functionality@resources@vostok@@AAEXPAVvfs_sub_fat_resource@23@@Z	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+?remove@manager@shared@strings@vostok@@QAEXPAVprofile@234@@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	confirms pass 3: branch layout only (the "user.cfg" literal sits in the base constprop clone)
+?segment_to_segment_distance@math@vostok@@YAMABVfloat3@12@000@Z	OPEN	confirms pass 3: squared_length term order in the four inlined distances not decidable symbolically (pointer-register renaming); likely fp:fast reassociation
+?set_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	confirms pass 3: interlocked_or tail call vs call+ret
+?set_multibyte@strings@vostok@@YA_NPADIPB_W@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?show_help@console_commands@vostok@@YAXPBD@Z	EQUIVALENT	confirms pass 3: log __LINE__ only; ICF boost::function dtor/clear reps
+?show_help_and_exit@command_line@vostok@@YAXXZ	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?sqrt_safe@@YAMM@Z	EQUIVALENT	confirms pass 3: LTCG xmm0 return vs x87; same NaN routing to sqrt
+?string@manager@shared@strings@vostok@@QAEPAVprofile@234@PBD@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?test_watcher_thread_proc@testing@vostok@@YAXXZ	EQUIVALENT	confirms pass 3: __LINE__ only; global relocation; the 0x927C0 timeout is symbolised as a boost address in retail
+?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	confirms pass 3: interlocked_and tail call vs call+ret
+?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+?write@writer@memory@vostok@@UAEXPBXI@Z	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+allocate_arenas	EQUIVALENT	confirms pass 3: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
+extrapolated_slerp	EQUIVALENT	confirms pass 3: compare form and branch layout only; identical FP expressions
+line_line_intersect_non_parallel	EQUIVALENT	confirms pass 3: read in full: d3412, d3434, d3134 ((x+z)+y), d3112, d1212, numer, denom, mua/mub and pa/pb sums identical; scheduling only
+out_of_memory_with_crash	EQUIVALENT	confirms pass 3: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
+slerp_optimized	EQUIVALENT	pass-3 fix complete: cosom ((x+y)+z)+w (+0x03..0x53) and CRT acosf/sinf on both sides; blend q0*S0+q1*S1 per component and sign/1-eps (3f7fff58) compares identical
+vostok::console_commands::save	EQUIVALENT	confirms pass 3: identical after regalloc; literal placement from the constprop clone
+vostok::core::initialize_console	EQUIVALENT	confirms pass 3: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+vostok::core::push_logging_filters	EQUIVALENT	confirms pass 3: retail inlines buffer_string::operator+= append; same string
