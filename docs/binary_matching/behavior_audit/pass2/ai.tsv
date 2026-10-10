@@ -1,0 +1,5 @@
+mangled	verdict	evidence
+??0fsm@ai@vostok@@QAE@XZ	EQUIVALENT	confirms pass 1: intrusive_list ctor out of line vs inline zero stores (same three fields)
+?add_state@fsm@ai@vostok@@QAEXPAUfsm_state@23@@Z	EQUIVALENT	confirms pass 1 (full read): retail LTCG push_back(state, NULL in esi) vs base generic ICF push_back(state, 0): same tail append/size++
+?clear_transitions@fsm@ai@vostok@@QAEXXZ	EQUIVALENT	confirms pass 1: get_next_of_object inlined vs call; same loop
+?pop_state@fsm@ai@vostok@@QAEPAUfsm_state@23@XZ	EQUIVALENT	confirms pass 1: structure match; ICF push_back name

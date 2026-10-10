@@ -1,0 +1,4 @@
+mangled	verdict	evidence
+??0MatrixState@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 1 (full read): same identity 1.0/0.0 per offset, memsets 0x30/0x40, tail floats 0.75/52/0.5625/6.4; x87 fld1/fldz vs SSE regs
+?SetString@flash_value@survarium@@QAEXPBD@Z	EQUIVALENT	confirms pass 1: same as SetStringW with Type=6; Value::operator= inline vs call
+?SetStringW@flash_value@survarium@@QAEXPB_W@Z	EQUIVALENT	confirms pass 1 (full read): release-if-managed (bit 6) then Type=7, value=str; retail inlines Value::operator=, base calls it

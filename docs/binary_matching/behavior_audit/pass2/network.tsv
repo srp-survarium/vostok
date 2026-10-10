@@ -1,0 +1,5 @@
+mangled	verdict	evidence
+??0tcp_packet_client@network@vostok@@QAE@AAUworld@12@@Z	EQUIVALENT	confirms pass 1: ICF names for bind/function helpers; same constants and member offsets
+?create_client@tcp_packet_client@network@vostok@@AAEXXZ	EQUIVALENT	confirms pass 1: paired call sequence position-for-position (0x988 alloc, ctor, binds/assign/swap); differences are ICF representative names and /Od slots
+?set_on_error@tcp_packet_client@network@vostok@@QAEXABV?$function@$$A6AXW4client_error_codes_enum@network_core@vostok@@Verror_code@system@boost@@@Z@boost@@@Z	EQUIVALENT	confirms pass 1 (full read): m_on_error (+60h) = on_error; retail calls operator=, base inlines copy+swap+dtor
+destroy_client@@pdb-overload:6b7060be47b7868a	EQUIVALENT	confirms pass 1: pdb-overload row with no target listing; source unchanged since pass 1
