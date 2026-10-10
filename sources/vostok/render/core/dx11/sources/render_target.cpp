@@ -129,7 +129,7 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
 
 		desc_rt.Format							= format;
-		desc_rt.ViewDimension					= in_texture->array_size() > 1 ? D3D_DSV_DIMENSION_TEXTURE2DARRAY : D3D_DSV_DIMENSION_TEXTURE2D;
+		desc_rt.ViewDimension					= in_texture->array_size() != 1 ? D3D_DSV_DIMENSION_TEXTURE2DARRAY : D3D_DSV_DIMENSION_TEXTURE2D;
 		desc_rt.Texture2DArray.MipSlice			= mip_slice;
 		desc_rt.Texture2DArray.ArraySize		= 1;
 		desc_rt.Texture2DArray.FirstArraySlice	= first_array_slice_index;
@@ -151,7 +151,7 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		D3D_RENDER_TARGET_VIEW_DESC				desc_rt;
 		vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
 		desc_rt.Format							= in_texture->format();
-		if (in_texture->array_size() > 1)
+		if (in_texture->array_size() != 1)
 		{
 			desc_rt.ViewDimension					= D3D_RTV_DIMENSION_TEXTURE2DARRAY;
 			desc_rt.Texture2DArray.MipSlice			= mip_slice;
