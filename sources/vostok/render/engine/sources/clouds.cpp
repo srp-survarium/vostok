@@ -113,7 +113,7 @@ void clouds::set_time( float time )
 	u32 k1 = m_current_key_1;
 	m_interp_key = m_keys[k0];
 
-	if ( time >= first_key.linear_time && time <= last_key.linear_time )
+	if ( !( time < first_key.linear_time ) && !( time > last_key.linear_time ) )
 	{
 		for ( u32 i = 0; i < m_num_keys - 1; ++i )
 		{
