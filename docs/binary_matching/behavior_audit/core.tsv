@@ -25,6 +25,7 @@ mangled	verdict	evidence
 ?link_child_resource@resource_children@resources@vostok@@MAEXPAVresource_base@23@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift); interlocked_or vs operator_or same op
 ?log@thread_pool@tasks@vostok@@QAAXPAVthread_tls@23@PBDZZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?log_columns_header@thread_pool@tasks@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?malloc_impl@doug_lea_allocator@memory@vostok@@QAEPAXI@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z	EQUIVALENT	CRT mbstowcs_s import alias
 ?on_create_resource_end@query_result@resources@vostok@@AAEXXZ	EQUIVALENT	push vs mov LTCG arg conv
 ?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	call order of independent getters only; ICF reps
@@ -49,6 +50,7 @@ mangled	verdict	evidence
 allocate_arenas	EQUIVALENT	identical after regalloc
 extrapolated_slerp	EQUIVALENT	compare form/branch layout only
 line_line_intersect_non_parallel	EQUIVALENT	symbolic store comparison equal
+out_of_memory_with_crash	EQUIVALENT	log __LINE__ only (absolute line drift)
 slerp_optimized	EQUIVALENT	retail acosf/sinf (x87 _CIacos/_CIsin wrappers) vs base __libm_sse2 double acos/sin; both double-precision results rounded to float
 vostok::console_commands::save	EQUIVALENT	identical after regalloc
 vostok::core::initialize_console	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps; CRT import aliases
