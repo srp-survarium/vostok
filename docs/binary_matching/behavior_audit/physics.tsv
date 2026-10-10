@@ -34,3 +34,5 @@ mangled	verdict	evidence
 `dynamic initializer for 's_reset_statistics''	FIXED	reset_physics_profiler registered user_specific; retail +0x66 stores command_type 0 at +0x10 (engine_internal)
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	EQUIVALENT	symbolic store comparison equal
 vostok::physics::dimensions_from_bullet_shape	FIXED	sphere dimensions were (r, r, 0); retail sphere case stores r, then 0 to both y and z; now float3(radius, 0, 0)
+vostok::physics::new_bt_element_joint	EQUIVALENT	load order only
+vostok::physics::new_bt_primitive	EQUIVALENT	LTCG parameter registers; jump table data only
