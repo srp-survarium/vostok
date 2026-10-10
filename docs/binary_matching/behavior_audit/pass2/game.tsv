@@ -36,8 +36,8 @@ mangled	verdict	evidence
 ?fill_inventory_contents@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	confirms pass 1: same calls/literals/offsets; register constant only
 ?fill_inventory_labels@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	confirms pass 1: 0x49-count loop vs 8-byte stride to 0x248 (same labels); Value::operator= inline-vs-call
 ?fill_items_dictionary@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	confirms pass 1: log __LINE__ 0x2CE vs 0x293; fixed_string<32> faction assigns inline vs call (same literals); Value::operator= inline-vs-call
-?fill_labels@game_options@survarium@@QAEXXZ	EQUIVALENT	retail 0xf71 vtbl+34h SetElement(i) vs ours +3Ch PushBack on a fresh CreateArray, i==size each pass: same array; fix tried: max 92.4->76.2 via regalloc, reverted
-?fill_menu_buttons@game_options@survarium@@QAEX_N@Z	EQUIVALENT	retail 0x5e7 vtbl+34h SetElement(i) vs ours +3Ch PushBack on a fresh CreateArray, i==size each pass: same array; fixing tried, costs regalloc (pass 1 said base reg)
+?fill_labels@game_options@survarium@@QAEXXZ	EQUIVALENT	ours PushBack vs retail SetElement(i) on a fresh array with i==size each pass: identical array. matching lead: retail SetElement(i) vtbl+0x34 (0xf71); try dropped max 92.4->76.2
+?fill_menu_buttons@game_options@survarium@@QAEX_N@Z	EQUIVALENT	ours PushBack vs retail SetElement(i) on a fresh array with i==size each pass: identical array. matching lead: retail SetElement(i) vtbl+0x34 (0x5e7); our try cost regalloc
 ?fill_profiles@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	confirms pass 1: Value::operator= inline-vs-call; mbstowcs_s ICF naming; same literals/offsets
 ?fill_quick_slots@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	confirms pass 1: same slot ids and calls; 0xD countdown vs 0x154 stride end
 ?fill_service_prices@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	confirms pass 1: Scaleform SetUInt inline adds release-previous check on fresh value; same get_service_prices+0x860, Invoke args
