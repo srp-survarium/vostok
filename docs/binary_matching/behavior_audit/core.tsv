@@ -25,6 +25,7 @@ mangled	verdict	evidence
 ?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	call order of independent getters only; ICF reps
 ?on_refered_query_ended@query_result@resources@vostok@@AAEXPAV123@@Z	EQUIVALENT	ICF reps (storage2 vs mutable_buffer ctor); interlocked_or flags 0x80000/0x40000 via LTCG reg conv
 ?on_request_iterator_ready@query_result@resources@vostok@@AAEXAAVvfs_iterator@vfs@3@_N@Z	EQUIVALENT	interlocked_or LTCG conv (register args)
+?preinitialize@core@vostok@@YAXPAUengine@12@W4log_file_usage_enum@logging@2@PBDW4contains_application_bool@command_line@2@22@Z	EQUIVALENT	base calls side-effect-free no_watcher_proxy ctor for the dead local device; retail inlines it away; CRT import aliases
 ?process_request_path@query_result@resources@vostok@@AAE_N_N@Z	EQUIVALENT	ICF reps (boost function2/function0 clear); push vs mov LTCG arg conv
 ?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	LTCG/prologue only
 ?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	LTCG ret size
