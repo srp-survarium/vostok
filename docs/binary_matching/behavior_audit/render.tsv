@@ -50,6 +50,7 @@ mangled	verdict	evidence
 ??0stage_sun@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@@Z	EQUIVALENT	retail calls CRT sinf where base uses the fsin intrinsic (same argument)
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
 ??0untyped_buffer@render@vostok@@QAE@IPBXW4enum_buffer_type@12@_N2@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??0vertex_buffer@render@vostok@@QAE@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
 ??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
 ??1portal_sector_structure@culling@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
