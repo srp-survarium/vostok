@@ -1,8 +1,10 @@
 mangled	verdict	evidence
 ??$call@V?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@memory@vostok@@@?$new_helper@Vbullet@survarium@@@memory@vostok@@SAPAXAAV?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@12@@Z	EQUIVALENT	ICF reps
+??$copy@$0CA@@strings@vostok@@YAPADAAY0CA@DPBD@Z	EQUIVALENT	identical after regalloc
 ??$delete_helper_impl@V?$single_size_buffer_allocator@$0CBI@Vmulti_threading_policy@threading@vostok@@@memory@vostok@@Vsound_instance_proxy@sound@3@Ucall_destructor_predicate@detail@23@@detail@memory@vostok@@YAXAAV?$single_size_buffer_allocator@$0CBI@Vmulti_threading_policy@threading@vostok@@@12@AAPAVsound_instance_proxy@sound@2@ABUcall_destructor_predicate@012@@Z	EQUIVALENT	refcount decrement inlined vs called
 ??$delete_helper_impl@V?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@memory@vostok@@Vbullet@survarium@@Ucall_destructor_predicate@detail@23@@detail@memory@vostok@@YAXAAV?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@12@AAPAVbullet@survarium@@ABUcall_destructor_predicate@012@@Z	EQUIVALENT	base inlines the single-size deallocate; ICF reps
 ??$delete_helper_impl@Vbullet_functor_mt_allocator@bullet_manager@survarium@@Ubullet_functor@23@Ucall_destructor_predicate@detail@memory@vostok@@@detail@memory@vostok@@YAXAAVbullet_functor_mt_allocator@bullet_manager@survarium@@AAPAUbullet_functor@45@ABUcall_destructor_predicate@012@@Z	EQUIVALENT	base inlines the mt allocator deallocate; ICF reps
+??$iterate_items@Ulogger_predicate@logging@vostok@@PAD@strings@vostok@@YA_NQADIABUlogger_predicate@logging@1@D@Z	EQUIVALENT	ICF reps
 ??$try_get@E@?$variant@$0CA@@vostok@@QAE_NAAE@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ??$try_get@G@?$variant@$0CA@@vostok@@QAE_NAAG@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ??$try_get@PAUeffect_compile_data@render@vostok@@@?$variant@$0CA@@vostok@@QAE_NAAPAUeffect_compile_data@render@1@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
