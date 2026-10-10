@@ -265,7 +265,7 @@ void stage_clouds::execute( )
 		math::create_scale(
 			float3(
 				60000.0f * options::ref( ).current.m_clouds_scale,
-				math::max( 0.01f, interp_key.cloud_base * 2.0f ) *
+				math::max( interp_key.cloud_base * 2.0f, 0.01f ) *
 					options::ref( ).current.m_clouds_scale,
 				60000.0f * options::ref( ).current.m_clouds_scale
 			)
