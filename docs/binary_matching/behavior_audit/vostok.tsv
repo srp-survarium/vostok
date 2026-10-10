@@ -52,6 +52,7 @@ mangled	verdict	evidence
 ??4query_mount_arguments@vfs@vostok@@QAEAAV012@ABV012@@Z	EQUIVALENT	ICF reps (path verify, boost::function helpers)
 ??Eiterator@?$hash_multiset@Vname_registry_entry@resources@vostok@@PAV123@$0M@V?$fixed_size_policy@$0IAAA@@detail@3@Uname_registry_hash@523@Uname_registry_equal@523@Vsingle_threading_policy@threading@3@@vostok@@QAE?AV012@XZ	EQUIVALENT	addressing only
 ??Eiterator@?$hash_multiset@Vprofile@shared@strings@vostok@@PAV1234@$03V?$fixed_size_policy@$0IAAA@@detail@4@Uhash_function@manager@234@U78234@Vsingle_threading_policy@threading@4@@vostok@@QAE?AV012@XZ	EQUIVALENT	addressing only
+??_Gstage_visibility@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ?allocate@?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@QAEPAXXZ	EQUIVALENT	ICF reps
 ?allocate@?$single_size_buffer_allocator@$0CBI@Vmulti_threading_policy@threading@vostok@@@memory@vostok@@QAEPAXXZ	EQUIVALENT	interlocked increment inlined vs called
 ?allocate@?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@memory@vostok@@QAEPAXXZ	EQUIVALENT	interlocked increment inlined vs called
