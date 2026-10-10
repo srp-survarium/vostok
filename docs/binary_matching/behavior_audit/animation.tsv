@@ -32,13 +32,13 @@ mangled	verdict	evidence
 ?create_in_place_internals@event_channel@animation@vostok@@QAEXABVbi_spline_event_channel_baked@23@PAX@Z	EQUIVALENT	writes through m_time_channel vs memory_buffer (same address); base keeps no-op ICF getter calls; LTCG ret size
 ?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	retail calls free_helper_impl with a null test; base calls allocator free directly (res already dereferenced by the dtor call)
 ?deserialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	computed_tree and get_next_buffer inlined in base; same buffer toggle and tree assignment
-?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	OPEN	NaN-only, no source lever: 3 knot ternaries retail +0x38f jb/+0x3da jae/+0x3f3 ja vs base jbe/jbe/jb; inverted conditions compile identically
+?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	FIXED	NaN routing of the 3 knot ternaries: retail +0x38f jb/+0x3da jae/+0x3f3 ja; inverted source conditions now reproduce it
 ?domain@?$time_channel@U?$poly_curve_order3_domain@M$00@animation@vostok@@@animation@vostok@@QBEIMAAI@Z	EQUIVALENT	addressing only; log __LINE__ only (absolute line drift)
 ?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z	EQUIVALENT	base constprops the 1.0 argument (fld1) where retail reads it; LTCG ret size
 ?fix_weight_driving_animations_with_null_weights@n_ary_tree_converter@mixing@animation@vostok@@AAEXABVexpression@234@@Z	EQUIVALENT	compare form/push order only
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
 ?get_bone_index@skeleton@animation@vostok@@QBEIPBD@Z	EQUIVALENT	identical after regalloc
-?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	OPEN	NaN-only (inversion untested): knot wrap test retail comiss len,cur/ja (+0x222) vs base comiss cur,len/jb; rest equal
+?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	FIXED	knot wrap test: retail +0x222 comiss len,cur/ja (NaN keeps cur); source written as cur < len ? cur : cur - len now reproduces it
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
 ?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	register renames and load order only
 ?merge_weight_asynchronous_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXQAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	identical after regalloc
