@@ -17,6 +17,7 @@ mangled	verdict	evidence
 ?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	same (b-a)*t+a per component with pointer registers swapped
 ?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z	EQUIVALENT	CRT mbstowcs_s import alias
 ?on_fs_iterators_ready@binary_config_cook@configs@core@vostok@@IAEXAAVqueries_result@resources@4@@Z	EQUIVALENT	call order of independent getters only; ICF reps
+?on_refered_query_ended@query_result@resources@vostok@@AAEXPAV123@@Z	EQUIVALENT	ICF reps (storage2 vs mutable_buffer ctor); interlocked_or flags 0x80000/0x40000 via LTCG reg conv
 ?on_request_iterator_ready@query_result@resources@vostok@@AAEXAAVvfs_iterator@vfs@3@_N@Z	EQUIVALENT	interlocked_or LTCG conv (register args)
 ?process_request_path@query_result@resources@vostok@@AAE_N_N@Z	EQUIVALENT	ICF reps (boost function2/function0 clear); push vs mov LTCG arg conv
 ?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	LTCG/prologue only
