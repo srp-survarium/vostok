@@ -52,6 +52,7 @@ mangled	verdict	evidence
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_volume_fog@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
+??1update_model_vertex_buffer_command@render@vostok@@UAE@XZ	EQUIVALENT	compare form only
 ??Aeffect_options_descriptor@render@vostok@@QAEAAU012@PBD@Z	EQUIVALENT	identical after regalloc
 ??Mrender@vostok@@YA_NABUbinary_shader_key_type@01@0@Z	EQUIVALENT	retail inlines identity accessors (ICF reps in base)
 ??Rconstant_buffer_predicate@resource_manager@render@vostok@@QBE_NQBVshader_constant_buffer@23@0@Z	EQUIVALENT	branch inversion and setne vs jne tail; same comparison order
