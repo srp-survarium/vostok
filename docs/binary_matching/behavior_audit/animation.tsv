@@ -15,6 +15,7 @@ mangled	verdict	evidence
 ?add_weight_synchronization_group@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@0@Z	EQUIVALENT	identical after regalloc
 ?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z	EQUIVALENT	flag tested from register vs recomputed; tail-merged returns
 ?calculated_head_matrix@animation@vostok@@YA?AVfloat4x4@math@2@ABV342@0@Z	EQUIVALENT	same rotations/mul4x3 order; stack slot layout and LTCG param passing only
+?change_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0_N@Z	EQUIVALENT	identical after regalloc
 ?change_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0QAV5234@_N@Z	EQUIVALENT	branch layout of cloner calls only
 ?change_weight_synchronization_group@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	identical after regalloc
 ?clone@fermi_interpolator@animation@vostok@@UBEPAV123@AAVn_ary_tree_transition_tree_constructor@mixing@23@@Z	EQUIVALENT	LTCG/prologue only
@@ -40,6 +41,7 @@ mangled	verdict	evidence
 ?get_bone_index@skeleton@animation@vostok@@QBEIPBD@Z	EQUIVALENT	identical after regalloc
 ?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	FIXED	knot wrap test: retail +0x222 comiss len,cur/ja (NaN keeps cur); source written as cur < len ? cur : cur - len now reproduces it
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
+?merge_trees@n_ary_tree_comparer@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	identical after regalloc
 ?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	register renames and load order only
 ?merge_weight_asynchronous_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXQAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	identical after regalloc
 ?merge_weight_asynchronous_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXQAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	push order only
@@ -49,6 +51,7 @@ mangled	verdict	evidence
 ?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z	EQUIVALENT	retail stores the interval time in each branch vs a shared tail store; same x87 ratio*time
 ?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z	EQUIVALENT	ratio sign as 1.0/-1.0 multiply vs negate (exact); same offsets
 ?new_weight_driving_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0@Z	EQUIVALENT	identical after regalloc
+?new_weight_driving_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	identical after regalloc
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0@Z	EQUIVALENT	LTCG ret size
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@@Z	EQUIVALENT	LTCG register params and stack layout; same new_animation args, clone loop, sort and add_animation_node
 ?on_bi_spline_animation_arrived@skeleton_animation_cook@animation@vostok@@CAXAAVqueries_result@resources@3@@Z	EQUIVALENT	identical after regalloc
