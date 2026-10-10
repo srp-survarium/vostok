@@ -29,6 +29,7 @@ mangled	verdict	evidence
 ?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z	EQUIVALENT	base constprops the 1.0 argument (fld1) where retail reads it; LTCG ret size
 ?fix_weight_driving_animations_with_null_weights@n_ary_tree_converter@mixing@animation@vostok@@AAEXABVexpression@234@@Z	EQUIVALENT	compare form/push order only
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
+?get_bone_index@skeleton@animation@vostok@@QBEIPBD@Z	EQUIVALENT	identical after regalloc
 ?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	OPEN	NaN-only (inversion untested): knot wrap test retail comiss len,cur/ja (+0x222) vs base comiss cur,len/jb; rest equal
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
 ?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	register renames and load order only
@@ -47,6 +48,7 @@ mangled	verdict	evidence
 ?serialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	LTCG conv (buffer/this register swap, size constprop 0x4000); boost::function clear inlined in base
 ?set_object_transform@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	ICF reps; pinned_ptr const-ness only
 ?set_target@animation_player@animation@vostok@@AAE_NABVexpression@mixing@23@IABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	get_next_buffer inlined; callback-generator cleanup loop placed after vs inside the if (runs only when non-null)
+?skeleton_bone_index@animation@vostok@@YAIABVskeleton@12@PBD@Z	EQUIVALENT	identical after regalloc
 ?skip_time_if_needed@animation_player@animation@vostok@@AAEXI@Z	EQUIVALENT	LTCG conv for serialize_state; unsigned >0 tested as jbe vs je; log __LINE__ only (absolute line drift)
 ?subscribe@animation_player@animation@vostok@@QAEXPBDABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@EQBX@Z	EQUIVALENT	ICF reps (call_constructor, function ctor)
 ?tick@n_ary_tree@mixing@animation@vostok@@QAE_NIAAPAUsubscribed_channel@34@AA_N@Z	EQUIVALENT	identical after regalloc
