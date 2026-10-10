@@ -7,6 +7,7 @@ mangled	verdict	evidence
 ??1DepthStencilSurface@D3D1x@Render@Scaleform@@UAE@XZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ??1Texture@D3D1x@Render@Scaleform@@UAE@XZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ??1TextureManager@D3D1x@Render@Scaleform@@UAE@XZ	EQUIVALENT	confirms pass 1: structure match; same calls and operands
+??_GTextureManager@D3D1x@Render@Scaleform@@UAEPAXI@Z	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?CreatePrimitiveFill@HAL@D3D1x@Render@Scaleform@@UAEPAVPrimitiveFill@34@ABUPrimitiveFillData@34@@Z	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?DrawProcessedComplexMeshes@HAL@D3D1x@Render@Scaleform@@UAEXPAVComplexMesh@34@ABV?$StrideArray@VHMatrix@MatrixPoolImpl@Render@Scaleform@@@34@@Z	EQUIVALENT	confirms pass 1: MoveToCacheListFront(MCL_ThisFrame=2) inline-vs-call of a shared-header helper; same effects; ICF names
 ?DrawProcessedPrimitive@HAL@D3D1x@Render@Scaleform@@UAEXPAVPrimitive@34@PAVPrimitiveBatch@34@1@Z	EQUIVALENT	confirms pass 1: MoveToCacheListFront(2) inline-vs-call of a shared-header helper; same effects; ICF names
@@ -19,4 +20,6 @@ mangled	verdict	evidence
 ?build_movie@flash_factory@survarium@@QAEPAUflash_movie@2@PAXIPBD@Z	EQUIVALENT	confirms pass 1: structure match; same calls and operands; operator new spelling
 ?createDefaultRenderBuffer@HAL@D3D1x@Render@Scaleform@@UAE_NXZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?destroyPendingBuffers@MeshCache@D3D1x@Render@Scaleform@@AAEXXZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?drawMaskClearRectangles@?$ShaderHAL@VShaderManager@D3D1x@Render@Scaleform@@VShaderInterface@234@@Render@Scaleform@@MAEXPBVHMatrix@MatrixPoolImpl@23@I@Z	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?set_position@flash_text@survarium@@QAEXMM@Z	EQUIVALENT	confirms pass 1: text bounds read through returned pointer vs stack copy; same fields and arithmetic
 ?shouldRenderFilters@HAL@D3D1x@Render@Scaleform@@MBE_NPBVFilterPrimitive@34@@Z	EQUIVALENT	confirms pass 1: shader version >= FL1x vs == FL1x: identical, FL1x (2) is the largest enum value
