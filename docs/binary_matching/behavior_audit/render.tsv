@@ -31,6 +31,7 @@ mangled	verdict	evidence
 ??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0speedtree_tree_component_branch@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
 ??0speedtree_tree_component_frond@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
+??0speedtree_tree_component_leafcard@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	push/schedule order only
 ??0speedtree_tree_component_leafmesh@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim/delete_helper; base calls resource_manager::release
 ??0sphere_geometry@render@vostok@@QAE@II@Z	EQUIVALENT	retail transforms side vertices as positions (xyz, w stored as 1.0) where base runs the full float4 transform with w=1; identical for the rotation matrix used
 ??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
