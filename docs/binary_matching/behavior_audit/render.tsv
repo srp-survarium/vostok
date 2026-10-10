@@ -279,7 +279,7 @@ mangled	verdict	evidence
 ?parse@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflection@@W4enum_shader_type@23@@Z	EQUIVALENT	ICF copy reps; log __LINE__ only (absolute line drift)
 ?parse_resources@?$res_xs_hw@Uvs_data@render@vostok@@@render@vostok@@AAEXPAUID3D11ShaderReflection@@AAV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@3@AAV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	string appends inlined in base
 ?populate@grass_world@render@vostok@@QAEXM@Z	EQUIVALENT	push_back realloc tails merged in retail
-?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	retail has 10 more addss inside the eight inlined float4x4::transform calls; retail math_float4x4_inline.h checksum differs from every in-repo blob (prior audit)
+?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined transform(float3) with const z; base CSEs (z*e2k+e3k) for all 4 rows, retail only row 0 (e20+e30); same tree, 1-ulp
 ?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
 ?prepare@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0M@Z	EQUIVALENT	retail drops the (view_direction.y=0)*scale*offset term; base adds 0*x to y (same for finite values)
 ?prepare_final@radiance_volume@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
