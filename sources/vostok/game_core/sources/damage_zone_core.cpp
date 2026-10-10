@@ -94,7 +94,7 @@ static float distance_from_box_center_to_point_on_shape( float4x4 const& transfo
 		result += axis * dist;
 	}
 
-	return ( result - transform.c.xyz( ) ).length( );
+	return ( transform.c.xyz( ) - result ).length( );
 }
 
 static float distance_from_capsule_center_to_point_on_shape(
@@ -108,18 +108,18 @@ static float distance_from_capsule_center_to_point_on_shape(
 	float3 y_axis					= transform.j.xyz( );
 	float3 top_surface_center		= center + y_axis * half_length;
 	float3 bottom_surface_center	= center - y_axis * half_length;
-	float3 height_vector			= top_surface_center - bottom_surface_center;
+	float3 height_vector			= bottom_surface_center - top_surface_center;
 	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
 	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
 	{
 		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
-		float3 dir						= height_vector_proj_point - source_position;
-		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+		float3 dir						= source_position - height_vector_proj_point;
+		return ( ( height_vector_proj_point + dir.normalize( ) * radius ) - center ).length( );
 	}
 
 	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
-	return ( center - ( surface_center + ( surface_center - source_position ).normalize( ) * radius ) ).length( );
+	return ( ( surface_center + ( source_position - surface_center ).normalize( ) * radius ) - center ).length( );
 }
 
 static float distance_from_cylinder_center_to_point_on_shape(
@@ -133,21 +133,21 @@ static float distance_from_cylinder_center_to_point_on_shape(
 	float3 y_axis					= transform.j.xyz( );
 	float3 top_surface_center		= center + y_axis * half_length;
 	float3 bottom_surface_center	= center - y_axis * half_length;
-	float3 height_vector			= top_surface_center - bottom_surface_center;
+	float3 height_vector			= bottom_surface_center - top_surface_center;
 	const float proj_to_y_axis		= ( source_position - top_surface_center ).dot_product( height_vector ) / height_vector.dot_product( height_vector );
 
 	if ( proj_to_y_axis > 0.0f && 1.0f > proj_to_y_axis )
 	{
 		float3 height_vector_proj_point	= top_surface_center + height_vector * proj_to_y_axis;
-		float3 dir						= height_vector_proj_point - source_position;
-		return ( center - ( height_vector_proj_point + dir.normalize( ) * radius ) ).length( );
+		float3 dir						= source_position - height_vector_proj_point;
+		return ( ( height_vector_proj_point + dir.normalize( ) * radius ) - center ).length( );
 	}
 
 	float3 surface_center			= proj_to_y_axis < 0.0f ? top_surface_center : bottom_surface_center;
-	float3 circle_point_dir			= surface_center - source_position;
-	float3 proj						= y_axis * y_axis.dot_product( circle_point_dir );
-	float3 circle_proj_vec			= proj - circle_point_dir;
-	return ( center - ( surface_center + circle_proj_vec ) ).length( );
+	float3 circle_point_dir			= source_position - surface_center;
+	float3 proj						= y_axis * circle_point_dir.dot_product( y_axis );
+	float3 circle_proj_vec			= circle_point_dir - proj;
+	return ( ( surface_center + circle_proj_vec ) - center ).length( );
 }
 
 struct compare_body_parts_predicate {
