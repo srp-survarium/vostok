@@ -62,7 +62,8 @@ cat > "$out/play.sh" <<'SH'
 set -euo pipefail
 dir=$(cd "$(dirname "$0")" && pwd)
 command -v wine >/dev/null || { echo "Wine is required (wine 9+; staging recommended)." >&2; exit 1; }
-export WINEPREFIX="${WINEPREFIX:-$dir/wineprefix}"
+# Always a private prefix: an inherited WINEPREFIX may belong to something else.
+export WINEPREFIX="${SURVARIUM_WINEPREFIX:-$dir/wineprefix}"
 export WINEDEBUG="${WINEDEBUG:--all}"
 # An English locale keeps Wine's keyboard layout sane; the game converts its Russian text itself.
 export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
