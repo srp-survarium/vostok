@@ -152,6 +152,7 @@ mangled	verdict	evidence
 ?execute@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (set_ps_constant, apply, get_rt, set_ps_texture)
 ?execute@stage_pre_rain@render@vostok@@UAEXXZ	EQUIVALENT	retail set_w(float4x4().identity()) vs set_w_identity(); same world matrix
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
+?execute@stage_resolve_lighting@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
 ?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	FIXED	align mult folded to mult/pow; retail +0x154 fld1/fdivrp then +0x177 fmul mults[i] = (1/pow)*mult; explicit parenthesised reciprocal reproduces it
@@ -265,6 +266,7 @@ mangled	verdict	evidence
 ?render_model_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant<float>/<float4x4> via set_memory; same float op count
 ?render_model_probe_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAUenvironment_probe@23@M@Z	EQUIVALENT	regalloc
 ?render_models@stage_gbuffer@render@vostok@@AAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@IAAI_N@Z	EQUIVALENT	identical after regalloc
+?render_models@stage_resolve_lighting@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@AAI@Z	EQUIVALENT	identical after regalloc
 ?render_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@II@Z	EQUIVALENT	retail drops redundant it_d!=end_d test on the index-exhausted exit; ICF reps
 ?render_occluders@hw_hiz_occlusion_manager@render@vostok@@AAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
 ?render_opaque_models@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	RT slot clears via immediate vs register zero
