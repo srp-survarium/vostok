@@ -32,6 +32,7 @@ mangled	verdict	evidence
 ?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z	EQUIVALENT	symbolic store comparison equal up to commutative operand order; ICF reps
 ?remove_animation@n_ary_tree@mixing@animation@vostok@@AAEXAAPAVn_ary_tree_animation_node@234@PAV5234@@Z	EQUIVALENT	time-list unlink via pointer-to-link vs prev pointer; same unlink, LTCG ret size
 ?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z	EQUIVALENT	ICF reps for buffer_vector/sort helpers
+?remove_transition@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_time_scale_transition_node@234@@Z	EQUIVALENT	operand shift-down as inline loop vs memmove (same count); same clamp
 ?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z	EQUIVALENT	ICF reps for boost bind/function helpers
 ?serialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	LTCG conv (buffer/this register swap, size constprop 0x4000); boost::function clear inlined in base
 ?set_object_transform@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	ICF reps; pinned_ptr const-ness only
@@ -48,3 +49,4 @@ mangled	verdict	evidence
 ?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_addition_node@234@@Z	EQUIVALENT	this-adjust form only
 ?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	schedule only
 ?visit@n_ary_tree_size_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_multiplication_node@234@@Z	EQUIVALENT	this-adjust form only
+?visit@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_time_scale_transition_node@234@@Z	EQUIVALENT	identical after regalloc
