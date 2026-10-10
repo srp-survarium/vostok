@@ -103,9 +103,9 @@ Windows needs the "DirectX End-User Runtimes (June 2010)" from Microsoft
 played older games already have them.
 
 Playing
-  The game opens in the lobby. Press Play to start on the default map, or open
-  the chat: it shows the numbered map list. Type a map's number (or its name)
-  and press Enter.
+  The game opens in the lobby with the chat already showing the numbered map
+  list: type a map's number (or its name) and press Enter. Play starts the
+  default map.
   Equip a weapon before starting a match.
 
 The maps in this package and their chat names are listed in MAPS.txt.
