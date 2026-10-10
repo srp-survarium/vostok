@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+?set_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
+?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
