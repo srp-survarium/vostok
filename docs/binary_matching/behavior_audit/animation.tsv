@@ -4,6 +4,8 @@ mangled	verdict	evidence
 ??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z	EQUIVALENT	m_layers_count kept in a register; ICF animation_interval::animation rep; LTCG ret size
 ??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z	EQUIVALENT	LTCG constprop of the float argument; ret size
 ??0n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@ABVn_ary_tree@123@1IIIAAPAUsubscribed_channel@23@ABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	LTCG param placement; same members stored (extra zero stores later overwritten)
+??Mmixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
+??Omixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
 ?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z	OPEN	inlined quaternion operator* (frame*conj(prev)): retail sums x/y terms in another order (fp:fast); 1-ulp in object movement rotation; no TU-local source lever
 ?add_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@QAV5234@@Z	EQUIVALENT	LTCG param placement for new_animation; same clone/compare loop
 ?add_animation_node@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@PBUanimation_state@234@IM_N@Z	EQUIVALENT	identical after regalloc
