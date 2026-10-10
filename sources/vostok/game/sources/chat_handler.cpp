@@ -329,6 +329,9 @@ void chat_handler::focus( bool b_focused )
 
 	m_focused = b_focused;
 
+	if( b_focused && !m_game.get_network_client( )->has_bandwidth( ) )
+		static_cast< offline_client* >( m_game.get_network_client( ) )->show_maps( );
+
 	if( b_focused )
 		m_game.input_world( ).add_handler( *this );
 	else

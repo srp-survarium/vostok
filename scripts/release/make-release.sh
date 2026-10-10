@@ -104,8 +104,8 @@ played older games already have them.
 
 Playing
   The game opens in the lobby. Press Play to start on the default map, or open
-  the chat, type 0 and press Enter to see the numbered map list, then type the
-  map's number (or its name) and press Enter.
+  the chat: it shows the numbered map list. Type a map's number (or its name)
+  and press Enter.
   Equip a weapon before starting a match.
 
 The maps in this package and their chat names are listed in MAPS.txt.

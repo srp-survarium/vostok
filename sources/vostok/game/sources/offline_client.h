@@ -31,6 +31,10 @@ public:
 	static pcstr default_map( );
 	void initialize_lobby( );
 	void choose_map_from_chat( wchar_t const* text );
+	void show_maps( );
+	void open_map_chat( );
+	void tick_map_chat( );
+	enum { map_chat_settle_frames = 60, map_chat_unfold_frames = 10 };
 	void start_match( );
 	void load_command( pcstr map_name );
 
@@ -39,12 +43,14 @@ private:
 	void on_maps_ready( vfs::vfs_locked_iterator const& maps );
 	bool map_available( pcstr map_name ) const;
 	void show_map_error( pcstr map_name );
+	void print_map_list( );
 	bool configure_weapon( );
 
 	player_profile m_profile;
 	player_ptr m_player;
 	fixed_string< 64 > m_map_name;
 	vector< fixed_string< 64 > > m_available_maps;
+	u32 m_map_chat_delay;
 };
 
 } // namespace survarium
