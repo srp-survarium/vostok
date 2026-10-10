@@ -2,6 +2,7 @@ mangled	verdict	evidence
 ??$propagate@Vn_ary_tree_animation_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z	EQUIVALENT	m_layers_count kept in a register; ICF animation_interval::animation rep; LTCG ret size
+??0cubic_spline_skeleton_animation@animation@vostok@@AAE@ABVbi_spline_skeleton_animation_baked@12@@Z	EQUIVALENT	stack/LTCG param placement; same members, bone loop and channel setup
 ??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z	EQUIVALENT	LTCG constprop of the float argument; ret size
 ??0n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@ABVn_ary_tree@123@1IIIAAPAUsubscribed_channel@23@ABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	LTCG param placement; same members stored (extra zero stores later overwritten)
 ??Mmixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z	EQUIVALENT	retail compares animation pointers as a three-way result then branches; same outcomes
@@ -28,6 +29,7 @@ mangled	verdict	evidence
 ?computed_operands_count@mixing@animation@vostok@@YA?AU?$pair@II@stlp_std@@AAVn_ary_tree_animation_node@123@0@Z	EQUIVALENT	compare operand form only
 ?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z	EQUIVALENT	time ratio computed before vs after the placement-new null check; same values and calls
 ?convert_skeleton_branch@bone_matrices_computer@animation@vostok@@ABEXABVskeleton_bone@23@PAVfloat4x4@math@3@ABV563@@Z	EQUIVALENT	identical after regalloc
+?count_memory_size@cubic_spline_skeleton_animation@animation@vostok@@SAIABVbi_spline_skeleton_animation_baked@23@@Z	EQUIVALENT	addressing/induction form only
 ?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z	EQUIVALENT	event_channels/knots_count inlined in retail; pinned_ptr const-ness only; same interval math
 ?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z	EQUIVALENT	event_channels/knots_count inlined in retail; same intervals, tail and start-time clamp
 ?create_in_place_internals@event_channel@animation@vostok@@QAEXABVbi_spline_event_channel_baked@23@PAX@Z	EQUIVALENT	writes through m_time_channel vs memory_buffer (same address); base keeps no-op ICF getter calls; LTCG ret size
