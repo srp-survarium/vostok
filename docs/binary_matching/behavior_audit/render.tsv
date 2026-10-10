@@ -169,6 +169,7 @@ mangled	verdict	evidence
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
 ?execute@stage_resolve_lighting@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
+?execute@stage_translucency@render@vostok@@UAEXXZ	EQUIVALENT	transform_direction operands from memory vs register; same products
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
 ?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	FIXED	align mult folded to mult/pow; retail +0x154 fld1/fdivrp then +0x177 fmul mults[i] = (1/pow)*mult; explicit parenthesised reciprocal reproduces it
 ?execute_disabled@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
