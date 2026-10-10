@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+??0ui_progress_bar@ui@vostok@@QAE@AAVui_world@12@@Z	EQUIVALENT	retail inlines fixed_string<32> ctor; LTCG this/world registers; same stores
+?set_text@ui_progress_bar@ui@vostok@@UAEXPBD@Z	EQUIVALENT	retail inlines fixed_string<32> operator= (self-check, clear, append); base tail-calls it
