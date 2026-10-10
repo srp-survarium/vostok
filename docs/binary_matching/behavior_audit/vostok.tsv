@@ -49,6 +49,7 @@ mangled	verdict	evidence
 ??0initiator_filter@logging@vostok@@QAE@ABU012@@Z	EQUIVALENT	identical after regalloc
 ??4?$fixed_string@$0BAE@@vostok@@QAEABV01@ABV01@@Z	EQUIVALENT	buffer_string::operator= vs inlined memcpy of the same string
 ??4buffer_string@vostok@@QAEABV01@ABV01@@Z	EQUIVALENT	identical after regalloc
+??4query_mount_arguments@vfs@vostok@@QAEAAV012@ABV012@@Z	EQUIVALENT	ICF reps (path verify, boost::function helpers)
 ??Eiterator@?$hash_multiset@Vname_registry_entry@resources@vostok@@PAV123@$0M@V?$fixed_size_policy@$0IAAA@@detail@3@Uname_registry_hash@523@Uname_registry_equal@523@Vsingle_threading_policy@threading@3@@vostok@@QAE?AV012@XZ	EQUIVALENT	addressing only
 ??Eiterator@?$hash_multiset@Vprofile@shared@strings@vostok@@PAV1234@$03V?$fixed_size_policy@$0IAAA@@detail@4@Uhash_function@manager@234@U78234@Vsingle_threading_policy@threading@4@@vostok@@QAE?AV012@XZ	EQUIVALENT	addressing only
 ?allocate@?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@QAEPAXXZ	EQUIVALENT	ICF reps
