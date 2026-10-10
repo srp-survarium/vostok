@@ -278,6 +278,7 @@ mangled	verdict	evidence
 ?release@resource_manager@render@vostok@@QAEXPBVshader_constant_buffer@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?release@resource_manager@render@vostok@@QAEXPBVshader_constant_table@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
 ?remove_environment_probe@scene@render@vostok@@QAEXI@Z	EQUIVALENT	retail DELETE omits dead null store into the slot erased next
+?render@decal_instance@0vostok@@AAEXPAVrenderer_context@02@W4enum_render_stage_type@02@@Z	EQUIVALENT	identical after regalloc
 ?render@grass_patch@0vostok@@QAEXPAUgrass_world@02@PAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IMPAVres_effect@02@I@Z	EQUIVALENT	immediate via register
 ?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
 ?render@renderer@0vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$rectangle@Vfloat2@math@vostok@@@math@2@ABV?$function@$$A6AX_N@Z@boost@@_NPBUfont@ui@2@@Z	FIXED	info->dips used signed max(s32); retail +0x8d6 calls max(u32,u32). Also flash present arg: retail +0x79a passes empty()?0:begin
@@ -321,6 +322,7 @@ mangled	verdict	evidence
 ?set_default_values@options@render@vostok@@QAEXXZ	EQUIVALENT	immediate store vs register
 ?set_model_material@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVvirtual_path_string@fs_new@4@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@64@@Z	EQUIVALENT	boost assign_to call vs inline; ICF reps
 ?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?set_properties@decal_instance@render@vostok@@QAEXABUdecal_properties@23@@Z	EQUIVALENT	identical after regalloc
 ?set_properties@environment_probe@render@vostok@@QAEXABUenvironment_probe_properties@23@@Z	EQUIVALENT	retail memsets the matrix before identity(); same result
 ?set_size@render_output_window@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	base set_size constprop-specialised for force_resize=true (only caller passing false is unreferenced); retail generic guard matches source
 ?set_size@res_render_output@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	math::max inlined in retail (cmp/sbb select); GetSystemMetrics via register in base
