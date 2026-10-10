@@ -56,6 +56,7 @@ mangled	verdict	evidence
 ??1portal_sector_structure@culling@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1render_model@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
+??1scene_manager@render@vostok@@QAE@XZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ??1stage_accumulate_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical
 ??1stage_apply_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_atmosphere@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor reps; LTCG conv
