@@ -276,9 +276,11 @@ mangled	verdict	evidence
 ?render_rain_shadow_map@stage_pre_rain@render@vostok@@AAE?AVfloat4x4@math@3@XZ	EQUIVALENT	mul4x3 argument order/scheduling; same matrices
 ?render_shadowed_light@stage_lights@render@vostok@@AAEXPAVlight@23@@Z	EQUIVALENT	view_matrix_parameters table addressed at same relative offsets; operand order of commutative adds only
 ?render_speedtree_lighting@stage_lights@render@vostok@@AAEXPBUlod_entry@23@PBVCInstance@SpeedTree@@PBUSInstanceLod@6@PAVspeedtree_tree_component@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant and speedtree get_material_effects; same float op count
+?render_subuv_sprites@render_particle_emitter_instance@render@vostok@@QAEXXZ	EQUIVALENT	addressing only
 ?render_to_hw_shadowmap@stage_lights@render@vostok@@AAEXPAVlight@23@IMIIABVfloat4x4@math@3@1I@Z	EQUIVALENT	retail calls res_effect::apply where base inlines apply_pass; static_shadows?1:0 vs bool push; size()!=0 vs pointer compare
 ?render_to_rms@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABVfloat4x4@53@1V?$vector@Vfloat4x4@math@vostok@@@23@I@Z	EQUIVALENT	shared tail (reset RTs, viewport, pop_v/pop_p) placed before the else loop in retail; same paths
 ?render_to_rms_smoothed2@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABVfloat4x4@53@1V?$vector@Vfloat4x4@math@vostok@@@23@III@Z	EQUIVALENT	vector::erase called vs inlined; same geometry checks
+?render_trails@render_particle_emitter_instance@render@vostok@@QAEXABVfloat3@math@3@PAUbase_particle@particle@3@I@Z	EQUIVALENT	commutative add/mul order in trail vertex math
 ?reset@backend@render@vostok@@QAEXXZ	EQUIVALENT	flush_rt_views inlined in retail
 ?reset_renderer@world@engine@render@vostok@@QAEX_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?resize@res_render_output@render@vostok@@QAEX_NII0@Z	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
@@ -286,6 +288,7 @@ mangled	verdict	evidence
 ?select_lod@static_render_model_instance@render@vostok@@IAEEABVfloat4x4@math@3@ABVfloat3@53@@Z	EQUIVALENT	regalloc+schedule; same arithmetic sequence
 ?select_models@portal_sector_system@culling@render@vostok@@QAEXPAUspace_partitioning_tree@collision@4@ABVfloat3@math@4@ABVfloat4x4@84@AAV?$vector@PAUrender_surface_instance@render@vostok@@@34@@Z	EQUIVALENT	ICF _Destroy rep; plane distance adds reordered commutatively
 ?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
+?set@subuv_particle_sprite_vertex@render@vostok@@QAEXVfloat3@math@3@Vfloat4@53@Vfloat2@53@2MM021@Z	EQUIVALENT	identical after regalloc
 ?set_children@grass_render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	same fallthrough switch over lods
 ?set_children@render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	schedule only
 ?set_default_values@options@render@vostok@@QAEXXZ	EQUIVALENT	immediate store vs register
