@@ -133,7 +133,7 @@ mangled	verdict	evidence
 ?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
 ?execute@stage_ambient_occlusion@render@vostok@@UAEXXZ	EQUIVALENT	retail merges the two final fill_surface call sites; same arguments per path
 ?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
-?execute@stage_atmosphere@render@vostok@@UAEXXZ	OPEN	angle_in_rad: retail multiplies by 1/180 then by the math::pi memory constant (+0x67d, +0x684); base folds pi/180 into one constant. Same source; math::pi declaration differs (header)
+?execute@stage_atmosphere@render@vostok@@UAEXXZ	FIXED	angle folded to x*(pi/180); retail +0x67d fmul 1/180 then +0x684 fmul [pi] is math::deg2rad, which now reproduces it
 ?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
 ?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (get_rt, intrusive_ptr dtor, res_effect::apply)
