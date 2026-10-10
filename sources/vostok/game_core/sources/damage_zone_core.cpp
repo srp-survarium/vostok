@@ -215,7 +215,7 @@ float dz_bone_data_contact_test_predicate::add_single_result(
 			return 0.0f;
 	}
 
-	float max_distance = 1.0f;
+	float max_distance = 0.0f;
 	switch ( second_shape_type )
 	{
 	case physics::primitive_sphere:
