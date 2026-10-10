@@ -42,6 +42,7 @@ mangled	verdict	evidence
 ?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
 ?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z	EQUIVALENT	LTCG/prologue only
 ?write@writer@memory@vostok@@UAEXPBXI@Z	EQUIVALENT	identical after regalloc
+allocate_arenas	EQUIVALENT	identical after regalloc
 extrapolated_slerp	EQUIVALENT	compare form/branch layout only
 line_line_intersect_non_parallel	EQUIVALENT	symbolic store comparison equal
 slerp_optimized	EQUIVALENT	retail acosf/sinf (x87 _CIacos/_CIsin wrappers) vs base __libm_sse2 double acos/sin; both double-precision results rounded to float
