@@ -69,6 +69,7 @@ mangled	verdict	evidence
 ??Rremove_model_if_not_skeletal_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	branch layout only
 ??Rremove_model_skeletal_filter_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	identical after regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
+??_Grender_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
