@@ -1,9 +1,13 @@
 mangled	verdict	evidence
+??0bt_ghost_object@physics@vostok@@QAE@V?$resource_ptr@Vbt_collision_shape@physics@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAVbtPairCachingGhostObject@@@Z	EQUIVALENT	retail inlines resource_ptr copy ctor (addref at +0xD0); base calls it
 ??0bt_static_rigid_body@physics@vostok@@QAE@V?$resource_ptr@Vbt_collision_shape@physics@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAVbtRigidBody@@@Z	EQUIVALENT	retail inlines resource_ptr copy ctor (addref at +0xD0); base calls it
 ??0bullet_physics_world@physics@vostok@@QAE@AAVbase_allocator@memory@2@AAUengine@12@@Z	EQUIVALENT	schedule only
 ?adjust_foot_transform@bullet_physics_world@physics@vostok@@QAE_NABVfloat3@math@3@00MMAAVfloat4x4@53@@Z	FIXED	hit-fraction and angle tests: retail +0x259/+0x3a3 comiss eps,|x|; ja skip (NaN proceeds); source now !math::is_zero(x)
 ?apply_impulse@bt_static_rigid_body@physics@vostok@@UAEXABVfloat3@math@3@0@Z	EQUIVALENT	load order only
 ?contact_pair_test@bullet_physics_world@physics@vostok@@QAEXAAUcontact_test_predicate@23@PAVbtCollisionObject@@1@Z	OPEN	no base instance: uncalled in our build so not emitted; source body reads identical to the retail asm
+?contact_test@bt_ghost_object@physics@vostok@@QAEXPAUworld@23@PAVbase_physics_object@23@AAUcontact_test_predicate@23@@Z	EQUIVALENT	LTCG conv (this on stack, colObjB in edi into contactPairTest) and schedule; same loads and callback fields
+?contact_test@bt_ghost_object@physics@vostok@@QAE_NPAUworld@23@@Z	EQUIVALENT	call register only
+?create_ghost_object@physics@vostok@@YAPAVbt_ghost_object@12@V?$resource_ptr@Vbt_collision_shape@physics@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABVfloat4x4@math@2@@Z	EQUIVALENT	retail inlines resource_ptr copy ctor (addref at +0xD0); base calls it
 ?create_static_rigid_body@physics@vostok@@YAPAVbt_static_rigid_body@12@ABUbt_rigid_body_construction_info@12@@Z	FIXED	mass test lost retail NaN order: retail +0x4f comiss eps,|m|; ja (NaN mass computes inertia); source now !math::is_zero(m_mass)
 ?debug_draw_world@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	retail rebuilds the 3-colour table per iteration, base copies a hoisted copy; same 0.3/0 values
 ?destroy@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	call register only
