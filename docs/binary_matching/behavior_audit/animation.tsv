@@ -45,6 +45,7 @@ mangled	verdict	evidence
 ?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z	EQUIVALENT	ratio sign as 1.0/-1.0 multiply vs negate (exact); same offsets
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0@Z	EQUIVALENT	LTCG ret size
 ?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@@Z	EQUIVALENT	LTCG register params and stack layout; same new_animation args, clone loop, sort and add_animation_node
+?on_bi_spline_animation_arrived@skeleton_animation_cook@animation@vostok@@CAXAAVqueries_result@resources@3@@Z	EQUIVALENT	identical after regalloc
 ?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z	EQUIVALENT	symbolic store comparison equal up to commutative operand order; ICF reps
 ?process_interpolators@n_ary_tree_converter@mixing@animation@vostok@@AAEXQAUbinary_tree_base_node@234@IAAVmutable_buffer@4@@Z	EQUIVALENT	identical after regalloc
 ?remove_animation@n_ary_tree@mixing@animation@vostok@@AAEXAAPAVn_ary_tree_animation_node@234@PAV5234@@Z	EQUIVALENT	time-list unlink via pointer-to-link vs prev pointer; same unlink, LTCG ret size
