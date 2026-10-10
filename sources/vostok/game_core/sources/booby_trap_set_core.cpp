@@ -228,7 +228,7 @@ bool booby_trap_set_core::get_visible_place_transform( float4x4& result )
 	);
 	const float slope_cos = ray_result.hit_normal_world.y;
 
-	if ( slope_cos >= config( ).max_slope_cos )
+	if ( config( ).max_slope_cos > slope_cos )
 	{
 		result = looking_point_matrix;
 		return false;
