@@ -1,4 +1,5 @@
 mangled	verdict	evidence
+??$?0Vanimation_lexeme@mixing@animation@vostok@@V0123@@addition_lexeme@mixing@animation@vostok@@QAE@AAVanimation_lexeme@123@0@Z	EQUIVALENT	ICF reps
 ??$propagate@Vn_ary_tree_animation_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDPBVanimation_interval@123@2QAVanimation_lexeme@123@3@Z	EQUIVALENT	ICF reps
