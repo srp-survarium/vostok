@@ -2,8 +2,12 @@ mangled	verdict	evidence
 ??0animated_object@collision@vostok@@QAE@ABVbinary_config_value@configs@2@ABV?$resource_ptr@Vskeleton@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@IAAVstack_allocator@memory@2@@Z	EQUIVALENT	symbolic store comparison equal; addressing form only
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVbox_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined matrix-vector transform sums row terms in a different order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVbox_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVbox_geometry_instance@23@ABVsphere_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcapsule_geometry_instance@23@ABVsphere_geometry_instance@23@@Z	EQUIVALENT	schedule only (axis loaded via pre-advanced pointer)
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length/dot term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@ABVbox_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@ABVsphere_geometry_instance@23@@Z	EQUIVALENT	load order only; symbolic store comparison equal
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVbox_geometry_instance@23@@Z	EQUIVALENT	symbolic store comparison equal; relocated constant address
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
