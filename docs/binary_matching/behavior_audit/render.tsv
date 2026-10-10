@@ -49,6 +49,7 @@ mangled	verdict	evidence
 ??1stage_rain@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
 ??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_volume_fog@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
 ??Aeffect_options_descriptor@render@vostok@@QAEAAU012@PBD@Z	EQUIVALENT	identical after regalloc
 ??Mrender@vostok@@YA_NABUbinary_shader_key_type@01@0@Z	EQUIVALENT	retail inlines identity accessors (ICF reps in base)
 ??Rconstant_buffer_predicate@resource_manager@render@vostok@@QBE_NQBVshader_constant_buffer@23@0@Z	EQUIVALENT	branch inversion and setne vs jne tail; same comparison order
@@ -56,6 +57,7 @@ mangled	verdict	evidence
 ??Rremove_model_if_not_skeletal_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	branch layout only
 ??Rremove_model_skeletal_filter_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	identical after regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
+??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
 ?accumulate_local_reflections@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
 ?accumulate_motion_vectors@stage_postprocess@render@vostok@@AAEXXZ	EQUIVALENT	ICF _Destroy reps
