@@ -8,6 +8,7 @@ mangled	verdict	evidence
 ?get_similar@console_commands@vostok@@YAIPBDPAPAVconsole_command@12@I@Z	EQUIVALENT	branch layout only
 ?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	same (b-a)*t+a per component with pointer registers swapped
 ?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	branch layout only
+?segment_to_segment_distance@math@vostok@@YAMABVfloat3@12@000@Z	OPEN	squared_length term order in the four inlined distances cannot be matched symbolically (pointer-register renaming); possible fp:fast reassociation
 ?set_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
 ?show_help@console_commands@vostok@@YAXPBD@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z	EQUIVALENT	LTCG/prologue only
@@ -15,5 +16,6 @@ mangled	verdict	evidence
 ?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
 ?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z	EQUIVALENT	LTCG/prologue only
 extrapolated_slerp	EQUIVALENT	compare form/branch layout only
+line_line_intersect_non_parallel	EQUIVALENT	symbolic store comparison equal
 slerp_optimized	EQUIVALENT	retail acosf/sinf (x87 _CIacos/_CIsin wrappers) vs base __libm_sse2 double acos/sin; both double-precision results rounded to float
 vostok::console_commands::save	EQUIVALENT	identical after regalloc
