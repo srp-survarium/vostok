@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+?set_support_email@debug@vostok@@YAXPBD@Z	EQUIVALENT	strcpy_s<64> template vs CRT _strcpy_s with 0x40 (same call)
