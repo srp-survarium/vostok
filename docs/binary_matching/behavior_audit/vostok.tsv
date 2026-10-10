@@ -30,6 +30,9 @@ mangled	verdict	evidence
 ??$try_get@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@?$variant@$0CA@@vostok@@QAE_NAAV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@1@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ??$try_get@Vbinary_config_value@configs@vostok@@@?$variant@$0CA@@vostok@@QAE_NAAVbinary_config_value@configs@1@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ??$try_get@W4affects_applying_type_enum@survarium@@@?$variant@$0CA@@vostok@@QAE_NAAW4affects_applying_type_enum@survarium@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
+??0?$fixed_string@$0BA@@vostok@@QAE@PBD@Z	EQUIVALENT	LTCG ret size
+??4?$fixed_string@$0BAE@@vostok@@QAEABV01@ABV01@@Z	EQUIVALENT	buffer_string::operator= vs inlined memcpy of the same string
+??4buffer_string@vostok@@QAEABV01@ABV01@@Z	EQUIVALENT	identical after regalloc
 ?allocate@?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@QAEPAXXZ	EQUIVALENT	ICF reps
 ?append@buffer_string@vostok@@QAEAAV12@PBD0@Z	EQUIVALENT	identical after regalloc
 ?call@?$call_constructor_helper@Ucloud_key_parameters@render@vostok@@$0A@@detail@memory@vostok@@SAXQAUcloud_key_parameters@render@4@0@Z	EQUIVALENT	same per-field constants (0, 3200, 7, 1, 0.5, 0/1) stored in another order
