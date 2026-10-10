@@ -117,7 +117,8 @@ Files
   resources/                                     must exist (empty)
   dxvk/                                          DXVK 2.7.1 (zlib licence), used by play.sh only
 
-Settings and crash reports go to Documents/survarium (inside the Wine prefix on Linux).
+Settings and crash reports go to Documents/survarium (on Linux, Wine maps this to
+your home folder's Documents).
 TXT
 
 ( cd "$out" && sha256sum binaries/Win32/* resources.db dxvk/* Play.bat play.sh > SHA256SUMS )
