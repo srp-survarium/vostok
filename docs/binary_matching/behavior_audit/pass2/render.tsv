@@ -7,6 +7,8 @@ mangled	verdict	evidence
 ??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	confirms pass 1: regalloc/schedule only (normalised op, constant, call, member and FP-expression multisets identical)
 ??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	confirms pass 1: regalloc
 ??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	confirms pass 1: regalloc/schedule only (normalised op, constant, call, member and FP-expression multisets identical)
+?calculate_needed_texture_mip_levels@render@vostok@@YAHABVfloat4x4@math@2@ABVfloat3@42@ABVsphere@42@IIMAAM@Z	FIXED	screen size computed (max(f,eps)/(2r))*max(sx,sy); retail +0x11d..0x121 divides max(sx,sy) by 2r then multiplies by max(f,eps); parenthesised source reproduces it
+?calculate_streaming_texture_factor@render@vostok@@YAMPBVfloat3@math@2@PBVfloat2@42@IIPBGI@Z	EQUIVALENT	confirms pass 1: index loads from pre- vs post-incremented pointer; same triangle edge products and -0.05 scaling
 ?create_targets@renderer_context_targets@render@vostok@@AAEXVuint2@math@3@_N@Z	FIXED	memory usage log printed bytes; retail +0xbb1..0xbc1 pushes m_memory_usage>>20 as a u64 (push 0 high half): m_memory_usage / Mb
 ?draw_debug@renderer@render@vostok@@QAEXPAVscene@23@PAVscene_view@23@MPBUfont@ui@3@@Z	EQUIVALENT	confirms pass 1: grass_world::render_debug guard partial-inlined in base (s_draw_grass_debug_value); cvtps2pd scheduling
 ?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	EQUIVALENT	confirms pass 1: retail calls color_rgba ((0,1,0,1), (0.5,0.5,0.7,1) via nscl/0.7 args), base inlines it; histogram scales and FP expressions identical
