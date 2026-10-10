@@ -122,7 +122,7 @@ animation::mixing::expression player_logic_crouch_state::get_recoil_animation_le
 
 	animation::mixing::animation_lexeme_parameters	recoil_lexeme_parameters( buffer, additive_animation_id, additive_animation, 0, 0 );
 
-	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * math::min( 1.0f, math::abs( coeff ) );
+	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * math::min( math::abs( coeff ), 1.0f );
 
 	animation::mixing::animation_lexeme	lexeme(
 		recoil_lexeme_parameters
