@@ -333,7 +333,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	{
 		start			= result.c.xyz( ) + foot_to_cube_center_offset * dist_to_test;
 		finish			= result.c.xyz( );
-		original_color.set_B( 0x64u );
+		original_color.r = fixed_color.g = 0x64;
 	}
 
 	float4x4 const&			foot_to_center_rel				= math::get_relative_matrix( foot_world_matrix, result );
