@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+??Rcompare_nodes@logging@vostok@@QBE_NABVnode_base@12@0@Z	EQUIVALENT	retail inlines buffer_string operator< (strcmp_s(left, right) == -1); base calls the noinline copy; ICF reps
+?set@node@logging@vostok@@QAEXPBDHIPAVbase_allocator@memory@3@1@Z	EQUIVALENT	base inlines fixed_string operator= self-assignment check (cannot trigger: local buffer); ICF reps
