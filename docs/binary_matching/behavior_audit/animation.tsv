@@ -10,6 +10,7 @@ mangled	verdict	evidence
 ?add_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@QAV5234@@Z	EQUIVALENT	LTCG param placement for new_animation; same clone/compare loop
 ?add_animation_node@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@PBUanimation_state@234@IM_N@Z	EQUIVALENT	identical after regalloc
 ?add_operands@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0PAPAUn_ary_tree_base_node@234@1_N@Z	EQUIVALENT	compare form/branch layout only
+?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z	EQUIVALENT	flag tested from register vs recomputed; tail-merged returns
 ?change_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0QAV5234@_N@Z	EQUIVALENT	branch layout of cloner calls only
 ?change_weight_synchronization_group@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	identical after regalloc
 ?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
@@ -25,6 +26,7 @@ mangled	verdict	evidence
 ?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	OPEN	NaN routing differs: retail +0x38f jb/+0x3da jae/+0x3f3 ja vs base jbe/jbe/jb (3 knot ternaries); inverting the source conditions compiles identically under fp:fast
 ?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z	EQUIVALENT	base constprops the 1.0 argument (fld1) where retail reads it; LTCG ret size
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
+?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z	OPEN	NaN-only: knot wrap test retail comiss len,cur/ja (+0x222) vs base comiss cur,len/jb; rest equal
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
 ?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	register renames and load order only
 ?merge_weight_asynchronous_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXQAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	push order only
