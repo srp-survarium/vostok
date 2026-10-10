@@ -223,6 +223,7 @@ mangled	verdict	evidence
 ?grass_layer_resources_ready@grass_world@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N@Z	EQUIVALENT	same float ops (x87 operand order)
 ?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
 ?init_collision@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	random offset: retail rounds the x87 product to float then SSE (rnd-0.25)+pos, base keeps x87 extended; same expression
+?initialize_post_process_parameters@material_manager@render@vostok@@QAEXPAUpost_process_parameters@23@V?$resource_ptr@Vmaterial@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	base pow(float4,float) is LTCG-specialised to 2.2 so the call omits the argument; rain/wet/density assignments identical
 ?inject_camera_occluders@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
 ?inject_lighting@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
 ?inject_occluder_geometry@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@ABVfloat3@math@3@1ABV?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
