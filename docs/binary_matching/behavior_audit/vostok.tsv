@@ -71,6 +71,7 @@ mangled	verdict	evidence
 ?get_token@strings@vostok@@YAPBDPBDPADID@Z	EQUIVALENT	ICF reps
 ?initialize_impl@?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@EAEXPAX_KPBD@Z	EQUIVALENT	ICF reps; interlocked exchange helper rep
 ?malloc_impl@?$single_size_buffer_allocator@$0IA@Vsimple_lock@threading@vostok@@@memory@vostok@@QAEPAXI@Z	EQUIVALENT	identical after regalloc
+?push_back@?$buffer_vector@V?$fixed_string@$0BI@@vostok@@@vostok@@QAEXABV?$fixed_string@$0BI@@2@@Z	EQUIVALENT	base push_back not emitted standalone (inlined at callers)
 ?r@reader@memory@vostok@@QAEXPAXII@Z	EQUIVALENT	argument load order only
 ?rtrim@buffer_string@vostok@@QAEXPBD@Z	EQUIVALENT	retail inlines buffer_string::ends_with; same trim loop
 ?set@?$intrusive_ptr@Vbooby_trap_core@survarium@@Vunmanaged_intrusive_base@resources@vostok@@Vsimple_lock@threading@5@@vostok@@AAEXPAVbooby_trap_core@survarium@@@Z	EQUIVALENT	ICF reps
