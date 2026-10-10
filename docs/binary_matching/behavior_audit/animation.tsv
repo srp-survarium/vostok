@@ -81,5 +81,6 @@ mangled	verdict	evidence
 ?visit@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_time_scale_transition_node@234@@Z	EQUIVALENT	identical after regalloc
 ?visit@n_ary_tree_weight_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_animation_node@234@@Z	EQUIVALENT	identical after regalloc
 ?visit@n_ary_tree_weight_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_weight_transition_node@234@@Z	EQUIVALENT	identical after regalloc
+?visit@n_ary_tree_weight_transition_end_time_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_animation_node@234@@Z	FIXED	retail +0x8c/+0xc2 compare min_weight with the 0.0 pool constant (0x974044), not float_max; source now compares with 0.f (structure match)
 add_bone	EQUIVALENT	ICF reps; register choice
 get_bones_count	EQUIVALENT	ICF reps

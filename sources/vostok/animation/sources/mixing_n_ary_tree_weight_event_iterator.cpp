@@ -21,7 +21,7 @@ namespace mixing {
 
 void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_animation_node& node )
 {
-	// claude@NOTE: target spills min_weight before the virtual call and reloads float_max; base hoists float_max into xmm2.
+
 	u32 const operands_count		= node.operands_count( );
 	n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_animation_node) );
 	n_ary_tree_base_node** const e	= i + operands_count;
@@ -42,13 +42,13 @@ void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_animati
 
 		if ( m_min_weight > min_weight ) {
 			m_min_weight			= min_weight;
-			if ( min_weight == math::float_max )
+			if ( min_weight == 0.f )
 				m_weight_transition_end_time_in_ms	= weight_transition_end_time;
 			else
 				m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
 		}
 		else if ( m_min_weight == min_weight ) {
-			if ( min_weight == math::float_max )
+			if ( min_weight == 0.f )
 				m_weight_transition_end_time_in_ms	= weight_transition_end_time;
 			else
 				m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
