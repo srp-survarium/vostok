@@ -343,9 +343,12 @@ mangled	verdict	evidence
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
 `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
+vostok::render::construct<vostok::render::effect_options_descriptor,vostok::render::custom_config_value>	EQUIVALENT	load order only
 vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::colored_static_vertex,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`3'::colored_opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
 vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::static_vertex0,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
 vostok::render::draw_text_shadowed	EQUIVALENT	inline-vs-call of color_rgba(0,0,0,1); LTCG conv for font arg
+vostok::render::fill_data<vostok::render::custom_config_value>	EQUIVALENT	identical after regalloc
+vostok::render::fill_data_crc_buffer<vostok::render::custom_config_value>	EQUIVALENT	identical after regalloc
 vostok::render::fill_source_vertices	EQUIVALENT	regalloc
 vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::colored_static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping (+0..+20, tangent/binormal 0)
 vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping
