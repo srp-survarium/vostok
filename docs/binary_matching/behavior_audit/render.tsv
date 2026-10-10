@@ -30,7 +30,7 @@ mangled	verdict	evidence
 ??0skeleton_mesh_gpu_skinning_2weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_3weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
 ??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
-??0sky_dome_geometry@render@vostok@@QAE@XZ	OPEN	move_xz: retail multiplies i by 1/15 then by deg2rad(100) (+0x7d, +0x89); base folds both into 0.116355. Source lever unknown (1-ulp angle difference)
+??0sky_dome_geometry@render@vostok@@QAE@XZ	OPEN	move_xz: retail fmul 1/15 then deg2rad(100) (+0x7d, +0x89); base folds to 0.116355 (1-ulp). See review_todos "Sky-dome angle multiplication partition"
 ??0speedtree_tree_component_branch@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
 ??0speedtree_tree_component_frond@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
 ??0speedtree_tree_component_leafcard@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	push/schedule order only
