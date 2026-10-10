@@ -109,6 +109,8 @@ Playing
   Equip a weapon before starting a match.
   F6 in a match toggles a free-flying camera (WASD + mouse); the console
   (the ` key) command demo_record does the same.
+  F7 (or the console command where) prints the map and your position and
+  adds it to where.txt in this folder; include that line in bug reports.
 
 The maps in this package and their chat names are listed in MAPS.txt.
 
