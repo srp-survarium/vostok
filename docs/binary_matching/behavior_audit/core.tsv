@@ -1,3 +1,9 @@
 mangled	verdict	evidence
+??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	EQUIVALENT	retail tail-duplicates the case blocks; same sqrt/sqrt_safe calls; tolerance tests via SSE (xmm return) vs x87
 ?set_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
+?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z	EQUIVALENT	LTCG/prologue only
+?sqrt_safe@@YAMM@Z	EQUIVALENT	retail returns in xmm0 (LTCG) vs x87; same NaN routing (sqrt for unordered)
 ?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
+?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z	EQUIVALENT	LTCG/prologue only
+extrapolated_slerp	EQUIVALENT	compare form/branch layout only
+slerp_optimized	EQUIVALENT	retail acosf/sinf (x87 _CIacos/_CIsin wrappers) vs base __libm_sse2 double acos/sin; both double-precision results rounded to float
