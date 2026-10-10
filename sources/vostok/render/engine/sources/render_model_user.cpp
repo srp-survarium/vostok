@@ -88,7 +88,7 @@ void user_render_model_instance::get_surface_stats( u32 surface_id, surface_stat
 void user_render_surface_editable::load_from_chunk_data( memory::chunk_reader& chunk )
 {
 
-	m_vertex_input_type			= render::null_vertex_input_type;
+	m_vertex_input_type			= render::user_vertex_input_type;
 	m_aabbox.min				= float3(-10.0f, -10.0f, -10.0f);
 	m_aabbox.max				= float3(10.0f, 10.0f, 10.0f);
 	memory::reader reader		= chunk.open_reader( model_texture);
