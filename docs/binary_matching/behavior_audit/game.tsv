@@ -18,7 +18,9 @@ mangled	verdict	evidence
 ?action@booby_trap_set@survarium@@EAEX_N@Z	EQUIVALENT	same calls/offsets; scheduling
 ?action_name_to_ptr@key_binder@survarium@@AAEPAUgame_action_descr@2@PBD@Z	EQUIVALENT	log __LINE__ only (0x12C vs 0x120); CRT ICF naming
 ?activate@weapon@survarium@@EAEXAAUbase_player@2@AAUengine@2@@Z	EQUIVALENT	boost::function ICF helper names; same calls/offsets (+0x278 vs +0x284 = ICF state table)
+?add_message@chat_handler@survarium@@QAEXW4message_channel_enum@messaging@@PB_W1@Z	EQUIVALENT	inline-vs-call flash_value::SetString/operator=; regalloc
 ?add_models_to_scene@player@survarium@@AAEXXZ	EQUIVALENT	renderer/scene pointer reload vs hoist; same calls/offsets
+?add_to_recent_list@chat_handler@survarium@@QAEXPB_W@Z	EQUIVALENT	LTCG conv (this on stack vs esi)
 ?allocate_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vdouble_barreled_weapon_core_hide_state@survarium@@@survarium@@@survarium@@EAE?AVmutable_buffer@vostok@@AAVquery_result_for_cook@resources@4@Vconst_buffer@4@_N@Z	EQUIVALENT	mutable_buffer ctor ICF naming; same allocation/calls
 ?allocate_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vpistol_weapon_core_aimed_fire_state@survarium@@@survarium@@@survarium@@EAE?AVmutable_buffer@vostok@@AAVquery_result_for_cook@resources@4@Vconst_buffer@4@_N@Z	EQUIVALENT	mutable_buffer ctor ICF naming; same allocation/calls
 ?allocate_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vpistol_weapon_core_reload_state@survarium@@@survarium@@@survarium@@EAE?AVmutable_buffer@vostok@@AAVquery_result_for_cook@resources@4@Vconst_buffer@4@_N@Z	EQUIVALENT	mutable_buffer ctor ICF naming; same allocation/calls
@@ -31,6 +33,7 @@ mangled	verdict	evidence
 ?apply_use_physics_controller_for_current@network_client@survarium@@EAEXXZ	EQUIVALENT	fixed 20-element walk vs begin/end loop with empty-range precheck; same refcount/call sequence
 ?assign_binding@game_options@survarium@@AAEXW4game_action_id@2@PBD@Z	EQUIVALENT	Scaleform type constants/register materialization; global table address differs only by image layout
 ?calculate_locator@weapon@survarium@@AAE?AVfloat4x4@math@vostok@@ABUmodel_locator_item@render@5@PBV345@I@Z	EQUIVALENT	math::mul4x3 inline-vs-call; same FP
+?call@chat_handler@survarium@@UAEXAAUflash_function_handler_params@2@@Z	EQUIVALENT	pArgs[1] read before has_bandwidth vs after (pure); regalloc
 ?call@options_monitor_index_selector@survarium@@UAEXAAUflash_function_handler_params@2@@Z	EQUIVALENT	calls refill_resolutions_data (inlined); fixed there
 ?call@relocate_item_func@survarium@@UAEXAAUflash_function_handler_params@2@@Z	FIXED	retail reads GetArraySize once as u8 (0x110 call [edx+28h]; test al,al; countdown); ours re-read it each pass. check_compatibility unconditional in retail (pure)
 ?callback@game_options@survarium@@UAEXPAUflash_movie@2@PBDPBUflash_value@2@I@Z	EQUIVALENT	same 41-statement dispatch, calls, literals, offsets
@@ -77,6 +80,7 @@ mangled	verdict	evidence
 ?fill_stats@human_npc@survarium@@QBEXAAUnpc_statistics@ai@vostok@@@Z	EQUIVALENT	inline-vs-call fixed_string::operator=(char const*)
 ?finish_npc_creation@game_world@survarium@@AAEXAAV?$resource_ptr@Vhuman_npc@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@AAUnpc_game_attributes@human_npc@2@@Z	EQUIVALENT	LTCG conv: this in ecx vs eax, same 18 instructions/callees
 ?fire_animation_time_scale_calculator@survarium@@YAMABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@ABUweapon_state_creation_params@1@@Z	EQUIVALENT	no body statements compared; same FP ops and offsets
+?focus@chat_handler@survarium@@QAEX_N@Z	EQUIVALENT	tail call vs call of add/remove_handler; frame alignment
 ?fov_factor@player@survarium@@QBEMI@Z	EQUIVALENT	LTCG return convention: retail SSE xmm0, base x87 st0; same (target-start)*interp+start order and >= test
 ?get_action_dik@key_binder@survarium@@QAEHW4game_action_id@2@H@Z	EQUIVALENT	same lookups/calls; scheduling
 ?get_binding_group@key_binder@survarium@@QAEHW4game_action_id@2@@Z	EQUIVALENT	base inlines it into callers (no standalone base body)
@@ -127,6 +131,7 @@ mangled	verdict	evidence
 ?on_hide@weapon@survarium@@EAEXXZ	EQUIVALENT	same remove_model selection (aimed +0x10C / idle +0x108) and flags; safe-bool ICF
 ?on_hit_from_pos@game_world_ui@survarium@@QAEXVfloat3@math@vostok@@@Z	EQUIVALENT	same FP and calls; scheduling
 ?on_items_compatibility_arrived@lobby_menu@survarium@@AAEXXZ	FIXED	count was cached in a u8 local (truncated); retail 0x50/0x1a2 cmp u8 i vs u32 [client+858h] each pass, no count local. Loop init folded into the for (record +6)
+?on_keyboard_action@chat_handler@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	FIXED	retail 0x9d tests only m_chat_ui (raw ptr + safe-bool const); ours also required m_chat_ui->movie != NULL before process_keyboard
 ?on_keyboard_action@game_options@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	same calls/offsets; scheduling
 ?on_keyboard_action@lobby_menu@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	compare chain (retail) vs jump table (base) over the same kCHARACTER/kSHOP/kINVENTORY/kFRIENDS handlers
 ?on_ladders_loaded@project_cooker_simple@survarium@@AAEXPAVsimple_game_project@2@AAVqueries_result@resources@vostok@@@Z	EQUIVALENT	regalloc+schedule; LTCG conv at set_unmanaged_resource (memory_usage by value vs by ref)
@@ -226,7 +231,9 @@ mangled	verdict	evidence
 ?set_base_capture_progress@game_world_ui@survarium@@QAEXII@Z	EQUIVALENT	retail tail-merges the two branches into one SetString/Invoke; same args per branch (owner/3, buff/"", percent)
 ?set_broken_connection_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; scheduling
 ?set_character_transform@player@survarium@@QAEXABVfloat3@math@vostok@@MM@Z	EQUIVALENT	math temporary scheduling/frame; same calls/offsets
+?set_local_player_name@chat_handler@survarium@@QAEXPBD@Z	EQUIVALENT	mbstowcs_s retval ptr: retail &dead local=0 vs NULL (no observable effect); frame
 ?set_match_time@game_world_ui@survarium@@QAEXI@Z	FIXED	second field subtracted in integers; retail 0x5b fsubr: float(time_left_ms) minus float(minutes*60000) before *0.001f (differs past 2^24 ms)
+?set_mode@chat_handler@survarium@@QAEX_N@Z	FIXED	retail 0x15c ObjectInterface vtbl+0x34 SetElement(data, i, value) per tab; ours PushBack (+0x3C). Rest: inline-vs-call Value::operator=
 ?set_next_ammo_type@weapon@survarium@@EAEXXZ	EQUIVALENT	same compare/offsets; register use
 ?set_player_online_status@game_world_ui@survarium@@QAEXI_N@Z	EQUIVALENT	CRT ICF naming; same calls
 ?set_player_skills@lobby_client@survarium@@QAEXAAV?$vectora@Uplayer_skill@survarium@@@vostok@@AAV?$vectora@E@4@@Z	EQUIVALENT	boost::get_pointer ICF naming; same calls
