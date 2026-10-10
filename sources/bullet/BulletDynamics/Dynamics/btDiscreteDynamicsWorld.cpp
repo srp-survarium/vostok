@@ -863,7 +863,7 @@ void	btDiscreteDynamicsWorld::integrateTransforms(btScalar timeStep)
 
 			
 
-			if (getDispatchInfo().m_useContinuous && body->getCcdSquareMotionThreshold() && body->getCcdSquareMotionThreshold() < squareMotion)
+			if (getDispatchInfo().m_useContinuous && body->getCcdSquareMotionThreshold() > btScalar(0.) && body->getCcdSquareMotionThreshold() < squareMotion)
 			{
 				BT_PROFILE("CCD motion clamping");
 				if (body->getCollisionShape()->isConvex())

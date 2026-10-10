@@ -1,2 +1,3 @@
 mangled	verdict	evidence
+?integrateTransforms@btDiscreteDynamicsWorld@@MAEXM@Z	FIXED	CCD gate lost retail NaN order: retail +0x11a comiss sqThreshold,0; jbe skips NaN; base ucomiss/jnp treated NaN as set; now > 0, function at 100%
 ?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	retail compound branch has no non-dbvt fallback (+0x15c1 je to profile exit when dbvt is NULL); base else-loop recurses per child; retail still emits the else-scope LocalInfoAdder
