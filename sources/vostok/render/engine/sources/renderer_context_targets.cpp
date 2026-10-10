@@ -272,7 +272,7 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	new_rt( rt_mie_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 	new_rt( rt_rayleigh_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 
-	LOG_INFO( "render targets memory usage: %d", m_memory_usage );
+	LOG_INFO( "render targets memory usage: %d", m_memory_usage / Mb );
 
 	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_previous].target, 0, 0, 0 );
 	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
