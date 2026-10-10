@@ -193,6 +193,7 @@ mangled	verdict	evidence
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
 ?on_layers_loaded@grass_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_cook_data@23@@Z	EQUIVALENT	stack realignment and addressing
 ?on_material_ready@material_effects_instance_cook@render@vostok@@QAEXAAVqueries_result@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?on_properties_changed@light@render@vostok@@QAEXXZ	EQUIVALENT	collision setup per light type with tail merging/inline differences; same transforms and calls per case
 ?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
 ?on_resources_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	data[2+i*3] walked via base+0x5F0 step 0x2D0 vs base+0x99C-0x2D4; same elements
 ?on_skeleton_config_loaded@skeleton_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUskeleton_model_instance_cook_data@23@@Z	EQUIVALENT	ICF intrusive_ptr::set rep
@@ -291,6 +292,7 @@ mangled	verdict	evidence
 ?update_model_vertex_buffer@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$vectora@Ubuffer_fragment@render@vostok@@@4@@Z	EQUIVALENT	identical after regalloc
 ?update_portals_visability@portal_sector_structure@culling@render@vostok@@QAEXABVfrustum@math@4@PBE@Z	EQUIVALENT	identical after regalloc
 ?update_targets@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?xform_calc@light@render@vostok@@QAEXXZ	EQUIVALENT	schedule only (trailing jump-table bytes differ)
 `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
 `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
 `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
