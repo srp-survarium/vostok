@@ -1,5 +1,6 @@
 mangled	verdict	evidence
 ??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	EQUIVALENT	retail tail-duplicates the case blocks; same sqrt/sqrt_safe calls; tolerance tests via SSE (xmm return) vs x87
+??0thread_local_data@resources@vostok@@QAE@IPAVbase_allocator@memory@2@@Z	EQUIVALENT	retail inlines fixed_string<32> ctor (same stores to +230/+234/+238/+23C); base calls it
 ??1text_tree@strings@vostok@@QAE@XZ	EQUIVALENT	base inlines ~text_tree_item (clear + two DeleteCriticalSection)
 ??1text_tree_item@strings@vostok@@QAE@XZ	EQUIVALENT	LTCG/prologue only
 ?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z	EQUIVALENT	LTCG ret size
