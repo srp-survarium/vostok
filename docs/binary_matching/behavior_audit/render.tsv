@@ -72,6 +72,7 @@ mangled	verdict	evidence
 ??_Grender_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gstage_forward@render@vostok@@UAEPAXI@Z	EQUIVALENT	base deleting dtor not emitted standalone (folded/inlined)
+??_Gstage_pre_rain@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
 ?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
 ?accumulate_local_reflections@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
