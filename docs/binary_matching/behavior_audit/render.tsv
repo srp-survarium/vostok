@@ -38,6 +38,7 @@ mangled	verdict	evidence
 ??0stage_clouds@render@vostok@@QAE@PAVrenderer@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@PAVrenderer_context@12@@Z	EQUIVALENT	commutative multiply operand placement
 ??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
 ??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
+??0stage_sun@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@@Z	EQUIVALENT	retail calls CRT sinf where base uses the fsin intrinsic (same argument)
 ??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
 ??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
 ??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
@@ -173,6 +174,7 @@ mangled	verdict	evidence
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
 ?execute@stage_resolve_lighting@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
+?execute@stage_sun@render@vostok@@UAEXXZ	EQUIVALENT	addressing only (trailing jump-table bytes differ)
 ?execute@stage_translucency@render@vostok@@UAEXXZ	EQUIVALENT	transform_direction operands from memory vs register; same products
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
 ?execute@stage_volume_fog@render@vostok@@UAEXXZ	EQUIVALENT	inside-box flag materialised vs branched; same six compares
