@@ -179,10 +179,10 @@ void legs_ik_processor::process_leg(
 			knee_obj_matrix * transform,
 			leg_obj_matrix * transform,
 			foot_obj_matrix * transform,
-			math::color( 0x64u, 0x64u, 0x64u ),
 			math::color( 0x64u, 0x00u, 0x00u ),
-			math::color( 0x00u, 0x00u, 0x64u ),
 			math::color( 0x00u, 0x64u, 0x00u ),
+			math::color( 0x00u, 0x00u, 0x64u ),
+			math::color( 0x64u, 0x64u, 0x64u ),
 			0.0f );
 
 	float3 const&			target_up_leg_to_foot_dir		= math::normalize( target_foot_obj_matrix.c.xyz( ) - up_leg_obj_matrix.c.xyz( ) );
@@ -232,16 +232,16 @@ void legs_ik_processor::process_leg(
 			knee_obj_matrix * transform,
 			leg_obj_matrix * transform,
 			foot_obj_matrix * transform,
-			math::color( 0x96u, 0x96u, 0x96u ),
 			math::color( 0xFFu, 0x00u, 0x00u ),
-			math::color( 0x00u, 0x00u, 0xFFu ),
 			math::color( 0x00u, 0xFFu, 0x00u ),
+			math::color( 0x00u, 0x00u, 0xFFu ),
+			math::color( 0x96u, 0x96u, 0x96u ),
 			0.0f );
 
 		if ( params.is_heel_on_ground( ) )
 		{
 			float3 const&	foot_pos	= transform.transform_position( target_foot_obj_matrix.c.xyz( ) );
-			m_drawer->draw_cross( foot_pos, s_ik_foot_capsule_radius_value, math::color( 0x00u, 0xFFu, 0x00u, 0x00u ), false );
+			m_drawer->draw_cross( foot_pos, 0.05f, math::color( 0xFFu, 0x00u, 0x00u ), false );
 		}
 
 		if ( params.is_toe_on_ground( ) )
@@ -308,7 +308,7 @@ float4x4 legs_ik_processor::get_foot_fixed_transform(
 	float3					foot_to_cube_center_offset( 0.0f, 1.0f, 0.0f );
 
 	float3					start, finish;
-	math::color				original_color( 0x80u, 0xc8u, 0x00u, 0x00u ), fixed_color( 0x80u, 0x00u, 0xc8u, 0x00u );
+	math::color				original_color( 0xc8, 0x00, 0x00, 0x80 ), fixed_color( 0x00, 0xc8, 0x00, 0x80 );
 	float					rotation_interpolation_koef		= 0.0f;
 
 	if ( params.is_full_on_ground( ) )
