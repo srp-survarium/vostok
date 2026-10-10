@@ -1,5 +1,7 @@
 mangled	verdict	evidence
 ?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
+?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z	EQUIVALENT	event_channels/knots_count inlined in retail; pinned_ptr const-ness only; same interval math
+?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z	EQUIVALENT	event_channels/knots_count inlined in retail; same intervals, tail and start-time clamp
 ?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	retail calls free_helper_impl with a null test; base calls allocator free directly (res already dereferenced by the dtor call)
 ?deserialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	computed_tree and get_next_buffer inlined in base; same buffer toggle and tree assignment
 ?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z	EQUIVALENT	ICF reps for boost bind/function helpers
