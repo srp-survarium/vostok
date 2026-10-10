@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	retail compound branch has no non-dbvt fallback (+0x15c1 je to profile exit when dbvt is NULL); base else-loop recurses per child; retail still emits the else-scope LocalInfoAdder
