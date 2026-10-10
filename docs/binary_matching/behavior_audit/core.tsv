@@ -1,6 +1,7 @@
 mangled	verdict	evidence
 ??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	EQUIVALENT	retail tail-duplicates the case blocks; same sqrt/sqrt_safe calls; tolerance tests via SSE (xmm return) vs x87
 ??0thread_local_data@resources@vostok@@QAE@IPAVbase_allocator@memory@2@@Z	EQUIVALENT	retail inlines fixed_string<32> ctor (same stores to +230/+234/+238/+23C); base calls it
+??1action_logger@resources@vostok@@QAE@XZ	EQUIVALENT	log __LINE__ only (absolute line drift)
 ??1manager@shared@strings@vostok@@QAE@XZ	EQUIVALENT	branch encoding only
 ??1text_tree@strings@vostok@@QAE@XZ	EQUIVALENT	base inlines ~text_tree_item (clear + two DeleteCriticalSection)
 ??1text_tree_item@strings@vostok@@QAE@XZ	EQUIVALENT	LTCG/prologue only
@@ -36,6 +37,7 @@ mangled	verdict	evidence
 ?process_request_path@query_result@resources@vostok@@AAE_N_N@Z	EQUIVALENT	ICF reps (boost function2/function0 clear); push vs mov LTCG arg conv
 ?query_create_resource@resources@vostok@@YAIPBDVconst_buffer@2@W4class_id_enum@12@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@PAVbase_allocator@memory@2@PBV?$variant@$0CA@@2@PAVquery_result_for_cook@12@W4assert_on_fail_bool@@@Z	EQUIVALENT	LTCG/prologue only
 ?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	LTCG ret size
+?release_sub_fat_from_parents@resource_freeing_functionality@resources@vostok@@AAEXPAVvfs_sub_fat_resource@23@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?remove@manager@shared@strings@vostok@@QAEXPAVprofile@234@@Z	EQUIVALENT	identical after regalloc
 ?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	branch layout only
 ?segment_to_segment_distance@math@vostok@@YAMABVfloat3@12@000@Z	OPEN	squared_length term order in the four inlined distances cannot be matched symbolically (pointer-register renaming); possible fp:fast reassociation
