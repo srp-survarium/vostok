@@ -56,4 +56,5 @@ mangled	verdict	evidence
 ?get_axis_and_angle@quaternion@math@vostok@@QBE_NAAVfloat3@23@AAM@Z	EQUIVALENT	load/spill order only
 ?get_token@strings@vostok@@YAPBDPBDPADID@Z	EQUIVALENT	ICF reps
 ?initialize_impl@?$fixed_size_allocator@Ubase_particle@particle@vostok@@Vmutex@threading@3@@memory@vostok@@EAEXPAX_KPBD@Z	EQUIVALENT	ICF reps; interlocked exchange helper rep
+?r@reader@memory@vostok@@QAEXPAXII@Z	EQUIVALENT	argument load order only
 ?rtrim@buffer_string@vostok@@QAEXPBD@Z	EQUIVALENT	retail inlines buffer_string::ends_with; same trim loop
