@@ -1,2 +1,3 @@
 mangled	verdict	evidence
+?on_error@platform@debug@vostok@@YAXPA_NQADI0PAU_EXCEPTION_POINTERS@@W4error_type_enum@123@@Z	EQUIVALENT	base inlines boost::function assign; ICF reps; CRT import aliases; same non-boost call sequence
 ?set_support_email@debug@vostok@@YAXPBD@Z	EQUIVALENT	strcpy_s<64> template vs CRT _strcpy_s with 0x40 (same call)
