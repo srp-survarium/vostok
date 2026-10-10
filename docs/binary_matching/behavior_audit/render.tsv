@@ -129,6 +129,7 @@ mangled	verdict	evidence
 ?create_hw_shader@?$res_xs_hw@Ups_data@render@vostok@@@render@vostok@@QAEJPAUID3D10Blob@@@Z	EQUIVALENT	ICF parse_resources rep; log __LINE__ only (absolute line drift)
 ?create_hw_shader@?$res_xs_hw@Uvs_data@render@vostok@@@render@vostok@@QAEJPAUID3D10Blob@@@Z	EQUIVALENT	ICF parse_resources rep; log __LINE__ only (absolute line drift)
 ?create_input_layout@resource_manager@render@vostok@@QAEPAVres_input_layout@23@PBVres_declaration@23@PBVres_signature@23@@Z	EQUIVALENT	retail calls ICF ~res_input_layout rep for stack descriptor; base inlines same releases
+?create_resource@effect_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	ICF reps; log __LINE__ only (absolute line drift)
 ?create_resource@renderer_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	frame/stack layout; ICF intrusive_ptr::set rep
 ?create_resource@shader_binary_source_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	path append inline/ICF choices
 ?create_shadow_pass_geometry@static_render_surface@render@vostok@@QAEXPBEII@Z	EQUIVALENT	LTCG conv (ret 0Ch vs ret 8)
@@ -237,6 +238,7 @@ mangled	verdict	evidence
 ?measure_per_pixel_luminance@stage_postprocess@render@vostok@@AAEXPAVres_texture@23@AAVfloat4@math@3@@Z	EQUIVALENT	identical after regalloc
 ?merge_instances@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	resource_ptr temp zero-init and dead null store after FREE; same float op multiset
 ?new_rt@renderer_context_targets@render@vostok@@QAEXW4enum_render_target_index@23@W4DXGI_FORMAT@@Vuint2@math@3@W4enum_rt_usage@23@_N@Z	EQUIVALENT	identical after regalloc
+?on_binary_shaders@effect_cook@render@vostok@@QAEXPAVquery_result_for_cook@resources@3@PAVres_effect@23@PAUeffect_compile_data@23@AAVqueries_result@53@@Z	EQUIVALENT	identical after regalloc
 ?on_effect_ready@material_effects_instance_cook@render@vostok@@QAEXAAVqueries_result@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	retail inlines strings::equal comparisons
 ?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
 ?on_layers_loaded@grass_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_cook_data@23@@Z	EQUIVALENT	stack realignment and addressing
