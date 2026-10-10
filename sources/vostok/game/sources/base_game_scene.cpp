@@ -156,7 +156,7 @@ bool base_game_scene::point_to_screen( float3 const& p, float2& result )
 	result.x = ( pos.x + 1.f ) * half_width;
 	result.y = ( 1.f - pos.y ) * half_height;
 
-	return pos.z < 0.f && result.x > 0.f && result.y > 0.f && result.x < output_size.x && result.y < output_size.y;
+	return pos.z < 1.f && result.x > 0.f && result.y > 0.f && result.x < output_size.x && result.y < output_size.y;
 }
 
 swf_input_translator& base_game_scene::input_translator( )

@@ -179,6 +179,7 @@ mangled	verdict	evidence
 ?play_weapon_fire_pfx@weapon@survarium@@AAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
 ?play_weapon_shell_pfx@weapon@survarium@@QAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
 ?player_visibility_change@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	resource_ptr dtor out-of-line in retail; same calls
+?point_to_screen@base_game_scene@survarium@@QAE_NABVfloat3@math@vostok@@AAVfloat2@45@@Z	FIXED	visibility test: retail 0x13d comiss xmm5(clear_value=1.f),z; jbe -> pos.z < 1.f; ours compared z < 0.f (rejected on-screen points). Rest fp:fast transform sum order
 ?process_base_capture_progress@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	same reads/calls; constant materialization
 ?process_incoming_text_message@messaging_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	CRT ICF naming (mbstowcs_s); same calls
 ?process_initialize_victory_items@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	same calls; reload differences
@@ -234,9 +235,11 @@ mangled	verdict	evidence
 ?show_crosshair@weapon@survarium@@AAEXXZ	EQUIVALENT	base inlines it into callers; retail body = if m_game_ui show_crosshair(true)
 ?show_disconnected_message@lobby_menu@survarium@@AAEX_N@Z	EQUIVALENT	argument stack slot only; same calls/literals
 ?show_match_making@lobby_menu@survarium@@QAEX_N@Z	EQUIVALENT	Scaleform SetString/SetStringW/operator= inline-vs-call; retail reuses the L"0 sec" pointer; same literals/Invokes/offsets
+?show_movie@base_game_scene@survarium@@QAEXAAV?$resource_ptr@Uflash_movie_resource@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	EQUIVALENT	LTCG conv/frame, same SetViewport args and refcounted movie copy
 ?show_parametrized_message@game_world_ui@survarium@@QAEXPBDEEI@Z	EQUIVALENT	same calls/literals; scheduling
 ?show_players_list@game_world_ui@survarium@@QAEX_N@Z	EQUIVALENT	same calls/literals; scheduling
 ?show_screen_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; constant materialization
+?show_text_manager@base_game_scene@survarium@@QAEXPAUflash_text_manager@2@@Z	EQUIVALENT	register order of SetViewport args only
 ?show_ui@lobby_menu@survarium@@UAEX_N@Z	EQUIVALENT	same show/hide_movie and chat_handler calls/offsets; register allocation only
 ?sign_in_on_packet_received@lobby_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	log __LINE__ only (0x8D/0x9A vs 0x8A/0x91); same dispatch
 ?tick@booby_trap_set@survarium@@AAEXII@Z	EQUIVALENT	same calls/offsets; scheduling
