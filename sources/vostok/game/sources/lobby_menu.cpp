@@ -14,6 +14,7 @@
 #include "lobby_client.h"
 #include "messaging_client.h"
 #include "chat_handler.h"
+#include "offline_client.h"
 #include "camera_director.h"
 #include "lobby_camera.h"
 #include "profile_player_character.h"
@@ -68,6 +69,8 @@ void lobby_menu::on_activate( )
 	if ( lobby_client( ).net_connected( ) && get_game( ).get_network_client( )->has_bandwidth( ) )
 		query_lobby_info( );
 	get_game( ).get_chat_handler( ).set_mode( false );
+	if ( !get_game( ).get_network_client( )->has_bandwidth( ) )
+		static_cast< offline_client* >( get_game( ).get_network_client( ) )->open_map_chat( );
 }
 
 void lobby_menu::on_deactivate( )
@@ -110,6 +113,8 @@ void lobby_menu::show_ui( bool b_show )
 			show_movie( m_message_ui );
 			show_movie( m_cursor_ui );
 			get_game( ).get_chat_handler( ).show( this );
+			if ( !get_game( ).get_network_client( )->has_bandwidth( ) )
+				static_cast< offline_client* >( get_game( ).get_network_client( ) )->open_map_chat( );
 		}
 		else
 		{

@@ -11,6 +11,8 @@
 #include "chat_handler.h"
 #include "lobby_menu.h"
 #include "flash_text_manager.h"
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_value.h>
 #include <stdlib.h>
 #include <vostok/console_command.h>
 #include <vostok/configs_binary_config.h>
@@ -59,7 +61,8 @@ enum { weapon_count = sizeof(s_weapons) / sizeof(s_weapons[0]) };
 } // namespace
 
 offline_client::offline_client( game& game ) :
-	network_client( game, false )
+	network_client( game, false ),
+	m_map_chat_delay( 0 )
 {
 	static console_commands::cc_delegate s_offline_load_command(
 		"offline_load", boost::bind( &offline_client::load_command, this, _1 ),
@@ -136,6 +139,7 @@ void offline_client::on_maps_ready( vfs::vfs_locked_iterator const& maps )
 			m_available_maps[i < m_available_maps.size( ) ? i : 0].c_str( ) );
 	}
 	LOG_INFO( "offline mode found %d playable maps", m_available_maps.size( ) );
+	open_map_chat( );
 }
 
 bool offline_client::map_available( pcstr map_name ) const
@@ -153,6 +157,63 @@ void offline_client::show_map_error( pcstr map_name )
 	message.assignf( "incorrect map: %s", map_name );
 	mbstowcs_s( NULL, wide, 512, message.c_str( ), _TRUNCATE );
 	m_game.get_chat_handler( ).add_message( messaging::player_system_channel, wide, L"Offline" );
+	print_map_list( );
+}
+
+void offline_client::show_maps( )
+{
+	// Offline the chat is the map picker: every time it opens, it starts from a clean log
+	// holding only the numbered list.
+	flash_movie_resource_ptr& chat = m_game.get_chat_handler( ).get_movie( );
+	for ( u32 channel = messaging::server_message_channel; channel < messaging::max_channel_num; ++channel )
+	{
+		flash_value argument;
+		argument.SetUInt( channel );
+		chat->movie->Invoke( "root.clear_channel", NULL, &argument, 1 );
+	}
+	chat->movie->SetVariable( "root.chat.text_chat.text", "" );
+	print_map_list( );
+}
+
+void offline_client::open_map_chat( )
+{
+	// The lobby opens with the map picker ready. The map list and the lobby UI arrive in
+	// either order, and the chat movie rejects messages until it has run a few frames
+	// with its channels set, so the request is served from tick once the lobby has settled.
+	m_map_chat_delay = map_chat_settle_frames;
+}
+
+void offline_client::tick_map_chat( )
+{
+	chat_handler& chat = m_game.get_chat_handler( );
+	if ( m_available_maps.empty( ) || !chat.is_active( ) || chat.in_match( ) )
+	{
+		m_map_chat_delay = map_chat_settle_frames;
+		return;
+	}
+	if ( --m_map_chat_delay )
+		return;
+	// The lobby chat starts folded (frame 3); unfold it first and let the unfolded
+	// frame build its input and log before focusing it.
+	flash_value frame;
+	chat.get_movie( )->movie->GetVariable( &frame, "root.chat.currentFrame" );
+	// currentFrame comes back as an int; the getters read the raw union, so accept either form.
+	if ( frame.GetInt( ) == 3 || frame.GetNumber( ) == 3.f )
+	{
+		chat.get_movie( )->movie->Invoke( "root.chat.onClose", NULL, NULL, 0 );
+		m_map_chat_delay = map_chat_unfold_frames;
+		return;
+	}
+	flash_value argument;
+	argument.SetBoolean( true );
+	chat.get_movie( )->movie->Invoke( "root.focus_chat", NULL, &argument, 1 );
+	chat.focus( true );
+}
+
+void offline_client::print_map_list( )
+{
+	fixed_string< 512 > message;
+	wchar_t wide[512];
 	wchar_t header[] = L"available maps:";
 	m_game.get_chat_handler( ).add_message( messaging::player_system_channel, header, L"Offline" );
 	for ( u32 i = 0; i < m_available_maps.size( ); ++i )
@@ -324,6 +385,8 @@ void offline_client::load_command( pcstr map_name )
 
 void offline_client::tick( u32 current_time_in_ms, bool is_game_paused )
 {
+	if ( m_map_chat_delay )
+		tick_map_chat( );
 	if ( !m_player || !m_player->has_been_inserted( ) )
 		return;
 	if ( !is_game_paused )
