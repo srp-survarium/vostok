@@ -4,8 +4,10 @@ mangled	verdict	evidence
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length/dot term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@ABVbox_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVbox_geometry_instance@23@@Z	EQUIVALENT	symbolic store comparison equal; relocated constant address
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVbox_geometry_instance@23@@Z	EQUIVALENT	symbolic store comparison equal; relocated constant address
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined plane dot term order: retail (x+z)+y, base (z+y)+x
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@intersection_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	EQUIVALENT	schedule only; same (x+z)+y dot and denominator, pointer advanced at a different point
 ?line_line_intersect_non_parallel@collision@vostok@@YA_NABVfloat3@math@2@000AAV342@1AAM2@Z	EQUIVALENT	symbolic store comparison equal
