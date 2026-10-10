@@ -95,7 +95,9 @@ bool insert_char_action::execute(input::enum_keyboard_action action)
 
 		if ( m_input_world->get_keyboard()->get_dik_name( m_key, buff, sizeof(buff) ) )
 		{
-			if ( _isalpha_l(buff[0], current_locale) )
+			// Wine may name a letter key by its XKB keysym ("Cyrillic_es") or by another
+			// layout's letter; only a one-letter name that is the key's own letter is used.
+			if ( _isalpha_l(buff[0], current_locale) && buff[1] == 0 && _tolower_l(buff[0], current_locale) == m_char )
 			{
 				_strlwr_s_l	(buff, sizeof(buff), current_locale);
 				c			= buff[0];

@@ -518,6 +518,9 @@ void game_world_ui::on_enemy_hitted( )
 
 void game_world_ui::show_crosshair( bool b_show )
 {
+	// The weapon re-shows the crosshair every tick; the offline free-fly camera has none.
+	if ( m_game_world.get_current_input_mode( ) == free_fly_mode )
+		b_show = false;
 	flash_value b_val;
 	b_val.SetBoolean( b_show );
 	get_ui( )->movie->Invoke( "root.show_crosshair", NULL, &b_val, 1 );
