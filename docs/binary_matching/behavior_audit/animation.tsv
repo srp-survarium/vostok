@@ -42,6 +42,7 @@ mangled	verdict	evidence
 ?deserialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	computed_tree and get_next_buffer inlined in base; same buffer toggle and tree assignment
 ?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	FIXED	NaN routing of the 3 knot ternaries: retail +0x38f jb/+0x3da jae/+0x3f3 ja; inverted source conditions now reproduce it
 ?domain@?$time_channel@U?$poly_curve_order3_domain@M$00@animation@vostok@@@animation@vostok@@QBEIMAAI@Z	EQUIVALENT	addressing only; log __LINE__ only (absolute line drift)
+?evaluate_frame@animation@vostok@@YAXMQBV?$poly_curve@U?$poly_curve_order3_domain@M$00@animation@vostok@@@12@AAUframe@12@AAUcurrent_frame_position@12@@Z	EQUIVALENT	loop alignment only
 ?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z	EQUIVALENT	base constprops the 1.0 argument (fld1) where retail reads it; LTCG ret size
 ?fix_weight_driving_animations_with_null_weights@n_ary_tree_converter@mixing@animation@vostok@@AAEXABVexpression@234@@Z	EQUIVALENT	compare form/push order only
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
