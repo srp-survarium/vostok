@@ -1,0 +1,9 @@
+mangled	verdict	evidence
+??$append@D@path_string_impl@fs_new@vostok@@QAEAAV012@ABD@Z	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
+??$append@V?$fixed_string@$0BAE@@vostok@@@path_string_impl@fs_new@vostok@@QAEAAV012@ABV?$fixed_string@$0BAE@@2@@Z	EQUIVALENT	confirms pass 1: ICF helper names; same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
+??$append_path@PBD@path_string_impl@fs_new@vostok@@QAEAAV012@ABQBD@Z	EQUIVALENT	confirms pass 1: append<pcstr> inline-vs-call of a shared-header helper; same effects
+??$append_path@V?$fixed_string@$0BAE@@vostok@@@path_string_impl@fs_new@vostok@@QAEAAV012@ABV?$fixed_string@$0BAE@@2@@Z	EQUIVALENT	confirms pass 1: append<fixed_string> inline-vs-call of a shared-header helper; same effects
+??$append_with_conversion@$$BY0N@$$CBD@path_string_impl@fs_new@vostok@@QAEABV012@AAY0N@$$CBD@Z	EQUIVALENT	confirms pass 1: structure match; same calls and operands
+??$append_with_conversion@PBD@path_string_impl@fs_new@vostok@@QAEABV012@ABQBD@Z	EQUIVALENT	confirms pass 1: structure match; same calls and operands
+?appendf@path_string_impl@fs_new@vostok@@QAAAAV123@QBDZZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only
+?assignf@path_string_impl@fs_new@vostok@@QAAAAV123@QBDZZ	EQUIVALENT	confirms pass 1: same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only

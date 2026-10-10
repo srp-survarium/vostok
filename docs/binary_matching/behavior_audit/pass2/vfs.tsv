@@ -10,5 +10,7 @@ mangled	verdict	evidence
 ??$node_cast@Verased_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$erased_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 1: erased-node cast helper out-of-line; same pointer
 ??$set_inline_data@$00@vfs@vostok@@YA_NPAV?$base_node@$00@01@ABVconst_buffer@1@@Z	EQUIVALENT	confirms pass 1: assert __LINE__ only (230h vs 1DEh); assert helper ICF name
 ?get_raw_file_size@vfs_iterator@vfs@vostok@@QBEIXZ	EQUIVALENT	confirms pass 1: retail inlines get_raw_file_size fast path ((f&51h)|(f&4))==4 -> [node-18h]; base forwards to impl, same archive_file_node size for such nodes
+?is_inlined@?$base_node@$00@vfs@vostok@@QBE_NXZ	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?reverse_bytes_for_final_class@?$base_node@$00@vfs@vostok@@QAEXW4reverse_direction_enum@23@@Z	EQUIVALENT	confirms pass 1: same flag masks in different registers; ICF helper names
+?set_name@?$base_node@$00@vfs@vostok@@QAEXPBD@Z	EQUIVALENT	confirms pass 1: same calls, immediates, member offsets and branch kinds; ICF helper names and /Od stack slots only
 ?sizeof_with_name@?$base_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	confirms pass 1: is_link() call vs inline flags&300h test

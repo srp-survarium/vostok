@@ -1,4 +1,10 @@
 mangled	verdict	evidence
+??0?$Matrix4x4@M@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 1: identity values via x87 vs SSE stores; same matrix
+??0DepthStencilBuffer@Render@Scaleform@@QAE@PAVRenderBufferManager@12@ABV?$Size@K@12@@Z	EQUIVALENT	confirms pass 1: ICF helper names and /Od stack slots only
 ??0MatrixState@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 1 (full read): same identity 1.0/0.0 per offset, memsets 0x30/0x40, tail floats 0.75/52/0.5625/6.4; x87 fld1/fldz vs SSE regs
+??0PrimitiveFillData@Render@Scaleform@@QAE@ABU012@@Z	EQUIVALENT	confirms pass 1: AddRef ICF names; same refcount increments
+??0RenderTarget@Render@Scaleform@@QAE@PAVRenderBufferManager@12@W4RenderBufferType@12@ABV?$Size@K@12@@Z	EQUIVALENT	confirms pass 1: ICF helper names and /Od stack slots only
+?SetMatrix@?$ShaderInterfaceBase@UUniform@D3D1x@Render@Scaleform@@UShaderPair@234@@Render@Scaleform@@QAEXABUShaderPair@D3D1x@23@IABV?$Matrix2x4@M@23@ABVHMatrix@MatrixPoolImpl@23@PBVMatrixState@23@II@Z	EQUIVALENT	confirms pass 1: MatrixState::GetUVP inline-vs-call of a shared-header helper; same effects
+?SetPrimitiveFill@?$StaticShaderManager@UShaderDesc@D3D1x@Render@Scaleform@@UVertexShaderDesc@234@UUniform@234@VShaderInterface@234@VTexture@234@@Render@Scaleform@@QAEABUShaderPair@D3D1x@23@PAVPrimitiveFill@23@AAIIPBUVertexFormat@23@IPBVMatrixState@23@PBUMeshEntry@Primitive@23@PAVShaderInterface@523@@Z	EQUIVALENT	confirms pass 1: Cxform != as !(==) vs retail ==, branch inverted; comiss clear_value,[esp+4Ch] + jbe same on both sides
 ?SetString@flash_value@survarium@@QAEXPBD@Z	EQUIVALENT	confirms pass 1: same as SetStringW with Type=6; Value::operator= inline vs call
 ?SetStringW@flash_value@survarium@@QAEXPB_W@Z	EQUIVALENT	confirms pass 1 (full read): release-if-managed (bit 6) then Type=7, value=str; retail inlines Value::operator=, base calls it
