@@ -1,8 +1,12 @@
 mangled	verdict	evidence
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVbox_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined matrix-vector transform sums row terms in a different order
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVbox_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@0@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length/dot term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVcylinder_geometry_instance@23@ABVbox_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVbox_geometry_instance@23@@Z	EQUIVALENT	symbolic store comparison equal; relocated constant address
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVsphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVbox_geometry_instance@23@@Z	EQUIVALENT	symbolic store comparison equal; relocated constant address
+?dispatch@containment_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcylinder_geometry_instance@23@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined float3 squared_length term order
 ?dispatch@intersection_double_dispatcher@collision@vostok@@UAEXABVtruncated_sphere_geometry_instance@23@ABVcapsule_geometry_instance@23@@Z	EQUIVALENT	schedule only; same (x+z)+y dot and denominator, pointer advanced at a different point
 ?line_line_intersect_non_parallel@collision@vostok@@YA_NABVfloat3@math@2@000AAV342@1AAM2@Z	EQUIVALENT	symbolic store comparison equal
 ?render@capsule_geometry_instance@collision@vostok@@EBEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@AAVrenderer@debug@03@ABVfloat4x4@math@3@ABVcolor@93@@Z	EQUIVALENT	stack realignment only; symbolic store comparison equal
