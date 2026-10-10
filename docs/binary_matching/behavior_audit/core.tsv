@@ -1,9 +1,14 @@
 mangled	verdict	evidence
 ??0quaternion@math@vostok@@QAE@ABVfloat4x4@12@@Z	EQUIVALENT	retail tail-duplicates the case blocks; same sqrt/sqrt_safe calls; tolerance tests via SSE (xmm return) vs x87
+?execute@console_commands@vostok@@YAXPBDW4execution_filter@12@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps; CRT strncpy_s import alias
+?get_similar@console_commands@vostok@@YAIPBDPAPAVconsole_command@12@I@Z	EQUIVALENT	branch layout only
+?save@console_commands@vostok@@YAXPBDW4command_type@12@AAVbase_allocator@memory@2@@Z	EQUIVALENT	branch layout only
 ?set_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
+?show_help@console_commands@vostok@@YAXPBD@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps
 ?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z	EQUIVALENT	LTCG/prologue only
 ?sqrt_safe@@YAMM@Z	EQUIVALENT	retail returns in xmm0 (LTCG) vs x87; same NaN routing (sqrt for unordered)
 ?unset_flag@query_result@resources@vostok@@AAEXI@Z	EQUIVALENT	tail call vs call+ret
 ?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z	EQUIVALENT	LTCG/prologue only
 extrapolated_slerp	EQUIVALENT	compare form/branch layout only
 slerp_optimized	EQUIVALENT	retail acosf/sinf (x87 _CIacos/_CIsin wrappers) vs base __libm_sse2 double acos/sin; both double-precision results rounded to float
+vostok::console_commands::save	EQUIVALENT	identical after regalloc
