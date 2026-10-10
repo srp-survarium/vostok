@@ -1239,7 +1239,7 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 		math::color( math::color_rgba( 1.f, 1.f, 1.f, 1.f ) )
 	};
 	const float lum_diffuse					= m_debug_readed_data[0].x * 0.2125f + m_debug_readed_data[0].y * 0.7154f + m_debug_readed_data[0].z * 0.0721f;
-	const float lum_final					= m_debug_readed_data[1].x * 0.2125f + m_debug_readed_data[1].y * 0.7154f + m_debug_readed_data[1].z * 0.0721f;
+	const float lum_final					= ( m_debug_readed_data[1].z * 0.0721f + m_debug_readed_data[1].y * 0.7154f ) + m_debug_readed_data[1].x * 0.2125f;
 
 	strings[0].assignf						( "r: %f", m_debug_readed_data[0].x );
 	strings[1].assignf						( "g: %f", m_debug_readed_data[0].y );
