@@ -1,0 +1,5 @@
+mangled	verdict	evidence
+??$call_predicate@Vprocess_packet_predicate@network_core@vostok@@@udp_match_connection@network_core@vostok@@AAEXABVprocess_packet_predicate@12@AAVpacket_reader@12@@Z	EQUIVALENT	confirms pass 5: ICF names
+??$process_incoming_packet@Vprocess_packet_predicate@network_core@vostok@@@udp_match_connection@network_core@vostok@@QAEXAAVpacket_reader@12@ABVprocess_packet_predicate@12@@Z	EQUIVALENT	confirms pass 5: ICF names
+?construct_packet@udp_match_connection@network_core@vostok@@SAXAAUudp_match_packets_orderer@23@AAVudp_match_packet@23@E@Z	EQUIVALENT	confirms pass 5: same calls; register/constant materialization
+?r@packet_reader@network_core@vostok@@QAEXPAXII@Z	EQUIVALENT	confirms pass 5: same calls/operands

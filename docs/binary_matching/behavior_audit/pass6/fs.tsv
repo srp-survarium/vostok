@@ -1,0 +1,10 @@
+mangled	verdict	evidence
+??$?Y$$BY04$$CBD@virtual_path_string@fs_new@vostok@@QAEABV012@AAY04$$CBD@Z	EQUIVALENT	confirms pass 5: same calls/operands; /Od slots
+??$append@D@path_string_impl@fs_new@vostok@@QAEAAV012@ABD@Z	EQUIVALENT	confirms pass 5: same calls/operands; /Od slots
+??$append@V?$fixed_string@$0BAE@@vostok@@@path_string_impl@fs_new@vostok@@QAEAAV012@ABV?$fixed_string@$0BAE@@2@@Z	EQUIVALENT	confirms pass 5: ICF helper names
+??$append_path@PBD@path_string_impl@fs_new@vostok@@QAEAAV012@ABQBD@Z	EQUIVALENT	confirms pass 5: append<pcstr> inline vs call
+??$append_path@V?$fixed_string@$0BAE@@vostok@@@path_string_impl@fs_new@vostok@@QAEAAV012@ABV?$fixed_string@$0BAE@@2@@Z	EQUIVALENT	confirms pass 5: append<fixed_string> inline vs call
+??$append_with_conversion@$$BY0N@$$CBD@path_string_impl@fs_new@vostok@@QAEABV012@AAY0N@$$CBD@Z	EQUIVALENT	confirms pass 5: same calls/operands
+??$append_with_conversion@PBD@path_string_impl@fs_new@vostok@@QAEABV012@ABQBD@Z	EQUIVALENT	confirms pass 5: same calls/operands
+?appendf@path_string_impl@fs_new@vostok@@QAAAAV123@QBDZZ	EQUIVALENT	confirms pass 5: ICF helper names and /Od slots
+?assignf@path_string_impl@fs_new@vostok@@QAAAAV123@QBDZZ	EQUIVALENT	confirms pass 5: ICF helper names and /Od slots

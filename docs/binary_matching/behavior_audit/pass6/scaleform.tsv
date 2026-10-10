@@ -1,0 +1,11 @@
+mangled	verdict	evidence
+??0?$Matrix4x4@M@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 5: identity values via x87 vs SSE stores
+??0DepthStencilBuffer@Render@Scaleform@@QAE@PAVRenderBufferManager@12@ABV?$Size@K@12@@Z	EQUIVALENT	confirms pass 5: ICF names, /Od slots
+??0MatrixState@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 5: same identity 1.0/0.0 per offset, memsets, tail floats; x87 fld1/fldz stores vs SSE xorps registers
+??0PrimitiveFillData@Render@Scaleform@@QAE@ABU012@@Z	EQUIVALENT	confirms pass 5: AddRef ICF names; same refcount increments
+??0RenderTarget@Render@Scaleform@@QAE@PAVRenderBufferManager@12@W4RenderBufferType@12@ABV?$Size@K@12@@Z	EQUIVALENT	confirms pass 5: ICF names, /Od slots
+?SetMatrix@?$ShaderInterfaceBase@UUniform@D3D1x@Render@Scaleform@@UShaderPair@234@@Render@Scaleform@@QAEXABUShaderPair@D3D1x@23@IABV?$Matrix2x4@M@23@ABVHMatrix@MatrixPoolImpl@23@PBVMatrixState@23@II@Z	EQUIVALENT	confirms pass 5: MatrixState::GetUVP inline vs call
+?SetPrimitiveFill@?$StaticShaderManager@UShaderDesc@D3D1x@Render@Scaleform@@UVertexShaderDesc@234@UUniform@234@VShaderInterface@234@VTexture@234@@Render@Scaleform@@QAEABUShaderPair@D3D1x@23@PAVPrimitiveFill@23@AAIIPBUVertexFormat@23@IPBVMatrixState@23@PBUMeshEntry@Primitive@23@PAVShaderInterface@523@@Z	EQUIVALENT	confirms pass 5: Cxform != vs ==, branch inverted; comiss clear_value + jbe same both sides
+?SetString@flash_value@survarium@@QAEXPBD@Z	EQUIVALENT	confirms pass 5: as SetStringW with Type=6; Value::operator= inline vs call
+?SetStringW@flash_value@survarium@@QAEXPB_W@Z	EQUIVALENT	confirms pass 5: release-if-managed (bit 6) then Type=7, value=str; Value::operator= inline vs call
+?build_movie@flash_factory@survarium@@QAEPAUflash_movie@2@PAXIPBD@Z	EQUIVALENT	confirms pass 5: operator new spelling; indirect-call register
