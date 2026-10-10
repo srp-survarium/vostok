@@ -6,6 +6,8 @@ mangled	verdict	evidence
 ?execute@console_commands@vostok@@YAXPBDW4execution_filter@12@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps; CRT strncpy_s import alias
 ?get_angles@float4x4@math@vostok@@QBE?AVfloat3@23@W4axis_rotation_order@23@@Z	EQUIVALENT	load order only
 ?get_angles_xyz@float4x4@math@vostok@@QBE?AVfloat3@23@XZ	EQUIVALENT	load order only
+?get_physical_path_info@resources@vostok@@YA?AVphysical_path_info@fs_new@2@ABVnative_path_string@42@_N@Z	EQUIVALENT	ICF reps
+?get_physical_path_info@resources@vostok@@YA?AVphysical_path_info@fs_new@2@ABVvfs_iterator@vfs@2@@Z	EQUIVALENT	ICF reps
 ?get_similar@console_commands@vostok@@YAIPBDPAPAVconsole_command@12@I@Z	EQUIVALENT	branch layout only
 ?lerp@math@vostok@@YA?AVfloat4x4@12@ABV312@0M@Z	EQUIVALENT	same (b-a)*t+a per component with pointer registers swapped
 ?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z	EQUIVALENT	LTCG ret size
