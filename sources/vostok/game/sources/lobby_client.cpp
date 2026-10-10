@@ -6,6 +6,8 @@
 #include <boost/bind.hpp>
 
 #include "game.h"
+#include "base_network_client.h"
+#include "offline_client.h"
 #include "game_memory.h"
 #include "lobby_menu.h"
 #include "price_item.h"
@@ -166,10 +168,122 @@ u32 lobby_client::session_id( ) const
 	return m_connection_info.session_id;
 }
 
+void lobby_client::initialize_offline( pcstr player_name, u16 weapon_id, u16 ammo_id )
+{
+	m_net_client_connected = true;
+	m_status = lobby::surf_lobby_menu;
+	m_profiles_count = 1;
+	m_profiles[0] = player_profile( );
+	m_profiles[0].profile_id = 1;
+	m_profiles[0].team = team_1;
+	m_profiles[0].is_local = true;
+	strcpy_s( m_profiles[0].profile_name, sizeof(m_profiles[0].profile_name), player_name );
+	strcpy_s( account_nickname_, sizeof(account_nickname_), player_name );
+	m_player_name = player_name;
+	m_player_leveling_info.total_skill_points = 100;
+	m_player_leveling_info.total_experience = 100000000;
+	m_player_leveling_info.prev_level_experience = 100000000;
+	m_player_leveling_info.next_level_experience = 100000001;
+	m_account_money.generic_money = 100000000;
+	m_account_money.premium_money = 100000000;
+	m_account_money.total_skill_points = 100;
+	m_service_prices.reroll_cost = 0;
+	m_service_prices.add_profile_cost = 0;
+	m_service_prices.rename_account_cost = 0;
+
+	m_inventory_item_instances.clear( );
+	bool allowed[256][max_slots_count];
+	memset( allowed, 0, sizeof(allowed) );
+	map< u32, dictionary_item > const& items = m_game.items_dictionary( ).get_dictionary( );
+	for ( map< u32, dictionary_item >::const_iterator it = items.begin( ); it != items.end( ); ++it )
+	{
+		dictionary_item description = it->second;
+		if ( !description.item_id || description.item_id > 64535 ||
+			!description.item_cfg->get_root( ).value_exists( "ui_desc" ) )
+			continue;
+		inventory_item_instance item;
+		item.id = 1000 + description.item_id;
+		item.dict_id = static_cast< u16 >( description.item_id );
+		item.condition_or_stack = description.is_stack ? ( description.is_ammo( ) ? 1000 : 100 ) : 100;
+		item.amount_in_inventory = description.is_stack ? item.condition_or_stack : 1;
+		m_inventory_item_instances.push_back( item );
+
+		pcstr path = description.item_cfg_name.c_str( );
+		u8 const category = description.item_category;
+		if ( strstr( path, "/armour/helmet/" ) ) allowed[category][helmet_slot] = true;
+		else if ( strstr( path, "/armour/mask/" ) ) allowed[category][mask_slot] = true;
+		else if ( strstr( path, "/armour/torso/" ) ) allowed[category][torso_slot] = true;
+		else if ( strstr( path, "/armour/back/" ) ) allowed[category][back_slot] = true;
+		else if ( strstr( path, "/armour/legs/" ) ) allowed[category][pants_slot] = true;
+		else if ( strstr( path, "/armour/gloves/" ) ) allowed[category][gloves_slot] = true;
+		else if ( strstr( path, "/armour/boots/" ) ) allowed[category][boots_slot] = true;
+		else if ( strstr( path, "/weapons/ammo/" ) )
+		{
+			allowed[category][ammo1_weapon1_slot] = true;
+			allowed[category][ammo2_weapon1_slot] = true;
+			allowed[category][ammo1_weapon2_slot] = true;
+			allowed[category][ammo2_weapon2_slot] = true;
+		}
+		else if ( strstr( path, "/weapons/" ) && !strstr( path, "/scopes/" ) )
+		{
+			allowed[category][weapon1_slot] = true;
+			allowed[category][weapon2_slot] = true;
+		}
+		else if ( strstr( path, "/items/drugs/" ) || strstr( path, "/items/artefacts/" ) ||
+			strstr( path, "/items/base_trap" ) )
+			for ( u32 slot = quick_slot1; slot <= quick_slot6; ++slot )
+				allowed[category][slot] = true;
+	}
+
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_profile_slot_restrictions );
+	m_profile_slot_restrictions_count = 0;
+	for ( u32 category = 0; category < 256; ++category )
+		for ( u32 slot = 0; slot < max_slots_count; ++slot )
+			if ( allowed[category][slot] ) ++m_profile_slot_restrictions_count;
+	m_profile_slot_restrictions = VOSTOK_ALLOC_IMPL( ::survarium::g_allocator,
+		profile_slot_restriction, m_profile_slot_restrictions_count );
+	u32 restriction = 0;
+	for ( u32 category = 0; category < 256; ++category )
+		for ( u32 slot = 0; slot < max_slots_count; ++slot )
+			if ( allowed[category][slot] )
+			{
+				m_profile_slot_restrictions[restriction].slot_dict_id = static_cast< u8 >( slot );
+				m_profile_slot_restrictions[restriction].category_dict_id = static_cast< u8 >( category );
+				++restriction;
+			}
+
+	for ( vectora< inventory_item_instance >::const_iterator it = m_inventory_item_instances.begin( );
+		it != m_inventory_item_instances.end( ); ++it )
+	{
+		if ( it->dict_id == weapon_id )
+			m_profiles[0].slots[weapon1_slot].item = *it;
+		if ( it->dict_id == ammo_id )
+		{
+			m_profiles[0].slots[ammo1_weapon1_slot].item = *it;
+			m_profiles[0].slots[ammo1_weapon1_slot].item.condition_or_stack = 1000;
+		}
+	}
+}
+
+void lobby_client::set_offline_compatibilities( items_compatibility const* pairs, u32 count )
+{
+	VOSTOK_FREE_IMPL( ::survarium::g_allocator, m_items_compatibility );
+	m_items_compatibilities_count = count;
+	m_items_compatibility = VOSTOK_ALLOC_IMPL( ::survarium::g_allocator, items_compatibility, count );
+	if ( count )
+		memory::copy( m_items_compatibility, count * sizeof(items_compatibility), pairs,
+			count * sizeof(items_compatibility) );
+}
+
 void lobby_client::set_status_ready_for_match(
 	const u32		profile_id
 )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+	{
+		static_cast< offline_client* >( m_game.get_network_client( ) )->start_match( );
+		return;
+	}
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::set_status_ready_for_match );
 	packet.append	( profile_id );
@@ -178,6 +292,18 @@ void lobby_client::set_status_ready_for_match(
 
 void lobby_client::query_client_status( lobby::query_info_types type )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+	{
+		switch ( type )
+		{
+		case lobby::q_player_skills_tree:
+		case lobby::q_price_items:
+			return;
+		default:
+			m_game.lobby_menu( ).on_client_status_received( type );
+			return;
+		}
+	}
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
 	packet.append	( (u32)type );
@@ -188,6 +314,8 @@ void lobby_client::query_prices(
 	const u32		faction_id
 )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+		return;
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
 	packet.append	( (u8)lobby::q_price_items );
@@ -199,6 +327,11 @@ void lobby_client::query_profile_contents(
 	const u32		profile_id
 )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+	{
+		m_game.lobby_menu( ).on_profile_arrived( 0 );
+		return;
+	}
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
 	packet.append	( (u8)lobby::q_profile_contents );
@@ -396,6 +529,34 @@ bool lobby_client::can_move_item( const u32 item_category_id, const u32 target_s
 
 void lobby_client::move_item( vector< relocate_item_descr >& items )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+	{
+		for ( vector< relocate_item_descr >::const_iterator move = items.begin( ); move != items.end( ); ++move )
+		{
+			if ( ( move->profile_id != 0 && move->profile_id != m_profiles[0].profile_id ) ||
+				( move->target_slot_id != 100 && move->target_slot_id >= max_slots_count ) )
+				continue;
+			inventory_item_instance const* owned = NULL;
+			for ( vectora< inventory_item_instance >::const_iterator item = m_inventory_item_instances.begin( );
+				item != m_inventory_item_instances.end( ); ++item )
+				if ( item->id == move->item_id && item->dict_id == move->item_dict_id )
+					owned = &*item;
+			if ( !owned )
+				continue;
+			if ( move->source_slot_id < max_slots_count &&
+				m_profiles[0].slots[move->source_slot_id].item.id == move->item_id )
+				m_profiles[0].slots[move->source_slot_id].item = inventory_item_instance( );
+			if ( move->target_slot_id < max_slots_count )
+			{
+				m_profiles[0].slots[move->target_slot_id].item = *owned;
+				if ( m_game.items_dictionary( ).item_by_id( owned->dict_id ).is_stack )
+					m_profiles[0].slots[move->target_slot_id].item.condition_or_stack = move->amount;
+			}
+		}
+		m_game.lobby_menu( ).on_profile_changed( 0 );
+		m_game.lobby_menu( ).fill_inventory_contents( );
+		return;
+	}
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::inventory_action );
 	packet.append	( (u8)0 );
@@ -506,6 +667,8 @@ void lobby_client::discard_playing_order( )
 
 void lobby_client::ping_server( )
 {
+	if ( !m_game.get_network_client( )->has_bandwidth( ) )
+		return;
 	if ( !m_net_client_connected )
 		return;
 

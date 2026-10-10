@@ -693,6 +693,12 @@ void game_world_ui::initialize_minimap( )
 
 	update_minimap_objects( );
 	reset_map_rotatable( );
+
+	// Offline playtests hide the minimap. hud.swf's Minimap.setProps (reached through
+	// set_minimap_props above) is the only in-game code that makes it visible.
+	flash_value hidden;
+	hidden.SetBoolean( false );
+	get_ui( )->movie->SetVariable( "root.mineMinimap.visible", hidden );
 }
 
 // sushi@NOTE: Retail hoists the inventory victory-item read above both GFx object creations.

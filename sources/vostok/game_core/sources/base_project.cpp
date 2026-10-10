@@ -49,6 +49,14 @@ void read_transform( vostok::configs::binary_config_value const& cfg, float4x4& 
 
 void static_collision::insert( vostok::physics::world* w )
 {
+	// Offline playtests: ported props whose collision failed to cook load without collision
+	// instead of crashing in create_static_rigid_body (retail has no such data).
+	if ( !shape_.c_ptr( ) )
+	{
+		physics_rigid_body_ = NULL;
+		return;
+	}
+
 	vostok::physics::bt_rigid_body_construction_info info;
 	info.m_collisionShape = shape_;
 	info.m_mass = 0.0f;
@@ -61,6 +69,9 @@ void static_collision::insert( vostok::physics::world* w )
 
 void static_collision::remove( vostok::physics::world* w )
 {
+	if ( !physics_rigid_body_ )
+		return;
+
 	w->remove( physics_rigid_body_ );
 	vostok::physics::destroy_static_rigid_body( physics_rigid_body_ );
 	physics_rigid_body_ = NULL;

@@ -535,7 +535,10 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 	fill_inventory_labels( );
 
 	get_game( ).on_queried_by_network_client_scene_ready( login_scene_ready );
-	show_disconnected_message( true );
+	if ( get_game( ).get_network_client( )->has_bandwidth( ) )
+		show_disconnected_message( true );
+	else
+		on_connected_to_lobby( );
 
 }
 

@@ -1,0 +1,1353 @@
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+pci id for fd 40: 10de:2489, driver (null)
+pci id for fd 41: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+pci id for fd 40: 10de:2489, driver (null)
+pci id for fd 41: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 39: 10de:2489, driver (null)
+
+0064:trace:seh:dispatch_exception code=6ba (RPC_S_SERVER_UNAVAILABLE) flags=0 addr=00006FFFFFBDD8A7
+0064:trace:seh:dispatch_exception rip=00006fffffbdd8a7 rsp=000000000031d670 rbp=000000000031d760 eflags=00000202
+0064:trace:seh:dispatch_exception rax=000000000031d690 rbx=000000000031e520 rcx=000000000031d690 rdx=0000000000000000
+0064:trace:seh:dispatch_exception rsi=00006fffff8343b6 rdi=0000000000000000  r8=0000000000000000  r9=0000000000000000
+0064:trace:seh:dispatch_exception r10=0000000000000000 r11=0000000000000000 r12=0000000000000005 r13=000000000031d828
+0064:trace:seh:dispatch_exception r14=00006fffff4e3160 r15=00006fffff8343d4 mxcsr=00001f80 cs=0033 ss=002b
+0064:trace:seh:call_seh_handlers calling TEB handler 00006FFFFF4CB0E0 (rec=000000000031D690 frame=000000000031D8B0 context=000000000031D190 dispatch=000000000031CA70) sp=31e230
+0064:trace:seh:call_seh_handlers TEB handler at 00006FFFFF4CB0E0 returned 1
+0064:trace:seh:call_seh_handlers calling TEB handler 00006FFFFF817E00 (rec=000000000031D690 frame=000000000031EDA0 context=000000000031D190 dispatch=000000000031CA70) sp=31eef0
+0064:trace:seh:RtlUnwindEx code=6ba flags=2 end_frame=000000000031EDA0 target_ip=00006FFFFF804E1A
+0064:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000000031bd70 rbp=000000000031bdf0 eflags=00000202
+0064:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000000031d690 rcx=000000000031c430 rdx=00006fffff804e1a
+0064:trace:seh:RtlUnwindEx rsi=000000000031c430 rdi=0000000000000000  r8=000000000031d690  r9=00006fffff828d10
+0064:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000000031c430 r13=000000000031bed0
+0064:trace:seh:RtlUnwindEx r14=000000000031eda0 r15=000000000031d8b0 mxcsr=00001f80 cs=0033 ss=002b
+0064:trace:seh:RtlUnwindEx calling TEB handler 00006FFFFF4CB0E0 (rec=000000000031D690, frame=000000000031D8B0 context=000000000031C430, dispatch=000000000031BDE0)
+0064:trace:seh:RtlUnwindEx handler at 00006FFFFF4CB0E0 returned 1
+0064:trace:seh:RtlRestoreContext returning to 00006FFFFF804E1A stack 000000000031ED50
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+pci id for fd 42: 10de:2489, driver (null)
+pci id for fd 43: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+pci id for fd 42: 10de:2489, driver (null)
+pci id for fd 43: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 41: 10de:2489, driver (null)
+
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+pci id for fd 43: 10de:2489, driver (null)
+pci id for fd 44: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+pci id for fd 43: 10de:2489, driver (null)
+pci id for fd 44: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 42: 10de:2489, driver (null)
+
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F350 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e940
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db00 rbp=000000010020db80 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6c0 rcx=000000010020e1c0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1c0 rdi=0000000004ede4f0  r8=000000010020e6c0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1c0 r13=000000010020dc60
+0120:trace:seh:RtlUnwindEx r14=000000010020f350 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8B0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e740 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004ede4f0  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=0000000004ede4f0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F270 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e860
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da20 rbp=000000010020daa0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5e0 rcx=000000010020e0e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0e0 rdi=0000000004ede4f0  r8=000000010020e5e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e0e0 r13=000000010020db80
+0120:trace:seh:RtlUnwindEx r14=000000010020f270 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F220 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e810
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9d0 rbp=000000010020da50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e590 rcx=000000010020e090 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e090 rdi=0000000004ede4f0  r8=000000010020e590  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e090 r13=000000010020db30
+0120:trace:seh:RtlUnwindEx r14=000000010020f220 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F290 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e880
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da40 rbp=000000010020dac0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e600 rcx=000000010020e100 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e100 rdi=0000000004ede4f0  r8=000000010020e600  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e100 r13=000000010020dba0
+0120:trace:seh:RtlUnwindEx r14=000000010020f290 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F220 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e810
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9d0 rbp=000000010020da50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e590 rcx=000000010020e090 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e090 rdi=0000000004ede4f0  r8=000000010020e590  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e090 r13=000000010020db30
+0120:trace:seh:RtlUnwindEx r14=000000010020f220 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E780
+0120:trace:seh:GetPerformanceInfo (04EDE914, 56)
+info:  Game: survarium-dx11-win32-gold.exe
+info:  DXVK: 2.7.1
+info:  Build: x86 gcc 15.3.0
+info:  Vulkan: Found vkGetInstanceProcAddr in winevulkan.dll @ 0x7a37a430
+info:  Extension providers:
+info:    Platform WSI
+info:    OpenVR
+info:  OpenVR: could not open registry key, status 2
+info:  OpenVR: Failed to locate module
+info:    OpenXR
+info:  Enabled instance extensions:
+info:    VK_EXT_surface_maintenance1
+info:    VK_KHR_get_surface_capabilities2
+info:    VK_KHR_surface
+info:    VK_KHR_win32_surface
+info:  Found device: NVIDIA GeForce RTX 3060 Ti (GA104, Low Hash Rate) (NVIDIA 595.71.5)
+info:  Found device: llvmpipe (LLVM 21.1.8, 256 bits) (llvmpipe 26.1.8)
+info:    Skipping: Software driver
+info:  D3D9: VK_FORMAT_D16_UNORM_S8_UINT -> VK_FORMAT_D24_UNORM_S8_UINT
+info:  Process set as DPI aware
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004edd4ac  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004edd2d4  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F270 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e860
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da20 rbp=000000010020daa0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5e0 rcx=000000010020e0e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0e0 rdi=0000000004edd2d4  r8=000000010020e5e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e0e0 r13=000000010020db80
+0120:trace:seh:RtlUnwindEx r14=000000010020f270 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F200 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e7f0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9b0 rbp=000000010020da30 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e570 rcx=000000010020e070 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e070 rdi=0000000004edd2d4  r8=000000010020e570  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e070 r13=000000010020db10
+0120:trace:seh:RtlUnwindEx r14=000000010020f200 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E760
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F230 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e820
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9e0 rbp=000000010020da60 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5a0 rcx=000000010020e0a0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0a0 rdi=0000000004edd2d4  r8=000000010020e5a0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e0a0 r13=000000010020db40
+0120:trace:seh:RtlUnwindEx r14=000000010020f230 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E790
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F290 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e880
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da40 rbp=000000010020dac0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e600 rcx=000000010020e100 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e100 rdi=0000000004edd2d4  r8=000000010020e600  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e100 r13=000000010020dba0
+0120:trace:seh:RtlUnwindEx r14=000000010020f290 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F230 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e820
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9e0 rbp=000000010020da60 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5a0 rcx=000000010020e0a0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0a0 rdi=0000000004edd2d4  r8=000000010020e5a0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e0a0 r13=000000010020db40
+0120:trace:seh:RtlUnwindEx r14=000000010020f230 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E790
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da50 rbp=000000010020dad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e610 rcx=000000010020e110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e110 rdi=0000000004edd2d4  r8=000000010020e610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e110 r13=000000010020dbb0
+0120:trace:seh:RtlUnwindEx r14=000000010020f2a0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E800
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da50 rbp=000000010020dad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e610 rcx=000000010020e110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e110 rdi=0000000004edd2d4  r8=000000010020e610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e110 r13=000000010020dbb0
+0120:trace:seh:RtlUnwindEx r14=000000010020f2a0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E800
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F290 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e880
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da40 rbp=000000010020dac0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e600 rcx=000000010020e100 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e100 rdi=0000000004edd2d4  r8=000000010020e600  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e100 r13=000000010020dba0
+0120:trace:seh:RtlUnwindEx r14=000000010020f290 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F200 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e7f0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9b0 rbp=000000010020da30 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e570 rcx=000000010020e070 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e070 rdi=0000000004edd2d4  r8=000000010020e570  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e070 r13=000000010020db10
+0120:trace:seh:RtlUnwindEx r14=000000010020f200 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E760
+libEGL warning: pci id for fd 52: 10de:2489, driver (null)
+
+pci id for fd 53: 10de:2489, driver (null)
+pci id for fd 54: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 52: 10de:2489, driver (null)
+
+pci id for fd 53: 10de:2489, driver (null)
+pci id for fd 54: 10de:2489, driver (null)
+libEGL warning: egl: failed to create dri2 screen
+libEGL warning: pci id for fd 52: 10de:2489, driver (null)
+
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=0000000000000000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=0000000000000000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=0000000000000000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=0000000000000000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edd610  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=000000007ffda000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=000000007ffda000  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00001f80 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=0000000004edf368  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F270 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e860
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da20 rbp=000000010020daa0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5e0 rcx=000000010020e0e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0e0 rdi=0000000004edf368  r8=000000010020e5e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e0e0 r13=000000010020db80
+0120:trace:seh:RtlUnwindEx r14=000000010020f270 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F190 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e780
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d940 rbp=000000010020d9c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e500 rcx=000000010020e000 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e000 rdi=0000000004edf368  r8=000000010020e500  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e000 r13=000000010020daa0
+0120:trace:seh:RtlUnwindEx r14=000000010020f190 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E6F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F230 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e820
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9e0 rbp=000000010020da60 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5a0 rcx=000000010020e0a0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0a0 rdi=0000000004edf368  r8=000000010020e5a0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e0a0 r13=000000010020db40
+0120:trace:seh:RtlUnwindEx r14=000000010020f230 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E790
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F290 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e880
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da40 rbp=000000010020dac0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e600 rcx=000000010020e100 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e100 rdi=0000000004edf368  r8=000000010020e600  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e100 r13=000000010020dba0
+0120:trace:seh:RtlUnwindEx r14=000000010020f290 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7F0
+01b8:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010506F270 target_ip=00006FFFFE962E76
+01b8:trace:seh:RtlUnwindEx  info[0]=000000010506e860
+01b8:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010506da20 rbp=000000010506daa0 eflags=00000202
+01b8:trace:seh:RtlUnwindEx rax=00000000679c0000 rbx=000000010506e5e0 rcx=000000010506e0e0 rdx=00006ffffe962e76
+01b8:trace:seh:RtlUnwindEx rsi=000000010506e0e0 rdi=000000007ea8f8b0  r8=000000010506e5e0  r9=0000000000000001
+01b8:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010506e0e0 r13=000000010506db80
+01b8:trace:seh:RtlUnwindEx r14=000000010506f270 r15=0000000000000000 mxcsr=00009fc0 cs=0033 ss=002b
+01b8:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010506E7D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F230 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e820
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d9e0 rbp=000000010020da60 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e5a0 rcx=000000010020e0a0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e0a0 rdi=0000000004edf368  r8=000000010020e5a0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020ef30 r11=0000000000200202 r12=000000010020e0a0 r13=000000010020db40
+0120:trace:seh:RtlUnwindEx r14=000000010020f230 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E790
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da50 rbp=000000010020dad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e610 rcx=000000010020e110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e110 rdi=0000000004edf368  r8=000000010020e610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e110 r13=000000010020dbb0
+0120:trace:seh:RtlUnwindEx r14=000000010020f2a0 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E800
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da50 rbp=000000010020dad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e610 rcx=000000010020e110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e110 rdi=0000000004edf368  r8=000000010020e610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e110 r13=000000010020dbb0
+0120:trace:seh:RtlUnwindEx r14=000000010020f2a0 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E800
+01b8:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010506F220 target_ip=00006FFFFE962E76
+01b8:trace:seh:RtlUnwindEx  info[0]=000000010506e810
+01b8:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010506d9d0 rbp=000000010506da50 eflags=00000202
+01b8:trace:seh:RtlUnwindEx rax=00000000679c0000 rbx=000000010506e590 rcx=000000010506e090 rdx=00006ffffe962e76
+01b8:trace:seh:RtlUnwindEx rsi=000000010506e090 rdi=000000007ea8f8b0  r8=000000010506e590  r9=0000000000000001
+01b8:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010506e090 r13=000000010506db30
+01b8:trace:seh:RtlUnwindEx r14=000000010506f220 r15=0000000000000000 mxcsr=00009fc0 cs=0033 ss=002b
+01b8:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010506E780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F290 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e880
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020da40 rbp=000000010020dac0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e600 rcx=000000010020e100 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e100 rdi=0000000004edf368  r8=000000010020e600  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e100 r13=000000010020dba0
+0120:trace:seh:RtlUnwindEx r14=000000010020f290 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+01b8:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010506F290 target_ip=00006FFFFE962E76
+01b8:trace:seh:RtlUnwindEx  info[0]=000000010506e880
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E7F0
+01b8:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010506da40 rbp=000000010506dac0 eflags=00000202
+01b8:trace:seh:RtlUnwindEx rax=00000000679c0000 rbx=000000010506e600 rcx=000000010506e100 rdx=00006ffffe962e76
+01b8:trace:seh:RtlUnwindEx rsi=000000010506e100 rdi=000000007ea8f8b0  r8=000000010506e600  r9=0000000000000001
+01b8:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010506e100 r13=000000010506dba0
+01b8:trace:seh:RtlUnwindEx r14=000000010506f290 r15=0000000000000000 mxcsr=00009fc0 cs=0033 ss=002b
+01b8:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010506E7F0
+01b8:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010506F220 target_ip=00006FFFFE962E76
+01b8:trace:seh:RtlUnwindEx  info[0]=000000010506e810
+01b8:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010506d9d0 rbp=000000010506da50 eflags=00000202
+01b8:trace:seh:RtlUnwindEx rax=00000000679c0000 rbx=000000010506e590 rcx=000000010506e090 rdx=00006ffffe962e76
+01b8:trace:seh:RtlUnwindEx rsi=000000010506e090 rdi=000000007ea8f8b0  r8=000000010506e590  r9=0000000000000001
+01b8:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010506e090 r13=000000010506db30
+01b8:trace:seh:RtlUnwindEx r14=000000010506f220 r15=0000000000000000 mxcsr=00009fc0 cs=0033 ss=002b
+01b8:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010506E780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F190 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e780
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020d940 rbp=000000010020d9c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e500 rcx=000000010020e000 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e000 rdi=0000000004edf368  r8=000000010020e500  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e000 r13=000000010020daa0
+0120:trace:seh:RtlUnwindEx r14=000000010020f190 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E6F0
+info:  Game: survarium-dx11-win32-gold.exe
+info:  DXVK: 2.7.1
+info:  Build: x86 gcc 15.3.0
+info:  Vulkan: Found vkGetInstanceProcAddr in winevulkan.dll @ 0x7a37a430
+info:  Extension providers:
+info:    Platform WSI
+info:    OpenVR
+info:  OpenVR: could not open registry key, status 2
+info:  OpenVR: Failed to locate module
+info:    OpenXR
+info:  Enabled instance extensions:
+info:    VK_EXT_surface_maintenance1
+info:    VK_KHR_get_surface_capabilities2
+info:    VK_KHR_surface
+info:    VK_KHR_win32_surface
+info:  Found device: NVIDIA GeForce RTX 3060 Ti (GA104, Low Hash Rate) (NVIDIA 595.71.5)
+info:  Found device: llvmpipe (LLVM 21.1.8, 256 bits) (llvmpipe 26.1.8)
+info:    Skipping: Software driver
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=00000000055306e0  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020f110 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000000000001  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020f110 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edf39c  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edf39c  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+info:  DXGI: Hiding actual GPU, reporting:
+info:    vendor ID: 0x1002
+info:    device ID: 0x73df
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edf43c  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fc0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+err:   readMonitorEdidFromKey: Failed to get EDID reg key size
+err:   DXGI: Failed to parse display metadata + colorimetry info, using blank.
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edefdc  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000066fe0c00  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020f110 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000000000001  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020f110 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edf33c  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=0000000004edf33c  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe0 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+info:  DXGI: Hiding actual GPU, reporting:
+info:    vendor ID: 0x1002
+info:    device ID: 0x73df
+info:  D3D11InternalCreateDevice: Maximum supported feature level: D3D_FEATURE_LEVEL_12_1
+info:  D3D11InternalCreateDevice: Using feature level D3D_FEATURE_LEVEL_11_0
+info:  Creating device:
+info:  NVIDIA GeForce RTX 3060 Ti (GA104, Low Hash Rate):
+info:    Driver   : NVIDIA 595.71.5
+info:  Queues:
+info:    Graphics : (0, 0)
+info:    Transfer : (1, 0)
+info:    Sparse   : (0, 0)
+info:  Memory:
+info:    Heap 0: 8.0 GiB (DEVICE_LOCAL)
+info:    Budget: 5.38 GiB
+info:      Type  1: DEVICE_LOCAL
+info:      Type  2: DEVICE_LOCAL
+info:    Heap 1: 23.45 GiB
+info:    Budget: 23.45 GiB
+info:      Type  0: (None)
+info:      Type  3: HOST_VISIBLE | HOST_COHERENT
+info:      Type  4: HOST_VISIBLE | HOST_COHERENT | HOST_CACHED
+info:    Heap 2: 246 MiB (DEVICE_LOCAL)
+info:    Budget: 214 MiB
+info:      Type  5: DEVICE_LOCAL | HOST_VISIBLE | HOST_COHERENT
+info:  Enabled extensions:
+info:    VK_EXT_attachment_feedback_loop_layout
+info:    VK_EXT_conservative_rasterization
+info:    VK_EXT_custom_border_color
+info:    VK_EXT_depth_clip_enable
+info:    VK_EXT_depth_bias_control
+info:    VK_EXT_descriptor_buffer
+info:    VK_EXT_extended_dynamic_state3
+info:    VK_EXT_fragment_shader_interlock
+info:    VK_EXT_graphics_pipeline_library
+info:    VK_EXT_hdr_metadata
+info:    VK_EXT_line_rasterization
+info:    VK_EXT_memory_priority
+info:    VK_EXT_multi_draw
+info:    VK_EXT_non_seamless_cube_map
+info:    VK_EXT_pageable_device_local_memory
+info:    VK_EXT_robustness2
+info:    VK_EXT_shader_module_identifier
+info:    VK_EXT_swapchain_maintenance1
+info:    VK_EXT_transform_feedback
+info:    VK_EXT_vertex_attribute_divisor
+info:    VK_KHR_external_memory_win32
+info:    VK_KHR_external_semaphore_win32
+info:    VK_KHR_load_store_op_none
+info:    VK_KHR_maintenance5
+info:    VK_KHR_maintenance6
+info:    VK_KHR_maintenance7
+info:    VK_KHR_pipeline_library
+info:    VK_KHR_present_id
+info:    VK_KHR_present_wait
+info:    VK_KHR_swapchain
+info:    VK_KHR_swapchain_mutable_format
+info:    VK_KHR_win32_keyed_mutex
+info:    VK_NV_raw_access_chains
+info:  Enabled features:
+info:    depthBiasClamp                 : 1
+info:    depthBounds                    : 1
+info:    depthClamp                     : 1
+info:    drawIndirectFirstInstance      : 1
+info:    dualSrcBlend                   : 1
+info:    fillModeNonSolid               : 1
+info:    fragmentStoresAndAtomics       : 1
+info:    fullDrawIndexUint32            : 1
+info:    geometryShader                 : 1
+info:    imageCubeArray                 : 1
+info:    independentBlend               : 1
+info:    logicOp                        : 1
+info:    multiDrawIndirect              : 1
+info:    multiViewport                  : 1
+info:    occlusionQueryPrecise          : 1
+info:    pipelineStatisticsQuery        : 1
+info:    robustBufferAccess             : 1
+info:    sampleRateShading              : 1
+info:    samplerAnisotropy              : 1
+info:    shaderClipDistance             : 1
+info:    shaderCullDistance             : 1
+info:    shaderFloat64                  : 1
+info:    shaderImageGatherExtended      : 1
+info:    shaderInt16                    : 1
+info:    shaderInt64                    : 1
+info:    shaderSampledImageArrayDynamicIndexing : 1
+info:    sparseBinding                  : 1
+info:    sparseResidencyBuffer          : 1
+info:    sparseResidencyImage2D         : 1
+info:    sparseResidencyImage3D         : 1
+info:    sparseResidency2Samples        : 1
+info:    sparseResidency4Samples        : 1
+info:    sparseResidency8Samples        : 1
+info:    sparseResidency16Samples       : 1
+info:    sparseResidencyAliased         : 1
+info:    shaderResourceResidency        : 1
+info:    shaderResourceMinLod           : 1
+info:    tessellationShader             : 1
+info:    textureCompressionBC           : 1
+info:    variableMultisampleRate        : 1
+info:    vertexPipelineStoresAndAtomics : 1
+info:    wideLines                      : 1
+info:    shaderDrawParameters           : 1
+info:    storagePushConstant16          : 1
+info:    bufferDeviceAddress            : 1
+info:    descriptorIndexing             : 1
+info:    descriptorBindingSampledImageUpdateAfterBind : 1
+info:    descriptorBindingUpdateUnusedWhilePending : 1
+info:    descriptorBindingPartiallyBound : 1
+info:    drawIndirectCount              : 1
+info:    hostQueryReset                 : 1
+info:    runtimeDescriptorArray         : 1
+info:    samplerFilterMinmax            : 1
+info:    samplerMirrorClampToEdge       : 1
+info:    shaderInt8                     : 1
+info:    shaderOutputViewportIndex      : 1
+info:    shaderOutputLayer              : 1
+info:    timelineSemaphore              : 1
+info:    uniformBufferStandardLayout    : 1
+info:    vulkanMemoryModel              : 1
+info:    dynamicRendering               : 1
+info:    maintenance4                   : 1
+info:    robustImageAccess              : 0
+info:    pipelineCreationCacheControl   : 1
+info:    shaderDemoteToHelperInvocation : 1
+info:    shaderZeroInitializeWorkgroupMemory : 1
+info:    synchronization2               : 1
+info:  VK_EXT_attachment_feedback_loop_layout:
+info:    attachmentFeedbackLoopLayout   : 1
+info:  VK_EXT_conservative_rasterization:
+info:    extConservativeRasterization   : 1
+info:  VK_EXT_custom_border_color:
+info:    customBorderColors             : 1
+info:    customBorderColorWithoutFormat : 1
+info:  VK_EXT_depth_clip_enable:
+info:    depthClipEnable                : 1
+info:  VK_EXT_depth_bias_control:
+info:    depthBiasControl               : 1
+info:    leastRepresentableValueForceUnormRepresentation : 1
+info:    floatRepresentation            : 0
+info:    depthBiasExact                 : 1
+info:  VK_EXT_descriptor_buffer:
+info:    descriptorBuffer               : 1
+info:  VK_EXT_extended_dynamic_state3:
+info:    extendedDynamicState3AlphaToCoverageEnable : 1
+info:    extendedDynamicState3DepthClipEnable : 1
+info:    extendedDynamicState3RasterizationSamples : 1
+info:    extendedDynamicState3SampleMask : 1
+info:    extendedDynamicState3LineRasterizationMode : 1
+info:  VK_EXT_fragment_shader_interlock:
+info:    fragmentShaderSampleInterlock  : 1
+info:    fragmentShaderPixelInterlock   : 1
+info:  VK_EXT_full_screen_exclusive:
+info:    extFullScreenExclusive         : 0
+info:  VK_EXT_graphics_pipeline_library:
+info:    graphicsPipelineLibrary        : 1
+info:  VK_EXT_hdr_metadata:
+info:    extHdrMetadata                 : 1
+info:  VK_EXT_line_rasterization:
+info:    rectangularLines               : 1
+info:    smoothLines                    : 1
+info:  VK_EXT_memory_budget:
+info:    extMemoryBudget                : 1
+info:  VK_EXT_memory_priority:
+info:    memoryPriority                 : 1
+info:  VK_EXT_multi_draw:
+info:    multiDraw                      : 1
+info:  VK_EXT_non_seamless_cube_map:
+info:    nonSeamlessCubeMap             : 1
+info:  VK_EXT_pageable_device_local_memory:
+info:    pageableDeviceLocalMemory      : 1
+info:  VK_EXT_robustness2:
+info:    robustBufferAccess2            : 1
+info:    robustImageAccess2             : 1
+info:    nullDescriptor                 : 1
+info:  VK_EXT_shader_module_identifier:
+info:    shaderModuleIdentifier         : 1
+info:  VK_EXT_shader_stencil_export:
+info:    extShaderStencilExport         : 0
+info:  VK_EXT_swapchain_colorspace:
+info:    extSwapchainColorSpace         : 0
+info:  VK_EXT_swapchain_maintenance1:
+info:    swapchainMaintenance1          : 1
+info:  VK_EXT_transform_feedback:
+info:    transformFeedback              : 1
+info:    geometryStreams                : 1
+info:  VK_EXT_vertex_attribute_divisor:
+info:    vertexAttributeInstanceRateDivisor : 1
+info:    vertexAttributeInstanceRateZeroDivisor : 1
+info:  VK_KHR_external_memory_win32:
+info:    khrExternalMemoryWin32         : 1
+info:  VK_KHR_external_semaphore_win32:
+info:    khrExternalSemaphoreWin32      : 1
+info:  VK_KHR_load_store_op_none:
+info:    khrLoadStoreOpNone             : 1
+info:  VK_KHR_maintenance5:
+info:    maintenance5                   : 1
+info:  VK_KHR_maintenance6:
+info:    maintenance6                   : 1
+info:  VK_KHR_maintenance7:
+info:    maintenance7                   : 1
+info:  VK_KHR_pipeline_library:
+info:    khrPipelineLibrary             : 1
+info:  VK_KHR_present_id:
+info:    presentId                      : 1
+info:  VK_KHR_present_wait:
+info:    presentWait                    : 1
+info:  VK_KHR_swapchain:
+info:    khrSwapchain                   : 1
+info:  VK_KHR_swapchain_mutable_format:
+info:    khrSwapchainMutableFormat      : 1
+info:  VK_KHR_win32_keyed_mutex:
+info:    khrWin32KeyedMutex             : 1
+info:  VK_NV_descriptor_pool_overallocation:
+info:    descriptorPoolOverallocation   : 0
+info:  VK_NV_low_latency2:
+info:    nvLowLatency2                  : 0
+info:  VK_NV_raw_access_chains:
+info:    shaderRawAccessChains          : 1
+info:  VK_NVX_binary_import:
+info:    nvxBinaryImport                : 0
+info:  VK_NVX_image_view_handle:
+info:    nvxImageViewHandle             : 0
+info:  Descriptor sizes (set alignment: 64)
+info:    Sampler              : 4
+info:    Uniform buffer       : 8
+info:    Storage buffer       : 16
+info:    Uniform texel buffer : 16
+info:    Storage texel buffer : 16
+info:    Sampled image        : 4
+info:    Storage image        : 4
+info:  Memory type mask for sparse resources: 0x2
+info:  Memory type mask for buffer resources: 0x3b, usage: 0x219ff
+info:  Creating sampler descriptor heap (8 kB)
+info:  DXVK: Graphics pipeline libraries supported
+info:  Creating resource descriptor heap (4096 kB)
+warn:  D3D11DXGIDevice::QueryInterface: Unknown interface query
+warn:  0ec870a6-5d7e-4c22-8cfc-5baae07616ed
+info:  DXVK: Using 16 compiler threads
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3B0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9a0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db60 rbp=000000010020dbe0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e720 rcx=000000010020e220 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e220 rdi=00000000000000a0  r8=000000010020e720  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e220 r13=000000010020dcc0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3b0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E910
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=00000000000000a0  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F410 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ea00
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dbc0 rbp=000000010020dc40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e780 rcx=000000010020e280 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e280 rdi=00000000000000a0  r8=000000010020e780  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020e830 r11=0000000000200202 r12=000000010020e280 r13=000000010020dd20
+0120:trace:seh:RtlUnwindEx r14=000000010020f410 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E970
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db70 rbp=000000010020dbf0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e730 rcx=000000010020e230 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e230 rdi=00000000000000a0  r8=000000010020e730  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e230 r13=000000010020dcd0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3c0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E920
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F3B0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e9a0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db60 rbp=000000010020dbe0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e720 rcx=000000010020e220 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e220 rdi=00000000000000a0  r8=000000010020e720  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e220 r13=000000010020dcc0
+0120:trace:seh:RtlUnwindEx r14=000000010020f3b0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E910
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E060 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d650
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c810 rbp=000000010020c890 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d3d0 rcx=000000010020ced0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020ced0 rdi=0000000000000046  r8=000000010020d3d0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020ced0 r13=000000010020c970
+0120:trace:seh:RtlUnwindEx r14=000000010020e060 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D5C0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F340 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e930
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020daf0 rbp=000000010020db70 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6b0 rcx=000000010020e1b0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1b0 rdi=00000000000000a0  r8=000000010020e6b0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1b0 r13=000000010020dc50
+0120:trace:seh:RtlUnwindEx r14=000000010020f340 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8A0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F310 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e900
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dac0 rbp=000000010020db40 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e680 rcx=000000010020e180 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e180 rdi=00000000000000a0  r8=000000010020e680  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e180 r13=000000010020dc20
+0120:trace:seh:RtlUnwindEx r14=000000010020f310 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E870
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E220 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d810
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9d0 rbp=000000010020ca50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d590 rcx=000000010020d090 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d090 rdi=0000000000000086  r8=000000010020d590  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d090 r13=000000010020cb30
+0120:trace:seh:RtlUnwindEx r14=000000010020e220 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D9D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020cfc0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c180 rbp=000000010020c200 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020cd40 rcx=000000010020c840 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020c840 rdi=0000000000000086  r8=000000010020cd40  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020c840 r13=000000010020c2e0
+0120:trace:seh:RtlUnwindEx r14=000000010020d9d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020CF30
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E200 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7f0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9b0 rbp=000000010020ca30 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d570 rcx=000000010020d070 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d070 rdi=0000000000000086  r8=000000010020d570  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d070 r13=000000010020cb10
+0120:trace:seh:RtlUnwindEx r14=000000010020e200 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D760
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E220 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d810
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9d0 rbp=000000010020ca50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d590 rcx=000000010020d090 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d090 rdi=000000000000000c  r8=000000010020d590  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020d640 r11=0000000000200202 r12=000000010020d090 r13=000000010020cb30
+0120:trace:seh:RtlUnwindEx r14=000000010020e220 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D9D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020cfc0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c180 rbp=000000010020c200 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020cd40 rcx=000000010020c840 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020c840 rdi=000000000000000c  r8=000000010020cd40  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020c840 r13=000000010020c2e0
+0120:trace:seh:RtlUnwindEx r14=000000010020d9d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020CF30
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1F0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7e0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9a0 rbp=000000010020ca20 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d560 rcx=000000010020d060 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d060 rdi=000000000000000c  r8=000000010020d560  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d060 r13=000000010020cb00
+0120:trace:seh:RtlUnwindEx r14=000000010020e1f0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D750
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D420 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020ca10
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020bbd0 rbp=000000010020bc50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020c790 rcx=000000010020c290 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020c290 rdi=0000000004ede9b8  r8=000000010020c790  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020c290 r13=000000010020bd30
+0120:trace:seh:RtlUnwindEx r14=000000010020d420 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020C980
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C190 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b780
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020a940 rbp=000000010020a9c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b500 rcx=000000010020b000 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b000 rdi=0000000004ede368  r8=000000010020b500  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b000 r13=000000010020aaa0
+0120:trace:seh:RtlUnwindEx r14=000000010020c190 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B6F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C1F0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b7e0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020a9a0 rbp=000000010020aa20 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b560 rcx=000000010020b060 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b060 rdi=0000000004ede368  r8=000000010020b560  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b060 r13=000000010020ab00
+0120:trace:seh:RtlUnwindEx r14=000000010020c1f0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B750
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C190 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b780
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020a940 rbp=000000010020a9c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b500 rcx=000000010020b000 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b000 rdi=0000000004ede368  r8=000000010020b500  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020b000 r13=000000010020aaa0
+0120:trace:seh:RtlUnwindEx r14=000000010020c190 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B6F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C200 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b7f0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020a9b0 rbp=000000010020aa30 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b570 rcx=000000010020b070 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b070 rdi=0000000004ede368  r8=000000010020b570  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b070 r13=000000010020ab10
+0120:trace:seh:RtlUnwindEx r14=000000010020c200 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B760
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C200 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b7f0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020a9b0 rbp=000000010020aa30 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b570 rcx=000000010020b070 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b070 rdi=0000000004ede368  r8=000000010020b570  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b070 r13=000000010020ab10
+0120:trace:seh:RtlUnwindEx r14=000000010020c200 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B760
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020aa50 rbp=000000010020aad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b610 rcx=000000010020b110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b110 rdi=0000000000000000  r8=000000010020b610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b110 r13=000000010020abb0
+0120:trace:seh:RtlUnwindEx r14=000000010020c2a0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B800
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C2A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020b890
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020aa50 rbp=000000010020aad0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020b610 rcx=000000010020b110 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b110 rdi=0000000000000000  r8=000000010020b610  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b110 r13=000000010020abb0
+0120:trace:seh:RtlUnwindEx r14=000000010020c2a0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020B800
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D030 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020c620
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020b7e0 rbp=000000010020b860 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020c3a0 rcx=000000010020bea0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020bea0 rdi=0000000000000281  r8=000000010020c3a0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020bea0 r13=000000010020b940
+0120:trace:seh:RtlUnwindEx r14=000000010020d030 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020C590
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7c0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c980 rbp=000000010020ca00 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d540 rcx=000000010020d040 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d040 rdi=0000000000000006  r8=000000010020d540  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000200202 r12=000000010020d040 r13=000000010020cae0
+0120:trace:seh:RtlUnwindEx r14=000000010020e1d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D730
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7c0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c980 rbp=000000010020ca00 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d540 rcx=000000010020d040 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d040 rdi=0000000000000006  r8=000000010020d540  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d040 r13=000000010020cae0
+0120:trace:seh:RtlUnwindEx r14=000000010020e1d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D730
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E220 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d810
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9d0 rbp=000000010020ca50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d590 rcx=000000010020d090 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d090 rdi=0000000000000085  r8=000000010020d590  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020d640 r11=0000000000200202 r12=000000010020d090 r13=000000010020cb30
+0120:trace:seh:RtlUnwindEx r14=000000010020e220 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D780
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D9D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020cfc0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c180 rbp=000000010020c200 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020cd40 rcx=000000010020c840 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020c840 rdi=0000000000000085  r8=000000010020cd40  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020c840 r13=000000010020c2e0
+0120:trace:seh:RtlUnwindEx r14=000000010020d9d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020CF30
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1F0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7e0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c9a0 rbp=000000010020ca20 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d560 rcx=000000010020d060 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d060 rdi=0000000000000085  r8=000000010020d560  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d060 r13=000000010020cb00
+0120:trace:seh:RtlUnwindEx r14=000000010020e1f0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D750
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F370 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e960
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db20 rbp=000000010020dba0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6e0 rcx=000000010020e1e0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1e0 rdi=00000000000000a0  r8=000000010020e6e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1e0 r13=000000010020dc80
+0120:trace:seh:RtlUnwindEx r14=000000010020f370 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E090 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d680
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c840 rbp=000000010020c8c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d400 rcx=000000010020cf00 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020cf00 rdi=0000000000000047  r8=000000010020d400  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020cf00 r13=000000010020c9a0
+0120:trace:seh:RtlUnwindEx r14=000000010020e090 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D5F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E090 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d680
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c840 rbp=000000010020c8c0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d400 rcx=000000010020cf00 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020cf00 rdi=0000000000000047  r8=000000010020d400  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020cf00 r13=000000010020c9a0
+0120:trace:seh:RtlUnwindEx r14=000000010020e090 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D5F0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F340 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e930
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020daf0 rbp=000000010020db70 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6b0 rcx=000000010020e1b0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1b0 rdi=00000000000000a0  r8=000000010020e6b0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1b0 r13=000000010020dc50
+0120:trace:seh:RtlUnwindEx r14=000000010020f340 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8A0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1D0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7c0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c980 rbp=000000010020ca00 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d540 rcx=000000010020d040 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d040 rdi=000000000000000c  r8=000000010020d540  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020d5f0 r11=0000000000200202 r12=000000010020d040 r13=000000010020cae0
+0120:trace:seh:RtlUnwindEx r14=000000010020e1d0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D730
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D980 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020cf70
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c130 rbp=000000010020c1b0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020ccf0 rcx=000000010020c7f0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020c7f0 rdi=000000000000000c  r8=000000010020ccf0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020c7f0 r13=000000010020c290
+0120:trace:seh:RtlUnwindEx r14=000000010020d980 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020CEE0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1A0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d790
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c950 rbp=000000010020c9d0 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d510 rcx=000000010020d010 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d010 rdi=000000000000000c  r8=000000010020d510  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d010 r13=000000010020cab0
+0120:trace:seh:RtlUnwindEx r14=000000010020e1a0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D700
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F320 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e910
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020dad0 rbp=000000010020db50 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e690 rcx=000000010020e190 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e190 rdi=00000000009bd1f8  r8=000000010020e690  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e190 r13=000000010020dc30
+0120:trace:seh:RtlUnwindEx r14=000000010020f320 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E880
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D070 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020c660
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020b820 rbp=000000010020b8a0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020c3e0 rcx=000000010020bee0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020bee0 rdi=0000000000000085  r8=000000010020c3e0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=000000010020c490 r11=0000000000200202 r12=000000010020bee0 r13=000000010020b980
+0120:trace:seh:RtlUnwindEx r14=000000010020d070 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020C5D0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020C820 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020be10
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020afd0 rbp=000000010020b050 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020bb90 rcx=000000010020b690 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020b690 rdi=0000000000000085  r8=000000010020bb90  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020b690 r13=000000010020b130
+0120:trace:seh:RtlUnwindEx r14=000000010020c820 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020BD80
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020D040 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020c630
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020b7f0 rbp=000000010020b870 eflags=00200206
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020c3b0 rcx=000000010020beb0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020beb0 rdi=0000000000000085  r8=000000010020c3b0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020beb0 r13=000000010020b950
+0120:trace:seh:RtlUnwindEx r14=000000010020d040 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020C5A0
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020E1C0 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020d7b0
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020c970 rbp=000000010020c9f0 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020d530 rcx=000000010020d030 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020d030 rdi=000000000000000f  r8=000000010020d530  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020d030 r13=000000010020cad0
+0120:trace:seh:RtlUnwindEx r14=000000010020e1c0 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020D720
+0120:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=000000010020F360 target_ip=00006FFFFE962E76
+0120:trace:seh:RtlUnwindEx  info[0]=000000010020e950
+0120:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=000000010020db10 rbp=000000010020db90 eflags=00200202
+0120:trace:seh:RtlUnwindEx rax=000000007ffd8000 rbx=000000010020e6d0 rcx=000000010020e1d0 rdx=00006ffffe962e76
+0120:trace:seh:RtlUnwindEx rsi=000000010020e1d0 rdi=000000000013a460  r8=000000010020e6d0  r9=0000000000000001
+0120:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=000000010020e1d0 r13=000000010020dc70
+0120:trace:seh:RtlUnwindEx r14=000000010020f360 r15=000000007ffda000 mxcsr=00009fe8 cs=0033 ss=002b
+0120:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 000000010020E8C0
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F270 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e860
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2da20 rbp=0000000108a2daa0 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e5e0 rcx=0000000108a2e0e0 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e0e0 rdi=00000000f994fbe4  r8=0000000108a2e5e0  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e0e0 r13=0000000108a2db80
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f270 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E7D0
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F230 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e820
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2d9e0 rbp=0000000108a2da60 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e5a0 rcx=0000000108a2e0a0 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e0a0 rdi=00000000f994fbe4  r8=0000000108a2e5a0  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e0a0 r13=0000000108a2db40
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f230 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E790
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F290 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e880
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2da40 rbp=0000000108a2dac0 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e600 rcx=0000000108a2e100 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e100 rdi=00000000f994fbe4  r8=0000000108a2e600  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e100 r13=0000000108a2dba0
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f290 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E7F0
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F230 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e820
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2d9e0 rbp=0000000108a2da60 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e5a0 rcx=0000000108a2e0a0 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e0a0 rdi=00000000f994fbe4  r8=0000000108a2e5a0  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e0a0 r13=0000000108a2db40
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f230 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E790
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F320 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e910
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2dad0 rbp=0000000108a2db50 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e690 rcx=0000000108a2e190 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e190 rdi=000000007ae009e0  r8=0000000108a2e690  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e190 r13=0000000108a2dc30
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f320 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E880
+0228:trace:seh:RtlUnwindEx code=80000026 flags=2 end_frame=0000000108A2F320 target_ip=00006FFFFE962E76
+0228:trace:seh:RtlUnwindEx  info[0]=0000000108a2e910
+0228:trace:seh:RtlUnwindEx rip=00006ffffff6aff9 rsp=0000000108a2dad0 rbp=0000000108a2db50 eflags=00000202
+0228:trace:seh:RtlUnwindEx rax=0000000079a70000 rbx=0000000108a2e690 rcx=0000000108a2e190 rdx=00006ffffe962e76
+0228:trace:seh:RtlUnwindEx rsi=0000000108a2e190 rdi=000000007ae009e0  r8=0000000108a2e690  r9=0000000000000001
+0228:trace:seh:RtlUnwindEx r10=0000000000000000 r11=0000000000000000 r12=0000000108a2e190 r13=0000000108a2dc30
+0228:trace:seh:RtlUnwindEx r14=0000000108a2f320 r15=0000000000000000 mxcsr=00001f80 cs=0033 ss=002b
+0228:trace:seh:RtlRestoreContext returning to 00006FFFFE962E76 stack 0000000108A2E880
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+err:   Failed to map Vulkan memory: VK_ERROR_OUT_OF_HOST_MEMORY
+err:     size: 16777216 bytes
+0120:trace:seh:raise (22)
+terminate called after throwing an instance of 'dxvk::DxvkError'

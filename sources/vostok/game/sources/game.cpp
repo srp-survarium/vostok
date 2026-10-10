@@ -41,6 +41,7 @@ using vostok::console_commands::command_type_engine_internal;
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
 #include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
 #include "network_client.h"	// network_client (create_network_client)
+#include "offline_client.h"
 #include "stats.h"	// m_stats (~game)
 #include "stats_graph.h"	// m_fps_graph (~game)
 #include "key_binder.h"	// m_key_binder (~game)
@@ -427,9 +428,11 @@ void game::on_base_resources_created( resources::queries_result& data )
 	}
 	else
 	{
-
-		create_and_assign_network_client( "188.93.23.27:25100", false );
-
+		set_network_client(
+			VOSTOK_NEW_IMPL( ::survarium::g_allocator, offline_client )( *this ),
+			"", 0, false );
+		static_cast< offline_client* >( m_network_client )->initialize_lobby( );
+		create_lobby_menu( );
 	}
 }
 
@@ -815,9 +818,6 @@ void game::switch_to_main_menu( )
 
 void game::switch_to_lobby( )
 {
-	if ( !m_network_client->has_bandwidth( ) )
-		return;
-
 	switch_to_scene					( m_lobby_menu );
 }
 

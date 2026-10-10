@@ -217,6 +217,7 @@ private:
 	typedef fixed_vector< client_player_update, 32 > player_inputs_type;
 
 private:
+	friend class offline_client;
 	/* 0x0000 */	/* base_network_client */
 	/* 0x0020 */	network::login_client				m_login_client;
 	/* 0x0218 */	class lobby_client					m_lobby_client;
