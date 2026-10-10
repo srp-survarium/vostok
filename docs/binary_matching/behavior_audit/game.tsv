@@ -35,6 +35,7 @@ mangled	verdict	evidence
 ?call@relocate_item_func@survarium@@UAEXAAUflash_function_handler_params@2@@Z	FIXED	retail reads GetArraySize once as u8 (0x110 call [edx+28h]; test al,al; countdown); ours re-read it each pass. check_compatibility unconditional in retail (pure)
 ?callback@game_options@survarium@@UAEXPAUflash_movie@2@PBDPBUflash_value@2@I@Z	EQUIVALENT	same 41-statement dispatch, calls, literals, offsets
 ?callback@lobby_menu_external_handler@survarium@@UAEXPAUflash_movie@2@PBDPBUflash_value@2@I@Z	EQUIVALENT	retail calls chat_handler::focus, base inlines it (root.focus_chat Invoke); same dispatch strings
+?callback@login_menu_external_handler@survarium@@UAEXPAUflash_movie@2@PBDPBUflash_value@2@I@Z	EQUIVALENT	LTCG constant-propagates "user.cfg" into console_commands::save
 ?clear_initial_info@lobby_client@survarium@@AAEXXZ	EQUIVALENT	strip_pointer out-of-line in retail; same frees
 ?clear_profile_info@lobby_client@survarium@@AAEXXZ	EQUIVALENT	strip_pointer out-of-line in retail; same frees
 ?clear_resources@human_npc@survarium@@UAEXXZ	EQUIVALENT	regalloc only (structure match)
@@ -65,6 +66,7 @@ mangled	verdict	evidence
 ?fill_inventory_labels@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	0x49-count loop vs 8-byte stride to 0x248 (same 0x49 labels); Scaleform Value::operator= inline-vs-call
 ?fill_items_dictionary@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	log __LINE__ only (0x2CE vs 0x293); fixed_string<32> assign inline-vs-call; retail logs item_cfg_name from the node, base from its copy (same value)
 ?fill_labels@game_options@survarium@@QAEXXZ	EQUIVALENT	Scaleform vtable slot via different base reg; same calls/literals
+?fill_labels@login_menu@survarium@@QAEXXZ	EQUIVALENT	inline-vs-call Value::operator=, loop by index vs pointer over the same 5 labels
 ?fill_menu_buttons@game_options@survarium@@QAEX_N@Z	EQUIVALENT	Scaleform vtable slot via different base reg; same calls/literals
 ?fill_profiles@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	Scaleform Value::operator= inline-vs-call; mbstowcs_s ICF naming; same literals/offsets
 ?fill_quick_slots@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	same slot ids and calls; constant materialization
@@ -147,6 +149,7 @@ mangled	verdict	evidence
 ?on_project_loaded@game_world@survarium@@IAEXAAVqueries_result@resources@vostok@@IABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@@Z	EQUIVALENT	intrusive_ptr::set / operator new ICF names; same calls/offsets
 ?on_reload@weapon@survarium@@EAEXXZ	EQUIVALENT	tail jump vs call to set_ui_ammo(true)
 ?on_render_scenes_ready@lobby_menu@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	retail m_sound_scene goes through an extra resource_ptr temp (+1/-1); net refcount same; 17 FP ops same
+?on_resources_ready@login_menu@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	FIXED	retail 0x358 calls Movie vtbl+0xC0 (ForceCollectGarbage, push 2=GCF_Full); ours called SetViewScaleMode(SM_ExactFit) at +0x34, stretching the login UI
 ?on_shop_ui_ready@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	countdown loop (4 iterations) vs trader_id<=4 compare; same query_prices(1..4); this on stack vs edi (LTCG)
 ?on_show@weapon@survarium@@EAEXXZ	EQUIVALENT	same calls/offsets; register constant
 ?on_skeleton_matrices_changed@weapon@survarium@@EAEXIABVfloat4x4@math@vostok@@QBV345@10QAV345@20@Z	EQUIVALENT	base tail-merges the two set_model_visible calls (push 2 / push 3, shared call); same calls and FP order
