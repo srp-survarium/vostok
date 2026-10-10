@@ -187,6 +187,7 @@ mangled	verdict	evidence
 ?execute@stage_pre_rain@render@vostok@@UAEXXZ	EQUIVALENT	retail set_w(float4x4().identity()) vs set_w_identity(); same world matrix
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
 ?execute@stage_resolve_lighting@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_screen_image@render@vostok@@QAEXV?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@@Z	EQUIVALENT	identical after regalloc
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
 ?execute@stage_sun@render@vostok@@UAEXXZ	EQUIVALENT	addressing only (trailing jump-table bytes differ)
 ?execute@stage_translucency@render@vostok@@UAEXXZ	EQUIVALENT	transform_direction operands from memory vs register; same products
