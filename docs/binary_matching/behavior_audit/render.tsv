@@ -325,6 +325,7 @@ mangled	verdict	evidence
 ?sort_instances@grass_patch@render@vostok@@QAEXABVfloat3@math@3@@Z	EQUIVALENT	identical after regalloc
 ?start@?$statistics_value@H@render@vostok@@UAEXXZ	EQUIVALENT	retail calls max(int,int) out of line; base inlines signed max
 ?translate_query@grass_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	1.f/u32(count) for a u8 count: retail x87 unsigned convert, base cvtsi2ss (same value)
+?translate_query@scene_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail inlines query_create_resource (1-element request + query_create_resources)
 ?translate_query@skeleton_combined_model_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
 ?translate_query@skeleton_combined_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail inlines user_data_variant::set (destroy-old check on empty ud); ICF assign_to reps
 ?translate_query@skeleton_combined_render_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
