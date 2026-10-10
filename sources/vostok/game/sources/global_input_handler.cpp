@@ -45,6 +45,12 @@ bool global_input_handler::on_keyboard_action(
 			static_cast< offline_client* >( m_game.get_network_client( ) )->toggle_free_camera( );
 			break;
 
+		case input::key_f7:
+			if ( !m_game.get_network_client( ) || m_game.get_network_client( )->has_bandwidth( ) )
+				return false;
+			static_cast< offline_client* >( m_game.get_network_client( ) )->print_where( );
+			break;
+
 		case input::key_grave:
 			m_game.toggle_console( );
 			break;
