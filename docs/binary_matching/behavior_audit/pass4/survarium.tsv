@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+splash_screen_main	EQUIVALENT	pass-3 fix complete: all integer ops (cdq/sar/sub per term for x and y) now identical in order; remaining diffs are ICF names and data addresses
