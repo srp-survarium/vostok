@@ -107,6 +107,8 @@ Playing
   list: type a map's number (or its name) and press Enter. Play starts the
   default map.
   Equip a weapon before starting a match.
+  F6 in a match toggles a free-flying camera (WASD + mouse); the console
+  (the ` key) command demo_record does the same.
 
 The maps in this package and their chat names are listed in MAPS.txt.
 
