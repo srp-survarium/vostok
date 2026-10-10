@@ -1,7 +1,10 @@
 mangled	verdict	evidence
 ??0bt_ghost_object@physics@vostok@@QAE@V?$resource_ptr@Vbt_collision_shape@physics@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAVbtPairCachingGhostObject@@@Z	EQUIVALENT	retail inlines resource_ptr copy ctor (addref at +0xD0); base calls it
 ??0bt_static_rigid_body@physics@vostok@@QAE@V?$resource_ptr@Vbt_collision_shape@physics@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAVbtRigidBody@@@Z	EQUIVALENT	retail inlines resource_ptr copy ctor (addref at +0xD0); base calls it
+??0bullet_character_controller@physics@vostok@@QAE@PAVbtPairCachingGhostObject@@ABVfloat2@math@2@1FF@Z	EQUIVALENT	retail cosf via x87 CRT vs base __libm_sse2_cos on the same float pi/3; both double cos rounded to float
 ??0bullet_physics_world@physics@vostok@@QAE@AAVbase_allocator@memory@2@AAUengine@12@@Z	EQUIVALENT	schedule only
+??1bullet_character_controller@physics@vostok@@UAE@XZ	EQUIVALENT	LTCG ret size only
+??_Gbullet_character_controller@physics@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete import alias
 ?adjust_foot_transform@bullet_physics_world@physics@vostok@@QAE_NABVfloat3@math@3@00MMAAVfloat4x4@53@@Z	FIXED	hit-fraction and angle tests: retail +0x259/+0x3a3 comiss eps,|x|; ja skip (NaN proceeds); source now !math::is_zero(x)
 ?apply_impulse@bt_static_rigid_body@physics@vostok@@UAEXABVfloat3@math@3@0@Z	EQUIVALENT	load order only
 ?contact_pair_test@bullet_physics_world@physics@vostok@@QAEXAAUcontact_test_predicate@23@PAVbtCollisionObject@@1@Z	OPEN	no base instance: uncalled in our build so not emitted; source body reads identical to the retail asm
@@ -14,8 +17,14 @@ mangled	verdict	evidence
 ?initialize@bullet_physics_world@physics@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
 ?log_cb@physics@vostok@@YAXPAD@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
 ?notify_about_contact@bullet_physics_world@physics@vostok@@AAEXXZ	FIXED	contact test lost retail NaN order: retail +0x4a comiss 0,[dist]; ja (NaN distance skipped); source now !(d < 0)
+?parallelComponent@physics@vostok@@YA?AVbtVector3@@ABV3@0@Z	OPEN	no base instance: uncalled in our build so not emitted; source body reads identical to the retail asm
 ?ray_test@bullet_physics_world@physics@vostok@@UAE?AUclosest_ray_result@23@ABVfloat3@math@3@0MGG@Z	EQUIVALENT	identical after regalloc
+?recover_from_penetration@bullet_character_controller@physics@vostok@@AAEMXZ	EQUIVALENT	symbolic store comparison equal
 ?recover_from_penetrations@bullet_physics_world@physics@vostok@@UAE_NQAVbt_collision_shape@23@ABVfloat4x4@math@3@AAV563@GG@Z	EQUIVALENT	cvtps2pd vs cvtss2sd on the same scalar; log __LINE__ only (absolute line drift)
+?setup_crouch_state@bullet_character_controller@physics@vostok@@AAEX_N@Z	EQUIVALENT	store order only
+?step_down@bullet_character_controller@physics@vostok@@AAEXM_NABVbtVector3@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); ICF reps; same 1.0/0.0 constants at relocated addresses
+?updateAction@bullet_character_controller@physics@vostok@@UAEXPAVbtCollisionWorld@@M@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?updateTargetPositionBasedOnCollision@bullet_character_controller@physics@vostok@@AAE?AVbtVector3@@ABV4@0MM@Z	EQUIVALENT	identical after regalloc
 `dynamic initializer for 's_dump_statistics''	FIXED	dump_physics_profiler registered user_specific; retail +0x6c/+0x66 store command_type 0 at +0x10 (engine_internal)
 `dynamic initializer for 's_reset_statistics''	FIXED	reset_physics_profiler registered user_specific; retail +0x66 stores command_type 0 at +0x10 (engine_internal)
 `vostok::physics::bullet_physics_world::object_query'::`2'::object_query_callback::addSingleResult	EQUIVALENT	symbolic store comparison equal
