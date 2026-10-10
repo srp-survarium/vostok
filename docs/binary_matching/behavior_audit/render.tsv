@@ -140,6 +140,7 @@ mangled	verdict	evidence
 ?execute@stage_forward@render@vostok@@UAEXXZ	EQUIVALENT	retail frees a temp buffer out of line / inc vs add 1; same calls
 ?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
 ?execute@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (set_ps_constant, apply, get_rt, set_ps_texture)
+?execute@stage_pre_rain@render@vostok@@UAEXXZ	EQUIVALENT	retail set_w(float4x4().identity()) vs set_w_identity(); same world matrix
 ?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
 ?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
 ?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
@@ -248,6 +249,7 @@ mangled	verdict	evidence
 ?render_opaque_models@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	RT slot clears via immediate vs register zero
 ?render_particle_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAVlight@23@I@Z	EQUIVALENT	retail inlines get_view2shadow switch and set_constant<float>; same float op multiset
 ?render_particle_probe_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAUenvironment_probe@23@I@Z	EQUIVALENT	addressing only
+?render_rain_shadow_map@stage_pre_rain@render@vostok@@AAE?AVfloat4x4@math@3@XZ	EQUIVALENT	mul4x3 argument order/scheduling; same matrices
 ?render_shadowed_light@stage_lights@render@vostok@@AAEXPAVlight@23@@Z	EQUIVALENT	view_matrix_parameters table addressed at same relative offsets; operand order of commutative adds only
 ?render_speedtree_lighting@stage_lights@render@vostok@@AAEXPBUlod_entry@23@PBVCInstance@SpeedTree@@PBUSInstanceLod@6@PAVspeedtree_tree_component@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant and speedtree get_material_effects; same float op count
 ?render_to_hw_shadowmap@stage_lights@render@vostok@@AAEXPAVlight@23@IMIIABVfloat4x4@math@3@1I@Z	EQUIVALENT	retail calls res_effect::apply where base inlines apply_pass; static_shadows?1:0 vs bool push; size()!=0 vs pointer compare
