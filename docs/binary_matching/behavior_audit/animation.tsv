@@ -1,3 +1,10 @@
 mangled	verdict	evidence
+?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
 ?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	retail calls free_helper_impl with a null test; base calls allocator free directly (res already dereferenced by the dtor call)
+?deserialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	computed_tree and get_next_buffer inlined in base; same buffer toggle and tree assignment
 ?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z	EQUIVALENT	ICF reps for boost bind/function helpers
+?serialize_state@animation_player@animation@vostok@@QAEXPAXI@Z	EQUIVALENT	LTCG conv (buffer/this register swap, size constprop 0x4000); boost::function clear inlined in base
+?set_target@animation_player@animation@vostok@@AAE_NABVexpression@mixing@23@IABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	get_next_buffer inlined; callback-generator cleanup loop placed after vs inside the if (runs only when non-null)
+?skip_time_if_needed@animation_player@animation@vostok@@AAEXI@Z	EQUIVALENT	LTCG conv for serialize_state; unsigned >0 tested as jbe vs je; log __LINE__ only (absolute line drift)
+?subscribe@animation_player@animation@vostok@@QAEXPBDABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@EQBX@Z	EQUIVALENT	ICF reps (call_constructor, function ctor)
+?unsubscribe@animation_player@animation@vostok@@QAEXPBDPBX@Z	EQUIVALENT	boost::function swap/move_assign inlined in base
