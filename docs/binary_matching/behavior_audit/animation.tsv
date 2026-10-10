@@ -2,11 +2,18 @@ mangled	verdict	evidence
 ??$propagate@Vn_ary_tree_animation_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z	EQUIVALENT	x4 as lea vs two adds
 ??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z	EQUIVALENT	m_layers_count kept in a register; ICF animation_interval::animation rep; LTCG ret size
+??0n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@ABVn_ary_tree@123@1IIIAAPAUsubscribed_channel@23@ABV?$function@$$A6A?AVfloat4x4@math@vostok@@PBX@Z@boost@@@Z	EQUIVALENT	LTCG param placement; same members stored (extra zero stores later overwritten)
 ?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z	OPEN	inlined quaternion operator* (frame*conj(prev)): retail sums x/y terms in another order (fp:fast); 1-ulp in object movement rotation; no TU-local source lever
+?add_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@QAV5234@@Z	EQUIVALENT	LTCG param placement for new_animation; same clone/compare loop
+?add_animation_node@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@PBUanimation_state@234@IM_N@Z	EQUIVALENT	identical after regalloc
+?add_operands@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0PAPAUn_ary_tree_base_node@234@1_N@Z	EQUIVALENT	compare form/branch layout only
+?change_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@0QAV5234@_N@Z	EQUIVALENT	branch layout of cloner calls only
+?change_weight_synchronization_group@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	identical after regalloc
 ?compact_callbacks@animation_player@animation@vostok@@AAEXXZ	EQUIVALENT	ICF reps
 ?compute_bones_local_matrices@bone_matrices_computer@animation@vostok@@QBEXPAVfloat4x4@math@3@0PBI@Z	EQUIVALENT	addressing only
 ?compute_bones_matrices@bone_matrices_computer@animation@vostok@@QBEXPAVfloat4x4@math@3@0PBI@Z	EQUIVALENT	addressing only
 ?compute_skeleton_branch@bone_matrices_computer@animation@vostok@@ABEXABVskeleton_bone@23@PAVfloat4x4@math@3@ABV563@PBI3@Z	EQUIVALENT	loop alignment only
+?computed_operands_count@mixing@animation@vostok@@YA?AU?$pair@II@stlp_std@@AAVn_ary_tree_animation_node@123@0@Z	EQUIVALENT	compare operand form only
 ?convert_skeleton_branch@bone_matrices_computer@animation@vostok@@ABEXABVskeleton_bone@23@PAVfloat4x4@math@3@ABV563@@Z	EQUIVALENT	identical after regalloc
 ?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z	EQUIVALENT	event_channels/knots_count inlined in retail; pinned_ptr const-ness only; same interval math
 ?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z	EQUIVALENT	event_channels/knots_count inlined in retail; same intervals, tail and start-time clamp
@@ -15,6 +22,13 @@ mangled	verdict	evidence
 ?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z	OPEN	NaN routing differs: retail +0x38f jb/+0x3da jae/+0x3f3 ja vs base jbe/jbe/jb (3 knot ternaries); inverting the source conditions compiles identically under fp:fast
 ?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z	EQUIVALENT	schedule only; ICF animation_interval::animation rep
 ?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	schedule/stack layout only; same float ops
+?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z	EQUIVALENT	register renames and load order only
+?merge_weight_asynchronous_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXQAVn_ary_tree_animation_node@234@000@Z	EQUIVALENT	push order only
+?merge_weight_synchronization_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z	EQUIVALENT	identical after regalloc
+?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z	EQUIVALENT	retail stores the interval time in each branch vs a shared tail store; same x87 ratio*time
+?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z	EQUIVALENT	ratio sign as 1.0/-1.0 multiply vs negate (exact); same offsets
+?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0@Z	EQUIVALENT	LTCG ret size
+?new_weight_driving_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@@Z	EQUIVALENT	LTCG register params and stack layout; same new_animation args, clone loop, sort and add_animation_node
 ?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z	EQUIVALENT	symbolic store comparison equal up to commutative operand order; ICF reps
 ?remove_animation@n_ary_tree@mixing@animation@vostok@@AAEXAAPAVn_ary_tree_animation_node@234@PAV5234@@Z	EQUIVALENT	time-list unlink via pointer-to-link vs prev pointer; same unlink, LTCG ret size
 ?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z	EQUIVALENT	ICF reps for buffer_vector/sort helpers
