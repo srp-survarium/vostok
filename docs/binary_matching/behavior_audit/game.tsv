@@ -20,6 +20,7 @@ mangled	verdict	evidence
 ?call@relocate_item_func@survarium@@UAEXAAUflash_function_handler_params@2@@Z	FIXED	retail reads GetArraySize once as u8 (0x110 call [edx+28h]; test al,al; countdown); ours re-read it each pass. check_compatibility unconditional in retail (pure)
 ?connect_to_login@network_client@survarium@@UAEXPBDG00@Z	EQUIVALENT	log __LINE__ only (absolute line drift, 0x1B0 vs 0x1AA; retail geometry restored anyway); boost::function dtor inline-vs-call
 ?create_game_objects@project_cooker_simple@survarium@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@PAVquery_result_for_cook@45@@Z	FIXED	empty collision/visual arrays stayed allocated; retail 0x14b/0x1d7 je on count==0 stores NULL. Rest: same calls/strings; boost::function dtor inline-vs-call
+?create_slot_value@game_world_ui@survarium@@AAEXW4profile_slot_enum@2@AAUinventory_item_props@2@AAUflash_value@2@@Z	EQUIVALENT	key_binder::get_action_dik inline-vs-call; same action ids 0x30..0x35 and hotkey selection
 ?deactivate@weapon@survarium@@EAEXXZ	EQUIVALENT	weapon_core::remove_animation_callback inline-vs-call (x4)
 ?delete_resource@project_cooker_simple@survarium@@UAEXPAVresource_base@resources@vostok@@@Z	EQUIVALENT	same containers/offsets/dtor slots/frees; base adds dead null-back stores into containers freed right after (retail deletes via copies); layout-blocked partition
 ?deserialize@player@survarium@@UAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	load scheduling only
@@ -33,6 +34,7 @@ mangled	verdict	evidence
 ?fill_labels@game_options@survarium@@QAEXXZ	EQUIVALENT	Scaleform vtable slot via different base reg; same calls/literals
 ?fill_menu_buttons@game_options@survarium@@QAEX_N@Z	EQUIVALENT	Scaleform vtable slot via different base reg; same calls/literals
 ?fill_profiles@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	Scaleform Value::operator= inline-vs-call; mbstowcs_s ICF naming; same literals/offsets
+?fill_quick_slots@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	same slot ids and calls; constant materialization
 ?fill_service_prices@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	Scaleform SetUInt inline: base adds the release-previous check on a fresh value; same get_service_prices+0x860, Invoke args
 ?fill_settings_data@game_options@survarium@@QAEXXZ	EQUIVALENT	same new_array sizes (9,0x13,7,2) and frees; strip_pointer out-of-line in retail; jump-table bytes in listing
 ?fill_skills_tree@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	5-branch countdown loop vs <=5 compare; Scaleform inline-vs-call; same literals, FP ops, offsets
@@ -40,11 +42,15 @@ mangled	verdict	evidence
 ?fov_factor@player@survarium@@QBEMI@Z	EQUIVALENT	LTCG return convention: retail SSE xmm0, base x87 st0; same (target-start)*interp+start order and >= test
 ?get_player_team@network_client@survarium@@QAE?AW4game_team_id@2@PBD@Z	EQUIVALENT	strcmp operands swapped (only ==0 tested); restored retail operand order and loop braces anyway
 ?hide_crosshair@weapon@survarium@@AAEXXZ	EQUIVALENT	base inlines it into callers; retail body = if m_game_ui show_crosshair(false)
+?hide_item_container@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	base inlines it into callers; retail body Invokes root.hide_container_icon as source
 ?http_query_server_connection_info@network_client@survarium@@AAE_NE@Z	EQUIVALENT	same calls/strings/constants; base inlines on_http_result_ready on the type 4 fallback (inline-vs-call); body present, stale park note
 ?initialize_ai@game_world@survarium@@AAEXXZ	EQUIVALENT	unreferenced island (no caller in target, base drops it); retail body ai::create_world(this) -> m_ai_world [+0x248], as source
 ?initialize_ai_navigation@game_world@survarium@@AAEXXZ	EQUIVALENT	unreferenced island; retail create_world(this, render_scene [+4], renderer().debug()) -> [+0x24C], as source
+?initialize_base_points@game_world_ui@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	same packet reads and calls; scheduling
 ?initialize_bindings@game_options@survarium@@QAEXXZ	EQUIVALENT	same calls; image-layout global addresses; Scaleform constant materialization
 ?initialize@game_options@survarium@@QAEXXZ	EQUIVALENT	boost::function ICF helper names; same calls/literals
+?initialize@game_world_ui@survarium@@QAEXAAUmatch_options@2@@Z	EQUIVALENT	same option fields copied and per-profile loop; CRT ICF naming; register/addressing only
+?initialize_minimap@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	extra temp resource_ptr release in base (+1/-1); same calls/literals
 ?insert@player@survarium@@QAEX_N@Z	EQUIVALENT	register/reload differences; same calls/constants
 ?instant_aim_end@weapon@survarium@@EAEXXZ	EQUIVALENT	STRUCTURE MATCH; register/scheduling only
 ?instant_aim_start@weapon@survarium@@EAEXXZ	EQUIVALENT	STRUCTURE MATCH; same FP op
@@ -61,11 +67,13 @@ mangled	verdict	evidence
 ?on_collision_and_visuals_loaded@project_cooker_simple@survarium@@AAEXAAVqueries_result@resources@vostok@@PAVsimple_game_project@2@@Z	EQUIVALENT	same loops/refcounts/offsets; base builds the resource_ptr arg via an extra temp (+1/-1), net refcount identical
 ?on_connected_to_lobby@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	base inlines it into callers; retail body = query_lobby_info, then if !connected set flag + show_disconnected_message(false)
 ?on_connected_to_login@network_client@survarium@@AAEXW4connection_error_types_enum@vostok@@W4handshaking_error_types_enum@4@W4socket_error_types_enum@4@W4login_server_message_types_enum@4@@Z	EQUIVALENT	log __LINE__ only (absolute line drift); messages, statuses (7,8,1,5,6,2,0) and flow match; tail-duplicated switch_to_login
+?on_damage_affect_applying@game_world_ui@survarium@@QAEXPBDW4hit_affects_type_enum@2@W4affect_event_type_enum@2@@Z	EQUIVALENT	same calls/literals; scheduling
 ?on_damage_zones_loaded@project_cooker_simple@survarium@@AAEXPAVsimple_game_project@2@AAVqueries_result@resources@vostok@@@Z	EQUIVALENT	ICF-folded with on_ladders_loaded on both sides; LTCG conv at set_unmanaged_resource
 ?on_disconnected_from_lobby@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	base inlines it into callers (no standalone base body); retail body = if connected: clear flag, show_disconnected_message(true), as source
 ?on_fire@player@survarium@@EAEXXZ	EQUIVALENT	STLport for_each inline-vs-call; same receiver (this+0x38 null-checked), action 3, 0.f, vtable slot 0
 ?on_friendship_status_recivied@lobby_menu@survarium@@QAEXW4friendship_actions_enum@messaging@@@Z	FIXED	update_friends_status (7) was ignored; retail jump table (0x17, cases 4..7) sends 7 to the friend-list block (entry 3 = 0x1e). Retail line geometry restored (#line 299, LOG 0x134)
 ?on_hide@weapon@survarium@@EAEXXZ	EQUIVALENT	same remove_model selection (aimed +0x10C / idle +0x108) and flags; safe-bool ICF
+?on_hit_from_pos@game_world_ui@survarium@@QAEXVfloat3@math@vostok@@@Z	EQUIVALENT	same FP and calls; scheduling
 ?on_items_compatibility_arrived@lobby_menu@survarium@@AAEXXZ	FIXED	count was cached in a u8 local (truncated); retail 0x50/0x1a2 cmp u8 i vs u32 [client+858h] each pass, no count local. Loop init folded into the for (record +6)
 ?on_keyboard_action@game_options@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	same calls/offsets; scheduling
 ?on_ladders_loaded@project_cooker_simple@survarium@@AAEXPAVsimple_game_project@2@AAVqueries_result@resources@vostok@@@Z	EQUIVALENT	regalloc+schedule; LTCG conv at set_unmanaged_resource (memory_usage by value vs by ref)
@@ -75,6 +83,7 @@ mangled	verdict	evidence
 ?on_object_loaded@project_cooker_simple@survarium@@AAEXAAVgame_object_@2@PAVsimple_game_project@2@PAVquery_result_for_cook@resources@vostok@@@Z	EQUIVALENT	LTCG conv at set_unmanaged_resource (memory_usage by value vs by ref); same flags/size 0x1C0
 ?on_operation_denied_received@lobby_menu@survarium@@QAEXW4lobby_client_message_types_enum@vostok@@PBD@Z	EQUIVALENT	log __LINE__ only (0x18C vs 0x187); jump-table bytes in listing
 ?on_operation_permitted_received@lobby_menu@survarium@@QAEXW4lobby_client_message_types_enum@vostok@@@Z	EQUIVALENT	log __LINE__ only (0x15F vs 0x15A); retail loads m_selected_profile before the lobby_client() call (pure getter)
+?on_player_killed@game_world_ui@survarium@@QAEXEE_NI@Z	EQUIVALENT	same action ids (2/3) computed differently (lea esi-1); same calls/literals
 ?on_player_reputations_arrived@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	accessor reloads/constant materialization; same calls/literals
 ?on_price_items_arrived@lobby_menu@survarium@@QAEXE@Z	EQUIVALENT	retail hoists &price(trader_id) (pure accessor); register constant materialization; same calls/literals
 ?on_profile_changed@lobby_menu@survarium@@QAEXE@Z	EQUIVALENT	slot walk from profile+0x80 [+8] vs +0x88, 0x13 slots both; ICF names for boost::function helpers; same literals/offsets
@@ -87,6 +96,7 @@ mangled	verdict	evidence
 ?on_stats_message_arrived@lobby_menu@survarium@@QAEXPB_W0W4message_channel_enum@messaging@@@Z	EQUIVALENT	CRT ICF naming; same wcsstr/wcsncpy offsets (9/0x12, 4/8, 5/0xA), statuses 7/8, store +0x110
 ?on_unload_chambered_round@weapon@survarium@@EAEXXZ	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535
 ?on_user_sprint@weapon@survarium@@EAEX_N@Z	EQUIVALENT	same calls/offsets; frame only
+?on_victory_item_put_take@game_world_ui@survarium@@QAEXE_N0@Z	EQUIVALENT	same calls/literals/offsets; accessor reloads
 ?play_weapon_fire_pfx@weapon@survarium@@AAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
 ?play_weapon_shell_pfx@weapon@survarium@@QAEXXZ	EQUIVALENT	STRUCTURE MATCH; constant materialization
 ?process_key_input@game_options@survarium@@AAE_NH@Z	EQUIVALENT	CRT ICF naming (wcscat_s); image-layout address
@@ -101,19 +111,36 @@ mangled	verdict	evidence
 ?reset_bindings@game_options@survarium@@AAEX_N@Z	EQUIVALENT	same 33-entry key_bind_descriptions walk, dik lookup, keyboards table search; image-layout addresses
 ?select_animations@player@survarium@@AAEXI@Z	EQUIVALENT	retail passes 0x4000 to make_stack_buffer (ICF name storage2), base folds it; same calls/offsets
 ?selected_animations@weapon_user_dead_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	animation_lexeme_parameters accessors inline-vs-call; same FP and stores
+?set_base_capture_progress@game_world_ui@survarium@@QAEXII@Z	EQUIVALENT	retail tail-merges the two branches into one SetString/Invoke; same args per branch (owner/3, buff/"", percent)
+?set_broken_connection_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; scheduling
 ?set_character_transform@player@survarium@@QAEXABVfloat3@math@vostok@@MM@Z	EQUIVALENT	math temporary scheduling/frame; same calls/offsets
+?set_match_time@game_world_ui@survarium@@QAEXI@Z	FIXED	second field subtracted in integers; retail 0x5b fsubr: float(time_left_ms) minus float(minutes*60000) before *0.001f (differs past 2^24 ms)
 ?set_next_ammo_type@weapon@survarium@@EAEXXZ	EQUIVALENT	same compare/offsets; register use
+?set_player_online_status@game_world_ui@survarium@@QAEXI_N@Z	EQUIVALENT	CRT ICF naming; same calls
+?set_pregame@game_world_ui@survarium@@QAEXPBDI@Z	EQUIVALENT	Scaleform inline-vs-call; same literals/calls
+?set_respawn_time@game_world_ui@survarium@@QAEXI@Z	EQUIVALENT	same sprintf format/args (/60, %60); Scaleform constants
 ?set_target@weapon@survarium@@EAEXW4weapon_targets@2@@Z	EQUIVALENT	same add_light/remove_light flow and offsets; register use
 ?set_ui_ammo@weapon@survarium@@AAEX_N@Z	FIXED	count summed in 32 bits; retail adds in 16 bits (setne al; add ax,[47Ah]; movzx); wraps only at 65535. Base drops the update_total_count test (both callers pass true, LTCG)
+?set_using_info_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; scheduling
+?set_using_progress_message@game_world_ui@survarium@@QAEXI@Z	EQUIVALENT	same calls/literals; scheduling
+?show_chat@game_world_ui@survarium@@QAEX_N@Z	EQUIVALENT	base inlines it into callers; retail body Invokes the chat show/hide as source
 ?show_crosshair@weapon@survarium@@AAEXXZ	EQUIVALENT	base inlines it into callers; retail body = if m_game_ui show_crosshair(true)
 ?show_disconnected_message@lobby_menu@survarium@@AAEX_N@Z	EQUIVALENT	argument stack slot only; same calls/literals
 ?show_match_making@lobby_menu@survarium@@QAEX_N@Z	EQUIVALENT	Scaleform SetString/SetStringW/operator= inline-vs-call; retail reuses the L"0 sec" pointer; same literals/Invokes/offsets
+?show_parametrized_message@game_world_ui@survarium@@QAEXPBDEEI@Z	EQUIVALENT	same calls/literals; scheduling
+?show_players_list@game_world_ui@survarium@@QAEX_N@Z	EQUIVALENT	same calls/literals; scheduling
+?show_screen_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	same calls/literals; constant materialization
 ?show_ui@lobby_menu@survarium@@UAEX_N@Z	EQUIVALENT	same show/hide_movie and chat_handler calls/offsets; register allocation only
 ?tick@lobby_menu@survarium@@UAEXII_N@Z	EQUIVALENT	STRUCTURE MATCH; same calls/offsets; register/scheduling only
 ?update_camera@player@survarium@@QAEXXZ	EQUIVALENT	inlined fov_factor x87 vs SSE (LTCG conv); same calls/constants/op order
 ?update_dispersion_visual_representation@weapon@survarium@@QAEXXZ	EQUIVALENT	atexit ICF naming; same FP and calls
 ?update_level_loading_progress@lobby_menu@survarium@@QAEXXZ	EQUIVALENT	CRT ICF naming (mbstowcs_s/wcscat_s); same 12 FP ops, calls, offsets
+?update_minimap_local_player@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	retail re-reads the client's current player for the team (same pointer); refcount release placement
+?update_minimap_objects@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	same get_transform calls (x +0x30, z +0x38) and literals; Scaleform constant materialization
+?update_minimap_players@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	same calls/literals/offsets; scheduling
 ?update_npc_stats@game_world@survarium@@AAEXXZ	EQUIVALENT	LTCG conv at npc_stats::set_stats (ecx/edx vs push) + ICF c_ptr representative for safe-bool
+?update_quick_slot@game_world_ui@survarium@@AAEXW4profile_slot_enum@2@@Z	EQUIVALENT	same calls/literals; zero materialization
 ?update_speed_info@player@survarium@@AAEXXZ	EQUIVALENT	same 23 FP ops, calls, offsets; register-only residual
 ?update_status@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	same host +0x2A / port +0x28 assignf, Invokes; accessor reloads
+?update_ui@game_world_ui@survarium@@QAEXII@Z	EQUIVALENT	same calls/literals; flag test width/addressing only
 ?update_ui@lobby_menu@survarium@@AAEXII@Z	EQUIVALENT	same calls, 3 FP ops, offsets; scheduling only
