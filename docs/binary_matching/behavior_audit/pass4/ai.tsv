@@ -1,0 +1,5 @@
+mangled	verdict	evidence
+??0fsm@ai@vostok@@QAE@XZ	EQUIVALENT	confirms pass 3: intrusive_list ctor out of line vs inline zero stores
+?add_state@fsm@ai@vostok@@QAEXPAUfsm_state@23@@Z	EQUIVALENT	confirms pass 3: LTCG push_back(state, NULL) vs ICF push_back(state,0)
+?clear_transitions@fsm@ai@vostok@@QAEXXZ	EQUIVALENT	confirms pass 3: get_next_of_object inline vs call (ICF names); same loop
+?pop_state@fsm@ai@vostok@@QAEPAUfsm_state@23@XZ	EQUIVALENT	confirms pass 3: ICF push_back name

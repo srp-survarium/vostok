@@ -1,0 +1,4 @@
+mangled	verdict	evidence
+??0MatrixState@Render@Scaleform@@QAE@XZ	EQUIVALENT	confirms pass 3: same identity 1.0/0.0 per offset, memsets, tail floats; x87 fld1/fldz stores vs SSE xorps registers
+?SetString@flash_value@survarium@@QAEXPBD@Z	EQUIVALENT	confirms pass 3: as SetStringW with Type=6; Value::operator= inline vs call
+?SetStringW@flash_value@survarium@@QAEXPB_W@Z	EQUIVALENT	confirms pass 3: release-if-managed (bit 6) then Type=7, value=str; Value::operator= inline vs call

@@ -1,0 +1,5 @@
+mangled	verdict	evidence
+??0tcp_packet_client@network@vostok@@QAE@AAUworld@12@@Z	EQUIVALENT	confirms pass 3: ICF names for bind/function helpers; same constants/offsets
+?create_client@tcp_packet_client@network@vostok@@AAEXXZ	EQUIVALENT	confirms pass 3: same ordered call sequence (0x988 alloc, ctor, binds); ICF representative names and frame only
+?set_on_error@tcp_packet_client@network@vostok@@QAEXABV?$function@$$A6AXW4client_error_codes_enum@network_core@vostok@@Verror_code@system@boost@@@Z@boost@@@Z	EQUIVALENT	confirms pass 3: m_on_error (+60h) = on_error; operator= call vs inlined copy+swap
+destroy_client@@pdb-overload:6b7060be47b7868a	EQUIVALENT	confirms pass 3: pdb-overload row with no target listing

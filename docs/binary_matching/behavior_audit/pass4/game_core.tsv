@@ -1,0 +1,60 @@
+mangled	verdict	evidence
+??0body_part_parameters@survarium@@QAE@PBDMMM_NAAVdamage_model@1@E@Z	EQUIVALENT	confirms pass 3: identical calls/FP/stores; ICF names
+??0weapon_core@survarium@@QAE@XZ	EQUIVALENT	confirms pass 3: fixed_vector/boost ctor ICF names
+??1weapon_core@survarium@@UAE@XZ	EQUIVALENT	confirms pass 3: ICF helper names
+?activate@weapon_core@survarium@@UAEXAAUbase_player@2@AAUengine@2@@Z	EQUIVALENT	confirms pass 3: no-ammo log verbosity matches (no push diff besides __LINE__ 355h/322h); get_user() vs +44Ch
+?activate@weapon_user_animations_selector@survarium@@QAEXAAUbase_player@2@ABV?$function@$$A6AXXZ@boost@@1@Z	EQUIVALENT	confirms pass 3: ICF bind/function helpers; same subscribe args (2,4)
+?broken_legs_predicate@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: stack slots only
+?can_and_must_reload_predicate@weapon_core@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: /Od slots
+?computed_backward_recoil_time@weapon_core@survarium@@AAEMMMIIIM@Z	EQUIVALENT	confirms pass 3: /Od slots
+?computed_horizontal_recoil_time@weapon_core@survarium@@AAEMMMIIIM@Z	EQUIVALENT	confirms pass 3: /Od slots
+?computed_reload_animation_time_scale@survarium@@YAMABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@M@Z	EQUIVALENT	confirms pass 3: (max-min)*(1/30)/reload_time, x87 extended vs mulss-rounded intermediate only
+?computed_shooting_animation_time_scale@survarium@@YAMABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@M@Z	EQUIVALENT	confirms pass 3: inline strcmp "shoot" scan stride 0x2C, data==7 over [ch+20h]; count u32 (fild+4f800000 vs qword fild); x87 extended vs SSE-rounded length only
+?computed_shotgun_reload_animation_time_scale@survarium@@YAMABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@IM@Z	EQUIVALENT	confirms pass 3: (max-min)*(1/30)*u32 capacity (fild+4f800000 fixup vs qword fild, same value)/reload_time; precision only
+?computed_vertical_recoil_time@weapon_core@survarium@@AAEMMMIIIM@Z	EQUIVALENT	confirms pass 3: /Od slots
+?could_be_aimed@weapon_core@survarium@@QBE_NABUbase_player@2@@Z	EQUIVALENT	confirms pass 3: ICF helper names, /Od slots
+?could_be_used@weapon_core@survarium@@QBE_NABUbase_player@2@@Z	EQUIVALENT	confirms pass 3: is_double_handed call vs inline [+48Ah]
+?deactivate@weapon_core@survarium@@UAEXXZ	EQUIVALENT	confirms pass 3: /Od slots
+?deactivate@weapon_user_animations_selector@survarium@@QAEXXZ	EQUIVALENT	confirms pass 3: stack slots / ICF names only
+?deserialize@body_part_parameters@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: identical code
+?deserialize@player_input@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: argument setup order only
+?deserialize@player_state@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: ICF identity helper name; stack slots
+?deserialize@weapon_core@survarium@@EAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: pointer-to-bool setne vs test; get_inventory inline
+?deserialize@weapon_user_animations_selector@survarium@@QAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: identical code
+?get_ammo_info@weapon_core@survarium@@QAEXAAUweapon_ammo_info@2@@Z	EQUIVALENT	confirms pass 3: null-compare helper vs inline
+?get_dispersed_bullet_dir@weapon_core@survarium@@AAE?AVfloat3@math@vostok@@XZ	EQUIVALENT	confirms pass 3: /Od slots
+?horizontal_recoil_value@weapon_core@survarium@@ABEMXZ	EQUIVALENT	confirms pass 3: identical
+?initialize@weapon_core_reload_state_base@survarium@@MAEXXZ	EQUIVALENT	confirms pass 3: identical code
+?is_weapon_firing@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: identical code
+?is_weapon_in_idle@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: identical code
+?is_weapon_toggling@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: identical code
+?jump_predicate@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: stack slots only
+?load_ammo@weapon_core@survarium@@AAEXXZ	EQUIVALENT	confirms pass 3: set_amount inline vs call; balanced temps
+?load_magazine@weapon_core@survarium@@QAEXXZ	EQUIVALENT	confirms pass 3: min(amount, cap-ammo) jge branch vs setl/neg/and branchless, same u16 result; set_amount inline
+?mix_transformations@survarium@@YA?AVfloat4x4@math@vostok@@ABV234@0MM@Z	EQUIVALENT	confirms pass 3: same FP ops/calls; stack temporaries and add esp scheduling only
+?on_sprint_animation_ended@weapon_core@survarium@@AAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	confirms pass 3: /Od slots
+?on_user_sprint@weapon_core@survarium@@MAEX_N@Z	EQUIVALENT	confirms pass 3: identical
+?reload_one_round@weapon_core@survarium@@QAEXXZ	EQUIVALENT	confirms pass 3: set_amount call vs inline [+114h] store; balanced resource_ptr temps
+?reset_fire_queue@weapon_core@survarium@@QAEXXZ	EQUIVALENT	confirms pass 3: /Od slots
+?selected_animations@weapon_core@survarium@@UBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_N@Z	EQUIVALENT	confirms pass 3: ICF helper names
+?serialize@body_part_parameters@survarium@@QBEXAAVudp_match_packet@network_core@vostok@@H@Z	EQUIVALENT	confirms pass 3: target-only unreferenced; source read against retail asm
+?serialize@inventory_item@survarium@@UBEXAAVudp_match_packet@network_core@vostok@@I@Z	EQUIVALENT	confirms pass 3: typed append(u16 +114h) vs raw append(ptr,2)
+?serialize@player_input@survarium@@QBEXAAVudp_match_packet@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: typed append(float2) inlined to raw append(ptr,8)
+?serialize@player_state@survarium@@QBEXAAVudp_match_packet@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: append(this+30h,12), angles.y 4, [+40h] 4; typed overloads vs raw append
+?serialize@weapon_core@survarium@@EBEXAAVudp_match_packet@network_core@vostok@@I@Z	EQUIVALENT	confirms pass 3: typed append inlined to raw append; current_state()!=0 via setne vs direct test
+?serialize@weapon_core_reload_state_base@survarium@@EBEXAAVudp_match_packet@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: typed append(bool +135h) vs raw append(ptr,1)
+?serialize@weapon_user_animations_selector@survarium@@QBEXAAVudp_match_packet@network_core@vostok@@@Z	EQUIVALENT	confirms pass 3: append(bool) inlined to raw append(ptr,1)
+?serialize_affect@survarium@@YAXAAVudp_match_packet@network_core@vostok@@ABU?$pair@W4hit_affects_type_enum@survarium@@I@stlp_std@@H@Z	EQUIVALENT	confirms pass 3: typed append inlined to raw append(ptr,1)
+?set_animation_callback@weapon_user_animations_selector@survarium@@QAEXPBDPBXABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@@Z	EQUIVALENT	confirms pass 3: stack slots only
+?set_animation_callback@weapon_user_animations_selector@survarium@@QAEXW4reserved_channel_ids_enum@animation@vostok@@PBXABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@@Z	EQUIVALENT	confirms pass 3: stack slots only
+?set_next_ammo_type@weapon_core@survarium@@UAEXXZ	EQUIVALENT	confirms pass 3: same slot swap/unload/target 4; get_inventory inline vs call
+?set_sprint_callbacks@weapon_user_animations_selector@survarium@@AAEXABV?$function@$$A6AXXZ@boost@@0@Z	EQUIVALENT	confirms pass 3: identical code
+?set_target@weapon_core@survarium@@UAEXW4weapon_targets@2@@Z	EQUIVALENT	confirms pass 3: ICF helper names
+?sprint_predicate@weapon_user_animations_selector@survarium@@QBE_NXZ	EQUIVALENT	confirms pass 3: stack slots only
+?stand_predicate@weapon_user_animations_selector@survarium@@ABE_NXZ	EQUIVALENT	confirms pass 3: stack slots only
+?tick@weapon_core@survarium@@UAEXXZ	EQUIVALENT	confirms pass 3: pointer-to-bool setne vs test
+?unload_ammo@weapon_core@survarium@@QAEXXZ	EQUIVALENT	confirms pass 3: set_amount inline vs call; balanced temps
+?update_bones_matrices@weapon_core@survarium@@EAEXABV?$resource_ptr@Vskeleton@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@QAVfloat4x4@math@5@IIAAV675@2ABVanimation_player@animation@5@@Z	EQUIVALENT	confirms pass 3: pure virtual input() getter re-called vs once
+?update_dispersion@weapon_core@survarium@@AAEX_NI@Z	EQUIVALENT	confirms pass 3: ICF helper names, /Od slots
+?update_recoil@weapon_core@survarium@@AAEXIM@Z	EQUIVALENT	confirms pass 3: identical
+?vertical_recoil_value@weapon_core@survarium@@ABEMXZ	EQUIVALENT	confirms pass 3: identical

@@ -1,0 +1,14 @@
+mangled	verdict	evidence
+??$calculate_count_of_nodes@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@_N1@Z	EQUIVALENT	confirms pass 3: is_link call vs inline flags&300h
+??$get_compressed_file_size@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: assert __LINE__/ICF names; retail inlines raw-size fast path ((f&51h)|(f&4))==4 -> [node-18h], same value
+??$get_file_hash@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: assert helper ICF names, __LINE__
+??$get_file_offs@$00@vfs@vostok@@YA_KPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: assert helper ICF names, __LINE__
+??$get_file_size@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: same masks; ICF names
+??$get_inline_data@$00@vfs@vostok@@YA_NPBV?$base_node@$00@01@PAVconst_buffer@1@@Z	EQUIVALENT	confirms pass 3: same flag masks 10h/40h; ICF names
+??$get_raw_file_size_impl@$00@vfs@vostok@@YAIPBV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: same link/universal/archive/physical branches; is_link inline (and 300h) vs call
+??$node_cast@Varchive_file_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$archive_file_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: /Od slots
+??$node_cast@Verased_node@vfs@vostok@@Vbase_node@23@$00@vfs@vostok@@YAPAV?$erased_node@$00@01@PAV?$base_node@$00@01@@Z	EQUIVALENT	confirms pass 3: erased-node cast helper out of line; same pointer
+??$set_inline_data@$00@vfs@vostok@@YA_NPAV?$base_node@$00@01@ABVconst_buffer@1@@Z	EQUIVALENT	confirms pass 3: assert __LINE__ (230h vs 1DEh); assert helper ICF name
+?get_raw_file_size@vfs_iterator@vfs@vostok@@QBEIXZ	EQUIVALENT	confirms pass 3: retail inlines ((f&51h)|(f&4))==4 fast path [node-18h], base forwards to get_raw_file_size<1> with same result
+?reverse_bytes_for_final_class@?$base_node@$00@vfs@vostok@@QAEXW4reverse_direction_enum@23@@Z	EQUIVALENT	confirms pass 3: same masks; ICF names
+?sizeof_with_name@?$base_node@$00@vfs@vostok@@QAEIXZ	EQUIVALENT	confirms pass 3: is_link call vs inline flags&300h
