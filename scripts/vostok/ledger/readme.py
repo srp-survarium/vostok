@@ -311,6 +311,9 @@ def _delinker_rev() -> str:
 
 
 def write_readme(block: str) -> None:
+    # A README marked no-score (the offline lane) carries no score blocks.
+    if "<!-- no-score -->" in README.read_text():
+        return
     text = README.read_text()
     if START in text and END in text:
         pre = text[: text.index(START)]
