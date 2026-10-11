@@ -69,6 +69,8 @@ DOCS = REPO / "docs"
 # names are present; vostok.shaders coverage reports the live figure.
 SHADER_SOURCES = REPO / "resources" / "sources" / "shaders"
 ENGINE = SOURCES / "vostok"
+# reconstructed GFx 4.2.21 files; ledger units spell them from `Src/...` down
+SCALEFORM_SOURCES = SOURCES / "scaleform"
 SLN = SOURCES / "vostok v2.0.sln"
 README = REPO / "README.md"
 FLAKE_LOCK = REPO / "flake.lock"
@@ -323,6 +325,11 @@ RETAIL_CONFIG = CONFIG / "retail"
 RETAIL_COMPILER_TABLES = RETAIL_CONFIG / "compiler_tables.tsv"
 CLEANLINESS_CONFIG = CONFIG / "cleanliness"
 MATCH_STATE = CONFIG / "match_state.tsv"
+# Where the ledger lived until 2026-08-30; its history reaches back through here.
+LEGACY_MATCH_STATE = DOCS_MATCHING / "match_state.tsv"
+# Parsed ledger-history deltas (`vostok ledger hist-gap` / `last-exact`), keyed
+# by git blob ids: content-addressed, so every worktree shares one copy.
+LEDGER_HISTORY_CACHE = _main_worktree() / "binaries" / "ledger_history"
 EXACT_FOLD_ALIASES = CONFIG / "exact_fold_aliases.tsv"
 MEASURED_FOLD_ALIASES = CONFIG / "measured_fold_aliases.tsv"
 MODULE_OWNERSHIP_OVERRIDES = CONFIG / "module_ownership_overrides.tsv"

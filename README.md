@@ -313,6 +313,8 @@ Each is also a standalone `nix build .#<name>`.
 ```sh
 python3 -m vostok ledger report --module render   # rollup; --per-unit for worst first
 python3 -m vostok ledger queue  --module render   # one batch per TU, what a matcher is handed
+python3 -m vostok ledger hist-gap --module render # real drops: the commits that reached and lost the peak (--all: every hist > max row)
+python3 -m vostok ledger last-exact <fn> --diff   # the last exact commit's source for <fn>, against HEAD
 git diff <rev> -- config/match_state.tsv          # which functions moved, and how
 ```
 
