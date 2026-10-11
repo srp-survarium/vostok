@@ -13,10 +13,10 @@
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
-// the compiland keeps its legacy name: the 2011/12 TU defined the whole
-// object_*_visual family (git show 885e1d4a4:temp/game_legacy/object_solid_visual.h), but
-// only object_particle_visual survived into the shipped PDB (source lines
-// 455-491 of a much larger file)
+
+
+// the compiland keeps its legacy name: of the old object_*_visual family only
+// object_particle_visual survived into the shipped PDB
 
 namespace survarium {
 
@@ -63,12 +63,12 @@ void object_particle_visual::on_visual_ready( resources::queries_result& data, b
 	cb( *this );
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). The facade by-value play_particle_system fix
-// has landed, so the temp intrusive_ptr copy is no longer the wall. Residual is the
-// call-boundary register cascade: target keeps get_game_scene() in esi and computes
-// render_scene() (`lea ecx,[esi+4]`) last, using edx for the renderer().scene() chain;
-// the base uses ecx for the chain and `add esi,4`. Non-steerable /Od arg-eval
-// scheduling, same as weapon::play_weapon_*_pfx.
+
+
+
+
+
+
 void object_particle_visual::insert( )
 {
 	get_game_scene().renderer().scene().play_particle_system( get_game_scene().render_scene(), m_particle_system_instance_ptr, m_transform );

@@ -22,25 +22,25 @@
 
 namespace survarium {
 
-// claude@NOTE: every QUANTITY/SPLIT method here is STRUCTURE-FAITHFUL (statement
-// sequence + named locals verified against pdb_fetch --view structure for each fn:
-// set_mode's 9 locals, initialize's func/proxy, add_message's tabs, focus's argument
-// all match the target). The residual % is driven entirely by cross-module
-// inlining/LTCG, NOT source shape:
-//   - scaleform flash_value ctor/dtor/Set*/SetMember + flash_movie::Invoke/Create*
-//     (value.cpp/movie.cpp) body into Scaleform::GFx but DON'T whole-program-inline
-//     into these callers the way the shipped /LTCG build did, so each flash_value
-//     temp / Invoke stays an out-of-line CALL here (the BASE_ONLY rows in
-//     add_message/set_mode, the missing TRGT_ONLY GFx::Value inlines in initialize);
-//   - flash_movie::Advance/Restart/ForceCollectGarbage are EMPTY stubs, so tick()
-//     inlines its movie->Advance to nothing -> base body == ret;
-//   - base_network_client::has_bandwidth + messaging_client::on_message_typed and
-//     network_client::get_player_team/get_local_player do not inline the way the
-//     target did, so focus/callback/on_message_typed/add_message keep extra
-//     guard/call statements out-of-line;
-//   - key_binder::get_binded_action stub-folds on_keyboard_action's binded-action
-//     branches, flipping focus(false) from a shared CALL (target) to an inlined block.
-// Match lifts once those siblings/scaleform are matched - structure here is correct.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 chat_handler::chat_handler( game& game )
 	: m_focused( false )

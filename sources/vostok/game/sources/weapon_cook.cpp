@@ -157,13 +157,13 @@ void weapon_cook::on_weapon_subresources_ready(
 	process_loading_weapon_core( parent, config_ptr, weapon_object );
 }
 
-// claude@NOTE: structure matches (cast, count, ~weapon, the two pfx-array deletes, the
-// appended-animations dtor loop). Capped ~77%: the final free is the strip_pointer/
-// delete_helper inline-vs-call wall. Target emits TWO statements - __RTCastToVoid
-// (dynamic_cast<pvoid> via get_top_pointer, line 249) then mspace_free under an if(cast)
-// guard (line 250) - whereas VOSTOK_FREE_IMPL's free_helper passes (remove_cv*)pointer
-// (a static cast, no dynamic_cast) and folds to ONE statement. The target free_helper
-// variant routes the pointer through get_top_pointer; not reproducible from this header.
+
+
+
+
+
+
+
 void weapon_cook::delete_resource( resources::resource_base* const resource )
 {
 	weapon* to_delete = static_cast< weapon* >( resource );

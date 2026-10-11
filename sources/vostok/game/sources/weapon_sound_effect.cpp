@@ -48,11 +48,11 @@ void weapon_sound_effect::initialize( )
 	m_sounds_counter = 0xff;
 }
 
-// claude@NOTE: structure faithful (guard + 2 clear_instances, both inlining to
-// buffer_vector::destroy). Capped: target folds the `if` condition into the prologue
-// block (no line-table row), while our base emits `push esi` + a separate line for the
-// `if` -> 1 extra statement / 1-byte SIZE. Codegen line-attribution residual, not
-// source-steerable.
+
+
+
+
+
 void weapon_sound_effect::finalize( )
 {
 	if ( m_stop_sounds_on_state_finalize )
@@ -71,12 +71,12 @@ void on_sound_finished(
 	instances.erase( found );
 }
 
-// claude@NOTE: structure faithful (26-stmt sound-event state machine, both first/third-view
-// playback branches present, correct members/branches/calls). Residual is MSVC register
-// scheduling: the target keeps &scene.get_sound_scene() (scene+0x9c) live in edi from the
-// scene statement (lea edi,[eax+9Ch]) while our base defers it (add edi,9Ch at the emit), plus
-// per-branch reg churn; and the if/erase statements differ only in line attribution (the begin()
-// CSE'd into size()'s m_begin load on the target). Not source-steerable.
+
+
+
+
+
+
 animation::callback_return_type_enum weapon_sound_effect::on_sound_event( animation::animation_callback_params& params )
 {
 	if ( params.domain_data == 0xff )

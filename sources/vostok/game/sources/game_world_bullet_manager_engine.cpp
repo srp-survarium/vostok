@@ -64,14 +64,14 @@ void game_world::update_tracer(
 	scene_renderer( ).update_tracer( render_scene( ), m_bullet_tracers[ tracer_idx ].tracer, m );
 }
 
-// claude@NOTE: faithful sound-facade reconstruction (paired). Two byte residuals are
-// cross-unit sound-module work: (1) the target's emit_and_play_once pushes a 6th
-// trailing default arg (a `bool`) absent from sound_emitter.h's 5-arg decl - same
-// missing 6-arg overload step_manager::on_step flagged; (2) the guard folds the
-// sound_emitter c_ptr test into the outer `if ( resource )` (static_cast over the
-// resource pointer, no temp construct) so the target is 3 statements where our inner
-// `if ( sound.c_ptr( ) )` is a 4th - both recover once the sound-facade
-// emit_and_play_once arg convention is settled in the sound module.
+
+
+
+
+
+
+
+
 void game_world::play_sound( resources::unmanaged_resource_ptr const& resource, float3 const& position )
 {
 	if ( resource )
@@ -86,15 +86,15 @@ void game_world::play_sound( resources::unmanaged_resource_ptr const& resource, 
 	}
 }
 
-// claude@NOTE: STRUCTURE MATCH (3 stmts, create_rotation + translation row +
-// play). The play_particle_system call boundary carries the render-facade
-// signature residual (same as weapon::play_weapon_fire_pfx / object_solid_visual):
-// the PDB / render::engine::world_pc take in_instance BY VALUE so the target owns
-// the temp particle_system_instance_ptr, but scene_renderer.h's facade spells it
-// const& so our base constructs AND destroys the temp in the caller (+0x2c bytes).
-// objdiff loses the fuzzy pairing on that residual (shows unpaired) but the rich
-// structure-diff pairs it cleanly. Recovers when the facade play_particle_system
-// signature is corrected (its own render-facade match phase).
+
+
+
+
+
+
+
+
+
 void game_world::play_particle(
 	resources::unmanaged_resource_ptr const&	particle,
 	float3 const&		position,
@@ -108,9 +108,9 @@ void game_world::play_particle(
 	scene_renderer( ).play_particle_system( render_scene( ), static_cast_resource_ptr< particle::particle_system_instance_ptr >( particle ), m );
 }
 
-// claude@NOTE: update_decal carries the decal_properties inline field-fill +
-// call-boundary residual (5 projection bools re-set to 1, alpha/clip = -1) that
-// the target folds into the call site.
+
+
+
 void game_world::add_decal(
 	resources::unmanaged_resource_ptr const&	decal,
 	const u32			id,

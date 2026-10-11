@@ -81,11 +81,11 @@ network_client::~network_client( )
 	}
 }
 
-// claude@NOTE: target walks m_net_players by pointer (no index local) and reads the
-// player_desc's resource_ptr directly (inlined c_ptr), not get_player(i); it records
-// 0 named locals. The 0-local pointer-walk over boost::array below reproduces that
-// structure (3 statements). Residual bytes are the resource_ptr/intrusive c_ptr LTCG
-// inlining shared with the other player-touching handlers in this TU.
+
+
+
+
+
 void network_client::apply_use_physics_controller_for_current( )
 {
 	for ( boost::array< player_desc, 20 >::const_iterator it = m_net_players.begin( ); it != m_net_players.end( ); ++it )
@@ -93,12 +93,12 @@ void network_client::apply_use_physics_controller_for_current( )
 			player_ptr( static_cast< player* >( it->player.c_ptr( ) ) )->set_use_physics_controller_for_current( m_use_physics_controller_for_current );
 }
 
-// claude@NOTE: the nested connection/handshaking/socket/message_type switch is structurally
-// exact (28 statements, --view structure-diff is a clean shape match against the target). The
-// per-statement byte residual is shared with every other LOG_ERROR site in the engine: each
-// LOG_ERROR expands to the g_log_filter_tree / has_passed_filters / stored_vtable / append
-// machinery, which is inlined slightly smaller here than in the target (the log-callback boost
-// glue is partially stubbed). on_connected_to_login below has the same wall.
+
+
+
+
+
+
 void network_client::on_connected_to_match(
 	const connection_error_types_enum		connection_error,
 	const handshaking_error_types_enum		handshaking_error,
