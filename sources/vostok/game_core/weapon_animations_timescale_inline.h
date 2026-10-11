@@ -13,11 +13,11 @@ inline float computed_reload_animation_time_scale( resources::managed_resource_p
 	return reload_animation_time / reload_time;
 }
 
-// claude@NOTE: the scanned domain byte is compared against a bare 7 because the target has no
-// enum for it - event_channel::domain_data is a single u8 and channel_type_enum only goes to 2,
-// so 7 is a wire value with no recoverable name. The loop bound really is knots_count(), not
-// domains_count() (which is knots_count()-1) - the target's `cmp eax, ecx` uses [channel+0x20]
-// (time_channel::m_knots_count) directly.
+
+
+
+// 7 is a raw domain wire value with no enum in the engine; the loop bound is knots_count( ),
+// not domains_count( )
 inline float computed_shooting_animation_time_scale( resources::managed_resource_ptr const& shooting_animation, float rounds_per_second )
 {
 	resources::pinned_ptr_const< animation::cubic_spline_skeleton_animation > pinned_animation( shooting_animation );

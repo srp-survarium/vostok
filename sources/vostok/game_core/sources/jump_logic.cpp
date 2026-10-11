@@ -15,14 +15,14 @@
 
 namespace survarium {
 
-// claude@MATCH: the external survarium::true_predicate is defined in
-// breath_vibration_calculator.cpp (target 0xbb5c0); initialize_logic references it
-// via boost::bind<bool>(&true_predicate) - forward-declare and reuse, do not redefine.
+
+
+// defined in breath_vibration_calculator.cpp; initialize_logic binds this one
 bool true_predicate( );
 
-// claude@MATCH: file STATIC - the target obj records this function under the PLAIN
-// name `survarium::get_move_direction` (no mangling), the file-static signature
-// (see patterns/static-plain-name-pairing.md); an extern definition never pairs.
+
+
+// file-static: retail names it plainly `survarium::get_move_direction`
 static move_direction_enum get_move_direction( player_input const& input )
 {
 	bool move_bwd_pressed;
@@ -281,9 +281,9 @@ bool jump_logic::is_jump_finished( ) const
 	return static_cast< jump_logic_base_state* >( m_logic->current_state( ) )->is_jump_finished( );
 }
 
-// claude@MATCH: rows 80/81 and 86/87 repeat the land/land_look captions - the left
-// (and right-to-left) jump directions have no land_run animations in the original
-// data (string pooling folds the repeats onto one literal in the exe).
+
+// rows 80/81 and 86/87 repeat the land captions: the original data has no land_run
+// animations for the left and right-to-left jumps
 pcstr const jump_animations_captions[] = {
 	"on_site_jump",
 	"on_site_jump_look",

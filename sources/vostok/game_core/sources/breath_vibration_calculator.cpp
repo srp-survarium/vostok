@@ -28,11 +28,11 @@ breath_vibration_calculator::breath_vibration_calculator( )
 	initialize_logic( );
 }
 
-// claude@NOTE: residual = the two m_logic.states( ).front( ) sites. Target calls
-// intrusive_list::front with `this` in EAX (no `mov ecx,eax`); base inlines/calls it
-// with `this` in ECX, leaving a 2-byte `mov ecx,eax` per site. That is the global
-// intrusive_list front()-de-inline knob (intrusive_list_inline.h) - off-limits from
-// this TU. See patterns/template-accessor-deinline-global-knob.md.
+
+
+
+
+
 void breath_vibration_calculator::set_breath_holding_params( breath_holding_params const* params )
 {
 	m_params = params;
@@ -63,10 +63,10 @@ bool true_predicate( )
 	return true;
 }
 
-// claude@NOTE: STRUCTURE MATCH (11/11). Residual is a 4-byte frame delta - the target
-// saves ESI (push esi / sub esp,128h) and uses it as `this` for the trailing
-// boost::function::clear() calls, shifting every [ebp-XX] slot by 8; base keeps ECX
-// (no esi, sub esp,130h). Whole-program LTCG register-budget choice, not source-steerable.
+
+
+
+
 void breath_vibration_calculator::initialize_logic( )
 {
 	breath_state* normal			= VOSTOK_NEW_IMPL( g_allocator, breath_state_normal )( m_breath_holding_reserve );

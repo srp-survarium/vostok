@@ -34,7 +34,7 @@ booby_trap_set_core::booby_trap_set_core( ) :
 {
 	ASSERT( UNKNOWN_EXPRESSION ); pcvoid damage_parms_buffer = m_damage_parameters.begin( );
 	m_damage_parameters.clear( );
-	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines it.
+	VOSTOK_FREE_IMPL( g_allocator, damage_parms_buffer );
 
 	m_traps.clear( );
 	VOSTOK_FREE_IMPL( g_allocator, m_traps_buffer );

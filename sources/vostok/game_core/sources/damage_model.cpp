@@ -190,7 +190,7 @@ void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )>
 	u32							body_part_index = 0;
 	while ( body_part )
 	{
-		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target
+		body_part->dump_state( callback, body_part_index++ );
 		body_part = m_body_parts.get_next_of_object( body_part );
 	}
 }

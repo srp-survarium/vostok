@@ -25,9 +25,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 		offset_only_weight_synchronization_group_id		= 128,
 	};
 
-	// claude@MATCH: the target writes each builder call as its OWN statement on
-	// `main_lexeme_parameters` (each `lea &main_lexeme_parameters; call method`), NOT a
-	// fluent chain - splitting them is what reproduces the per-line statement structure.
+
+
+	// each setter is its own statement, not a fluent chain, as retail records them
 	animation::mixing::animation_lexeme_parameters main_lexeme_parameters( buffer, identifier, animation, NULL, NULL );
 	main_lexeme_parameters.animated_object						( animated_object );
 	main_lexeme_parameters.playback_type						( playback_type );
@@ -39,19 +39,19 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	// Both lexemes play the same animation; only the time-driven one below raises its user
 	// events ("shoot", "sound_events"), otherwise every shot/sound event is dispatched twice.
 	main_lexeme_parameters.can_generate_events					( false );
-	// claude@NOTE: target records NO `main_lexeme` local (3 locals: main_lexeme_parameters,
-	//   offset_lexeme, offset_lexeme_parameters), base records 4 (adds main_lexeme): in the
-	//   target it is a temporary, yet it is referenced at line 48 (`group != -1 ? &main_lexeme
-	//   : NULL`) and line 61 (weapon_lexeme_pair(...)). The 0-local shape is unrecovered; the
-	//   rest of the byte residual is the animation-module inline builder-call expansions.
-	//   Target stores the setter inline (`mov byte[ebp-5],0`, params+0x53); base calls it.
+
+
+
+
+
+
 	animation::mixing::animation_lexeme main_lexeme( main_lexeme_parameters );
 
 
-	// claude@MATCH: each builder call is its own statement (as the main chain above).
-	// The 4th (time_driving_animation) ctor arg is the target's `push 0; mov edx,group;
-	// sub edx,-1; neg; sbb edx,edx; lea &main_lexeme; and edx,eax` select ==
-	// `group != u32(-1) ? &main_lexeme : NULL` (matches base byte-for-byte).
+
+
+
+
 	animation::mixing::animation_lexeme_parameters offset_lexeme_parameters( buffer, identifier, animation, time_synchronization_group != u32( -1 ) ? &main_lexeme : NULL, NULL );
 	offset_lexeme_parameters.animated_object					( animated_object );
 	offset_lexeme_parameters.playback_type						( playback_type );

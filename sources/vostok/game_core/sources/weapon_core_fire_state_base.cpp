@@ -29,10 +29,10 @@ void weapon_core_fire_state_base::initialize( )
 	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
 }
 
-// claude@NOTE: paired, walled by a cross-unit inline-vs-call boundary. The target emits a
-// `call weapon_core_base_state::execute` (out-of-line 0x16-byte function there); here that
-// base method is an inline `{}` in weapon_core_base_state.h, so MSVC inlines it away and drops
-// the call statement. Out-lining it belongs to weapon_core_base_state.cpp's match.
+
+
+
+
 void weapon_core_fire_state_base::execute( )
 {
 	weapon_core_base_state::execute( );
@@ -48,10 +48,10 @@ void weapon_core_fire_state_base::finalize( )
 	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
 }
 
-// claude@NOTE: paired, structure matches (10/10 stmts); sole residual is a 3-byte size
-// diff in the LOG_ERROR statement - the macro bakes __LINE__ into the pushed string length
-// (target pushes 0x52, base 0x42), which depends on this file's line layout matching the
-// original's and is not faithfully reconstructable.
+
+
+
+
 animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = true;

@@ -33,13 +33,13 @@ public:
 			void		load						( configs::binary_config_value const& cfg );
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones;
-	// the idiomatic bodies below are the faithful shapes.
-	// claude@MATCH: the target's eater call is UNGUARDED (no identity(false) round-trip) and
-	// pushes the two reference POINTERS, so the source called the helper directly rather than
-	// through VOSTOK_UNREFERENCED_PARAMETERS - the macro's never-taken block would copy
-	// base_player by value (0x11C rep movsd). See patterns/unreferenced-params-eater.md.
+
+
+
+
+
+	// the eater is called directly, not through VOSTOK_UNREFERENCED_PARAMETERS: retail's call is
+	// unguarded and pushes the two reference pointers
 	virtual	void		activate					( base_player& user, engine& engine ) override
 	{
 		ASSERT( UNKNOWN_EXPRESSION );

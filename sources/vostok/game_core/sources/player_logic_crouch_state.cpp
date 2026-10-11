@@ -14,9 +14,9 @@
 
 namespace survarium {
 
-// claude@NOTE: single .rdata copy in the target exe (?crouch_animations_captions@survarium@@3QBQBDB
-// @va 0x89d118); mirrors stand_animations_captions with a crouch_ prefix. 33 entries,
-// 3 captions per direction (move, shoot, look), indexed direction * 3 + part.
+
+
+// 3 captions per direction (move, shoot, look), indexed direction * 3 + part
 pcstr const crouch_animations_captions[] = {
 	"crouch_idle",
 	"crouch_shoot_on_site",
@@ -68,9 +68,9 @@ void player_logic_crouch_state::finalize( )
 	m_user->stand_up( );
 }
 
-// claude@NOTE: structure mirrors player_logic_stand_state::movement_lexeme but WITHOUT the
-// explicit `main_animation_index < 33` ASSERT line (target has 4 body statements, stand 5);
-// residual is the module-wide animation_lexeme_parameters builder-chain inline-vs-call wall.
+
+
+
 animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 	mutable_buffer&						buffer,
 	u32 const							animation_index,

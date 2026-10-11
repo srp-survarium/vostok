@@ -88,8 +88,8 @@ weapon_core::~weapon_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// The target source is inline, but the remaining real consumer set does not retain
-// this COMDAT yet. Keep the call boundary until that consumer is reconstructed.
+
+// inline in retail; kept out of line until its remaining consumer is reconstructed
 u16 weapon_core::ammo_in_magazine( ) const
 {
 	return m_ammo_in_magazine;
@@ -277,10 +277,10 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 	m_skeleton = skeleton;
 }
 
-// claude@NOTE: walled by the has_animation_ended inline-vs-call - the target out-of-lines
-// weapon_core_base_state::has_animation_ended (symbol @0x087f70) but our weapon_core_base_state.h
-// keeps it inline, so the member read is inlined here instead of a `call`. Out-lining it belongs
-// to weapon_core_base_state's PR.
+
+
+
+
 bool weapon_core::target_and_animation_ended_predicate( const weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
@@ -320,10 +320,10 @@ float weapon_core::vertical_recoil_value( ) const
 	return result;
 }
 
-// claude@NOTE: 4/4 stmts. % walled by the inline-vs-call ceiling (mixing operator+, the
-// recoil-value getters, weapon_user_animations_selector::selected_animations all inlined here
-// vs out-of-line target-side). The recoil cc_bool reads (s_recoil_*_enable_value) are compiled
-// IN here (gating the coeffs), unlike the parked computed_*_recoil_time trio where they fold out.
+
+
+
+
 animation::mixing::expression weapon_core::selected_animations( mutable_buffer& buffer, const bool is_third_view ) const
 {
 	m_is_third_view = is_third_view;
@@ -350,8 +350,8 @@ void weapon_core::update_recoil( u32 current_time_in_ms, const float time_scale 
 	m_recoil_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_aimed( ), current_time_in_ms, time_scale );
 }
 
-// claude@NOTE: callee of update_bones_matrices. % walled by intrusive_ptr operator* + dispersion_calculator::tick
-// inline-vs-call (target out-of-lines the resource_ptr deref; inlined here).
+
+
 void weapon_core::update_dispersion( const bool is_moving, u32 current_time_in_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) );
@@ -365,8 +365,8 @@ void weapon_core::update_breath_vibration( const bool is_holding_breath, u32 cur
 	m_breath_vibration_calculator.tick( current_time_in_ms, time_scale );
 }
 
-// claude@NOTE: 25/25 stmts. % walled by inline-vs-call (intrusive_ptr ctor/dtor for
-// target_active_object, user_animations_selector getter). Named locals input/target_active_object match.
+
+
 void weapon_core::tick( )
 {
 	player_input const&																		input					= m_user->input( );
@@ -417,8 +417,8 @@ void weapon_core::instant_hide( )
 	on_hide( );
 }
 
-// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
-// resource_ptr set/dec/operator* out-of-line, this build inlines them).
+
+
 void weapon_core::load_magazine( )
 {
 	u16 const amount = ( *m_ammunition ).amount( );
@@ -440,8 +440,8 @@ void weapon_core::chamber_a_round( )
 	m_is_round_chambered = true;
 }
 
-// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
-// resource_ptr set/dec/operator* out-of-line, this build inlines them).
+
+
 void weapon_core::unload_ammo( )
 {
 	if ( !m_ammunition )
@@ -477,8 +477,8 @@ void weapon_core::instant_chamber_a_round( )
 	m_recoil_calculator.chamber_a_round( );
 }
 
-// claude@NOTE: structure recovered; % walled by intrusive_ptr inline-vs-call (target keeps
-// resource_ptr set/dec/operator* out-of-line, this build inlines them).
+
+
 void weapon_core::reload_one_round( )
 {
 	if ( m_ammo_in_magazine != m_magazine_capacity && ( *m_ammunition ).amount( ) != 0 )
@@ -571,8 +571,8 @@ animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( ani
 	return animation::callback_return_type_dont_call_me_anymore;
 }
 
-// claude@NOTE: the sprint guard is split into a nested `if` (not a folded `&&`) because the target
-// gives `is_sprinting()` its own line-table statement.
+
+// a nested if, not &&: retail records is_sprinting( ) as its own statement
 void weapon_core::set_target( weapon_targets target )
 {
 	if ( target == weapon_target_fire || target == weapon_target_aim_fire )
@@ -674,8 +674,8 @@ void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,reso
 	m_ammunition = ammunition_to_set;
 }
 
-// claude@NOTE: structure recovered; the % is walled by the intrusive_ptr inline-vs-call
-// ceiling - the target keeps resource_ptr ctor/set/dec out-of-line, this build inlines them.
+
+
 void weapon_core::load_ammo( )
 {
 	if ( m_ammunition && ( *m_ammunition ).amount( ) != 0 )
@@ -825,7 +825,7 @@ void weapon_core::activate( base_player& user, engine& engine )
 }
 
 
-// claude@NOTE: 21/21 stmts. % walled by inline-vs-call (unsubscribe sites, get_user).
+
 void weapon_core::deactivate( )
 {
 	if ( g_is_server )
@@ -875,9 +875,9 @@ void weapon_core::on_player_model_removed( )
 	instant_hide( );
 }
 
-// claude@NOTE: structure recovered (29/29 stmts). % walled by intrusive_ptr operator* + animation
-// inline-vs-call (compute_bones_matrices/convert_to_object_matrices/skeleton accessors out-of-line
-// target-side, inlined here).
+
+
+
 void weapon_core::update_bones_matrices(
 	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
 	float4x4* const						user_matrices,
@@ -1074,9 +1074,9 @@ bool weapon_core::instant_idle_predicate( ) const
 	return m_user_animations_selector.sprint_predicate( ) || m_user_animations_selector.is_in_jump( );
 }
 
-// claude@NOTE: ceiling is intrusive_ptr::operator* inline-vs-call (target out-of-lines it,
-// carrying the embedded ASSERT; our /GL inlines it + the debug_render eater). could_be_used
-// also has is_double_handed() inlined target-side vs our out-of-line call. Both LTCG-decided.
+
+
+
 bool weapon_core::could_be_used( base_player const& user ) const
 {
 	u8 const broken_hands_count = ( *user.damage_model( ) ).broken_hands_count( );
@@ -1089,9 +1089,9 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// claude@NOTE: the target keeps the `player_input const&` binding unnamed (0 recorded locals)
-// yet calls m_user->input() once - the single-call shape needs the reference, so it stays a
-// named local here and the extra PDB local is the residual.
+
+
+
 float weapon_core::computed_backward_recoil_time(
 	const float		animation_length,
 	const float		animation_time_before_time_scale_starts,
@@ -1166,7 +1166,7 @@ void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 	inventory_item::set_inventory( inv, slot );
 }
 
-// convention on the callee, not source-steerable. claude@NOTE
+
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
 	static profile_slot_enum const weapon_ammo_slots[2][2] = {
@@ -1241,12 +1241,12 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 	return !is_trying_to_aim( );
 }
 
-// claude@NOTE: release COMDAT (target 0 PDB statements, fully folded -> objdiff leaves it
-// "unpaired"). Body is byte-recovered: filtering the uniform [ebp-N] slot-alloc shift and the
-// ICF assert-fold name, the ONLY residual is one folded-empty assert call named
-// unreferenced_parameter_helper (base) vs finalize_impl (target) - the same compiled-out
-// resource_ptr::operator-> non-null assert. ammunition() returns a resource_ptr by value (each
-// call = an inc/dec copy); the && chain short-circuits to a common false sink.
+
+
+
+
+
+
 bool weapon_core::ready_to_reload( ) const
 {
 	u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false );
@@ -1257,13 +1257,13 @@ bool weapon_core::ready_to_reload( ) const
 		&& !m_user_animations_selector.is_in_jump( );
 }
 
-// record and no read - not source-pinnable. claude@NOTE
+
 bool weapon_core::can_and_must_reload_predicate( ) const
 {
 	return ready_to_reload( ) && m_ammo_in_magazine == 0 && !m_is_round_chambered;
 }
 
-// shared getter would regress other inlined call sites. claude@NOTE
+
 bool weapon_core::can_and_must_reload_and_animation_ended_predicate( ) const
 {
 	return current_base_state( ).has_animation_ended( ) && can_and_must_reload_predicate( );

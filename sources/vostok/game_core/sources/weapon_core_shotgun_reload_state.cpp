@@ -96,14 +96,14 @@ animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// claude@MATCH: chained cast-forward matches the target's SOURCE STRUCTURE - 1 statement,
-	// ZERO named locals (`--view structure`: target has no locals block). The byte-100% variant
-	// `T* state = ...; U* current = ...; return current->...` is rejected: it fabricates two
-	// locals (state/current) the target never records. Residual SIZE -0x6 (~90%) is the target
-	// materializing 2 stack temps our build elides - non-steerable, and preferred over phantom locals.
-	// sushi@TODO: recover the exact temp shape via vostok-versions; the structure verdict does not
-	// yet compare locals (a follow-up PR adds locals name+count to the tool + worker).
-	// See patterns/current-state-cast-forward-materialized-locals.md.
+
+
+
+
+
+
+	// a chained cast-forward: retail records no locals here
+	// sushi@TODO: recover the exact temp shape (see review_todos.md)
 	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
@@ -131,15 +131,15 @@ void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_rel
 	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
 }
 
-// claude@NOTE: structure matched (1 stmt @0x14d) and the boolean logic is byte-faithful.
-// Two residuals, both rooted in another unit's header (weapon_core), so out of scope here:
-//   (1) the target reads m_weapon.m_ammo_in_magazine (+0x47a) and m_weapon.m_is_round_chambered
-//       (+0x48e) INLINE (direct member access => weapon_core befriends this state), but the
-//       state is not a friend, so ammo_in_magazine()/round_is_chambered() are CALLed instead.
-//   (2) the target keeps m_weapon.get_target() out-of-line (a `call`), but our inline getter
-//       (return m_target) folds to a direct read here.
-// Both need cross-unit weapon_core.h changes (friend decl + out-of-line get_target) that would
-// touch weapon_core's own matches; left for the weapon_core owner.
+
+
+
+
+
+
+
+
+
 bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
 	return m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )

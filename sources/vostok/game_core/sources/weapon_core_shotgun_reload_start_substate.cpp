@@ -28,10 +28,10 @@ weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_subs
 {
 }
 
-// claude@NOTE: the deserializing/chamber_a_round/round_is_chambered/unload guard chain is
-// structure-correct; residual is boost::function's assign_to - target inlines this
-// instantiation, /Od out-of-lines it (per-instantiation inliner decision; one_round::initialize,
-// the same boost::bind without the guard, is 100%). Non-steerable from source.
+
+
+
+
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
 	m_animation_ended = false;
@@ -59,9 +59,9 @@ bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 	return m_animation_ended;
 }
 
-// claude@NOTE: structure matches the matched weapon_core_animation_end_aware_state::on_animation_end
-// (90.9%); residual is the intrusive_ptr operator== operand-evaluation order (target computes
-// the `this` address before the arg, /Od emits the reverse). Non-steerable from source.
+
+
+
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;
