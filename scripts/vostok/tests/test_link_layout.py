@@ -11,6 +11,7 @@ from vostok.tool.link_layout import (
     Module,
     code_owners,
     optimization_classes,
+    order_metrics,
     owner_rows,
     parse_dbi,
     pass1_order,
@@ -95,6 +96,19 @@ class LayoutTests(unittest.TestCase):
         base = _layout(self.MODULES[1:], [(1, 0, 0x10, COMDAT, 0)])
         rows = owner_rows(target, base, [("f", 0x1000)], [("f", 0x1000)], {}, {})
         self.assertEqual(rows[0]["verdict"], "roster")
+
+
+class OrderTests(unittest.TestCase):
+    def test_order_metrics_counts_inversions_among_shared_modules(self):
+        modules = [("a.obj", "x\\one.lib"), ("b.obj", "x\\one.lib"), ("c.obj", "x\\one.lib"),
+                   ("d.obj", "x\\one.lib")]
+        target = _layout(modules, [(1, 0, 4, COMDAT, 0), (1, 4, 4, COMDAT, 1), (1, 8, 4, COMDAT, 2)])
+        base = _layout(modules, [(1, 0, 4, COMDAT, 2), (1, 4, 4, COMDAT, 0), (1, 8, 4, COMDAT, 1),
+                                 (1, 12, 4, COMDAT, 3)])
+        m = order_metrics(target, base, lambda c: c.comdat)
+        self.assertEqual(m["shared"], 3)
+        self.assertEqual(m["inversions"], 2)          # c before a, c before b
+        self.assertAlmostEqual(m["in_order_percent"], 200 / 3)
 
 
 class OptimizationClassTests(unittest.TestCase):
