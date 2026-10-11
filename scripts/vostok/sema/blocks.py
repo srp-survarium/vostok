@@ -41,41 +41,70 @@ def show_blocks(graph, lite):
     return "\n".join(out) + "\n"
 
 
-def blocks_diff(b, t, lite):
-    """Aligned CFG diff. `b`/`t` are cfg() outputs for base/target."""
+def _text(block):
+    return "\n".join(block[1] + [block[2] or ""])
+
+
+def flow_verdict(b, t):
+    """The facts `blocks_diff` prints, as data. `b`/`t` are cfg() outputs.
+
+    `same_flow`: identical terminator sequence. `moved`: for an ISOMORPHIC pair
+    that differs only in block layout, the (base, target) indices that moved
+    (`iso` is the full map, None when not isomorphic). `skeleton`: the first
+    block whose branch KIND differs. `extra`: (side, n) when the skeletons agree
+    over the shared blocks and one side has more. `differing`: the aligned
+    (base, target) pairs whose bodies or terminators differ, None for a
+    one-sided block."""
     bflow = [x[2] or "" for x in b]
     tflow = [x[2] or "" for x in t]
     same_flow = bflow == tflow
     pairs = align(b, t)
-    out = [f"[block diff: base {len(b)} blocks vs target {len(t)} blocks; "
-           f"flow {'SAME' if same_flow else 'DIFFERS'}]"]
     iso = None if same_flow else iso_map(b, t)
-    if iso is not None:
-        moved = [f"base B{k}->target B{v}" for k, v in sorted(iso.items()) if k != v]
-        out.append("[ORDER-ONLY: the two CFGs are ISOMORPHIC - same blocks, same edges. "
-                   "Only the linear BLOCK ORDER differs, which flips the polarity of "
-                   "every branch that reaches a moved block. One fact, not several.]")
-        out.append("[  moved: " + ", ".join(moved) + "]")
+    skeleton = extra = None
     if not same_flow:
         bk = [kind(x, i) for i, x in enumerate(bflow)]
         tk = [kind(x, i) for i, x in enumerate(tflow)]
         k = next((i for i, (x, y) in enumerate(zip(bk, tk)) if x != y), None)
         if k is not None:
-            out.append(f"[skeleton diverges at B{k}: base [{bflow[k]}]  vs  "
-                       f"target [{tflow[k]}]  (branch kinds identical before)]")
+            skeleton = {"block": k, "base": bflow[k], "target": tflow[k],
+                        "source": b[k][3] or t[k][3] or ""}
+        elif len(bk) != len(tk):
+            extra = ("base" if len(bk) > len(tk) else "target", abs(len(bk) - len(tk)),
+                     min(len(bk), len(tk)))
+    differing = [(bi, tj) for bi, tj in pairs
+                 if bi is None or tj is None or _text(b[bi]) != _text(t[tj])]
+    return {"same_flow": same_flow, "iso": iso,
+            "moved": [(k, v) for k, v in sorted((iso or {}).items()) if k != v],
+            "skeleton": skeleton, "extra": extra, "pairs": pairs, "differing": differing}
+
+
+def blocks_diff(b, t, lite):
+    """Aligned CFG diff. `b`/`t` are cfg() outputs for base/target."""
+    verdict = flow_verdict(b, t)
+    same_flow, pairs = verdict["same_flow"], verdict["pairs"]
+    out = [f"[block diff: base {len(b)} blocks vs target {len(t)} blocks; "
+           f"flow {'SAME' if same_flow else 'DIFFERS'}]"]
+    if verdict["iso"] is not None:
+        moved = [f"base B{k}->target B{j}" for k, j in verdict["moved"]]
+        out.append("[ORDER-ONLY: the two CFGs are ISOMORPHIC - same blocks, same edges. "
+                   "Only the linear BLOCK ORDER differs, which flips the polarity of "
+                   "every branch that reaches a moved block. One fact, not several.]")
+        out.append("[  moved: " + ", ".join(moved) + "]")
+    if not same_flow:
+        if verdict["skeleton"]:
+            k = verdict["skeleton"]["block"]
+            out.append(f"[skeleton diverges at B{k}: base [{verdict['skeleton']['base']}]  vs  "
+                       f"target [{verdict['skeleton']['target']}]  (branch kinds identical before)]")
             if b[k][3] or t[k][3]:
                 out.append(f"[  base block source: {b[k][3] or '-'}]")
-        elif len(bk) != len(tk):
-            side = "base" if len(bk) > len(tk) else "target"
-            out.append(f"[same branch skeleton for the shared {min(len(bk), len(tk))} "
-                       f"blocks; {side} has {abs(len(bk) - len(tk))} extra block(s)]")
+        elif verdict["extra"]:
+            side, n, shared = verdict["extra"]
+            out.append(f"[same branch skeleton for the shared {shared} "
+                       f"blocks; {side} has {n} extra block(s)]")
         else:
             out.append("[same branch-kind skeleton; only block-index targets differ "
                        "(an inserted/moved block shifts later indices)]")
-    ndiff = sum(1 for bi, tj in pairs
-                if bi is None or tj is None
-                or "\n".join(b[bi][1] + [b[bi][2] or ""]) !=
-                   "\n".join(t[tj][1] + [t[tj][2] or ""]))
+    ndiff = len(verdict["differing"])
     if lite:
         out.append(f"       {'BASE':30}    TARGET    "
                    "(== exact, ~= same kind/shifted target, ## size drift, !! kind mismatch)")

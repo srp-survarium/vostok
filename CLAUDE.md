@@ -79,6 +79,8 @@ file directly, so every query works on a fresh clone without a build.
     python3 -m vostok ledger list   --module render --class QUANTITY,SPLIT
     python3 -m vostok ledger list   --module render --status parked|blocked
     python3 -m vostok ledger list   --headroom                     # hist > max: we had it better once
+    python3 -m vostok ledger hist-gap [--module M] [--all]         # real drops: the commits that reached and lost it
+    python3 -m vostok ledger last-exact <fn> --diff                # last commit at 100: the source that matched, vs HEAD
     python3 -m vostok ledger tried  <mangled> --note "what was attempted"
     python3 -m vostok ledger park   <mangled> --cause "why it stops here"   (`open` undoes it)
 
@@ -92,9 +94,10 @@ Three percentages per row:
 `(held <max>)` next to a row means `cur` dipped below a still-proven `max`: compiler
 noise, **do not chase it**. A real regression is a `max` that fell (the body changed).
 `hist > max` (`--headroom`) means an earlier implementation scored better - that IS
-worth working. `status` is `done` / `inprogress` / `blocked` (something missing,
-incl. target-only) / `parked` (worked, could not raise it; `note` says why - keep it
-short, it stops the next matcher re-deriving a dead end).
+worth working: `hist-gap` names the commit that lost it, and `last-exact --diff`
+shows the source that was exact. `status` is `done` / `inprogress` / `blocked`
+(something missing, incl. target-only) / `parked` (worked, could not raise it;
+`note` says why - keep it short, it stops the next matcher re-deriving a dead end).
 
 ## Structure matching
 
@@ -125,6 +128,13 @@ What moves the partition is source shape, not logic:
 - one expression as one statement vs split through a named temporary
 - a ternary vs an if/else; braces that open a lexical block
 - which `.cpp` a body lives in and its definition order (a moved body changes the record)
+
+The one-shot first look gathers this verdict with the ledger row (cur/max/hist,
+`tried`, note), the geometry check, the `sema blocks` flow verdict and unmatched
+callees, in one process, and prints a one-line verdict followed only by what
+needs action (`--full` for everything, `--json` for agents, `--only`/`--skip`):
+
+    python3 -m vostok evidence 'weapon_core::tick'
 
 How to act: run the diff before writing a body (read the target's statements) and
 after each build. `TRGT_ONLY` / `BASE_ONLY` rows are structure work - fix the shape
@@ -164,7 +174,8 @@ Iterate with `vostok build --code-only`.
   and assembly before writing a body; never fabricate a function, type, override
   or symbol to gain percentage, and never change another unit to steer a caller's
   inlining. Match one translation unit at a time.
-- Evidence beats taste: `vostok-pdb inspect --view target|base|structure-diff` for
+- Evidence beats taste: `vostok evidence <fn>` for the one-shot verdict,
+  `vostok-pdb inspect --view target|base|structure-diff` for
   disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
   for control flow (its exit code 1 is an answer, read the printed verdict),
   `binaries/structure/target/headers` for class layout and vtable order.

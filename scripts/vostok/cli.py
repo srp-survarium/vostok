@@ -6,8 +6,13 @@
                                    delink + structure + PDB evidence, then derive
                                    and ledger refresh and the README block
     vostok ledger <verb>           the committed campaign record: report / list
-                                   / queue / tried / park / open, plus `readme`
+                                   / queue / tried / park / open, the history
+                                   queries hist-gap / last-exact, plus `readme`
                                    and `mismatch-queue`
+    vostok evidence <function>     one function's matching evidence in one
+                                   process: verdict line, then only what needs
+                                   action (ledger, structure, geometry, flow,
+                                   calls); --full, --json, --only/--skip
     vostok derive refresh          re-derive the ledger from an already-built
                                    report; the one verb, since the derivation
                                    now writes the record rather than a cache
@@ -67,6 +72,9 @@ def main(argv: list[str] | None = None) -> int:
     cmd, rest = argv[0], argv[1:]
     if cmd == "build":
         return _run("vostok.build.rebuild", rest, "vostok build")
+    if cmd == "evidence":
+        from vostok.evidence import main as evidence
+        return evidence(rest)
     if cmd in ("ledger", "derive", "sema", "data", "pdb"):
         mod = {"ledger": "vostok.ledger", "derive": "vostok.derive.cli",
                "sema": "vostok.sema", "data": "vostok.data.cli",

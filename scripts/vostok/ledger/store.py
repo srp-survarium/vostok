@@ -153,6 +153,19 @@ def load(path=STATE_PATH):
         return _load_lines(fh)
 
 
+def lookup(keys, prefix="", path=STATE_PATH):
+    """The rows for `keys` (and every row whose key starts with a non-empty
+    `prefix`) without parsing the other ~35k: one question about one function
+    should not pay for the whole ledger."""
+    if not os.path.exists(path):
+        return {}
+    wanted = tuple(f"{key}\t" for key in keys)
+    with open(path, encoding="utf-8", newline="") as fh:
+        lines = [line for line in fh if line.startswith("mangled\t")
+                 or line.startswith(wanted) or (prefix and line.startswith(prefix))]
+    return _load_lines(lines)
+
+
 def load_committed():
     """Read the ledger from ``HEAD``, the last retained measurement state.
 
