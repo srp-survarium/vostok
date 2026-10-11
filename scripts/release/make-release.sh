@@ -85,7 +85,7 @@ SH
 chmod +x "$out/play.sh"
 
 [ -n "$maps_file" ] && cp "$maps_file" "$out/MAPS.txt"
-cat > "$out/README.txt" <<TXT
+cat > "$out/README.txt" <<'TXT'
 Survarium (v0.100b) - offline build
 ====================================
 
