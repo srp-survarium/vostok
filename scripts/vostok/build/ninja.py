@@ -686,12 +686,19 @@ def main() -> None:
         if rc != 0 or (targets == ["core"] and not full_build):
             sys.exit(rc)
 
+    # Module builds run on the same retail clock as the full build.  Ninja
+    # stamps its deps log with the clock it runs under, and a deps record older
+    # than its output reads as out of date: one real-clock run after a faked
+    # one would recompile every edge.  It also keeps module objects' __DATE__
+    # equal to the full build's.
+    build_time = RETAIL_GAME_BUILD_TIME if date_sensitive else None
     if full_build:
-        build_time = RETAIL_GAME_BUILD_TIME if date_sensitive else None
         _prepare_clean_final_pdb(ninja_exe, args, build_time)
         rc = _run_with_watchdog(ninja_exe, args, build_time)
     else:
-        rc = _run_plain(ninja_exe, args)
+        if build_time is not None and "core" not in targets:
+            _stop_wine_session()
+        rc = _run_plain(ninja_exe, args, build_time)
 
     # cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which then
     # idles for ~10 minutes before exiting on its own. It inherits the build's
@@ -700,8 +707,8 @@ def main() -> None:
     # stall per rebuild. The PDB is fully written once ninja returns, so
     # killing it here is safe; respawning next build costs ~a second.
     _kill_prefix_processes(("mspdbsrv.exe",))
-    if full_build and date_sensitive:
-        _stop_wine_session(RETAIL_GAME_BUILD_TIME)
+    if build_time is not None:
+        _stop_wine_session(build_time)
     sys.exit(rc)
 
 

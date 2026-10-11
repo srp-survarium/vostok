@@ -10,6 +10,10 @@ in the module), while a real change (source added/excluded, flags, a new
 #include discovered by the header scan) rewrites just the affected files and
 ninja rebuilds exactly those edges. `vostok build` runs this before every build.
 
+The header scan misses computed includes, so the compile rule also records the
+compiler's own include list in ninja's deps log (`deps = msvc`, see
+_track_compile_includes); a header edit dirties every edge that opened it.
+
 The tool clears its output dir on each run - writing in place would bump every
 mtime - so it emits into a temp dir, whose path lands inside the generated
 text (rsp @-references and rsp implicit-input lines). Those are rewritten to
@@ -23,6 +27,7 @@ Usage:
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -217,6 +222,108 @@ def _normalize_compile_working_source_root(
     return "".join(lines)
 
 
+# Front-end spelling of /showIncludes.  The driver switch makes cl drop /MP
+# (D9030), and losing /MP removes `-MPdiagMutex` from the c2 command line that
+# every /GL object records.  /d1 hands the switch straight to c1/c1xx, so /MP
+# stays on and /GL objects keep their bytes.
+SHOW_INCLUDES_FLAG = "/d1showIncludes"
+CL_COMMAND = 'cmd /c cd /d "$compile_dir" && cl $flags'
+SCAN_RULE = "cl_scan"
+CL_EDGE_RULE = re.compile(r"(^|\s): cl(\s|$)")
+# A non-/GL object records the full driver command line in its S_ENVBLOCK
+# (and so in the linked PDB), whatever channel - argument, response file,
+# CL or _CL_ - carries the switch.  And cl lists no includes at all while it
+# creates a PCH (/Yc).  Those edges list their headers with a syntax-only
+# pass (/Zs writes no object; /Y- parses the PCH header text for /Yc) whose
+# output is reduced to the include notes, then compile with the unchanged
+# command line; the edge's status and diagnostics are the real compile's.
+INCLUDE_NOTE = "Note: including file:"
+SCAN_COMMAND = (
+    'cmd /c cd /d "$compile_dir" && ('
+    f"cl $flags /Zs $scan_flags {SHOW_INCLUDES_FLAG} 2>&1"
+    f' | findstr /c:"{INCLUDE_NOTE}" & cl $flags)'
+)
+
+
+def _response_file_name(flags_line: str) -> str:
+    """``  flags = @Z:\\...\\rsp\\x_cl_0.rsp /nologo`` -> ``x_cl_0.rsp``."""
+    words = flags_line.split()
+    if len(words) < 3 or not words[2].startswith("@"):
+        raise ValueError(f"compile edge has no response file: {flags_line!r}")
+    return words[2][1:].replace("\\", "/").rsplit("/", 1)[-1]
+
+
+def _track_compile_includes(text: str, rsp_texts: dict[str, str]) -> str:
+    """Record every header each compile opens in Ninja's deps log.
+
+    vcproj2ninja's include scan cannot follow computed includes such as
+    ``#include VOSTOK_RENDER_CORE_FILE(backend_inline.h)``, so a header reached
+    only that way never dirtied its dependents.  The compiler's own include
+    notes are complete; ``deps = msvc`` stores them and strips them from the
+    output.  Paths stay as cl prints them (``c:\\survarium\\sources\\...``):
+    ninja.exe runs in the same Wine prefix and stats them directly.
+
+    ``rsp_texts`` maps response-file names to their contents; an edge whose
+    response file lacks /GL or creates a PCH moves to the scan-then-compile
+    rule.
+    """
+    command = f"  command = {CL_COMMAND}\n"
+    lines = text.splitlines(keepends=True)
+    if command not in lines:
+        return text
+
+    out: list[str] = []
+    scanned = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        if line == command:
+            out.append(f"  command = {CL_COMMAND} {SHOW_INCLUDES_FLAG}\n")
+            out.append("  deps = msvc\n")
+            index += 1
+            continue
+        if not line.startswith("build "):
+            out.append(line)
+            index += 1
+            continue
+
+        end = index + 1
+        while end < len(lines) and lines[end].startswith(" "):
+            end += 1
+        block = lines[index:end]
+        index = end
+        rule_at = [i for i, row in enumerate(block) if CL_EDGE_RULE.search(row)]
+        if not rule_at:
+            out.extend(block)
+            continue
+        flags_at = [i for i, row in enumerate(block) if row.startswith("  flags = ")]
+        if len(rule_at) != 1 or len(flags_at) != 1:
+            raise ValueError("compile edge without exactly one rule and flags line")
+        name = _response_file_name(block[flags_at[0]])
+        if name not in rsp_texts:
+            raise ValueError(f"compile edge references unknown response file {name}")
+        words = rsp_texts[name].split()
+        creates_pch = any(word.startswith("/Yc") for word in words)
+        if "/GL" not in words or creates_pch:
+            scanned = True
+            block[rule_at[0]] = CL_EDGE_RULE.sub(
+                rf"\1: {SCAN_RULE}\2", block[rule_at[0]], count=1
+            )
+            if creates_pch:
+                block.insert(flags_at[0] + 1, "  scan_flags = /Y-\n")
+        out.extend(block)
+
+    if scanned:
+        rule = out.index("  deps = msvc\n") + 1
+        out[rule:rule] = [
+            "\n",
+            f"rule {SCAN_RULE}\n",
+            f"  command = {SCAN_COMMAND}\n",
+            "  deps = msvc\n",
+        ]
+    return "".join(out)
+
+
 def _normalize_link_rsp_library_order(text: str) -> str:
     """Reproduce the retail LTCG library order in the final executable link."""
     wanted = {name.casefold() for name in RETAIL_LINK_LIBRARY_ORDER}
@@ -314,6 +421,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
         esc_t, esc_b = raw_t.replace(":", "$:"), raw_b.replace(":", "$:")
 
         fresh = sorted(p for p in tmp_dir.rglob("*") if p.is_file())
+        rsp_texts = {p.name: p.read_text() for p in fresh if p.suffix == ".rsp"}
         for fp in fresh:
             rel = fp.relative_to(tmp_dir)
             text = fp.read_text().replace(raw_t, raw_b).replace(esc_t, esc_b)
@@ -328,6 +436,7 @@ def regenerate(dry_run: bool = False, compdb: bool = False) -> list[str]:
                 text = _normalize_compile_rsp_source_root(text)
             elif fp.suffix == ".ninja":
                 text = _normalize_compile_working_source_root(text)
+                text = _track_compile_includes(text, rsp_texts)
             dst = BUILD_DIR / rel
             if dst.is_file() and dst.read_text() == text:
                 continue
