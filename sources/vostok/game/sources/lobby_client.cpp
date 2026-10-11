@@ -91,17 +91,17 @@ void lobby_client::on_connected( )
 	m_packet_client.send	( packet );
 }
 
-// claude@NOTE: structure-capped, not source-steerable. The boost::function safe-bool test
-// ( if ( m_on_disconnected ) ) is emitted out-of-line in the target's full-LTCG build
-// (call boost::function1<void,bool>::operator bool) but inlined to neg/sbb/test in our base,
-// so target shows 4 stmts vs our 1. Systematic boost-header artifact, same in disconnect()/on_error().
+
+
+
+
 void lobby_client::on_disconnected( )
 {
 	m_net_client_connected	= false;
 	if ( m_on_disconnected )
 		m_on_disconnected	( );
 }
-// claude@NOTE: target PDB coalesces the final two stores; keep the source statements separate.
+
 void lobby_client::on_error(
 	network_core::client_error_codes_enum,
 	boost::system::error_code )

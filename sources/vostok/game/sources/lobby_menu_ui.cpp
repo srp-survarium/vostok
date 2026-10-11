@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// The reconstructed UI paths retain a few target/base Scaleform wrapper
-// inline-boundary differences under LTCG.
+
+
 
 #include "pch.h"
 #include "lobby_menu.h"
@@ -139,8 +139,8 @@ void relocate_item_func::call( flash_function_handler_params& params )
 	lobby.move_item( descriptions );
 }
 
-// Target and base retain different Scaleform temporary and argument statement
-// partitions under LTCG; keep the target's named-local and dispatch order.
+
+
 void lobby_menu_external_handler::callback(
 	flash_movie*			pmovieView,
 	pcstr					methodName,
@@ -281,10 +281,10 @@ void lobby_menu_external_handler::callback(
 	}
 }
 
-// claude@NOTE: source structure and constants are exhausted. The target keeps calls
-// to flash_value::SetString/SetStringW because its wrappers inline GFx::Value::operator=;
-// the base wrappers call operator= and are then inlined here. Reopen only with the
-// exact Scaleform 4.2.21 inline-header/compiler partition.
+
+
+
+
 ui_label match_making_labels[] =
 {
 	{ "label_status",			"st_label_status" },
@@ -352,9 +352,9 @@ void lobby_menu::show_match_making( bool b_show )
 	}
 }
 
-// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); structure
-// is faithful and the residual is LTCG scheduling of the inlined flash_value
-// ctor/dtor, not the old inline-vs-call wall.
+
+
+
 void lobby_menu::update_level_loading_progress( )
 {
 	char buff[64];
@@ -1403,10 +1403,10 @@ bool lobby_menu::is_mouse_over_ui( )
 	return is_over_lobby || is_mouse_over_val.GetBool( );
 }
 
-// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); structure
-// (the three independent message blocks) is faithful and the residual is LTCG
-// scheduling of the inlined flash_value ctor/dtor + SetStringW/SetMember/SetUInt, not
-// the old inline-vs-call wall.
+
+
+
+
 static wchar_t const player_joined_pref[]	= L"#+p:[ ";
 static wchar_t const player_left_pref[]		= L"#-p:[ ";
 static wchar_t const player_queue_pref[]	= L"#q:[";

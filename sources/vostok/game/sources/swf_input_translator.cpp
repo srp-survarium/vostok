@@ -121,11 +121,11 @@ dik_to_swf_bind* swf_input_translator::get_bind( input::enum_keyboard key )
 	return &char_map[ key ];
 }
 
-// claude@NOTE: capped - LTCG-optimized COMDAT (and esp,-8, esi=this, edi/bl
-// register-passed args, `result` enregistered into ebp so the PDB records no
-// `result` local). Our /Od base spills these to the frame, so the bytes diverge;
-// the structure (early non-translate return, locale-guarded init, get_dik_unicode,
-// shift-keyed wcsupr/wcslwr) is faithful.
+
+
+
+
+
 wchar_t swf_input_translator::translate_key_action( input::world* input_world, bool is_shift_now, dik_to_swf_bind& current )
 {
 	wchar_t result = is_shift_now ? current.c_shift : current.c;
