@@ -235,3 +235,11 @@ link).
   | `animation\skeleton` ← `game_core\hand_to_weapon_ik_processor` | 1 | `skeleton::get_bone` |
   | `game\object_sound` ← `sound\single_sound` | 1 | `intrusive_list<new_sound_propagator>::push_back` |
   | `vfs\saving_node`, `network\login_client`, `game\game` | 3 | `strings::ends_with`, `string_order` ctor, `intrusive_ptr::operator=` |
+
+  A first triage found no faithful one-line fix among them. The retail owner TUs
+  of the `game_world_npc`, `render_engine_world_pc_dx11` and `game` groups
+  hold bodies that our link drops (`initialize_ai`, `is_playing`,
+  `apply_render_options_changes` are parked as retained-without-caller), so
+  their references never reach pass 1. In `skeleton.cpp` and `object_sound.cpp`
+  no retail body visibly calls the function, so the referencing use was inlined
+  and has to be reconstructed with its unit.
