@@ -34,6 +34,7 @@ Matchable (`/Od` in the target) but with no folder yet: `vfs`, `particle`, `ai`,
 
 ### Data matching
 * [binary_matching/data_matching.md](binary_matching/data_matching.md) — the data lane; per-module dossiers are regenerated into `data_matching/` by every build (not committed), the handoff is [data_matching/data_extent_handoff.md](data_matching/data_extent_handoff.md).
+* [binary_matching/link-layout.md](binary_matching/link-layout.md) — how retail laid out code and data (section contributions, pass-1 vs DBI order), which layout levers exist, and COMDAT copy selection as the one that changes code.
 
 ### Matching status tags
 Per-function status lives in the ledger (`config/match_state.tsv`):

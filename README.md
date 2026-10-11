@@ -8,23 +8,23 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 <!-- match-score:start -->
 ## Match status
 
-**`survarium.exe`: 96.05% matched (MAX)** - 11,344 / 13,014 functions exact (87.2%), weighted by code size.
+**`survarium.exe`: 96.06% matched (MAX)** - 11,374 / 13,014 functions exact (87.4%), weighted by code size.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |          10,738 |   94.37% | last measured score                            |
-| MAX   |          11,344 |   96.05% | best result for each function's current source |
-| HIST  |          11,458 |   96.37% | all-time peak across source revisions          |
+| CUR   |          10,762 |   94.38% | last measured score                            |
+| MAX   |          11,374 |   96.06% | best result for each function's current source |
+| HIST  |          11,488 |   96.37% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module          | Units |   Functions exact MAX | Weighted MAX |
 | :-------------- | ----: | --------------------: | -----------: |
 | `render`        |   351 | 2,290 / 2,734 (83.8%) |       94.95% |
-| `game`          |   141 | 1,168 / 1,528 (76.4%) |       89.98% |
+| `game`          |   141 | 1,170 / 1,528 (76.6%) |       89.99% |
 | `core`          |   136 | 1,266 / 1,325 (95.5%) |       98.83% |
 | `vostok`        |   112 | 1,152 / 1,250 (92.2%) |       98.60% |
-| `game_core`     |   189 |   904 / 1,181 (76.5%) |       97.59% |
+| `game_core`     |   189 |   932 / 1,181 (78.9%) |       97.62% |
 | `animation`     |   102 |     628 / 727 (86.4%) |       94.63% |
 | `ai`            |   124 |     660 / 691 (95.5%) |       99.65% |
 | `sound`         |    69 |     500 / 510 (98.0%) |       99.90% |
@@ -52,13 +52,13 @@ _Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand.
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,090,459 / 429,051,363).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,087,935 / 429,051,363).**
 
-_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,487 otherwise-exact functions (615,849 code bytes) with referent debt._
+_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,501 otherwise-exact functions (624,019 code bytes) with referent debt._
 
 _The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11805 / 13321 definitions). Integrity ratchet: armed._
 
-_Updated 2026-10-11._
+_Updated 2026-10-12._
 <!-- data-match:end -->
 
 ## Requirements
@@ -273,6 +273,10 @@ fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
 It records commands, artifacts, and complete `vostok-pdb topology --order --json`
 comparisons under `binaries/gen/pdb-order-probes/`; see
 [`vostok-pdb topology.md`](docs/binary_matching/vostok-pdb topology.md#causal-order-probes).
+`python3 -m vostok tool link-layout runs|owners` reads the section contributions
+of both PDBs: archive runs per section side by side, and the COMDAT functions
+whose kept copy comes from a different compiland than retail's; see
+[`link-layout.md`](docs/binary_matching/link-layout.md).
 
 ## Third-party libs and the GFx suite
 

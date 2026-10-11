@@ -297,7 +297,7 @@ void weapon::on_show( )
 	if ( m_game_ui )
 	{
 		m_game_ui->set_ammo_type( (u8)( ammo_slot( ) != get_ammo_slot( first_ammo ) ) + 1 );
-		m_game_ui->set_fire_queue_size( m_weapon_fire_queue_types[ m_fire_queue_type ] );
+		m_game_ui->set_fire_queue_size( fire_queue_length( ) );
 		m_game_ui->show_ammo_indicator( true );
 		show_crosshair( );
 		set_ui_ammo( true );
@@ -333,7 +333,7 @@ void weapon::set_ui_ammo( bool update_total_count )
 	if ( !m_game_ui || !m_inventory )
 		return;
 
-	u16 const ammo_in_magazine = ( m_is_round_chambered != 0 ) + m_ammo_in_magazine;
+	u16 const ammo_in_magazine = ( round_is_chambered( ) != 0 ) + m_ammo_in_magazine;
 	m_game_ui->set_ammo_in_magazine( ammo_in_magazine );
 
 	if ( !update_total_count )
@@ -380,7 +380,7 @@ void weapon::on_before_fire( )
 void weapon::on_after_fire( )
 {
 	if ( m_game_ui )
-		m_game_ui->set_ammo_in_magazine( m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ammo_in_magazine( ) );
 
 	play_weapon_fire_pfx( );
 
@@ -459,7 +459,7 @@ void weapon::set_next_fire_queue_type( )
 	weapon_core::set_next_fire_queue_type( );
 
 	if ( m_game_ui )
-		m_game_ui->set_fire_queue_size( m_weapon_fire_queue_types[ m_fire_queue_type ] );
+		m_game_ui->set_fire_queue_size( fire_queue_length( ) );
 }
 
 void weapon::set_next_ammo_type( )
@@ -577,7 +577,7 @@ void weapon::on_skeleton_matrices_changed(
 	if ( s_draw_fire_point )
 		renderer.debug( ).draw_origin( scene, m_barrel_transform, 0.5f, false );
 
-	if ( !m_is_third_view && m_aimed ) {
+	if ( !m_is_third_view && is_aimed( ) ) {
 		if ( !m_is_scope_aimed && m_rifle_scope ) {
 			float const scope_fov_factor = m_rifle_scope->fov_factor( );
 			float const fov_factor = user( ).fov_factor( current_time_in_ms );
@@ -660,7 +660,7 @@ void weapon::update_dispersion_visual_representation( )
 
 	if ( m_game_ui )
 	{
-		m_game_ui->show_crosshair( !( s_hide_crosshair_on_aim_value && m_aimed ) );
+		m_game_ui->show_crosshair( !( s_hide_crosshair_on_aim_value && is_aimed( ) ) );
 		const float crosshair_size = s_dispersion_gui_scale_coef_value / default_vertical_fov * get_dispersion( );
 		m_game_ui->set_crosshair_size( crosshair_size );
 	}
@@ -669,7 +669,7 @@ void weapon::update_dispersion_visual_representation( )
 void weapon::on_user_sprint( const bool user_is_sprinting )
 {
 	weapon_core::on_user_sprint( user_is_sprinting );
-	bool const left_hand_active = m_is_double_handed || !user_is_sprinting;
+	bool const left_hand_active = is_double_handed( ) || !user_is_sprinting;
 	bool const right_hand_active = !user_is_sprinting;
 	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::left,  left_hand_active,  m_last_tick_time_in_ms );
 	m_fingers_corrector.activate_hand( fingers_to_weapon_corrector::right, right_hand_active, m_last_tick_time_in_ms );

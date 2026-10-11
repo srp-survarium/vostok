@@ -89,42 +89,10 @@ weapon_core::~weapon_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-
-// inline in retail; kept out of line until its remaining consumer is reconstructed
-u16 weapon_core::ammo_in_magazine( ) const
-{
-	return m_ammo_in_magazine;
-}
-
-bool weapon_core::round_is_chambered( ) const
-{
-	return m_is_round_chambered;
-}
-
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( magazine_capacity ) );
 	m_magazine_capacity = magazine_capacity;
-}
-
-u16 weapon_core::fire_queue_length( ) const
-{
-	return m_weapon_fire_queue_types[m_fire_queue_type];
-}
-
-profile_slot_enum weapon_core::ammo_slot( )
-{
-	return m_ammo_slot;
-}
-
-bool weapon_core::is_aimed( ) const
-{
-	return m_aimed;
-}
-
-bool weapon_core::is_double_handed( ) const
-{
-	return m_is_double_handed;
 }
 
 void weapon_core::initialize_weapon_logic(
