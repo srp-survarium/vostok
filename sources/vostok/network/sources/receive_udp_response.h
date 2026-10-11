@@ -38,9 +38,9 @@ public:
 	{
 	}
 
-	// claude@NOTE: structure matches 2/2; residual is intrusive_ptr::operator*
-	// (with its ASSERT eater) and the member ~intrusive_ptr (base inlines both,
-	// target calls them out-of-line) - the inline-vs-call wall, not steerable.
+
+
+
 	virtual			~receive_udp_response	( )
 #line 43
 	{
@@ -48,9 +48,9 @@ public:
 		network_core::delete_udp_match_packet	( *m_allocator, temp );
 	}
 
-	// claude@NOTE: structure matches 4/4; residual is base_packet::buffer() inlined
-	// inside the packet_reader-ctor expansion where the target calls the COMDAT
-	// (same wall as receive_response::execute); the if/copy stats tail is byte-equal.
+
+
+
 	virtual	void	execute					( )
 #line 49
 	{

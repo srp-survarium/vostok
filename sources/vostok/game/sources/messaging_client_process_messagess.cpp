@@ -17,10 +17,10 @@
 
 namespace survarium {
 
-// claude@NOTE: target log line and severity values are fixed below. Remaining bytes
-// are LTCG register selection at the two successful query call boundaries plus an
-// ICF boost::function clear representative; target/base still share the same CFG.
-// Revisit only if the caller compiler context or fold representative changes.
+
+
+
+
 void messaging_client::on_packet_received( network_core::packet_reader& reader )
 {
 	const u8 message_type = reader.r< u8 >( );

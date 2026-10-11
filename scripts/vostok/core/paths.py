@@ -197,16 +197,25 @@ DATA_FUNCTION_OPEN = GEN_DIR / "data_function_open.tsv"
 # functions could never pair). Give each side the prefix that leaves the SAME
 # relative path, so target and base key identically: both reduce to `Src\...`.
 GFX_TARGET_PREFIX = r"c:\w\42216f4658640829\scaleform\releases\gfx_4.2.21"
+# The pinned scaleform-gfx tree (flake input `scaleform-gfx-src`): the recovered
+# 4.2.21 lib sources under Include/ Src/ 3rdParty/, plus Vostok/ - the files
+# where the engine's own view of the SDK differs from the lib tree.
 SCALEFORM_SDK = Path(
-    os.environ.get("SCALEFORM_SDK", str(Path.home() / "Projects/survarium/scaleform_sdk"))
+    os.environ.get("SCALEFORM_SDK", str(BINARIES / "nix-store" / "scaleform-gfx"))
 )
+GFX_ENGINE_OVERLAY = "Vostok"
 
-# Merged GFx build tree: the pristine SDK linked file-by-file, with the repo's
-# reconstructed 4.2.21 files (sources/scaleform/...) copied over it.
-# vostok.build.gfx materializes it and compiles the lib TUs FROM it, so bare
-# neighbor-includes ("Render_HAL.h") resolve to the reconstructed copies -
-# an -I overlay cannot reach those. Both PDB readers strip this prefix on
-# the base side (in addition to SCALEFORM_SDK, so pre-tree objs still key).
+# The engine TUs' view of the SDK, where the retail vcprojs look for it
+# ($(SolutionDir)/scaleform/{Include,Src}) and where the retail PDB records it
+# (c:\survarium\sources\scaleform\...): SCALEFORM_SDK Include/ + Src/ with
+# GFX_ENGINE_OVERLAY laid over. Generated and gitignored; vostok.tool.toolchain
+# refreshes it through vostok.build.gfx.materialize_engine_tree().
+GFX_ENGINE_TREE = SOURCES / "scaleform"
+
+# GFx lib build tree: SCALEFORM_SDK linked file-by-file. vostok.build.gfx
+# materializes it and compiles the lib TUs FROM it through the gfx-sdk alias
+# below. Both PDB readers strip this prefix on the base side (in addition to
+# SCALEFORM_SDK, so pre-tree objs still key).
 GFX_BUILD_TREE = BINARIES / "gfx-sdk"
 GFX_OBJECT_TREE = WIN32_DIR / "intermediates" / "gfx"
 
@@ -289,6 +298,21 @@ PDB_ORDER_PROBE_OUTPUT = GEN_DIR / "pdb-order-probes"
 
 REBUILD_LOG = BINARIES / "rebuild.log"
 BUILD_JOBS = BINARIES / "build-jobs"
+
+
+def _runtime_dir() -> Path:
+    """Per-user runtime dir; derived from the uid when XDG_RUNTIME_DIR is unset,
+    so an `env -i` shell and a desktop shell still meet on the same lock."""
+    for candidate in (os.environ.get("XDG_RUNTIME_DIR"), f"/run/user/{os.getuid()}"):
+        if candidate and Path(candidate).is_dir():
+            return Path(candidate)
+    return Path("/tmp")
+
+
+# Host-wide: one ninja compile/link at a time across every worktree on this
+# machine (vostok.build.ninja). Outside any worktree on purpose.
+HOST_BUILD_LOCK = Path(os.environ.get("VOSTOK_BUILD_LOCK")
+                       or _runtime_dir() / "vostok-ninja.lock")
 
 
 def _main_worktree() -> Path:

@@ -25,9 +25,9 @@ namespace network {
 // caller via the functor; the handshake is then retried
 // retry_count times before giving up
 
-// claude@NOTE: structure + locals match; residual = LOG-helper callback-ctor
-// schedule in the three LOG blocks + the function1 copy lowering in the
-// handshake( functor, ... ) retry call
+
+
+
 void login_client_impl::on_handshaked(
 		boost::system::error_code const&	error_code,
 		boost::function< void ( handshaking_error_types_enum ) > const&	functor,

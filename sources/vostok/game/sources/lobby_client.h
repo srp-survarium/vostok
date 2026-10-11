@@ -150,8 +150,8 @@ public:
 
 			void									ping_server							( );
 
-	// claude@MATCH: private from here - the on_*/sign_in_on_packet_received/
-	// clear_* symbols mangle AAE (the dump prints them public)
+
+	// private from here: these symbols mangle AAE in the PDB
 private:
 			void									on_connected						( );
 			void									on_disconnected						( );

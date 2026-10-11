@@ -40,10 +40,10 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 	);
 }
 
-// claude@MATCH: the trailing branch is a real `else` (target emits a back-to-back
-// `jmp .epilogue; jmp .epilogue` = the returning if-body's `}` jumping OVER the else;
-// patterns/else-block-double-jmp.md). Residual is the builder-chain inline-vs-call ceiling
-// (the animation_lexeme_parameters setters go out-of-line in the target), not steerable here.
+
+
+
+// a real `else`: retail's returning if-body jumps over it (back-to-back jmp)
 animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( mutable_buffer& buffer, const bool is_third_view, const animation::body_part_masks_enum bones_mask )
 {
 	typedef fixed_vector< animation::mixing::animation_interval, 2 >	two_anim_intervals_type;

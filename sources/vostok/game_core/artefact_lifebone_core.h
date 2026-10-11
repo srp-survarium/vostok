@@ -29,7 +29,7 @@ protected:
 			void								activate_impl				( );
 			bool								protect_affect				( pcstr __formal, hit_affects_type_enum affect );
 private:
-	virtual	void								activate					( base_player& user, engine& engine ) override { }
+	virtual	void								activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate					( ) override {}
 
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
@@ -38,15 +38,15 @@ private:
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; /* no source */ }
 
-	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
+	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
 
-	// claude@NOTE: rva 0xbc810, ICF-folded across oxygen_tank+medkit. animation_player has
-	// no accessible copy ctor, so it is the one argument the target passes by address;
-	// user_skeleton is a 4-byte resource_ptr copied bitwise through the ellipsis and the
-	// two float4x4 go by value (0x40 each) - 0x94 pushed in total.
+
+
+
+
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
@@ -55,17 +55,7 @@ private:
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
-												) override {
-													VOSTOK_UNREFERENCED_PARAMETERS(
-														user_skeleton,
-														user_matrices,
-														user_matrices_count,
-														current_time_in_ms,
-														character_head_transform,
-														character_transform,
-														& animation_player
-													);
-												}
+																) override { VOSTOK_UNREFERENCED_PARAMETERS( user_skeleton, user_matrices, user_matrices_count, current_time_in_ms, character_head_transform, character_transform, & animation_player ); }
 
 	virtual	void								serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize					( network_core::packet_reader& arg_0 ) override { /* no source */ }

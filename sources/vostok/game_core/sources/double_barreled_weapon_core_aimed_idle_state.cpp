@@ -43,10 +43,10 @@ double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_
 	ASSERT( UNKNOWN_EXPRESSION_T( animation_index == animations_count ) );
 }
 
-// claude@NOTE: systemic /Od ceiling - the expression() return materializes
-// addition_lexeme via cloned_in_buffer (target) vs operator+ (base); identical
-// residual to the matched weapon_core_aimed_state::weapon_and_hands_expression.
-// Not source-steerable; structure matches (3/3 stmts).
+
+
+
+
 animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,

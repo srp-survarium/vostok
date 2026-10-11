@@ -17,10 +17,10 @@ public:
 	typedef boost::function< void ( pcstr, pcstr ) >		functor_type1;
 	typedef boost::function< void ( pcstr, pcstr, pcstr ) >	functor_type2;
 
-	// claude@NOTE: standalone target symbol at rva 0x49340 (NOT inlined-only); all
-	// statements byte-equal - sole residual is one extra dead frame dword in the
-	// target (this at -0x18 vs -0x14), LTCG slot slack with no source statement
-	// mapping to it
+
+
+
+
 	inline			string_response	(
 			memory::base_allocator&		allocator,
 			functor_type0 const&	functor,
@@ -37,9 +37,9 @@ public:
 	{
 	}
 
-	// claude@NOTE: the two- and three-string ctors emit NO target symbol (only the
-	// one-functor ctor does); bodies by symmetry with the string_order ctor set,
-	// verifiable only through callers - not anchored
+
+
+	// no shipped symbol: mirrors the string_order ctor set
 	inline			string_response	(
 			memory::base_allocator&		allocator,
 			functor_type1 const&	functor,
@@ -86,9 +86,9 @@ public:
 		VOSTOK_FREE_IMPL	( m_allocator, temp );
 	}
 
-	// claude@NOTE: the target's ICF survivor lives in string_order.h's unit (rva
-	// 0x49490), so this unit's objdiff score reads None; verified by-name with
-	// --view diff - zero divergent rows
+
+
+
 	virtual	void	execute			( )
 	{
 		if ( m_string1 ) {

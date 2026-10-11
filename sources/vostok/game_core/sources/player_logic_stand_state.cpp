@@ -14,10 +14,10 @@
 
 namespace survarium {
 
-// claude@NOTE: extern definition needed by weapon_user_animations_container::
-// get_stand_animation_caption (inlined into jump_logic::get_move_look_caption);
-// content read from the target exe .rdata @va 0x89d090 (33 entries, single copy).
-// 3 captions per direction: move, shoot, look - indexed by direction * 3 + part.
+
+
+// extern: weapon_user_animations_container::get_stand_animation_caption reads it.
+// 3 captions per direction (move, shoot, look), indexed direction * 3 + part
 pcstr const stand_animations_captions[] = {
 	"idle",
 	"shoot_on_site",
@@ -59,10 +59,10 @@ player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selec
 {
 }
 
-// claude@NOTE: structure faithful; residual is the module-wide animation_lexeme_parameters
-// builder-chain inline-vs-call wall (the VOSTOK_ANIMATION_API setters / mixing::operator+ /
-// expression::operator= go out-of-line in the target but inline here). Same ceiling as
-// weapon_core_aimed_fire_state::get_user_hands_expression.
+
+
+
+
 animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	mutable_buffer&						buffer,
 	u32 const							animation_index,
@@ -111,23 +111,21 @@ animation::mixing::expression player_logic_stand_state::get_recoil_animation_lex
 ) const
 {
 	pcstr const							additive_animation_id	= m_owner.animations( ).get_stand_animation_caption( aimed, animation_index );
-
 	resources::managed_resource_ptr		additive_animation		= m_owner.animations( ).get_stand_animation( aimed, animation_index, is_third_view );
-
+	ASSERT( UNKNOWN_EXPRESSION );
 	animation::mixing::animation_lexeme_parameters	recoil_lexeme_parameters( buffer, additive_animation_id, additive_animation, 0, 0 );
-
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
 	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * coeff;
 
-	animation::mixing::animation_lexeme	lexeme(
-		recoil_lexeme_parameters
+	recoil_lexeme_parameters
 		.start_animation_interval_time	( start_animation_interval_time )
 		.animated_object				( m_user )
 		.additivity_priority			( additivity_priority )
 		.weight_interpolator			( interpolator )
 		.time_scale_interpolator		( interpolator )
-		.time_calculator				( time_calculator )
-	);
-
+		.time_calculator				( time_calculator );
+	animation::mixing::animation_lexeme	lexeme( recoil_lexeme_parameters );
 	return animation::mixing::expression( lexeme );
 }
 
@@ -148,20 +146,18 @@ animation::mixing::expression player_logic_stand_state::look_expression(
 	pcstr const							look_animation_id	= m_owner.animations( ).get_stand_animation_caption( is_aimed, animation_type );
 
 	resources::managed_resource_ptr		look_animation		= m_owner.animations( ).get_stand_animation( is_aimed, animation_type, is_third_view );
+	ASSERT( UNKNOWN_EXPRESSION );
 
 	animation::mixing::animation_lexeme_parameters	look_lexeme_parameters( buffer, look_animation_id, look_animation, NULL, &weight_driving_animation );
-
 	float const							start_animation_interval_time	= look_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * m_owner.look_time_factor( );
-
-	animation::mixing::animation_lexeme	look_lexeme(
-		look_lexeme_parameters
+	look_lexeme_parameters
 		.start_animation_interval_time	( start_animation_interval_time )
 		.animated_object				( m_user )
 		.additivity_priority			( 4 )
 		.time_scale_interpolator		( interpolator )
-		.time_calculator				( m_owner.look_time_calculator( ) )
-	);
+		.time_calculator				( m_owner.look_time_calculator( ) );
 
+	animation::mixing::animation_lexeme	look_lexeme( look_lexeme_parameters );
 	animation::mixing::expression		result( look_lexeme );
 
 	weapon_core&						weapon	= static_cast< weapon_core& >( *m_user->current_active_object( ) );

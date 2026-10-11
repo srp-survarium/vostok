@@ -121,9 +121,9 @@ void player_parameters_modifyer::apply( base_player* player )
 		};
 		for ( u32 i = 0 ; i != array_size( anomaly_damage_types ) ; ++i )
 		{
-			// claude@NOTE: target calls intrusive_ptr::operator* out-of-line here (so the loop
-			// back-jump is its own statement, line 141); the base inlines operator* (with its
-			// ASSERT) regardless of the *-vs--> spelling. inline-vs-call residual, not steerable.
+
+
+
 			( *player->damage_model( ) ).add_damage_protector( anomaly_damage_types[i], anomaly_scale, 0.0f );
 		}
 	}
@@ -226,7 +226,7 @@ void player_parameters_modifyer_cook::translate_query( resources::query_result_f
 						cooked_resource->body_part_parameters_modifyers[body_part_name].health_regeneration += body_part_modifyer_from_cfg.health_regeneration;
 					}
 					else
-						cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg; // sushi@MATCH: LTCG for map_assign as third member in class.
+						cooked_resource->body_part_parameters_modifyers[body_part_name] = body_part_modifyer_from_cfg;
 
 					body_part_parameters_modifyer& current_body_part_modifyer = cooked_resource->body_part_parameters_modifyers[body_part_name];
 

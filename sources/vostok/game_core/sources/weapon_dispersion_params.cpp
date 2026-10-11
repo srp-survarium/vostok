@@ -51,9 +51,9 @@ weapon_dispersion_params::weapon_dispersion_params( configs::binary_config_value
 	if ( cfg.value_exists( "max_dispersion" ) )
 		max_dispersion = (float)cfg["max_dispersion"];
 
-	// claude@MATCH: the target unconditionally clears this AFTER the if-blocks,
-	// discarding any "one_shoot_dispersion_amount" the config just read (matched verbatim,
-	// not a fix: movss from .rdata 0.0f at target .text 0x22d -> [this+0x10]).
+
+
+	// retail clears this unconditionally, discarding the value read above
 	one_shoot_dispersion_amount = 0.0f;
 }
 

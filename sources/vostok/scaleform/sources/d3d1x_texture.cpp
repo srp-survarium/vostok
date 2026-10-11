@@ -428,8 +428,7 @@ DepthStencilSurface::DepthStencilSurface(TextureManagerLocks* pmanagerLocks, con
 }
 
 DepthStencilSurface::~DepthStencilSurface()
-{
-    if (pDepthStencilSurface)
+{   if (pDepthStencilSurface)
         pDepthStencilSurface->Release();
     if (pDepthStencilSurfaceView)
         pDepthStencilSurfaceView->Release();

@@ -63,10 +63,10 @@ public:
 	inline	pcstr									local_user_name					( ) { /* no source */ return m_local_name; }
 	inline	game_team_id							local_player_team				( ) { /* no source */ return m_game_team_id; }
 
-	// claude@MATCH: private from here - the sign_in_on_packet_received/on_*/
-	// read_*/accept_message_from/process_incoming_text_message/
-	// update_channel_subscriptions/parse_receiver_channel symbols mangle AAE
-	// (the dump prints them public)
+
+
+
+	// private from here: these symbols mangle AAE in the PDB
 private:
 			void									sign_in_on_packet_received		( network_core::packet_reader& reader );
 			void									on_packet_received				( network_core::packet_reader& reader );

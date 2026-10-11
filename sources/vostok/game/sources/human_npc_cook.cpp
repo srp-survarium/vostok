@@ -31,8 +31,8 @@ namespace survarium {
 {
 }
 
-// claude@NOTE: Target keeps creation_data_from_user().c_ptr() out-of-line; base inlines it.
-// The remaining query construction difference is LTCG argument scheduling.
+
+
 void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
@@ -61,8 +61,8 @@ void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 	);
 }
 
-// claude@NOTE: Target keeps strip_pointer( g_allocator ) out-of-line on this delete path;
-// base inlines it through VOSTOK_DELETE_IMPL.
+
+
 void human_npc_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
@@ -83,8 +83,8 @@ void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 	on_npc_options_received								( config->get_root(), *parent );
 }
 
-// claude@NOTE: Target keeps the creation-data c_ptr and allocator strip_pointer helpers
-// out-of-line. Base inlines them; the remaining callback CFG and request setup agree.
+
+
 void human_npc_cook::on_npc_options_received(
 	configs::binary_config_value const&		config_value,
 	resources::query_result_for_cook&		parent

@@ -6,8 +6,8 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: structure + locals match; residual = the LOG-helper callback-ctor
-// schedule inside the two LOG_ERROR blocks (log-callback-ctor-schedule.md)
+
+
 void login_client_impl::on_ping_sent(
 		const u32							try_count,
 		boost::system::error_code const&	error_code,

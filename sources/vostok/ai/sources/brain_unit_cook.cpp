@@ -15,10 +15,10 @@
 namespace vostok {
 namespace ai {
 
-// The empty entity at this+0x20 is the boost::noncopyable base (retail record
-// places it at 0x20, folded with m_ai_world by EBO); its inline ctor is the
-// "allocator<char>" the delinker named via ICF.
-// sushi@TODO: verify the ctor byte residual closes now that the base is in place.
+
+
+
+
 brain_unit_cook::brain_unit_cook	( ai_world& world ) :
 	translate_query_cook			( resources::brain_unit_class, reuse_false, use_current_thread_id ),
 	m_ai_world						( world )

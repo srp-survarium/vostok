@@ -254,12 +254,12 @@ void profile_character::weapon_resources_ready( resources::queries_result& data 
 	}
 }
 
-// claude@NOTE: structure matches (for / if(!is_successful) LOG_ERROR / two array
-// assigns). Byte residual is a cross-module layout shift: our resources::queries_result
-// header is 8 bytes larger than the target's, so m_size reads [esi+40h] vs target
-// [esi+38h] and m_queries[i] is at +0x154 vs +0x14C; that 8-byte offset cascades into
-// the loop base-register choice (ebx vs edi) and the get_managed_resource ref-count
-// temp count. Fixing it would mean editing core resources_query_result.h - out of scope.
+
+
+
+
+
+
 void profile_character::character_animation_ready( resources::queries_result& data )
 {
 	for ( u32 i = 0; i < data.size( ); ++i )
@@ -270,9 +270,9 @@ void profile_character::character_animation_ready( resources::queries_result& da
 	m_character_animation[ 1 ] = data[ 1 ].get_managed_resource( );
 }
 
-// internal-linkage scene-load functor (the original is a file-local static: the PDB
-// records only an S_LPROC32 for it, no mangled COFF symbol). Originally referenced by
-// query_scene_resources (still a STUB), so pin its address from this TU to keep
+
+// file-local scene-load functor: retail records only an S_LPROC32 for it; the pin
+// below keeps it referenced while query_scene_resources is a stub
 static float4x4 identity_transform_functor( pcvoid )
 {
 	return float4x4( ).identity( );

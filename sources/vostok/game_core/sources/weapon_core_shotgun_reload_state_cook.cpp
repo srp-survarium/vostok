@@ -19,13 +19,13 @@ weapon_core_shotgun_reload_state_cook::~weapon_core_shotgun_reload_state_cook( )
 {
 }
 
-// claude@NOTE: line 35 is the VOSTOK_UNREFERENCED_PARAMETERS dead-guard, NOT an ASSERT
-//   (patterns/optimized-comdat-in-od-unit.md, dead-guard-fold variant): the leading
-//   empty_stub is the identity(false) lvalue materialization, the 0x96-dword rep-movsd
-//   is the by-reference in_query promoted-by-value through the variadic eater. Structure
-//   now matches (2 stmts, 0 locals - malloc folded into the return at line 36). Residual:
-//   the optimized COMDAT folds the dead-branch movzx/test/je guard that our /Od build
-//   keeps (~7 bytes) + the by-value query copy - the known dead-guard ceiling.
+
+
+
+
+
+
+// the eater is VOSTOK_UNREFERENCED_PARAMETERS' dead guard, not an ASSERT
 mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( in_query, raw_file_data, file_exist );
@@ -34,7 +34,7 @@ mutable_buffer weapon_core_shotgun_reload_state_cook::allocate_resource( resourc
 
 void weapon_core_shotgun_reload_state_cook::deallocate_resource( void* buffer )
 {
-	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines it.
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
 }
 
 void weapon_core_shotgun_reload_state_cook::create_resource( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer )
@@ -163,7 +163,7 @@ void weapon_core_shotgun_reload_state_cook::on_subresources_ready( resources::qu
 
 	weapon_core_shotgun_reload_state* object_to_cook = new ( buffer.c_ptr( ) ) weapon_core_shotgun_reload_state( params->weapon, reload_start, reload_one_round, reload_finish );
 
-	// claude@MATCH: target pushes 0x20 here - sizeof of the cook itself, not of weapon_core_shotgun_reload_state (0x140).
+	// sizeof the cook itself, not of weapon_core_shotgun_reload_state, as retail
 	data.get_parent_query( )->set_unmanaged_resource( object_to_cook, resources::memory_usage_type( resources::nocache_memory, sizeof( *this ) ) );
 	data.get_parent_query( )->finish_query( result_success );
 }

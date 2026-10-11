@@ -5,12 +5,12 @@
 
 namespace survarium {
 
-// claude@NOTE: get_animation_impl<27,6> (mangled $0BL@$05 == <27,6>; $05 encodes 6) is the
-// instantiation get_stand_animation forwards to, passing the [6] hands member. It is kept
-// out-of-line in the target (standalone @0x0bcf90) because the *_lexeme callers in
-// player_logic_*_state inline get_stand_animation but leave the nested template call as a
-// `call`. ODR-using it from those callers (movement_lexeme et al.) emits the standalone here
-// so objdiff pairs it; get_stand_animation itself is the inlined impl.
+
+
+
+
+
+
 template < u32 move_count, u32 hands_count >
 inline resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl(
 		resources::managed_resource_ptr const	(&move)[ move_count ],

@@ -65,9 +65,9 @@ static void create_wire_visual_source(
 	writer.close_chunk		( );
 }
 
-// claude@NOTE: The 22-statement source shape matches. The residual is a shared-template
-// /GL cut around creation_request and the Boost callback exception tail; reopen only
-// after the compiler context or function-scoped MAX attribution changes.
+
+
+
 void object_wire::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -133,9 +133,9 @@ void object_wire::remove( )
 		get_game_scene().renderer().scene().remove_model( get_game_scene().render_scene(), m_visual );
 }
 
-// claude@NOTE: VOSTOK_DELETE_IMPL(pbyte) remains out-of-line through get_top_pointer/destructor
-// helpers in base but reduces to the target's direct mspace_free. The following resource
-// pointer assignment aligns; reopen after the shared memory-helper inline context changes.
+
+
+
 void object_wire::resources_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
 	const_buffer user_data_to_create	= data[0].creation_data_from_user();

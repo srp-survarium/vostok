@@ -73,7 +73,7 @@ public:
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
 	inline	u16									ammo_in_magazine				( ) const	{ return m_ammo_in_magazine;	}
-	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
+	inline	u16									ammo_in_weapon					( ) const { return m_ammo_in_magazine + ( m_is_round_chambered != false ); }
 
 			u16									maximum_ammo_in_weapon			( ) const;
 
@@ -83,7 +83,7 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
-			bool								ready_to_reload					( ) const;
+	inline	bool								ready_to_reload					( ) const { return ammo_in_weapon( ) != maximum_ammo_in_weapon( ) && ammunition( ) && ammunition( )->amount( ) != 0 && !m_is_in_sprint_transition && !m_user_animations_selector.is_in_jump( ); }
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
 	inline	weapon_targets						get_target						( ) const { return m_target; }
@@ -95,8 +95,8 @@ public:
 	inline	u16									fire_queue_length				( ) const	{ return m_weapon_fire_queue_types[m_fire_queue_type];	}
 
 	inline	float4x4							get_transform					( ) const { return m_transform; }
-	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
-	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	float4x4							transform						( ) const override { return m_transform; }
+	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }
 
 	inline	hit_initiator const*				hit_initiator_holder			( ) const { return m_initiator_holder; }
 	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
@@ -117,7 +117,7 @@ public:
 			fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >
 												vertical_recoil_time_calculator		( );
 
-			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
+			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
 
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override;
@@ -146,12 +146,12 @@ public:
 	virtual	void								activate						( base_player& user, engine& engine ) override;
 	virtual	void								deactivate						( ) override;
 
-	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	bool								can_hold_breath					( ) const { return m_aimed; }
 			void								reset_fire_queue				( );
 
 	inline	bool								is_aimed						( ) const	{ return m_aimed;	}
-	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
-	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
+
+
 	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
 
 			void								unload_chambered_round			( );
@@ -160,11 +160,17 @@ public:
 			void								load_magazine					( );
 			void								chamber_a_round					( );
 
-	// claude@MATCH: weapon_core_cook::load_weapon_parameters inlines these two setters
-	// WITH an empty_stub (compiled-out ASSERT) before the member store.
-	inline	void								set_bullet_damage				( float bullet_damage ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) ); m_bullet_damage = bullet_damage; }
+	inline	void								set_bullet_damage				( float bullet_damage )
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) );
+		m_bullet_damage = bullet_damage;
+	}
 	inline	float								get_bullet_damage				( ) const { return m_bullet_damage; }
-	inline	void								set_bullet_pierce				( float bullet_pierce ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) ); m_bullet_pierce = bullet_pierce; }
+	inline	void								set_bullet_pierce				( float bullet_pierce )
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) );
+		m_bullet_pierce = bullet_pierce;
+	}
 	inline	float								get_bullet_pierce				( ) const { return m_bullet_pierce; }
 	inline	void								set_aim_fov_factor				( const float aim_fov_factor ) { m_aim_fov_factor = aim_fov_factor; }
 	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
@@ -173,7 +179,11 @@ public:
 
 	inline	profile_slot_enum					ammo_slot						( )	{ return m_ammo_slot;	}
 
-	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
+	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count )
+	{
+		m_weapon_fire_queue_types		= weapon_fire_queue_types;
+		m_weapon_fire_queue_types_count	= count;
+	}
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
@@ -203,7 +213,7 @@ public:
 	inline	bool								is_active						( ) const { /* no source */ }
 
 private:
-	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
+
 			bool								target_predicate						( const weapon_targets target ) const { return m_target == target; }
 			bool								target_and_animation_ended_predicate	( const weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
@@ -214,7 +224,7 @@ private:
 			bool								must_chamber_a_round_and_animation_ended_predicate		( ) const;
 			bool								must_chamber_a_round_aimed_and_animation_ended_predicate( ) const;
 
-	// claude@MATCH: target mangles these AAE (private), not QAE.
+
 			float3								get_dispersed_bullet_dir		( );
 
 			void								update_recoil					( u32 current_time_in_ms, const float time_scale );
@@ -229,8 +239,8 @@ private:
 	virtual	void								on_player_model_added			( ) override;
 	virtual	void								on_player_model_removed			( ) override;
 
-	// claude@MATCH: target mangles update_bones_matrices/serialize/deserialize
-	// EAE/EBE/EAE (private virtual), not UAE/UBE.
+
+
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
@@ -256,8 +266,8 @@ private:
 	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
 
 private:
-	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
-	// top-level const on every pointer.
+
+	// top-level const on every pointer parameter, as retail mangles them
 	virtual	void								on_skeleton_matrices_changed	(
 													const u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
@@ -271,7 +281,7 @@ private:
 
 	virtual	void								process_finger_correction		( const u32 current_time_in_ms, float4x4* const user_matrices );
 
-	// claude@MATCH: target mangles this ABE (private const), not QBE.
+
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
 													const bool								is_third_view,
@@ -334,7 +344,7 @@ private:
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
 
-	// claude@MATCH: target mangles load_ammo AAE (private), not QAE.
+
 			void								load_ammo						( );
 
 private:

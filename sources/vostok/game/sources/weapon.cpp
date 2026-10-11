@@ -50,16 +50,16 @@ namespace survarium {
 // shared light-id counter (also in object_light.cpp); each light grabs ++light_ids.
 u32 light_ids = 1000000;
 
-// claude@NOTE: STUB-grade structure (6 target stmts vs our many). The target emits the
-// member-init/light_props setup as ONE batched /Od statement (line 86, 0x12d bytes,
-// declaration-order writes) then 5 small ones (88-90 = attenuation_power; 98/99 =
-// m_barrel/m_scope = identity). Walled structurally: m_weapon_fire_light_props is built
-// field-by-field here, but render::light_props has NO out-of-line ctor in our headers
-// (sushi@TODO in light_props.h) so we cannot reproduce the single batched statement - each
-// field assignment becomes its own line record (16 stmts). Field VALUES are
-// recovered (range=5, color=color_rgba(1,1,1,1)=0xFFFFFFFF, attenuation=2, intensity=1,
-// diffuse/specular=1, does_cast_shadows=true, type=point, anim_length const=200). Recovers
-// once the render-facade light_props ctor lands and the init can collapse.
+
+
+
+
+
+
+
+
+// retail sets the light props up in one batched statement, which needs
+// light_props' out-of-line ctor (see the sushi@TODO in light_props.h)
 // STATE[STUB]
  weapon::weapon(
 	const u32		first_view_death_animations_count,
@@ -169,14 +169,14 @@ void weapon::tick( )
 	weapon_core::tick( );
 }
 
-// claude@NOTE: structure correct (single statement = the base call at line 187). The target
-// INLINES the trivial in-header weapon_core::set_transform (`m_transform = transform`) directly
-// into a `rep movsd` of 0x10 dwords to [this+0x158], so its body is byte-identical to (and ICF-
-// adjacent) weapon_core::set_transform; our per-TU build keeps the qualified call and tail-jmps
-// it (weapon_core::set_transform is a VIRTUAL whose body is emitted as an addressable COMDAT for
-// the vtable, which /O2 declines to inline at the call site - only the whole-program optimizer
-// inlines it). m_transform is private to weapon_core so the assignment cannot be spelled here.
-// Inline-vs-call LTCG wall, not source-steerable.
+
+
+
+
+
+
+
+
 void weapon::set_transform( float4x4 const& transform )
 {
 	weapon_core::set_transform( transform );
@@ -406,11 +406,11 @@ void weapon::set_target( const weapon_targets new_target )
 	}
 }
 
-// claude@NOTE: play_weapon_fire_pfx / play_weapon_shell_pfx are STRUCTURE MATCH; the
-// access mangles AAE/QAE correctly. Residual is the play_particle_system call-boundary
-// register cascade: target keeps get_game_scene() in eax and computes render_scene()
-// (`lea ecx,[eax+4]`) early; the base lands it in ecx with a late `add ecx,4`. Same
-// non-steerable /Od arg-eval scheduling as object_particle_visual::insert (96%).
+
+
+
+
+
 void weapon::play_weapon_fire_pfx( )
 {
 	if ( m_fire_pfx_list )
@@ -433,10 +433,10 @@ void weapon::play_weapon_shell_pfx( )
 	}
 }
 
-// claude@NOTE: target structure records 6 statements that all compile away in
-// MASTER_GOLD (asm is a bare `ret`) - likely debug-render / LOG calls that are
-// no-ops in gold; their exact form is unrecoverable from the carcass. Empty body
-// byte-matches but is structurally short by 6 statements.
+
+
+
+// retail's body is debug-only calls that compile out in Master Gold
 void weapon::show_laser_pointer( )
 {
 }
@@ -505,7 +505,7 @@ void weapon::activate( base_player& user, engine& engine )
 	m_fingers_corrector.activate( user.skeleton( ), model->m_render_model, m_game_ui != NULL );
 }
 
-// The target inlines remove_animation_callback at these call sites.
+
 void weapon::deactivate( )
 {
 	remove_animation_callback( "sound_events", get_user( ) );
@@ -624,11 +624,11 @@ void weapon::on_skeleton_matrices_changed(
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 }
 
-// claude@NOTE: faithful body (finger_corrector_enable guard + tail-call to
-// fingers_to_weapon_corrector::process). Walled: process() is an empty STUB in
-// fingers_to_weapon_corrector.cpp (a separate TU), so LTCG inlines its empty body and DCE
-// drops the whole guarded statement, leaving our base a bare `ret 8`. Recovers once that
-// process() lands a real body; do NOT collapse the guard to hold a % - structure is correct.
+
+
+
+
+
 void weapon::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
 {
 	if ( s_enable_finger_corrector_value )
@@ -644,10 +644,10 @@ animation::callback_return_type_enum weapon::on_hand_correction_event(
 	return animation::callback_return_type_call_me_again;
 }
 
-// claude@NOTE: faithful body (play_weapon_shell_pfx + return call_me_again). Residual is
-// an LTCG prologue-frame choice: the target reserves a 4-byte slot (push ecx) and preserves
-// `this` in esi across the call; our LTCG build, seeing the full play_weapon_shell_pfx def,
-// emits the leaf-minimal form (no esi save). Structure is correct (2 statements).
+
+
+
+
 animation::callback_return_type_enum weapon::on_shell_extraction_event( animation::animation_callback_params& params )
 {
 	play_weapon_shell_pfx( );

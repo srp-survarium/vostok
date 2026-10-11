@@ -21,10 +21,10 @@ namespace network_core {
 
 namespace network {
 
-// NOTE: the PDB carries THREE layouts of this class (2048- and 8192-packet
-// storage, udp_match_client 0xB20 vs 0xB28) from per-TU type drift in the
-// original build; the ctor disassembly (0x776240: 0x2000 * 0x12C arena) and
-// our matched network_core::udp_match_client (0xB28) pin the real one.
+
+
+// The PDB carries three layouts of this class (per-TU type drift); the ctor
+// (0x2000-packet arena) and udp_match_client's 0xB28 size pin this one.
 class match_client_impl {
 public:
 	typedef boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum lobby_server_message_types_enum ) >	connect_callback_type;

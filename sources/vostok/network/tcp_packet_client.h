@@ -50,8 +50,8 @@ public:
 					client_on_error_type const&	on_error
 				);
 
-	// claude@MATCH: private - all the on_*/create_client/connect_impl symbols
-	// mangle AAE (private non-const) in the target
+
+
 private:
 	void		on_packet_received		( network_core::tcp_packet const& packet );
 	void		on_packet_received_impl	( network_core::packet_reader& reader );

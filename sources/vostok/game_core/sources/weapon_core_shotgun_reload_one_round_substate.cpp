@@ -44,12 +44,13 @@ void weapon_core_shotgun_reload_one_round_substate::initialize( )
 
 void weapon_core_shotgun_reload_one_round_substate::finalize( )
 {
-	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_animation_playback_state->reset( );
 	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
 }
 
-// claude@NOTE: structure-correct; residual is the intrusive_ptr operator== operand-evaluation
-// order (target loads `this` before the arg; /Od reverses it). Non-steerable from source.
+
+
 animation::callback_return_type_enum weapon_core_shotgun_reload_one_round_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;

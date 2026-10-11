@@ -41,11 +41,13 @@ Worked example (scaleform, v0.100b). **Both** sides link a prebuilt GFx, but not
 same one:
 
 - base: `binaries.prebuilt/Win32/libraries/shipping/libgfx*.lib` — gitignored,
-  ~197 MB, built **out of tree** from the GFx **4.2.22** sources
-  (`sources/scaleform/Include/GFxVersion.h`), its members named
-  `Z:\...\surv\vostok_4\binaries\Win32\intermediates\gfx\libgfx\*.obj`. Only headers
-  plus 46 platform/sample `.cpp` live in `sources/scaleform`; `Render_HAL.cpp` and
-  friends are not in this repo at all.
+  ~197 MB, built **out of tree** from the GFx sources in the
+  [scaleform-gfx](https://github.com/srp-survarium/scaleform-gfx) flake input, its
+  members named
+  `Z:\...\surv\vostok_4\binaries\Win32\intermediates\gfx\libgfx\*.obj`. The
+  engine's own TUs compile only against that repo's engine view (materialized at
+  `sources/scaleform`); `Render_HAL.cpp` and friends reach the exe only through the
+  lib.
 - target: the vendor's GFx **4.2.21 Shipping** objects — `survarium.pdb` names
   `C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Obj\Win32\Msvc90\Shipping\GFx\Render_HAL.obj`,
   `...\Render_BufferGeneric.obj`, `...\Render_Matrix4x4.obj`, and so on.

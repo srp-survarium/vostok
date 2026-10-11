@@ -32,9 +32,9 @@ inline sequence_number< T >& sequence_number< T >::operator=( sequence_number co
 	return *this;
 }
 
-// serialize(udp_match_packet&): append the raw number via the packet writer; this
-// is one of the call sites that ODR-uses packet< T >::append (and keeps it
-// out-of-line in the LTCG image).
+
+
+// one of the ODR-uses that keep packet< T >::append out of line
 template < typename T >
 inline void sequence_number< T >::serialize( udp_match_packet& packet )
 {

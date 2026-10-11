@@ -49,10 +49,10 @@ double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( 
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// claude@NOTE: systemic ceiling shared by every weapon_*_state weapon_and_hands_expression
-// override. Structure is a 3-statement MATCH; only the return statement diverges - the target
-// inlines mixing::operator+ where our build emits `call operator+<...>`. Inline-vs-call codegen;
-// not source-steerable. Left at the faithful `+` form.
+
+
+
+
 animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,
@@ -66,6 +66,9 @@ animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and
 
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 }
+
+
+
 
 weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {

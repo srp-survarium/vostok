@@ -100,8 +100,8 @@ public:
 	inline	udp_match_stats const&		get_stats						( ) const { return m_stats; }
 
 	inline	u32							last_send_time_in_ms			( ) const { return m_last_send_time_in_ms; }
-	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
-	// (single volatile load of m_last_receive_time_in_ms @+0xfc)
+
+	// STATE[INLINED]
 	inline	u32							last_receive_time_in_ms			( ) const { return m_last_receive_time_in_ms; }
 	inline	u32							last_activity_time_in_ms		( ) const { return math::max( last_send_time_in_ms( ), last_receive_time_in_ms( ) ); }
 
@@ -149,8 +149,8 @@ private:
 
 			void						update_acknowledgements			( sequence_number< u16 > remote_sequence_id, sequence_number< u16 > local_sequence_id, u16 local_acknowledgement_bits );
 
-			// claude@MATCH: pcstr const - the target mangles QBDI (top-level pointer
-			// const lives in the member declaration, the silent-join variant).
+
+			// pcstr const: retail mangles this parameter QBDI
 			void						dump							( pcstr const caption, const u32 current_time_in_ms );
 
 			void						process_low_level_message		( packet_reader& reader, const u32 time_in_ms );
@@ -219,8 +219,8 @@ private:
 	/* 0x00f0 */	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	m_packets_allocator;
 	/* 0x00f4 */	udp_match_packets_orderer&			m_packets_orderer;
 	/* 0x00f8 */	pcstr								m_logging_id;
-	// PDB records volatile long here AND at m_last_send_attempt_time_in_ms
-	// (pdb-parser renders cv-qualifiers now) - spelled threading::atomic32_type.
+
+	// volatile long in the PDB, as is m_last_send_attempt_time_in_ms
 	/* 0x00fc */	threading::atomic32_type			m_last_receive_time_in_ms;
 	/* 0x0100 */	const u32							m_disconnection_timeout_in_ms;
 	/* 0x0104 */	u32									m_last_send_time_in_ms;

@@ -51,9 +51,9 @@ public:
 									sign_out_callback_type const&	callback
 								);
 
-	// claude@NOTE: no standalone symbols and no matched consumer; bodies are the
-	// canonical state-compare one-liners (values pinned by the matched ctor/
-	// on_signed_* stores)
+
+
+
 	inline	bool				is_signed_in					( ) const { return m_client_state == signed_in; }
 	inline	bool				is_signed_out					( ) const { return m_client_state == signed_out; }
 	inline	client_state_enum	client_state					( ) const { return m_client_state; }
@@ -66,8 +66,8 @@ public:
 			pcstr				server_browser_address			( ) const;
 			pcstr				server_browser_initial_query	( ) const;
 
-	// claude@NOTE: no standalone symbol and no matched consumer; the member it
-	// returns is pinned by create_client's strings::copy( m_local_host_ip, ... )
+
+
 	inline	pcstr				local_ip_address				( ) const { return m_local_host_ip; }
 			pcstr				host_ip_address					( ) const;
 

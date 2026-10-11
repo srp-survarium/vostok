@@ -23,7 +23,9 @@ build whose README and ledger you commit must be a full `vostok build`.
 
 The objdiff config is `binaries/objdiff/objdiff.json`; each build writes
 `binaries/objdiff/report.json` and `report-changes.json`. Header edits
-recompile their dependents automatically.
+recompile their dependents automatically. Only one ninja compile/link runs at
+a time on the host: a second build prints who holds the lock and waits
+(`--no-lock` opts out).
 
 Long builds are notification-driven, not polled. With `CODEX_THREAD_ID` set,
 the canonical build command starts a host service and queues one completion

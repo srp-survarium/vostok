@@ -18,7 +18,7 @@ protected:
 	static resources::class_id_enum const resource_class = resources::weapon_reload_state_class;
 
 protected:
-	// ctor mangles ??0...@@IAE@... -> protected, non-const (objdiff pairs by mangled name)
+
 			explicit							weapon_core_reload_state	(
 													weapon_core&							weapon,
 													const float									animation_time_scale,
@@ -27,7 +27,7 @@ protected:
 												);
 
 private:
-	// mangles ?...@@EBE... -> private virtual, const
+
 	virtual	animation::mixing::expression		weapon_and_hands_expression	(
 													mutable_buffer&							buffer,
 													const bool									is_third_view,
@@ -35,10 +35,10 @@ private:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const override;
 
-	// mangles ?...@@ABE... -> private, const
+
 			weapon_lexeme_pair					get_weapon_lexeme_pair		( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const;
 
-	// mangles ?...@@ABE... -> private, const
+
 			animation::mixing::expression		get_user_hands_expression	(
 													animation::mixing::animation_lexeme&	weapon_lexeme,
 													mutable_buffer&							buffer,

@@ -17,19 +17,19 @@
 
 namespace survarium {
 
-// claude@NOTE: large server->client lobby dispatch (78 stmts, 7 locals), STRUCTURE recovered.
-// Outer switch on the op_id (connect_to_match_server / client_status / operation_permitted /
-// operation_denied); client_status + operation_permitted nest an if/else-if sub-dispatch (the
-// target subtract-and-compare chains, NOT jump tables). Banked residuals (NOT source shape):
-//  - the embedded LOG_* (logging::append) pin __LINE__ + the demangled signature string; they
-//    byte-match only if this file's line layout equals the shipped source (it does not).
-//  - messaging_client::assign_match_channel_order is INLINED in the target (its cmp/assign/
-//    update_channel_subscriptions expands in place) but emitted as a call here - an LTCG inline
-//    cap that drifts the inner-switch statement alignment.
-//  - packet_reader::r<T>/r_string and boost::function bind / operator= / clear are the
-//    network_core/boost inline cap (calls here, whole-program-inlined in the target).
-// op_id is typed lobby_client_message_types_enum to match the PDB-recorded local (the server
-// message values reuse the client enum's numbering window).
+
+
+
+
+
+
+
+
+
+
+
+// op_id is typed lobby_client_message_types_enum, as the PDB records it: the server
+// message values reuse the client enum's numbering
 void network_client::on_lobby_packet_received( network_core::packet_reader& reader )
 {
 	lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );
@@ -136,13 +136,13 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 	}
 }
 
-// claude@NOTE: the target CSEs m_game.lobby_menu() into one held pointer across the
-// body, so the faithful source caches the lobby_menu& once (the reference enregisters
-// with 0 named locals - matches the target's recorded local set). Residual is the
-// cross-TU LTCG inline of show_disconnected_message: in the base its scaleform Set*/
-// Invoke calls are still empty stubs so it is tiny and the LTCG inliner folds its
-// constant-pruned branch in here, whereas the target (real GFx ops) keeps it a call.
-// Lifts once scaleform value.cpp/movie.cpp are matched.
+
+
+
+
+
+
+// m_game.lobby_menu( ) is read once, as retail does
 void network_client::on_connected_to_lobby( )
 {
 	lobby_menu& menu = m_game.lobby_menu( );
@@ -154,28 +154,28 @@ void network_client::on_connected_to_lobby( )
 	}
 }
 
-// claude@NOTE: caching the lobby_menu& once is faithful (the target loads
-// m_game.lobby_menu() ONCE and reuses it - inlining the accessor at each use
-// reloads it 3x and regresses to ~20%). Residual is register/FPO scheduling: the
-// target keeps the cached pointer in scratch eax with a `push ecx` FPO frame and
-// no save, where our base enregisters it in callee-saved esi (`push esi`). Same
-// single-load source shape; the optimizer's register/frame choice is not steerable.
+
+
+
+
+
+
+
 void network_client::on_disconnected_from_lobby( )
 {
-	lobby_menu& menu = m_game.lobby_menu( );
-	// target folds the guarded body onto one source line (single line-table entry)
-	if ( menu.m_is_connected_to_lobby ) { menu.m_is_connected_to_lobby = false; menu.show_disconnected_message( true ); }
+
+	m_game.lobby_menu( ).on_disconnected_from_lobby( );
 }
 
-// claude@NOTE: structure recovered + faithful (reads dict_id u16 / id u32 /
-// condition_or_stack u32, amount_in_inventory=0 folds into the find-begin stmt as
-// in the target). Banked residuals (network_core/STL inline cap, not source shape):
-//  - packet_reader::r<T>() emits a call (+ the r() ASSERT's log_format ctor) where
-//    the target whole-program-inlines the byte/word reads to direct mov.
-//  - std::find emits a call to stlp __find<inventory_item_instance*,u32>; the target
-//    inlines that loop in place (its 4 stmts 296/297/299/301 vs our 1 call), so our
-//    statement count reads 12 vs 14 over the SAME source. The comparison is the free
-//    inventory_item_instance/u32 overload; retail has no member operator record.
+
+
+
+
+
+
+
+
+
 void network_client::process_shop_action( network_core::packet_reader& packet )
 {
 	if ( packet.r< u8 >( ) )
@@ -201,10 +201,10 @@ void network_client::process_shop_action( network_core::packet_reader& packet )
 	lobby_client( ).query_client_status	( ( lobby::query_info_types )7 );
 }
 
-// claude@NOTE: STRUCTURE MATCH (9/9 stmts). Banked residual: the target defers the
-// `push edi` into the final `!is_loading` branch (lazy callee-save), so user_initiate
-// reads [esp+0Ch] there vs our prologue-push [esp+8] - a register-save scheduling
-// artifact, not source shape.
+
+
+
+
 void network_client::close_current_match( bool user_initiate )
 {
 	m_game_status	= game_status_inactive;

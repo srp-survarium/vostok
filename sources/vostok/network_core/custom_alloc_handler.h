@@ -13,14 +13,14 @@ class custom_alloc_handler {
 public:
 	inline			custom_alloc_handler	( handler_allocator& allocator, Handler handler );
 
-	// RESOLVED (#269 investigate): the claimed "6 out-of-line operator() symbols" do NOT exist.
-	// An exhaustive index scan (mangled ??$?R.../??R... whose leftmost class token is
-	// ?$custom_alloc_handler@) finds ZERO standalone custom_alloc_handler<..>::operator()
-	// symbols in EITHER side - the operator() always inlines into the asio read_op/write_op
-	// that invokes the handler (those op::operator() symbols carry the body and ARE matched).
-	// Keeping operator() `inline` is correct; an out-of-line form would emit symbols the target
-	// lacks and HURT the score. The only emitted custom_alloc_handler member is the ctor (size 25,
-	// identical both sides at target 0x231f0 / base 0x6c120). See review_todos.md (ticked done).
+
+
+
+
+
+
+
+	// operator() stays inline: retail has no standalone symbol, it folds into asio's ops
 	template < typename Arg1 >
 	inline	void	operator()				( Arg1 const& arg1 ) { handler_( arg1 ); }
 

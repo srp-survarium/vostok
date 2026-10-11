@@ -6,10 +6,10 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: structure + locals match (else-if ladder + iterator end checks
-// verified); residual = LOG-helper callback-ctor schedule x6
-// (log-callback-ctor-schedule.md) + the functor/function2 bind-copy lowering at
-// the resolve/async_resolve retry sites
+
+
+
+
 void login_client_impl::on_resolved(
 		boost::asio::ip::tcp::resolver* const	resolver,
 		const u32								retry_count,

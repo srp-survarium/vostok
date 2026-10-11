@@ -341,32 +341,32 @@ res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 
 res_xs_hw<vs_data>* resource_manager::create_vs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<vs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<vs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<gs_data>* resource_manager::create_gs_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<gs_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<gs_data>( name, shader_config, include_getter, shader_sources );
 }
 
 res_xs_hw<ps_data>* resource_manager::create_ps_hw(
 	pcstr name,
-	shader_configuration config,
+	shader_configuration shader_config,
 	shader_include_getter* include_getter,
-	binary_shader_sources_type* sources
+	binary_shader_sources_type* shader_sources
 )
 {
-	return create_xs_hw_impl<ps_data>( name, config, include_getter, sources );
+	return create_xs_hw_impl<ps_data>( name, shader_config, include_getter, shader_sources );
 }
 
 void resource_manager::bind_samplers_to_shaders( )
@@ -437,11 +437,6 @@ pcstr get_textures_path2( )
 static ID3D11CommandList* s_command_lists[1000];
 
 resource_manager::resource_manager( configs::binary_config_ptr const& in_config ) :
-	sh_created					( 0),
-	sh_returned					( 0),
-	tl_created					( 0),
-	cb_created					( 0),
-	sl_created					( 0),
 	m_deferred_context			( NULL),
 	m_render_target_video_memory( 0),
 	shader_name_to_mask_config	( in_config),
@@ -456,6 +451,12 @@ resource_manager::resource_manager( configs::binary_config_ptr const& in_config 
 	m_compile_error_handler		( NULL)
 {
 	memset( s_command_lists, 0, sizeof( s_command_lists));
+
+	sh_returned = 0;
+	sh_created = 0;
+	tl_created = 0;
+	cb_created = 0;
+	sl_created = 0;
 
 	static shader_binary_source_cook shader_binary_source_cooker;
 	resources::register_cook(&shader_binary_source_cooker);
@@ -608,14 +609,16 @@ shader_constant_table* resource_manager::create_const_table(
 	new_table.apply_bindings( m_const_bindings);
 
 	const_tables_type::iterator const found = m_const_tables.find( &new_table );
+	shader_constant_table* result;
 	if( found != m_const_tables.end( ) )
-		return *found;
+		result = *found;
+	else
+	{
+		result = *m_const_tables.insert( NEW( shader_constant_table)( new_table)).first;
+		result->mark_registered();
+	}
 
-	shader_constant_table* const created_table = NEW( shader_constant_table)( new_table);
-	m_const_tables.insert( created_table);
-	created_table->mark_registered();
-
-	return created_table;
+	return result;
 }
 
 void resource_manager::release( shader_constant_table const* const_table )

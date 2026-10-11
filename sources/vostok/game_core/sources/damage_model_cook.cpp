@@ -46,7 +46,7 @@ void damage_model_cook::delete_resource( resources::resource_base* resource )
 			std::pair< body_part_parameters*, float > const* it_bdb_end		= it_bdb_begin + type->get_bdb_coeffs_count( );
 
 			for ( std::pair<body_part_parameters*, float> const* it = it_bdb_begin ; it != it_bdb_end; ++it )
-				{} // it->first->~body_part_parameters( );										// sushi@NOTE: Uncommenting this line results in worse match.
+				{} // it->first->~body_part_parameters( ); retail destroys nothing here
 
 			type->~hit_type_parameters( );
 		}
@@ -65,7 +65,7 @@ void damage_model_cook::delete_resource( resources::resource_base* resource )
 	}
 
 	model_res->~damage_model( );
-	VOSTOK_FREE_IMPL( g_allocator, resource );	// claude@MATCH: target keeps free_helper out-of-line (free_helper_impl); base inlines free_helper.
+	VOSTOK_FREE_IMPL( g_allocator, resource );
 }
 
 static u32 calculate_model_size( configs::binary_config_value const& model_value )
@@ -295,7 +295,7 @@ void damage_model_cook::on_hit_params_received( resources::queries_result& data 
 			console_commands::command_token new_command = { i, m_hit_types_strings.back( ).c_str( ) };
 			m_hit_types.push_back( new_command );
 		}
-		m_hit_types_commands = VOSTOK_NEW_IMPL( g_allocator, console_commands::cc_token )(	// claude@MATCH: target stores the new cc_token into static m_hit_types_commands
+		m_hit_types_commands = VOSTOK_NEW_IMPL( g_allocator, console_commands::cc_token )(
 			"hit_type",
 			g_current_hit_type,
 			m_hit_types.begin( ),

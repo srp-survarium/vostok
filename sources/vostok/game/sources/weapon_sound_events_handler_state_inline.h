@@ -5,12 +5,12 @@
 
 namespace survarium {
 
-// The four sub-buffers are carved out of sounds_buffer by sounds_count (target
-// 0x94230 reload instance): first emitters [buf, buf+count) ; third emitters
-// [buf+count, buf+2*count) ; first instances at (proxy_ptr*)(buf)+2*count (== buf+count*8
-// bytes) ; third instances at buf+count*0x88 bytes. The max_*_instances_count args are
-// dropped by LTCG (MASTER_GOLD buffer_vector keeps no m_max_end), so they do not affect
-// the bytes; new_state sizes the regions.
+
+
+// sounds_buffer is carved by sounds_count: first emitters [buf, buf+count), third emitters
+// [buf+count, buf+2*count), first instances at (proxy_ptr*)(buf)+2*count, third instances at
+// buf+count*0x88 bytes. MASTER_GOLD buffer_vector keeps no m_max_end, so the
+// max_*_instances_count arguments go unused; new_state sizes the regions.
 template < typename T >
 inline weapon_sound_events_handler_state< T >::weapon_sound_events_handler_state(
 	weapon&			weapon,

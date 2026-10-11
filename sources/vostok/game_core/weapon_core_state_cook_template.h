@@ -28,7 +28,7 @@ public:
 private:
 	inline	void			on_subresources_ready	( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
-	// new_object mangles ?new_object@...@@AAE... -> private (objdiff pairs by mangled name)
+
 			type_to_create*	new_object				(
 								mutable_buffer							buffer,
 								weapon_state_creation_params const*		params,

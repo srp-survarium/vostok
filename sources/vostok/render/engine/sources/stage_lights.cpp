@@ -394,13 +394,22 @@ void stage_lights::render_to_hw_shadowmap(
 	m_context->push_set_p( projection_matrix);
 
 	vector< render_surface_instance* > m_dynamic_visuals_to_shadow;
-	m_context->scene()->select_models(
-		m_context->get_culling_vp(),
-		m_dynamic_visuals_to_shadow,
-		m_context->get_view_pos(),
-		visible_flag,
-		l->static_shadows
-	);
+	if ( l->static_shadows )
+		m_context->scene()->select_models(
+			m_context->get_culling_vp(),
+			m_dynamic_visuals_to_shadow,
+			m_context->get_view_pos(),
+			visible_flag,
+			true
+		);
+	else
+		m_context->scene()->select_models(
+			m_context->get_culling_vp(),
+			m_dynamic_visuals_to_shadow,
+			m_context->get_view_pos(),
+			visible_flag,
+			false
+		);
 
 	if ( !l->static_shadows || !m_dynamic_visuals_to_shadow.empty() || l->need_refresh_static_shadows )
 	{
