@@ -134,7 +134,7 @@ inline-vs-call or LTCG call-boundary difference: confirm it with
 rather than bending the source to the bytes. The ledger's `cls` column
 (`QUANTITY`, `SPLIT`, `SIZE`, `MATCH`) is only an approximation of this verdict;
 `QUANTITY` and `SPLIT` rows are where to look first. Definitions and the deeper
-PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/vostok-pdb topology.md`.
+PDB tools: `docs/binary_matching/ledger_design.md`, `docs/binary_matching/pdb_topology.md`.
 
 ### The matching order: whitespace and statements first, then bytes
 

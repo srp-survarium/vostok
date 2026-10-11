@@ -190,3 +190,21 @@ versions (cl/`mspdb*`/`msobj*` are all the matched SP1 `…30729` build, correct
 `VSA/9.0/VsaEnv` copies are byte-identical), prefix arch (`wow64` and `win32`
 both fail), and wow64-vs-multilib (both `stable` flavors fail at 10.0). It is
 purely the wine *version*: 10.0's RPC/`mspdbsrv` path is broken, staging fixes it.
+
+## Library archive and the GFx suite
+
+`binaries.prebuilt/` is staged on first entry from the pinned `vostok-libs` zip.
+The Scaleform GFx static libs in it are the one part this repo builds
+itself: `python3 -m vostok.build.gfx` compiles them from the pristine 4.2.22 SDK
+(`nix develop .#with-scaleform-sdk`) with the recipe the shipped PDB records, and
+`python3 -m vostok tool libs-release --tag <tag>` packages a new zip and prints the
+hash to pin. Add `--upload` to upload it to the `v0.100b` release in
+`srp-survarium/vostok`; `gh` is included in the dev shell. The
+[toolchain packaging instructions](docs/build/toolchain-build.md) publish to the
+same release.
+
+The library archive and staging tool exclude the Sony Cell SDK and the PS3/Xbox
+builds of `cs`, Lua, and luabind. Staging removes these directories from older
+`binaries.prebuilt/` installations too. The optional Scaleform SDK derivation
+removes its PS3/Xbox ports and libraries. Console-only engine files and tools
+are omitted; shared Windows/console implementations remain for the PC build.
