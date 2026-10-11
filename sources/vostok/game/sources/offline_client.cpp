@@ -197,6 +197,8 @@ void offline_client::print_where( )
 	wchar_t wide[512];
 	mbstowcs_s( NULL, wide, 512, message.c_str( ), _TRUNCATE );
 	m_game.get_chat_handler( ).add_message( messaging::player_system_channel, wide, L"Offline" );
+	// The console shows the log, and user.cfg's default "logging_rule warning" drops info lines.
+	LOG_WARNING( "%s", message.c_str( ) );
 	// Also appended next to resources.db, so a reported spot survives the session.
 	FILE* file = NULL;
 	if ( !fopen_s( &file, "../../where.txt", "a" ) && file )
