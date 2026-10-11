@@ -43,10 +43,8 @@ class weapon;	// game module; reads weapon_core members directly (see friend bel
 
 
 class weapon_core : public inventory_item {
-	// the game-module weapon reads m_ammo_in_magazine / m_is_round_chambered /
-	// m_fire_queue_type / m_weapon_fire_queue_types / m_ammo_slot INLINE (direct
-	// member loads in weapon::set_ui_ammo, set_next_*_type, on_chamber_a_round,
-	// on_after_fire); codegen-neutral friend, no layout/symbol impact
+	// the game-module weapon reads m_ammo_in_magazine, m_is_third_view, m_target and
+	// m_last_tick_time_in_ms directly; codegen-neutral friend, no layout/symbol impact
 	friend class weapon;
 public:
 	typedef weapon_recoil_params recoil_params;
@@ -74,7 +72,7 @@ public:
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const;
+	inline	u16									ammo_in_magazine				( ) const	{ return m_ammo_in_magazine;	}
 	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
@@ -94,7 +92,7 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-			u16									fire_queue_length				( ) const;
+	inline	u16									fire_queue_length				( ) const	{ return m_weapon_fire_queue_types[m_fire_queue_type];	}
 
 	inline	float4x4							get_transform					( ) const { return m_transform; }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
@@ -151,7 +149,7 @@ public:
 	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
 			void								reset_fire_queue				( );
 
-			bool								is_aimed						( ) const;
+	inline	bool								is_aimed						( ) const	{ return m_aimed;	}
 	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
 	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
 	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
@@ -173,7 +171,7 @@ public:
 	inline	void								set_aim_near_plane_factor		( const float aim_near_plane_factor ) { m_aim_near_plane_factor = aim_near_plane_factor; }
 	inline	float								aim_near_plane_factor			( ) const { return m_aim_near_plane_factor; }
 
-			profile_slot_enum					ammo_slot						( );
+	inline	profile_slot_enum					ammo_slot						( )	{ return m_ammo_slot;	}
 
 	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
@@ -181,7 +179,7 @@ public:
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
 	inline	base_player*						get_user						( ) const { return m_user; }
-			bool								is_double_handed				( ) const;
+	inline	bool								is_double_handed				( ) const	{ return m_is_double_handed;	}
 
 	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return this; }
@@ -197,7 +195,7 @@ public:
 
 	inline	bool								is_third_view					( ) const { /* no source */ }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
-			bool								round_is_chambered				( ) const;
+	inline	bool								round_is_chambered				( ) const	{ return m_is_round_chambered;	}
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 

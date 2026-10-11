@@ -73,8 +73,6 @@ animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_ex
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
-// claude@NOTE: STRUCTURE MATCH; residual is the /Od register-coloring nibble at the out-of-line
-// m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into eax, our build into ecx).
 weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =

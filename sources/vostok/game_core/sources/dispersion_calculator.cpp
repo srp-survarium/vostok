@@ -26,8 +26,6 @@ dispersion_calculator::dispersion_calculator( ) :
 }
 
 // claude@NOTE: bigger base frame (sub esp,58h vs 4Ch) -> [ebp-XX] slot reassignment;
-// claude@NOTE: target calls weapon_core::is_aimed() out-of-line, base inlines it as
-//   [this+0x488] (m_aimed) - the inline-vs-call COMDAT decision, not steerable here;
 // claude@NOTE: the m_weapon->ammunition() safe-bool test (operator unspecified_bool_type)
 //   lowers via an extra bool slot in base vs a direct cmp/sete in target - LTCG materialization.
 float dispersion_calculator::get_dispersion( ) const
