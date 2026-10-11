@@ -1,9 +1,6 @@
 # vostok
 
-Binary-matching decompilation of the **Vostok Engine** used by Survarium
-(v0.100b): C++ sources that, compiled with the original MSVC 8.0 / VS2008 SP1
-toolchain, produce byte-identical objects to `survarium.exe`. Linux only; the
-flake builds the exact toolchain under Wine, no Windows install needed.
+Decompilation of the **Vostok Engine** used by Survarium (v0.100b).
 
 <!-- match-score:start -->
 ## Match status
@@ -57,123 +54,34 @@ _The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, wit
 _Updated 2026-10-11._
 <!-- data-match:end -->
 
+## Branches
+
+```text
+v0.10b ----------------------> v0.10b-offline
+  |
+  v
+v0.20e
+```
+
+- [`v0.10b`](https://github.com/srp-survarium/vostok/tree/v0.10b#branches) - Survarium v0.100b (May 2013), byte-matching reconstruction
+- [`v0.10b-offline`](https://github.com/srp-survarium/vostok/tree/v0.10b-offline#branches) - `v0.10b` plus an offline single-player client
+- `v0.20e` - Survarium v0.20e target (planned)
+
+To play rather than match, use `v0.10b-offline`; `scripts/create-wine-prefix.py` builds a run-only Wine prefix from a bare clone.
+
 ## Requirements
 
-Linux x86_64 with [Nix](https://nixos.org/download) and flakes enabled
-(`experimental-features = nix-command flakes`). Everything else - the VS2008 SP1
-compiler, the Windows and DirectX SDKs, Wine, ninja, the Rust tools, the game
-binaries and the third-party libs - comes from the flake.
+Linux x86_64 with [Nix](https://nixos.org/download) flakes. The flake provides everything else, including the VS2008 toolchain under Wine.
 
 ## Quickstart
 
-Target branches use version-only names: `v0.10b` for the Survarium v0.100b
-reconstruction and `v0.20e` for v0.20e. Use the same `v<version>` naming pattern
-for future target branches. Root matching stacks in the selected target branch
-and land them back there; do not assume one fixed default branch for all targets.
-Branch names are labels, not replacements for retail version identifiers,
-release tags, asset URLs, or measured history.
-
 ```sh
-nix develop                 # first entry realizes ~18 GiB into the store, sets up Wine + ninja,
-                            # and generates the target-side diff inputs from the original game
-python3 -m vostok build     # build under Wine, regenerate the base-side inputs, refresh the ledger
+nix develop                          # first run fetches ~18 GiB and prepares the retail side
+python3 -m vostok build              # full build and measurement; refreshes the ledger and this README
+python3 -m vostok build --code-only  # faster iteration build (no data lane, no README)
 ```
 
-Open the result in [objdiff](https://github.com/encounter/objdiff) with the
-config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
-`target` (the original game). Every build also refreshes the committed ledger
-`config/match_state.tsv` and the score block at the top of this README.
-The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
-holds Ninja after a completed link or a failed pre-link edge, it reaps that
-server and preserves Ninja's real success or failure result.
-
-Codex builds on Linux with a systemd user manager are notification-driven by
-default whenever `CODEX_THREAD_ID` is set:
-
-```sh
-python3 -m vostok build
-# Or select the destination and the installed CLI explicitly:
-python3 -m vostok build --background --notify-thread THREAD --codex-bin /path/to/codex
-# Explicit synchronous mode for CI or a supervising process:
-python3 -m vostok build --foreground
-```
-
-The default destination is `CODEX_THREAD_ID`. The CLI is selected from
-`--codex-bin`, `VOSTOK_CODEX_BIN`, a usable `CODEX_EXECUTABLE_PATH`, then `PATH`;
-it must support `codex queue --thread --message`. Outside Codex, builds remain
-synchronous unless notification mode is requested. The supervisor explicitly
-uses `--foreground` to avoid recursive service launches. The launcher needs host user-bus access (request
-execution approval when running in a sandbox). It starts a transient
-`vostok-build-*.service`, prints its name and its unique log under
-`binaries/build-jobs/`, and returns immediately. The service enters this
-worktree's `nix develop`, waits for the complete build/refresh process, and
-queues its exit status and log path into that existing thread, including on
-setup or build failure. No timer or model polling is involved. Existing
-per-worktree build locking still serializes the build itself.
-
-`python3 -m vostok build --code-only` is the iteration build: it stops after
-the function ledger, skipping the data lane (manifests, data COFF/reports,
-image-data ledger, module data audits) and the README. Function scores are the
-same as a full build's because the function ledger reads only code-lane
-artifacts; data-side changes appear at the next full build, which is the only
-kind whose README and ledger get committed.
-
-Build logs include `[timing]` lines for each phase, expensive delinker/report
-subprocesses, symbol inspection, and each module's data audit. Durations use a
-monotonic clock and include failures; nested/parallel timings are not additive.
-Data preparation runs once per build and its successful result feeds the later
-image-data refresh. Standalone `vostok data refresh` still prepares its inputs.
-Symbol normalization inspects objects in bounded batches; audit fingerprints
-and content keys are shared only within that build, with no persistent cache.
-Deferred performance ideas and their safety requirements are tracked in
-[the performance backlog](docs/todos/perf.md).
-
-Launcher success means only that the service started. Wait for the completion
-notification; do not repeatedly inspect the session, process, service, or log.
-A delivery/setup failure never silently falls back to a foreground build.
-
-Check the log for nonfatal ledger/README refresh warnings even after exit 0.
-Notification failure is recorded in that log without changing the build exit
-status; delivery is attempted once with a 30-second timeout. Host shutdown or
-force-stopping the service can prevent notification. To stop a job, use
-`systemctl --user stop UNIT.service`; service startup diagnostics remain in
-`journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
-until the job finishes.
-
-The full-engine structural/byte campaign queue includes `game`, `game_core`,
-`render`, named-local differences and unpaired frameless procedures:
-
-```sh
-python3 -m vostok ledger mismatch-queue --all-engine --write-queue
-```
-
-It writes `binaries/gen/structure_campaign_queue.md` and the uncapped machine-readable
-`structure_campaign_queue.json` alongside it, using a completed build's report,
-PDB evidence databases and ledger. Report/ledger-only compiler functions lacking a PDB
-procedure record remain explicit coverage rows. Functions whose current-source `max` is 100% are listed
-last; approximate statement classes, local-record differences and missing pairs
-remain triage evidence requiring target inspection. Whole-PDB class variants,
-enum and definition order are separate checks described in
-[`divergence_queue.md`](docs/binary_matching/divergence_queue.md).
-
-Class access, static/instance and virtual qualifiers, declaration order, and
-candidate-source declarations are checked against retail PDB evidence:
-
-```sh
-python3 -m vostok pdb index source --database binaries/pdb/candidate/evidence.sqlite \
-  --scope sources/vostok/network --scope sources/vostok/network_core
-python3 -m vostok pdb compare source \
-  --target binaries/pdb/target/evidence.sqlite \
-  --candidate binaries/pdb/candidate/evidence.sqlite \
-  --scope vostok::network --strict
-```
-
-The evidence-channel plan, proof boundaries, and extraction limits are in
-[`pdb_evidence_engine.md`](docs/binary_matching/pdb_evidence_engine.md).
-
-The check prints exact qualifier and declaration-order verdicts. PDB-unobservable
-properties such as `mutable`, source expressions, and the physical home of an
-unexpanded inline body stay explicit instead of being promoted to matches.
+Compare `base` (our build) with `target` (retail) in [objdiff](https://github.com/encounter/objdiff) using `binaries/objdiff/objdiff.json`. Agent builds: [docs/build/agent-builds.md](docs/build/agent-builds.md). Matching tools: [docs/binary_matching/tools.md](docs/binary_matching/tools.md).
 
 ## Layout
 
@@ -200,34 +108,14 @@ python3 -m vostok tool clangd def   <file> <line> [col]   # definition; also ref
 
 clang is a reader here; the Wine build is the only verdict on correctness.
 
-To investigate linker/PDB ordering without rebuilding game sources, run the
-fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
-It records commands, artifacts, and complete `vostok-pdb topology --order --json`
-comparisons under `binaries/gen/pdb-order-probes/`; see
-[`vostok-pdb topology.md`](docs/binary_matching/vostok-pdb topology.md#causal-order-probes).
-
 ## Third-party libs and the GFx suite
 
-The toolchain and third-party library archives are published in this repo's
-[build-environment release](https://github.com/srp-survarium/vostok/releases/tag/v0.100b).
-`flake.nix` pins their download URLs and SHA-256 hashes.
-
-`binaries.prebuilt/` is staged on first entry from the pinned `vostok-libs` zip.
-The Scaleform GFx static libs in it are the one part this repo builds
-itself: `python3 -m vostok.build.gfx` compiles them from the pristine 4.2.22 SDK
-(`nix develop .#with-scaleform-sdk`) with the recipe the shipped PDB records, and
-`python3 -m vostok tool libs-release --tag <tag>` packages a new zip and prints the
-hash to pin. Add `--upload` to upload it to the `v0.100b` release in
-`srp-survarium/vostok`; `gh` is included in the dev shell. The
-[toolchain packaging instructions](docs/build/toolchain-build.md) publish to the
-same release. To *play* the game rather than match it, `scripts/create-wine-prefix.py`
-builds a run-only Wine prefix from a bare clone.
-
-The library archive and staging tool exclude the Sony Cell SDK and the PS3/Xbox
-builds of `cs`, Lua, and luabind. Staging removes these directories from older
-`binaries.prebuilt/` installations too. The optional Scaleform SDK derivation
-removes its PS3/Xbox ports and libraries. Console-only engine files and tools
-are omitted; shared Windows/console implementations remain for the PC build.
+The toolchain and third-party library archives come from this repo's
+[build-environment release](https://github.com/srp-survarium/vostok/releases/tag/v0.100b),
+pinned by URL and SHA-256 in `flake.nix` and staged into `binaries.prebuilt/`.
+The Scaleform GFx libs are built by the project itself with
+`python3 -m vostok.build.gfx`; packaging and publishing are described in
+[docs/build/toolchain-build.md](docs/build/toolchain-build.md).
 
 ## Game data
 
@@ -256,31 +144,25 @@ the loop is [`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agenti
 
 - [docs/binary_matching/matching_guide.md](docs/binary_matching/matching_guide.md) - how to actually match assembly.
 - [docs/index.md](docs/index.md) - index of build and per-module matching notes.
-- [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine.
+- [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain and the library archive are built.
+- [docs/build/agent-builds.md](docs/build/agent-builds.md) - builds under Codex/Claude agents.
+- [docs/binary_matching/tools.md](docs/binary_matching/tools.md) - campaign queue, PDB declaration checks, order probes.
+- [docs/binary_matching/data_matching.md](docs/binary_matching/data_matching.md) - the data lane.
 
 ## License
 
-Everything this project adds on top - the reconstruction work in the engine
-sources, the Python tooling, the Nix flake, and the docs - is licensed under the
-[GNU General Public License, version 3 or later](LICENSE), to the extent the
-contributors can do so. The tooling and the engine units the project generated
-carry a one-line `SPDX-License-Identifier: GPL-3.0-or-later` tag.
-
-The engine sources carry their original `Copyright (C) GSC Game World`
-headers: the Vostok Engine and Survarium remain the property of their rights
-holders, and the GPL covers only the contributors' work. No game binaries or
-packed resources are stored in the repository; the retail inputs the flake
-fetches, and build outputs that incorporate them, are not covered by this
-license.
+The project's own work - the reconstruction in the engine sources, the tooling,
+the flake and the docs - is [GPL-3.0-or-later](LICENSE); files it created carry an
+`SPDX-License-Identifier` tag. The engine sources keep their original
+`Copyright (C) GSC Game World` headers: the Vostok Engine and Survarium remain their
+rights holders' property. No game binaries or resources are stored here, and
+outputs built from the retail inputs are not covered by the GPL.
 
 ### Third-party code in the tree
 
-`sources/` vendors the third-party code the engine was built against, as it
-came with the engine's source tree. Each tree keeps its own terms; a file
-carrying its own copyright or license notice is governed by that notice, not
-by the GPL. Several of these SDKs are proprietary and are included only so the
-engine builds as shipped; **if a rights holder asks for one to be removed, it
-will be.**
+`sources/` vendors the libraries the engine was built against. Each keeps its own
+terms; proprietary SDKs are included only so the engine builds as shipped and will
+be removed on a rights holder's request.
 
 **Open-source libraries**
 
@@ -304,8 +186,7 @@ will be.**
 | `nvidia/nvt`, `nvidia/DDSUtilities` | nvtt, squish | MIT | texture tools |
 | `WeifenLuo.WinFormsUI.Docking`, `WPFToolkit.Extended`, `PropertyBag` | 2.3, 1.4.0, 1.0 | MIT, Ms-PL, CodeProject | editor (.NET) |
 
-**Proprietary SDKs** (each under its vendor's own license; included only so the
-engine and its tools build as shipped)
+**Proprietary SDKs**
 
 | Tree | Version | Terms as carried in the tree | Used by |
 | :-- | :-- | :-- | :-- |
@@ -314,7 +195,3 @@ engine and its tools build as shipped)
 | `maya2011`, `maya2012` | devkits | Autodesk devkit license, proprietary markings | Maya plugin |
 | `nvidia/PerfSDK` | 6.62 | NVIDIA SDK license | benchmark |
 | `amd` | compress, GPUPerfAPI 2.3, tootle 2.2 | AMD library licenses (`compress/LibraryLicense.rtf`) | editor, tools |
-
-`cs` (1.3) is not third-party: it is a GSC-authored helper library carrying the
-same headers as the engine, and falls under the same notice as the engine
-sources.
