@@ -273,6 +273,10 @@ fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
 It records commands, artifacts, and complete `vostok-pdb topology --order --json`
 comparisons under `binaries/gen/pdb-order-probes/`; see
 [`vostok-pdb topology.md`](docs/binary_matching/vostok-pdb topology.md#causal-order-probes).
+`python3 -m vostok tool link-layout runs|owners` reads the section contributions
+of both PDBs: archive runs per section side by side, and the COMDAT functions
+whose kept copy comes from a different compiland than retail's; see
+[`link-layout.md`](docs/binary_matching/link-layout.md).
 
 ## Third-party libs and the GFx suite
 
