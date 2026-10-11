@@ -79,7 +79,7 @@ file directly, so every query works on a fresh clone without a build.
     python3 -m vostok ledger list   --module render --class QUANTITY,SPLIT
     python3 -m vostok ledger list   --module render --status parked|blocked
     python3 -m vostok ledger list   --headroom                     # hist > max: we had it better once
-    python3 -m vostok ledger hist-gap [--module M]                 # ...and the commits that reached and lost it
+    python3 -m vostok ledger hist-gap [--module M] [--all]         # real drops: the commits that reached and lost it
     python3 -m vostok ledger last-exact <fn> --diff                # last commit at 100: the source that matched, vs HEAD
     python3 -m vostok ledger tried  <mangled> --note "what was attempted"
     python3 -m vostok ledger park   <mangled> --cause "why it stops here"   (`open` undoes it)

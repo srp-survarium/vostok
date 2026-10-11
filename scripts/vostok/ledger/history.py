@@ -7,11 +7,13 @@ Read-only: these verbs read the committed history of `config/match_state.tsv`
 2026-08-30) and the source tree. They never build and never write the ledger.
 
   vostok ledger hist-gap [--module M] [--unit U] [--min-gap X] [--exact]
-                         [--sort recoverable|gap|drop] [--limit N] [--json]
-      every row whose `hist` exceeds `max`: the PEAK commit where the row first
+                         [--all] [--sort recoverable|gap|drop] [--limit N] [--json]
+      rows whose `hist` exceeds `max`: the PEAK commit where the row first
       reached its `hist`, and the DROP commit after which it stayed below it
       (with the score it fell to and whether its body `hash` changed there).
-      Sorted by recoverable bytes, size * (hist - max).
+      Sorted by recoverable bytes, size * (hist - max). By default only real
+      drops; --all adds hashless rows, peaks older than the ledger and exact
+      curs max never recorded.
 
   vostok ledger last-exact FUNCTION [--diff] [--limit N] [--json]
       the last commit where the function was exact (cur or max at 100), the
@@ -473,6 +475,15 @@ def find_event(history, series, target, measures=("max", "best", "hist")):
     return event
 
 
+def real_drop(row, _series, event):
+    """A peak this ledger measured on a hashed source body and then lost.
+
+    Not: a row with no source hash (max is never banked for it), a peak only
+    carried in `hist` from before the ledger (`peak*`), or a row still exact
+    in cur at HEAD that max never recorded - none names a commit to read."""
+    return bool(row.get("hash")) and not event.inherited and event.drop is not None
+
+
 def recoverable(row):
     return (row.get("size") or 0) * gap(row)
 
@@ -520,6 +531,9 @@ def cmd_hist_gap(args, rows=None, history=None):
         series = history.series.get(row["mangled"], [])
         event = find_event(history, series, row["hist"])
         records.append((row, series, event))
+    listed = len(records)
+    if not args.all:
+        records = [item for item in records if real_drop(*item)]
 
     def drop_key(item):
         event = item[2]
@@ -552,9 +566,12 @@ def cmd_hist_gap(args, rows=None, history=None):
     with_drop = sum(1 for _r, _s, e in records if e.drop is not None)
     with_peak = sum(1 for _r, _s, e in records if e.peak is not None)
     stats = history.stats
-    _log(f"{len(records)} row(s) with hist - max > {args.min_gap:g}"
-         f"{' and hist = 100' if args.exact else ''}; {with_peak} with a peak, "
-         f"{with_drop} with a drop"
+    _log(f"{listed} row(s) with hist - max > {args.min_gap:g}"
+         f"{' and hist = 100' if args.exact else ''}"
+         + ("" if args.all else f"; {len(records)} real drop(s), "
+            f"{listed - len(records)} hidden (no source hash, peak older than "
+            "the ledger, or max never recorded it; --all shows them)")
+         + f"; {with_peak} with a peak, {with_drop} with a drop"
          + (f"; showing {len(shown)}" if len(shown) < len(records) else "")
          + (f"; {stats['commits']} commits / {stats['blobs']} blobs "
             f"({stats['cached']} cached, {stats['computed']} parsed) in "
@@ -1088,13 +1105,19 @@ def add_parsers(sub):
         "reached and lost the peak",
         description="For every row with hist > max: the PEAK commit where it "
         "first reached its hist and the DROP commit after which it stayed "
-        "below. Reads committed ledger history only.")
+        "below. By default only real drops: a hashed body whose measured peak "
+        "a later commit lost (--all lists every hist > max row). Reads "
+        "committed ledger history only.")
     p.add_argument("--module")
     p.add_argument("--unit", help="substring of the TU path")
     p.add_argument("--min-gap", type=float, default=0.01, metavar="PCT",
                    help="smallest hist - max to report (default 0.01, the "
                         "--headroom threshold)")
     p.add_argument("--exact", action="store_true", help="only rows whose hist is 100")
+    p.add_argument("--all", action="store_true",
+                   help="also rows with no source hash, a peak older than the "
+                        "ledger, or an exact cur max never recorded (default: "
+                        "only real drops)")
     p.add_argument("--sort", choices=("recoverable", "gap", "drop"),
                    default="recoverable",
                    help="recoverable = size * (hist - max) (default); drop = "

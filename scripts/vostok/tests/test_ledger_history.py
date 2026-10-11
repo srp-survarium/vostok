@@ -178,7 +178,8 @@ class WalkTests(unittest.TestCase):
                           "size": 9, "cur": 99.0, "max": 99.0, "hist": 99.0, "hash": ""},
         }
         args = SimpleNamespace(module=None, unit=None, min_gap=0.01, exact=False,
-                               sort="recoverable", limit=None, json=True, cache_dir=None)
+                               sort="recoverable", limit=None, json=True, cache_dir=None,
+                               all=True)
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
             history.cmd_hist_gap(args, rows=rows, history=self.history)
@@ -190,6 +191,13 @@ class WalkTests(unittest.TestCase):
         self.assertEqual(records[0]["drop"]["score"], 70.0)
         self.assertTrue(records[2]["inherited"])
 
+        # by default only real drops: C's peak is older than the ledger
+        args.all = False
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+            history.cmd_hist_gap(args, rows=rows, history=self.history)
+        self.assertEqual([r["mangled"] for r in json.loads(out.getvalue())], [B, A])
+
         args.json, args.module = False, "game"
         out = io.StringIO()
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
@@ -198,6 +206,18 @@ class WalkTests(unittest.TestCase):
         self.assertIn("rewrite b", text)
         self.assertIn("(body changed)", text)
         self.assertNotIn(C, text)
+
+
+class RealDropTests(unittest.TestCase):
+    def test_real_drop_needs_a_hash_a_measured_peak_and_a_drop(self):
+        hashed, hashless = {"hash": "aaaa00000001"}, {"hash": ""}
+        dropped = history.Event(100.0, peak=1, last=2, drop=3, measure="max")
+        cur_only = history.Event(100.0, peak=1, last=4, drop=None, measure="best")
+        carried = history.Event(80.0, peak=0, last=4, drop=None, measure="hist")
+        self.assertTrue(history.real_drop(hashed, None, dropped))
+        self.assertFalse(history.real_drop(hashless, None, dropped))
+        self.assertFalse(history.real_drop(hashed, None, cur_only))
+        self.assertFalse(history.real_drop(hashed, None, carried))
 
 
 class ParseTests(unittest.TestCase):

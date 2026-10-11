@@ -18,8 +18,8 @@ every question below before it has compiled anything.
   vostok ledger tried   <mangled>... [--note ...]   record a dispatch attempt
   vostok ledger park    <mangled> --cause "..."     stop working it, with a reason
   vostok ledger open    <mangled>                   undo a park
-  vostok ledger hist-gap [--module M] [--min-gap X] [--limit N]
-                                              hist > max rows: peak + drop commits
+  vostok ledger hist-gap [--module M] [--min-gap X] [--limit N] [--all]
+                                              real drops: peak + drop commits
   vostok ledger last-exact FUNCTION [--diff]  last commit at 100; its source since
 
 Two more verbs live beside these and are dispatched by `vostok.ledger.__init__`,
