@@ -33,6 +33,10 @@ Any extra args are forwarded to vostok.build.ninja:
       image-data ledger, module data audits) and the README. Function scores are
       the same as a full build's; not a commit state - commit after a full build.
 
+  python3 -m vostok build --no-lock
+      Skip the host-wide build lock (vostok.build.ninja); by default only one
+      ninja compile/link runs at a time across every worktree on the machine.
+
   python3 -m vostok build --regenerate-target
       Regenerate every retail-derived artifact first: the fix when setup
       reports a target side stamped with another retail binary.

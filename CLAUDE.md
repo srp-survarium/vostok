@@ -92,7 +92,9 @@ libs and retail evidence are hard-linked from one shared cache
 build is a full one. Every target-side artifact carries the sha256 of the
 retail exe and pdb it came from; setup and build stop on a stamp from another
 retail (another branch's v0.20e target side) until you rerun with
-`vostok build --regenerate-target`. Details: `docs/build/agent-builds.md`.
+`vostok build --regenerate-target`. Only one ninja compile/link runs at a time
+on the host: a second build prints who holds the lock and waits (`--no-lock`
+opts out). Details: `docs/build/agent-builds.md`.
 
 ## The ledger (`config/match_state.tsv`)
 

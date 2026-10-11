@@ -102,6 +102,23 @@ the `gen/target_data_*` inventory (rewritten by the data lane), and
 output of `vostok tool libs-release`, and `binaries/rich/` is a legacy index no
 script reads: no build needs them, so pool worktrees do not carry them.
 
+## Host-wide build lock
+
+Each ninja runs about as many `cl.exe` as the machine has cores, so concurrent
+builds in several worktrees multiply (five full builds: ~490 `cl.exe`, load ~55
+on 24 cores and 31 GB). `vostok.build.ninja` therefore holds an `flock` on
+`$XDG_RUNTIME_DIR/vostok-ninja.lock` (`VOSTOK_BUILD_LOCK` overrides it; the
+runtime dir is derived from the uid when the variable is unset) for every run
+that can compile or link, full or module. A second build prints one line,
+`waiting for the build lock held by <worktree> pid N`, and blocks; the kernel
+releases the lock when the holder exits or crashes. `-t` tools and `-n` dry
+runs never take it, and `--no-lock` (`vostok build --no-lock`) opts out.
+
+The measurement phase after ninja (PDB evidence, delink, objdiff report,
+ledger) stays outside the lock: it runs at most two processes per build, so it
+cannot multiply the way `-j` does, and holding the lock through it would leave
+the compiler slot idle for the ~15 minutes another worktree could compile.
+
 ## Retail provenance stamps
 
 Every target-side artifact is derived from the retail `survarium.exe` and
