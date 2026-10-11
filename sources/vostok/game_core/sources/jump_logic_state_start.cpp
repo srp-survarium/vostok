@@ -82,9 +82,9 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 		return animation::mixing::animation_lexeme(
 			animation::mixing::animation_lexeme_parameters( buffer, caption, intervals.begin( ), intervals.end( ), 0, 0 )
 			.weight_synchronization_group_id	( 0 )
-			.weight_interpolator				( animation::linear_interpolator( 0.3f ) )
+			.weight_interpolator				( animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME ) )
 			.time_synchronization_group_id		( 0 )
-			.time_scale_interpolator			( animation::linear_interpolator( 0.3f ) )
+			.time_scale_interpolator			( animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME ) )
 			.animated_object					( m_user )
 			.bones_mask							( bones_mask )
 		);
@@ -93,7 +93,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 	{
 		m_interval_id_to_wait_for	= 0;
 
-		animation::linear_interpolator	interpolator( 0.3f );
+		animation::linear_interpolator	interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 		return animation::mixing::animation_lexeme(
 			animation::mixing::animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )

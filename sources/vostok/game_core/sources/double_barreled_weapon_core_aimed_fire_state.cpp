@@ -114,7 +114,7 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 		1,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 
@@ -145,7 +145,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 
 	pcstr const user_animation_captions[2] = { "aimed_stand_shot", "aimed_crouch_shot" };
 
-	animation::linear_interpolator interpolator( 0.3f );
+	animation::linear_interpolator interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	// claude@MATCH: chain ctor + all setters into ONE statement (target L101 carcass) feeding the
 	// animation_lexeme construction - matches the show/hide siblings; a named params local + separate

@@ -37,4 +37,7 @@ STATIC_SIZE_ASSERT(linear_interpolator, 0x8);
 } // namespace animation
 } // namespace vostok
 
+// the blend time of the game's weapon, jump and player-logic animation transitions
+#define VOSTOK_ANIMATION_TRANSITION_TIME	0.3f
+
 #endif // #ifndef LINEAR_INTERPOLATOR_H_INCLUDED

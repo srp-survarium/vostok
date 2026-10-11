@@ -32,7 +32,7 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 {
 	VOSTOK_UNREFERENCED_PARAMETER( is_third_view );
 
-	animation::linear_interpolator		l_interpolator( 0.3f );
+	animation::linear_interpolator		l_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(

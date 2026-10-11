@@ -105,7 +105,7 @@ weapon_lexeme_pair double_barreled_weapon_core_hide_state::get_weapon_lexeme_pai
 		7,
 		m_time_scale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

@@ -101,7 +101,7 @@ weapon_lexeme_pair pistol_weapon_core_reload_state::get_weapon_lexeme_pair( muta
 		2,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 
@@ -124,7 +124,7 @@ animation::mixing::expression pistol_weapon_core_reload_state::get_user_hands_ex
 
 	u32 const weapon_state_index = m_weapon.ammo_in_magazine( ) == 0;
 
-	animation::linear_interpolator interpolator( 0.3f );
+	animation::linear_interpolator interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(

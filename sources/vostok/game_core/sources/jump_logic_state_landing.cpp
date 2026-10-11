@@ -82,7 +82,7 @@ animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( m
 			.weight_synchronization_group_id	( 0 )
 			.weight_interpolator				( animation::instant_interpolator( ) )
 			.time_synchronization_group_id		( 0 )
-			.time_scale_interpolator			( animation::linear_interpolator( 0.3f ) )
+			.time_scale_interpolator			( animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME ) )
 			.animated_object					( m_user )
 			.bones_mask							( bones_mask )
 		);

@@ -100,7 +100,7 @@ weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutabl
 		7,
 		m_time_scale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 
@@ -125,7 +125,7 @@ animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expr
 
 	pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
 
-	animation::linear_interpolator interpolator( 0.3f );
+	animation::linear_interpolator interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(

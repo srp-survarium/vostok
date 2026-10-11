@@ -76,7 +76,7 @@ weapon_lexeme_pair weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffe
 		u32( -1 ),
 		1.0f,
 		animation::mixing::play_cyclically,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

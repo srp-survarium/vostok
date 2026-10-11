@@ -37,7 +37,7 @@ animation::mixing::expression empty_hands::selected_animations( mutable_buffer& 
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( is_third_view );
 
-	animation::linear_interpolator l_interpolator( 0.3f );
+	animation::linear_interpolator l_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 	animation::mixing::animation_lexeme lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,

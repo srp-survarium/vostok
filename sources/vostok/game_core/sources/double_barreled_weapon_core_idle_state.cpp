@@ -96,7 +96,7 @@ weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pai
 		u32( -1 ),
 		1.0f,
 		animation::mixing::play_cyclically,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

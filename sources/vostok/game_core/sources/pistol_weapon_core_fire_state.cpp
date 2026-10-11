@@ -118,7 +118,7 @@ weapon_lexeme_pair pistol_weapon_core_fire_state::get_weapon_lexeme_pair( mutabl
 		1,
 		m_animation_timescale,
 		m_playback_type,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

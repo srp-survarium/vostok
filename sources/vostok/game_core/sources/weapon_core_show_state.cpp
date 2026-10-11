@@ -86,7 +86,7 @@ weapon_lexeme_pair weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffe
 		6,
 		m_time_scale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

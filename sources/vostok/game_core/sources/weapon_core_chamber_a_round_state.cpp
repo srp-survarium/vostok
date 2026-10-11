@@ -85,7 +85,7 @@ weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mu
 		8,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

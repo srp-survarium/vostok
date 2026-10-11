@@ -98,7 +98,7 @@ weapon_lexeme_pair double_barreled_weapon_core_reload_state::get_weapon_lexeme_p
 		2,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 
@@ -131,7 +131,7 @@ animation::mixing::expression double_barreled_weapon_core_reload_state::get_user
 			&weight_driving_animation
 		)
 		.animated_object( m_weapon.get_user( ) )
-		.weight_interpolator( animation::linear_interpolator( 0.3f ) )
+		.weight_interpolator( animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME ) )
 		.bones_mask( 2 )
 		.playback_type( animation::mixing::play_once_and_freeze_at_end )
 	);

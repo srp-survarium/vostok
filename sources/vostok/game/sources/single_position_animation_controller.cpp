@@ -115,7 +115,7 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 			float const previous_to_current_length = ( m_navigation_path[i] - m_navigation_path[i - 1] ).length( );
 			if (
 				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) / previous_to_current_length ) < previous_to_current_length &&
-				!( ( movement_position - m_navigation_path[i] ).length( ) <= 0.3f )	// NaN length breaks too, as retail
+				!( ( movement_position - m_navigation_path[i] ).length( ) <= 0.3f )	// path-point arrival tolerance; a NaN length breaks too, as retail
 			)
 				break;
 

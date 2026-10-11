@@ -78,7 +78,7 @@ weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_p
 		m_time_synchronization_group,
 		m_animation_timescale,
 		m_playback_type,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

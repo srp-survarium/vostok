@@ -44,7 +44,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 		sprint_look_animation_index,
 	};
 
-	animation::linear_interpolator		l_interpolator( 0.3f );
+	animation::linear_interpolator		l_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(

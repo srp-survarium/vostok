@@ -82,7 +82,7 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 {
 	u32 const							move_animation_index	= is_firing ? animation_index + 1 : animation_index;
 
-	animation::linear_interpolator		interpolator( 0.3f );
+	animation::linear_interpolator		interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation::mixing::animation_lexeme	movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
@@ -146,7 +146,7 @@ animation::mixing::expression player_logic_crouch_state::look_expression(
 ) const
 {
 	animation::instant_interpolator		interpolator;
-	animation::linear_interpolator		l_interpolator( 0.3f );
+	animation::linear_interpolator		l_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
 	animation_type_enum const			animation_type	= animation_type_enum( movement_animation_index + 2 );
 

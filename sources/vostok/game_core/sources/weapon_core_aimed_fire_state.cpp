@@ -99,7 +99,7 @@ weapon_lexeme_pair weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable
 		1,
 		m_animation_timescale,
 		m_weapon.get_bullets_in_queue( ) <= 1 ? animation::mixing::play_once_and_freeze_at_end : animation::mixing::play_cyclically,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 

@@ -112,7 +112,7 @@ weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pai
 		1,
 		m_animation_timescale,
 		animation::mixing::play_once_and_freeze_at_end,
-		animation::linear_interpolator( 0.3f )
+		animation::linear_interpolator( VOSTOK_ANIMATION_TRANSITION_TIME )
 	);
 }
 
