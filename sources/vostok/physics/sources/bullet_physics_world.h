@@ -82,9 +82,9 @@ public:
 	inline	memory::base_allocator&			allocator					( ) { return m_allocator; }
 	inline	btSoftRigidDynamicsWorld*		get_bt_internal				( ) { return m_dynamicsWorld; }
 
-	// STATE[REMOVED]: rope create/destroy are referenced only from editor object_wire_set.cpp,
-	// not compiled into survarium.exe; no free create/destroy_soft_body_rope nor these inlines
-	// appear in either binary. Empty stubs correct.
+
+
+	// STATE[REMOVED]: only the editor-only object_wire_set.cpp calls these; absent from both binaries
 	inline	bt_soft_body_rope*				create_soft_body_rope		( rope_construction_info const& arg_0 ) { /* no source */ }
 	inline	void							destroy_soft_body_rope		( bt_soft_body_rope* arg_0 ) { /* no source */ } // STATE[REMOVED]
 
