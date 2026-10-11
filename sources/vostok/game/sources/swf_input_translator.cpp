@@ -122,37 +122,37 @@ dik_to_swf_bind* swf_input_translator::get_bind( input::enum_keyboard key )
 }
 
 
-
-
-
-
 wchar_t swf_input_translator::translate_key_action( input::world* input_world, bool is_shift_now, dik_to_swf_bind& current )
 {
 	wchar_t result = is_shift_now ? current.c_shift : current.c;
-
 	if ( !current.translate )
+	{
 		return is_shift_now ? current.c_shift : current.c;
+	}
 
 	wchar_t buff[ 64 ];
 
 	static _locale_t current_locale = _create_locale( LC_ALL, "" );
 
-	if ( !input_world->get_keyboard( )->get_dik_unicode( current.key, buff, sizeof( buff ) ) )
-		return result;
-
-	if ( is_shift_now )
+	if ( input_world->get_keyboard( )->get_dik_unicode( current.key, buff, sizeof( buff ) ) )
 	{
-		if ( buff[ 0 ] == current.c )
-			buff[ 0 ] = result;
 
-		_wcsupr_s_l( buff, 64, current_locale );
+
+		if ( is_shift_now ) {
+			if ( buff[ 0 ] == current.c )
+				buff[ 0 ] = result;
+
+			_wcsupr_s_l( buff, 64, current_locale );
+		}
+		else
+			_wcslwr_s_l( buff, 64, current_locale );
+
 		return buff[ 0 ];
 	}
-	else
-	{
-		_wcslwr_s_l( buff, 64, current_locale );
-		return buff[ 0 ];
-	}
+
+
+	return result;
+
 }
 
 void swf_input_translator::initialize( )
