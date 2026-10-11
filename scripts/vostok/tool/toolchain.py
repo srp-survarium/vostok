@@ -46,7 +46,7 @@ import functools
 import sys
 from pathlib import Path
 
-from vostok.build import native_crt, ninja_regen
+from vostok.build import gfx, native_crt, ninja_regen
 from vostok.core import paths
 from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
                                DATA_TARGET_RELOCS, OBJDIFF_DIR, PREBUILT,
@@ -246,6 +246,11 @@ def ensure_retail_source_root(wineprefix: Path) -> None:
     log(f"Retail source root: C:\\survarium\\sources -> {target}")
 
 
+def ensure_gfx_engine_tree() -> None:
+    """Refresh sources/scaleform, the engine TUs' view of the pinned SDK."""
+    gfx.materialize_engine_tree()
+
+
 def ensure_gfx_tree_root(parent: Path) -> None:
     """Give GFx source and object trees machine-independent Wine paths."""
     ensure_gfx_alias(parent, "gfx-sdk", paths.GFX_BUILD_TREE)
@@ -363,6 +368,7 @@ def setup(force: set[str]) -> None:
 
     if setup_current and not force:
         log("Wine/ninja setup already complete.")
+        ensure_gfx_engine_tree()
         ensure_retail_source_root(wineprefix)
         ensure_compdb()
         ensure_target_side()
@@ -375,6 +381,7 @@ def setup(force: set[str]) -> None:
         copy_libs(libs_dir)
     if not setup_current or "wine" in force:
         init_wine_prefix(wineprefix, force="wine" in force)
+    ensure_gfx_engine_tree()
     ensure_retail_source_root(wineprefix)
     if not setup_current or "registry" in force:
         log("Configuring Wine environment (PATH, INCLUDE, LIB) ...")

@@ -94,15 +94,15 @@ class FunctionDataResolutionTests(unittest.TestCase):
                     "e2f12c7bf31a",
                 )
 
-    def test_gfx_review_hashes_lib_overlay_before_pristine_sdk(self):
+    def test_gfx_review_hashes_pinned_lib_tree_not_engine_view(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            overlay = root / "sources/scaleform/sdk-overlay/GFx/example.cpp"
+            engine = root / "sources/scaleform/Src/GFx/example.cpp"
             sdk = root / "sdk/Src/GFx/example.cpp"
-            overlay.parent.mkdir(parents=True)
+            engine.parent.mkdir(parents=True)
             sdk.parent.mkdir(parents=True)
-            overlay.write_text("overlay\n", encoding="latin-1")
-            sdk.write_text("sdk\n", encoding="latin-1")
+            engine.write_text("engine\n", encoding="latin-1")
+            sdk.write_text("lib\n", encoding="latin-1")
             with (
                 mock.patch(
                     "vostok.derive.maxima.SOURCES", root / "sources"
@@ -119,7 +119,7 @@ class FunctionDataResolutionTests(unittest.TestCase):
                         {"module": "gfx"},
                         None,
                     ),
-                    "e3eb0451f80e",
+                    "376456435d4c",
                 )
 
     def test_direct_exact_needs_no_ledger_evidence(self):

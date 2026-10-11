@@ -18,8 +18,33 @@ of the Scaleform D3D11 render HAL (`d3d1x_*`). Scaffolded in game **batch 12**
   `library_linkage.h`; everything else under `sources/`).
 - Include dirs add the Scaleform SDK (`$(SolutionDir)/scaleform/Include`,
   `$(SolutionDir)/scaleform/Src`), cloned from `render_engine_pc_dx11.vcproj`
-  (the other consumer of GFx headers). Vendored SDK lives at
-  `sources/scaleform/`.
+  (the other consumer of GFx headers). Those resolve to `sources/scaleform/`,
+  which is no longer committed here - see below.
+
+## Where the SDK source lives (scaleform-gfx)
+
+The GFx source is the [scaleform-gfx](https://github.com/srp-survarium/scaleform-gfx)
+repo, pinned as the `scaleform-gfx-src` flake input (`$SCALEFORM_SDK` in the dev
+shell). Its `4.2.22` branch is the pristine DuckTales import; the pinned branch adds
+the recovered 4.2.21 rollbacks and is the single source for two views:
+
+- **Lib view** - `Include/`, `Src/`, `3rdParty/` as committed. `vostok.build.gfx`
+  links it into `binaries/gfx-sdk` (the `C:\survarium\gfx-sdk` alias) and builds
+  the `libgfx*` suite from it. This replaced the old in-tree
+  `sources/scaleform/{Src,Include}` + `sdk-overlay/` merge over the DuckTales SDK.
+- **Engine view** - `Include/` + `Src/` with `Vostok/` laid over. Retail compiled
+  the engine's own TUs against its vendored `c:\survarium\sources\scaleform\...`
+  (the target PDB records those paths), which differs from the lib tree in the
+  files under `Vostok/`: four pristine 4.2.22 headers (`GFxConfig.h`,
+  `GFxConfigAddons.h`, `GFxVersion.h`, `GFx/GFx_CharPosInfo.h`) and the engine-pch
+  `HeapMH_SysAllocMalloc.h`. `vostok tool toolchain` writes this view as plain
+  files to `sources/scaleform/` (gitignored), so the retail vcproj include paths and
+  the base PDB paths are unchanged.
+
+Edit SDK source in scaleform-gfx and bump the input (`nix flake update
+scaleform-gfx-src`); for a local checkout use
+`nix develop --override-input scaleform-gfx-src path:<checkout>`. Never edit
+`sources/scaleform/` - the next setup rewrites it.
 
 ## The structure-generator gap (symbol-list provenance)
 
@@ -205,8 +230,9 @@ The swap (379 files, +425k/-283k lines):
   `D3D1x_ShaderDescs.h`, and a handful of platform headers). Scope mirrors the
   curated vendored subset (NOT the whole multi-thousand-file SDK); driven by the
   transitive `#include` closure from the engine's GFx entry headers.
-- The vendored tree (`sources/scaleform/`, consumed by the render engine's
-  in-tree D3D1x HAL) carries render-side reconciliation patches:
+- The vendored tree (then `sources/scaleform/`, now the scaleform-gfx engine
+  view; consumed by the render engine's in-tree D3D1x HAL) carries render-side
+  reconciliation patches:
   `Src/Render/D3D1x/D3D1x_Config.h` hardcodes `#define SF_D3D_VERSION 11` (4.2
   made it a required build-config define; the build config doesn't set it), and
   every D3D1x `.cpp` the render engine compiles gets `#include "pch.h"` first
@@ -294,9 +320,9 @@ driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
 
     nix develop --command python3 -m vostok.build.gfx
 
-  Source is the PRISTINE external SDK (`<scaleform_sdk checkout>`,
-  4.2.22; `$SCALEFORM_SDK` overrides). No `scaleform_build/` overlay (deleted -
-  it existed only to carry the now-removed survarium patches + pch prepend).
+  Source is the pinned scaleform-gfx lib view (`$SCALEFORM_SDK`; see "Where
+  the SDK source lives"). No `scaleform_build/` overlay (deleted - it existed
+  only to carry the now-removed survarium patches + pch prepend).
 
 **Staging.** Output is `binaries.prebuilt/Win32/libraries/shipping/<name>.lib`,
 where the exe's `#pragma comment(lib,"<name>.lib")` resolves it. The libs are

@@ -6,6 +6,12 @@ binaries/
 target/
 debug/
 
+## The engine's view of the pinned Scaleform SDK: scaleform-gfx Include/ + Src/
+## with its Vostok/ overlay, written by `vostok tool toolchain` (vostok.build.gfx
+## materialize_engine_tree). Generated, never edited here - the source of truth is
+## the scaleform-gfx flake input.
+/sources/scaleform/
+
 ## Prebuilt 3rd-party libraries (staged from vostok-libs by `vostok tool libs`;
 ## mirrors the shipped game's binaries.prebuilt/ layout - blobs, not source)
 binaries.prebuilt/

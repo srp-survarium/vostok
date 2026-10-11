@@ -56,6 +56,7 @@
         "nixpkgs": "nixpkgs",
         "objdiff-src": "objdiff-src",
         "rust-overlay": "rust-overlay",
+        "scaleform-gfx-src": "scaleform-gfx-src",
         "vcproj2ninja-src": "vcproj2ninja-src",
         "vostok-data-delinker-src": "vostok-data-delinker-src",
         "vostok-delinker-src": "vostok-delinker-src",
@@ -79,6 +80,23 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "scaleform-gfx-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791692437,
+        "narHash": "sha256-S2RVFAeUN0CmhI5rTpPlQpO2hbr5tj+FWN8/mMMy2po=",
+        "owner": "srp-survarium",
+        "repo": "scaleform-gfx",
+        "rev": "5f24cd71fd28590f3bf3d0c0340cc2d6333d3e78",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "ref": "4.2.21-vostok",
+        "repo": "scaleform-gfx",
         "type": "github"
       }
     },

@@ -1827,8 +1827,8 @@ def _current_source_hash(
     Prefer the same PDB statement extent that scopes MAX.  Helpers without an
     extent use their complete owning TU; this is broader, but it safely stales
     a review on every relevant source change.  GFx PDB paths are rooted at the
-    SDK's ``Src`` directory while the reconstructed tree lives below
-    ``sources/scaleform``.
+    SDK's ``Src`` directory; their source is the pinned lib tree
+    (``paths.SCALEFORM_SDK``), not the engine's view under ``sources/scaleform``.
     """
     if pairs is not None:
         record = pairs.base.get(function)
@@ -1836,22 +1836,11 @@ def _current_source_hash(
         if current is not None:
             return current
 
-    candidates = [unit]
+    current = maxima.whole_source_file_hash(unit)
+    if current is not None:
+        return current
     module = str(ledger_row.get("module") or "").casefold()
-    gfx_unit = module == "gfx" or unit.casefold().startswith("src/")
-    if gfx_unit:
-        relative = unit[4:] if unit.casefold().startswith("src/") else unit
-        # The lib-only overlay wins over both the shared reconstruction and
-        # the pristine SDK, matching build.gfx.materialize_tree().
-        candidates.extend((
-            f"scaleform/sdk-overlay/{relative}",
-            f"scaleform/{unit}",
-        ))
-    for candidate in candidates:
-        current = maxima.whole_source_file_hash(candidate)
-        if current is not None:
-            return current
-    if gfx_unit:
+    if module == "gfx" or unit.casefold().startswith("src/"):
         current = maxima.whole_source_tree_hash(paths.SCALEFORM_SDK, unit)
         if current is not None:
             return current
