@@ -33,10 +33,10 @@ void weapon_core_reload_state_base::on_animation_end_impl( bool& animation_playe
 	animation_player_tick_result = true;
 }
 
-// claude@NOTE: target keeps packet<>::append(const bool) / packet_reader::r<bool> OUT of line
-// (single push of the bool value / al return); our base inlines both to the append(&v,sizeof)/
-// r(&v,1,1) bodies. Inline ceiling owned by the shared packet.h/packet_reader.h templates, not
-// steerable from here; every bool-append/r<bool> sibling sits at the same 69.33%/46.9%.
+
+
+
+
 void weapon_core_reload_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
 	packet.append( m_animation_has_been_ended );

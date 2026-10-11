@@ -13,10 +13,10 @@ class bt_soft_body_rope {
 public:
 	explicit		bt_soft_body_rope	( btSoftBody* bt_body ) : m_bt_body( bt_body ) { }
 
-	// STATE[REMOVED]: bt_soft_body_rope accessors are referenced only from editor
-	// object_wire_set.cpp, which is not compiled into survarium.exe. The shipped rope
-	// users (bullet_physics_world::add/remove(bt_soft_body_rope*)) touch m_bt_body
-	// directly and never call these. Absent from both binaries; empty stubs correct.
+
+
+
+	// STATE[REMOVED]: only the editor-only object_wire_set.cpp calls these; absent from both binaries
 	inline	bool	is_active			( ) const { /* no source */ }
 
 	inline	u32		get_fragments_count	( ) const { /* no source */ } // STATE[REMOVED]

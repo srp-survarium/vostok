@@ -11,8 +11,7 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: callback binding and assignment remain shared Boost context walls.
-// claude@MATCH: array-size spelling preserves the target's runtime 0x2000 * 0x12c.
+// the array-size spelling keeps retail's runtime 0x2000 * 0x12c
 #line 24
 match_client_impl::match_client_impl(
 	boost::asio::io_service&	io_service,
@@ -61,7 +60,6 @@ void match_client_impl::on_packet_received( const u8 message_type, network_core:
 }
 #line 64
 
-// claude@NOTE: m_on_connected assignment remains a shared Boost context wall.
 #line 67
 void match_client_impl::connect(
 	pcstr const	host,
@@ -76,7 +74,6 @@ void match_client_impl::connect(
 	m_client.connect		( host, port, packet ? clone_packet( *packet ) : 0, current_time_in_ms );
 }
 
-// claude@NOTE: callback assignment remains a shared Boost context wall.
 #line 77
 void match_client_impl::set_on_packet_received(
 	boost::function< void ( u8, network_core::packet_reader& ) > const&	on_packet_received
@@ -102,7 +99,6 @@ network_core::udp_match_packet* match_client_impl::clone_packet( network_core::u
 	return					result;
 }
 
-// claude@NOTE: packet callback binding remains a shared Boost context wall.
 #line 99
 void match_client_impl::disconnect( )
 #line 100
@@ -112,7 +108,6 @@ void match_client_impl::disconnect( )
 	m_client.disconnect		( );
 }
 
-// claude@NOTE: packet callback binding remains a shared Boost context wall.
 #line 104
 void match_client_impl::on_disconnect(
 	const network_core::disconnect_event_types_enum	disconnect_type

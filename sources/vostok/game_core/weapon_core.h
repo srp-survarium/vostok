@@ -97,8 +97,8 @@ public:
 			u16									fire_queue_length				( ) const;
 
 	inline	float4x4							get_transform					( ) const { return m_transform; }
-	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
-	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	float4x4							transform						( ) const override { return m_transform; }
+	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }
 
 	inline	hit_initiator const*				hit_initiator_holder			( ) const { return m_initiator_holder; }
 	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
@@ -119,7 +119,7 @@ public:
 			fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) >
 												vertical_recoil_time_calculator		( );
 
-			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
+			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
 
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override;
@@ -148,12 +148,12 @@ public:
 	virtual	void								activate						( base_player& user, engine& engine ) override;
 	virtual	void								deactivate						( ) override;
 
-	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	bool								can_hold_breath					( ) const { return m_aimed; }
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const;
-	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
-	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
+
+
 	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
 
 			void								unload_chambered_round			( );
@@ -215,7 +215,7 @@ public:
 	inline	bool								is_active						( ) const { /* no source */ }
 
 private:
-	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
+
 			bool								target_predicate						( const weapon_targets target ) const { return m_target == target; }
 			bool								target_and_animation_ended_predicate	( const weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
@@ -226,7 +226,7 @@ private:
 			bool								must_chamber_a_round_and_animation_ended_predicate		( ) const;
 			bool								must_chamber_a_round_aimed_and_animation_ended_predicate( ) const;
 
-	// claude@MATCH: target mangles these AAE (private), not QAE.
+
 			float3								get_dispersed_bullet_dir		( );
 
 			void								update_recoil					( u32 current_time_in_ms, const float time_scale );
@@ -241,8 +241,8 @@ private:
 	virtual	void								on_player_model_added			( ) override;
 	virtual	void								on_player_model_removed			( ) override;
 
-	// claude@MATCH: target mangles update_bones_matrices/serialize/deserialize
-	// EAE/EBE/EAE (private virtual), not UAE/UBE.
+
+
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
@@ -268,8 +268,8 @@ private:
 	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
 
 private:
-	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
-	// top-level const on every pointer.
+
+	// top-level const on every pointer parameter, as retail mangles them
 	virtual	void								on_skeleton_matrices_changed	(
 													const u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
@@ -283,7 +283,7 @@ private:
 
 	virtual	void								process_finger_correction		( const u32 current_time_in_ms, float4x4* const user_matrices );
 
-	// claude@MATCH: target mangles this ABE (private const), not QBE.
+
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
 													const bool								is_third_view,
@@ -346,7 +346,7 @@ private:
 			bool								can_and_must_reload_predicate	( ) const;
 			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
 
-	// claude@MATCH: target mangles load_ammo AAE (private), not QAE.
+
 			void								load_ammo						( );
 
 private:

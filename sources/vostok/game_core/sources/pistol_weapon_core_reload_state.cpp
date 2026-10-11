@@ -113,8 +113,8 @@ animation::mixing::expression pistol_weapon_core_reload_state::get_user_hands_ex
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// PDB records char const*[2][2] (no pointer const); each inner row attributes its two
-	// element stores to its own line (two 0xe statements).
+
+	// char const*[2][2], as the PDB records it (no pointer const)
 	pcstr user_animation_captions[2][2] = {
 		{ "stand_reload_pistol", "stand_reload_empty_pistol" },
 		{ "crouch_reload_pistol", "crouch_reload_empty_pistol" }

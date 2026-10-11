@@ -118,12 +118,12 @@ weapon_lexeme_pair double_barreled_weapon_core_aimed_fire_state::get_weapon_lexe
 	);
 }
 
-// and - per claude@MATCH - the animation_lexeme_parameters ctor+setter chain folded into ONE statement
-// (target L101=0x6e vs base 0x72) feeding the animation_lexeme override_lexeme construction, like the
-// matching show/hide siblings). Residual is the unsteerable inline-vs-call LTCG class: the target keeps
-// the lexeme_parameters setters OUT-OF-LINE (animated_object/playback_type are calls, additivity_priority
-// inline) while our /GL build INLINES animated_object+playback_type; animation_type() is also COMDAT-folded
-// onto a trivial getter. Both whole-program decisions, not source-steerable.
+
+
+
+
+
+
 animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
@@ -147,9 +147,9 @@ animation::mixing::expression double_barreled_weapon_core_aimed_fire_state::get_
 
 	animation::linear_interpolator interpolator( VOSTOK_ANIMATION_TRANSITION_TIME );
 
-	// claude@MATCH: chain ctor + all setters into ONE statement (target L101 carcass) feeding the
-	// animation_lexeme construction - matches the show/hide siblings; a named params local + separate
-	// setter statement split this into 2 statements (14 vs target's 12).
+
+
+	// the params are built inside the lexeme ctor: retail records a single statement
 	animation::mixing::animation_lexeme override_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,

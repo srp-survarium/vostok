@@ -13,6 +13,11 @@
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
+
+
+// the compiland keeps its legacy name: of the old object_*_visual family only
+// object_particle_visual survived into the shipped PDB
+
 namespace survarium {
 
 void load_transform( configs::binary_config_value const& t, float4x4& dest );

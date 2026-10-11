@@ -95,7 +95,7 @@ void base_network_client::attach_to_player( player_ptr player )
 	);
 }
 
-// Matching wall: the inlined UI call passes its second false through a different LTCG convention.
+
 void base_network_client::detach_from_player( )
 {
 	if ( m_current_player )
@@ -132,6 +132,6 @@ void base_network_client::use_physics_controller_for_current( pcstr const argume
 	}
 }
 
-// Matching wall: constructor and destructor retain only derived-owner compiler-context differences.
+
 
 } // namespace survarium

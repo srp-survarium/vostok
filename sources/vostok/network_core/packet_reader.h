@@ -24,7 +24,7 @@ public:
 
 	inline	bool				eof				( ) const;
 
-	// claude@MATCH: public per the target mangling ?pointer@..@@QBEPBEXZ (Q = public).
+
 	inline	pcbyte				pointer			( ) const;
 
 	inline	void				advance			( u32 offset );

@@ -67,7 +67,7 @@ void weapon_core_cook::load_weapon_parameters( configs::binary_config_ptr config
 
 	object_to_cook->m_chamber_a_round_on_reload = parameters.value_exists( "chamber_a_round_on_reload" ) ? (bool)parameters["chamber_a_round_on_reload"] : false;
 
-	configs::binary_config_value const& weapon_fire_queue_types_cfg = cfg_root["parameters"]["fire_queue_types"];	// claude@MATCH: target recomputes cfg_root["parameters"] here instead of reusing `parameters`
+	configs::binary_config_value const& weapon_fire_queue_types_cfg = cfg_root["parameters"]["fire_queue_types"];	// retail recomputes cfg_root["parameters"] here
 
 	pbyte weapon_fire_queue_types	= VOSTOK_NEW_ARRAY_IMPL( g_allocator, u8, weapon_fire_queue_types_cfg.size( ) );
 	u8 queue_types_count			= 0;
@@ -117,9 +117,9 @@ void weapon_core_cook::on_core_subresources_ready( resources::queries_result& da
 	query_weapon_states( data.get_parent_query( ), config_ptr, object_to_cook );
 }
 
-// claude@MATCH: unlike the sibling cooks (items_cook, weapon_ammunition_cook, ...) this
-// target site has NO strip_pointer call - the original bypasses VOSTOK_DELETE_IMPL and
-// calls delete_helper with the dereferenced allocator directly.
+
+
+// delete_helper directly, not VOSTOK_DELETE_IMPL: retail has no strip_pointer call here
 void weapon_core_cook::delete_resource( resources::resource_base* resource )
 {
 	memory::delete_helper( *g_allocator, resource );

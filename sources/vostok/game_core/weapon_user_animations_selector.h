@@ -101,7 +101,7 @@ public:
 private:
 	inline	void			set_forced_not_to_sprint		( const bool arg_0 ) { /* no source */ }
 
-	// claude@MATCH: target mangling `ABE` -> private const.
+
 			player_logic_base_state&		current_state	( ) const;
 
 private:

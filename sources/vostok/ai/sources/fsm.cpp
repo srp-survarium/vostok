@@ -7,17 +7,17 @@
 namespace vostok {
 namespace ai {
 
-// claude@NOTE: STRUCTURE MATCH (init-list ctor). Capped by the global de-inline
-// knob - the target out-of-lines intrusive_list<fsm_state,...>::intrusive_list()
-// while our base inlines it (declared `inline` in intrusive_list_inline.h); flipping
-// that keyword is an off-limits cross-unit change (pattern template-accessor-deinline-global-knob).
+
+
+
+
 fsm::fsm( ) :
 	m_current_state( 0 )
 {
 }
 
-// claude@NOTE: STRUCTURE MATCH; sole residual is push_back inline-vs-call (same
-// global de-inline knob as the ctor) plus the this-in-EAX LTCG convention.
+
+
 void fsm::add_state( fsm_state* state )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( state ) );

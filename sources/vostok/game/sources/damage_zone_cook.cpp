@@ -40,8 +40,8 @@ void damage_zone_cook::translate_query( resources::query_result_for_cook& parent
 	);
 }
 
-// claude@NOTE: The target operations are complete. Remaining flow is resource_ptr
-// temporary/inlining codegen, and its load call drops the two unused trailing arguments.
+
+
 void damage_zone_cook::on_sub_resources_loaded( resources::queries_result& data, configs::binary_config_value const& cfg_val )
 {
 	damage_zone* zone = VOSTOK_NEW_IMPL( g_allocator, damage_zone )( m_game_world );

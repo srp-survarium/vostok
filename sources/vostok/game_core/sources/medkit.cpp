@@ -86,10 +86,10 @@ void medkit::load( configs::binary_config_value config )
 	}
 }
 
-// claude@NOTE: walled by inventory::holder()/inventory_holder::scheduler() LTCG inlining
-// (both kept out-of-line in the target, always inlined by our /GL build). remove_affects /
-// active_tick share the same wall (active_tick additionally needs math::min out-of-line).
-// Source kept faithful: (*holder().damage_model()) via operator*, matching the target.
+
+
+
+
 void medkit::set_active( bool bactive )
 {
 	m_active = bactive;

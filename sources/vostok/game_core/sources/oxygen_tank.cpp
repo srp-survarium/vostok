@@ -62,12 +62,12 @@ void oxygen_tank::action( bool key_down )
 		set_active( !m_active );
 }
 
-// claude@NOTE: walled by inventory::holder()/inventory_holder::scheduler() LTCG inlining
-// (both out-of-line in target, inlined by our /GL). LOG_INFO args recovered. A ~13-byte
-// residual remains in the LOG __FUNCSIG__ string immediate (push 0x61 vs target 0x54);
-// the delinker truncates both funcsig strings identically so the tail can't be compared,
-// and a matched LOG sibling (collision_geometry::load) proves funcsig CAN match - this
-// looks like a delinker string-resolution artifact, not source.
+
+
+
+
+
+
 void oxygen_tank::set_active( bool bactive )
 {
 	m_active = bactive;

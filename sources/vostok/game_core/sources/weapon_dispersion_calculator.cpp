@@ -17,8 +17,16 @@ weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
 {
 }
 
+
+
+
+
+
+
+
 void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 {
+
 	if ( !m_current_time )
 	{
 		m_current_time = current_time_in_ms;
@@ -43,6 +51,7 @@ void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 	{
 		m_current_coeff = math::min( m_target_coeff, m_current_coeff + m_growth_speed * dt );
 	}
+
 }
 
 void weapon_dispersion_calculator::fire( )

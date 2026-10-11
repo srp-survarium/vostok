@@ -123,15 +123,15 @@ void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_rel
 	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
 }
 
-// claude@NOTE: structure matched (1 stmt @0x14d) and the boolean logic is byte-faithful.
-// Two residuals, both rooted in another unit's header (weapon_core), so out of scope here:
-//   (1) the target reads m_weapon.m_ammo_in_magazine (+0x47a) and m_weapon.m_is_round_chambered
-//       (+0x48e) INLINE (direct member access => weapon_core befriends this state), but the
-//       state is not a friend, so ammo_in_magazine()/round_is_chambered() are CALLed instead.
-//   (2) the target keeps m_weapon.get_target() out-of-line (a `call`), but our inline getter
-//       (return m_target) folds to a direct read here.
-// Both need cross-unit weapon_core.h changes (friend decl + out-of-line get_target) that would
-// touch weapon_core's own matches; left for the weapon_core owner.
+
+
+
+
+
+
+
+
+
 bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
 	return m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )

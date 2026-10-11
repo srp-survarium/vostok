@@ -14,10 +14,10 @@
 
 namespace survarium {
 
-// claude@NOTE: extern definition needed by weapon_user_animations_container::
-// get_stand_animation_caption (inlined into jump_logic::get_move_look_caption);
-// content read from the target exe .rdata @va 0x89d090 (33 entries, single copy).
-// 3 captions per direction: move, shoot, look - indexed by direction * 3 + part.
+
+
+// extern: weapon_user_animations_container::get_stand_animation_caption reads it.
+// 3 captions per direction (move, shoot, look), indexed direction * 3 + part
 pcstr const stand_animations_captions[] = {
 	"idle",
 	"shoot_on_site",
@@ -59,10 +59,10 @@ player_logic_stand_state::player_logic_stand_state( weapon_user_animations_selec
 {
 }
 
-// claude@NOTE: structure faithful; residual is the module-wide animation_lexeme_parameters
-// builder-chain inline-vs-call wall (the VOSTOK_ANIMATION_API setters / mixing::operator+ /
-// expression::operator= go out-of-line in the target but inline here). Same ceiling as
-// weapon_core_aimed_fire_state::get_user_hands_expression.
+
+
+
+
 animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 	mutable_buffer&						buffer,
 	u32 const							animation_index,

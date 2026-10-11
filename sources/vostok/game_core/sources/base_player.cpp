@@ -87,10 +87,10 @@ void base_player::send_game_world_object( game_world_object const* object, reciv
 	reciver_enqueuer	( packet );
 }
 
-// claude@NOTE: structure matches the target (3 stmts), but the base inlines what the
-// target keeps out-of-line - reader.r<bool>, inventory(), inventory::item_in_slot
-// (and its bounds ASSERT), the intrusive_ptr ctor/operator*/dtor - so the byte match
-// collapses. Inline-vs-call, not source-steerable.
+
+
+
+
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {
 	profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
@@ -123,10 +123,10 @@ void base_player::on_player_death( )
 	m_player_death_subscribers.for_each( call_player_death_subscriber_callback );
 }
 
-// claude@NOTE: reconstructed forwarding target of base_player::get_animation_playback_state.
-// The real callee COMDAT-folded to a bare `ret` whole-program (name unrecoverable); this empty
-// body re-folds to the same `ret`, so the caller's `call rel32` is byte-identical. result is
-// taken BY VALUE - the target pushes its two members (interval_id, interval_time) individually.
+
+
+
+// stand-in for get_animation_playback_state's callee, which folded to a bare `ret` in retail
 // sushi@TODO: helper NAME is a guess (the real callee folded away); structure/bytes of the
 // forwarding call are name-independent, but identify the true callee to retire this base-only symbol.
 bool query_animation_playback_state( pcvoid const object, u32 const mask, animation::animation_playback_state result )

@@ -45,8 +45,8 @@ class player_stamina;
 struct player_input;
 struct base_player_creation_params;
 
-// claude@NOTE: forwarding target of base_player::get_animation_playback_state (see below);
-// the real callee folded to a bare `ret` and is reconstructed in base_player.cpp.
+
+// get_animation_playback_state forwards here; retail's callee folded to a bare `ret`
 bool query_animation_playback_state( pcvoid const object, u32 const mask, animation::animation_playback_state result );
 
 // sushi@TODO: <0x122e20>|0x000:'149'
@@ -96,9 +96,9 @@ public:
 
 	inline	bool								has_been_inserted				( ) const { return m_has_been_inserted; }
 
-	// claude@MATCH: MSVC assigns vtable slots to same-name overloaded virtuals in
-	// REVERSE declaration order. Target wants enum-subscribe at vtable+0x4C (lower)
-	// and pcstr-subscribe at +0x50, so the enum overload must be declared LAST.
+
+	// MSVC gives same-name virtual overloads vtable slots in reverse declaration order;
+	// retail has the enum overload at +0x4C, so it is declared last.
 	virtual	void								subscribe_animation_player		(
 													pcstr									arg_0,
 													boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > const& arg_1,
@@ -126,9 +126,9 @@ public:
 
 	virtual	u32									local_time						( const u32 arg_0 ) const = 0;
 
-	// claude@NOTE: inline COMDAT attributed to this header (target emits it from base_player.h).
-	// `object`/`mask` are top-level `const` (QBX/IBE mangle); result is passed BY VALUE to the
-	// forwarding helper (reconstructed in base_player.cpp - its real callee folded away).
+
+
+	// object/mask carry top-level const as retail mangles them; result goes to the helper by value
 	virtual	bool								get_animation_playback_state	( pcvoid const object, u32 const mask, animation::animation_playback_state& result ) const
 	{
 		return query_animation_playback_state( object, mask, result );
@@ -167,7 +167,7 @@ protected:
 	/* 0x0044 */	interactive_object_ptr				m_target_active_object;
 	/* 0x0048 */	float4x4							m_character_head_transform;
 private:
-	// target mangles ABE (private const) - ?send_game_world_object@..@@ABE..
+
 			void								send_game_world_object			(
 													game_world_object const*											object,
 													reciver_packet_allocator_type const&							reciver_packet_allocator,

@@ -6,10 +6,10 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: STRUCTURE MATCH (16/16). Residual is the boost::function4::operator()
-// inline-vs-call wall: target out-of-lines the COMDAT (5-byte call), base inlines the
-// empty/throw/get_vtable body (+0x3d per callback site x3) + LOG ctor scheduling. Global
-// boost-header knob, off-limits from a consumer TU. See template-accessor-deinline-global-knob.md.
+
+
+
+
 void login_client_impl::on_sign_out_password_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -39,8 +39,8 @@ void login_client_impl::on_sign_out_password_written(
 	if ( !m_in_destructor )
 		callback			( successfully_connected, successfully_handshaked, no_socket_error, servers_connection_info_message_type );
 }
-// claude@NOTE: STRUCTURE MATCH (13/13). Residual = function4::operator() inline-vs-call wall
-// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
+
+
 void login_client_impl::on_sign_out_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
 #line 43
 {
@@ -72,8 +72,8 @@ void login_client_impl::on_sign_out_handshaked( boost::function< void ( connecti
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (16/16). Residual = function4::operator() inline-vs-call wall
-// x2 + LOG ctor scheduling; global boost-header knob (see note above).
+
+
 void login_client_impl::on_sign_out_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
 #line 74
 {
@@ -109,8 +109,8 @@ void login_client_impl::on_sign_out_written( boost::function< void ( connection_
 		true
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (12/12). Residual = function4::operator() inline-vs-call wall
-// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
+
+
 void login_client_impl::sign_out_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 #line 109
 {
@@ -144,8 +144,8 @@ void login_client_impl::sign_out_on_connected( connection_error_types_enum conne
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (11/11). Residual = the function1(bind_t) conversion lowering
-// at the establish_connection boundary + LOG ctor scheduling; global boost-header knob (see note above).
+
+
 void login_client_impl::sign_out( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 #line 142
 {

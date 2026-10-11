@@ -136,9 +136,9 @@ void weapon_recoil_calculator::fire( )
 	m_additive_recoil_timer				= weapon_params.additive_recoil_time;
 }
 
-// delinker pairs it and report.json now reads 100. claude@NOTE: the source duplicates the
-// vertical/horizontal koef stores (0x34/0x38 written twice) - matches the target's 7 stores
-// exactly, reproduced as-is per the #1 rule.
+
+
+// the koef stores are written twice, as retail does
 void weapon_recoil_calculator::reset( )
 {
 	m_time_since_last_dispersion_change	= 0.0f;

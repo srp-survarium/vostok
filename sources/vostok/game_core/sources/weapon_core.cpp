@@ -89,8 +89,8 @@ weapon_core::~weapon_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// The target source is inline, but the remaining real consumer set does not retain
-// this COMDAT yet. Keep the call boundary until that consumer is reconstructed.
+
+// inline in retail; kept out of line until its remaining consumer is reconstructed
 u16 weapon_core::ammo_in_magazine( ) const
 {
 	return m_ammo_in_magazine;
@@ -422,8 +422,6 @@ void weapon_core::instant_hide( )
 	on_hide( );
 }
 
-// claude@NOTE: Target inlines the faithful math::min< u16 > helper here; this
-// /GL context keeps it out-of-line.
 #line 433
 void weapon_core::load_magazine( )
 {
@@ -447,7 +445,6 @@ void weapon_core::chamber_a_round( )
 	m_is_round_chambered = true;
 }
 
-// claude@NOTE: The remaining bytes are resource_ptr accessor inline-depth.
 #line 454
 void weapon_core::unload_ammo( )
 {
@@ -495,7 +492,6 @@ void weapon_core::instant_chamber_a_round( )
 	m_recoil_calculator.chamber_a_round( );
 }
 
-// claude@NOTE: The remaining bytes are resource_ptr accessor inline-depth.
 #line 500
 void weapon_core::reload_one_round( )
 {
@@ -522,7 +518,6 @@ void weapon_core::instant_aim_end( )
 	m_aiming_state_transition = true;
 }
 
-// claude@NOTE: The final two bytes are argument-evaluation register scheduling.
 #line 525
 float3 weapon_core::get_dispersed_bullet_dir( )
 {
@@ -579,8 +574,6 @@ void weapon_core::set_fire_bullet_transform( float4x4 const& fire_bullet_transfo
 	m_fire_bullet_transform = fire_bullet_transform;
 }
 
-// claude@NOTE: Target keeps pointer_cast< pbyte > as an identity call here;
-// this /GL context inlines it.
 #line 592
 animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( animation::animation_callback_params& params )
 {
@@ -597,9 +590,7 @@ animation::callback_return_type_enum weapon_core::on_sprint_animation_ended( ani
 	return animation::callback_return_type_dont_call_me_anymore;
 }
 
-// claude@NOTE: the sprint guard is split into a nested `if` (not a folded `&&`) because the target
-// gives `is_sprinting()` its own line-table statement. The second sprint subscription retains
-// pointer_cast in target and inlines that identity helper in base.
+// a nested if, not &&: retail records is_sprinting( ) as its own statement
 #line 612
 void weapon_core::set_target( weapon_targets target )
 {
@@ -651,11 +642,11 @@ void weapon_core::set_target( weapon_targets target )
 	m_target = target;
 }
 
-// claude@NOTE: The two fire_queue_length calls use an LTCG-selected custom
-// this register (EAX in target, ECX in base).
 #line 675
 void weapon_core::reset_fire_queue( )
 {
+
+
 	if ( fire_queue_length( ) == 0xff )
 	{
 		m_bullets_in_queue = m_ammo_in_magazine;
@@ -664,6 +655,8 @@ void weapon_core::reset_fire_queue( )
 	}
 	else
 		m_bullets_in_queue = math::min( fire_queue_length( ), ammo_in_weapon( ) );
+
+
 }
 
 #line 689
@@ -675,8 +668,6 @@ void weapon_core::set_next_fire_queue_type( )
 		++m_fire_queue_type;
 }
 
-// claude@NOTE: Target keeps get_inventory and resource_ptr::operator== calls
-// out-of-line at these sites; base inlines them.
 #line 700
 void weapon_core::set_next_ammo_type( )
 {
@@ -709,7 +700,6 @@ void weapon_core::set_ammunition( resources::resource_ptr<weapon_ammunition,reso
 	m_ammunition = ammunition_to_set;
 }
 
-// claude@NOTE: The remaining bytes are resource_ptr/accessor inline-depth.
 #line 730
 void weapon_core::load_ammo( )
 {
@@ -784,8 +774,6 @@ void weapon_core::remove_animation_callback( animation::reserved_channel_ids_enu
 	m_user->unsubscribe_animation_player( channel_id, callback_uid );
 }
 
-// claude@NOTE: The remaining statement calls profile_slot_id in target and
-// inlines its member load in base.
 #line 798
 void weapon_core::activate( base_player& user, engine& engine )
 {
@@ -864,7 +852,6 @@ void weapon_core::activate( base_player& user, engine& engine )
 		get_user( )->subscribe_animation_player( "right_hand_corrector", boost::bind( &weapon_core::fake_callback, this, _1 ), this, NULL, 0xff, NULL );
 	}
 }
-// claude@NOTE: Sprint cleanup retains pointer_cast in target and inlines it in base.
 #line 876
 void weapon_core::deactivate( )
 {
@@ -1022,7 +1009,6 @@ void weapon_core::process_finger_correction( const u32 current_time_in_ms, float
 	VOSTOK_UNREFERENCED_PARAMETERS( current_time_in_ms, user_matrices );
 }
 
-// claude@NOTE: Packet append and FSM accessors cross different /GL inline cuts.
 #line 1058
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
 {
@@ -1069,7 +1055,6 @@ void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_
 	}
 }
 
-// claude@NOTE: packet_reader::r<T> remains out-of-line in target and inlines in base.
 #line 1107
 void weapon_core::deserialize( network_core::packet_reader& reader )
 {
@@ -1143,8 +1128,6 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// claude@NOTE: The recoil trio has identical statements, CFG, size, and opcodes;
-// only anonymous stack slots and the folded empty-stub alias differ.
 #line 1194
 float weapon_core::computed_backward_recoil_time(
 	const float		animation_length,
@@ -1211,7 +1194,7 @@ void weapon_core::set_inventory( inventory* inv, profile_slot_enum slot )
 	inventory_item::set_inventory( inv, slot );
 }
 
-// convention on the callee, not source-steerable. claude@NOTE
+
 profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 {
 	static profile_slot_enum const weapon_ammo_slots[2][2] = {
@@ -1227,7 +1210,7 @@ profile_slot_enum weapon_core::get_ammo_slot( ammo_id_enum slot_id )
 	}
 }
 
-// claude@NOTE: The two slot totals differ only in resource_ptr safe-bool inline depth.
+
 void weapon_core::get_ammo_info( weapon_ammo_info& info )
 {
 #line 1274

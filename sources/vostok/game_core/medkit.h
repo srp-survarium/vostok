@@ -46,10 +46,10 @@ protected:
 													const float		armor_piercing
 												);
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
-	// faithful idioms below. update_bones_matrices ICF-folds with the oxygen_tank and
-	// artefact_lifebone_core copies at rva 0xbc810; see that header's note.
+
+
+
+
 	virtual	void								activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( &user, &engine ); VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate					( ) override { }
 

@@ -21,8 +21,8 @@ damage_zone::~damage_zone( )
 {
 }
 
-// claude@NOTE: Source operations and loop shape are complete. The target inlines the
-// resource_ptr copy and drops the two unused trailing arguments from its sole caller.
+
+
 void damage_zone::load(
 	configs::binary_config_value const&		cfg_val,
 	vector< resources::unmanaged_resource_ptr >&	resources,
@@ -37,8 +37,8 @@ void damage_zone::load(
 		m_particles.push_back( resources[ i ] );
 }
 
-// claude@NOTE: Flow and statements match. The sole caller uses a target-only
-// this-on-stack convention, which changes this function's frame and register allocation.
+
+
 void damage_zone::play_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
 	vectora< float3 > shapes_centers( g_allocator );
@@ -59,8 +59,8 @@ void damage_zone::stop_particles( vector< resources::unmanaged_resource_ptr > co
 		m_game_world.renderer( ).scene( ).remove_particle_system_instance( m_game_world.render_scene( ), particles[ i ] );
 }
 
-// claude@NOTE: Flow and statements match. The target passes play_particles' this pointer
-// on the stack; the base emits an ordinary thiscall. Revisit with caller-context control.
+
+
 void damage_zone::activate( zone_group* owner, physics::world* p_world, scheduler& scheduler )
 {
 	damage_zone_core::activate( owner, p_world, scheduler );

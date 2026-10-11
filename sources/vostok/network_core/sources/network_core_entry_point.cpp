@@ -21,7 +21,7 @@ typedef boost::asio::ip::basic_resolver_query<boost::asio::ip::tcp>	query_type;
 void memory_allocator( memory::base_allocator& allocator )
 #line 17
 {
-	ASSERT( UNKNOWN_EXPRESSION );	// compiled-out ASSERT (target's `call empty_stub`, delinker-misnamed finalize_impl)
+	ASSERT( UNKNOWN_EXPRESSION );
 	g_allocator = &allocator;
 }
 

@@ -656,9 +656,9 @@ void scene::select_models(
 			render_model_instance_impl* const model =
 				static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it)->owner( );
 
-			// claude@NOTE: the transformed bounding box is computed and dropped -
-			// the target keeps both calls (virtual get_aabb + out-of-line
-			// aabb::modify) and never consumes the result.
+
+
+			// retail computes the transformed box and never uses it
 			model->get_aabb( ).modify		( model->transform( ) );
 
 			u8 lod_id					= fixed_lod_value == -1 ? u8( -1 ) : u8( fixed_lod_value );

@@ -35,7 +35,7 @@ base_game_scene::base_game_scene( game& g ) :
 	m_camera_director = VOSTOK_NEW_IMPL( *g_allocator, camera_director )( *this );
 }
 
-// claude@NOTE: target structure matches; residual is the retained empty camera_director vtable rewrite.
+
 base_game_scene::~base_game_scene( )
 {
 	VOSTOK_DELETE_IMPL( *g_allocator, m_camera_director );
@@ -71,21 +71,21 @@ void base_game_scene::hide_text_manager( flash_text_manager* tm )
 	renderer( ).hide_text_manager( render_scene_view( ), tm );
 }
 
-// claude@NOTE: structure matches (1 stmt: alloc bullet_physics_world via g_mt_allocator
-// then tail-call initialize()). Residual: my base routes through create_world_bt's
-// base_allocator* param so VOSTOK_NEW_IMPL emits a strip_pointer( g_mt_allocator ) call;
-// the target inlines strip_pointer to nothing and allocates straight through
-// g_mt_allocator's vtable (so it likely NEWs bullet_physics_world directly with the
-// g_mt_allocator OBJECT, needing the physics-private bullet_physics_world.h). The dropped
-// allocator& ctor arg (target pushes only engine&) is an LTCG constant-arg elision.
+
+
+
+
+
+
+
 void base_game_scene::init_physics( )
 {
 	( m_physics_world = physics::create_world_bt( &memory::g_mt_allocator, *this ) )->initialize( );
 }
 
-// claude@NOTE: structure matches (1 stmt: destroy_world = w->destroy() + delete via
-// g_mt_allocator). Same allocator-path residual as init_physics (strip_pointer vs direct
-// g_mt_allocator vtable).
+
+
+
 void base_game_scene::destroy_physics( )
 {
 	physics::destroy_world( &memory::g_mt_allocator, m_physics_world );
@@ -130,11 +130,11 @@ void base_game_scene::on_deactivate( )
 	m_camera_director->on_focus( false );
 }
 
-// claude@NOTE: structure matches (4 stmts, 1 local cd). Residual: my base builds an ebp
-// stack frame with 8-byte alignment (and esp,~8) for the invert4x3 temp, so it can't reuse
-// ebp as a scratch register; the target has no aligned frame (sub esp,40h) and caches
-// &m_projection_matrix in ebp across both set_*_matrix calls. Frame-layout/register-alloc
-// only - the source shape is faithful.
+
+
+
+
+
 void base_game_scene::apply_camera( camera_director& cd )
 {
 	m_inverted_view_matrix			= cd.get_inverted_view_matrix( );

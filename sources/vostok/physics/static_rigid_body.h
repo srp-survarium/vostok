@@ -28,8 +28,8 @@ public:
 	virtual u16					get_collision_group			( ) const override;
 	virtual btCollisionObject*	get_bt_collision_obect		( ) override;
 
-	// STATE[REMOVED]: no out-of-line body, no caller in any shipped TU, no inline site in
-	// the matched bt_static_rigid_body functions; absent from both binaries. Empty stubs correct.
+
+	// STATE[REMOVED]: no body or caller in either binary
 	inline	bool								is_active					( ) const { /* no source */ }
 	inline	void								set_ccd_motion_thresholds	( float arg_0, float arg_1 ) { /* no source */ } // STATE[REMOVED]
 	inline	const bt_collision_shape_ptr		get_collision_shape			( ) const { /* no source */ } // STATE[REMOVED]
@@ -48,8 +48,8 @@ struct bt_rigid_body_construction_info  {
 public:
 	bt_rigid_body_construction_info( );
 
-	// STATE[REMOVED]: no caller (the shipped user game_core static_collision::insert builds
-	// the construction_info field-by-field, never calls load); absent from both binaries.
+
+	// STATE[REMOVED]: no caller (static_collision::insert fills the fields itself)
 	inline	bool	load						( configs::binary_config_value const& arg_0 ) { /* no source */ return true; }
 
 	/* 0x0000 */	float						m_mass;

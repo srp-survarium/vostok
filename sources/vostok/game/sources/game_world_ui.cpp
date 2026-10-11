@@ -287,10 +287,10 @@ void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths
 	get_ui( )->movie->Invoke( "root.list_update_player", NULL, &out_event, 1 );
 }
 
-// claude@NOTE: PDB locals and CFG match. Retail LTCG passes this in edi and
-// frame_delta_ms in ecx, drops __formal, and devirtualizes the byte-exact
-// network_client::is_player_local; base keeps thiscall arguments and the vcall.
-// Reopen after game_world::tick/network_client compiler-context changes.
+
+
+
+
 void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
@@ -341,9 +341,9 @@ void game_world_ui::set_health( u8 health_in_percentage )
 	get_ui( )->movie->Invoke( "root.set_player_hp", NULL, &value, 1 );
 }
 
-// claude@NOTE: Body and PDB structure match. Retail's sole
-// player::apply_hit_directly caller stack-passes this; base has no real caller
-// while that player function remains stubbed. Reopen with that caller.
+
+
+
 void game_world_ui::on_hit_from_pos( float3 position )
 {
 	float4x4 const actor_camera_matrix = m_game_world.get_camera_director( ).get_inverted_view_matrix( );
@@ -594,8 +594,8 @@ void game_world_ui::on_damage_affect_applying(
 	}
 }
 
-// sushi@NOTE: Retail keeps the reusable GFx property's cleanup inside each object-loop
-// latch; base emits two extra cleanup branches despite the target local/statement shape.
+
+
 void game_world_ui::update_minimap_objects( )
 {
 	base_network_client* const client = m_game_world.get_game( ).get_network_client( );
@@ -749,9 +749,9 @@ void game_world_ui::update_minimap_players( )
 	get_ui( )->movie->Invoke( "root.update_players", NULL, &players_array, 1 );
 }
 
-// claude@NOTE: PDB locals and predicates match. Retail LTCG inlines the
-// implicit player_ptr destructor; base calls its byte-exact COMDAT body.
-// Reopen after resource_ptr/player compiler-context changes.
+
+
+
 void game_world_ui::update_minimap_local_player( )
 {
 	player_ptr current_player = m_game_world.get_game( ).get_network_client( )->get_current_player( );
@@ -925,9 +925,9 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 	}
 }
 
-// claude@NOTE: Source locals and operations match. Retail callers push this
-// and pass message_id in edx, separating the inlined flash_value constructor;
-// base caller context keeps this in esi. Reopen after player/weapon callers.
+
+
+
 void game_world_ui::show_screen_message( pcstr message_id )
 {
 	wchar_t message[512];

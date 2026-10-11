@@ -42,8 +42,8 @@ u32 player_logic_base_state::movement_animation_index( player_input const& input
 		move_right_pressed	= false;
 	}
 
-	// claude@MATCH: flat early-returns (no `else`) - an if/else-if chain would emit an
-	// extra join `jmp` per level; flat returns each jump once to the single epilogue.
+
+	// flat early returns, no else: each level jumps once to the epilogue, as retail
 	if ( move_fwd_pressed )
 	{
 		if ( move_left_pressed )

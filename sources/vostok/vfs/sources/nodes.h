@@ -309,13 +309,13 @@ u32   get_file_hash						(base_node<T> const * node)
 template <platform_pointer_enum T>
 u32   get_raw_file_size_impl			(base_node<T> const * node);
 
-// claude@NOTE: target out-of-lines the body as get_raw_file_size_impl<1> and keeps an
-// inline get_raw_file_size<1> wrapper (no standalone wrapper symbol). The IMPL link branch
-// (L404) is one statement: a fast-path `(flags & 0x51) | (flags & 0x4) == 0x4`
-// (non-folder/non-compressed/non-inlined archive) reading archive_file_node->size_in_db via
-// an inline cast (-0x18), else get_raw_file_size_impl(referenced). The exact fast-path
-// source idiom is unconfirmed - this plain forwarding wrapper pairs the IMPL's 12 non-link
-// statements; the L404 byte residual is the unreproduced fast-path.
+
+
+
+
+
+
+// retail out-of-lines the body as get_raw_file_size_impl and keeps this wrapper inline
 template <platform_pointer_enum T>
 u32   get_raw_file_size					(base_node<T> const * node)
 {

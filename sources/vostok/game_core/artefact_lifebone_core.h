@@ -43,10 +43,10 @@ private:
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
 
-	// claude@NOTE: rva 0xbc810, ICF-folded across oxygen_tank+medkit. animation_player has
-	// no accessible copy ctor, so it is the one argument the target passes by address;
-	// user_skeleton is a 4-byte resource_ptr copied bitwise through the ellipsis and the
-	// two float4x4 go by value (0x40 each) - 0x94 pushed in total.
+
+
+
+
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,

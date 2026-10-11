@@ -202,7 +202,7 @@ template class constants_handler<enum_shader_type_pixel>;
 
 //////////////////////////////////////////////////////////////////////////
 //textures
-// claude@NOTE: the target calls the u32 max overload that the base inlines.
+
 template <enum_shader_type shader_type>
 void textures_handler<shader_type>::assign( res_texture_list const * list)
 {

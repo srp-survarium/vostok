@@ -292,7 +292,7 @@ void grass_world::merge_patches( )
 	}
 }
 
-// claude@NOTE: the grass debug guard is partial-inlined only in the base.
+
 void grass_world::render_debug( renderer_context* context )
 {
 	if ( !s_draw_grass_debug_value )

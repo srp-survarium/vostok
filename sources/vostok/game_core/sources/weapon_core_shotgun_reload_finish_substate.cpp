@@ -57,8 +57,8 @@ void weapon_core_shotgun_reload_finish_substate::finalize( )
 	}
 }
 
-// claude@NOTE: structure-correct; residual is the intrusive_ptr operator== operand-evaluation
-// order (target loads `this` before the arg; /Od reverses it). Non-steerable from source.
+
+
 animation::callback_return_type_enum weapon_core_shotgun_reload_finish_substate::on_animation_end( animation::animation_callback_params& params )
 {
 	params.interrupt_animation_player_tick = false;

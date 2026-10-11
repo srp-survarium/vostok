@@ -124,11 +124,11 @@ void network_client::query_players( )
 		boost::bind( &network_client::on_players_ready, this, _1, players_count ) );
 }
 
-// claude@NOTE: structure matches (4 statements; player_profile::deserialize now defined
-// in game_net_defines.h so this links + pairs). The byte residual is codegen-only: the
-// target keeps this in ebx/edi and ends with call query_players + ret 4, while the base
-// allocates esi/edi and tail-jmps query_players (last-statement tail-call). The regalloc
-// + tail-call choice is whole-program-driven and not source-steerable in this single TU.
+
+
+
+
+
 void network_client::process_player_profile( network_core::packet_reader& reader )
 {
 	struct match_options& options = match_client( ).get_match_options( );
@@ -138,23 +138,23 @@ void network_client::process_player_profile( network_core::packet_reader& reader
 		query_players( );
 }
 
-// claude@NOTE: the HUD-forwarding packet handlers below (process_team_bases /
-// process_match_time / process_respawn_timer / process_match_wait_timer /
-// process_base_capture_progress / process_player_kd_stats) are structurally exact
-// (read u32/u8 from the packet, forward into m_game.get_game_world( ).game_ui.set_*);
-// structure-diff confirms STRUCTURE MATCH. The byte residual is the packet_reader::r<T>
-// inline wall (documented in packet_reader_inline.h): r<T> inlines to a direct
-// *(T*)m_pointer load in the target but compiles to an out-of-line call here, so each
-// read shows as a TRGT_ONLY inlined statement. process_team_bases additionally folds
-// get_game_world( ).game_ui to a single [this+18h]+0x26C add in the target where the base
-// computes it across the thiscall/arg threading; the forwarding call itself is emitted.
+
+
+
+
+
+
+
+
+
+
 void network_client::process_team_bases( network_core::packet_reader& reader )
 {
 	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
 }
 
-// TU-local sign-out callback; PDB: all four params __formal (genuinely
-// unused) - they would collide, left unnamed. Empty body (0 statements) = matched.
+
+// TU-local sign-out callback; all four PDB params are __formal (unused)
 void on_signed_out(
 	connection_error_types_enum,
 	handshaking_error_types_enum,
@@ -214,11 +214,11 @@ void network_client::process_affect_damage_model( network_core::packet_reader& p
 		player->apply_damage_model_affect( body_part_name, affect, event );
 }
 
-// claude@NOTE: line 257 is an out-of-line player virtual at vtable slot 25 ([player]+0x64)
-// that takes the network_client (push this), not the reader - no player override taking a
-// base_network_client is identifiable yet, so deserialize(packet) stands in as the
-// structurally-correct single-statement placeholder (right count/position, links). Replace
-// once the slot-25 override is named. Byte residual is the shared packet_reader::r<T> wall.
+
+
+
+// placeholder: retail calls an unidentified player virtual (vtable slot 25) taking
+// the network_client; deserialize( packet ) stands in until it is named
 void network_client::process_player_respawn( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
@@ -374,12 +374,12 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
-// claude@NOTE: STRUCTURE match (35 target / 32 base statements). The 3-statement gap and
-// the byte residual are cross-TU whole-program-inline walls the single-TU base cannot
-// reproduce: packet_reader::r<T> (out-of-line calls vs the target's inlined byte reads),
-// simple_game_project::get_items_container (out-of-line call vs the target's inlined
-// m_victory_items_containers search loop), and inventory_holder::inventory() ([ecx+8] vs
-// call). Packet layout: player id, victory item index, take flag, container id.
+
+
+
+
+
+// packet layout: player id, victory item index, take flag, container id
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
 	const u8 player_id = packet.r< u8 >( );
@@ -526,20 +526,20 @@ void network_client::send_player_inputs( )
 	m_player_inputs.clear( );
 }
 
-// PARKED: full per-frame client pump, including lobby/messaging reconnect throttles, match-client
-// disconnect/connect/send/sync cadences, the per-player walk, and both camera-update paths.
-// Target control flow continues after switch_to_login; there is no early return in that arm.
-// The loop-local player guard uses c_ptr() because target tests only the stored pointer before
-// has_been_inserted(), unlike the intrusive pointer safe-bool sequence emitted for member guards.
-// The first remaining flow divergence is the loop-local resource_ptr destruction: target calls
-// resource_ptr<player>::~resource_ptr out of line, while this compiler context expands its
-// reference-count/destroy path in place. Both paths reconverge at the loop increment.
-// Other residuals are whole-program context: login/lobby/match/messaging accessors, the game-layer
-// send_queued_packets wrapper stores, player accessors, camera-update tail merging, and logging.
-// Reopen only when resource_ptr destructor ownership or one of those callee contexts changes.
-// The four PDB locals are current_time_in_ms, is_game_paused, id, and player.
-// set_broken_connection_message's argument is VOSTOK_UNREFERENCED, so its literal is eliminated.
-// This pass stops at that demonstrated compiler-context boundary.
+
+
+
+
+
+
+
+
+
+
+
+
+// no early return after switch_to_login: retail's flow continues in that arm.
+// The loop guard tests c_ptr( ): retail checks only the stored pointer before has_been_inserted( ).
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	static u32			lobby_resolve_time		= 0;
@@ -679,11 +679,11 @@ void network_client::player_visibility_change( network_core::packet_reader& pack
 			player->hide( );
 }
 
-// claude@NOTE: the four on_trap_* handlers read three packet bytes (player id, slot
-// index, trap index) then dispatch via the player's inventory slot. The byte residual
-// vs target is the packet_reader::r<T> / inventory()/item_in_slot() whole-program-inline
-// wall (target inlines to direct member loads; this single-TU base emits the out-of-line
-// reads) - documented in packet_reader_inline.h; lifts when networking inlining is whole.
+
+
+
+
+
 void network_client::on_trap_placed( network_core::packet_reader& packet )
 {
 	const u8 player_id = packet.r< u8 >( );

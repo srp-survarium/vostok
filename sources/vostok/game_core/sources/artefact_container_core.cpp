@@ -63,7 +63,7 @@ bool artefact_container_core::use_execute( usable_object_user_data* user )
 			m_owner->on_artefact_container_use( this );
 
 		user->start_using_time_ms = user->current_time_ms;
-		if ( m_artefact	)	// sushi@NOTE: In target this calls `unspecified_bool_type` conversion. For some reason it doesn't in base.
+		if ( m_artefact	)
 			transfer_artefact( user->owner->cast_to_inventory_holder( ) );
 	}
 

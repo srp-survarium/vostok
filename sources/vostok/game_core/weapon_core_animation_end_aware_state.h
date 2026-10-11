@@ -21,9 +21,9 @@ protected:
 	inline explicit			weapon_core_animation_end_aware_state( weapon_core& weapon, bool serialize_animation_state ) : weapon_core_base_state( weapon, serialize_animation_state ) { }
 
 protected:
-	// target mangles initialize/finalize @@MAE (protected virtual),
-	// set_animation_to_wait @@IBE (protected const), on_animation_end @@IAE
-	// (protected non-virtual) - objdiff pairs by mangled name.
+
+
+
 	virtual	void			initialize						( ) override;
 	virtual	void			finalize						( ) override;
 
@@ -37,8 +37,8 @@ private:
 
 private:
 	/* 0x0000 */	/* weapon_core_base_state */
+
 	// mutable: set_animation_to_wait() is a const method that assigns this
-	// (target takes &m_animation_to_wait_for and calls intrusive_ptr::operator=).
 	/* 0x0138 */	mutable resources::managed_resource_ptr	m_animation_to_wait_for;
 }; // class weapon_core_animation_end_aware_state
 

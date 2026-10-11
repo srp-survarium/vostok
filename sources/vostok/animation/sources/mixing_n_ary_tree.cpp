@@ -717,7 +717,7 @@ void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_ty
 				process_event			( *i, event_types );
 }
 
-// claude@NOTE: target passes the inlined iterator's this in eax to select_state; base retains it in edi.
+
 void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 {
 	while ( (*m_animation_events)->event_iterator->event_time_in_ms == target_time_in_ms ) {

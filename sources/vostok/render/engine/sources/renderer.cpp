@@ -67,9 +67,9 @@
 #include "system_renderer.h"
 #include "temporal_projection_matrix_modifier.h"
 
-// claude@NOTE: the target records `dynamic initializer for 's_ui_enabled_console_command'`
-// WITHOUT a namespace qualifier while every other console command in this TU carries
-// `vostok::render::` - the pair lives at global scope, ahead of the namespaces.
+
+// retail names this initializer without vostok::render::, unlike the other commands here:
+// the pair lives at global scope, ahead of the namespaces
 static bool s_ui_enabled = true;
 static vostok::console_commands::cc_bool s_ui_enabled_console_command(
 	"ui",
@@ -660,7 +660,7 @@ inline bool sort_by_texture_predicate::operator()( render_surface_instance const
 	return left_pass->get_ps( )->m_textures->compare( *right_pass->get_ps( )->m_textures ) < 0;
 }
 
-// claude@MATCH: nested two-argument max calls select the target's inlined overload.
+// nested two-argument max calls: retail inlines that overload
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	bbox.modify					( model_transform );
@@ -894,7 +894,7 @@ static void draw_text(
 	system_renderer::ref().draw_ui_vertices((vertex_formats::TL*)&out_vertices.front(), out_vertices.size(), 0, 0);
 }
 
-// claude@NOTE: color_rgba and this helper have inverse target/base inline choices.
+
 static void draw_text_shadowed(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
@@ -907,7 +907,7 @@ static void draw_text_shadowed(
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
-// claude@NOTE: the target keeps the effects-ready return cold and uses a different color call convention.
+
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -1135,7 +1135,7 @@ void renderer::render(
 	}
 }
 
-// claude@NOTE: render-target refcounts and the grass debug guard have different inline boundaries.
+
 void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
@@ -1228,7 +1228,7 @@ void renderer::draw_debug(
 
 }
 
-// claude@NOTE: draw_text_shadowed and color_rgba have inverse target/base inline choices.
+
 void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
 	fixed_string< 64 > strings[8];
@@ -1262,7 +1262,7 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 		draw_text_shadowed	( default_font, strings[4 + i].get_buffer( ), 5, 82 + i * 12, rgbl_colors[i].m_value );
 }
 
-// claude@NOTE: draw_text_shadowed remains out-of-line only in the base at these sites.
+
 void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
 	double total_gpu_time					= 0.;
@@ -1328,7 +1328,7 @@ void renderer::present(
 	m_present_stage->execute	( m_renderer_context->get_t( rt_present ) );
 }
 
-// claude@NOTE: color_rgba remains out-of-line only in the target at these sites.
+
 void renderer::draw_frame_histogram( ) const
 {
 	if ( !backend::ref( ).m_render_output )
