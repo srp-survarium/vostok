@@ -9,11 +9,11 @@
 
 namespace vostok {
 
-// claude@NOTE: the enum NAMES are a buildability device - the login-stack match
-// made these enumerators PDB-reachable, and pdb_parser panics merging multiple
-// same-scope ANONYMOUS enums of different lengths ("Enums cannot be of
-// different length"); naming them is byte-neutral (enumerators are pure
-// compile-time constants)
+
+
+
+// Named, not anonymous: pdb_parser cannot merge same-scope anonymous enums of
+// different lengths. Byte-neutral.
 enum max_lengths_enum {
 	max_account_name_length		= 32,
 	max_password_length			= 48,
