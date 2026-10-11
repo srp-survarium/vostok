@@ -159,7 +159,7 @@ void udp_match_client::send_queued_packets( const u32 current_time_in_ms )
 #line 179
 {
 	if ( m_network_flow_emulator ) {
-		// claude@MATCH: tick gets the OLD m_time_in_ms - the member is updated only after this block
+		// tick sees the old m_time_in_ms: the member is updated after this block
 #line 181
 		m_network_flow_emulator->tick( m_time_in_ms, boost::bind( &udp_match_client::process_incoming_packet, this, _1, _2 ) );
 		if ( m_connection.is_disconnected( ) )

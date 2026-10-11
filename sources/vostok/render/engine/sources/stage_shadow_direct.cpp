@@ -320,8 +320,14 @@ void stage_shadow_direct::render_models(
 	render_surface_instance** it_d = begin_d;
 	render_surface_instance* const* end_d = m_caster_model.end( );
 	u32 render_index = 0;
-	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
+	for ( ; it_d != end_d; ++it_d, ++render_index )
 	{
+		if ( render_index >= num_render )
+		{
+			m_caster_model.erase( begin_d, begin_d + num_render );
+			break;
+		}
+
 		render_surface_instance& instance = **it_d;
 		render_surface* surface = instance.m_render_surface;
 		material_effects& effects = surface->get_material_effects( );
@@ -376,8 +382,6 @@ void stage_shadow_direct::render_models(
 		m_context->set_w( *instance.m_transform );
 		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0 );
 	}
-	if ( it_d != end_d )
-		m_caster_model.erase( begin_d, it_d );
 	if ( !pass_index && s_draw_grass_shadows_value && m_context->scene( )->get_grass( ) )
 		m_context->scene( )->get_grass( )->render( m_context, real_view_pos, shadow_render_stage, 0, 25.f, false, 0, true, cascade_index );
 
@@ -394,15 +398,34 @@ void stage_shadow_direct::render_dynamic_models(
 }
 void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u32 shadow_map_size )
 {
+	options::ref( ).current.m_update_shadows_every_frame = true;
+
 	static float cascade_offsets[4] = { -5.f, -10.f, -20.f, -40.f };
 	static float cascade_align_mults[4] = { 1.f, 1.f, 1.f, 1.f };
 	static float cascade_pos_mults[4] = { 1.f, 3.f, 6.f, 12.f };
 	static u32 refresh_rate[4] = { 1, 1, 1, 1 };
 	static bool do_it = true;
-	options::ref( ).current.m_update_shadows_every_frame = do_it;
-	u32 const pass_index = m_context->scene_view( )->get_render_frame_index( ) % refresh_rate[cascade_index];
-	bool const first_pass = pass_index == 0;
+
+
+
+
+
 	vector<render_surface_instance*> m_caster_model;
+	u32 const pass_index = m_context->scene_view( )->get_render_frame_index( ) % refresh_rate[cascade_index];
+	bool const need_refresh = pass_index == 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	light* sun = &*m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 
@@ -413,10 +436,24 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	if ( size < math::epsilon_7 )
 		return;
+
+
+
+
+
+
+
+
+
+
 	float current_cascade_align_mult = ( 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) ) * cascade_align_mults[cascade_index];
 	float current_cascade_offset = cascade_offsets[cascade_index];
+
+
+
 	if ( options::ref( ).current.m_update_shadows_every_frame )
 	{
+
 		if ( cascade_index == 0 )
 			current_cascade_offset = -0.25f;
 		else
@@ -426,6 +463,8 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	}
 	float3 view_pos = m_context->get_view_pos( );
 	float3 view_dir = m_context->get_view_dir( );
+
+
 
 	if ( !m_invalid_shadow && !options::ref( ).current.m_update_shadows_every_frame )
 	{
@@ -442,6 +481,10 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 			}
 		}
 	}
+
+
+
+
 	float3 offset_to_viewer = view_dir * current_cascade_offset;
 	float const sun_distance = 300.f;
 	sun->position = view_pos - sun->direction * sun_distance;
@@ -454,63 +497,102 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	float3 light_shift_xz( 0.f, 0.f, 0.f );
 
 	shadow_cascade_volume cascade_volume;
+
+
+
+
 	if ( cascade_index == 0 )
-	{
-		for ( u32 i = 0; i < 4; ++i )
+		for ( int i = 0; i < 4; ++i )
 		{
 			float3 eye_ray = m_context->get_eye_rays( )[i];
 			eye_ray.normalize( );
 			eye_ray = m_context->get_v_inverted( ).transform_direction( eye_ray );
 			cascade_volume.view_frustum_rays.push_back( ray( view_pos + m_context->get_near( ) * eye_ray, eye_ray ) );
 		}
-	}
 	else
 		cascade_volume.view_frustum_rays = m_context->m_sun_cascades[cascade_id].rays;
 
 	cascade_volume.view_ray.origin = view_pos;
 	cascade_volume.view_ray.direction = view_dir;
-
 	cascade_volume.light_ray.origin = sun->position;
 	cascade_volume.light_ray.direction = sun->direction;
+
+
 	float4x4 light_full_transform = light_view_transform * light_projection_transform;
 
 	float4x4 light_full_transform_invert = math::invert4x3( light_full_transform );
 
-	for ( u32 p = 0; p < 8; ++p )
+	for ( int p = 0; p < 8; ++p )
 	{
 		float4 xf = light_full_transform_invert.transform( float4( corners[p], 1.f ) );
 		cascade_volume.light_cuboid_points[p] = xf.xyz( );
 	}
+
+
 	for ( s32 plane = 0; plane < 4; ++plane )
 		for ( u32 point = 0; point < 4; ++point )
-
-		cascade_volume.light_cuboid_polys[plane].points[point] = facetable[plane][point];
+			cascade_volume.light_cuboid_polys[plane].points[point] = facetable[plane][point];
 
 	cascade_volume.compute_caster_model_fixed( cull_planes, light_shift_xz, size, true );
+
+
+
+
+
+
+
+
 	float3 gran;
 
 	float3 adjastment = compute_aligment( light_shift_xz, light_view_transform * light_projection_transform, float(shadow_map_size), current_cascade_align_mult, gran );
 
 	float4x4 light_view_transform_offset = math::create_camera_direction( sun->position + adjastment + offset_to_viewer, sun->direction, float3( 1.f, 0.f, 0.f ) );
+
+
+
+
+
 	float3 gran0;
 
 	float3 adjastment_of_offset = compute_aligment( light_shift_xz, light_view_transform_offset * light_projection_transform, float(shadow_map_size), 1.f, gran0 );
-	light_view_transform = math::create_camera_direction( sun->position + light_shift_xz + adjastment + offset_to_viewer + adjastment_of_offset, sun->direction, float3( 1.f, 0.f, 0.f ) );
-	bool const need_refresh = options::ref( ).current.m_update_shadows_every_frame || m_invalid_shadow || !math::is_similar( adjastment.x, m_previous_adjastment[cascade_index].x, 0.01f ) || !math::is_similar( adjastment.y, m_previous_adjastment[cascade_index].y, 0.01f );
 
-	if ( first_pass )
+
+
+
+
+
+
+
+
+
+
+
+	light_view_transform = math::create_camera_direction( sun->position + light_shift_xz + adjastment + offset_to_viewer + adjastment_of_offset, sun->direction, float3( 1.f, 0.f, 0.f ) );
+
+
+
+	bool const need_update = options::ref( ).current.m_update_shadows_every_frame || m_invalid_shadow || ( !math::is_similar( light_view_transform.c.x, m_previous_adjastment[cascade_index].x, 0.01f ) && !math::is_similar( light_view_transform.c.y, m_previous_adjastment[cascade_index].y, 0.01f ) );
+
+	if ( need_refresh )
 	{
 		m_previous_view_matrix[cascade_index] = light_view_transform;
 		m_previous_projection_matrix[cascade_index] = light_projection_transform;
 	}
-	if ( need_refresh )
+
+
+
+
+
+
+
+	if ( need_update )
 	{
 		float4x4 orig_view_projection = m_context->get_vp( );
 
 		m_context->push_set_v( light_view_transform );
 		m_context->push_set_p( light_projection_transform );
 
-		if ( first_pass )
+		if ( need_refresh )
 			prepare_models( m_caster_model, orig_view_projection, cascade_index, shadow_map_size, view_pos );
 
 		render_models( m_caster_model, orig_view_projection, cascade_index, shadow_map_size, view_pos, pass_index, refresh_rate[cascade_index] );
@@ -519,11 +601,26 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 		m_context->pop_v( );
 		m_context->pop_p( );
+
+
+
+
+
+
+
+
+
+
 		float4x4 texture_space( float4( 0.5f, 0.f, 0.f, 0.f ), float4( 0.f, -0.5f, 0.f, 0.f ), float4( 0.f, 0.f, 1.f, 0.f ), float4( 0.5f, 0.5f, -m_context->m_sun_cascades[cascade_id].bias, 1.f ) );
-		if ( first_pass )
+		if ( need_refresh )
 		{
+
+
+
 			m_prev_view_to_shadow[cascade_index] = m_view_to_shadow[cascade_index];
 			m_view_to_shadow[cascade_index] = shadow_trans * texture_space;
+
+
 			if ( cascade_id < m_context->m_sun_cascades.size( ) - 1 )
 				m_context->m_sun_cascades[cascade_id + 1].rays = cascade_volume.view_frustum_rays;
 
@@ -533,10 +630,9 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	if ( !options::ref( ).current.m_update_shadows_every_frame )
 	{
-		float3 real_vp = m_context->get_view_pos( );
+		float3 real_vp = view_pos;
 
 		m_context->push_set_v( m_previous_view_matrix[cascade_index] );
-		// 1 target line is likely retail-compiled-out source.
 		m_context->push_set_p( m_previous_projection_matrix[cascade_index] );
 
 		render_dynamic_models( cascade_index, shadow_map_size, real_vp );
@@ -544,9 +640,15 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		m_context->pop_v( );
 		m_context->pop_p( );
 	}
+
+
+
+
 	m_context->set_view2shadow( m_context->get_v_inverted( ) * m_view_to_shadow[cascade_index], cascade_index );
 
-	m_previous_adjastment[cascade_index] = adjastment;
+	m_previous_adjastment[cascade_id] = light_view_transform.c.xyz( );
+
+
 }
 float3 stage_shadow_direct::compute_aligment( float3 const& lightXZshift, float4x4 const& light_space_transform, float smap_res, float mult, float3& gran )
 {

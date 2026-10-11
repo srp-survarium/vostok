@@ -218,10 +218,10 @@ void player::time_warp( server_player_update const& action, u32 time_in_ms )
 	m_last_server_correction_time = time_in_ms;
 }
 
-// claude@NOTE: Master Gold strips the LOG body to a bare `ret` (target size 1).
-// The carcass shows ~11 statements at lines 415-427 (a LOG_* of the active object,
-// gated header param) that all compile out; reproduced as the unreferenced-param
-// eater so the base also emits just `ret`.
+
+
+
+// Master Gold compiles the LOG body out: retail is a bare `ret`
 void player::log_active_object( pcstr const header ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( header );

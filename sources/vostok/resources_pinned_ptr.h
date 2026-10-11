@@ -50,7 +50,11 @@ class pinned_ptr_const : public pinned_ptr_base<T const>
 public:
 							explicit pinned_ptr_const	(managed_resource_ptr ptr) : pinned_ptr_base<T const>(ptr) { }
 							pinned_ptr_const	(pinned_ptr_const<T> const & other) : pinned_ptr_base<T const>(other) {}
-	pinned_ptr_const<T>&	operator =			(pinned_ptr_const<T> const & other) { pinned_ptr_base<T const>::operator = ( other ); return *this; }
+	pinned_ptr_const<T>&	operator =			(pinned_ptr_const<T> const & other)
+	{
+		pinned_ptr_base<T const>::operator = ( other );
+		return *this;
+	}
 };
 
 template <class T>

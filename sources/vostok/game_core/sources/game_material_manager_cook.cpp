@@ -91,25 +91,33 @@ void game_material_manager_cook::create_game_materials(
 	physics::setup_game_material_groups( g_material_physics_group, sizeof( g_material_physics_group ) /  sizeof( u16 ) );
 }
 
-// claude@NOTE: structure matches (60/60 stmts, decl order verified via PDB-local set), but base
-// inlines the three vector ctors, create_request, material_effects_instance_cook_data new, and the
-// query_resources bind that the target keeps out-of-line. That inline-vs-call shift moves nearly
-// every register/offset, so the byte % stays low even though the shape is right - non-steerable.
+
 void game_material_manager_cook::create_game_material_pairs(
 	resources::query_result_for_cook&		parent_query,
 	game_material_manager* const			manager,
 	configs::binary_config_value const&		pairs_root
 )
 {
+
 	configs::binary_config_value const* it			= pairs_root.begin( );
 	configs::binary_config_value const* const end	= pairs_root.end( );
 
-	vector< resources::request > requests;
-	vector< variant<32> const* > user_data_ptrs;
-	vector< variant<32> >		 user_datas;
 
+	vector< resources::request > requests;
+
+
+	vector< variant<32> const* > user_data_ptrs;
+
+
+	vector< variant<32> >		 user_datas;
 	user_datas.resize( 2 * pairs_root.size( ) );
 	u32 ud_idx = 0;
+
+
+
+
+
+
 	ext_data_vec* ext_pair_data = VOSTOK_NEW_IMPL( g_allocator, ext_data_vec );	// sushi@TODO: Is this vector leaked?
 
 	for ( ; it != end ; it++ )
@@ -123,14 +131,14 @@ void game_material_manager_cook::create_game_material_pairs(
 			pcstr decal1_name = (pcstr)(*it)["decal1"];
 			if ( strings::length( decal1_name ) )
 			{
-				query_ext_data ext_data;
-				resources::request r = resources::create_request( decal1_name, resources::material_effects_instance_class );
+				resources::request r;
+				r.set( decal1_name, resources::material_effects_instance_class );
 				requests.push_back( r );
-
+				query_ext_data ext_data;
 				ext_data.pair = pair;
 				ext_data.type = decal1;
-				ext_data.cd	  = VOSTOK_NEW_IMPL( g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, resources::unmanaged_resource_ptr( NULL ), false );
 
+				ext_data.cd	  = VOSTOK_NEW_IMPL( g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, resources::unmanaged_resource_ptr( NULL ), false );
 				user_datas[ud_idx].set<render::material_effects_instance_cook_data*>( ext_data.cd );
 
 				ext_pair_data->push_back( ext_data );
@@ -140,16 +148,15 @@ void game_material_manager_cook::create_game_material_pairs(
 			pcstr decal2_name = (pcstr)(*it)["decal2"];
 			if ( strings::length( decal2_name ) )
 			{
-				query_ext_data ext_data;
-				resources::request r = resources::create_request( decal2_name, resources::material_effects_instance_class );
+				resources::request r;
+				r.set( decal2_name, resources::material_effects_instance_class );
 				requests.push_back( r );
-
+				query_ext_data ext_data;
 				ext_data.pair = pair;
 				ext_data.type = decal2;
 				ext_data.cd	  = VOSTOK_NEW_IMPL( g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, resources::unmanaged_resource_ptr( NULL ), false );
 
 				user_datas[ud_idx].set<render::material_effects_instance_cook_data*>( ext_data.cd );
-
 				ext_pair_data->push_back( ext_data );
 				user_data_ptrs.push_back( &user_datas[ud_idx++] );
 			}
@@ -157,14 +164,13 @@ void game_material_manager_cook::create_game_material_pairs(
 			pcstr sound_name = (pcstr)(*it)["sound"];
 			if ( strings::length( sound_name ) )
 			{
-				query_ext_data ext_data;
 				u32 sound_type = (u32)(*it)["sound_type"];
 				resources::class_id_enum resource_type = (resources::class_id_enum)( sound_type );
 				ASSERT( UNKNOWN_EXPRESSION );
-
-				resources::request r = resources::create_request( sound_name, resource_type );
+				resources::request r;
+				r.set( sound_name, resource_type );
 				requests.push_back( r );
-
+				query_ext_data ext_data;
 				ext_data.pair = pair;
 				ext_data.type = sound;
 				ext_pair_data->push_back( ext_data );
@@ -174,21 +180,25 @@ void game_material_manager_cook::create_game_material_pairs(
 			pcstr particle_name = (pcstr)(*it)["particle"];
 			if ( strings::length( particle_name ) )
 			{
+
+
+
 				for ( u32 i = 0 ; i < 8 ; ++i ) // sushi@TODO: Why 8?
 				{
-					query_ext_data ext_data;
-					resources::request r = resources::create_request( particle_name, resources::particle_system_instance_class );
+					resources::request r;
+					r.set( particle_name, resources::particle_system_instance_class );
 					requests.push_back( r );
-
+					query_ext_data ext_data;
 					ext_data.pair = pair;
 					ext_data.type = particle;
 					ext_pair_data->push_back( ext_data );
+
+
 
 					user_data_ptrs.push_back( NULL );
 				}
 			}
 		}
-
 		manager->add_pair( pair );
 	}
 
@@ -196,11 +206,11 @@ void game_material_manager_cook::create_game_material_pairs(
 	{
 		parent_query.finish_query( result_success );
 	}
+
 	else
 	{
 		resources::query_resources(
-			requests.begin( ),
-			requests.size( ),
+			&requests[0], requests.size( ),
 			boost::bind( &game_material_manager_cook::on_decals_loaded, this, _1, ext_pair_data ),
 			g_allocator,
 			user_data_ptrs.begin( ),	// sushi@TODO: How ownership works here? `user_data` is dropped when the function exits
@@ -210,9 +220,7 @@ void game_material_manager_cook::create_game_material_pairs(
 	}
 }
 
-// claude@NOTE: target has one extra statement - a bare `jmp` (5 bytes) closing the decal1 block in
-// the if/else-if chain; base folds that jump into the decal2 else-if. Same source shape; a codegen
-// quirk of the first else-if arm, not steerable. Rest is LOG_ERROR / VOSTOK_DELETE inline residual.
+
 void game_material_manager_cook::on_decals_loaded( resources::queries_result& data, ext_data_vec* ext_data )
 {
 	if ( !data.is_successful( ) ) // sushi@TODO: I think this is the first place where multiple queries are processed?
@@ -235,8 +243,9 @@ void game_material_manager_cook::on_decals_loaded( resources::queries_result& da
 		{
 			it->pair->set_decal1( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );
+			continue;
 		}
-		else if ( it->type == decal2 )
+		if ( it->type == decal2 )
 		{
 			it->pair->set_decal2( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );

@@ -34,7 +34,7 @@ extern bool		g_mouse_invert;
 {
 }
 
-// Target inlines all three action pushes; this compiler retains only the key-up call.
+
 
 
 bool player_input_handler::on_keyboard_action(

@@ -50,10 +50,10 @@ void victory_item_core_cook::on_config_loaded( resources::queries_result& data )
 
 void victory_item_core_cook::delete_resource( resources::resource_base* resource )
 {
-	// Direct form (no VOSTOK_DELETE_IMPL): the target has NO strip_pointer call -
-	// the *g_allocator deref is inline. Residual is the shared delete_helper COMDAT's
-	// custom EDI convention vs the target's two-stack-arg cdecl (an argument-passing
-	// LTCG boundary).
+
+
+
+	// delete_helper directly, not VOSTOK_DELETE_IMPL: retail has no strip_pointer call here
 	memory::delete_helper( *g_allocator, resource );
 }
 

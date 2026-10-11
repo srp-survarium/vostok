@@ -38,7 +38,7 @@ namespace survarium {
 {
 }
 
-// claude@NOTE: source shape is complete; the residual is the current LTCG argument and tail-call convention.
+
 void messaging_client::assign_match_channel_order(
 	const u32				match_id,
 	const game_team_id		team_id
@@ -57,8 +57,8 @@ void messaging_client::connect( server_connection_info const& connection_info )
 	u32 const connection_error_count = m_connection_info.connection_error_count;
 	m_connection_info	= connection_info;
 	m_connection_info.connection_error_count = connection_error_count;
-	// claude@NOTE: scheduler lives at the real game+0x380 (game-layout wall -
-	// the trimmed game.h does not reproduce that offset)
+
+
 	if ( m_scheduler_identifier.m_active )
 		m_game.scheduler( ).unregister	( &m_scheduler_identifier );
 
@@ -81,8 +81,8 @@ void messaging_client::disconnect( )
 
 void messaging_client::on_connected( )
 {
-	// claude@NOTE: caller source is complete; target calls the header-inline
-	// tcp_packet ctor while this compiler context expands its four member stores.
+
+
 	m_connection_state	= messaging::client_connecting;
 	m_network_client.set_on_packet_received	(
 		boost::bind( &messaging_client::sign_in_on_packet_received, this, _1 )
@@ -100,7 +100,7 @@ void messaging_client::on_disconnected( )
 	m_connection_state	= messaging::client_disconnected;
 	m_network_client.set_on_packet_received	( boost::function< void ( network_core::packet_reader& ) >( ) );
 }
-// claude@NOTE: on_error is capped by error_code message/c_str inlining and the LOG __LINE__ immediate.
+
 void messaging_client::on_error(
 	network_core::client_error_codes_enum	client_error_code,
 	boost::system::error_code		system_error_code
@@ -112,7 +112,7 @@ void messaging_client::on_error(
 	disconnect		( );
 	m_connection_info.connection_error_count++; m_connection_info.need_resolve = true;
 }
-// claude@NOTE: read_* line structure matches; residual calls are the global packet_reader inline-cut wall.
+
 bool messaging_client::read_friend_status( network_core::packet_reader& reader )
 {
 	const u32 status_count	= reader.r< u16 >( );

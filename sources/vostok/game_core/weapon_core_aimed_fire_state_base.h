@@ -13,10 +13,10 @@ class weapon_core_aimed_fire_state_base : public weapon_core_animation_end_aware
 	typedef weapon_core_animation_end_aware_state super;
 
 protected:
-	// target mangles the ctor @@IAE (protected) and initialize/execute/finalize
-	// @@MAE (protected virtual); on_animation_end_impl is @@EAE (private virtual),
-	// on_shot_event/on_aiming_event @@MAE (protected virtual). objdiff pairs by
-	// mangled name, so the access specifiers split the declarations accordingly.
+
+
+
+
 			explicit							weapon_core_aimed_fire_state_base( weapon_core& weapon, float animation_timescale );
 
 	virtual	void								initialize						( ) override;

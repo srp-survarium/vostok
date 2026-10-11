@@ -46,9 +46,9 @@ login_client_impl::login_client_impl( boost::asio::io_service& io_service ) :
 }
 #line 45
 
-// claude@NOTE: structure + locals match (do/switch with the folded case-breaks
-// verified); residual = +0x3 at each sign_out( boost::function<...>( ) ) temp -
-// the folded function4 default-ctor takes `this` via a reg the base reloads
+
+
+
 login_client_impl::~login_client_impl( )
 {
 	m_in_destructor		= true;

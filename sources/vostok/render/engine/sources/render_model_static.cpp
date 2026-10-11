@@ -112,9 +112,9 @@ template bool read_diffuse_colors< 64 >(
 	math::color (&)[64][64]
 );
 
-static float frac( float f )
+static float frac( float v )
 {
-	return math::abs(f) - math::abs(math::floor(f));
+	return math::abs(v) - math::abs(math::floor(v));
 }
 
 template < u32 Size >
@@ -153,7 +153,10 @@ static void create_shadow_pass_geometry_type(
 	OptimizedVertex* temp_data = ALLOC(OptimizedVertex, num_vertices);
 
 	for (u32 i = 0; i < num_vertices; ++i)
-		temp_data[i].set(*reinterpret_cast<StaticVertex const*>(data + i * sizeof(StaticVertex)));
+	{
+		temp_data[i].set(*reinterpret_cast<StaticVertex const*>(data));
+		data += sizeof(StaticVertex);
+	}
 
 	untyped_buffer_ptr vb = resource_manager::ref().create_buffer(
 		num_vertices * sizeof(OptimizedVertex),
@@ -457,11 +460,11 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 		math::color	normal;
 		float2			uv;
 
-		void set( static_vertex0 const& source )
+		void set( static_vertex0 const& base )
 		{
-			position = source.position;
-			normal = source.normal;
-			uv = source.uv;
+			position = base.position;
+			normal = base.normal;
+			uv = base.uv;
 		}
 	};
 
@@ -471,12 +474,12 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 		float2			uv;
 		math::color	color;
 
-		void set( colored_static_vertex const& source )
+		void set( colored_static_vertex const& base )
 		{
-			position = source.position;
-			normal = source.normal;
-			uv = source.uv;
-			color = source.color_component;
+			position = base.position;
+			normal = base.normal;
+			uv = base.uv;
+			color = base.color_component;
 		}
 	};
 
@@ -616,7 +619,7 @@ void static_render_model_instance::assign_original( static_render_model_ptr v )
 	m_instances_count	= m_original->m_childs_count;
 	m_surface_instances = NEW_ARRAY( render_surface_instance, m_instances_count );
 
-	for( u8 i = 0; i < m_instances_count; ++i )
+	for( u16 i = 0; i < m_instances_count; ++i )
 	{
 		render_surface_instance& info = m_surface_instances[i];
 		info.m_parent				= this;

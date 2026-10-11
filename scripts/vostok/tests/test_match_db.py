@@ -63,6 +63,37 @@ class CleanFinalPdbTests(unittest.TestCase):
             ["faketime", "2013-05-09 12:00:00", "wine", "cmd"],
         )
 
+    def test_gfx_engine_tree_lays_vostok_overlay_over_sdk(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sdk = Path(tmp) / "sdk"
+            tree = Path(tmp) / "sources" / "scaleform"
+            for rel, text in {
+                "Include/GFxVersion.h": "lib",
+                "Src/Kernel/SF_Types.h": "shared",
+                "3rdParty/zlib/zlib.h": "lib-only",
+                "Vostok/Include/GFxVersion.h": "engine",
+            }.items():
+                (sdk / rel).parent.mkdir(parents=True, exist_ok=True)
+                (sdk / rel).write_text(text)
+            stale = tree / "sdk-overlay" / "GFxConfig.h"
+            stale.parent.mkdir(parents=True)
+            stale.write_text("retired")
+
+            gfx.materialize_engine_tree(sdk, tree)
+            shared = tree / "Src/Kernel/SF_Types.h"
+            os.utime(shared, (1, 1))
+            gfx.materialize_engine_tree(sdk, tree)
+
+            self.assertEqual(
+                sorted(str(p.relative_to(tree)) for p in tree.rglob("*") if p.is_file()),
+                ["Include/GFxVersion.h", "Src/Kernel/SF_Types.h"],
+            )
+            self.assertEqual((tree / "Include/GFxVersion.h").read_text(), "engine")
+            self.assertFalse(shared.is_symlink())
+            # Unchanged content keeps its mtime, so ninja sees no edit.
+            self.assertEqual(shared.stat().st_mtime, 1)
+            self.assertFalse((tree / "sdk-overlay").exists())
+
     def test_gfx_object_paths_use_machine_independent_alias(self):
         self.assertEqual(
             gfx.object_path(Path("libgfx") / "sample.obj"),
@@ -231,6 +262,104 @@ class CleanFinalPdbTests(unittest.TestCase):
             "rule link\n"
             '  command = cmd /c cd "$proj_dir" && link $flags\n',
         )
+
+    def test_compile_rule_records_compiler_include_deps(self):
+        rule = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "\n"
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "\n"
+        )
+        edge = (
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\binaries\\ninja\\rsp\\m_cl_0.rsp /nologo\n"
+        )
+        tracked = ninja_regen._track_compile_includes(
+            rule + edge, {"m_cl_0.rsp": '/Ox /GL /Yu"pch.h" /MP'}
+        )
+        pch = ninja_regen._track_compile_includes(
+            rule + edge, {"m_cl_0.rsp": '/Ox /GL /Yc"pch.h"'}
+        )
+        self.assertIn(": cl_scan $", pch)
+        self.assertIn("  scan_flags = /Y-", pch)
+
+        self.assertEqual(
+            tracked,
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags'
+            " /d1showIncludes\n"
+            "  deps = msvc\n"
+            "\n"
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "\n" + edge,
+        )
+
+    def test_non_ltcg_compile_scans_includes_before_unchanged_compile(self):
+        text = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "\n"
+            "build $\n"
+            "    pch.obj $\n"
+            "    : cl $\n"
+            "    pch.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_0.rsp /nologo\n"
+            "  pool = p\n"
+            "\n"
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_1.rsp /nologo\n"
+        )
+        tracked = ninja_regen._track_compile_includes(text, {
+            "s_cl_0.rsp": '/Od /Yc"pch.h" /MP',
+            "s_cl_1.rsp": '/Od /Yu"pch.h" /MP',
+        })
+
+        self.assertEqual(
+            tracked,
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags'
+            " /d1showIncludes\n"
+            "  deps = msvc\n"
+            "\n"
+            "rule cl_scan\n"
+            '  command = cmd /c cd /d "$compile_dir" && (cl $flags'
+            " /Zs $scan_flags /d1showIncludes 2>&1"
+            ' | findstr /c:"Note: including file:" & cl $flags)\n'
+            "  deps = msvc\n"
+            "\n"
+            "build $\n"
+            "    pch.obj $\n"
+            "    : cl_scan $\n"
+            "    pch.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_0.rsp /nologo\n"
+            "  scan_flags = /Y-\n"
+            "  pool = p\n"
+            "\n"
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl_scan $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_1.rsp /nologo\n",
+        )
+
+    def test_compile_edge_with_unknown_response_file_is_refused(self):
+        text = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "build a.obj : cl a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\gone.rsp\n"
+        )
+        with self.assertRaises(ValueError):
+            ninja_regen._track_compile_includes(text, {})
 
     def test_ninja_options_only_select_default_full_build(self):
         self.assertEqual(build_ninja._explicit_targets(["-j6"]), [])
@@ -472,6 +601,25 @@ class ReportOnlyObservationTests(unittest.TestCase):
         self.assertEqual(rows[0]["cur"], 100.0)
         self.assertEqual(rows[0]["size"], 11)
         self.assertEqual(rows[0]["hash"], "sourcehash")
+
+    def test_does_not_carry_a_stale_structure_class(self):
+        """A report-only row has no statement record this build, so a class
+        remembered from an older ledger state must not survive into the
+        observation - it would count as a divergence nothing can verify."""
+        roster = SimpleNamespace(
+            target={},
+            artifacts=SimpleNamespace(
+                report_fns=[("vostok/render/engine/sources/stage_ambient_occlusion.cpp", self.THUNK, 100.0, 11)]
+            ),
+        )
+        previous = {
+            self.THUNK: {"mangled": self.THUNK, "unit": "", "module": "render", "size": 0, "flags": "", "cls": "QUANTITY", "hash": ""}
+        }
+
+        rows = list(report_only_observations(roster, {}, previous))
+
+        self.assertEqual(len(rows), 1)
+        self.assertIsNone(rows[0]["cls"])
 
     def test_does_not_invent_ownership_from_internal_delinker_bucket(self):
         symbol = "??_Elobby_camera@survarium@@UAEPAXI@Z"

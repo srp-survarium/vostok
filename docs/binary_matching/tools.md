@@ -44,3 +44,11 @@ fixed-input VS2008 toy matrix with `python3 -m vostok tool pdb-order-probe`.
 It records commands, artifacts, and complete `vostok-pdb topology --order --json`
 comparisons under `binaries/gen/pdb-order-probes/`; see
 [`pdb_topology.md`](pdb_topology.md#causal-order-probes).
+
+## Joined statements
+
+Two statements on one source line are never a retail shape to reproduce a line
+record count with. `python3 -m vostok tool joined` lists them per module
+(`--list` for every line, `--module`, `--blame`/`--since` for commit dates,
+`--verdict` to look each line up in the PDB evidence: `retail-split` lines are
+unwound first). Vendored subtrees and tool programs are skipped.

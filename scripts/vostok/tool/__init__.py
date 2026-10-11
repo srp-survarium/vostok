@@ -17,4 +17,7 @@
     breakpoints       find the target source line behind an address
     pdb_order_probe   compile and compare tiny causal PDB-order experiments
     geometry          one function's PDB line geometry, retail beside ours
+    joined            source lines carrying two statements - the shape that
+                      fakes a retail line-record count; list them per module,
+                      with git dates, to unwind and investigate the real cause
 """

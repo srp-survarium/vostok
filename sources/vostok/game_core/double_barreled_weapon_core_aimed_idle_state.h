@@ -28,10 +28,10 @@ class double_barreled_weapon_core_aimed_idle_state : public weapon_core_aimed_st
 	static resources::class_id_enum const resource_class = resources::double_barreled_weapon_aimed_state_class;
 
 private:
-	// ctor mangles ??0...@@AAE@... -> private, non-const (objdiff pairs by mangled name)
+
 				explicit							double_barreled_weapon_core_aimed_idle_state	( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count );
 
-	// mangles ?...@@EBE... -> private virtual, const
+
 	virtual	animation::mixing::expression		weapon_and_hands_expression		(
 													mutable_buffer&							buffer,
 													const bool									is_third_view,
@@ -39,7 +39,7 @@ private:
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const override;
 
-	// mangles ?...@@ABE... -> private, const
+
 				weapon_lexeme_pair					get_weapon_lexeme_pair			( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const;
 
 private:

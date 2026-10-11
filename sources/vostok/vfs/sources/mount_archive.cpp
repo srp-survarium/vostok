@@ -190,10 +190,10 @@ void   archive_mounter::mount_fat		(archive_folder_mount_root_node<> *	mount_roo
 	}
 	else if ( m_args.submount_type == submount_type_unset )
 	{
-		pcstr const last_slash			=	strrchr(mount_root->virtual_path_holder, '/');
-		pcstr const name				=	last_slash ? last_slash + 1 : mount_root->virtual_path_holder;
+		pcstr const last_slash_pos			=	strrchr(mount_root->virtual_path_holder, '/');
+		pcstr const virtual_path_last_part	=	last_slash_pos ? last_slash_pos + 1 : mount_root->virtual_path_holder;
 
-		mount_root->node->set_name			(name);
+		mount_root->node->set_name			(virtual_path_last_part);
 	}
 
 	u32	const hash						=	path_crc32(m_args.virtual_path);

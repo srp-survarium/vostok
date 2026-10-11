@@ -53,7 +53,8 @@ void network_client::destroy_player_impl( const u8 id )
 	if ( m_current_player && m_current_player->id == id )
 	{
 		m_current_player = NULL;
-		m_game.get_game_world( ).game_ui.show_quick_slots( false );
+		game_world_ui& ui = m_game.get_game_world( ).game_ui;
+		ui.show_quick_slots( false );
 	}
 }
 
@@ -123,11 +124,11 @@ void network_client::query_players( )
 		boost::bind( &network_client::on_players_ready, this, _1, players_count ) );
 }
 
-// claude@NOTE: structure matches (4 statements; player_profile::deserialize now defined
-// in game_net_defines.h so this links + pairs). The byte residual is codegen-only: the
-// target keeps this in ebx/edi and ends with call query_players + ret 4, while the base
-// allocates esi/edi and tail-jmps query_players (last-statement tail-call). The regalloc
-// + tail-call choice is whole-program-driven and not source-steerable in this single TU.
+
+
+
+
+
 void network_client::process_player_profile( network_core::packet_reader& reader )
 {
 	struct match_options& options = match_client( ).get_match_options( );
@@ -137,23 +138,23 @@ void network_client::process_player_profile( network_core::packet_reader& reader
 		query_players( );
 }
 
-// claude@NOTE: the HUD-forwarding packet handlers below (process_team_bases /
-// process_match_time / process_respawn_timer / process_match_wait_timer /
-// process_base_capture_progress / process_player_kd_stats) are structurally exact
-// (read u32/u8 from the packet, forward into m_game.get_game_world( ).game_ui.set_*);
-// structure-diff confirms STRUCTURE MATCH. The byte residual is the packet_reader::r<T>
-// inline wall (documented in packet_reader_inline.h): r<T> inlines to a direct
-// *(T*)m_pointer load in the target but compiles to an out-of-line call here, so each
-// read shows as a TRGT_ONLY inlined statement. process_team_bases additionally folds
-// get_game_world( ).game_ui to a single [this+18h]+0x26C add in the target where the base
-// computes it across the thiscall/arg threading; the forwarding call itself is emitted.
+
+
+
+
+
+
+
+
+
+
 void network_client::process_team_bases( network_core::packet_reader& reader )
 {
 	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
 }
 
-// TU-local sign-out callback; PDB: all four params __formal (genuinely
-// unused) - they would collide, left unnamed. Empty body (0 statements) = matched.
+
+// TU-local sign-out callback; all four PDB params are __formal (unused)
 void on_signed_out(
 	connection_error_types_enum,
 	handshaking_error_types_enum,
@@ -203,21 +204,21 @@ void network_client::process_player_hit( network_core::packet_reader& packet )
 
 void network_client::process_affect_damage_model( network_core::packet_reader& packet )
 {
-	player_ptr player = get_player( packet.r< u8 >( ) );
+	const u8 player_id = packet.r< u8 >( );
+	player_ptr player = get_player( player_id );
 	char body_part_name[ 16 ];
 	packet.r_string( body_part_name );
-
 	hit_affects_type_enum affect = packet.r< hit_affects_type_enum >( );
 	affect_event_type_enum event = packet.r< affect_event_type_enum >( );
 	if ( player )
 		player->apply_damage_model_affect( body_part_name, affect, event );
 }
 
-// claude@NOTE: line 257 is an out-of-line player virtual at vtable slot 25 ([player]+0x64)
-// that takes the network_client (push this), not the reader - no player override taking a
-// base_network_client is identifiable yet, so deserialize(packet) stands in as the
-// structurally-correct single-statement placeholder (right count/position, links). Replace
-// once the slot-25 override is named. Byte residual is the shared packet_reader::r<T> wall.
+
+
+
+// placeholder: retail calls an unidentified player virtual (vtable slot 25) taking
+// the network_client; deserialize( packet ) stands in until it is named
 void network_client::process_player_respawn( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
@@ -302,8 +303,7 @@ void network_client::process_respawn_timer( network_core::packet_reader& packet 
 void network_client::process_match_wait_timer( network_core::packet_reader& packet )
 {
 	const u32 time_left = packet.r< u32 >( );
-	m_game.get_game_world( ).game_ui.set_pregame(
-		m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
+	m_game.get_game_world( ).game_ui.set_pregame( m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
 }
 
 // TU console values backing setup_camera_for_warmup: cc_float3 console commands
@@ -342,6 +342,7 @@ void network_client::process_game_status( network_core::packet_reader& packet )
 
 	if ( m_game_status != status )
 	{
+
 		game_world_ui& ui = m_game.get_game_world( ).game_ui;
 
 		if ( status == game_status_inprocess )
@@ -353,14 +354,11 @@ void network_client::process_game_status( network_core::packet_reader& packet )
 				attach_to_player( m_local_player );
 			}
 		}
-		else
+		else if ( !m_game_status )
 		{
-			if ( !m_game_status )
-			{
-				ui.show_pregame( true );
-				if ( m_local_player )
-					setup_camera_for_warmup( );
-			}
+			ui.show_pregame( true );
+			if ( m_local_player )
+				setup_camera_for_warmup( );
 		}
 
 		m_game_status = status;
@@ -372,15 +370,16 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	const u8 player_id = packet.r< u8 >( );
 	const u32 kills = packet.r< u32 >( );
 	const u32 deaths = packet.r< u32 >( );
-	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
+	game_world_ui& ui = m_game.get_game_world( ).game_ui;
+	ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
-// claude@NOTE: STRUCTURE match (35 target / 32 base statements). The 3-statement gap and
-// the byte residual are cross-TU whole-program-inline walls the single-TU base cannot
-// reproduce: packet_reader::r<T> (out-of-line calls vs the target's inlined byte reads),
-// simple_game_project::get_items_container (out-of-line call vs the target's inlined
-// m_victory_items_containers search loop), and inventory_holder::inventory() ([ecx+8] vs
-// call). Packet layout: player id, victory item index, take flag, container id.
+
+
+
+
+
+// packet layout: player id, victory item index, take flag, container id
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
 	const u8 player_id = packet.r< u8 >( );
@@ -456,6 +455,7 @@ void network_client::process_sync_response( network_core::packet_reader& packet 
 {
 	m_server_latency = ( m_game.permanent_timer( ).get_elapsed_msec( ) - m_last_sync_request_time ) / 2;
 
+
 	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x46 ) );
 
 	m_is_time_synchronized_first_time = true;
@@ -485,12 +485,6 @@ void network_client::send_local_player_input(
 	m_player_inputs.push_back( update );
 }
 
-// claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is the cross-TU inline
-// wall: base_player::is_alive() / set_character_transform are direct out-of-line calls here
-// but the target inlines them (the m_is_alive load and the transform setup) so its reads /
-// member accesses fold into the surrounding statements (TRGT_ONLY rows). server_player_update
-// ::deserialize is bodied now so the deserialize call is emitted. Lifts when whole-program
-// inlining is reproduced.
 void network_client::process_player_action( network_core::packet_reader& packet, const u32 time_in_ms )
 {
 	const u8 id = packet.r< u8 >( );
@@ -501,7 +495,9 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 
 	if ( !player )
 	{
+#line 535
 		LOG_WARNING( "player not found %d", id );
+#line 502
 		return;
 	}
 
@@ -519,30 +515,31 @@ void network_client::process_player_action( network_core::packet_reader& packet,
 
 void network_client::send_player_inputs( )
 {
-	for ( client_player_update* update = m_player_inputs.begin( ); update != m_player_inputs.end( ); ++update )
+	for ( client_player_update* update = m_player_inputs.begin( ), *update_end = m_player_inputs.end( ); update != update_end; ++update )
 	{
 		network_core::udp_match_packet* packet = m_match_client.new_packet( ( match_client_message_types_enum )0x43 );
 		update->serialize( *packet );
+
 		m_match_client.enqueue( packet );
 	}
+
 	m_player_inputs.clear( );
 }
 
-// PARKED: full per-frame client pump, including lobby/messaging reconnect throttles, match-client
-// disconnect/connect/send/sync cadences, the per-player walk, and both camera-update paths.
-// Target control flow continues after switch_to_login; there is no early return in that arm.
-// The loop-local player guard uses c_ptr() because target tests only the stored pointer before
-// has_been_inserted(), unlike the intrusive pointer safe-bool sequence emitted for member guards.
-// The first remaining flow divergence is the loop-local resource_ptr destruction: target calls
-// resource_ptr<player>::~resource_ptr out of line, while this compiler context expands its
-// reference-count/destroy path in place. Both paths reconverge at the loop increment.
-// Other residuals are whole-program context: login/lobby/match/messaging accessors, the game-layer
-// send_queued_packets wrapper stores, player accessors, camera-update tail merging, and logging.
-// Reopen only when resource_ptr destructor ownership or one of those callee contexts changes.
-// The four PDB locals are current_time_in_ms, is_game_paused, id, and player.
-// set_broken_connection_message's argument is VOSTOK_UNREFERENCED, so its literal is eliminated.
-// Preserve this comment line count: LOG_WARNING below embeds the physical source line.
-// This pass stops at that demonstrated compiler-context boundary.
+
+
+
+
+
+
+
+
+
+
+
+
+// no early return after switch_to_login: retail's flow continues in that arm.
+// The loop guard tests c_ptr( ): retail checks only the stored pointer before has_been_inserted( ).
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	static u32			lobby_resolve_time		= 0;
@@ -567,7 +564,9 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 				lobby_client( ).connection_info( ).need_resolve =
 					!http_query_server_connection_info( 2 );
 				lobby_resolve_time = current_time_in_ms;
+#line 616
 				LOG_INFO( "LOBBY: try reconnect" );
+#line 568
 			}
 		}
 		else
@@ -663,25 +662,28 @@ bool network_client::is_player_local( const u8 player_id ) const
 	return m_local_player && m_local_player->id == player_id;
 }
 
-// claude@NOTE: STRUCTURE match. The TRGT_ONLY rows are resource_ptr<player> destructor
-// cleanup blocks (lock xadd refcount + unmanaged_intrusive_base::destroy) the target whole-
-// program-inlines at each early-return tail, plus the packet_reader::r<T> inline split; the
-// base emits a single out-of-line ~resource_ptr / r<T> call. Lifts with networking inlining.
 void network_client::player_visibility_change( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
 	const bool is_visible = packet.r< bool >( );
+
 	player_ptr player = get_player( id );
-	if ( m_local_player && player )
-		if ( player->has_been_inserted( ) && is_visible != player->is_visible( ) )
-			is_visible ? player->show( ) : player->hide( );
+	if ( !m_local_player.c_ptr( ) || !player )
+		return;
+
+
+	if ( player->has_been_inserted( ) && is_visible != player->is_visible( ) )
+		if ( is_visible )
+			player->show( );
+		else
+			player->hide( );
 }
 
-// claude@NOTE: the four on_trap_* handlers read three packet bytes (player id, slot
-// index, trap index) then dispatch via the player's inventory slot. The byte residual
-// vs target is the packet_reader::r<T> / inventory()/item_in_slot() whole-program-inline
-// wall (target inlines to direct member loads; this single-TU base emits the out-of-line
-// reads) - documented in packet_reader_inline.h; lifts when networking inlining is whole.
+
+
+
+
+
 void network_client::on_trap_placed( network_core::packet_reader& packet )
 {
 	const u8 player_id = packet.r< u8 >( );
@@ -689,7 +691,9 @@ void network_client::on_trap_placed( network_core::packet_reader& packet )
 	const u8 index = packet.r< u8 >( );
 	float3 position = packet.r< float3 >( );
 	float3 angles = packet.r< float3 >( );
+
 	player_ptr player = get_player( player_id );
+
 	static_cast< booby_trap_set* >( player->inventory( ).item_in_slot( ( profile_slot_enum )slot ).c_ptr( ) )
 		->on_trap_placed_message( index, position, angles );
 }
@@ -726,7 +730,9 @@ void network_client::on_trap_disarmed( network_core::packet_reader& packet )
 
 void network_client::game_world_object_state_arrived( network_core::packet_reader& reader )
 {
-	player_ptr player = get_player( reader.r< u8 >( ) );
+	const u8 player_id = reader.r< u8 >( );
+	player_ptr player = get_player( player_id );
+
 	player->deserialize_game_world_object( reader );
 }
 
@@ -759,7 +765,9 @@ void network_client::on_world_sync_request( )
 
 void network_client::damage_model_state_arrived( network_core::packet_reader& packet )
 {
-	player_ptr player = get_player( packet.r< u8 >( ) );
+	const u8 player_id = packet.r< u8 >( );
+	player_ptr player = get_player( player_id );
+
 	player->damage_model( )->deserialize( packet );
 }
 

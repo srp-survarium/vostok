@@ -6,6 +6,42 @@ The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
 
+## Header dependencies
+
+Header dependencies come from the compiler, not only from vcproj2ninja's
+include scan (which cannot follow computed includes such as
+`#include VOSTOK_RENDER_CORE_FILE(...)`). Every compile edge stores the headers
+cl actually opened in Ninja's deps log (`deps = msvc`), so editing any header
+rebuilds exactly the edges that include it. `/GL` compiles pass the front-end
+`/d1showIncludes`, which keeps `/MP` and the object bytes. Non-`/GL` objects
+record their whole command line in the PDB, and PCH creation lists no includes,
+so those edges first run a syntax-only `/Zs` scan and then compile with the
+unchanged command line. The first build after this graph change recompiles
+every edge once, because no edge has recorded dependencies yet. Ninja stamps
+those records with the clock it runs under, so module builds
+(`python3 -m vostok.build.ninja MODULE`) run on the same retail build clock as
+the full build; a real-clock run after a faked one would see every record as
+stale.
+
+## Host-wide build lock
+
+Each ninja runs about as many `cl.exe` as the machine has cores, so concurrent
+builds in several worktrees multiply (five full builds: ~490 `cl.exe`, load ~55
+on 24 cores and 31 GB). `vostok.build.ninja` therefore holds an `flock` on
+`$XDG_RUNTIME_DIR/vostok-ninja.lock` (`VOSTOK_BUILD_LOCK` overrides it; the
+runtime dir is derived from the uid when the variable is unset) for every run
+that can compile or link, full or module. A second build prints one line,
+`waiting for the build lock held by <worktree> pid N`, and blocks; the kernel
+releases the lock when the holder exits or crashes. `-t` tools and `-n` dry
+runs never take it, and `--no-lock` (`vostok build --no-lock`) opts out.
+
+The measurement phase after ninja (PDB evidence, delink, objdiff report,
+ledger) stays outside the lock: it runs at most two processes per build, so it
+cannot multiply the way `-j` does, and holding the lock through it would leave
+the compiler slot idle for the ~15 minutes another worktree could compile.
+
+## Notification-driven builds
+
 Codex builds on Linux with a systemd user manager are notification-driven by
 default whenever `CODEX_THREAD_ID` is set:
 

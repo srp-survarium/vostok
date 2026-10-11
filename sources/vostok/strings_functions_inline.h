@@ -70,6 +70,7 @@ inline pstr vostok::strings::duplicate	( allocator_type& allocator, pcstr const 
 template <typename predicate_type, typename string_type>
 inline bool	vostok::strings::iterate_items( string_type const string, u32 length, predicate_type const& predicate, char const separator )
 {
+	ASSERT				( UNKNOWN_EXPRESSION );
 	pcstr I				= string;
 
 	pstr const			temp_string	= ( pstr )ALLOCA( ( length + 1 )*sizeof( char ) );

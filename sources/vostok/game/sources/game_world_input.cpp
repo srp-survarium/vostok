@@ -14,11 +14,11 @@
 
 namespace survarium {
 
-// claude@NOTE: structure matches the target, but the residual % is callee-stub
-// inlining - show_players_list, key_binder::get_binded_action,
-// chat_handler::focus and game::activate_main_menu are still STUBs, so under
-// LTCG their calls fold away (get_binded_action returns a constant, collapsing
-// the game_action branches). Unblocks once those callee bodies are matched.
+
+
+
+
+
 bool game_world::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,

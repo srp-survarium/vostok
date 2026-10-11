@@ -8,12 +8,12 @@
 
 namespace survarium {
 
-// claude@NOTE: ctor/dtor/load byte-residual is a cross-TU wall - the object_sound
-// base ctor/dtor/load are STUBs on this branch (object_sound.cpp unmatched), so the
-// inlined base ctor + the base load call + the dtor tail-call line up differently
-// than the target. The link_resolver implicit ctor is also emitted out-of-line here
-// (target inlines the [+160h] vtable store). Each body is structure-exact; the
-// remaining residuals recover once object_sound.cpp is matched.
+
+
+
+
+
+
 object_volumetric_sound::object_volumetric_sound( base_game_scene& w ) :
 	object_sound			( w ),
 	m_collision_geometry	( 0 ),

@@ -48,11 +48,11 @@ void artefact_lifebone_core::holder_removed( )
 		switch_passive_mode_impl( false );
 }
 
-// claude@NOTE: walled by inventory::holder() LTCG inlining - the target keeps holder()
-// out-of-line (call survarium::inventory::holder) so dm is a real intrusive_ptr and the
-// loop derefs it via operator*. Our /GL inlines holder() at every call site (m_holder
-// read inline), which cascades and inlines the whole intrusive_ptr machinery. Fixable
-// only by out-lining holder() in inventory.cpp (another unit). Source kept faithful (*dm).
+
+
+
+
+
 void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 {
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );
@@ -70,7 +70,7 @@ void artefact_lifebone_core::switch_passive_mode_impl( bool switch_on )
 	m_passive_mode = switch_on;
 }
 
-// claude@NOTE: same inventory::holder() LTCG-inline wall as switch_passive_mode_impl.
+
 void artefact_lifebone_core::activate_impl( )
 {
 	damage_model_ptr dm = m_inventory->holder( ).damage_model( );

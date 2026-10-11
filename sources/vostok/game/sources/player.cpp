@@ -120,9 +120,9 @@ player::~player( )
 	VOSTOK_DELETE_IMPL( ::survarium::g_allocator, m_current.physics_controller );
 }
 
-// claude@NOTE: target and base share five statements and a ten-block CFG. The
-// target hoists the inlined scene-renderer pointer before the visibility guards;
-// base reloads it inside each guarded add_model call.
+
+
+
 void player::add_models_to_scene( )
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
@@ -133,9 +133,9 @@ void player::add_models_to_scene( )
 		m_game_scene.scene_renderer( ).add_model( scene, m_target.model->m_render_model, m_target.transform );
 }
 
-// claude@NOTE: target and base share five statements and a ten-block CFG. The
-// target hoists the inlined scene-renderer pointer before the visibility guards;
-// base reloads it inside each guarded remove_model call.
+
+
+
 void player::remove_models_from_scene( )
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
@@ -146,11 +146,11 @@ void player::remove_models_from_scene( )
 		m_game_scene.scene_renderer( ).remove_model( scene, m_target.model->m_render_model );
 }
 
-// claude@NOTE: structure faithful (two if-guarded assign_game_ui virtual calls,
-// NULL then m_game_ui). Capped by the intrusive_ptr<interactive_object> c_ptr()
-// inline-vs-call: the target inlines c_ptr() (the guard + call fold into one stmt
-// each), our base out-lines it, splitting the call into its own statement. Core
-// template-instantiation inline decision, not steerable from player.cpp.
+
+
+
+
+
 void player::on_before_active_object_changed(
 	interactive_object_ptr const&		current_active_object,
 	interactive_object_ptr const&		target_active_object
@@ -237,11 +237,11 @@ void player::insert( const bool is_alive )
 	m_force_bones_recompute = true;
 }
 
-// claude@NOTE: structure faithful; the lone diff is a line-table fold artifact -
-// the target lists `m_is_alive=false` + the first deactivate() as ONE entry-line
-// statement (367, folded into the prologue), our base lists the deactivate as a
-// separate body statement. Content is identical; physics deactivate() bytes are
-// the bullet from_*/remove inline residual.
+
+
+
+
+
 void player::remove_alive( )
 {
 	m_is_alive = false;
@@ -300,11 +300,11 @@ void player::apply_input( client_player_state& player_state, float2 const& rotat
 	player_state.look_pitch = math::clamp_r( player_state.look_pitch + rotation_to_apply.y, -1.f, 1.f );
 }
 
-// claude@NOTE: STRUCTURE MATCH (2 stmts, 1 local rotation_to_apply). Builds the
-// per-component rotation increment ( accel * dt * 0.5 + prev_velocity ) * dt and
-// forwards to the 2-arg apply_input. Byte residual is inherited from that callee's
-// create_rotation/mul4x3 inline schedule (see the 2-arg note) plus the LTCG custom
-// calling convention (time_delta/accel/velocity arrive in xmm0/eax/ecx, not slots).
+
+
+
+
+
 void player::apply_input(
 	client_player_state&	player_state,
 	float2 const&			previous_velocity,
@@ -461,13 +461,13 @@ void player::update_speed_info( )
 	}
 }
 
-// claude@NOTE: paired ~93%. Reads the bullet controller transform (bt_character_controller::
-// get_transform = from_bullet(...) inlined), keeps its translation while taking state.transform's
-// rotation, pushes it back (set_transform = from_vostok(...) inlined) and feeds the residual
-// position delta as the walk direction (set_walk_direction = set_desired_walk_vector(from_vostok)
-// inlined). Residual is a single statement-fusion boundary: the target keeps the rotation-copy
-// temp build (L726) and set_transform (L731) as two statements; our /Od compile fuses the c
-// override into the set_transform statement (1 fewer stmt). Non-steerable line-boundary artifact.
+
+
+
+
+
+
+
 void player::set_physics_controller_walk_vector( client_player_state& state )
 {
 	float4x4 physics_transform = state.physics_controller->get_transform( );
@@ -626,9 +626,9 @@ void player::reset_fov_factor( )
 	m_current_fov_factor	= 1.0f;
 }
 
-// claude@NOTE: transition_time is dropped (ret 4 = 1 arg): the sole caller passes
-// a constant 0.3f, LTCG const-propagates it into m_fov_factor_transition_time
-// (the [s_aim_transition_time]=0.3f memload). Allowed LTCG arg-drop.
+
+
+
 void player::set_target_fov_factor( const float target_fov_factor, const float transition_time )
 {
 	m_start_fov_factor						= m_current_fov_factor;
@@ -647,10 +647,10 @@ float player::fov_factor( const u32 current_time_in_ms ) const
 		* animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( time );
 }
 
-// claude@NOTE: inline-vs-store cap - the [controller+0x4C] store is game_camera::
-// set_near_plane( near_plane_factor * 0.05f ), inlined; game_camera::set_near_plane
-// is an empty stub in game_camera.h (render cone, another unit), so our base omits
-// the store. Re-score once game_camera::set_near_plane has a body.
+
+
+
+
 void player::set_near_plane_factor( const float near_plane_factor )
 {
 	if ( m_local_input_controller )
@@ -696,9 +696,9 @@ player_input player::local_input( ) const
 	return m_local_input_controller ? m_local_input_controller->get_input( ) : player_input( );
 }
 
-// claude@NOTE: structure matches; residual is the LTCG custom calling convention
-// (this in eax, struct-return buffer in a register vs base's stack slot + ret 4) -
-// an argument-passing artifact, not a source-steerable diff. Same cap on local_input.
+
+
+
 player_input player::remote_input( ) const
 {
 	return m_history.empty( ) ? player_input( ) : m_history.newest( ).action.input;
@@ -735,8 +735,8 @@ void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 
 namespace {
 
-// the 3-arg notify variant: per subscriber, if the player moved (abs(movement)
-// past epsilon_3) report run while sprinting else walk, with the movement amount.
+
+
 struct player_movement_notifier {
 	hit_receiver const*		m_receiver;
 	bool					m_sprinting;
@@ -756,11 +756,11 @@ struct player_movement_notifier {
 
 } // namespace
 
-// claude@NOTE: std::for_each over m_player_actions_subscribers (0 iterator locals);
-// the only named local `movement` survives. run/walk = header enum 1/0. Receiver
-// is static_cast<hit_receiver const*>(this) (player+0x38). Same STLport for_each
-// inline-vs-call wall as on_fire/jump - the functor body inlines in the target
-// (its 1113/1115/1117-1120 statements) but our for_each stays out-of-line.
+
+
+
+
+
 void player::notify_actions_subscribers( )
 {
 	const float movement = math::length( m_current.transform.c.xyz( ) - m_last_frame_position );
@@ -784,14 +784,14 @@ struct player_action_notifier {
 
 } // namespace
 
-// claude@NOTE: std::for_each over m_player_actions_subscribers, 0 named locals
-// (the iterator lives in the inlined for_each, not on_fire). The target INLINES
-// the loop (begin/end direct member reads + the loop body = its 4 separate
-// statements 1127-1131); our STLport for_each / vector::begin()/end() stay
-// OUT-OF-LINE (one `call stlp_std::for_each`), so we emit 1 statement vs 4. The
-// for_each functor form is structurally correct; the residual is the STLport
-// header-template inline boundary, not steerable from player.cpp. The retail
-// action value is the named `shoot` enumerator.
+
+
+
+
+
+
+
+
 void player::on_fire( )
 {
 	std::for_each(
@@ -800,10 +800,10 @@ void player::on_fire( )
 		player_action_notifier( this, player_actions_subscriber::shoot ) );
 }
 
-// claude@NOTE: stand_up() (virtual, this->vtable+0x44) then the same for_each
-// subscriber notify with the named `jump` action, then
-// bullet_character_controller::jump on both controllers.
-// Same STLport for_each inline-vs-call wall as on_fire for the notify loop.
+
+
+
+
 void player::jump( )
 {
 	stand_up( );
@@ -824,9 +824,9 @@ void player::end_jump( )
 		m_current.physics_controller->end_jump( );
 }
 
-// claude@NOTE: both functions have the target three-statement source shape.
-// The target inlines bt_character_controller::set_crouch through the Bullet
-// crouch-state/list cleanup; base keeps the physics-owned wrapper call.
+
+
+
 void player::crouch( )
 {
 	m_target.physics_controller->set_crouch( true );
@@ -872,17 +872,17 @@ void player::take_inventory_item( inventory_item_ptr const& item )
 	}
 }
 
-// claude@NOTE: structure correct; residual is the intrusive_ptr c_ptr() out-of-line
-// cap - target inlines to `mov eax,[eax+10Ch]`, our base emits `add ecx,10Ch; jmp
-// c_ptr`. Same accessor-inlining wall as the quick-slot fns; not TU-steerable.
+
+
+
 animation::skeleton const& player::skeleton( ) const
 {
 	return *m_current.model->m_skeleton.c_ptr( );
 }
 
-// claude@NOTE: STRUCTURE MATCH (6 stmts). Byte residual is the bt_character_controller
-// activate()/get_transform() inline (the bullet from_vostok/from_bullet roundtrip) -
-// the same physics-conversion wall as player_tick's set_transform tails.
+
+
+
 void player::set_use_physics_controller_for_current( const bool value )
 {
 	if ( m_use_physics_controller_for_current == value )
@@ -900,12 +900,12 @@ engine& player::get_engine( )
 	return m_game_scene;
 }
 
-// claude@NOTE: weapon-swap blocks (0x1000/0x2000) + 6 quick-slot blocks + back_slot,
-// driven by remote_input() flag bits (raw masks - no named bit enum in this engine).
-// Residual: inventory().item_in_slot()/intrusive_ptr c_ptr stay out-of-line in our
-// base (target inlines the slot load to `mov eax,[esi+8]; cmp [eax+124h],0`); same
-// intrusive_ptr accessor-inlining cap that walls player::skeleton. cast_weapon_core
-// slot now matches after the interactive_object vtable reorder.
+
+
+
+
+
+// remote_input( ) flag bits are raw masks: the engine names no bit enum for them.
 void player::process_quick_slots_for_proxy_player( )
 {
 	if ( remote_input( ).actions_mask & 0x1000 )
@@ -966,10 +966,10 @@ void player::process_quick_slots_for_proxy_player( )
 		inventory( ).action( back_slot, true );
 }
 
-// claude@NOTE: current-player variant (unblocks player_tick::time_warp): like the
-// proxy but driven by input() (virtual) and richer - weapon blocks show a "could not
-// be used" screen message on failure, quick-slot blocks feed add_quick_slot_to_update
-// when action() succeeds. Same item_in_slot/intrusive_ptr accessor-inlining residual.
+
+
+
+
 void player::process_quick_slots_for_current_player( )
 {
 	if ( input( ).actions_mask & 0x1000 )
@@ -1082,9 +1082,9 @@ static console_commands::cc_float cc_death_camera_yaw		( "death_camera_yaw",		s_
 static console_commands::cc_float cc_death_camera_pitch		( "death_camera_pitch",		s_death_camera_pitch,		-math::pi,	math::pi,	true,	console_commands::command_type_engine_internal );
 static console_commands::cc_float cc_death_camera_distance	( "death_camera_distance",	s_death_camera_distance,	0.0f,		1000.0f,	true,	console_commands::command_type_engine_internal );
 
-// claude@NOTE: target and base share the twelve-block camera/UI sequence. The
-// target retains the inlined is_player_current entry statement while base folds
-// it into the prologue; the final select_animations differs by LTCG tail-calling.
+
+
+
 void player::kill( const u32 current_time_in_ms )
 {
 	const bool is_local_player = m_game.get_network_client( )->is_player_current( id );
@@ -1098,16 +1098,17 @@ void player::kill( const u32 current_time_in_ms )
 		m_local_input_controller->set_yaw_pitch_distance( s_death_camera_yaw, s_death_camera_pitch, s_death_camera_distance );
 		m_local_input_controller->set_key_binder_context( 16 );
 		static_cast< game_world& >( m_game_scene ).switch_camera_mode( m_local_input_controller->input_mode( ) );
-		m_game_ui->show_ammo_indicator( false ); m_game_ui->show_quick_slots( false );
+		m_game_ui->show_ammo_indicator( false );
+		m_game_ui->show_quick_slots( false );
 	}
 
 	select_animations( current_time_in_ms );
 }
 
-// claude@NOTE: structure matches except the assign_game_ui (L1493) + member-store
-// block (L1519) merge into our prologue (target keeps them as 2 statements separated
-// by a source-line gap we cannot reproduce) and the intrusive_ptr/assign inline; the
-// if-alive input-mode/key-binder gate and the camera wiring all pair.
+
+
+
+
 void player::attach_controller(
 	player_input_handler*		handler,
 	stats_graph*				linear_speed,
@@ -1137,10 +1138,10 @@ void player::attach_controller(
 	m_force_animation_selection = true;
 }
 
-// claude@NOTE: 4-stmt structure matches. Byte residual is the intrusive_ptr operator-bool
-// inline (target folds the m_current_active_object null-check into the assign_game_ui
-// statement / prologue; our base emits a separate `if` line) - the same intrusive_ptr
-// accessor inline-vs-call wall as skeleton()/the quick-slot fns; not TU-steerable.
+
+
+
+
 void player::detach_controller( )
 {
 	if ( m_current_active_object )
@@ -1174,18 +1175,18 @@ void player::set_head_visibility( bool is_visible )
 	m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 5, mode );
 }
 
-// claude@NOTE: file-static default callback; target is `xor eax,eax; ret`
-// (returns callback_return_type_call_me_again = 0). The two subscribe_animation_player
-// overloads below reference it (as the m_target.animation_player.subscribe callback).
+
+
+
 animation::callback_return_type_enum empty_callback( animation::animation_callback_params& params )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( params );
 	return animation::callback_return_type_call_me_again;
 }
 
-// claude@NOTE: both overloads have the target two statements and ten-block CFG.
-// Their three-byte size residual is argument/register scheduling around the two
-// subscribe calls and the temporary empty_callback boost::function.
+
+
+
 void player::subscribe_animation_player(
 	pcstr			channel_id,
 	boost::function< enum animation::callback_return_type_enum( animation::animation_callback_params& ) > const&	callback,

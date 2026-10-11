@@ -26,9 +26,9 @@ object_sound::~object_sound( )
 {
 }
 
-// claude@NOTE: Source structure and locals match after passing a create_request temporary.
-// The residual is the shared binary_config_value::operator int inline cut; reopen after
-// that compiler context or function-scoped MAX attribution changes.
+
+
+
 void object_sound::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -58,11 +58,11 @@ void object_sound::on_sound_resources_ready(
 	callback( *this );
 }
 
-// claude@NOTE: insert is a STRUCTURE MATCH (7 stmts); the byte-residual is a CSE/
-// scheduling difference - the target hoists the get_sound_scene() + get_sound_world()
-// .get_logic_world_user() chain (shared by both emit branches) out of the if/else and
-// computes it once, our base recomputes it per branch. No named locals on either side,
-// so this is a compiler optimization scheduling delta, not source-steerable here.
+
+
+
+
+
 void object_sound::insert( )
 {
 	if ( m_sound_emitter_type == 1 )

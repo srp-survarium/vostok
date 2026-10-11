@@ -16,19 +16,19 @@ using vostok::animation::interpolator_visitor;
 using vostok::animation::instant_interpolator;
 using vostok::animation::linear_interpolator;
 
-// claude@NOTE: cross-module LTCG wall. Target ctor is an optimized COMDAT with the
-// eax-this frameless convention (this in eax, transition_time in xmm0, epsilon on
-// stack, ret 4) reached only via game::legs_ik_processor::set_*_on_ground. Our /Od
-// base never emits a standalone ctor (inlined at every site) so report pairs it with
-// an ICF fold-rep (spurious call log_format). Structure/init-list already faithful.
+
+
+
+
+
 fermi_interpolator::fermi_interpolator			( float const transition_time, float const epsilon ) :
 	m_total_transition_time	( transition_time ),
 	m_epsilon				( epsilon )
 {
 }
 
-// Target /GL removes the derived locals from PDB and schedules this upstream body
-// through direct SSE libm calls; the unoptimized base retains their stack lifetimes.
+
+
 float fermi_interpolator::interpolated_value			( float current_transition_time ) const
 {
 	R_ASSERT				( current_transition_time < m_total_transition_time );

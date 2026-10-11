@@ -127,10 +127,10 @@ public:
 
 	inline	bool						is_player_connected					( u32 arg_0 ) { /* no source */ return false; }
 
-	// claude@MATCH: private from here - the process_*/on_*/draw_stats/query_players/
-	// send_*/setup_camera_for_warmup/http_* symbols mangle AAE, and
-	// apply_use_physics_controller_for_current/close_current_match mangle EAE
-	// (private virtual); the dump prints everything public
+
+
+
+	// private from here: these symbols mangle AAE in the PDB, the two virtuals EAE
 private:
 	virtual	void						apply_use_physics_controller_for_current( ) override;
 

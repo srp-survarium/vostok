@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// claude@VERIFY (structure, 2026-06-13): every body in this TU is a confirmed
-// STRUCTURE MATCH (statement quantity + order). The low fuzzy% on several is a
-// header-level, cross-unit byte wall, NOT a per-TU structure defect:
-//   ctor / dtor / crouch_predicate ........ clean MATCH (no steerable residual)
-//   sprint/jump/stand_predicate, activate,
-//   deactivate ............................ SIZE-only on the ( *m_user->damage_model() )
-//                                           deref: target ICF-folds intrusive_ptr::operator*
-//                                           (mov eax,[eax]), base inlines the empty-stub'd
-//                                           assert + extra indirection (intrusive_ptr_inline.h).
-//                                           activate's BASE_ONLY/TRGT_ONLY rows are an
-//                                           aligner artifact from SIZE drift; both sides 7 stmts.
-//   is_weapon_firing/in_idle/toggling ..... SIZE +0x49 (identical) on the current_active_object()
-//                                           temp: intrusive_ptr<inventory_item> copy-ctor
-//                                           inline-vs-call + temp element type.
-//   set_sprint_callbacks .................. SIZE-only: static_cast_checked instantiation,
-//                                           not source-shape.
-// None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #include "pch.h"
 #include <vostok/game_core/game_net_defines.h>
@@ -88,10 +88,10 @@ void weapon_user_animations_selector::tick( )
 	m_logic.tick( );
 }
 
-// claude@MATCH: the "deref idiom" is static_cast_checked - its non-DEBUG body is an
-// inline cref-taking cast wrapper; the target's `call <op*>` IS the static_cast_checked
-// instantiation kept out-of-line by LTCG (ICF-folded onto intrusive_ptr<...>::operator*,
-// body `mov eax,[eax]; ret`), taking &(the cref-bound fsm_state* temp).
+
+
+
+// static_cast_checked: retail's out-of-line deref call is its instantiation
 player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 {
 	player_logic_base_state* const result = static_cast_checked< player_logic_base_state* >( m_logic.current_state( ) );
@@ -234,11 +234,11 @@ bool weapon_user_animations_selector::crouch_predicate( ) const
 	return broken_legs_predicate( ) || ( m_user->input( ).is_crouching( ) && m_user->physics_controller( ).can_crouch( ) );
 }
 
-// claude@NOTE: the `( *m_user->damage_model( ) )` deref wall, shared by deactivate /
-// sprint_predicate / jump_predicate / stand_predicate / activate: target folds
-// intrusive_ptr::operator* onto a no-assert representative (mov eax,[eax]); base emits the
-// inline ASSERT( m_object ) (call to the empty stub) + an extra indirection. Header-level
-// ICF/assert-fold artifact (intrusive_ptr_inline.h), not per-TU fixable; structure matches.
+
+
+
+
+
 bool weapon_user_animations_selector::broken_legs_predicate( ) const
 {
 	return ( *m_user->damage_model( ) ).broken_legs_count( ) == 2;
@@ -256,12 +256,12 @@ bool weapon_user_animations_selector::jump_predicate( ) const
 	return result;
 }
 
-// claude@NOTE: is_weapon_in_idle / is_weapon_firing / is_weapon_toggling share a wall: the
-// target builds the current_active_object() temp via an out-of-line `intrusive_ptr<inventory_item>`
-// copy-ctor CALL, then reads the weapon_core flag; base INLINES the intrusive_ptr copy
-// (refcount dec/interlocked_increment) and over a different temp element type
-// (interactive_object/weapon_ammunition). Copy-ctor inline-vs-call + temp-type artifact, not
-// per-TU fixable; the weapon_core::is_idle/is_toggling bodies (recovered from this asm) are correct.
+
+
+
+
+
+
 bool weapon_user_animations_selector::is_weapon_in_idle( ) const
 {
 	return static_cast< weapon_core const& >( *m_user->current_active_object( ) ).is_idle( );

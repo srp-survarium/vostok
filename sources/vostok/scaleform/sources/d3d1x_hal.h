@@ -5,17 +5,17 @@
 #ifndef D3D1X_HAL_H_INCLUDED
 #define D3D1X_HAL_H_INCLUDED
 
-// claude@NOTE: nothing #includes this header - it is a PDB-derived reference skeleton,
-// listed in scaleform.vcproj but never compiled. Every symbol it describes is emitted
-// (and already byte-exact) from the vendored SDK header it mirrors under
-// scaleform/src/render/d3d1x/, so its STATE[STUB] bodies are documentation, not a
-// matching gap - check the vendored header before treating one as work.
-// survarium's fork of the Scaleform 4.x D3D1x_HAL.h - the shipped binary
-// tracks a NEWER SDK than the vendored 4.0.15 (ShaderHAL base, filters,
-// render events, MatrixState, ...); skeleton rebuilt from the canonical PDB
-// type dumps. Per the rich index this fork header also CARRIED definitions of
-// several base-SDK members (Render::HAL::~HAL and friends, at the bottom) -
-// the fork backported the newer D3D11 backend onto an older core.
+
+
+
+
+
+
+
+
+
+// Reference skeleton of survarium's newer-SDK fork of D3D1x_HAL.h, rebuilt from the PDB type
+// dumps. Nothing includes it: the shipped code comes from the vendored SDK header.
 
 #include "Render/Render_ShaderHAL.h"
 #include "d3d1x_meshcache.h"
@@ -52,7 +52,7 @@ class RenderTargetData : public RenderBuffer::RenderTargetData {
 public:
 	virtual					~RenderTargetData	( ) { /* no source */ }
 
-	// STATE[STUB]
+
 	inline					RenderTargetData	(
 								RenderBuffer*			arg_0,
 								ID3D11View*				arg_1,
@@ -60,11 +60,11 @@ public:
 								ID3D11View*				arg_3
 							)
 	{
-		// FUNCTION BODY[0x0aee90]
+
 		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2, arg_3 );
 	}
 
-	// STATE[STUB]
+
 	static	void			UpdateData			(
 								RenderBuffer*			arg_0,
 								ID3D11View*				arg_1,
@@ -72,7 +72,7 @@ public:
 								ID3D11View*				arg_3
 							)
 	{
-		// FUNCTION BODY[0x0aedd0]
+
 		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2, arg_3 );
 	}
 
@@ -105,7 +105,7 @@ public:
 		RasterMode_Count		= 0x2,
 	};
 
-	// everything unmarked is out-of-line in d3d1x_hal.cpp per the rich index
+
 	inline	HAL*			getThis							( ) { /* no source */ return this; }
 
 			explicit		HAL								( ThreadCommandQueue* arg_0 );
@@ -146,10 +146,10 @@ public:
 
 	virtual	void			PopMask							( ) override;
 
-	// STATE[STUB]
+
 	virtual	void			beginMaskDisplay				( ) override
 	{
-		// FUNCTION BODY[0x0aed60]
+
 	}
 
 			bool			checkMaskBufferCaps				( );
@@ -180,10 +180,10 @@ public:
 
 			ID3D11Buffer*	getNextConstantBuffer			( );
 
-	// STATE[STUB]
+
 	virtual	Render::TextureManager*	GetTextureManager		( ) const override
 	{
-		// FUNCTION BODY[0x0aed80]
+
 		return pTextureManager;
 	}
 
@@ -210,14 +210,14 @@ public:
 
 	virtual	void			drawCachedFilter				( FilterPrimitive* arg_0 ) override;
 
-	// STATE[STUB]
+
 	virtual	D3D1x::MeshCache&	GetMeshCache				( ) override
 	{
-		// FUNCTION BODY[0x0aed90]
+
 		return Cache;
 	}
 
-	// STATE[STUB]
+
 	virtual	void			MapVertexFormat					(
 								PrimitiveFillType		arg_0,
 								VertexFormat const*		arg_1,
@@ -227,7 +227,7 @@ public:
 								u32						arg_5
 							) override
 	{
-		// FUNCTION BODY[0x0aeda0]
+
 		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2, arg_3, arg_4, arg_5 );
 	}
 
@@ -283,19 +283,19 @@ private:
 
 } // namespace D3D1x
 
-// base-SDK member bodies the fork header carried (rich index attributes their
-// line info to vostok/scaleform/sources/d3d1x_hal.h) - the fork backported
-// the D3D11 backend, supplying these out of line here:
-//
-//	// FUNCTION BODY[0x0aef80]	Scaleform::Render::HAL::~HAL()
-//	// FUNCTION BODY[0x0af090]	Scaleform::Render::D3D1x::ShaderManager::~ShaderManager()
-//	// FUNCTION BODY[0x0af130]	Scaleform::Render::HAL::RenderTargetEntry::RenderTargetEntry()
-//	// FUNCTION BODY[0x0af1b0]	Scaleform::Render::HAL::RenderTargetEntry::operator=(RenderTargetEntry const&)
-//	// FUNCTION BODY[0x0af280]	Scaleform::Render::MatrixState::operator=(MatrixState const&)
-//	// FUNCTION BODY[0x0af580]	Scaleform::Render::HAL::FilterStackEntry::~FilterStackEntry()
-//
-// They need the (newer-SDK) base class definitions, so they stay recorded
-// here as carcass markers until that base is reconciled (TU enablement pass).
+
+
+
+
+
+
+
+
+
+
+// Retail's fork header also carried the bodies of several base-SDK members (HAL::~HAL,
+// ShaderManager::~ShaderManager, RenderTargetEntry, MatrixState::operator=,
+// FilterStackEntry::~FilterStackEntry); they need the newer-SDK base classes.
 
 } // namespace Render
 } // namespace Scaleform

@@ -45,13 +45,13 @@ public:
 
 STATIC_SIZE_ASSERT(hit_object, 0x18);
 
-// TU statics (compiler-generated dynamic initializers / atexit
-// destructors); a matcher recovers their types/initializers from the asm.
-/*
-void `dynamic atexit destructor for 's_npc_debug_draw_command''( )
-{
-}
-*/
+
+
+
+
+
+
+
 
  human_npc::npc_game_attributes::npc_game_attributes( ) :
 	initial_position		( float3( 0.f, 0.f, 0.f ) ),
@@ -276,9 +276,9 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 
 	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
 
-	// 86.4 wall: draw_origin/draw_arrow take a reg-arg custom convention
-	// target-side (set by their OTHER callers); ours pushes. The remaining
-	// delta is that convention + the scheduling cascade off it.
+
+
+
 	float3 const eyes_position		= get_eyes_position( );
 	float3 const eyes_direction		= get_eyes_direction( ) * 2.f;
 	m_renderer.debug( ).draw_arrow	( m_scene, eyes_position, eyes_position + eyes_direction, math::color( 255, 0, 0 ) );
@@ -293,7 +293,7 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, m_transform, math::color( 0, 255, 0 ) );
 		m_sound_produced			= false;
 	}
-	// target passes the members, not the (dead, LTCG-stripped) params
+	// passes the members, not the parameters, as retail does
 	m_animations_selector->debug_draw	( m_renderer, m_scene );
 }
 
@@ -306,8 +306,8 @@ void human_npc::set_transform( float4x4 const& transform )
 	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
 }
 
-// Matching wall: target LTCG eliminates the position temporary and specializes draw's
-// two member arguments away; target and base otherwise have the same statements and flow.
+
+
 void human_npc::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	const u32 time_delta		= current_time_in_ms > m_last_tick_time_in_ms ? current_time_in_ms - m_last_tick_time_in_ms : 0;
@@ -326,7 +326,7 @@ void human_npc::tick( const u32 current_time_in_ms, const bool is_game_paused )
 	m_last_tick_time_in_ms		= current_time_in_ms;
 }
 
-// Matching wall: target update_skeleton uses a render-LTCG register convention.
+
 void human_npc::render_model( )
 {
 	animation::animation_player* animation_player	= m_model_instance->m_animation_player;
@@ -566,7 +566,7 @@ void human_npc::on_movement_end( )
 	}
 }
 
-// Retail passes the path object by value; set_target retains an animation-LTCG register-argument wall.
+// Retail passes the path object by value.
 #line 572
 void human_npc::play_animation( ai::animation_item const* const target )
 {
@@ -587,8 +587,8 @@ void human_npc::tick_animation_player( const u32 current_time_in_ms )
 
 void human_npc::up_to_terrain( )
 {
-	// Matching wall: target scalar-replaces position and result; faithful value/reference
-	// forms either retain aggregate stack slots or lose the target's position statement.
+
+
 	float3 const position			= m_transform.c.xyz( );
 
 	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 10.f, 0x20, 2 );
@@ -604,9 +604,9 @@ void human_npc::up_to_terrain( )
 	}
 }
 
-// claude@NOTE: body byte-identical (11/14 instrs); the only diff is the prologue/epilogue -
-// the shipped build out-lined this with `this` already in esi (no `mov esi, ecx`), an LTCG
-// codegen artifact no normal source emits. Body structure (one select_new_goal forward) is right.
+
+
+
 void human_npc::select_new_goal( )
 {
 	m_ai_world.select_new_goal	( m_brain_unit );

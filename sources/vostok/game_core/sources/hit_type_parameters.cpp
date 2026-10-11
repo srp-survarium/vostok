@@ -30,7 +30,7 @@ void hit_type_parameters::apply_damage( const float delta, const u32 time_in_ms 
 
 	for ( std::pair<body_part_parameters*, float>* it = it_begin; it != it_end; ++it )
 		if ( it->second > 0.0f )
-			it->first->hit_by_type( get_type( ), time_in_ms, it->second * delta, 0.0f, false, NULL ); // sushi@MATCH: In target `c_str` is called in a different order.
+			it->first->hit_by_type( get_type( ), time_in_ms, it->second * delta, 0.0f, false, NULL );
 }
 
 void hit_type_parameters::set_parameters( float armor, float reduce, float absorbtion )

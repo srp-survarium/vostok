@@ -115,11 +115,11 @@ void light::destroy_impl( ) const
 	DELETE					( this_ptr );
 }
 
-void light::set_position( float3 const& value )
+void light::set_position( float3 const& P )
 {
 	float	eps					=	math::epsilon_7;	//_max	(range*0.001f,EPS_L);
-	if (position.is_similar(value,eps))return	;
-	position = (value);
+	if (position.is_similar(P,eps))return	;
+	position = (P);
 }
 
 void light::set_color( math::color const& c, float const value )
@@ -131,11 +131,11 @@ void light::set_color( math::color const& c, float const value )
 	intensity		= value;
 }
 
-void light::set_range( float value )
+void light::set_range( float R )
 {
 //	float	eps					=	std::max	(range*0.1f, math::epsilon_7);
 //	if (math::is_similar(range,R,eps))	return	;
-	range						= value	;
+	range						= R	;
 }
 
 void light::set_orientation(
@@ -225,7 +225,7 @@ void light::on_properties_changed( )
 				&*collision::new_collision_object(
 					g_allocator,
 					1,
-					m_collision_geometry = &*collision::new_box_geometry_instance( g_allocator, transform ),
+					m_collision_geometry = &*collision::new_box_geometry_instance( g_allocator, math::create_scale( float3( 1.f, 1.f, 1.f ) ) ),
 					this
 			);
 
@@ -396,9 +396,9 @@ void light::set_attenuation_power( float value )
 	attenuation_power	= value;
 }
 
-void light::set_scale( float3 const& value )
+void light::set_scale( float3 const& scale )
 {
-	scale			= value;
+	this->scale		= scale;
 }
 
 } // namespace render

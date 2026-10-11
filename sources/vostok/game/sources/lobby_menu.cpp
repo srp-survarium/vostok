@@ -100,7 +100,7 @@ void lobby_menu::on_connected_to_lobby( )
 		show_disconnected_message( false );
 	}
 }
-// claude@NOTE: source structure matches; target LTCG uses a different frame and register arguments.
+
 void lobby_menu::show_ui( bool b_show )
 {
 	if ( m_is_ui_shown != b_show )
@@ -123,7 +123,7 @@ void lobby_menu::show_ui( bool b_show )
 		m_is_ui_shown = b_show;
 	}
 }
-// claude@NOTE: residual is the update_ui this-register convention and an ICF c_ptr fold representative.
+
 void lobby_menu::tick(
 	const u32		frame_delta_in_ms,
 	const u32		current_time_in_ms,
@@ -178,7 +178,7 @@ void lobby_menu::switch_to_level_loading( )
 	m_match_making_ui->movie->Invoke( "root.switch_to_loading", NULL, NULL, 0 );
 }
 
-// claude@NOTE: source and LOG geometry match; residual is LTCG register arguments/inlining.
+
 #line 189
 void lobby_menu::on_client_status_received( lobby::query_info_types type )
 {
@@ -289,7 +289,7 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 		LOG_ERROR( "Unknown Client status received. type = %d", type );
 	}
 }
-// claude@NOTE: source and LOG geometry match; residual is optimized callee/log partitioning.
+
 #line 299
 void lobby_menu::on_friendship_status_recivied(
 	const messaging::friendship_actions_enum	type
@@ -347,7 +347,7 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 		LOG_ERROR( "Unknown (operation permitted) type received %d", op_type );
 	}
 }
-// claude@NOTE: target keeps the four identical case bodies separate; the base folds them.
+
 void lobby_menu::on_operation_denied_received( lobby_client_message_types_enum op_type, pcstr description )
 {
 	switch ( op_type )
