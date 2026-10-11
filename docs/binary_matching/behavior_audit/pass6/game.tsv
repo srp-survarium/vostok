@@ -1,5 +1,6 @@
 mangled	verdict	evidence
 ??0animations_selector@survarium@@QAE@AAVanimation_player@animation@vostok@@ABV?$resource_ptr@Vanimation_space_graph@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@4@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@64@ABUworld@navigation@ai@4@ABVgame_world@1@AAVhuman_npc@1@@Z	EQUIVALENT	confirms pass 5: subscribe(...,NULL,0FFh,...) same args; temp release order
+??0base_network_client@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	confirms pass 5: store scheduling; atexit spelling
 ??0game_world@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	confirms pass 5: atexit ICF naming
 ??0lobby_client@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	confirms pass 5: fixed_string<32> ctor inline vs call
 ??0lobby_menu@survarium@@QAE@AAVgame@1@@Z	EQUIVALENT	confirms pass 5: retail and [+0C8h]/[+0CCh],7FFFFFFFh clears m_active only vs ours zeroes whole identifier; m_id unread before register_object; m_match_stats zero sunk past query_scene_res
@@ -9,20 +10,27 @@ mangled	verdict	evidence
 ??0options_tab@survarium@@QAE@AAVgame@1@AAV?$resource_ptr@Uflash_movie_resource@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@W4options_enum@1@@Z	EQUIVALENT	confirms pass 5: new_array_helper ICF naming; same arrays/counts
 ??0player@survarium@@QAE@ABUplayer_creation_params@1@@Z	EQUIVALENT	confirms pass 5: mbstowcs_s ICF naming
 ??0simple_game_project@survarium@@QAE@AAVbase_game_scene@1@@Z	EQUIVALENT	confirms pass 5: frame push/pop only
+??0victory_item@survarium@@QAE@AAVgame_world@1@@Z	EQUIVALENT	confirms pass 5: identity factors; same stored matrix
 ??0weapon@survarium@@QAE@III@Z	EQUIVALENT	confirms pass 5: same final stores (F40h..F45h zero via dl vs imm, 0C8h, identity); base dead NULL-assign releases of already-null ptrs
 ??1ai_sound_player@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: regalloc only
+??1booby_trap_set@survarium@@EAE@XZ	EQUIVALENT	confirms pass 5: callee-save push; identical body
 ??1game@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: "user.cfg" const-propagated; ICF names
 ??1game_options@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/offsets; register constant
 ??1object_decal@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/offsets
 ??1object_weapon@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/offsets
 ??1options_tab@survarium@@QAE@XZ	EQUIVALENT	confirms pass 5: strip_pointer out of line in retail
 ??1player@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same ordered calls/offsets; partition-only
+??1shotgun_weapon_reload_state_cook@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/operands; ICF helper names, frame/stack slots, __LINE__ only
+??1simple_animation_controller@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/operands; ICF helper names, frame/stack slots, __LINE__ only
 ??1simple_game_project@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: strip_pointer inline vs call; Rb_tree ICF representative
 ??1single_position_animation_controller@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: scheduling only
 ??1weapon@survarium@@UAE@XZ	EQUIVALENT	confirms pass 5: same calls/offsets
 ??4npc_game_attributes@human_npc@survarium@@QAEAAU012@AAU012@@Z	EQUIVALENT	confirms pass 5: fixed_string<32>::operator= inline (self-check, clear, memcpy) vs call
 ??9survarium@@YA_NABUanimation_space_vertex_id@0@0@Z	EQUIVALENT	confirms pass 5: base fully inlined; retail compares 4 rotation components (ucomiss/jp) and translation is_similar(0.3)
+??_Ggame_options@survarium@@UAEPAXI@Z	EQUIVALENT	confirms pass 5: operator delete spelling
 ??_Gobject_weapon@survarium@@UAEPAXI@Z	EQUIVALENT	confirms pass 5: base calls out-of-line ~object_weapon (vptrs, [+8]+4 dec, pt3free at 0 else clear) = retail inlined body; operator delete if flag&1
+??_Gplayer@survarium@@UAEPAXI@Z	EQUIVALENT	confirms pass 5: same calls/operands; ICF helper names, frame/stack slots, __LINE__ only
+??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	EQUIVALENT	confirms pass 5: operator delete spelling
 ?accept_message_from@messaging_client@survarium@@AAE_NIW4client_type_enum@messaging@@@Z	EQUIVALENT	confirms pass 5: base hoists type==5 test into caller (0x3c cmp edx,5) and clone takes 1 arg; same ignore-list find
 ?action@booby_trap_set@survarium@@EAEX_N@Z	EQUIVALENT	confirms pass 5: scheduling
 ?action_name_to_ptr@key_binder@survarium@@AAEPAUgame_action_descr@2@PBD@Z	EQUIVALENT	confirms pass 5: __LINE__ only; CRT ICF naming
@@ -57,6 +65,9 @@ mangled	verdict	evidence
 ?clear_resources@human_npc@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: regalloc
 ?clear_resources@lobby_menu@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: raw project pointer test without constant safe-bool test
 ?connect_to_login@network_client@survarium@@UAEXPBDG00@Z	EQUIVALENT	confirms pass 5: boost::function dtor inline-vs-call; same ordered calls/strings
+?create@stats@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: float2 temp slot; same FP/calls
+?create@stats_row@survarium@@QAEXAAUflash_text_manager@2@QBDMMMMMMMABVcolor@math@vostok@@@Z	EQUIVALENT	confirms pass 5: text bounds via returned pointer vs copy
+?create@stats_stream@survarium@@QAEXAAUflash_text_manager@2@MMMMMABVcolor@math@vostok@@@Z	EQUIVALENT	confirms pass 5: text bounds via returned pointer vs copy
 ?create_game_objects@project_cooker_simple@survarium@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@PAVquery_result_for_cook@45@@Z	EQUIVALENT	confirms pass 5: ordered calls/literals same modulo ICF names (touch=has_empty_target), addressing-mode stores [+40h]/[+42h]
 ?create_slot_value@game_world_ui@survarium@@AAEXW4profile_slot_enum@2@AAUinventory_item_props@2@AAUflash_value@2@@Z	EQUIVALENT	confirms pass 5: get_action_dik inline vs call; action ids 30h..35h same
 ?deactivate@weapon@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: remove_animation_callback inline vs call (x4)
@@ -74,6 +85,7 @@ mangled	verdict	evidence
 ?destroy_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vpistol_weapon_core_reload_state@survarium@@@survarium@@@survarium@@EAEXPAVunmanaged_resource@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: m_buffer_for_sounds load before vs after ~T (dtor never writes it); same free
 ?destroy_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vweapon_core_shotgun_reload_finish_substate@survarium@@@survarium@@@survarium@@EAEXPAVunmanaged_resource@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: m_buffer_for_sounds load before vs after ~T (dtor never writes it); same free
 ?destroy_resource@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vweapon_core_shotgun_reload_one_round_substate@survarium@@@survarium@@@survarium@@EAEXPAVunmanaged_resource@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: m_buffer_for_sounds load before vs after ~T (dtor never writes it); same free
+?detach_from_player@base_network_client@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: safe-bool ICF
 ?detach_tracer@game_world@survarium@@UAE_NPAVbullet@2@@Z	EQUIVALENT	confirms pass 5: __LINE__ only
 ?dik_to_keyname@key_binder@survarium@@QAEPBDH@Z	EQUIVALENT	confirms pass 5: scheduling
 ?dik_to_ptr@key_binder@survarium@@QAEPAUkeyboard_key_descr@2@H_N@Z	EQUIVALENT	confirms pass 5: same walk; image-layout table address
@@ -106,9 +118,13 @@ mangled	verdict	evidence
 ?focus@chat_handler@survarium@@QAEX_N@Z	EQUIVALENT	confirms pass 5: tail call vs call of add/remove_handler
 ?fov_factor@player@survarium@@QBEMI@Z	EQUIVALENT	confirms pass 5: same >= test and start+(target-start)*t order; SSE vs x87 precision only
 ?generate_graph_edges@animation_space_graph_cook@survarium@@AAEXPAVanimation_space_graph@2@@Z	EQUIVALENT	confirms pass 5: cached count/pointer vs member reloads
+?generate_materials_shaders@generate_shaders_world@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: __LINE__ only
+?generate_renderer_shaders@generate_shaders_world@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: __LINE__; same globals
 ?get_action_dik@key_binder@survarium@@QAEHW4game_action_id@2@H@Z	EQUIVALENT	confirms pass 5: base out-of-line copy has no E8/E9 callers (dead); inlined copies (e.g. create_slot_value 0xa5-0xc3) test m_keyboard[0] then [1] -> dik, else 0, as retail
+?get_bind@swf_input_translator@survarium@@IAEPAUdik_to_swf_bind@2@W4enum_keyboard@input@vostok@@@Z	EQUIVALENT	confirms pass 5: same code
 ?get_binding_group@key_binder@survarium@@QAEHW4game_action_id@2@@Z	EQUIVALENT	confirms pass 5: base inlines into callers
 ?get_items_container@simple_game_project@survarium@@QAEPAVvictory_items_container_core@2@E@Z	EQUIVALENT	confirms pass 5: register/epilogue duplication only
+?get_movement@animation_space_graph@survarium@@SA?AUanimation_space_vertex_id@2@AAVanimation_player@animation@vostok@@PBUanimation_space_vertex@2@1M@Z	EQUIVALENT	confirms pass 5: lexeme setters inline vs call; ICF names
 ?get_sound_world@game_world@survarium@@QBEAAUworld@sound@vostok@@XZ	EQUIVALENT	confirms pass 5: base inlines into callers; accessor +0A8h -> +84h
 ?hide_crosshair@weapon@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: base inlines into callers; retail body if m_game_ui show_crosshair(false)
 ?hide_item_container@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: base inlines into callers; retail Invokes root.hide_container_icon
@@ -127,7 +143,9 @@ mangled	verdict	evidence
 ?initialize_locators@fingers_to_weapon_corrector@survarium@@AAEXABVrender_model_instance@render@vostok@@_N@Z	EQUIVALENT	confirms pass 5: temp slot coloring; loop exit jne vs jb on same counters
 ?initialize_minimap@game_world_ui@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: extra temp resource_ptr +1/-1 in base; same calls/literals
 ?insert@object_environment_probe@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: fixed_string<260> operator= vs memcpy, same string
+?insert@object_particle_visual@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: lea vs add; identical
 ?insert@object_sky_ambient_occlusion@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: fixed_string<260> operator= vs whole-buffer memcpy, same string
+?insert@object_sound@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: sound-world pointer chain hoisting; same calls/args
 ?insert@player@survarium@@QAEX_N@Z	EQUIVALENT	confirms pass 5: register-only residual
 ?instant_aim_end@weapon@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: register/scheduling only
 ?instant_aim_start@weapon@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: same FP op
@@ -138,11 +156,16 @@ mangled	verdict	evidence
 ?kill_npc@game_world@survarium@@CAXAAV?$resource_ptr@Vhuman_npc@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: target-only unreferenced island; delete_weapons then vtbl+1Ch call = source
 ?load@game_world@survarium@@QAEXPBDPAUrequest@resources@vostok@@1PAPBV?$variant@$0CA@@5@ABV?$function@$$A6AXAAVqueries_result@resources@vostok@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: pass-4 OPEN resolved: retail 0xd3 and byte [ebp+17h],80h (scene_configuration ctor, hoisted) clears bit 2 before and 0E6h/or 62h; final (x&80h)|62h same as ours and 0E2h/or 62h
 ?load@object_decal@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: stack layout/store scheduling; same request/bind
+?load@object_environment@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: pointer to NULL user-data entry vs NULL; ICF name
 ?load@object_environment_probe@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: same m_geometry +268h stores both paths; ICF names
+?load@object_particle_visual@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: boost::function1 copy ctor ICF; schedule
 ?load@object_sky@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: boost::function copy ctor ICF; scheduling
+?load@object_sound@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: pointer to NULL user-data entry vs NULL
+?load@object_wire@survarium@@UAEXABVbinary_config_value@configs@vostok@@PBDAAV?$function@$$A6AXAAVgame_object_@survarium@@@Z@boost@@@Z	EQUIVALENT	confirms pass 5: empty-wire branch calls cb(*this); __LINE__ only otherwise
 ?load_cc_script@game@survarium@@QAEXV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@_N@Z	EQUIVALENT	confirms pass 5: mutable_buffer ctor inline vs call
 ?load_config_query@game@survarium@@QAEXPBD_N@Z	EQUIVALENT	confirms pass 5: pointer to NULL entry vs NULL user_data, callee treats same
 ?load_weapon@weapon@survarium@@AAEXABV?$resource_ptr@Vskeleton_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@ABV?$resource_ptr@Vrifle_scope@survarium@@Vunmanaged_resource@resources@vostok@@@45@@Z	EQUIVALENT	confirms pass 5: boost::function ICF helper names
+?max_speed@animation_space_graph@survarium@@QBEMXZ	EQUIVALENT	confirms pass 5: pass 4: translation.length() sum x2+z2+y2 retail vs y2+z2+x2 ours: fp:fast reassociation in shared float3 helper (retail order varies per call site); max/>=0 gate same
 ?notify_actions_subscribers@player@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: pass 4: math::length sum (z2+x2)+y2 retail vs (y2+x2)+z2 ours = fp:fast reassociation in shared inlined helper (neither is source order); functor eps/ja, sprint 1/run 0 same
 ?on_activate@free_fly_camera@survarium@@UAEXPAVcamera_director@2@@Z	EQUIVALENT	confirms pass 5: retail constant-propagates j=(0,1,0) into cross product; same results
 ?on_active_sound_serialized@ai_sound_player@survarium@@QAEXPAVwriter@memory@vostok@@0@Z	EQUIVALENT	confirms pass 5: unreferenced; source read against retail asm
@@ -164,17 +187,20 @@ mangled	verdict	evidence
 ?on_disconnected_from_lobby@network_client@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: this pushed vs esi (LTCG conv)
 ?on_empty_hands_animations_loaded@empty_hands_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: extra temp addref/release per animation
 ?on_empty_hands_config_loaded@empty_hands_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: ICF names; same request buffer/bind
+?on_error@messaging_client@survarium@@AAEXW4client_error_codes_enum@network_core@vostok@@Verror_code@system@boost@@@Z	EQUIVALENT	confirms pass 5: LTCG conv at add_message; __LINE__
 ?on_fire@player@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: for_each inline-vs-call; receiver this+8, action 3, 0.f
 ?on_friendship_status_recivied@lobby_menu@survarium@@QAEXW4friendship_actions_enum@messaging@@@Z	EQUIVALENT	confirms pass 5: op 4..7 jump tables same blocks; boost::function ICF names
 ?on_hide@weapon@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: same aimed +10Ch / idle +108h model selection
 ?on_hit_from_pos@game_world_ui@survarium@@QAEXVfloat3@math@vostok@@@Z	EQUIVALENT	confirms pass 5: same FP/calls
 ?on_items_compatibility_arrived@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: u8 i vs u32 [client+858h] per pass both sides
 ?on_keyboard_action@game_options@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	confirms pass 5: same calls/offsets; scheduling
+?on_keyboard_action@game_world@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	confirms pass 5: m_game CSE; regalloc
 ?on_keyboard_action@lobby_menu@survarium@@UAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	confirms pass 5: pass 4 decoded base table: 38h character/39h inventory/3Ah shop/3Bh skip/3Ch friends = retail compare chain; 3Fh status, 1 escape, returns same
 ?on_keyboard_action@player_input_handler@survarium@@EAE_NPAUworld@input@vostok@@W4enum_keyboard@45@W4enum_keyboard_action@45@@Z	EQUIVALENT	confirms pass 5: push_back inline vs call; same (action,state) pairs
 ?on_ladders_loaded@project_cooker_simple@survarium@@AAEXPAVsimple_game_project@2@AAVqueries_result@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: as on_damage_zones_loaded with m_ladders +188h; LTCG conv at set_unmanaged_resource
 ?on_lobby_packet_received@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	OPEN	confirms pass 5: retail UB: op switch jump table has no range check (NODEFAULT), ours ignores unknown op; rest equivalent (__LINE__); UB not reproduced
 ?on_match_message_arrived@lobby_menu@survarium@@QAEXPB_W@Z	EQUIVALENT	confirms pass 5: CRT ICF naming; constant in register
+?on_match_packet_received@network_client@survarium@@AAEXEAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: pass 4 decoded both 30-entry tables (op-81h, no range check either side): every case calls the same handler (match_info..damage_model_state), 12-15 null in both
 ?on_message_typed@messaging_client@survarium@@QAEXPB_WW4message_channel_enum@messaging@@@Z	EQUIVALENT	confirms pass 5: jump-table case maps same (retail ch1..8, base ch3..8+default); CRT ICF names
 ?on_models_ready@booby_trap_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@PAVbooby_trap@2@@Z	EQUIVALENT	confirms pass 5: extra temp copy, balanced refcounts
 ?on_mouse_key_action@game_options@survarium@@UAE_NPAUworld@input@vostok@@W4mouse_button@45@W4enum_mouse_key_action@45@@Z	EQUIVALENT	confirms pass 5: same calls/2 FP ops/offsets; stack alignment/scheduling
@@ -199,11 +225,13 @@ mangled	verdict	evidence
 ?on_show@weapon@survarium@@EAEXXZ	EQUIVALENT	confirms pass 5: register constant
 ?on_skeleton_matrices_changed@weapon@survarium@@EAEXIABVfloat4x4@math@vostok@@QBV345@10QAV345@20@Z	EQUIVALENT	confirms pass 5: base tail-merges the two set_model_visible calls; same FP order
 ?on_slot_restrictions_arrived@lobby_menu@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: u8 i vs u32 [client+850h] per pass both sides
+?on_sound_event@weapon_sound_effect@survarium@@QAE?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@45@@Z	EQUIVALENT	confirms pass 5: safe-bool ICF; hoisted loads
 ?on_sounds_loaded@sound_player_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@@Z	EQUIVALENT	confirms pass 5: strip_pointer inline; ICF names
 ?on_stats_message_arrived@lobby_menu@survarium@@QAEXPB_W0W4message_channel_enum@messaging@@@Z	EQUIVALENT	confirms pass 5: CRT ICF naming (wcsstr/wcsncpy_s); same parse offsets/statuses
 ?on_step@step_manager@survarium@@QBEXABVplayer@2@ABVfloat3@math@vostok@@1AAVgame_world@2@@Z	EQUIVALENT	confirms pass 5: material_pair accessors inline vs call; same add_decal/play_particle args
 ?on_sub_resources_loaded@damage_zone_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@ABVbinary_config_value@configs@5@@Z	EQUIVALENT	confirms pass 5: light_props temp destroyed at end vs after load; extra temp ref +1/-1 around set_unmanaged_resource
 ?on_subresources_loaded@human_npc_cook@survarium@@AAEXAAVqueries_result@resources@vostok@@QAVhuman_npc@2@@Z	EQUIVALENT	confirms pass 5: extra temp addref/release; ICF names
+?on_subresources_loaded@victory_item_cook@survarium@@UAEXAAVqueries_result@resources@vostok@@PAVvictory_item@2@@Z	EQUIVALENT	confirms pass 5: same calls/operands; ICF helper names, frame/stack slots, __LINE__ only
 ?on_subresources_ready@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vdouble_barreled_weapon_core_aimed_fire_state@survarium@@@survarium@@@survarium@@AAEXAAVqueries_result@resources@vostok@@Vmutable_buffer@5@PBUweapon_state_creation_params@2@Uconfig_params@12@@Z	EQUIVALENT	confirms pass 5: same 0Ch animation loop (retail +50h+D8h = base +128h), sound stride 2D0h; retail tail-dup new_state; +1/-1 temp
 ?on_subresources_ready@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vdouble_barreled_weapon_core_fire_state@survarium@@@survarium@@@survarium@@AAEXAAVqueries_result@resources@vostok@@Vmutable_buffer@5@PBUweapon_state_creation_params@2@Uconfig_params@12@@Z	EQUIVALENT	confirms pass 5: same 0Ch animation loop (retail +50h+D8h = base +128h), sound stride 2D0h; retail tail-dup new_state; +1/-1 temp
 ?on_subresources_ready@?$weapon_sound_events_handler_state_cook@V?$weapon_sound_events_handler_state@Vdouble_barreled_weapon_core_hide_state@survarium@@@survarium@@@survarium@@AAEXAAVqueries_result@resources@vostok@@Vmutable_buffer@5@PBUweapon_state_creation_params@2@Uconfig_params@12@@Z	EQUIVALENT	confirms pass 5: same 0Ch animation loop (retail +50h+D8h = base +128h), sound stride 2D0h; retail tail-dup new_state; +1/-1 temp
@@ -232,6 +260,7 @@ mangled	verdict	evidence
 ?parse_receiver_channel@messaging_client@survarium@@AAE?AW4message_channel_enum@messaging@@PB_W_N@Z	EQUIVALENT	confirms pass 5: CRT ICF naming (wcsstr); same literals/returns
 ?pick_current_ghost_model@booby_trap_set@survarium@@AAE_NABVfloat4x4@math@vostok@@_N@Z	EQUIVALENT	confirms pass 5: [rec+28h]=7FFFFFFFh after register_object(...,true); 1 pushed vs cl (LTCG)
 ?play_particle@game_world@survarium@@UAEXABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@ABVfloat3@math@5@11@Z	EQUIVALENT	confirms pass 5: set(T*) vs set(ptr const&), same addref
+?play_particles@damage_zone@survarium@@QBEXABV?$vector@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@@2@@Z	EQUIVALENT	confirms pass 5: load scheduling
 ?play_sound@game_world@survarium@@UAEXABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@vostok@@ABVfloat3@math@5@@Z	EQUIVALENT	confirms pass 5: retail omits inner null test of static_cast of non-null resource
 ?play_weapon_fire_pfx@weapon@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: constant materialization
 ?play_weapon_shell_pfx@weapon@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: constant materialization
@@ -246,10 +275,13 @@ mangled	verdict	evidence
 ?process_quick_slots_for_current_player@player@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: same masks; retail extra test 30000h is accessor inline, same branches
 ?process_shop_action@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: std::find inline vs call (id at +8); push_back from copy; LTCG conv
 ?process_victory_item_take_or_put@network_client@survarium@@AAEXAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: team points branchless vs branches; same FFh skip and take/put paths
+?put@victory_item@survarium@@UAEXPAUworld@physics@vostok@@ABVfloat4x4@math@5@AAVscheduler@2@@Z	EQUIVALENT	confirms pass 5: LTCG conv at register_object; same value
 ?query_base_resources@game@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: request array store scheduling
 ?query_for_derived_resources@booby_trap_cook@survarium@@EAEXPAVquery_result_for_cook@resources@vostok@@PAVbooby_trap_core@2@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@@Z	EQUIVALENT	confirms pass 5: request table store scheduling; same keys/classes
+?query_for_derived_resources@booby_trap_set_cook@survarium@@EAEXPAVquery_result_for_cook@resources@vostok@@PAVbooby_trap_set_core@2@ABUbooby_trap_set_cook_data@2@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@45@@Z	EQUIVALENT	confirms pass 5: 13h stored directly vs via register
 ?read_enumerate_inventory_info@lobby_client@survarium@@QAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: constant materialization
 ?read_enumerate_profiles_info@lobby_client@survarium@@QAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: fixed_string<32> assign inline vs call; same fields
+?read_friend_status@messaging_client@survarium@@AAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: LOG_ERROR verbosity 2; __LINE__ only
 ?read_items_compatibility@lobby_client@survarium@@QAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: strip_pointer out of line in retail
 ?read_ping_server_answer@lobby_client@survarium@@QAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: float->s64 truncation inline fistp RC=0C00h vs _ftol2
 ?read_player_reputations@lobby_client@survarium@@QAE_NAAVpacket_reader@network_core@vostok@@@Z	EQUIVALENT	confirms pass 5: strip_pointer out of line in retail; same reads/allocations
@@ -271,6 +303,8 @@ mangled	verdict	evidence
 ?search@animations_search_service@survarium@@QAE_NABV?$resource_ptr@Vanimation_space_graph@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@resources@vostok@@PAV?$vector@I@2@Uanimation_space_vertex_id@2@2@Z	OPEN	confirms pass 5: retail UB: failed a_star path always calls vertex(best) at 0xa8 even when best never visited (garbage/crash); ours falls back; UB not reproduced
 ?select_animations@player@survarium@@AAEXI@Z	EQUIVALENT	confirms pass 5: make_stack_buffer 4000h const-propagated inline vs call
 ?select_new_goal@human_npc@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: base inlines into callers; retail m_brain_unit copy + vcall +54h
+?selected_animations@empty_hands@survarium@@EBE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@_N@Z	EQUIVALENT	confirms pass 5: lexeme parameter setters inline vs call (same zero stores)
+?selected_animations@player_logic_preview_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	confirms pass 5: lexeme parameter setters inline vs call
 ?selected_animations@single_position_animation_controller@survarium@@UAE?AVexpression@mixing@animation@vostok@@AAVmutable_buffer@6@@Z	EQUIVALENT	confirms pass 5: fcomip/jb 0.3 gate and comiss len,dot/jbe same; length (z,y,x vs x,y,z) and dot (x,z,y vs y,z,x) sums are fp:fast reassociation in shared float3 helpers
 ?selected_animations@weapon_user_dead_state@survarium@@EBE?AU?$pair@Vexpression@mixing@animation@vostok@@Vanimation_lexeme@234@@stlp_std@@AAVmutable_buffer@vostok@@ABUweapon_animation_parameters@2@_N@Z	EQUIVALENT	confirms pass 5: lexeme parameter accessors inline vs call; same FP/stores
 ?send_local_player_input@network_client@survarium@@UAEXABUplayer_input@2@IABVfloat4x4@math@vostok@@M@Z	EQUIVALENT	confirms pass 5: retail push_back default then fills back() (input, transform, +54h pitch, +58h time); same final element
@@ -289,9 +323,12 @@ mangled	verdict	evidence
 ?set_pregame@game_world_ui@survarium@@QAEXPBDI@Z	EQUIVALENT	confirms pass 5: Scaleform inline vs call; same literals/calls
 ?set_respawn_time@game_world_ui@survarium@@QAEXI@Z	EQUIVALENT	confirms pass 5: same sprintf args (/60, %60 via 88888889h); SetString vs inline operator=
 ?set_target@weapon@survarium@@EAEXW4weapon_targets@2@@Z	EQUIVALENT	confirms pass 5: same add/remove_light flow, +0FE8h flag, transform copy
+?set_text@stats_row@survarium@@QAEXIABUudp_match_stream_stats@network_core@vostok@@0@Z	EQUIVALENT	pass-5 fix complete: sprintf_big_number postfixes swapped: retail 0x83 push "bytes" (stack=simple) edi="b" (complex); ours "b","bytes"; now "bytes","b"
+?set_text@stats_stream@survarium@@QAEXIABUudp_match_items_stats@network_core@vostok@@0@Z	EQUIVALENT	pass-5 fix complete: sprintf_big_number postfixes swapped: retail 0xbd push "bytes" (stack=simple, callee [esp+10h]) edi="b" (complex, callee push edi; callee identical); ours "b","bytes"; now "bytes"
 ?set_ui_ammo@weapon@survarium@@AAEX_N@Z	EQUIVALENT	confirms pass 5: 16-bit sum; update_total_count test const-folded by LTCG (callers pass true)
 ?set_using_info_message@game_world_ui@survarium@@QAEXPBD@Z	EQUIVALENT	confirms pass 5: indirect-call register
 ?set_using_progress_message@game_world_ui@survarium@@QAEXI@Z	EQUIVALENT	confirms pass 5: indirect-call register
+?set_visible@stats_row@survarium@@QAEX_N@Z	EQUIVALENT	confirms pass 5: register choice only
 ?setup_camera_for_warmup@network_client@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: pass 4: 21 FP exprs identical once data addresses are normalised (retail 0A5C380h.. = base 0A4C318h.., same offsets); scheduling only
 ?shotgun_reload_timescale_calculator@survarium@@YAMABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@vostok@@ABUweapon_state_creation_params@1@@Z	EQUIVALENT	confirms pass 5: forwards params to computed_shotgun_reload_animation_time_scale
 ?show_chat@game_world_ui@survarium@@QAEX_N@Z	EQUIVALENT	empty body both sides (retail ret only; source VOSTOK_UNREFERENCED_PARAMETER only); no base out-of-line copy
@@ -317,9 +354,12 @@ mangled	verdict	evidence
 ?tick@player@survarium@@QAEXI@Z	EQUIVALENT	confirms pass 5 (pass-1 fix intact); retail 0x64b-0x6be evaluates active-camera type getter and [+84h]!=0 unconditionally (sete/setne/and), base short-circuits: pure getters, same result
 ?time_warp@player@survarium@@QAEXABUserver_player_update@2@I@Z	EQUIVALENT	confirms pass 5: head/buffer pointer CSE
 ?toggle_ghost_model@booby_trap_set@survarium@@AAEX_N@Z	EQUIVALENT	confirms pass 5: scheduling
+?translate_key_action@swf_input_translator@survarium@@IAE_WPAUworld@input@vostok@@_NAAUdik_to_swf_bind@2@@Z	EQUIVALENT	confirms pass 5: inverted branch; CRT import names
 ?translate_query@damage_zone_cook@survarium@@UAEXAAVquery_result_for_cook@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: boost::function assign_to inline vs call; ICF names
 ?translate_query@scaleform_movie_cook@survarium@@UAEXAAVquery_result_for_cook@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: pointer to NULL entry vs NULL user_data
+?unload@victory_item@survarium@@UAEXXZ	EQUIVALENT	confirms pass 5: never-null safe-bool check
 ?up_to_terrain@human_npc@survarium@@AAEXXZ	EQUIVALENT	pass-5 fix complete: feet target = (position.x, hit.y, position.z) both; != test and offset vs m_transform.c (retail member reads, ours position copy, same values); min NaN order equal
+?update_bones_matrices@empty_hands@survarium@@EAEXABV?$resource_ptr@Vskeleton@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@QAVfloat4x4@math@5@IIAAV675@2ABVanimation_player@animation@5@@Z	EQUIVALENT	confirms pass 5: LTCG conv at calculated_head_matrix; same mul4x3 args
 ?update_camera@player@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: inlined fov_factor SSE vs x87, same op order
 ?update_channel_subscriptions@messaging_client@survarium@@AAEXXZ	EQUIVALENT	confirms pass 5: subscription table slot 4 = 1
 ?update_dispersion_visual_representation@weapon@survarium@@QAEXXZ	EQUIVALENT	confirms pass 5: atexit ICF naming; same FP/calls
@@ -336,6 +376,7 @@ mangled	verdict	evidence
 ?update_tracer@game_world@survarium@@UAEXGABVfloat3@math@vostok@@0M@Z	EQUIVALENT	confirms pass 5: cross products i=(0,1,0)xd, j=dxi same terms; fpx diff is stack-slot naming only
 ?update_ui@game_world_ui@survarium@@QAEXII@Z	EQUIVALENT	confirms pass 5: size() test sar 2/jbe vs test 0FFFFFFFCh/je (same nonzero test); byte flag [+226Ch]
 ?update_ui@lobby_menu@survarium@@AAEXII@Z	EQUIVALENT	confirms pass 5: scheduling/frame only
+?vertex_id@animation_space_graph_wrapper@survarium@@QBE?AUanimation_space_vertex_id@2@ABU32@I@Z	EQUIVALENT	confirms pass 5: LTCG conv (ret 4 vs 8); same FP ops
 ?weapon_resources_ready@profile_character@survarium@@AAEXAAVqueries_result@resources@vostok@@@Z	EQUIVALENT	confirms pass 5: target-only; source read against retail (2 slots stride 74h, remove/clear/add)
 `dynamic initializer for 'cfg_save_system_cc''	EQUIVALENT	confirms pass 5: command type 0 at +10h both
 `dynamic initializer for 'cfg_save_user_cc''	EQUIVALENT	confirms pass 5: command type 0 at +10h both
