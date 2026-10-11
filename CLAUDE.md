@@ -179,8 +179,11 @@ Iterate with `vostok build --code-only`.
   disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
   for control flow (its exit code 1 is an answer, read the printed verdict),
   `binaries/structure/target/headers` for class layout and vtable order.
-- Attribute a residual to LTCG only when it is proven to be argument passing at a
-  call boundary; otherwise it is source shape, or a concrete wall to record.
+- Attribute a residual to LTCG only when it is proven: argument passing at a call
+  boundary, or a header inline called out of line because the kept COMDAT copy
+  belongs to another optimisation class (`/Od` vs `/Og`). Otherwise it is source
+  shape, or a concrete wall to record. `vostok sema ltcg <fn>` and the decision
+  guide in `docs/binary_matching/ltcg.md` tell them apart.
 - Every commit is a measured state: run the full `vostok build` and commit the
   refreshed README block and ledger with the change. Record worked functions with
   `vostok ledger tried`. Stacks stay linear; land by fast-forward, never squash.

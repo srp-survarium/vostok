@@ -139,6 +139,7 @@ Vostok's PDB-PDB evidence databases as well as the CFG views:
     python3 -m vostok sema branches <fn> --diff          # branch sequence, diffed
     python3 -m vostok sema dot      <fn> [--base|--diff] # graphviz
     python3 -m vostok sema sweep --module render [--unit U] [--min-pct P] [--max N]
+    python3 -m vostok sema ltcg     <fn>             # LTCG mechanism tags + fast-loop trust (ltcg.md)
 
 `rva`, `xref`, and `strings` were ported as native rich-index readers rather
 than copying either project's PE/COFF assumptions. Direct calls and literal
