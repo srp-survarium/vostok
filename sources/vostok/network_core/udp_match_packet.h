@@ -67,9 +67,9 @@ private:
 		m_buffer.elems[0]		= 0;
 	}
 private:
-	// trivial dtor (POD/aggregate members); the empty body is correct. Referenced via
-	// helper::call_destructor in delete_udp_match_packet but never emitted standalone
-	// (inlined into the destroying scope - no ??1 target symbol).
+
+
+	// never emitted standalone: inlined where delete_udp_match_packet destroys it
 	inline				~udp_match_packet	( ) { }
 
 public:

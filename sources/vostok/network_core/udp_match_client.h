@@ -52,8 +52,8 @@ public:
 
 			void								check_consistency			( ) const;
 
-	// STATE[INLINED]: body from match_client_impl ctor 0x766240 +0x1f7 (folded
-	// function1::operator= into this+0x558 = m_on_disconnect)
+
+	// STATE[INLINED]
 	inline	void								set_on_disconnect			( boost::function< void( enum disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	// STATE[UNMATCHABLE]: these legacy convenience seams mirror the connection API,
@@ -69,18 +69,18 @@ public:
 	inline	boost::asio::ip::udp::endpoint		endpoint					( ) const { return m_server_endpoint; }
 
 	inline	u32									last_send_time_in_ms		( ) const { return m_connection.last_send_time_in_ms( ); }
-	// STATE[INLINED]: body from match_client::last_receive_time_in_ms 0x74c5f0
-	// (single load of impl+0x258134 = m_connection+0xfc)
+
+	// STATE[INLINED]
 	inline	u32									last_receive_time_in_ms		( ) const { return m_connection.last_receive_time_in_ms( ); }
 	inline	u32									last_activity_time_in_ms	( ) const { return m_connection.last_activity_time_in_ms( ); }
 
-	// STATE[INLINED]: bodies from match_client::is_connected/is_disconnected
-	// 0x74c670/0x74c620 (cmp impl+0x258154 = m_connection.m_state vs 0/3)
+
+	// STATE[INLINED]
 	inline	bool								is_connected				( ) const { return m_connection.is_connected( ); }
 	inline	bool								is_disconnected				( ) const { return m_connection.is_disconnected( ); }
 
-	// STATE[INLINED]: body from match_client_impl 0x765d90 +0x73 / 0x765d30 +0x33
-	// (folded function2::operator= into this+0x538 = m_on_packet_received)
+
+	// STATE[INLINED]
 	inline	void								set_on_packet_received		( client_on_packet_received_type const& value ) { m_on_packet_received = value; }
 
 private:
