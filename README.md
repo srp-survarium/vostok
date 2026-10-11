@@ -10,32 +10,32 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 
 _Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 10,720 / 13,014 functions exact (82.37%) &middot; 11,289 / 13,014 functions exact-max (86.75%) &middot; 94.24% fuzzy &middot; 95.84% fuzzy-max.**
+**Overall: 10,680 / 13,014 functions exact (82.07%) &middot; 11,287 / 13,014 functions exact-max (86.73%) &middot; 94.15% fuzzy &middot; 95.84% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
-| `render`        |   351 | 2,062 / 2,734 (75.4%) | 2,281 / 2,734 (83.4%) |  92.6% |     94.6% |
-| `game`          |   141 | 1,029 / 1,528 (67.3%) | 1,156 / 1,528 (75.7%) |  86.9% |     89.9% |
-| `core`          |   136 | 1,175 / 1,325 (88.7%) | 1,261 / 1,325 (95.2%) |  97.5% |     98.8% |
-| `vostok`        |   112 | 1,136 / 1,250 (90.9%) | 1,151 / 1,250 (92.1%) |  97.7% |     98.6% |
-| `game_core`     |   189 |   863 / 1,181 (73.1%) |   894 / 1,181 (75.7%) |  93.8% |     96.9% |
+| `render`        |   351 | 2,057 / 2,734 (75.2%) | 2,281 / 2,734 (83.4%) |  92.5% |     94.6% |
+| `game`          |   141 | 1,021 / 1,528 (66.8%) | 1,156 / 1,528 (75.7%) |  86.7% |     89.9% |
+| `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,261 / 1,325 (95.2%) |  97.4% |     98.8% |
+| `vostok`        |   112 | 1,130 / 1,250 (90.4%) | 1,150 / 1,250 (92.0%) |  98.0% |     98.6% |
+| `game_core`     |   189 |   855 / 1,181 (72.4%) |   894 / 1,181 (75.7%) |  93.5% |     96.9% |
 | `animation`     |   102 |     611 / 727 (84.0%) |     628 / 727 (86.4%) |  94.1% |     94.6% |
-| `ai`            |   124 |     650 / 691 (94.1%) |     660 / 691 (95.5%) |  99.4% |     99.6% |
+| `ai`            |   124 |     647 / 691 (93.6%) |     660 / 691 (95.5%) |  99.3% |     99.6% |
 | `sound`         |    69 |     499 / 510 (97.8%) |     500 / 510 (98.0%) |  99.8% |     99.9% |
 | `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) |  98.4% |     98.7% |
 | `scaleform`     |    47 |     420 / 454 (92.5%) |     425 / 454 (93.6%) |  96.7% |     96.9% |
 | `particle`      |    25 |     390 / 400 (97.5%) |     398 / 400 (99.5%) |  99.6% |    100.0% |
-| `vfs`           |    71 |     321 / 390 (82.3%) |     321 / 390 (82.3%) |  98.5% |     98.5% |
-| `ui`            |    27 |     224 / 227 (98.7%) |     224 / 227 (98.7%) | 100.0% |    100.0% |
+| `vfs`           |    71 |     319 / 390 (81.8%) |     321 / 390 (82.3%) |  98.4% |     98.5% |
+| `ui`            |    27 |     221 / 227 (97.4%) |     223 / 227 (98.2%) |  99.5% |     99.9% |
 | `physics`       |    14 |     138 / 198 (69.7%) |     159 / 198 (80.3%) |  90.1% |     95.1% |
 | `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
 | `engine`        |    22 |     156 / 162 (96.3%) |     161 / 162 (99.4%) |  99.5% |    100.0% |
 | `network`       |    25 |      91 / 159 (57.2%) |      94 / 159 (59.1%) |  90.6% |     91.4% |
 | `network_core`  |    22 |      95 / 127 (74.8%) |      97 / 127 (76.4%) |  98.2% |     98.2% |
 | `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
-| `logging`       |    10 |       55 / 72 (76.4%) |       61 / 72 (84.7%) |  97.5% |     99.6% |
+| `logging`       |    10 |       53 / 72 (73.6%) |       61 / 72 (84.7%) |  97.0% |     99.6% |
 | `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  97.7% |     99.8% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
@@ -48,11 +48,11 @@ _Updated 2026-10-11 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 98.15% (421,104,583 / 429,051,363).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,088,375 / 429,051,363).**
 
-_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,495 otherwise-exact functions (610,021 code bytes) with referent debt._
+_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,484 otherwise-exact functions (602,731 code bytes) with referent debt._
 
-_The linked-image audit is 98.51% exact and covers 98.57% by PDB type extent, with 99.96% paired-only fidelity (12888 / 13321 definitions). Integrity ratchet: armed._
+_The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11805 / 13321 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-11._
 <!-- data-match:end -->
