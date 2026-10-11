@@ -683,7 +683,7 @@ void renderer::fill_opaque_models( )
 			if ( me.m_effects[gbuffer_render_stage].c_ptr( ) )
 				opaque_models.push_back( *i );
 		}
-		sort_models( opaque_models, gbuffer_render_stage, 0 );
+		sort_models( m_renderer_context->get_scene_view( )->get_visible_opaque_models( ), gbuffer_render_stage, 0 );
 		return;
 	}
 
@@ -715,16 +715,16 @@ void renderer::fill_opaque_models( )
 
 		float const lod0_threshold = s_debug_use_skeletel_mesh_lods_value && skeletal_mesh ? 0.01f : 0.005f;
 
-		instance->m_shader_lod_index = factor > lod0_threshold ? 0
+		( *i )->m_shader_lod_index = factor > lod0_threshold ? 0
 			: factor <= 0.0000333f && instance->m_render_surface
 				&& instance->m_render_surface->get_vertex_input_type( ) == static_mesh_vertex_input_type ? 2 : 1;
 
 		instance->m_dynamic_screen_factor = factor;
 
-		if ( instance->m_shader_lod_index == 0 )
-			opaque_models_lod0.push_back( instance );
-		else if ( instance->m_shader_lod_index == 1 )
-			opaque_models_lod1.push_back( instance );
+		if ( ( *i )->m_shader_lod_index == 0 )
+			opaque_models_lod0.push_back( *i );
+		else if ( ( *i )->m_shader_lod_index == 1 )
+			opaque_models_lod1.push_back( *i );
 	}
 
 	if ( opaque_models_lod0.size( ) )

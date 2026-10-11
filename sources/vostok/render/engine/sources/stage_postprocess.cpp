@@ -264,8 +264,7 @@ void scene_shader_constants::set(
 
 static float gaussian( float x, float mu, float sigma )
 {
-	float const g = ( x - mu ) * ( 1.0f / sigma );
-	return vostok::math::exp( -0.5f * g * g );
+	return vostok::math::exp( -0.5f * math::sqr( ( x - mu ) * ( 1.0f / sigma ) ) );
 }
 
 static void get_gaussain_weights_offsets(
@@ -853,10 +852,8 @@ void stage_postprocess::execute( )
 		fill_surface2( m_context->get_rt( rt_final_frame_downsampled ) );
 
 		m_image_space_reflections_effect->apply( 0, 0 );
-		backend::ref( ).set_ps_constant(
-			m_blur_target_size_parameter,
-			m_context->get_screen_resolution( )
-		);
+		float3 const* const eye_rays = m_context->get_eye_rays( );
+		backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
 		fill_surface2( m_context->get_rt( rt_generic_0 ) );
 	}
 
@@ -1014,12 +1011,8 @@ void stage_postprocess::execute( )
 
 	if ( s_debug_pp_4 )
 	{
-		if ( options::ref( ).current.m_post_process_quality &&
-			 pp_parameters.enable_advanced_bloom )
-		{
-			advanced_bloom( );
-		}
-		else
+		if ( !options::ref( ).current.m_post_process_quality ||
+			 !pp_parameters.enable_advanced_bloom )
 		{
 			u32 const kernel_index = math::clamp_r(
 				pp_parameters.blur_kernel,
@@ -1068,13 +1061,17 @@ void stage_postprocess::execute( )
 			);
 			fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 		}
+		else
+		{
+			advanced_bloom( );
+		}
 	}
 
 	if ( s_debug_pp_5 && pp_parameters.use_dynamic_lens_flares )
 	{
 		backend::ref( ).flush_rt_shader_resources( );
 		m_lens_flares_effect->apply( 0, 0 );
-		if ( pp_parameters.lens_flares_mask_texture )
+		if ( pp_parameters.lens_flares_mask_texture.c_ptr( ) )
 			backend::ref( ).set_ps_texture(
 				"t_lensdirt",
 				&*pp_parameters.lens_flares_mask_texture
@@ -1098,16 +1095,11 @@ void stage_postprocess::execute( )
 
 	if ( s_debug_pp_6 )
 	{
-		bool use_bokeh_dof = false;
-		bool use_bokeh_image = false;
-		bool use_image_grain = false;
-		if ( options::ref( ).current.m_post_process_quality )
-		{
-			use_bokeh_dof = pp_parameters.use_bokeh_dof;
-			if ( use_bokeh_dof )
-				use_bokeh_image = pp_parameters.use_bokeh_image;
-			use_image_grain = pp_parameters.use_image_grain;
-		}
+		bool use_bokeh_dof = options::ref( ).current.m_post_process_quality
+			? pp_parameters.use_bokeh_dof : false;
+		bool use_bokeh_image = use_bokeh_dof ? pp_parameters.use_bokeh_image : false;
+		bool use_image_grain = options::ref( ).current.m_post_process_quality
+			? pp_parameters.use_image_grain : false;
 
 		m_sh_complex_blend
 			[use_bokeh_dof]
@@ -1136,21 +1128,22 @@ void stage_postprocess::execute( )
 			pp_parameters
 		);
 
-		if ( options::ref( ).current.m_post_process_quality &&
-			 pp_parameters.use_color_grading_lut &&
-			 pp_parameters.color_grading_texture.c_ptr( ) )
+		if ( options::ref( ).current.m_post_process_quality )
 		{
-			backend::ref( ).set_ps_texture(
-				"t_color_grading_lut",
-				&*pp_parameters.color_grading_texture
-			);
-		}
-		else
-		{
-			backend::ref( ).set_ps_texture(
-				"t_color_grading_lut",
-				&*m_color_grading_base_lut
-			);
+			if ( pp_parameters.use_color_grading_lut && pp_parameters.color_grading_texture )
+			{
+				backend::ref( ).set_ps_texture(
+					"t_color_grading_lut",
+					&*pp_parameters.color_grading_texture
+				);
+			}
+			else
+			{
+				backend::ref( ).set_ps_texture(
+					"t_color_grading_lut",
+					&*m_color_grading_base_lut
+				);
+			}
 		}
 
 		backend::ref( ).set_ps_constant( m_sun_direction_parameter, sun_direction );

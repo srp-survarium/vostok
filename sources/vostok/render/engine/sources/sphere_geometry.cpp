@@ -26,11 +26,10 @@ sphere_geometry::sphere_geometry( u32 const num_sides, u32 const num_rings ) :
 	u16* indices = static_cast<u16*>( ALLOCA( sizeof(u16) * num_indices ) );
 	u16* indices_it = indices;
 
-	u32 i;
-	for ( i = 0; i < num_rings + 1; ++i )
+	for ( u32 i = 0; i < num_rings + 1; ++i )
 		new (vertices_it++) vertex_type;
 
-	for ( i = 0; i < num_rings + 1; ++i )
+	for ( u32 i = 0; i < num_rings + 1; ++i )
 	{
 		float const angle = float(i) / float(num_rings) * math::pi;
 		side_vertices[i].position.x = math::sin( angle );
@@ -43,29 +42,29 @@ sphere_geometry::sphere_geometry( u32 const num_sides, u32 const num_rings ) :
 
 	vertices_it = vertices;
 	u32 s;
-	for ( i = 0; i < num_sides + 1; ++i, vertices_it += num_rings + 1 )
+	for ( s = 0; s < num_sides + 1; ++s, vertices_it += num_rings + 1 )
 	{
-		float4x4 rotation_matrix = math::create_rotation_y( float(i) * math::pi_x2 / float(num_sides) );
-		float texcoord_u = float(i) / float(num_sides);
+		float4x4 rotation_matrix = math::create_rotation_y( float(s) * math::pi_x2 / float(num_sides) );
+		float texcoord_u = float(s) / float(num_sides);
 
-		for ( s = 0; s < num_rings + 1; ++s )
+		for ( u32 i = 0; i < num_rings + 1; ++i )
 		{
-			vertices_it[s].position = rotation_matrix.transform( side_vertices[s].position );
-			vertices_it[s].uv.x = texcoord_u;
-			vertices_it[s].uv.y = side_vertices[s].uv.y;
+			vertices_it[i].position = float4( rotation_matrix.transform_position( side_vertices[i].position.xyz() ), 1.f );
+			vertices_it[i].uv.x = texcoord_u;
+			vertices_it[i].uv.y = side_vertices[i].uv.y;
 		}
 	}
 
-	for ( i = 0; i < num_sides; ++i )
+	for ( s = 0; s < num_sides; ++s )
 	{
-		for ( s = 0; s < num_rings; ++s )
+		for ( u32 i = 0; i < num_rings; ++i )
 		{
-			*(indices_it++) = static_cast<u16>( i * (num_rings + 1) + s );
-			*(indices_it++) = static_cast<u16>( i * (num_rings + 1) + s + 1 );
-			*(indices_it++) = static_cast<u16>( (i + 1) * (num_rings + 1) + s );
-			*(indices_it++) = static_cast<u16>( (i + 1) * (num_rings + 1) + s );
-			*(indices_it++) = static_cast<u16>( i * (num_rings + 1) + s + 1 );
-			*(indices_it++) = static_cast<u16>( (i + 1) * (num_rings + 1) + s + 1 );
+			*(indices_it++) = static_cast<u16>( s * (num_rings + 1) + i );
+			*(indices_it++) = static_cast<u16>( s * (num_rings + 1) + i + 1 );
+			*(indices_it++) = static_cast<u16>( (s + 1) * (num_rings + 1) + i );
+			*(indices_it++) = static_cast<u16>( (s + 1) * (num_rings + 1) + i );
+			*(indices_it++) = static_cast<u16>( s * (num_rings + 1) + i + 1 );
+			*(indices_it++) = static_cast<u16>( (s + 1) * (num_rings + 1) + i + 1 );
 		}
 	}
 

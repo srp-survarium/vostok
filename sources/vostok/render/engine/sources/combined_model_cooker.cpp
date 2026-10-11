@@ -282,9 +282,13 @@ skeleton_combined_model_instance_cook::skeleton_combined_model_instance_cook( ) 
 
 void skeleton_combined_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	resources::user_data_variant ud;
 	skeleton_combined_cook_data* cook_data = 0;
 	if ( parent.user_data( ) )
 		parent.user_data( )->try_get( cook_data );
+
+	ud.set( cook_data );
+	resources::user_data_variant const* params[2] = { &ud, 0 };
 
 	resources::request r[2] = {
 		{ parent.get_requested_path( ), resources::skeleton_combined_render_model_instance_class },
@@ -294,10 +298,6 @@ void skeleton_combined_model_instance_cook::translate_query( resources::query_re
 			resources::skeleton_class
 		}
 	};
-
-	resources::user_data_variant ud;
-	ud.set( cook_data );
-	resources::user_data_variant const* params[2] = { &ud, 0 };
 
 	resources::query_resources(
 		r, 2,

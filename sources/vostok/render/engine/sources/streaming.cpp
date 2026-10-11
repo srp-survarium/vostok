@@ -31,19 +31,19 @@ float calculate_streaming_texture_factor(
 
 
 
-		u32 const index2 = indices[ i * 3 + 2 ] * vertex_stride;
+
 		float const l1 =
 			( *pointer_cast< float3 const* >( pointer_cast< pcbyte >( positions ) + index0 ) - *pointer_cast< float3 const* >( pointer_cast< pcbyte >( positions ) + index1 ) ).length( );
 
 
 		float const t1 = math::max( ( *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + index0 ) - *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + index1 ) ).length( ), math::epsilon_5 );
-		float const t2 = math::max( ( *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + index0 ) - *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + index2 ) ).length( ), math::epsilon_5 );
+		float const t2 = math::max( ( *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + index0 ) - *pointer_cast< float2 const* >( pointer_cast< pcbyte >( uvs ) + indices[ i * 3 + 2 ] * vertex_stride ) ).length( ), math::epsilon_5 );
 
 		if ( math::abs( t1 * t2 ) > math::epsilon_5 )
 			texel_ratios.push_back( math::max( l1 / t1, l1 / t2 ) );
 	}
 
-	if ( !texel_ratios.empty( ) )
+	if ( texel_ratios.size( ) )
 	{
 		std::sort( texel_ratios.begin( ), texel_ratios.end( ) );
 		streaming_factor = texel_ratios[ u32( texel_ratios.size( ) * .05f ) ];
@@ -75,7 +75,7 @@ s32 calculate_needed_texture_mip_levels(
 
 	if ( distance > object_sphere.radius )
 	{
-		float const screen_space_scale = distance / math::sqrt( math::sqr( distance ) - math::sqr( object_sphere.radius ) );
+		float const screen_space_scale = object_sphere.radius / math::sqrt( math::sqr( distance ) - math::sqr( object_sphere.radius ) );
 		float screen_space_size_x = screen_size_x * screen_space_scale * 2.f;
 		float screen_space_size_y = screen_size_y * screen_space_scale * 2.f;
 
