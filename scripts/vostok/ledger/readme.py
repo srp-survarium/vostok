@@ -31,7 +31,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import datetime
 import json
 
 from vostok.core.paths import FLAKE_LOCK, MATCH_STATE, README, REPORT
@@ -134,39 +133,44 @@ def module_stats() -> dict[str, dict]:
             f"no ledger at {MATCH_STATE} - run `python3 -m vostok build` (or "
             "`python3 -m vostok derive refresh` if the report is already built)"
         )
-    # module -> [n_funcs, exact_cur, exact_max, code, fuzzy_cur_num, fuzzy_max_num]
+    # module -> [n_funcs, exact_cur, exact_max, code, fuzzy_cur_num, fuzzy_max_num,
+    #            exact_hist, fuzzy_hist_num]
     agg: dict[str, list[float]] = {}
 
-    def acc(mod: str, size: float, cur: float, maximum: float) -> None:
+    def acc(mod: str, size: float, cur: float, maximum: float, hist: float) -> None:
         # A row with no module is banked from a build whose target spelling is
         # gone; it belongs to no module's tally and carries no weight.
         if not mod or mod in _NON_ENGINE:
             return
-        a = agg.setdefault(mod, [0, 0, 0, 0.0, 0.0, 0.0])
+        a = agg.setdefault(mod, [0, 0, 0, 0.0, 0.0, 0.0, 0, 0.0])
         a[0] += 1
         a[1] += 1 if cur >= _EXACT else 0
         a[2] += 1 if maximum >= _EXACT else 0
         a[3] += size
         a[4] += cur * size
         a[5] += maximum * size
+        a[6] += 1 if hist >= _EXACT else 0
+        a[7] += hist * size
 
     # Unpaired (inlined/folded target-only) rows carry cur = None: 0% now, full
     # size as weight, and MAX credit only from a hash-scoped peak.
     for row in store.load(str(MATCH_STATE)).values():
         cur = row["cur"] or 0.0
-        acc(row["module"], row["size"] or 0, cur, max(cur, _proven(row)))
+        maximum = max(cur, _proven(row))
+        acc(row["module"], row["size"] or 0, cur, maximum, max(maximum, row["hist"] or 0.0))
     if not agg:
         raise ScoreDataUnavailable(f"{MATCH_STATE} has no function rows")
     units = {m: n for m, n in _unit_counts().items() if m not in _NON_ENGINE}
 
     out: dict[str, dict] = {}
-    tot = [0, 0, 0, 0.0, 0.0, 0.0]
+    tot = [0, 0, 0, 0.0, 0.0, 0.0, 0, 0.0]
     for mod, a in agg.items():
         out[mod] = {
             "total_funcs": int(a[0]), "units": int(units.get(mod, 0)),
             "exact_cur": int(a[1]), "exact_max": int(a[2]),
             "fuzzy_cur": a[4] / a[3] if a[3] else 0.0,
             "fuzzy_max": a[5] / a[3] if a[3] else 0.0,
+            "exact_hist": int(a[6]), "fuzzy_hist": a[7] / a[3] if a[3] else 0.0,
         }
         tot = [x + y for x, y in zip(tot, a)]
     out["OVERALL"] = {
@@ -174,72 +178,57 @@ def module_stats() -> dict[str, dict]:
         "exact_cur": int(tot[1]), "exact_max": int(tot[2]),
         "fuzzy_cur": tot[4] / tot[3] if tot[3] else 0.0,
         "fuzzy_max": tot[5] / tot[3] if tot[3] else 0.0,
+        "exact_hist": int(tot[6]), "fuzzy_hist": tot[7] / tot[3] if tot[3] else 0.0,
     }
     return out
 
 
 def render(delinker_rev: str) -> str:
-    today = datetime.date.today().isoformat()
-
-    # Every FIGURE in the block comes from the committed ledger (sushi:
-    # "calculated through our database entirely, not by using anything from
-    # report"). There is NO report.json fallback on purpose - see
-    # ScoreDataUnavailable; only the unit NAMES come from it.
+    # Every FIGURE in the block comes from the committed ledger; only the unit
+    # NAMES come from report.json (see ScoreDataUnavailable).
+    del delinker_rev
     db = module_stats()
-
     ov = db["OVERALL"]
-    funcs, tfuncs = ov["exact_cur"], ov["total_funcs"]
+    tfuncs = ov["total_funcs"]
+
+    def exact(n: int) -> str:
+        return f"{n:,}"
+
+    scores = _md_table(
+        ["Score", "Functions exact", "Weighted", "Meaning"],
+        "lrrl",
+        [
+            ["CUR", exact(ov["exact_cur"]), f"{ov['fuzzy_cur']:.2f}%", "last measured score"],
+            ["MAX", exact(ov["exact_max"]), f"{ov['fuzzy_max']:.2f}%",
+             "best result for each function's current source"],
+            ["HIST", exact(ov["exact_hist"]), f"{ov['fuzzy_hist']:.2f}%",
+             "all-time peak across source revisions"],
+        ],
+    )
     rows = []
     for mod in sorted((m for m in db if m != "OVERALL"),
                       key=lambda k: -db[k]["total_funcs"]):
         a = db[mod]
-        tot = a["total_funcs"]
-        exc, exm = a["exact_cur"], a["exact_max"]
-        fzc, fzm = a["fuzzy_cur"], a["fuzzy_max"]
-        rows.append([
-            f"`{mod}`",
-            f"{a['units']}",
-            f"{exc:,} / {tot:,} ({_pct(exc, tot):.1f}%)",
-            f"{exm:,} / {tot:,} ({_pct(exm, tot):.1f}%)",
-            f"{fzc:.1f}%",
-            f"{fzm:.1f}%",
-        ])
-    table = _md_table(
-        ["Module", "Units", "Functions exact", "Functions exact-max",
-         "Fuzzy", "Fuzzy-max"],
-        "lrrrrr",
-        rows,
-    )
+        tot, exm = a["total_funcs"], a["exact_max"]
+        rows.append([f"`{mod}`", f"{a['units']}",
+                     f"{exm:,} / {tot:,} ({_pct(exm, tot):.1f}%)", f"{a['fuzzy_max']:.2f}%"])
+    modules = _md_table(["Module", "Units", "Functions exact MAX", "Weighted MAX"], "lrrr", rows)
 
     lines = [
         START,
         "## Match status",
         "",
-        "_Auto-generated from `config/match_state.tsv` (the committed "
-        "matching ledger) - refreshed by `vostok build` at the end of every build; "
-        "do not hand-edit. Diff this block across commits to spot regressions._",
+        f"**`survarium.exe`: {ov['fuzzy_max']:.2f}% matched (MAX)** - "
+        f"{ov['exact_max']:,} / {tfuncs:,} functions exact "
+        f"({_pct(ov['exact_max'], tfuncs):.1f}%), weighted by code size.",
         "",
-        f"**Overall: {funcs:,} / {tfuncs:,} functions exact "
-        f"({_pct(funcs, tfuncs):.2f}%) &middot; "
-        f"{ov['exact_max']:,} / {tfuncs:,} functions exact-max "
-        f"({_pct(ov['exact_max'], tfuncs):.2f}%) &middot; "
-        f"{ov['fuzzy_cur']:.2f}% fuzzy &middot; "
-        f"{ov['fuzzy_max']:.2f}% fuzzy-max.**",
+        *scores,
         "",
-        "_All figures come from the ledger over every target function (paired plus "
-        "inlined/folded target-only). **Functions exact** and **Fuzzy** describe the "
-        "current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak "
-        "proven for the function's own source body (`hash`), which resets when that "
-        "body changes; the all-time `hist` peak is never promoted into it, and a "
-        "banked peak carrying no `hash` is not credited. Byte-weighted code view: "
-        "`python3 -m vostok ledger readme --max-code`._",
+        "MAX by module:",
         "",
-        *table,
-    ]
-    lines += [
+        *modules,
         "",
-        f"_Updated {today} &middot; delinker `{delinker_rev}` "
-        f"(folded-symbol reconciliation)._",
+        "_Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand._",
         END,
     ]
     return "\n".join(lines)
