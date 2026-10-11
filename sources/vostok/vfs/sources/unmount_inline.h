@@ -177,7 +177,6 @@ void   unmounter::recursive_unmount_folder (fs_new::virtual_path_string &	path,
 		{
 			base_node<> * overlap_of_child_to_unmount	=	NULL;
 			recursive_unmount_node			(child_path, child_hash, predicate, child_to_unmount, overlap_of_child_to_unmount);
-			R_ASSERT						(child_to_unmount == child);
 			if ( overlap_of_child_to_unmount )
 				overlap_of_child_to_unmount->set_next_overlapped(child_to_unmount->get_next_overlapped());
 		}

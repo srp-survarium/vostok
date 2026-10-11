@@ -97,8 +97,7 @@ void   resources_manager::dump_unmanaged_resource_leaks ()
 
 resources_manager::~resources_manager ()
 {
-	if ( !threading::g_debug_single_thread )
-		if ( memory::g_use_resources_manager )
+	if ( !threading::g_debug_single_thread && memory::g_use_resources_manager )
 		{
 			memory::g_resources_helper_allocator.user_current_thread_id( );
 			memory::g_resources_unmanaged_allocator.user_current_thread_id( );

@@ -21,13 +21,37 @@ class weapon_user_animations_container : public resources::unmanaged_resource , 
 public:
 			resources::managed_resource_ptr	get_stand_animation			( const bool aimed, const u32 index, const bool is_third_view ) const;
 			resources::managed_resource_ptr	get_crouch_animation		( const bool aimed, const u32 index, const bool is_third_view ) const;
-	inline	resources::managed_resource_ptr get_sprint_animation		( const u32 index, const bool is_third_view ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < sprint_animations_count ) ); return m_sprint_animations[is_third_view][index]; }
-	inline	resources::managed_resource_ptr	get_jump_animation			( const u32 index, const bool is_third_view ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < jump_animations_count ) ); return m_jump_animations[is_third_view][index]; }
+	inline	resources::managed_resource_ptr get_sprint_animation		( const u32 index, const bool is_third_view ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < sprint_animations_count ) );
+		return m_sprint_animations[is_third_view][index];
+	}
+	inline	resources::managed_resource_ptr	get_jump_animation			( const u32 index, const bool is_third_view ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < jump_animations_count ) );
+		return m_jump_animations[is_third_view][index];
+	}
 
-	inline	pcstr		get_stand_animation_caption		( const bool aimed, const u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) ); return stand_animations_captions[ index ]; }
-	inline	pcstr		get_crouch_animation_caption	( const bool aimed, const u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) ); return crouch_animations_captions[ index ]; }
-	inline	pcstr		get_sprint_animation_caption	( const u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < sprint_animations_count ) ); return sprint_animations_captions[ index ]; }
-	inline	pcstr		get_jump_animation_caption		( const u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < jump_animations_count ) ); return jump_animations_captions[ index ]; }
+	inline	pcstr		get_stand_animation_caption		( const bool aimed, const u32 index ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) );
+		return stand_animations_captions[ index ];
+	}
+	inline	pcstr		get_crouch_animation_caption	( const bool aimed, const u32 index ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) );
+		return crouch_animations_captions[ index ];
+	}
+	inline	pcstr		get_sprint_animation_caption	( const u32 index ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < sprint_animations_count ) );
+		return sprint_animations_captions[ index ];
+	}
+	inline	pcstr		get_jump_animation_caption		( const u32 index ) const
+	{
+		ASSERT( UNKNOWN_EXPRESSION_T( index < jump_animations_count ) );
+		return jump_animations_captions[ index ];
+	}
 
 	enum {
 		move_directions_count = 9,

@@ -48,8 +48,10 @@ inline scheduler::record& scheduler::register_object( scheduler::id_type* identi
 inline void scheduler::register_on_frame( scheduler::id_type* const identifier, scheduler::callback_type const& callback, const bool active )
 {
 	scheduler::record& record = register_object( identifier, callback, active );
-	record.m_type = type_on_frame; record.m_update_delta = u32(-1); record.m_max_update_count = 0;
-	record.m_last_update_time = 0;
+	record.m_type			   = type_on_frame;
+	record.m_update_delta	   = u32(-1);
+	record.m_max_update_count  = 0;
+	record.m_last_update_time  = 0;
 }
 
 inline void scheduler::register_for_update(
@@ -74,11 +76,13 @@ inline void scheduler::unregister( scheduler::id_type* identifier )
 		m_current_index -= 1;
 
 	scheduler::OBJECTS& records = objects( identifier );
+
+
 	scheduler::record& src = records.back( );
 	scheduler::record& dst = records[identifier->m_id];
 
-    dst = src;
-	dst.m_id->m_id = identifier->m_id; 
+	dst = src;
+	dst.m_id->m_id = identifier->m_id;
 	records.pop_back( );
 
 	identifier->m_active = false;
