@@ -48,7 +48,6 @@ static float s_player_name_min_font_size = 12.f;
 static float s_player_name_max_font_size = 32.f;
 
 static float s_player_name_decrease_koef = 0.3f;
-static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
@@ -266,6 +265,7 @@ void player::apply_input_before_new_transform(
 
 static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
