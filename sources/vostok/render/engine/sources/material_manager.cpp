@@ -68,8 +68,8 @@ material_manager::~material_manager()
 static pcstr resources_materials_string						=	"resources/materials";
 static pcstr resources_material_instances_string			=	"resources/material_instances";
 static pcstr resources_materials_string_with_slash			=	"resources/materials/";
-// claude@NOTE: Retail retains the nominal 2.2f argument at the second byte-identical
-// pow call; the remaining temporary placement is its LTCG call-boundary convention.
+
+
 void material_manager::initialize_post_process_parameters(post_process_parameters* out_post_process_parameters_ptr, material_ptr mtl, bool force_recompilation)
 {
 	VOSTOK_UNREFERENCED_PARAMETER									(force_recompilation);

@@ -600,9 +600,9 @@ void scene_renderer::set_sky_material( base_scene_ptr const& scene, resources::u
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::set_sky_material, &m_render_engine_world, scene, mtl_ptr) ));
 }
 
-// claude@MATCH: the target binds engine::world::set_model_visible_by_id here -
-// world::set_model_visible takes the virtual_path_string overload, this facade
-// entry takes the resolved (surface_id, flags) pair.
+
+
+// binds the resolved-id overload; world::set_model_visible takes a virtual_path_string
 void scene_renderer::set_model_visible( render_model_instance_ptr const& v, u32 surface_id, u32 flags )
 {
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::set_model_visible_by_id, &m_render_engine_world, v, surface_id, flags) ));
@@ -721,8 +721,8 @@ void scene_renderer::end_render_options_changing(
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::end_render_options_changing, &m_render_engine_world, scene, output_window, reload_all_materials, shaders_recompile, waiting_for) ));
 }
 
-// claude@MATCH: the target passes the literal true for world::reset_renderer's
-// async_effects argument (mov byte ptr [esp+24h], 1 at the bind site).
+
+
 void scene_renderer::reset_renderer( )
 {
 	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::reset_renderer, &m_render_engine_world, true) ));

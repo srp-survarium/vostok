@@ -536,7 +536,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		float3 real_vp = m_context->get_view_pos( );
 
 		m_context->push_set_v( m_previous_view_matrix[cascade_index] );
-		// 1 target line is likely retail-compiled-out source.
+
 		m_context->push_set_p( m_previous_projection_matrix[cascade_index] );
 
 		render_dynamic_models( cascade_index, shadow_map_size, real_vp );

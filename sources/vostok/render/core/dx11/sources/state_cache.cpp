@@ -23,7 +23,7 @@ state_cache<device_state, state_desc>::~state_cache( )
 template < typename device_state, typename state_desc >
 void state_cache<device_state, state_desc>::clear_state_array( )
 {
-	// One retail source line emitted no code before the loop.
+
 	for ( u32 i=0; i<states.size(); ++i)
 		safe_release( states[i].state);
 	states.erase(states.begin(),states.end());

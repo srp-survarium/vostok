@@ -89,7 +89,7 @@ renderer_cook::renderer_cook( ) :
 	resources::register_cook( this );
 }
 
-// claude@NOTE: mutable_buffer construction remains out-of-line only in the target.
+
 mutable_buffer renderer_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
@@ -105,7 +105,7 @@ void renderer_cook::deallocate_resource( void* buffer )
 	FREE									(buffer);
 }
 
-// claude@NOTE: query_result_for_cook::user_data is inlined only in the target.
+
 void renderer_cook::create_resource(
 	resources::query_result_for_cook&		in_out_query,
 	const_buffer							raw_file_data,
@@ -731,7 +731,7 @@ void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view
 	static_cast_checked< render::scene_view* >(scene_view.c_ptr())->camera_set_projection	( projection_matrix );
 }
 
-// claude@NOTE: LTCG drops the two constant bool arguments to scene::flush in the base call site.
+
 void engine::world::draw_scene(
 	base_scene_ptr const&				scene,
 	base_scene_view_ptr const&			view,

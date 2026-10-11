@@ -215,7 +215,7 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 	return m_v2shadow0;
 }
 
-// claude@NOTE: LTCG selects different `this` handling across this call boundary.
+
 void renderer_context::set_target_context( renderer_context_targets const* targets_context, bool force_set )
 {
 	if (
