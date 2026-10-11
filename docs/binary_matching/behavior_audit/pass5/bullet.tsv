@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	no-dbvt compound: retail +0x15c1 je skips to the CProfileSample dtor (line 909), no child loop; yet 57' LocalInfoAdder (line 939) is compiled; source form unknown; dbvt never null for engine shapes

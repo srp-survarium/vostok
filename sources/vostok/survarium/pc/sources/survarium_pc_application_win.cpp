@@ -215,8 +215,8 @@ static void splash_screen_main		( )
 #else // #ifndef MASTER_GOLD
 		HWND_TOPMOST,
 #endif // #ifndef MASTER_GOLD
-		(screen_rectangle.right - screen_rectangle.left - info_header->biWidth)/2,
-		(screen_rectangle.bottom - screen_rectangle.top - info_header->biHeight)/2,
+		(screen_rectangle.right - screen_rectangle.left)/2 - info_header->biWidth/2,
+		(screen_rectangle.bottom - screen_rectangle.top)/2 - info_header->biHeight/2,
 		info_header->biWidth,
 		info_header->biHeight,
 		SWP_SHOWWINDOW

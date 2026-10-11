@@ -83,7 +83,7 @@ animation::mixing::animation_lexeme player_logic_stand_state::movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			m_owner.animations( ).get_stand_animation_caption( is_aimed, main_animation_index ),
-			m_owner.animations( ).get_stand_animation( is_aimed, animation_index, is_third_view ),
+			m_owner.animations( ).get_stand_animation( is_aimed, main_animation_index, is_third_view ),
 			0,
 			0
 		)

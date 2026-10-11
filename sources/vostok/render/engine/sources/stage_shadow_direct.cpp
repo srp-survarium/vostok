@@ -413,7 +413,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	if ( size < math::epsilon_7 )
 		return;
-	float current_cascade_align_mult = 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) * cascade_align_mults[cascade_index];
+	float current_cascade_align_mult = ( 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) ) * cascade_align_mults[cascade_index];
 	float current_cascade_offset = cascade_offsets[cascade_index];
 	if ( options::ref( ).current.m_update_shadows_every_frame )
 	{
@@ -491,7 +491,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 	float3 adjastment = compute_aligment( light_shift_xz, light_view_transform * light_projection_transform, float(shadow_map_size), current_cascade_align_mult, gran );
 
-	float4x4 light_view_transform_offset = math::create_camera_direction( sun->position + light_shift_xz + offset_to_viewer, sun->direction, float3( 1.f, 0.f, 0.f ) );
+	float4x4 light_view_transform_offset = math::create_camera_direction( sun->position + adjastment + offset_to_viewer, sun->direction, float3( 1.f, 0.f, 0.f ) );
 	float3 gran0;
 
 	float3 adjastment_of_offset = compute_aligment( light_shift_xz, light_view_transform_offset * light_projection_transform, float(shadow_map_size), 1.f, gran0 );

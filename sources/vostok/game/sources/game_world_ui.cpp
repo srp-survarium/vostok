@@ -223,7 +223,7 @@ void game_world_ui::set_match_time( u32 time_left_ms )
 			buff,
 			"MATCH TIME: %02d : %02d",
 			math::floor( time_left_ms * ( 1.0f / 60000.0f ) ),
-			math::floor( ( time_left_ms - math::floor( time_left_ms * ( 1.0f / 60000.0f ) ) * 60000 ) * 0.001f )
+			math::floor( ( ( float )time_left_ms - math::floor( time_left_ms * ( 1.0f / 60000.0f ) ) * 60000u ) * 0.001f )
 		);
 
 	flash_value match_time_str;

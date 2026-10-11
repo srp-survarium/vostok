@@ -127,7 +127,7 @@ render::static_model_ptr booby_trap_set::pick_ghost_model( bool is_placing_allow
 // claude@NOTE: 12/12 statements but two byte residuals remain. (1) The early-out
 // `if (model == m_current) return false;` is a separate statement in our base; the target
 // folds the model-temp release into a SHARED epilogue (a single ret path), so our explicit
-// `return false` emits its own model dtor + ret. (2) The boost::bind register_for_update
+// `return false` emits its own model dtor + ret. (2) The boost::bind register_on_frame
 // argument block (TRGT_ONLY rows) schedules differently. The `model` by-value local is fine
 // (this build is /Ox, the named local is elided from the PDB like action's `player`). The
 // shape is faithful; the residual is the early-return cleanup + boost::bind scheduling.
@@ -144,14 +144,7 @@ bool booby_trap_set::pick_current_ghost_model( float4x4 const& transform, bool i
 	if ( !m_current_rendering_model )
 	{
 		scheduler& scheduler = m_inventory->holder( ).scheduler( );
-		scheduler.register_for_update(
-			&m_scheduler_identifier,
-			boost::bind( &booby_trap_set::tick, this, _1, _2 ),
-			true,
-			0x7fffffff,
-			0,
-			0
-		);
+		scheduler.register_on_frame( &m_scheduler_identifier, boost::bind( &booby_trap_set::tick, this, _1, _2 ), true );
 	}
 
 	m_current_rendering_model = model;

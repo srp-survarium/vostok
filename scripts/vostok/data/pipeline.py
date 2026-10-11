@@ -83,16 +83,59 @@ def _engine_args(side: str) -> list[str]:
     ]
 
 
-def export_index(side: str) -> Path:
+def _index_export_command(side: str) -> list[str]:
     exe, pdb = image_paths(side)
     for source in (exe, pdb):
         if not source.is_file():
             raise RuntimeError(f"{source} is missing")
     delinker = os.environ.get("VOSTOK_DATA_DELINKER", "vostok-data-delinker")
-    if shutil.which(delinker) is None:
+    executable = shutil.which(delinker)
+    if executable is None:
         raise RuntimeError("vostok-delinker is not on PATH; enter `nix develop`")
+    return [
+        str(Path(executable).resolve()),
+        "--pdb-path", str(pdb),
+        "--exe-path", str(exe),
+        "--write-data-index", str(index_path(side)),
+        *_engine_args(side),
+    ]
+
+
+def _target_index_inputs(command: list[str] | None = None) -> dict:
+    if command is None:
+        command = _index_export_command("target")
+    exe, pdb = image_paths("target")
+    return {
+        "schema": 1,
+        "command": command,
+        "exporter_sha256": _file_hash(Path(command[0])),
+        "exe_sha256": _file_hash(exe),
+        "pdb_sha256": _file_hash(pdb),
+    }
+
+
+def _target_index_reusable(inputs: dict) -> bool:
+    try:
+        provenance = json.loads(
+            paths.DATA_TARGET_INDEX_PROVENANCE.read_text(encoding="utf-8")
+        )
+        return provenance == {
+            "inputs": inputs,
+            "index_sha256": _file_hash(paths.DATA_TARGET_INDEX),
+        }
+    except (OSError, ValueError, UnicodeError):
+        return False
+
+
+def export_index(side: str) -> Path:
+    command = _index_export_command(side)
+    inputs = _target_index_inputs(command) if side == "target" else None
+    if side == "target":
+        # A failed exporter may leave partial output. Its old stamp must never
+        # authorize that output, even if the command is retried later.
+        paths.DATA_TARGET_INDEX_PROVENANCE.unlink(missing_ok=True)
     help_result = subprocess.run(
-        [delinker, "--help"], capture_output=True, text=True, check=False
+        [command[0], "--help"], capture_output=True, text=True, check=False
     )
     if "--write-data-index" not in help_result.stdout + help_result.stderr:
         raise RuntimeError(
@@ -102,13 +145,15 @@ def export_index(side: str) -> Path:
     output = index_path(side)
     output.parent.mkdir(parents=True, exist_ok=True)
     log(f"exporting {side} PDB data inventory")
-    subprocess.run([
-        delinker,
-        "--pdb-path", str(pdb),
-        "--exe-path", str(exe),
-        "--write-data-index", str(output),
-        *_engine_args(side),
-    ], check=True)
+    subprocess.run(command, check=True)
+    if side == "target":
+        load(output)
+        if inputs != _target_index_inputs():
+            raise RuntimeError("retail inventory inputs changed during export")
+        write_if_changed(paths.DATA_TARGET_INDEX_PROVENANCE, json.dumps({
+            "inputs": inputs,
+            "index_sha256": _file_hash(output),
+        }, indent=2) + "\n")
     return output
 
 
@@ -749,6 +794,14 @@ def _access_kind(instruction: str, absolute_value: int | None = None) -> tuple[s
         return "address", width
     if mnemonic == "lea" or "[" not in operands:
         return "address", width
+    # LLVM Intel syntax prints x87 memory inputs as a single first operand.
+    # Arithmetic updates ST, not the addressed datum; stores retain WRITE below.
+    if mnemonic in {
+        "fadd", "fsub", "fsubr", "fmul", "fdiv", "fdivr", "fcom", "fcomp",
+        "fiadd", "fisub", "fisubr", "fimul", "fidiv", "fidivr", "ficom", "ficomp",
+        "fld", "fild", "fbld", "fldcw", "fldenv", "frstor",
+    }:
+        return "read", width
     if selected is not None and selected > 0:
         return "read", width
     if "[" in first:
@@ -1017,7 +1070,11 @@ def _write_coverage_gaps(symbols: list[DataSymbol], image: PEImage) -> None:
 
 
 def init_target(*, force: bool = False) -> None:
-    if paths.DATA_TARGET_INDEX.is_file() and not force:
+    regenerate = force
+    if not regenerate and not _target_index_reusable(_target_index_inputs()):
+        log("retail inventory provenance missing or stale; regenerating")
+        regenerate = True
+    if paths.DATA_TARGET_INDEX.is_file() and not regenerate:
         with paths.DATA_TARGET_INDEX.open(encoding="ascii") as source:
             has_public_anchors = any(
                 len(fields := line.rstrip("\n").split("\t")) == 11
@@ -1026,13 +1083,12 @@ def init_target(*, force: bool = False) -> None:
             )
         if not has_public_anchors:
             log("retail inventory predates public address anchors; regenerating")
-            force = True
-    if paths.DATA_TARGET_INDEX.is_file() and not force:
+            regenerate = True
+    if paths.DATA_TARGET_INDEX.is_file() and not regenerate:
         symbols = load(paths.DATA_TARGET_INDEX)
         image = PEImage(image_paths("target")[0])
-        # The PDB census is immutable, but these maps encode our current
-        # resolver and access-classification rules. Re-derive them so a tooling
-        # change can never leave apparently valid target evidence stale.
+        # The index is bound to its exporter and inputs; these maps also encode
+        # current resolver and access-classification rules. Always re-derive.
         _write_relocations("target", symbols, image)
         _write_access("target", symbols, image)
         _write_retail_census(symbols)

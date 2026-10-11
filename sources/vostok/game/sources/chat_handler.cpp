@@ -121,7 +121,7 @@ bool chat_handler::on_keyboard_action(
 		}
 	}
 
-	if( m_chat_ui && m_chat_ui->movie )
+	if( m_chat_ui )
 		m_game.input_translator( ).process_keyboard( input_world, key, action, get_movie( )->movie, m_game.game_time_ms( ) );
 
 	return true;
@@ -287,7 +287,7 @@ void chat_handler::set_mode( bool is_game_mode )
 			chat_tab_value.SetMember( "key", chat_tab_member );
 		}
 
-		channels_array.PushBack( chat_tab_value );
+		channels_array.SetElement( i, chat_tab_value );
 	}
 
 	get_movie( )->movie->Invoke( "root.set_channels", NULL, &channels_array, 1 );

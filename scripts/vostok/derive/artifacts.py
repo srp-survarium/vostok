@@ -30,7 +30,8 @@ from vostok.core.paths import (BASE_EVIDENCE, CROSS_UNIT_REPORT,
 from vostok.core.paths import REPO as VOSTOK
 from vostok.derive import log
 from vostok.derive.index import (authoritative_demangled_names,
-                                 index_by_mangled, load_index_records)
+                                 index_by_mangled, load_index_records,
+                                 same_name_distinct_bodies)
 from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
                                    load_source_ownership_overrides)
@@ -121,6 +122,25 @@ class Artifacts:
         return bool(self.declared_methods or self.declared_free)
 
 
+def _warn_hidden_bodies(records, indexed):
+    for (mangled, name), group in sorted(same_name_distinct_bodies(records).items()):
+        selected = next(
+            (record for record in indexed.values()
+             if record["mangled"] == mangled and record["name"] == name),
+            None,
+        )
+        if selected is None:
+            continue
+        owners = ", ".join(
+            f"{record['file']}@{record['rva']:#x}" for record in group
+        )
+        log(
+            f"WARNING: PDB identity {mangled} has distinct TU-owned bodies [{owners}]; "
+            f"ledger selects {selected['file']}@{selected['rva']:#x} only. "
+            "Its score does not close sibling bodies; inspect --list with --file/--rva."
+        )
+
+
 def load(declarations=True):
     """Read every input, warn about staleness, and cross-reference the two sides.
 
@@ -134,6 +154,7 @@ def load(declarations=True):
     log("loading PDB evidence ...")
     target_records = load_index_records(TARGET_EVIDENCE)
     target = index_by_mangled(target_records)
+    _warn_hidden_bodies(target_records, target)
     base_records = load_index_records(BASE_EVIDENCE)
     # Pairing prefers the other side's owner and primary signature, so a static
     # helper compiled into several TUs resolves to the same record on both sides.

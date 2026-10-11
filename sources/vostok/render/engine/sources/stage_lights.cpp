@@ -1170,7 +1170,16 @@ void stage_lights::render_model_lighting(
 			backend::ref().set_ps_constant( m_c_light_position, light_position );
 			backend::ref().set_ps_constant( m_c_light_range, light_range );
 			backend::ref().set_ps_constant( m_c_light_attenuation_power, l->attenuation_power );
+
 			backend::ref().set_ps_constant( m_c_light_sphere_radius, l->scale.x );
+
+			backend::ref().set_ps_constant( m_c_light_color, light_color );
+			backend::ref().set_ps_constant( m_c_light_intensity, l->intensity );
+			backend::ref().set_ps_constant( m_c_lighting_model, l->lighting_model );
+
+			float3 const* const eye_rays = m_context->get_eye_rays();
+			backend::ref().set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
+			backend::ref().set_vs_constant( m_c_near_far, m_context->get_near_far() );
 			draw = true;
 			break;
 		}
@@ -1334,6 +1343,12 @@ void stage_lights::render_speedtree_lighting(
 			backend::ref().set_ps_constant	( m_c_light_sphere_radius,	l->scale.x );
 
 			backend::ref().set_ps_constant	( m_c_light_color, light_color );
+			backend::ref().set_ps_constant	( m_c_light_intensity, l->intensity );
+			backend::ref().set_ps_constant	( m_c_lighting_model, l->lighting_model );
+
+			float3 const* const eye_rays	= m_context->get_eye_rays();
+			backend::ref().set_ps_constant	( m_c_eye_ray_corner,	((float4*)eye_rays)[0] );
+			backend::ref().set_vs_constant	( m_c_near_far, m_context->get_near_far());
 			draw = true;
 			break;
 		}
@@ -1515,15 +1530,17 @@ void stage_lights::execute( )
 
 			if (bbox.extents().squared_length() > 2.0f)
 			{
-				if (probe->m_properties.radius <= max_rad)
-					continue;
 
-				max_rad = probe->m_properties.radius;
-				found_probe = probe;
+				if (probe->m_properties.radius > max_rad)
+				{
+					max_rad = probe->m_properties.radius;
+					found_probe = probe;
+				}
+
 				continue;
 			}
 
-			float const model_probe_sqdist = (model_location - probe->m_properties.location).length();
+			float const model_probe_sqdist = math::sqrt((math::sqr(model_location.x - probe->m_properties.location.x) + math::sqr(model_location.z - probe->m_properties.location.z)) + math::sqr(model_location.y - probe->m_properties.location.y));
 
 			if (
 				probe->m_properties.transform.i.xyz().squared_length() &&
@@ -1534,14 +1551,14 @@ void stage_lights::execute( )
 			else
 				LOG_ERROR("invalid probe->m_properties.transform");
 
-			if (probe->m_properties.radius * 0.45f + model_max_scale < model_probe_sqdist)
-				continue;
-
-			if (min_dist <= model_probe_sqdist)
-				continue;
-
-			min_dist = model_probe_sqdist;
-			found_probe = probe;
+			if (model_probe_sqdist <= probe->m_properties.radius * 0.45f + model_max_scale)
+			{
+				if (model_probe_sqdist < min_dist)
+				{
+					min_dist = model_probe_sqdist;
+					found_probe = probe;
+				}
+			}
 		}
 
 		if (found_probe)
@@ -1635,11 +1652,11 @@ void stage_lights::execute( )
 			math::aabb bbox = instance->get_aabb();
 			bbox.modify(instance->transform());
 
-			if (probe->m_properties.radius <= max_rad)
-				continue;
-
-			max_rad = probe->m_properties.radius;
-			found_probe = probe;
+			if (probe->m_properties.radius > max_rad)
+			{
+				max_rad = probe->m_properties.radius;
+				found_probe = probe;
+			}
 		}
 
 		if (found_probe)

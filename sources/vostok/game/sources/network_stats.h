@@ -38,9 +38,9 @@ inline void sprintf_big_number(
 	else if( value < divider * divider )
 		vostok::sprintf( text, "%5.1f K%s", (float)value / divider, complex_postfix );
 	else if( value < divider * divider * divider )
-		vostok::sprintf( text, "%5.1f M%s", (float)value / ( divider * divider ), complex_postfix );
+		vostok::sprintf( text, "%5.1f M%s", (float)value / ( (float)divider * divider ), complex_postfix );
 	else
-		vostok::sprintf( text, "%5.1f G%s", (float)value / ( divider * divider * divider ), complex_postfix );
+		vostok::sprintf( text, "%5.1f G%s", (float)value / ( (float)divider * divider * divider ), complex_postfix );
 }
 
 } // namespace survarium

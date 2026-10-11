@@ -551,7 +551,7 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 	data.SysMemPitch		= data_size / (size * size);
 
 	return					resource_manager::ref().create_texture3d(
-		"$user$color_grading_base_3d_lut",
+		"$user$test3d",
 		size,
 		size,
 		size,
@@ -1429,16 +1429,32 @@ res_declaration* resource_manager::create_declaration(
 	u32 count
 )
 {
+
 	{
 		res_declaration descriptor( dcl, count );
 		declarations_type::iterator const found = m_declarations.find( &descriptor );
-		if( found != m_declarations.end( ) )
-			return *found;
+
+		// sushi@TODO: Recover declaration lookup and construction attribution.
+
+
+
+
+
+
+
+
+
+		if( found != m_declarations.end( ) ) return *found;
 	}
+
 
 	res_declaration* new_decl = NEW( res_declaration)( dcl, count);
 	new_decl->mark_registered();
 	m_declarations.insert( new_decl);
+
+
+
+
 
 	return new_decl;
 }

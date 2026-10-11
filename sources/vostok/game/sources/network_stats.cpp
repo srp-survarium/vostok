@@ -75,7 +75,7 @@ void stats_stream::set_text(
 	sprintf_big_number	( text, new_stats.count, 1000, "", "" );
 	count.set_text		( text );
 
-	sprintf_big_number	( text, new_stats.bytes, 1024, "b", "bytes" );
+	sprintf_big_number	( text, new_stats.bytes, 1024, "bytes", "b" );
 	bytes.set_text		( text );
 
 	if( graph->cumulative_time( ) > 0.f )
@@ -166,7 +166,7 @@ void stats_row::set_text(
 
 	char	text[ 256 ];
 
-	sprintf_big_number	( text, new_stats.data_bytes, 1024, "b", "bytes" );
+	sprintf_big_number	( text, new_stats.data_bytes, 1024, "bytes", "b" );
 	data_bytes.set_text	( text );
 
 	if( data_bytes_per_second_graph->cumulative_time( ) > 0.f )

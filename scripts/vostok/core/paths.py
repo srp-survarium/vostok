@@ -93,6 +93,7 @@ NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
+BUILD_LOCK = BINARIES / ".build.lock"
 
 # Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
 # regenerable from resources.db + fxc, so it lives with the other artifacts.
@@ -131,6 +132,7 @@ BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 # binaries/gen. The image audit remains separate from objdiff until the two
 # delink manifests below actually enroll target COFF data.
 DATA_TARGET_INDEX = GEN_DIR / "target_data_index.tsv"
+DATA_TARGET_INDEX_PROVENANCE = GEN_DIR / "target_data_index_provenance.json"
 DATA_BASE_INDEX = GEN_DIR / "base_data_index.tsv"
 DATA_TARGET_ACCESS = GEN_DIR / "data_access_map.tsv"
 DATA_BASE_ACCESS = GEN_DIR / "base_data_access_map.tsv"
@@ -318,6 +320,7 @@ USAGE_LOG = _main_worktree() / "binaries" / "vostok_usage.log"
 DOCS_MATCHING = REPO / "docs" / "binary_matching"
 DOCS_DATA_MATCHING = DOCS / "data_matching"
 RETAIL_CONFIG = CONFIG / "retail"
+RETAIL_COMPILER_TABLES = RETAIL_CONFIG / "compiler_tables.tsv"
 CLEANLINESS_CONFIG = CONFIG / "cleanliness"
 MATCH_STATE = CONFIG / "match_state.tsv"
 EXACT_FOLD_ALIASES = CONFIG / "exact_fold_aliases.tsv"

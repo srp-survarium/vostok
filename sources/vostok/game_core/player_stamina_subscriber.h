@@ -10,7 +10,7 @@ public:
 	typedef boost::function< void( ) > stamina_event_callback_type;
 
 	inline	explicit	player_stamina_subscriber	( stamina_event_callback_type const& subscription_callback_ ) : subscription_callback( subscription_callback_ ) { }
-	inline	explicit	player_stamina_subscriber	( ) { }
+	inline	explicit	player_stamina_subscriber	( ) : subscription_callback( 0 ), next( 0 ) { }
 
 	/* 0x0000 */	stamina_event_callback_type		subscription_callback;
 	/* 0x0020 */	player_stamina_subscriber*		next;

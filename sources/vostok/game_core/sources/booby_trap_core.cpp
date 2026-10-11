@@ -27,8 +27,8 @@ booby_trap_core::booby_trap_core( ) :
 
 booby_trap_core::~booby_trap_core( )
 {
-	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries );
-	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries );
+	VOSTOK_DELETE_IMPL( g_allocator, usable_object::m_collision_geometries[0] );
+	VOSTOK_DELETE_IMPL( g_allocator, collision_sensor::m_collision_geometries[0] );
 }
 
 void booby_trap_core::load( configs::binary_config_value const& config )

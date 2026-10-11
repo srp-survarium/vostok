@@ -113,9 +113,6 @@ void lobby_camera::on_deactivate( )
 {
 }
 
-// The target reuses the first matrix-product temporary for the pitch rotation;
-// the base compiler reserves another 0x10-byte temporary area.
-
 void lobby_camera::tick( )
 {
 	m_yaw	+= m_rotation_delta.x;
@@ -131,16 +128,13 @@ void lobby_camera::tick( )
 
 	float4x4 new_inverted_view	= float4x4( ).identity( );
 	new_inverted_view			= new_inverted_view * math::create_rotation_y( m_yaw );
-	new_inverted_view			= new_inverted_view * math::create_rotation( float3( m_pitch, 0.0f, 0.0f ) );
+	new_inverted_view			= new_inverted_view * math::create_rotation( new_inverted_view.i.xyz( ), m_pitch );
 
 	m_current_distance_to_focus_point	= m_target_distance_to_focus_point;
-
 	float3 ray_direction		= -new_inverted_view.k.xyz( );
-
 	process_collision	( m_target_point, ray_direction, m_current_distance_to_focus_point );
 
 	new_inverted_view.c.xyz( )	= m_target_point - new_inverted_view.k.xyz( ) * m_current_distance_to_focus_point;
-
 	m_inverted_view_matrix		= new_inverted_view;
 }
 

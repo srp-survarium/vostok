@@ -143,7 +143,7 @@ bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
 	return m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )
 		|| m_weapon.ammunition( )->amount( ) == 0
-		|| ( ( m_weapon.ammo_in_magazine( ) + ( m_weapon.round_is_chambered( ) != 0 ) ) != 0
+		|| ( ( u16 )( m_weapon.ammo_in_magazine( ) + ( m_weapon.round_is_chambered( ) != 0 ) ) != 0
 			&& ( m_weapon.get_target( ) == weapon_target_fire || m_weapon.get_target( ) == weapon_target_aim_fire ) );
 }
 

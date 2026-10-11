@@ -126,7 +126,7 @@ bool messaging_client::read_friend_status( network_core::packet_reader& reader )
 			found->online	= online;
 		else
 
-			LOG_WARNING		( "Friend list out of sync." );
+			LOG_ERROR		( "Friend list out of sync." );
 	}
 	return true;
 }

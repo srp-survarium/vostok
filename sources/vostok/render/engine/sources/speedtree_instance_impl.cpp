@@ -21,7 +21,7 @@ void speedtree_instance_impl::set_transform( float4x4 const& transform )
 {
 	m_transform							= transform;
 	float3 rotation_angles				= transform.get_angles(math::rotation_zxy);
-	float3 scale						= transform.get_scale();
+	float3 scale						= float3( math::sqrt( ( math::sqr( transform.i.z ) + math::sqr( transform.i.x ) ) + math::sqr( transform.i.y ) ), math::sqrt( ( math::sqr( transform.j.z ) + math::sqr( transform.j.x ) ) + math::sqr( transform.j.y ) ), transform.k.xyz().length() );
 	m_speedtree_instance->SetPos		(vostok_to_speedtree(transform.lines[3].xyz()));
 	m_speedtree_instance->SetRotation	(-rotation_angles.y);
 	m_speedtree_instance->SetScale		(math::max(scale.x, math::max(scale.y, scale.z)));

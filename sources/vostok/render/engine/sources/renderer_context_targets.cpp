@@ -156,19 +156,15 @@ void renderer_context_targets::new_lt(
 	math::uint2 const			in_size
 )
 {
-	render_target_instance& instance = m_family[index];
-	instance.orig_name = rt_index_to_name( index );
-
-	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
-	instance.target = 0;
-	instance.texture = resource_manager::ref().create_texture2d(
-		instance.name.get_buffer(),
-		in_size.x,
-		in_size.y,
+	m_family[index].orig_name = rt_index_to_name( index );
+	m_family[index].name.assignf( "%s_%d", m_family[index].orig_name.c_str(), m_id );
+	m_family[index].target = 0;
+	m_family[index].texture = resource_manager::ref().create_texture2d(
+		m_family[index].name.get_buffer(), in_size.x, in_size.y,
 		0,
 		in_format,
 		D3D_USAGE_STAGING,
-		0,
+		1,
 		1,
 		false
 	);
@@ -276,7 +272,7 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	new_rt( rt_mie_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 	new_rt( rt_rayleigh_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 
-	LOG_INFO( "render targets memory usage: %d", m_memory_usage );
+	LOG_INFO( "render targets memory usage: %d", m_memory_usage / Mb );
 
 	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_previous].target, 0, 0, 0 );
 	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );

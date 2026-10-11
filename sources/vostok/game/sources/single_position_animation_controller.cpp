@@ -85,23 +85,28 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 
 	m_target_vertex->rotation = math::create_quaternion_from_direction_vector( m_current_parameters.eyes_direction );
 
-	float3 const& movement_position = m_owner.get_position( float3( 0.f, 0.f, 0.f ) );
-	if ( !m_target_vertex->translation.is_similar( movement_position ) )
-		m_target_vertex->translation = movement_position;
 
-	u32 const start_node_id = m_ai_navigation_world.get_node_id_at( movement_position );
-	u32 const target_node_id = m_ai_navigation_world.get_node_id_at( m_target_vertex->translation );
-	if ( start_node_id == u32( -1 ) || target_node_id == u32( -1 ) )
-		m_next_key_point = u32( -1 );
-	else
-		m_next_key_point = m_ai_navigation_world.find_path(
-			start_node_id,
-			movement_position,
-			target_node_id,
-			m_target_vertex->translation,
-			m_animation_space_graph->agent_radius( ),
-			m_navigation_path
-		) && !m_navigation_path.empty( ) ? 1 : u32( -1 );
+	float3 const& movement_position = m_owner.get_position( float3( 0.f, 0.f, 0.f ) );
+
+	if ( !m_target_vertex->translation.is_similar( m_current_parameters.position ) )
+	{
+		m_target_vertex->translation = m_current_parameters.position;
+		u32 const start_node_id = m_ai_navigation_world.get_node_id_at( movement_position );
+		u32 const target_node_id = m_ai_navigation_world.get_node_id_at( m_target_vertex->translation );
+		if ( start_node_id == u32( -1 ) || target_node_id == u32( -1 ) )
+			m_next_key_point = u32( -1 );
+		else
+			m_next_key_point =
+				m_ai_navigation_world.find_path(
+					start_node_id,
+					movement_position,
+					target_node_id,
+					m_target_vertex->translation,
+					m_animation_space_graph->agent_radius( ),
+					m_navigation_path
+				)
+				&& !m_navigation_path.empty( ) ? 1 : u32( -1 );
+	}
 
 	float3 target_position;
 	if ( m_next_key_point == u32( -1 ) )
@@ -111,7 +116,7 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 			float const previous_to_current_length = ( m_navigation_path[i] - m_navigation_path[i - 1] ).length( );
 			if (
 				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) / previous_to_current_length ) < previous_to_current_length &&
-				( movement_position - m_navigation_path[i] ).length( ) > s_aim_transition_time
+				!( ( movement_position - m_navigation_path[i] ).length( ) <= s_aim_transition_time )	// NaN length breaks too, as retail
 			)
 				break;
 
@@ -131,21 +136,21 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 
 	animation_space_vertex_id start_vertex_id = {
 		math::quaternion( m_owner.get_transform( ).get_angles_xyz( ) ),
-		target_position
+		movement_position
 	};
 
 	vector< u32 > path;
 	if ( !m_search_service->search( m_animation_space_graph, &path, start_vertex_id, *m_target_vertex ) || path.empty( ) ) {
 		while ( m_next_key_point < m_navigation_path.size( ) - 1 ) {
 			++m_next_key_point;
-			m_target_vertex->translation = m_navigation_path[m_next_key_point];
+			m_target_vertex->translation = target_position;
 			if ( m_search_service->search( m_animation_space_graph, &path, start_vertex_id, *m_target_vertex ) && !path.empty( ) )
 				break;
 		}
 
 		if ( m_next_key_point >= m_navigation_path.size( ) - 1 ) {
 			m_next_key_point = u32( -1 );
-			m_target_vertex->translation = movement_position;
+			m_target_vertex->translation = m_current_parameters.position;
 
 			animation::mixing::animation_lexeme lexeme(
 				animation::mixing::animation_lexeme_parameters(
@@ -160,7 +165,7 @@ animation::mixing::expression single_position_animation_controller::selected_ani
 		}
 	}
 
-	m_target_vertex->translation = movement_position;
+	m_target_vertex->translation = m_current_parameters.position;
 
 	float const time_scale = m_animation_space_graph->edge( path[0] ).mixable_pair->first->length / m_animation_space_graph->edge( path[0] ).animation_length;
 
@@ -208,21 +213,13 @@ void single_position_animation_controller::debug_draw( render::game::renderer& r
 {
 	if ( m_target_vertex ) {
 		render.debug( ).draw_origin(
-			scene,
-			math::mul4x3(
-				math::create_matrix(
-					math::quaternion( ),
-					float3( m_current_parameters.position.x, m_current_parameters.position.y + 0.5f, m_current_parameters.position.z )
-				),
-				math::create_translation(
-					float3( m_current_parameters.position.x, m_current_parameters.position.y + 0.5f, m_current_parameters.position.z )
-				)
-			),
-			0.5f,
-			true
+			scene, math::mul4x3( math::create_rotation( m_target_vertex->rotation ), math::create_translation( float3( m_current_parameters.position.x, m_current_parameters.position.y + 0.5f, m_current_parameters.position.z ) ) ), 0.5f, true
 		);
 
-		for ( float3 const* e = m_navigation_path.begin( ); e != m_navigation_path.end( ); ++e ) {
+
+
+		for ( float3 const* e = m_navigation_path.begin( ); e != m_navigation_path.end( ); ++e )
+		{
 			render.debug( ).draw_cube( scene, math::create_translation( *e ), float3( 0.1f, 0.1f, 0.1f ), math::color( 0xff0000ff ), true );
 			if ( e != m_navigation_path.begin( ) )
 				render.debug( ).draw_arrow( scene, *( e - 1 ), *e, math::color( 0xff00ff00 ), true );

@@ -327,6 +327,40 @@ def _stop_wine_session(build_time: str | None = None) -> None:
         _kill_prefix_processes(tuple(_WINE_SESSION))
 
 
+
+def _report_watchdog_timeout(
+    elapsed: float, *, workers: set[int], outputs_refreshed: bool | None = None,
+    recent_cores: float | None = None, worker_idle_seconds: float,
+) -> None:
+    """Preserve the observed failure state before cleanup destroys its evidence."""
+    print(
+        f"[ninja] timeout state: elapsed={elapsed:.1f}s "
+        f"worker_idle={worker_idle_seconds:.1f}s "
+        f"outputs_refreshed={outputs_refreshed} recent_cpu_cores={recent_cores}",
+        flush=True,
+    )
+    for pid in sorted(workers):
+        try:
+            entry = Path("/proc") / str(pid)
+            comm = (entry / "comm").read_text().strip()
+            fields = (entry / "stat").read_text().rsplit(") ", 1)[1].split()
+            print(
+                f"[ninja] timeout worker: pid={pid} comm={comm} state={fields[0]} "
+                f"cpu_ticks={int(fields[11]) + int(fields[12])} "
+                f"rss_pages={int(fields[21])}",
+                flush=True,
+            )
+        except (OSError, IndexError, ValueError):
+            print(f"[ninja] timeout worker: pid={pid} exited/unreadable", flush=True)
+    for output in LINK_OUTPUTS:
+        try:
+            info = output.stat()
+            detail = f"size={info.st_size} mtime={info.st_mtime}"
+        except OSError:
+            detail = "missing/unreadable"
+        print(f"[ninja] timeout output: {output.name} {detail}", flush=True)
+
+
 def _run_plain(
     ninja_exe: Path,
     args: list[str],
@@ -382,6 +416,10 @@ def _run_plain(
                         f"[ninja] watchdog: module hard timeout "
                         f"({HARD_TIMEOUT_SECONDS}s); killing the build.",
                         flush=True,
+                    )
+                    _report_watchdog_timeout(
+                        time.time() - start, workers=workers,
+                        worker_idle_seconds=idle_seconds,
                     )
                     _stop_interrupted_build(proc, existing_pids)
                     return 1
@@ -572,6 +610,12 @@ def _run_with_watchdog(
                         f"[ninja] watchdog: hard timeout ({HARD_TIMEOUT_SECONDS}s) with no "
                         f"idle-completion signal; killing the build.",
                         flush=True,
+                    )
+                    _report_watchdog_timeout(
+                        now - start, workers=workers,
+                        outputs_refreshed=outputs_refreshed,
+                        recent_cores=cores,
+                        worker_idle_seconds=worker_idle_seconds,
                     )
                     break
         except BaseException:

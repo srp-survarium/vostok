@@ -156,8 +156,8 @@ void cfg_save_system( )
 {
 }
 
-static cc_delegate cfg_save_system_cc( "cfg_save_system", boost::bind( &cfg_save_system ), false );
-static cc_delegate cfg_save_user_cc( "cfg_save_user", boost::bind( &cfg_save_user ), false );
+static cc_delegate cfg_save_system_cc( "cfg_save_system", boost::bind( &cfg_save_system ), false, command_type_engine_internal );
+static cc_delegate cfg_save_user_cc( "cfg_save_user", boost::bind( &cfg_save_user ), false, command_type_engine_internal );
 
 static u32 s_max_particles_value = 100;
 static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, true, command_type_engine_internal );

@@ -89,7 +89,7 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			m_owner.animations( ).get_crouch_animation_caption( is_aimed, move_animation_index ),
-			m_owner.animations( ).get_crouch_animation( is_aimed, animation_index, is_third_view ),
+			m_owner.animations( ).get_crouch_animation( is_aimed, move_animation_index, is_third_view ),
 			0,
 			0
 		)
@@ -122,7 +122,7 @@ animation::mixing::expression player_logic_crouch_state::get_recoil_animation_le
 
 	animation::mixing::animation_lexeme_parameters	recoil_lexeme_parameters( buffer, additive_animation_id, additive_animation, 0, 0 );
 
-	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * math::min( 1.0f, math::abs( coeff ) );
+	float const							start_animation_interval_time	= recoil_lexeme_parameters.animation_intervals( )[ 0 ].length( ) * math::min( math::abs( coeff ), 1.0f );
 
 	animation::mixing::animation_lexeme	lexeme(
 		recoil_lexeme_parameters

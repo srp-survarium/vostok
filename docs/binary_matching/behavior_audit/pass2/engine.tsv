@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+?create_render@engine_world@engine@vostok@@AAEXABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	confirms pass 1: relocated data addresses only
+vostok::engine::scaleform_log_output	EQUIVALENT	confirms pass 1 (log __LINE__ only (absolute line drift); ICF reps); only call-target names differ, same call count, ops and FP expressions

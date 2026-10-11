@@ -113,11 +113,11 @@ void project_cooker_simple::create_game_objects(
 
 	configs::binary_config_value collision_objects = ( *project_cfg )["collision_objects"];
 	project->m_static_collision_objects_count = collision_objects.size( );
-	project->m_static_collision_objects = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, static_collision, project->m_static_collision_objects_count );
+	project->m_static_collision_objects = project->m_static_collision_objects_count ? VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, static_collision, project->m_static_collision_objects_count ) : NULL;
 
 	configs::binary_config_value render_visuals = ( *project_cfg )["render_visuals"];
 	project->m_render_visuals_count = render_visuals.size( );
-	project->m_render_visuals = VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, render_visual, project->m_render_visuals_count );
+	project->m_render_visuals = project->m_render_visuals_count ? VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, render_visual, project->m_render_visuals_count ) : NULL;
 
 	requests_type collision_and_render;
 	collision_and_render.resize( project->m_static_collision_objects_count + project->m_render_visuals_count );

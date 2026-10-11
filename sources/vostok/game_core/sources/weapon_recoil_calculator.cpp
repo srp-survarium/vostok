@@ -73,7 +73,7 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 				float additive_dispersion_angle_deg = weapon_params.additive_recoil_min_angle + get_random_angle( weapon_params.additive_recoil_angle_range );
 				float additive_dispersion_angle_rad = math::deg2rad( additive_dispersion_angle_deg );
 				float force_koef = get_random_amount( 1.0f );
-				float additive_dispersion_amount = m_player_recoil_multiplier * force_koef * weapon_params.additive_side_recoil;
+				float additive_dispersion_amount = weapon_params.additive_side_recoil * force_koef * m_player_recoil_multiplier;
 
 				m_target_vertical_koef		= m_vertical_koef + math::cos( additive_dispersion_angle_rad ) * additive_dispersion_amount;
 				m_target_horizontal_koef	= m_horizontal_koef + math::sin( additive_dispersion_angle_rad ) * additive_dispersion_amount;
@@ -92,15 +92,15 @@ void weapon_recoil_calculator::tick( const u32 current_time_in_ms, const float t
 				m_additive_recoil_timer = 0.0f;
 				m_back_koef				= std::max( m_back_koef - additive_dispersion_amount, 0.0f );
 			}
-
-			float interpolated_value			= m_interpolator.interpolated_value( m_time_since_last_dispersion_change );
-			float one_minus_interpolated_value	= 1.0f - interpolated_value;
-			m_vertical_koef		= ( m_target_vertical_koef * interpolated_value )	+ m_vertical_koef * one_minus_interpolated_value;
-			m_horizontal_koef	= ( m_target_horizontal_koef * interpolated_value ) + m_horizontal_koef * one_minus_interpolated_value;
-			m_back_koef			= ( m_target_recoil_koef * interpolated_value )		+ m_back_koef * one_minus_interpolated_value;
-
-			process_compensation( dt_sec );
 		}
+		float interpolated_value			= m_interpolator.interpolated_value( m_time_since_last_dispersion_change );
+		float one_minus_interpolated_value	= 1.0f - interpolated_value;
+		m_vertical_koef		= m_vertical_koef * one_minus_interpolated_value	+ m_target_vertical_koef * interpolated_value;
+		m_horizontal_koef	= m_horizontal_koef * one_minus_interpolated_value	+ m_target_horizontal_koef * interpolated_value;
+		m_back_koef			= m_back_koef * one_minus_interpolated_value		+ m_target_recoil_koef * interpolated_value;
+
+		process_compensation( dt_sec );
+
 	}
 }
 
@@ -112,7 +112,7 @@ void weapon_recoil_calculator::fire( )
 	float force_koef		= get_random_amount( 1.0f );
 	bool const first_shoot	= m_target_vertical_koef == 0.0f && m_target_horizontal_koef == 0.0f;
 
-	float recoil			= m_player_recoil_multiplier * force_koef * ( first_shoot ? weapon_params.first_shoot_side_recoil : weapon_params.shoot_side_recoil );
+	float recoil			= ( first_shoot ? weapon_params.first_shoot_side_recoil : weapon_params.shoot_side_recoil ) * force_koef * m_player_recoil_multiplier;
 	float recoil_angle_rad	= math::deg2rad( recoil_angle_deg );
 
 	m_target_vertical_koef		= m_vertical_koef + math::cos( recoil_angle_rad ) * recoil;
@@ -126,7 +126,7 @@ void weapon_recoil_calculator::fire( )
 		m_target_horizontal_koef /= total_amount;
 	}
 
-	float recoil_amount		= m_player_recoil_multiplier * force_koef * ( first_shoot ? weapon_params.first_shoot_back_recoil : weapon_params.shoot_back_recoil );
+	float recoil_amount		= ( first_shoot ? weapon_params.first_shoot_back_recoil : weapon_params.shoot_back_recoil ) * force_koef * m_player_recoil_multiplier;
 	m_target_recoil_koef	= std::min( m_target_recoil_koef + recoil_amount, 1.0f );
 
 	m_time_since_last_dispersion_change = 0.0f;

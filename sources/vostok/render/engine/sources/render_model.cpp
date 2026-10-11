@@ -158,7 +158,7 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 	case mt_skinned_submesh_4w:
 		m_vertex_input_type = skeletal_4_bones_mesh_vertex_input_type;
 		break;
-
+	case mt_static_mesh:
 	case mt_static_submesh:
 		m_vertex_input_type = static_mesh_vertex_input_type;
 		break;

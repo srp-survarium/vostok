@@ -43,15 +43,12 @@ public:
 
 	res_input_layout* get( res_signature const* signature )
 	{
-		vector<signature_layout_pair>::iterator found = std::lower_bound(
-			vs_to_layout.begin( ), vs_to_layout.end( ), signature
-		);
+		vector<signature_layout_pair>::iterator found = std::lower_bound( vs_to_layout.begin( ), vs_to_layout.end( ), signature );
+
 		if ( found != vs_to_layout.end( ) && *found == signature )
 			return &*found->input_layout;
-		return &*vs_to_layout.insert(
-			found,
-			signature_layout_pair( this, signature )
-		)->input_layout;
+
+		return &*vs_to_layout.insert( found, signature_layout_pair( this, signature ) )->input_layout;
 	}
 
 	bool is_registered( ) const { return m_is_registered; }

@@ -19,8 +19,8 @@ world::world(
 	  m_editor_renderer( 0 ),
 	  m_is_logic_enabled( 1 ),
 	  m_is_logic_frame_ended( 0 ),
-	  m_is_editor_frame_ended( !is_editor ),
-	  m_is_editor( is_editor )
+	  m_is_editor_frame_ended( !editor_allocator ),
+	  m_is_editor( editor_allocator != 0 )
 {
 	m_render_engine_world		= engine::create_world( in_config, is_editor );
 	R_ASSERT					( m_render_engine_world );

@@ -353,7 +353,7 @@ void radiance_volume::prepare( float3 const& view_position, float3 const& view_d
 	float const cell_size					=	get_scale() / float(get_num_cells());
 
 	float3 cascade_origin					=	view_position - float3(0.5f, 0.5f, 0.5f) * get_scale();
-	cascade_origin							+=	view_direction * get_scale() * offset_from_center;
+	cascade_origin							+=	float3(view_direction.x, 0.0f, view_direction.z) * get_scale() * offset_from_center;
 	cascade_origin							/=  cell_size;
 	cascade_origin.x						=	float(math::floor(cascade_origin.x));
 	cascade_origin.y						=	float(math::floor(cascade_origin.y));

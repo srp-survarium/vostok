@@ -26,8 +26,8 @@
 #include "statistics.h"
 #include "streaming.h"
 #include "system_renderer.h"
+#include <vostok/core_entry_point.h>
 static const u32 s_max_vertex_count	= 64*1024;
-
 static bool s_use_poral_culling_value = true;
 static vostok::console_commands::cc_bool s_use_poral_culling_cc(
 	"r_use_portal_culling",
@@ -215,7 +215,7 @@ void scene::on_fs_iterator_probes_ready( char* path, vfs::vfs_locked_iterator co
 	probes_path = m_environment_probes[0]->m_properties.texture_name;
 	probes_path.set_length( probes_path.rfind( '/' ) );
 
-	fs_new::synchronous_device_interface const& device = resources::get_synchronous_device();
+	fs_new::synchronous_device_interface const& device = core::get_core_synchronous_device();
 	file_names_array::iterator it = remove_names.begin();
 
 	for ( ; it != remove_names.end(); ++it )
@@ -406,6 +406,9 @@ void scene::process_streaming(
 		fs_new::virtual_path_string path;
 		fs_new::virtual_path_string path_add( texture_request.path.c_str( ) );
 		path.assignf( "%s/%s.dds", "resources/textures", path_add.c_str( ) );
+
+		texture_request.texture->m_loaded	= false;
+		texture_request.texture->num_mips	= num_wanted_mips;
 
 		resources::request requests[] = {
 			{ path.c_str( ), resources::texture_wrapper_class }

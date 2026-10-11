@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+vostok::engine::scaleform_log_output	EQUIVALENT	confirms pass 4: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
