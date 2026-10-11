@@ -178,6 +178,7 @@ python3 -m vostok data coverage
 python3 -m vostok data check
 python3 -m vostok data check --gate
 python3 -m vostok data check --all-zero
+python3 -m vostok data values [--module M] [--function PATTERN] [--class all]
 ```
 
 `missing-next` prints the retail bytes, PDB neighbours, owners, callers, and
@@ -191,6 +192,38 @@ does not require a datum to be enrolled in objdiff and therefore exposes every
 physical relocation, including candidate-only sites and extentless retail PDB
 data. With no pattern it regenerates the audit and Markdown report; a pattern
 inspects generated rows without rebuilding.
+
+## Data values: what paired code reads
+
+The lane above asks whether the two images hold the same allocations. `data
+values` asks the question a code review cannot: where an aligned instruction of a
+paired function addresses data (`fld dword ptr [__real@...]`, `movss xmm0,
+[clear_value]`, `push offset ??_C@...`, a switch's jump and index tables in
+`.text`), do the two sides read the same value? The operand addresses always
+differ, so an instruction-level comparison treats them as layout noise; a wrong
+constant then passes every code audit.
+
+It aligns the PDB evidence disassembly of each function pair (symbol operands
+masked), pairs data references by aligned instruction (then by access order for
+the rest), and reads both images: the accessed width for direct accesses, the
+complete datum (bounded at 4 KiB) for indexed accesses and address immediates,
+strings by content, switch-table entries as aligned code offsets. Pointer words
+inside a window compare by pointee (function pair or data identity), so ICF,
+relinking and renamed folds compare SAME. Each reference gets a class in
+`binaries/gen/data_value_diff.tsv`:
+
+- `SAME` - the values agree.
+- `DIFFERENT` - the leads: retail reads another value here.
+- `UNRESOLVABLE` - no aligned partner, an unrelatable pointee, or a difference
+  that is only order (the function reads the same multiset of values of that
+  kind; a reordered `if` chain pairs the wrong references).
+- `EQUIVALENT` - policy-equal: build paths and timestamps, a constant one side
+  folds into a multiply whose factor only the other side reads (`x / 180.f *
+  pi` against `x * (pi / 180)`), and with `--immediates` `__LINE__` operands.
+
+Literal operands (`push 3F800000h`) are visible to code review already, so they
+are compared only with `--immediates`. The verb reads the full build's access
+maps and data indexes; run it after a full `vostok build`.
 
 ## What each result proves
 
