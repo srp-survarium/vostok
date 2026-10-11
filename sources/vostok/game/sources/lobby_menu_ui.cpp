@@ -354,24 +354,25 @@ void lobby_menu::show_match_making( bool b_show )
 
 
 
-
 void lobby_menu::update_level_loading_progress( )
 {
 	char buff[64];
 	vostok::sprintf						( buff, "(%d)", resources::pending_queries_count( ) );
 
 	if ( m_last_queries_count > resources::pending_queries_count( ) )
-		m_level_loading_progress += ( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count * ( 1.0f - m_level_loading_progress );
+	{
+		u32 const loaded_queries_count	= m_last_queries_count - resources::pending_queries_count( );
+		m_level_loading_progress		+= ( float )loaded_queries_count / ( float )m_last_queries_count * ( 1.0f - m_level_loading_progress );
+	}
 
 	m_last_queries_count = resources::pending_queries_count( );
 
 	wchar_t w_text[512] = L"\x0417\x0430\x0433\x0440\x0443\x0437\x043a\x0430 \x0443\x0440\x043e\x0432\x043d\x044f[";
 
 	wchar_t level_name[512];
-	mbstowcs_s							( NULL, level_name, 512, get_game( ).project_resource_name( ), _TRUNCATE );
-
 	wchar_t queries_count[512];
-	mbstowcs_s							( NULL, queries_count, 512, buff, _TRUNCATE );
+	strings::mbstowcs					( level_name, sizeof( level_name ), get_game( ).project_resource_name( ) );
+	strings::mbstowcs					( queries_count, sizeof( queries_count ), buff );
 
 	wcscat_s							( w_text, sizeof( w_text ), level_name );
 	wcscat_s							( w_text, sizeof( w_text ), L"]" );
@@ -380,12 +381,11 @@ void lobby_menu::update_level_loading_progress( )
 	flash_value text;
 	text.SetStringW						( w_text );
 	m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
-
+	flash_value progress;
 	m_level_loading_progress = clear_value - m_level_loading_progress < math::epsilon_3
 		? clear_value
 		: m_level_loading_progress;
 
-	flash_value progress;
 	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );
 	m_match_making_ui->movie->Invoke	( "root.set_percent", NULL, &progress, 1 );
 }
