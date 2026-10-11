@@ -21,6 +21,8 @@ class renderer_context;
 class speedtree_tree_component;
 
 struct speedtree_forest {
+	static float scale_speedtree_to_vostok;
+
 	struct tree_render_info {
 		tree_render_info(
 			lod_entry const* in_lod,

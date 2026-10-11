@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "game_camera.h"
 #include "camera_director.h"
 #include <vostok/console_command.h>
 
 namespace survarium {
 
+float s_camera_near_plane	= 0.05f;
 float s_camera_far_plane	= 500.0f;
 float default_vertical_fov	= 65.0f;
 
 game_camera::game_camera( base_game_scene& w ) :
 	m_game_scene( w ),
-	m_near_plane( 0.05f ),
+	m_near_plane( s_camera_near_plane ),
 	m_far_plane( s_camera_far_plane ),
 	m_fov_factor( 1.0f )
 {

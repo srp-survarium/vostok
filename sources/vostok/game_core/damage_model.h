@@ -7,8 +7,8 @@
 
 #include <vostok/game_core/damage_protector.h>
 #include <vostok/game_core/body_part_parameters.h>
-#include <vostok/game_core/hit_affects_type_enum.h>
-#include <vostok/game_core/affect_event_type_enum.h>
+#include <vostok/game_core/affect_types.h>
+#include <vostok/game_core/affect_subscriber.h>
 
 namespace survarium {
 	enum affects_applying_type_enum;
@@ -55,25 +55,6 @@ public:
 };
 
 STATIC_SIZE_ASSERT(dump_player_body_part_state_predicate, 0x8);
-
-struct affect_subscriber: private boost::noncopyable {
-public:
-	typedef boost::function<void (
-		pcstr,
-		hit_affects_type_enum,
-		affect_event_type_enum
-	)> affect_event_callback_type;
-
-public:
-	inline	explicit affect_subscriber	( affect_event_callback_type const& subscription_callback ) : subscription_callback( subscription_callback ), next( NULL ) { }
-	inline	         affect_subscriber	( ) : next( NULL ) { }
-
-public:
-	affect_event_callback_type	subscription_callback;
-	affect_subscriber*		next;
-};
-
-STATIC_SIZE_ASSERT(affect_subscriber, 0x28);
 
 struct booster_damage_protector : public damage_protector {
 public:

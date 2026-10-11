@@ -6,7 +6,6 @@
 
 #include "pch.h"
 #include "sound_propagator.h"
-#include "new_sound_propagator.h"
 #include "sound_voice_params.h"
 #include <vostok/sound/sound_propagator_emitter.h>
 #include <vostok/sound/sound_rms.h>
@@ -23,9 +22,9 @@ static inline sound_world* get_world	( sound_instance_proxy_internal const& prox
 	return proxy.get_world_user().get_sound_world();
 }
 
-#if 0
 static u32 prop_id					= 0;
 
+#if 0
 sound_propagator::sound_propagator	(	playback_mode mode,
 										u32 playback_id,
 										u32	playing_offset,

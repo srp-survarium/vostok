@@ -54,7 +54,7 @@ using vostok::debug::bugtrap_usage;
 static bool	s_initialized				= false;
 static vostok::core::engine * s_engine	=	NULL;
 
-static vostok::command_line::key s_mount_mounts_path("mount_mounts_path", "", "vfs", "");
+vostok::command_line::key s_mount_mounts_path("mount_mounts_path", "", "vfs", "");
 
 vostok::uninitialized_reference<vostok::fs_new::synchronous_device_interface>	s_core_synchronous_device;
 

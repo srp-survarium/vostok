@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player_input_handler.h"
 #include "game_world.h"	// game_camera base needs game_world complete (upcast to base_game_scene)
 #include "game.h"

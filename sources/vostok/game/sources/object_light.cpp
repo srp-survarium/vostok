@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "object_light.h"
 #include "game_object_static.h"
 #include "base_game_scene.h"
@@ -14,7 +15,7 @@ namespace survarium {
 
 void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
-static u32 light_ids = 1000000;
+extern u32 light_ids;
 
 object_light::object_light( base_game_scene& w ) :
 	game_object_static( w )

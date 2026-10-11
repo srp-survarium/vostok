@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "pch.h"
+#include <vostok/game_core/game_net_defines.h>
 #include "player.h"
 #include "game.h"
 #include "base_game_scene.h"
@@ -47,7 +48,6 @@ static float s_player_name_min_font_size = 12.f;
 static float s_player_name_max_font_size = 32.f;
 
 static float s_player_name_decrease_koef = 0.3f;
-static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
 
@@ -261,8 +261,13 @@ void player::apply_input_before_new_transform(
 	player_state.animation_player.set_object_transform( player_state.transform, this );
 }
 
+} // namespace survarium
+
 static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
 static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
+
+namespace survarium {
 
 void player::smooth( const float time_delta )
 {

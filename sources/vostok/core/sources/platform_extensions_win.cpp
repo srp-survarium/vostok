@@ -11,6 +11,7 @@
 
 #pragma comment(lib, "delayimp")
 
+pcstr vostok::g_delay_loading_libraries_prefix = "";
 pcstr vostok::g_delay_loading_libraries_reference_module = NULL;
 
 bool vostok::platform::unload_delay_loaded_library	( pcstr dll_name )
