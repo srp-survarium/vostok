@@ -33,6 +33,10 @@ Any extra args are forwarded to vostok.build.ninja:
       image-data ledger, module data audits) and the README. Function scores are
       the same as a full build's; not a commit state - commit after a full build.
 
+  python3 -m vostok build --regenerate-target
+      Regenerate every retail-derived artifact first: the fix when setup
+      reports a target side stamped with another retail binary.
+
   python3 -m vostok build --background
       Run in a host systemd user service; notify CODEX_THREAD_ID on completion.
       Overrides: --notify-thread THREAD, --codex-bin /path/to/codex.
@@ -250,6 +254,14 @@ def _background_dispatch() -> bool:
     return False
 
 
+def _take_regenerate_target() -> bool:
+    """Strip --regenerate-target: setup rebuilds every retail-derived artifact."""
+    if "--regenerate-target" not in sys.argv[1:]:
+        return False
+    sys.argv = [sys.argv[0], *(a for a in sys.argv[1:] if a != "--regenerate-target")]
+    return True
+
+
 def _take_code_only() -> bool:
     """Strip --code-only before the remaining arguments reach ninja."""
     if "--code-only" not in sys.argv[1:]:
@@ -271,13 +283,15 @@ def main() -> None:
     if _background_dispatch():
         return
     code_only = _take_code_only()
+    regenerate_target = _take_regenerate_target()
 
     lock = _acquire_build_lock()
     start = time.monotonic()
     modules: set[str] = set()
     try:
         from vostok.tool import toolchain
-        _log.timed("toolchain setup", lambda: toolchain.setup(set()))
+        _log.timed("toolchain setup", lambda: toolchain.setup(
+            {"target"} if regenerate_target else set()))
         log("Refreshing ninja graph from the .vcprojs ...")
         _log.timed("ninja graph", ninja_regen.regenerate)
 

@@ -27,8 +27,10 @@ Env vars (set automatically by flake.nix devShell):
 import argparse
 import os
 import subprocess
+from pathlib import Path
 import sys
 
+from vostok.build import retail_stamp
 from vostok.core.paths import (BASE_PDB, RETAIL_SOURCE_PREFIX, STRUCTURE_DIR,
                                survarium_bin)
 from vostok.core.log import logger
@@ -42,13 +44,15 @@ def _pdb_tool() -> str:
     return os.environ.get("PDB_TOOL", "vostok-pdb")
 
 
-def generate(side: str) -> None:
+def generate(side: str, out: Path | None = None) -> None:
     """Regenerate binaries/structure/<side> from the matching PDB.
+
+    `out` redirects the output (the shared cache fills its own copy).
 
     Raises RuntimeError if the source PDB is missing and CalledProcessError if
     vostok-pdb fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
-    out = STRUCTURE_DIR / side
+    out = Path(out) if out is not None else STRUCTURE_DIR / side
 
     if side == "base":
         pdb = BASE_PDB
@@ -76,6 +80,8 @@ def generate(side: str) -> None:
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
 
     out.mkdir(parents=True, exist_ok=True)
+    if side == "target":
+        retail_stamp.clear(out)
     log(f"Generating {side} structure from {pdb.name} -> {out}")
     try:
         proc = subprocess.run(
@@ -112,6 +118,8 @@ def generate(side: str) -> None:
             "vostok-pdb suppressed)")
     if proc.returncode != 0:
         raise subprocess.CalledProcessError(proc.returncode, proc.args)
+    if side == "target":
+        retail_stamp.write(out)
     log(f"Done: {out}")
 
 

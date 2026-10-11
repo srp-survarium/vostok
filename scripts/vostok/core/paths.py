@@ -117,9 +117,11 @@ EFFECTIVE_SYMBOL_MAP = OBJDIFF_DIR / "effective-target-symbol-map.tsv"
 STRUCTURE_DIR = BINARIES / "structure"
 TARGET_HEADERS = STRUCTURE_DIR / "target" / "headers"
 TARGET_SOURCES = STRUCTURE_DIR / "target" / "sources"
+TARGET_STRUCTURE_DIR = STRUCTURE_DIR / "target"
 
 PDB_DIR = BINARIES / "pdb"
-TARGET_EVIDENCE = PDB_DIR / "target" / "evidence.sqlite"
+TARGET_PDB_DIR = PDB_DIR / "target"
+TARGET_EVIDENCE = TARGET_PDB_DIR / "evidence.sqlite"
 BASE_EVIDENCE = PDB_DIR / "base" / "evidence.sqlite"
 
 #: the base-only taxonomy: one verdict per function OUR build emits and the
@@ -289,6 +291,7 @@ REBUILD_LOG = BINARIES / "rebuild.log"
 BUILD_JOBS = BINARIES / "build-jobs"
 
 
+
 def _main_worktree() -> Path:
     """REPO, or - when REPO is a LINKED worktree - the main checkout.
 
@@ -315,6 +318,32 @@ def _main_worktree() -> Path:
 # rebuild.log, but pooled in the main checkout so worktree agents
 # all feed the one trail.
 USAGE_LOG = _main_worktree() / "binaries" / "vostok_usage.log"
+
+# --- worktree pool and shared build cache ----------------------------------
+# `vostok tool worktree` keeps a fixed pool of build worktrees beside the main
+# checkout (vostok-w1..vostok-wN) instead of a fresh ~15 GB worktree per task.
+# Every location below is overridable, so a test or a second clone can run its
+# own pool.
+MAIN_WORKTREE = _main_worktree()
+POOL_ROOT = Path(os.environ.get("VOSTOK_POOL_ROOT", str(MAIN_WORKTREE.parent)))
+POOL_PREFIX = os.environ.get("VOSTOK_POOL_PREFIX", f"{MAIN_WORKTREE.name}-w")
+POOL_SIZE = int(os.environ.get("VOSTOK_POOL_SIZE", "4"))
+# Claim records live in the shared git directory, so every worktree sees them.
+POOL_LOCKS = MAIN_WORKTREE / ".git" / "vostok-pool"
+# One copy of the read-only artifacts every worktree would otherwise duplicate
+# (vostok.build.shared_cache); worktrees hard-link their files to it.
+SHARED_CACHE = Path(os.environ.get(
+    "VOSTOK_CACHE_DIR", str(MAIN_WORKTREE.parent / ".vostok-cache")))
+SHARED_CACHE_STAMP = BINARIES / ".shared-cache.json"
+# Copies a new pool worktree never seeds from its source checkout: build
+# outputs it regenerates, per-run logs, and release-tool scratch nothing reads.
+LIBS_RELEASE_WORK = BINARIES / "libs-release"
+LIBS_RELEASE_ZIPS = "vostok-libs-*.zip"
+LEGACY_RICH_DIR = BINARIES / "rich"
+POOL_SEED_EXCLUDES = (
+    WIN32_DIR, LIBS_RELEASE_WORK, LEGACY_RICH_DIR, BUILD_JOBS,
+    TARGET_PDB_DIR, TARGET_STRUCTURE_DIR, SETUP_STAMP, SHARED_CACHE_STAMP,
+)
 
 # --- committed machine-readable state (config/, in git) --------------------
 DOCS_MATCHING = REPO / "docs" / "binary_matching"

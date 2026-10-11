@@ -26,7 +26,7 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-from vostok.core.paths import BINARIES
+from vostok.core.paths import BINARIES, LIBS_RELEASE_WORK
 from vostok.tool.libs import GFX_SRC, LIBS_DIR, console_library_path, prune_console_libraries
 from vostok.core.log import logger
 from vostok.core import log as _log
@@ -107,7 +107,7 @@ def main() -> int:
     ap.add_argument("--tag", required=True, help="suffix for the zip name, e.g. gfx421r2")
     ap.add_argument("--skip-gfx", action="store_true", help="do not rebuild GFx; package what binaries.prebuilt holds")
     ap.add_argument("--upload", action="store_true", help=f"gh release upload to {RELEASE_REPO} {RELEASE_TAG}")
-    ap.add_argument("--work", type=Path, default=BINARIES / "libs-release", help="staging directory")
+    ap.add_argument("--work", type=Path, default=LIBS_RELEASE_WORK, help="staging directory")
     args = ap.parse_args()
 
     if not args.skip_gfx:

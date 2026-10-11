@@ -43,10 +43,11 @@ import fcntl
 import os
 import subprocess
 import functools
+import shutil
 import sys
 from pathlib import Path
 
-from vostok.build import native_crt, ninja_regen
+from vostok.build import native_crt, ninja_regen, retail_stamp, shared_cache
 from vostok.core import paths
 from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
                                DATA_TARGET_RELOCS, OBJDIFF_DIR, PREBUILT,
@@ -160,11 +161,16 @@ def _nonempty_dir(p: Path) -> bool:
     return p.is_dir() and any(p.iterdir())
 
 
-def ensure_target_side(force: bool = False) -> None:
+def ensure_target_side(force: bool = False, shared: set[str] = frozenset()) -> None:
     """Generate the target-side diff inputs (the original game never changes):
     binaries/objdiff/target (COFF), binaries/structure/target (vostok-pdb stubs),
     binaries/pdb/target (the vostok-pdb evidence database), and the
     independent PDB/image data inventory under binaries/gen/.
+
+    `shared` names the trees vostok.build.shared_cache already linked (and,
+    under `force`, regenerated); those are never generated here. A forced
+    per-worktree regeneration first drops the old tree, whose files may be
+    read-only links to the cache.
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
@@ -175,6 +181,7 @@ def ensure_target_side(force: bool = False) -> None:
     objdiff_target   = OBJDIFF_DIR / "target"
     structure_target = STRUCTURE_DIR / "target"
     rich_target      = PDB_DIR / "target"
+    _check_retail_stamps(force)
     if (
         not force
         and _nonempty_dir(objdiff_target)
@@ -190,15 +197,52 @@ def ensure_target_side(force: bool = False) -> None:
     try:
         if force or not _nonempty_dir(objdiff_target):
             generate_delink.generate("target", reports=False)
-        if force or not _nonempty_dir(structure_target):
-            generate_structure.generate("target")
-        if force or not _nonempty_dir(rich_target):
-            generate_pdb.generate("target")
+        for name, tree, generate in (
+            ("structure-target", structure_target, generate_structure.generate),
+            ("pdb-target", rich_target, generate_pdb.generate),
+        ):
+            if name in shared and _nonempty_dir(tree):
+                continue
+            if force and tree.exists():
+                shutil.rmtree(tree)
+            if not _nonempty_dir(tree):
+                generate("target")
         from vostok.data import pipeline as data_pipeline
         data_pipeline.init_target(force=force)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e:
         die(f"could not generate target diff inputs: {e}")
     log("Target diff inputs ready.")
+
+
+def _check_retail_stamps(force: bool) -> None:
+    """Fail fast on target artifacts derived from another retail binary.
+
+    Under `force` (--regenerate-target) everything retail-derived is rebuilt,
+    so a mismatch is the expected state, not an error. An unstamped artifact
+    predates stamping: drop it so the steps below regenerate it.
+    """
+    try:
+        unstamped = [] if force else retail_stamp.require_current()
+    except retail_stamp.RetailMismatch as error:
+        die(str(error))
+    except OSError as error:
+        die(f"cannot hash the retail game for the target-side check: {error}")
+    dropped = list(unstamped)
+    if force:
+        dropped = [a for a in retail_stamp.artifacts() if a.name.startswith("data-")]
+    for artifact in dropped:
+        if artifact.legacy or not artifact.path.exists():
+            continue
+        if artifact in unstamped:
+            log(f"{artifact.path.relative_to(VOSTOK_DIR)} has no retail stamp; regenerating it")
+        owner = artifact.path if artifact.path.is_dir() else artifact.path.parent / "target"
+        for victim in {artifact.path, owner}:
+            if victim.is_dir():
+                shutil.rmtree(victim)
+            elif victim.exists():
+                victim.unlink()
+    for note in retail_stamp.audit()[2] if not force else ():
+        log(f"note: {note}")
 
 
 def copy_libs(libs_dir: Path) -> None:
@@ -296,12 +340,22 @@ def parse_force(argv) -> set:
              "the .sln, so vcproj edits don't auto-regenerate the build graph). "
              f"Stages: {', '.join(STAGES)}, all.",
     )
-    forced = ap.parse_args(argv).force
-    return set(STAGES) if "all" in forced else set(forced)
+    ap.add_argument(
+        "--regenerate-target", action="store_true",
+        help="regenerate every retail-derived artifact (same as --force target); "
+             "the fix when the target side came from another retail binary",
+    )
+    parsed = ap.parse_args(argv)
+    forced = set(STAGES) if "all" in parsed.force else set(parsed.force)
+    if parsed.regenerate_target:
+        forced.add("target")
+    return forced
 
 
 def setup(force: set[str]) -> None:
     """Set up under the caller-owned worktree build lock."""
+    if os.environ.get("VOSTOK_REGENERATE_TARGET") == "1":
+        force = {*force, "target"}
     msvc_dir   = Path(require_env("MSVC_DIR"))
     winsdk_dir = Path(require_env("WINSDK_DIR"))
     dxsdk_dir  = Path(require_env("DXSDK_DIR"))
@@ -361,11 +415,15 @@ def setup(force: set[str]) -> None:
         and all(p.exists() for p in outputs)
     )
 
+    # One shared copy of the read-only trees (prebuilt libs, retail evidence)
+    # before any stage would stage or generate its own.
+    shared = shared_cache.sync(refresh=shared_cache.RETAIL if "target" in force else ())
+
     if setup_current and not force:
         log("Wine/ninja setup already complete.")
         ensure_retail_source_root(wineprefix)
         ensure_compdb()
-        ensure_target_side()
+        ensure_target_side(shared=shared)
         return
     if setup_current:
         log(f"Setup is current; forcing stage(s): {', '.join(sorted(force))}")
@@ -386,7 +444,7 @@ def setup(force: set[str]) -> None:
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
     SETUP_STAMP.write_text(fingerprint)
 
-    ensure_target_side(force="target" in force)
+    ensure_target_side(force="target" in force, shared=shared)
 
     if not setup_current:
         log("")

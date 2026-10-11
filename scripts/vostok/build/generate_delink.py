@@ -36,6 +36,7 @@ import sys
 from pathlib import Path
 
 from vostok.build import generate_objdiff_cross_unit
+from vostok.build import retail_stamp
 from vostok.core import paths
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
@@ -655,6 +656,8 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
     out = project_dir / side
     if out.exists():
         shutil.rmtree(out)
+    if side == "target":
+        retail_stamp.clear(Path(symbol_map[1]) if symbol_map else out)
     out.mkdir(parents=True, exist_ok=True)
 
     log(f"Delinking {side} ({exe.name}) -> {out}")
@@ -689,6 +692,10 @@ def generate(side: str, *, reports: bool = True, data_project: bool = False) -> 
             f"Normalized {symbols} project-specific static-init symbols "
             f"in {objects} target objects ({len(aliases)} unique rich-PDB aliases)"
         )
+        # Provenance: which retail exe+pdb this tree and its symbol map are.
+        retail_stamp.write(out, survarium)
+        if symbol_map:
+            retail_stamp.write(Path(symbol_map[1]), survarium)
     elif (project_dir / "target").is_dir():
         # The target tree is persistent, but normalization rules can improve.
         # Reapply the idempotent transform before every comparison so a script

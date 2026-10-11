@@ -69,6 +69,31 @@ not merely because a build is running. Keep the full goal active while awaiting
 results; waiting alone is not a blocker. This rule applies to every matcher,
 reviewer, skill and build caller.
 
+### Build worktrees come from the pool
+
+Never `git worktree add` a fresh ~15 GB worktree for a task. Build in the pool
+(`vostok-w1`..`vostok-w4` beside the main checkout), whose `binaries/` survive
+between tasks, so switching branches rebuilds only what changed. That relies on
+ninja's compiler-recorded header dependencies (`deps = msvc`). One line claims a
+free worktree (waiting while all are busy), switches it to BRANCH, runs the
+command there and releases it, also on failure:
+
+    python3 -m vostok tool worktree run BRANCH -- nix develop --command python3 -m vostok build --foreground
+
+Changes the command leaves uncommitted are saved under `refs/vostok-pool/`
+before the tree is cleaned, so commit the ledger inside the command when it is
+the measured state. For longer work in one tree, `claim BRANCH --owner NAME`
+prints its path and `release` frees it (it refuses a dirty tree without `--save`
+or `--discard`). Locks whose owner is gone or that are older than a day free
+themselves. `status` lists the pool and the shared cache; `gc --apply` removes
+finished non-pool worktrees (clean, pushed or merged, idle a day). Prebuilt
+libs and retail evidence are hard-linked from one shared cache
+(`../.vostok-cache`); setup fills and verifies it. A new pool worktree's first
+build is a full one. Every target-side artifact carries the sha256 of the
+retail exe and pdb it came from; setup and build stop on a stamp from another
+retail (another branch's v0.20e target side) until you rerun with
+`vostok build --regenerate-target`. Details: `docs/build/agent-builds.md`.
+
 ## The ledger (`config/match_state.tsv`)
 
 The committed record: one row per target function. `vostok ledger` reads the

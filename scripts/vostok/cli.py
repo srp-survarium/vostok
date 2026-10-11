@@ -18,8 +18,9 @@
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
     vostok tool <name>             operational helpers: clangd / toolchain /
-                                   libs / pdb-order-probe / geometry, plus `usage` - the
-                                   read-back of the usage log
+                                   libs / pdb-order-probe / geometry / worktree (the
+                                   build-worktree pool), plus `usage` - the read-back
+                                   of the usage log
 
 Every one of these processes appends a line to binaries/vostok_usage.log
 (vostok.core.log): what was run, on which branch, how long it took, and how it
@@ -48,7 +49,7 @@ TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "breakpoints": "vostok.tool.breakpoints",
          "pdb-order-probe": "vostok.tool.pdb_order_probe",
          "geometry": "vostok.tool.geometry",
-         "usage": "vostok.tool.usage"}
+         "usage": "vostok.tool.usage", "worktree": "vostok.tool.worktree"}
 
 
 def _run(module: str, argv: list[str], prog: str) -> int:

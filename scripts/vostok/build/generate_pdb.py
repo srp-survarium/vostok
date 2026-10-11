@@ -28,8 +28,10 @@ Env vars (set automatically by flake.nix devShell):
 import argparse
 import os
 import subprocess
+from pathlib import Path
 import sys
 
+from vostok.build import retail_stamp
 from vostok.core.paths import (
     BASE_EXE,
     BASE_PDB,
@@ -55,13 +57,15 @@ def _pdb_tool() -> str:
     return os.environ.get("PDB_TOOL", "vostok-pdb")
 
 
-def generate(side: str) -> None:
+def generate(side: str, out: Path | None = None) -> None:
     """Regenerate binaries/pdb/<side> from the matching PDB+EXE.
+
+    `out` redirects the output (the shared cache fills its own copy).
 
     Raises RuntimeError if an input is missing and CalledProcessError if
     vostok-pdb fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
-    out = PDB_DIR / side
+    out = Path(out) if out is not None else PDB_DIR / side
 
     if side == "base":
         pdb, exe = BASE_PDB, BASE_EXE
@@ -96,6 +100,8 @@ def generate(side: str) -> None:
         raise RuntimeError(f"unknown side {side!r} (expected 'base' or 'target')")
 
     out.mkdir(parents=True, exist_ok=True)
+    if side == "target":
+        retail_stamp.clear(out)
     log(f"Building {side} PDB evidence from {pdb.name}+{exe.name} -> {out}")
     try:
         subprocess.run(
@@ -115,6 +121,8 @@ def generate(side: str) -> None:
             f"vostok-pdb binary {_pdb_tool()!r} not found on PATH - run inside "
             "`nix develop`, or set PDB_TOOL"
         )
+    if side == "target":
+        retail_stamp.write(out)
     log(f"Done: {out}/evidence.sqlite")
 
 

@@ -97,7 +97,10 @@ Compare `base` (our build) with `target` (retail) in [objdiff](https://github.co
   the ledger, structure matching, the matching rules.
 - `config/` - the committed ledger and retail data tables; `docs/` - matching notes
   and the pattern knowledge base; `binaries/`, `binaries.prebuilt/` - generated,
-  gitignored.
+  gitignored. Agents build in a pool of reusable worktrees
+  (`python3 -m vostok tool worktree`) that hard-link the prebuilt libs and the
+  retail evidence from one shared cache, `../.vostok-cache/`; see
+  [docs/build/agent-builds.md](docs/build/agent-builds.md).
 
 ## Source navigation
 
