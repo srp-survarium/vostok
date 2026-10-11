@@ -75,7 +75,8 @@ chat_handler::~chat_handler( )
 
 void chat_handler::call( flash_function_handler_params& params )
 {
-	flash_value w_text; w_text.SetConvertStringW( );
+	flash_value w_text;
+	w_text.SetConvertStringW( );
 	params.pArgs[ 0 ].GetMember( "text", &w_text );
 
 	if( m_game.get_network_client( )->has_bandwidth( ) )
