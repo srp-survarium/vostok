@@ -32,3 +32,6 @@ nix develop
 python3 -m vostok build
 scripts/release/make-release.sh --resources-db <resources.db> --out <dir>
 ```
+
+`scripts/rebase-offline.sh` rebases this branch onto `origin/v0.10b` and re-applies
+the strip.

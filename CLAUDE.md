@@ -9,6 +9,9 @@ evidence, matching docs and skills) is stripped here; it lives on `v0.10b`.
     python3 -m vostok build                 # -> binaries/Win32/survarium-dx11-win32-gold.exe
     scripts/release/make-release.sh --resources-db <resources.db> --out <dir>
 
+- The lane is rebased onto `origin/v0.10b` with `scripts/rebase-offline.sh`, which
+  re-applies the strip (its `KEEP` list is what this branch tracks). Push the
+  rewritten branch with `--force-with-lease`.
 - Engine fixes that are not offline-specific belong on `v0.10b`, where they are
   matched; keep offline changes small and in `offline:` / `release:` commits.
 - New project-written files start with `// SPDX-License-Identifier: GPL-3.0-or-later`
