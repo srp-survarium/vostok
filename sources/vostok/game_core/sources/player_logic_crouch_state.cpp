@@ -89,7 +89,7 @@ animation::mixing::animation_lexeme player_logic_crouch_state::movement_lexeme(
 		animation::mixing::animation_lexeme_parameters(
 			buffer,
 			m_owner.animations( ).get_crouch_animation_caption( is_aimed, move_animation_index ),
-			m_owner.animations( ).get_crouch_animation( is_aimed, animation_index, is_third_view ),
+			m_owner.animations( ).get_crouch_animation( is_aimed, move_animation_index, is_third_view ),
 			0,
 			0
 		)
