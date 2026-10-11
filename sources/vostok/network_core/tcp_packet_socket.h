@@ -47,8 +47,8 @@ public:
 											on_error_type const&	value
 										) { m_on_error = value; }
 
-// claude@MATCH: target mangling is AAE (private) for the four members below -
-// QAE (public) left them unpairable in objdiff (the unit's 0% block).
+
+
 private:
 			void						on_packet_received		(
 											tcp_packet const*					packet,

@@ -27,8 +27,8 @@ public:
 	inline	profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
 	inline	inventory_item::action_behaviour_type const&
 											get_action_behaviuor			( ) const { return m_action_behaviuor; }
-	// sushi@NOTE: Actual impl is at `player_logic_base_state.h`. Empty here and ICF-folded
-	// (no distinct symbol in either index), so unpairable as a standalone.
+
+	// sushi@NOTE: Actual impl is at `player_logic_base_state.h`.
 	virtual	void								action							( bool key_down ) { VOSTOK_UNREFERENCED_PARAMETER( key_down ); }
 	virtual	void								remove							( ) { /* no source */ }
 

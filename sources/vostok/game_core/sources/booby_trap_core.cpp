@@ -239,12 +239,12 @@ void booby_trap_core::defuse_completed( )
 	switch_to_state( booby_trap_state_disarmed );
 }
 
-// claude@NOTE: target records ZERO named locals (kept here, structure > %). It loads
-// m_trap_state ONCE into a compiler temp at [ebp-8] (below the this-save) and compares
-// that temp twice; reaching that single-load-temp-after-this layout needs an assignment
-// to a variable, but a named local claims [ebp-4] and swaps the slots vs the target, so
-// the faithful zero-local spelling reads the member directly twice (one extra member
-// load). Byte residual only; named-local set matches the target (0).
+
+
+
+
+
+
 void booby_trap_core::on_state_timer_finished( )
 {
 	if ( m_trap_state == booby_trap_state_armed || m_trap_state > booby_trap_state_disarmed )
@@ -307,7 +307,7 @@ void booby_trap_core::switch_to_state( booby_trap_state new_state )
 			m_owner->on_trap_disarmed( *this );
 			break;
 		}
-		default: NODEFAULT( ); // claude@MATCH: target jump table has no bounds check -> full contiguous range + NODEFAULT
+		default: NODEFAULT( );	// retail's jump table has no bounds check
 	}
 
 	m_trap_state = new_state;

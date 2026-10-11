@@ -58,10 +58,10 @@ private:
 		vostok::detail::unreferenced_parameter_helper( &packet, client_offset );
 	}
 
-	// claude@NOTE: faithful empty body. Target is a bare `int3` (0x1 byte, 0 stmts):
-	// ICF maps the identical empty body elsewhere, so only the alignment trap survives
-	// at this RVA; our genuine `ret 4` is correct and
-	// the int3-vs-ret residual is a linker fold artifact, not source-steerable.
+
+
+
+
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override
 	{
 	}

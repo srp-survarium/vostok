@@ -177,14 +177,14 @@ private:
 			for ( bullet_functor *i = static_cast<bullet_functor*>( buffer ), *e = i + buffer_size / sizeof( bullet_functor ) ; i != e ; ++i )
 				free_impl( i );
 		}
-		// claude@NOTE: target retains the 64-bit interlocked helper call; base expands the intrinsic.
+
 		inline	void*			buffer						( ) const { return m_buffer; }
 
 		inline	bullet_functor*	allocate					( ) {
 			return static_cast<bullet_functor*>( malloc_impl( 0 ) );
 		}
 
-		// claude@NOTE: target emits this through the real delete helper; base inlines it.
+
 				void			deallocate					( bullet_functor*& functor )
 		{
 			free_impl( static_cast<void*>( functor ) );
@@ -197,7 +197,7 @@ private:
 			std::swap( m_buffer, other.m_buffer );
 		}
 
-		// claude@NOTE: target emits this through the real new helper; base inlines it.
+
 				void*			malloc_impl					( u32 size )
 		{
 			ASSERT_CMP_U			( size, <=, sizeof( bullet_functor ) );

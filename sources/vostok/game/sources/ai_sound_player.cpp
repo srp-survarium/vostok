@@ -125,10 +125,10 @@ void ai_sound_player::clear_resources( )
 	m_active_sound			= 0;
 }
 
-// claude@NOTE: 3-stmt STRUCTURE MATCH (the braceless if merges save_to+LOG_ERROR into one
-// statement, matching the target). Byte residual: target LOG_ERROR bakes __LINE__ 407
-// (push 197h) vs our shorter file, and the LOG callback's boost::function is constructed
-// inline in target vs a call here (the repo-wide logging-not-gold-stubbed wall).
+
+
+
+
 void ai_sound_player::on_active_sound_serialized( memory::writer* sound_thread_writer, memory::writer* current_thread_writer )
 {
 	current_thread_writer->write		( sound_thread_writer->pointer(), sound_thread_writer->size() );

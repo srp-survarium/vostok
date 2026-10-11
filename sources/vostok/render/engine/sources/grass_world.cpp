@@ -292,7 +292,7 @@ void grass_world::merge_patches( )
 	}
 }
 
-// claude@NOTE: the grass debug guard is partial-inlined only in the base.
+
 void grass_world::render_debug( renderer_context* context )
 {
 	if ( !s_draw_grass_debug_value )
@@ -733,10 +733,8 @@ void grass_world::grass_layer_resources_ready(
 			m.i.xyz( ) = math::cross_product( m.j.xyz( ), m.k.xyz( ) );
 		}
 
-		float const scale = select_model_scale(
-			desc->random_scale,
-			desc->models_list[model_index].scale
-		);
+		float scale = desc->models_list[model_index].scale;
+		scale = select_model_scale( desc->random_scale, scale );
 		m.set_scale( float3( scale, scale, scale ) );
 		add_instance( model_ids[model_index], clr, m, desc->id, desc->wind_factor );
 	}

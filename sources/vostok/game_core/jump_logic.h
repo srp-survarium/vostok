@@ -71,7 +71,7 @@ public:
 			bool								is_jump_finished		( ) const;
 			float								look_time_factor		( ) const;
 
-private:	// claude@MATCH: mangled access - landing_predicate ABE, initialize_logic AAE
+private:
 			bool								landing_predicate		( ) const;
 
 			void								initialize_logic		( );

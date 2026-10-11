@@ -11,7 +11,7 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: collision tree construction is inlined only in the base.
+
 lights_db::lights_db( ) :
 	m_lights_tree( 0 )
 {
@@ -231,7 +231,7 @@ void lights_db::add_light( u32 const id, light_props* props )
 	}
 }
 
-// claude@NOTE: target evidence requires the u32 key; the base inlines this search.
+
 void lights_db::update_light( u32 id, light_props* props )
 {
 	lights_type::iterator found	= std::lower_bound( m_lights.begin(), m_lights.end(), id );

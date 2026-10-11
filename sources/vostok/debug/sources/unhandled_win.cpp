@@ -22,8 +22,8 @@ static void save_minidump						( pcstr const output_file_name, _EXCEPTION_POINTE
 
 	string_path					file_name;
 	strcpy_s					( file_name, vostok::debug::debug_engine()->current_directory() );
-	// Target calls the shared strcat_s<260> COMDAT reused through ICF; this /Ob2
-	// caller inlines the same array overload to _strcat_s.
+
+
 	strcat_s					( file_name, library_id );
 	library_handle				= LoadLibrary ( file_name );
 

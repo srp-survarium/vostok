@@ -15,8 +15,8 @@ public:
 	inline	explicit	jump_logic_state_inactive	( jump_logic& owner ) : jump_logic_base_state( owner ) { }
 
 private:
-	// claude@MATCH: target mangles this override private virtual (?...@@EAE...),
-	// so it lives under private: (objdiff pairs by symbol name -> access char).
+
+
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations			(
 							mutable_buffer&						buffer,

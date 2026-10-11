@@ -154,7 +154,7 @@ void free_fly_camera::on_activate( camera_director* cd )
 	m_prev_delta_sec			= -1.0f;
 	m_inverted_view_matrix		= cd->get_inverted_view_matrix( );
 
-	m_inverted_view_matrix.j.xyz( )	= float3( 0.f, 1.f, 0.f ); // claude@NOTE: target writes xyz directly; base materializes the faithful float3 temporary.
+	m_inverted_view_matrix.j.xyz( )	= float3( 0.f, 1.f, 0.f );
 	m_inverted_view_matrix.i.xyz( )	= math::cross_product( m_inverted_view_matrix.j.xyz( ), m_inverted_view_matrix.k.xyz( ) );
 }
 

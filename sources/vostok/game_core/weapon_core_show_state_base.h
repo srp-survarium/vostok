@@ -12,10 +12,10 @@ class weapon_core_show_state_base : public weapon_core_animation_end_aware_state
 	typedef weapon_core_animation_end_aware_state super;
 
 protected:
-	// ctor mangles ??0...@@IAE@... -> protected (objdiff pairs by mangled name)
+
 	explicit		weapon_core_show_state_base	( weapon_core& weapon, bool& is_shown );
 
-	// initialize/finalize mangle ...@@MAEXXZ -> protected virtual
+
 	virtual	void	initialize					( ) override;
 	virtual	void	finalize					( ) override;
 
@@ -23,7 +23,7 @@ private:
 	virtual	bool	is_ready_for_transition		( ) const override { return has_animation_ended( ); }
 
 private:
-	// on_animation_end_impl mangles ...@@EAEXAA_N@Z -> private virtual
+
 	virtual	void	on_animation_end_impl		( bool& animation_player_tick_result ) override;
 
 private:

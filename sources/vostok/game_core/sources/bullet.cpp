@@ -98,7 +98,7 @@ bullet::~bullet( )
 void bullet::tick( u32 current_time_in_ms )
 {
 	m_current_time_in_ms				= current_time_in_ms;
-	float3			zero_velocity		= float3( 0, 0, 0 );	// sushi@MATCH: <0x592a3b> Arguments are built slightly differently. claude@MATCH: target PDB records it NON-const.
+	float3			zero_velocity		= float3( 0, 0, 0 );	// non-const, as retail's PDB records it
 	u16 const		invalid_tracer_idx	= u16(-1);
 	float			low_time			= m_life_time;
 	float			high_time			= ( current_time_in_ms - m_born_time_in_ms ) / 1000.0f * m_bullet_manager->get_bullet_time_factor( );
@@ -110,7 +110,7 @@ void bullet::tick( u32 current_time_in_ms )
 	{
 		// sushi@NOTE: Added some ifdefs here
 
-		if ( m_velocity.squared_length( ) < 1.f )	// sushi@MATCH: <0x592aba> fld1 is used instead of movss.
+		if ( m_velocity.squared_length( ) < 1.f )
 		{
 			m_start_velocity = zero_velocity;
 			return;
@@ -189,7 +189,7 @@ bool bullet::is_finish_flying ( ) const
 
 float3 bullet::compute_parabolic_velocity( float time, float3 const& gravity )
 {
-	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// claude@MATCH: target PDB records it NON-const
+	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// non-const, as retail's PDB records it
 	// this could be since we could fire in different directions
 	// for example, vertically into the ground
 	if ( math::is_zero( xz_velocity.squared_length( ) ) )
@@ -212,7 +212,7 @@ float3 bullet::compute_trajectory_velocity( float time, float3 const& gravity )
 
 float3 bullet::compute_parabolic_position( float time, float3 const& gravity )
 {
-	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// claude@MATCH: target PDB records it NON-const
+	float3 xz_velocity			= float3( m_start_velocity.x, 0.f, m_start_velocity.z );	// non-const, as retail's PDB records it
 
 	if ( math::is_zero( xz_velocity.squared_length( ) ) )
 		return				m_start_position + m_start_velocity * time + gravity * ( math::sqr( time ) * .5f );
@@ -341,7 +341,7 @@ inline static float get_max_error_time( float t0, float t1 )
 float bullet::get_check_time( float const start_low, float high, float3 const& gravity )
 {
 	float const max_test_distance	= m_max_distance - m_flown_distance;
-	float3 start			= compute_trajectory_position( start_low, gravity );	// claude@MATCH: target PDB records start/intermediate/target NON-const
+	float3 start			= compute_trajectory_position( start_low, gravity );	// start/intermediate/target are non-const, as retail's PDB records them
 #ifndef MASTER_GOLD
 	float const start_high	= high;
 #endif // #ifndef MASTER_GOLD
@@ -367,7 +367,7 @@ float bullet::compute_max_error( float low, float high, float3 const& gravity )
 {
 	float					max_error_time = get_max_error_time( low, high );
 
-	// claude@MATCH: target PDB records these three NON-const.
+	// these three are non-const, as retail's PDB records them
 	float3 start			= compute_trajectory_position( low, gravity );
 	float3 target			= compute_trajectory_position( high, gravity );
 	float3 max_error		= compute_trajectory_position( max_error_time, gravity );
@@ -384,7 +384,7 @@ float bullet::compute_max_error( float low, float high, float3 const& gravity )
 
 collision_result bullet::check_collision( float3 start_position, float start_time, float current_time )
 {
-	collision_result result			= collision_result_no_collision;	// claude@MATCH: target PDB records this local NON-const
+	collision_result result			= collision_result_no_collision;	// non-const, as retail's PDB records it
 
 	float3 const& target_position	= compute_trajectory_position( current_time, m_bullet_manager->get_gravity( ) );
 	R_ASSERT						( start_time < current_time, "start time can not be greater than current time" );

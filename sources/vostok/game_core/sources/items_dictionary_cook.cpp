@@ -25,9 +25,9 @@ void items_dictionary_cook::translate_query( resources::query_result_for_cook& p
 	);
 }
 
-// claude@NOTE: 0-local target (matches this source). Base differs only in delete_helper arg
-// marshalling/order (push edi/pop edi, add esp,4 vs 8) - strip_pointer/delete_helper ceiling on the
-// same VOSTOK_DELETE_IMPL source, not steerable.
+
+
+
 void items_dictionary_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );

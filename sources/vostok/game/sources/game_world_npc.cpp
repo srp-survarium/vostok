@@ -128,9 +128,9 @@ public:
 
 STATIC_SIZE_ASSERT(ray_query_predicate, 0x14);
 
-// claude@NOTE: structure matches (3 stmts). Byte residual is LTCG: the target
-// inlines the vectora_allocator<void*> ctor at the game_objects init site (base
-// keeps it out-of-line as a call) plus this-in-register; both are call-boundary.
+
+
+
 bool game_world::ray_query(
 	ai::collision_object const* const		object_to_pick,
 	ai::collision_object const* const		object_to_ignore,
@@ -192,9 +192,9 @@ void delete_weapons( human_npc_ptr& owner )
 		VOSTOK_DELETE_IMPL			( ::survarium::g_allocator, weapon );
 }
 
-// Target LTCG eliminates the faithful delete_weapons/clear_resources cleanup from
-// its PDB body while base retains the real calls. Do not remove cleanup to chase
-// the optimized projection.
+
+
+// retail's optimised body drops this cleanup; keep the real calls
 void game_world::kill_npc( human_npc_ptr& condemned )
 {
 	delete_weapons					( condemned );

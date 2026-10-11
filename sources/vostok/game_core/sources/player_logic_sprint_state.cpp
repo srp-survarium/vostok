@@ -16,20 +16,20 @@
 
 namespace survarium {
 
-// claude@NOTE: single .rdata copy in the target exe (?sprint_animations_captions@survarium@@3QBQBDB
-// @va 0x89d19c); 2 captions (move, look) sitting between crouch_animations_captions and
-// jump_animations_captions. Mirrors m_sprint_animations[2][2].
+
+
+// move and look captions; mirrors m_sprint_animations[2][2]
 pcstr const sprint_animations_captions[] = {
 	"run_fwd",
 	"run_fwd_look",
 };
 
-// claude@NOTE: structure matches (single body stmt); walled at inline-vs-call. The
-// target INLINES boost::function<void()>::operator=<bind_t<...>> as the partial-spec
-// body `self_type(f).swap(*this)` (function-ctor + assign_to + swap + clear), whereas
-// our base emits an out-of-line `call operator=<...>`. Per-call-site whole-program
-// inline-vs-call decision (patterns/boost-function-assign-inline.md); the `= boost::bind`
-// source is correct, so this stays at the inline-vs-call %.
+
+
+
+
+
+
 player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_selector& owner ) :
 	player_logic_base_state	( owner, type_sprint )
 {
@@ -94,11 +94,11 @@ void player_logic_sprint_state::set_callbacks( boost::function<void()> const& in
 	m_finalize_callback		= finalize_callback;
 }
 
-// claude@NOTE: structure matches (single stmt); walled at inline-vs-call. The target
-// does `call base_player::force_animation_selection` (a real out-of-line method), but
-// base_player.h declares that method inline, so our base inlines it to
-// `mov byte ptr [this+118h], 1`. Out-lining it is a base_player-TU change; cross-unit
-// out-lining is off-limits here, so this stays at the inline-vs-call %.
+
+
+
+
+
 void player_logic_sprint_state::on_stamina_depleted( )
 {
 	m_user->force_animation_selection( );

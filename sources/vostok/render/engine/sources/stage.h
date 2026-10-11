@@ -10,8 +10,8 @@ class renderer;
 class renderer_context;
 
 class stage : private boost::noncopyable {
-	// claude@MATCH: renderer::draw_debug reads m_context off m_stages[..] directly
-	// (0x64b312: mov ecx,[edi+1Ch]; mov edx,[ecx+4]) - codegen-neutral access grant.
+
+	// renderer::draw_debug reads m_context off its stages directly
 	friend class renderer;
 
 public:

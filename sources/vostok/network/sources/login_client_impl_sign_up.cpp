@@ -7,9 +7,9 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: STRUCTURE MATCH (17/17). Residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
-// global boost-header knob. See template-accessor-deinline-global-knob.md.
+
+
+
 void login_client_impl::on_sign_up_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -41,9 +41,9 @@ void login_client_impl::on_sign_up_answer_received(
 		callback			( successfully_connected, successfully_handshaked, no_socket_error, ( login_server_message_types_enum )m_data[0], sign_up_info );
 }
 
-// claude@NOTE: STRUCTURE MATCH (15/15). Residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
-// global boost-header knob (see note above).
+
+
+
 void login_client_impl::on_sign_up_info_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -83,9 +83,9 @@ void login_client_impl::on_sign_up_info_written(
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (20/20). Residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule; global boost-header
-// knob (see note above).
+
+
+
 void login_client_impl::sign_up_on_handshaked(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -128,10 +128,10 @@ void login_client_impl::sign_up_on_handshaked(
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (26/26). default-case `return` is load-bearing (target's
-// 2-byte jmp goes to the epilogue, skipping handshake, same shape as on_user_name_answer_received).
-// Residual = the callback/info bind-copy lowering (function5 copy + boost::ref slot) vs the
-// target folded-ctor schedule + LOG ctor scheduling; global boost-header knob (see note above).
+
+
+
+// the default case returns: retail's jump goes straight to the epilogue, skipping the handshake
 void login_client_impl::on_sign_up_account_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -189,9 +189,9 @@ void login_client_impl::on_sign_up_account_answer_received(
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (15/15). Residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule + LOG ctor scheduling;
-// global boost-header knob (see note above).
+
+
+
 void login_client_impl::on_sign_up_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
 		sign_up_info const&					sign_up_info,
@@ -231,9 +231,9 @@ void login_client_impl::on_sign_up_written(
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (16/16). Residual = the callback/info bind-copy lowering
-// (function5 copy + boost::ref slot) vs the target folded-ctor schedule; global boost-header
-// knob (see note above).
+
+
+
 void login_client_impl::sign_up_on_connected(
 		const connection_error_types_enum	connection_result,
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const&	callback,
@@ -272,9 +272,9 @@ void login_client_impl::sign_up_on_connected(
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (6/6). Residual = the function1(bind_t) conversion lowering at
-// the establish_connection boundary (the bind carries the function5 copy + boost::ref slot);
-// global boost-header knob (see note above).
+
+
+
 void login_client_impl::sign_up( pcstr host, u16 port, sign_up_info const& sign_up_info, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum, vostok::sign_up_info const& ) > const& callback )
 #line 261
 {

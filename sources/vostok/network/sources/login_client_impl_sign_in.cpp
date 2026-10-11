@@ -7,6 +7,7 @@ namespace vostok {
 namespace network {
 
 // The target keeps the answer dispatch scoped and records both length locals as non-const.
+#line 12
 void login_client_impl::on_sign_in_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -78,6 +79,7 @@ void login_client_impl::on_sign_in_answer_received(
 #line 83
 }
 
+#line 84
 void login_client_impl::on_sign_in_password_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -119,6 +121,7 @@ void login_client_impl::on_sign_in_password_written(
 		)
 	);
 }
+#line 126
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
 #line 127
 {
@@ -150,6 +153,7 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 	);
 }
 // Unknown messages return instead of falling through to the handshake.
+#line 156
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 #line 157
 {
@@ -201,6 +205,7 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		false
 	);
 }
+#line 207
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
 #line 208
 {
@@ -235,6 +240,7 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 		)
 	);
 }
+#line 241
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 #line 242
 {
@@ -275,6 +281,7 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 		)
 	);
 }
+#line 281
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 #line 282
 {

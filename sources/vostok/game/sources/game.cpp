@@ -61,11 +61,11 @@ using vostok::console_commands::command_type_engine_internal;
 #include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include "victory_item_cook.h"
 
-// File-scope console-command statics + their command functions. The PDB mangles these
-// undecorated (global scope, not survarium::); the dynamic initializers / atexit
-// destructors the compiler emits for each are the matched targets. Source order (init
-// line numbers): draw_snd_stats(58), draw_stats(70), show_profiler(74), cfg_save pair
-// (126/127), particle commands (138/141).
+
+
+
+// File-scope console-command statics and their command functions: retail names
+// them at global scope, not in survarium::.
 
 vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
 static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
@@ -170,7 +170,7 @@ static bool s_show_detailed_statistics_value;
 static cc_bool show_detailed_statistics( "r_show_detailed_statistics", s_show_detailed_statistics_value, true, command_type_user_specific );
 
 namespace survarium {
-// claude@NOTE: exact statement/local structure; residual is LTCG register and call convention scheduling.
+
  game::game(
 	engine_user::engine&	engine,
 	render::world&			render_world,
@@ -376,7 +376,7 @@ void game::on_render_output_window_created( resources::queries_result& data )
 		assert_on_fail_true
 	);
 }
-// claude@NOTE: target keeps key::is_set_as_string out of line and passes create_and_assign_network_client this on the stack.
+
 void game::on_base_resources_created( resources::queries_result& data )
 {
 	m_items_dictionary = static_cast_resource_ptr< items_dictionary_ptr >( data[0].get_unmanaged_resource( ) );
@@ -469,11 +469,11 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 		create_network_client		( false );
 }
 
-// claude@NOTE: structure + 6 stmts match. Residual is LTCG convention only - the
-// target passes `this` ON THE STACK (ret 8, mov ebx,[esp+42Ch]) and pushes
-// is_spectator to the network_client ctor; base keeps __thiscall (this in ecx,
-// ret 4) and the ctor's is_spectator goes via register. The 4-byte frame shift
-// cascades through every [esp+XX] slot. Not source-steerable (arg-passing).
+
+
+
+
+
 void game::create_network_client( const bool is_spectator )
 {
 	fixed_string< 512 > host;
@@ -713,8 +713,8 @@ void game::update_stats( const u32 current_frame_id )
 	if ( draw_fps_graph && !hide_game_stats && m_game_world.is_active( ) )
 	{
 		m_fps_graph->set_time_interval		( 5.f );
-		// only top_margin (574) + height (128) survive; arg_4/5/6 are UNREFERENCED in
-		// render() so LTCG drops them - the trailing args here are placeholders.
+
+		// render() ignores the trailing arguments; only top_margin and height matter
 		m_fps_graph->render					( ui_world( ).get_renderer( ), m_active_scene->render_scene_view( ), 574, 128, current_frame_id, 1004, 10 );
 	}
 	else
@@ -830,8 +830,8 @@ void game::switch_to_login( login_menu_status_enum status )
 	switch_to_scene					( m_login_menu );
 }
 
-// claude@NOTE: target receives this in EAX and drops project_cooker_simple's constant this argument.
-// The first static's base PDB line attribution returns when the caller's LTCG convention matches.
+
+
 
 void game::register_cooks( )
 {

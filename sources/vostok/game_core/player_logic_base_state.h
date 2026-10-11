@@ -41,8 +41,8 @@ public:
 											const bool							is_third_view
 										) const = 0;
 
-	// claude@NOTE: stub body must return a value or the abstract vtable fails LTCG
-	// codegen (C4716/LNK1257) once an obj carrying this vtable is kept. Not matched.
+
+	// must return a value: without one the abstract vtable fails LTCG codegen (C4716/LNK1257)
 	virtual	float4x4					get_attachment_transform	( ) const { return float4x4( ); }
 
 	virtual	void						serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
@@ -57,14 +57,14 @@ public:
 	inline	bool						is_physics_transform_allowed( ) const { /* no source */ }
 
 protected:
-	// claude@MATCH: protected static -> mangled `K` (target). private would be `C`,
-	// public `S`; either mismatches the target's symbol so objdiff can't pair it.
+
+
 	static	u32							movement_animation_index	( player_input const& input );
 
-	// claude@NOTE: protected (not private) so derived state overrides
-	// (e.g. player_logic_jump_state::is_ready_for_transition) can read m_user
-	// directly, as the target codegen does (no accessor call). Access level does
-	// not affect base_state's own byte output.
+
+
+
+	// protected: derived states (e.g. player_logic_jump_state) read m_user directly, as retail does
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	weapon_user_animations_selector&	m_owner;
 	/* 0x001c */	base_player*						m_user;

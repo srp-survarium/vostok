@@ -36,10 +36,10 @@ namespace resources {
 	class request;
 } // namespace resources
 namespace render {
-	// vostok::render-pool type parked here (the server_connection_info
-	// pattern): bullet_tracer's inline dtor needs it COMPLETE, and the render
-	// carcass rebuild has not emitted it yet - identical blobs merge clean.
-	// Canonical: binaries/structure/target/headers/vostok/render/tracer_model_instance.h
+
+
+	// parked here: bullet_tracer's inline dtor needs this render type complete,
+	// and the render tree does not define it yet
 	struct tracer_model_instance : public resources::unmanaged_resource {
 		inline	void	set_color				( math::color const& arg_0 ) { /* no source */ }
 

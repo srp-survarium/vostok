@@ -25,13 +25,13 @@ http_client::http_client( world& world ) :
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: target inlines strip_pointer
-// (passes the g_allocator pointer value direct to delete_helper) where our base
-// keeps a strip_pointer call before delete_helper - per-site inline-vs-call,
-// byte-identical for either allocator spelling (sibling destroy_client documents
-// the same wall). Not steerable from this TU.
-// claude@MATCH: static - the target symbol is the unmangled PDB-private name
-// `vostok::network::destroy_http_client` (internal linkage), not a mangled export
+
+
+
+
+
+
+// static: retail names it the internal `vostok::network::destroy_http_client`
 static void destroy_http_client( network_core::http_client* client_to_destroy )
 #line 36
 {
@@ -65,8 +65,8 @@ void http_client::get( pcstr server, pcstr path, boost::function< void ( pcstr )
 	m_busy					= true;
 	m_on_content_downloaded	= callback;
 
-	// claude@MATCH: bind passed directly (arity picks the 2-string string_order
-	// ctor); an explicit function wrap mis-schedules the EH guard `or`
+
+	// the bind converts implicitly: an explicit boost::function wrap reorders the EH state store
 	m_world.add_order		(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator(), string_order ) (
 			m_world.orders_allocator( ),
@@ -88,9 +88,9 @@ void http_client::on_content_downloaded_impl( pcstr content )
 	m_busy	= false;
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: one dead frame dword (target 0x70
-// vs base 0x6C) plus the home-slot rename riding on it - the string_order-ctor
-// ghost-dword LTCG class. Not steerable from this TU.
+
+
+
 void http_client::on_content_downloaded( )
 #line 80
 {

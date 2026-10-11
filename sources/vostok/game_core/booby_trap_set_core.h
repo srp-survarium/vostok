@@ -56,14 +56,14 @@ public:
 
 	inline damage_parameters_type const& damage_parameters				( ) const { return m_damage_parameters; }
 
-	// claude@NOTE: config()/traps() carry the correct one-line bodies and pair in this TU,
-	// but the target compiled them /Ox (frameless, this in eax/ecx, no ebp frame) while
-	// our base is /Od; the residual is the optimization-level wall, not source-steerable.
+
+
+
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
 
 private:
-	// private in the target: mangled @@EAE (private virtual), not @@UAE - pairing depends on it
+
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
 
 protected:
@@ -76,9 +76,9 @@ public:
 												) const;
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold to shared targets (no distinct symbol in either index), so they
-	// are unpairable as standalones; the idiomatic bodies below are the faithful shapes.
+
+
+
 	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	void								deactivate						( ) override { VOSTOK_UNREACHABLE_CODE( ); }
 	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }

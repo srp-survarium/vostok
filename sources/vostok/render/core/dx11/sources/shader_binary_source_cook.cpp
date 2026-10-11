@@ -96,7 +96,7 @@ void shader_binary_source_cook::create_resource(
 	{
 		in_out_query.finish_query					(resources::query_result_for_user::error_type_cook_failed, assert_on_fail_false);
 
-		// claude@MATCH: qualification keeps the target's direct deallocation path.
+		// qualified: retail calls it directly, not through the vtable
 		shader_binary_source_cook::deallocate_resource(in_out_unmanaged_resource_buffer.c_ptr());
 		DELETE										(user_data);
 		return;

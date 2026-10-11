@@ -14,8 +14,8 @@ class weapon_core_fire_state_base : public weapon_core_animation_end_aware_state
 protected:
 			explicit		weapon_core_fire_state_base	( weapon_core& weapon, float animation_timescale );
 
-	// target mangles ctor @@IAE (protected), the four virtuals + on_shot_event
-	// @@MAE (protected virtual); objdiff pairs by mangled name.
+
+
 	virtual	void			initialize					( ) override;
 	virtual	void			execute						( ) override;
 	virtual	void			finalize					( ) override;

@@ -27,7 +27,7 @@ inventory_cook::inventory_cook( ) :
 	resources::register_cook( this );
 	static items_cook				s_items_cook;
 	static damage_model_cook 		s_damage_model_cook;
-	static weapon_ammunition_cook	s_weapon_ammunition_cook;;
+	static weapon_ammunition_cook	s_weapon_ammunition_cook;
 }
 
 void inventory_cook::translate_query( resources::query_result_for_cook& parent )
@@ -51,8 +51,8 @@ void inventory_cook::translate_query( resources::query_result_for_cook& parent )
 		slot						= &cooker_data->profile->slots[current];
 		if ( slot->item.id )
 		{
-			resource_name = cooker_data->dictionary->item_by_id( slot->item.dict_id ).item_cfg_name.c_str( );		// sushi@MATCH:
-			requests.push_back( resources::create_request( resource_name, resources::weapon_class ) );	// sushi@MATCH:
+			resource_name = cooker_data->dictionary->item_by_id( slot->item.dict_id ).item_cfg_name.c_str( );
+			requests.push_back( resources::create_request( resource_name, resources::weapon_class ) );
 			user_data.push_back( NULL );
 		}
 	}

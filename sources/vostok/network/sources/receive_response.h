@@ -33,9 +33,9 @@ public:
 	{
 	}
 
-	// claude@NOTE: statements byte-equal; residual is the folded function1::clear's
-	// LTCG this-convention (esi in target, ecx in base) and the 8-byte frame slack
-	// riding on it - not source-steerable.
+
+
+
 	virtual			~receive_response	( )
 #line 36
 	{
@@ -43,9 +43,9 @@ public:
 		VOSTOK_DELETE_IMPL		( m_allocator, temp );
 	}
 
-	// claude@NOTE: structure matches 2/2; residual is base_packet::buffer() inlined
-	// inside the packet_reader-ctor expansion where the target calls the COMDAT -
-	// the inline-vs-call wall, not source-steerable.
+
+
+
 	virtual	void	execute				( )
 #line 42
 	{

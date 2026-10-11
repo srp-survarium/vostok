@@ -32,7 +32,7 @@ public:
 
 public:
 	// network_client clears m_victory_items directly (on_world_sync_request);
-	// PDB does not record friendship, codegen-neutral
+
 	friend class network_client;
 	// victory_items_container::use_info reads m_victory_items directly.
 	friend class victory_items_container;

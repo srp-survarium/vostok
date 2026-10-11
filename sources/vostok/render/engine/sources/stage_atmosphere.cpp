@@ -218,7 +218,7 @@ void stage_atmosphere::execute( )
 
 		if ( pp_parameters.sun_moon_texture && sun )
 		{
-			u32 offset;
+			u32 offset = 0;
 			screen_vertex* pv = reinterpret_cast<screen_vertex*>( backend::ref( ).vertex.lock( 4, sizeof(screen_vertex), offset ) );
 
 			pv->set( float4( -1.0f, -1.0f, 0.0f, 1.0f ), float2( 0.0f, 1.0f ) ); pv++;

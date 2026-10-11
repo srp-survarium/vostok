@@ -8,9 +8,9 @@
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/buffer_vector.h>
 
-// the tick remove_if predicate lives at GLOBAL scope - the target mangling carries no
-// namespace (??Rdelayed_packets_predicate@@QBE..); the namespaced spelling mangles
-// @network_core@vostok@ and the symbol join fails SILENTLY (objdiff never pairs it).
+
+
+// Global scope: retail mangles this predicate without a namespace.
 class delayed_packets_predicate : private boost::noncopyable {
 public:
 	inline	delayed_packets_predicate	(

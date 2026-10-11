@@ -14,9 +14,9 @@ public:
 	typedef boost::function< void ( pcstr, pcstr ) >		functor_type1;
 	typedef boost::function< void ( pcstr, pcstr, pcstr ) >	functor_type2;
 
-	// claude@NOTE: only diff is `sub esp` - target reserves one untouched ghost
-	// temp dword per strings::duplicate call; zero PDB locals on either side,
-	// whole-program LTCG inline-consideration context (assembly_patterns.md)
+
+
+
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			functor_type0 const&	functor,
@@ -33,7 +33,7 @@ public:
 	{
 	}
 
-	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x2)
+
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			functor_type1 const&	functor,
@@ -51,7 +51,7 @@ public:
 	{
 	}
 
-	// claude@NOTE: same ghost-frame-dword residual as the 1-string ctor (x3)
+
 	inline			string_order	(
 			memory::base_allocator&		allocator,
 			functor_type2 const&	functor,

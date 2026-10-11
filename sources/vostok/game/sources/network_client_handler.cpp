@@ -12,12 +12,12 @@
 
 namespace survarium {
 
-// claude@NOTE: switch on the leading server-message-type byte (compiled as a
-// jump table over message_type - 0x81), each case forwarding to a sibling
-// process_*/on_* handler. The match_server_message_types_enum is empty in the PDB
-// (param/cast-only -> no enumerators recovered), so the case labels are the raw
-// recovered byte values rather than named constants. process_team_bases inlines to
-// m_game.get_game_world().game_ui.initialize_base_points(packet) at its case.
+
+
+
+
+// the PDB records no enumerators for match_server_message_types_enum, so the cases
+// use the raw message-type bytes (the jump table indexes message_type - 0x81)
 void network_client::on_match_packet_received( const u8 message_type, network_core::packet_reader& packet )
 {
 	switch ( message_type )

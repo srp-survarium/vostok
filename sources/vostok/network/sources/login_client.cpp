@@ -40,8 +40,8 @@ pcstr login_client::account_password( ) const
 	return				m_net_client_account_password;
 }
 
-// claude@NOTE: residual = the out-of-line strings::copy<128> COMDAT takes its
-// args via esi/eax with a 3-byte reg-shuffle delta (LTCG call-boundary arg passing)
+
+
 void login_client::store_user_password_in_settings( )
 #line 39
 {
@@ -53,8 +53,8 @@ void login_client::reset_user_password_in_settings( )
 	s_net_client_account_password_[0]	= 0;
 }
 
-// claude@NOTE: residual = 1-instruction reg rename at the inlined
-// ip_address.c_str( ) read (LTCG slot choice after the get_ip_address sret)
+
+
 void login_client::create_client( )
 #line 49
 {
@@ -64,10 +64,10 @@ void login_client::create_client( )
 	strings::copy		( m_local_host_ip, ip_address.c_str( ) );
 }
 
-// claude@NOTE: structure + locals match; residual = the three boost::function
-// member default-ctors (m_on_sign_*) are inlined with extra [ebp-XX] temp-slot
-// spills where the target calls the folded default-ctor with this+offset direct
-// (boost::function ctor inline-vs-call wall; match_client ctor precedent)
+
+
+
+
 login_client::login_client( world& world ) :
 	m_world				( static_cast_checked<network_world&>(world) ),
 	m_client			( 0 ),
@@ -89,11 +89,11 @@ login_client::login_client( world& world ) :
 } // namespace network
 } // namespace vostok
 
-// claude@NOTE: base keeps the LTCG-promoted strip_pointer fold call before
-// delete_helper where the target inlines it - byte-identical for either allocator
-// spelling (tcp_packet_client destroy_client precedent)
-// claude@MATCH: GLOBAL-scope static - the target symbol is the unmangled
-// PDB-private name `destroy_client` (no namespaces), the tcp_packet_client idiom
+
+
+
+
+// Global scope: retail names this static the unmangled `destroy_client`.
 static void destroy_client( vostok::network::login_client_impl* client_to_destroy )
 #line 72
 {
@@ -103,8 +103,8 @@ static void destroy_client( vostok::network::login_client_impl* client_to_destro
 namespace vostok {
 namespace network {
 
-// claude@NOTE: residual = the function0(bind_t) copy lowering inside the
-// destroy_client functor_order (boost::function ctor inline-vs-call wall)
+
+
 login_client::~login_client( )
 #line 77
 {
@@ -115,11 +115,11 @@ login_client::~login_client( )
 	);
 }
 
-// claude@NOTE: structure + locals match; residual = base inlines the
-// functor_response bind argument copies (m_on_sign_up function5 + sign_up_info
-// by-value - target bind list5 confirms value<sign_up_info>, NOT cref) through
-// extra esp temps where the target schedules them through folded ctor COMDATs
-// (boost::function copy inline-vs-call wall)
+
+
+
+
+
 void login_client::on_signed_up(
 		connection_error_types_enum			connection_error,
 		handshaking_error_types_enum		handshaking_error,
@@ -141,9 +141,9 @@ void login_client::on_signed_up(
 	);
 }
 
-// claude@NOTE: structure + locals match (cmp 8 = servers_connection_info,
-// brace-less if/else pair); residual = the same functor_response bind-copy
-// lowering as on_signed_up
+
+
+
 void login_client::on_signed_in(
 		connection_error_types_enum			connection_error,
 		handshaking_error_types_enum		handshaking_error,
@@ -168,8 +168,8 @@ void login_client::on_signed_in(
 	);
 }
 
-// claude@NOTE: residual = 2 bytes of bind-temp slot scheduling in the function4
-// conversion at the impl::sign_in boundary (boost::function conversion wall)
+
+
 void login_client::sign_in_impl(
 		pcstr const		host,
 		const u16		port,
@@ -195,10 +195,10 @@ void login_client::sign_up(
 	m_client->sign_up	( host, port, m_sign_up_info, boost::bind( &login_client::on_signed_up, this, _1, _2, _3, _4, _5 ) );
 }
 
-// claude@NOTE: structure + locals match; residuals = `m_on_sign_in = callback`
-// inlined as copy-swap-clear where the target calls the folded operator=
-// (edi-promoted), plus the bind_t -> function3 conversion temp lowering in the
-// string_order ctor build (boost-function-assign-inline.md wall, both sites)
+
+
+
+
 void login_client::sign_in(
 		pcstr			host,
 		u16				port,
@@ -235,8 +235,8 @@ void login_client::sign_in(
 	);
 }
 
-// claude@NOTE: structure + locals match; same functor_response bind-copy
-// lowering residual as on_signed_up
+
+
 void login_client::on_signed_out(
 		connection_error_types_enum			connection_error,
 		handshaking_error_types_enum		handshaking_error,
@@ -257,10 +257,10 @@ void login_client::on_signed_out(
 	);
 }
 
-// claude@NOTE: structure + locals match (const& lifetime-extended on_signed_out
-// local verified - its bind->function4 assign_to matches the target); residual =
-// `m_on_sign_out = callback` copy-swap-clear inline where the target calls the
-// folded operator= (boost-function-assign-inline.md wall)
+
+
+
+
 void login_client::sign_out(
 		boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) > const&	callback
 	)

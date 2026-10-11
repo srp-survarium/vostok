@@ -24,7 +24,7 @@ network_world::network_world					( vostok::network::engine& engine, vostok::memo
 	m_channel.responses.owner_initialize( NEW(functor_response)( &empty_function ), NEW(functor_response)( &empty_function ) );
 }
 
-// claude@NOTE: the target never deletes m_io_service - a faithful leak, do not "fix"
+// retail never deletes m_io_service: a faithful leak, do not "fix"
 network_world::~network_world					( )
 #line 28
 {
