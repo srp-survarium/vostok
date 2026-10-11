@@ -47,6 +47,8 @@ from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   report_overload_scores,
                                   report_score_for_target)
 from vostok.ledger import store
+# the EH table reader rides along with the canonical post-edit check
+from vostok.tests.test_eh import EhTests, MsfTests, X86Tests  # noqa: F401
 
 
 class CleanFinalPdbTests(unittest.TestCase):

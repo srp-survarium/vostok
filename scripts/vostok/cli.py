@@ -15,6 +15,8 @@
                                    base<->target function pair
     vostok data <verb>             independent PDB/image data matching lane
     vostok pdb <verb>              PDB/PE/source evidence and structure views
+    vostok eh [fn]                 C++ exception-handling tables (FuncInfo,
+                                   unwind funclets, try/catch) retail vs ours
     vostok diff <view>             target-vs-base source shape: layout / order
                                    / tu-order / enums
     vostok tool <name>             operational helpers: clangd / toolchain /
@@ -67,10 +69,10 @@ def main(argv: list[str] | None = None) -> int:
     cmd, rest = argv[0], argv[1:]
     if cmd == "build":
         return _run("vostok.build.rebuild", rest, "vostok build")
-    if cmd in ("ledger", "derive", "sema", "data", "pdb"):
+    if cmd in ("ledger", "derive", "sema", "data", "pdb", "eh"):
         mod = {"ledger": "vostok.ledger", "derive": "vostok.derive.cli",
                "sema": "vostok.sema", "data": "vostok.data.cli",
-               "pdb": "vostok.pdb"}[cmd]
+               "pdb": "vostok.pdb", "eh": "vostok.eh"}[cmd]
         sys.argv = [f"vostok {cmd}", *rest]
         return importlib.import_module(mod).main() or 0
     for name, table in (("diff", DIFF), ("tool", TOOLS)):

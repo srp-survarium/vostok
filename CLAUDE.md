@@ -167,7 +167,8 @@ Iterate with `vostok build --code-only`.
 - Evidence beats taste: `vostok-pdb inspect --view target|base|structure-diff` for
   disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
   for control flow (its exit code 1 is an answer, read the printed verdict),
-  `binaries/structure/target/headers` for class layout and vtable order.
+  `binaries/structure/target/headers` for class layout and vtable order, and
+  `python3 -m vostok eh <fn>` for a function's `__try` and C++ unwind tables.
 - Attribute a residual to LTCG only when it is proven to be argument passing at a
   call boundary; otherwise it is source shape, or a concrete wall to record.
 - Every commit is a measured state: run the full `vostok build` and commit the
@@ -181,7 +182,8 @@ Iterate with `vostok build --code-only`.
 
 One package, run as `python3 -m vostok ...` (`python3 -m vostok` maps the surface):
 `core/` (paths, tsv, symbols, log, wine, fmt - blind helpers), `ledger/`, `derive/`
-(report + PDB evidence databases -> ledger), `sema/` (control-flow views), `build/`, `diff/`,
+(report + PDB evidence databases -> ledger), `sema/` (control-flow views), `eh/` (C++ EH
+and SEH tables, retail vs ours), `build/`, `diff/`,
 `tool/`, `shaders/`, `data/`, `tests/`. Every repo path is spelled once, in
 `core/paths.py` - add new ones there. After editing anything under `scripts/`, run
 `ruff check scripts/` and `python3 -m vostok.tests.test_match_db`. If you change

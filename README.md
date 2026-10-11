@@ -202,6 +202,23 @@ notes. Empty direct caller output does not exclude virtual dispatch: verify
 constructor storage, slot contents and the actual indirect caller before
 closing that question.
 
+Exception-handling tables are compared outside the byte diff: they have no PDB
+function record, so the report and ledger never score them.
+
+```sh
+python3 -m vostok eh                 # image-wide counts and divergence classes
+python3 -m vostok eh --list          # one verdict per divergent registration
+python3 -m vostok eh FUNCTION        # verdict, then both sides' tables
+```
+
+For each C++ EH registration it reads the `__ehhandler$` stub, the FuncInfo, the
+unwind map with each state's `.text$x` funclet (destructor called, frame slot,
+masked bytes) and the try/catch map with caught types. For each `__try` it reads
+the SEH3/SEH4 scope table. Registrations pair by parent name, falling back to the
+ledger pairing and then to identical tables. `--json` prints the same data. The engine
+builds with `ExceptionHandling=0`, so its C++ EH tables belong to vendored
+and prebuilt code. The engine's `__try` blocks still appear as SEH frames.
+
 The full-engine structural/byte campaign queue includes `game`, `game_core`,
 `render`, named-local differences and unpaired frameless procedures:
 

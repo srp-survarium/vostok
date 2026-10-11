@@ -350,6 +350,16 @@ def survarium_bin() -> Path:
     return Path(os.environ.get("SURVARIUM_BIN", NIX_STORE / "survarium-game"))
 
 
+def target_exe() -> Path:
+    """The shipped executable the matching targets."""
+    return survarium_bin() / "survarium.exe"
+
+
+def target_pdb() -> Path:
+    """The shipped executable's PDB."""
+    return survarium_bin() / "survarium.pdb"
+
+
 def child_env(env: dict[str, str] | None = None) -> dict[str, str]:
     """Environment for a `sys.executable -m vostok.*` subprocess.
 
