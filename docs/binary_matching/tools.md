@@ -52,3 +52,21 @@ record count with. `python3 -m vostok tool joined` lists them per module
 (`--list` for every line, `--module`, `--blame`/`--since` for commit dates,
 `--verdict` to look each line up in the PDB evidence: `retail-split` lines are
 unwound first). Vendored subtrees and tool programs are skipped.
+
+## Cross-references and duplicate owners
+
+`vostok sema xref FUNCTION --pointers` verifies the PE/PDB hash and prints the
+physical procedure span plus HIGHLOW words pointing to that exact RVA. Vtable
+labels appear only when the data report binds both this PE and the exact current
+data-index bytes; otherwise they are omitted. Labels annotate reference
+candidates and do not prove runtime reachability.
+On the base side, the view flags possible stale base-stripping claims in ledger
+notes. Empty direct caller output does not exclude virtual dispatch: verify
+constructor storage, slot contents and the actual indirect caller before
+closing that question.
+
+Ledger derivation warns when an identical decorated name and signature has
+distinct bodies in several translation units. The ledger selects one canonical
+owner; its score does not establish closure of the other bodies. Inspect each
+owner with `vostok pdb inspect --list`, then `--file` or an exact `--rva`, and
+verify the actual referenced datum when a behavior depends on a literal or table.

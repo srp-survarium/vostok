@@ -263,3 +263,31 @@ current source and diff hashes; it cannot permanently excuse a changing row.
 The deferred PDB-extent review and shifting-candidate identity-transfer work is
 specified in
 [`data_extent_handoff.md`](../data_matching/data_extent_handoff.md).
+
+## Classifier, gate and exporter rules
+
+The data access map classifies x87 memory arithmetic and load operands as
+reads, including LLVM Intel syntax with a single memory operand. FST/FSTP and
+integer/control-state stores remain writes. Regenerate the full data lane after
+updating this classifier; existing access-map artifacts retain their old roles.
+
+The direct datum gate also checks six reviewed embedded dispatch arrays in
+`config/retail/compiler_tables.tsv`: two mesh-mapper pairs and the
+`render_surface::load` selector/jump pair. The latter has its own exact504B
+member-store/RET8 profile; it does not widen the existing301B mapper profile.
+Their exact TU owners, physical
+operand relocations and table bounds are validated independently of PDB data
+symbols. Jump referents use owner-relative case offsets; selector bytes and null
+slots remain literal data. Missing, ambiguous or changed candidate evidence stays
+OPEN even with a code score of100 or a datum wall review. These rows use a stable
+TU-qualified compiler-table identity; they do not add PDB symbols or COFF data
+manifest entries. Other `.text` data still requires separate reviewed evidence.
+
+The data-index exporter resolves duplicate PDB declarations for the same linked
+symbol before measuring its extent. A unique positive declared extent supersedes
+incomplete zero/unknown declarations and retains the complete record’s type
+provenance; conflicting positive extents remain unknown. Sizes are not inferred
+from neighboring addresses, and data/relocation comparisons remain unchanged.
+Retail inventory reuse requires provenance matching the exporter binary and
+arguments, retail PE/PDB hashes, and inventory hash. Missing, stale or corrupt
+provenance triggers export; a failed export leaves no reusable provenance.

@@ -94,3 +94,25 @@ force-stopping the service can prevent notification. To stop a job, use
 `systemctl --user stop UNIT.service`; service startup diagnostics remain in
 `journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
 until the job finishes.
+
+## Setup and the build graph
+
+For read-only helpers during a build, enter the flake environment without
+setup: `VOSTOK_SKIP_SETUP=1 nix develop --command python3 -m vostok ...`.
+This skips shell-entry gcroot writes, Wine setup, library staging and graph
+generation. Ordinary shell entry still prepares the worktree, but refuses to
+run setup while its build lock is held. The canonical build runs required
+setup under that same lock, including when entered through the read-only shell.
+Setup and builds use the same normalized graph merge: unchanged Ninja, response
+and clangd files retain their mtimes, so a setup refresh rebuilds only affected
+inputs.
+
+Prebuilt library staging compares file contents in bounded chunks. Identical
+regular files retain their inode, mtime and mode; changed files and symlinks are
+replaced atomically with writable copies. Repeating setup does not dirty
+unchanged library inputs.
+
+The DX11 game dependency graph excludes the texture compressor and its
+NVTT/FreeImage dependencies. They remain available to the editor and
+texture tools; a solution build-order dependency must not make offline
+asset tools prerequisites of the shipping executable.

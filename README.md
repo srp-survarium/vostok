@@ -70,12 +70,8 @@ binaries and the third-party libs - comes from the flake.
 
 ## Quickstart
 
-Target branches use version-only names: `v0.10b` for the Survarium v0.100b
-reconstruction and `v0.20e` for v0.20e. Use the same `v<version>` naming pattern
-for future target branches. Root matching stacks in the selected target branch
-and land them back there; do not assume one fixed default branch for all targets.
-Branch names are labels, not replacements for retail version identifiers,
-release tags, asset URLs, or measured history.
+Target branches are named by version: `v0.10b` (Survarium v0.100b) and `v0.20e`.
+Root matching stacks in the target branch they belong to and land them there.
 
 ```sh
 nix develop                 # first entry realizes ~18 GiB into the store, sets up Wine + ninja,
@@ -85,163 +81,13 @@ python3 -m vostok build     # build under Wine, regenerate the base-side inputs,
 
 Open the result in [objdiff](https://github.com/encounter/objdiff) with the
 config at `binaries/objdiff/objdiff.json` and compare `base` (your build) against
-`target` (the original game). Every build also refreshes the committed ledger
-`config/match_state.tsv` and the score block at the top of this README.
-The DX11 game dependency graph excludes the texture compressor and its
-NVTT/FreeImage dependencies. They remain available to the editor and
-texture tools; a solution build-order dependency must not make offline
-asset tools prerequisites of the shipping executable.
+`target` (the original game). Every full build also refreshes the committed ledger
+`config/match_state.tsv` and the score block at the top of this README;
+`python3 -m vostok build --code-only` is the faster iteration build.
 
-Prebuilt library staging compares file contents in bounded chunks. Identical
-regular files retain their inode, mtime and mode; changed files and symlinks are
-replaced atomically with writable copies. Repeating setup does not dirty
-unchanged library inputs.
-
-The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
-holds Ninja after a completed link or a failed pre-link edge, it reaps that
-server and preserves Ninja's real success or failure result.
-Before a hard-timeout cleanup, the supervisor logs its observed CPU rate,
-worker states and final output readiness to distinguish incomplete compilation
-from a stalled output or process. The timeout and success gates are unchanged.
-
-For read-only helpers during a build, enter the flake environment without
-setup: `VOSTOK_SKIP_SETUP=1 nix develop --command python3 -m vostok ...`.
-This skips shell-entry gcroot writes, Wine setup, library staging and graph
-generation. Ordinary shell entry still prepares the worktree, but refuses to
-run setup while its build lock is held. The canonical build runs required
-setup under that same lock, including when entered through the read-only shell.
-Setup and builds use the same normalized graph merge: unchanged Ninja, response
-and clangd files retain their mtimes, so a setup refresh rebuilds only affected
-inputs.
-
-Codex builds on Linux with a systemd user manager are notification-driven by
-default whenever `CODEX_THREAD_ID` is set:
-
-```sh
-python3 -m vostok build
-# Or select the destination and the installed CLI explicitly:
-python3 -m vostok build --background --notify-thread THREAD --codex-bin /path/to/codex
-# Explicit synchronous mode for CI or a supervising process:
-python3 -m vostok build --foreground
-```
-
-The default destination is `CODEX_THREAD_ID`. The CLI is selected from
-`--codex-bin`, `VOSTOK_CODEX_BIN`, a usable `CODEX_EXECUTABLE_PATH`, then `PATH`;
-it must support `codex queue --thread --message`. Outside Codex, builds remain
-synchronous unless notification mode is requested. The supervisor explicitly
-uses `--foreground` to avoid recursive service launches. The launcher needs host user-bus access (request
-execution approval when running in a sandbox). It starts a transient
-`vostok-build-*.service`, prints its name and its unique log under
-`binaries/build-jobs/`, and returns immediately. The service enters this
-worktree's `nix develop`, waits for the complete build/refresh process, and
-queues its exit status and log path into that existing thread, including on
-setup or build failure. No timer or model polling is involved. Existing
-per-worktree build locking still serializes the build itself.
-
-`python3 -m vostok build --code-only` is the iteration build: it stops after
-the function ledger, skipping the data lane (manifests, data COFF/reports,
-image-data ledger, module data audits) and the README. Function scores are the
-same as a full build's because the function ledger reads only code-lane
-artifacts; data-side changes appear at the next full build, which is the only
-kind whose README and ledger get committed.
-
-Build logs include `[timing]` lines for each phase, expensive delinker/report
-subprocesses, symbol inspection, and each module's data audit. Durations use a
-monotonic clock and include failures; nested/parallel timings are not additive.
-Data preparation runs once per build and its successful result feeds the later
-image-data refresh. Standalone `vostok data refresh` still prepares its inputs.
-The data-index exporter resolves duplicate PDB declarations for the same linked
-symbol before measuring its extent. A unique positive declared extent supersedes
-incomplete zero/unknown declarations and retains the complete record’s type
-provenance; conflicting positive extents remain unknown. Sizes are not inferred
-from neighboring addresses, and data/relocation comparisons remain unchanged.
-Retail inventory reuse requires provenance matching the exporter binary and
-arguments, retail PE/PDB hashes, and inventory hash. Missing, stale or corrupt
-provenance triggers export; a failed export leaves no reusable provenance.
-Symbol normalization inspects objects in bounded batches; audit fingerprints
-and content keys are shared only within that build, with no persistent cache.
-Deferred performance ideas and their safety requirements are tracked in
-[the performance backlog](docs/todos/perf.md).
-
-Launcher success means only that the service started. Wait for the completion
-notification; do not repeatedly inspect the session, process, service, or log.
-A delivery/setup failure never silently falls back to a foreground build.
-
-Check the log for nonfatal ledger/README refresh warnings even after exit 0.
-Notification failure is recorded in that log without changing the build exit
-status; delivery is attempted once with a 30-second timeout. Host shutdown or
-force-stopping the service can prevent notification. To stop a job, use
-`systemctl --user stop UNIT.service`; service startup diagnostics remain in
-`journalctl --user -u UNIT.service`. Keep the worktree and branch unchanged
-until the job finishes.
-
-The data access map classifies x87 memory arithmetic and load operands as
-reads, including LLVM Intel syntax with a single memory operand. FST/FSTP and
-integer/control-state stores remain writes. Regenerate the full data lane after
-updating this classifier; existing access-map artifacts retain their old roles.
-
-The direct datum gate also checks six reviewed embedded dispatch arrays in
-`config/retail/compiler_tables.tsv`: two mesh-mapper pairs and the
-`render_surface::load` selector/jump pair. The latter has its own exact504B
-member-store/RET8 profile; it does not widen the existing301B mapper profile.
-Their exact TU owners, physical
-operand relocations and table bounds are validated independently of PDB data
-symbols. Jump referents use owner-relative case offsets; selector bytes and null
-slots remain literal data. Missing, ambiguous or changed candidate evidence stays
-OPEN even with a code score of100 or a datum wall review. These rows use a stable
-TU-qualified compiler-table identity; they do not add PDB symbols or COFF data
-manifest entries. Other `.text` data still requires separate reviewed evidence.
-
-`vostok sema xref FUNCTION --pointers` verifies the PE/PDB hash and prints the
-physical procedure span plus HIGHLOW words pointing to that exact RVA. Vtable
-labels appear only when the data report binds both this PE and the exact current
-data-index bytes; otherwise they are omitted. Labels annotate reference
-candidates and do not prove runtime reachability.
-On the base side, the view flags possible stale base-stripping claims in ledger
-notes. Empty direct caller output does not exclude virtual dispatch: verify
-constructor storage, slot contents and the actual indirect caller before
-closing that question.
-
-The full-engine structural/byte campaign queue includes `game`, `game_core`,
-`render`, named-local differences and unpaired frameless procedures:
-
-```sh
-python3 -m vostok ledger mismatch-queue --all-engine --write-queue
-```
-
-It writes `binaries/gen/structure_campaign_queue.md` and the uncapped machine-readable
-`structure_campaign_queue.json` alongside it, using a completed build's report,
-PDB evidence databases and ledger. Report/ledger-only compiler functions lacking a PDB
-procedure record remain explicit coverage rows. Functions whose current-source `max` is 100% are listed
-last; approximate statement classes, local-record differences and missing pairs
-remain triage evidence requiring target inspection. Whole-PDB class variants,
-enum and definition order are separate checks described in
-[`divergence_queue.md`](docs/binary_matching/divergence_queue.md).
-
-Ledger derivation warns when an identical decorated name and signature has
-distinct bodies in several translation units. The ledger selects one canonical
-owner; its score does not establish closure of the other bodies. Inspect each
-owner with `vostok pdb inspect --list`, then `--file` or an exact `--rva`, and
-verify the actual referenced datum when a behavior depends on a literal or table.
-
-Class access, static/instance and virtual qualifiers, declaration order, and
-candidate-source declarations are checked against retail PDB evidence:
-
-```sh
-python3 -m vostok pdb index source --database binaries/pdb/candidate/evidence.sqlite \
-  --scope sources/vostok/network --scope sources/vostok/network_core
-python3 -m vostok pdb compare source \
-  --target binaries/pdb/target/evidence.sqlite \
-  --candidate binaries/pdb/candidate/evidence.sqlite \
-  --scope vostok::network --strict
-```
-
-The evidence-channel plan, proof boundaries, and extraction limits are in
-[`pdb_evidence_engine.md`](docs/binary_matching/pdb_evidence_engine.md).
-
-The check prints exact qualifier and declaration-order verdicts. PDB-unobservable
-properties such as `mutable`, source expressions, and the physical home of an
-unexpanded inline body stay explicit instead of being promoted to matches.
+How builds run under agents (notifications, locks, logs, timings) is in
+[docs/build/agent-builds.md](docs/build/agent-builds.md); campaign queues and the
+PDB declaration checks are in [docs/binary_matching/tools.md](docs/binary_matching/tools.md).
 
 ## Layout
 
