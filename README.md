@@ -277,6 +277,10 @@ comparisons under `binaries/gen/pdb-order-probes/`; see
 of both PDBs: archive runs per section side by side, and the COMDAT functions
 whose kept copy comes from a different compiland than retail's; see
 [`link-layout.md`](docs/binary_matching/link-layout.md).
+`python3 -m vostok diff image` compares the linked EXE with retail region by
+region (headers, Rich header, imports, resources, code and data bytes and
+order) against the banked counts in `config/image_diff.tsv`; see
+[`target-vs-base.md`](docs/target-vs-base.md). It runs on demand, not in the build.
 
 ## Third-party libs and the GFx suite
 
