@@ -263,6 +263,104 @@ class CleanFinalPdbTests(unittest.TestCase):
             '  command = cmd /c cd "$proj_dir" && link $flags\n',
         )
 
+    def test_compile_rule_records_compiler_include_deps(self):
+        rule = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "\n"
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "\n"
+        )
+        edge = (
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\binaries\\ninja\\rsp\\m_cl_0.rsp /nologo\n"
+        )
+        tracked = ninja_regen._track_compile_includes(
+            rule + edge, {"m_cl_0.rsp": '/Ox /GL /Yu"pch.h" /MP'}
+        )
+        pch = ninja_regen._track_compile_includes(
+            rule + edge, {"m_cl_0.rsp": '/Ox /GL /Yc"pch.h"'}
+        )
+        self.assertIn(": cl_scan $", pch)
+        self.assertIn("  scan_flags = /Y-", pch)
+
+        self.assertEqual(
+            tracked,
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags'
+            " /d1showIncludes\n"
+            "  deps = msvc\n"
+            "\n"
+            "rule lib\n"
+            '  command = cmd /c cd "$proj_dir" && lib $flags\n'
+            "\n" + edge,
+        )
+
+    def test_non_ltcg_compile_scans_includes_before_unchanged_compile(self):
+        text = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "\n"
+            "build $\n"
+            "    pch.obj $\n"
+            "    : cl $\n"
+            "    pch.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_0.rsp /nologo\n"
+            "  pool = p\n"
+            "\n"
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_1.rsp /nologo\n"
+        )
+        tracked = ninja_regen._track_compile_includes(text, {
+            "s_cl_0.rsp": '/Od /Yc"pch.h" /MP',
+            "s_cl_1.rsp": '/Od /Yu"pch.h" /MP',
+        })
+
+        self.assertEqual(
+            tracked,
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags'
+            " /d1showIncludes\n"
+            "  deps = msvc\n"
+            "\n"
+            "rule cl_scan\n"
+            '  command = cmd /c cd /d "$compile_dir" && (cl $flags'
+            " /Zs $scan_flags /d1showIncludes 2>&1"
+            ' | findstr /c:"Note: including file:" & cl $flags)\n'
+            "  deps = msvc\n"
+            "\n"
+            "build $\n"
+            "    pch.obj $\n"
+            "    : cl_scan $\n"
+            "    pch.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_0.rsp /nologo\n"
+            "  scan_flags = /Y-\n"
+            "  pool = p\n"
+            "\n"
+            "build $\n"
+            "    a.obj $\n"
+            "    : cl_scan $\n"
+            "    a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\s_cl_1.rsp /nologo\n",
+        )
+
+    def test_compile_edge_with_unknown_response_file_is_refused(self):
+        text = (
+            "rule cl\n"
+            '  command = cmd /c cd /d "$compile_dir" && cl $flags\n'
+            "build a.obj : cl a.cpp\n"
+            "  flags = @Z:\\w\\rsp\\gone.rsp\n"
+        )
+        with self.assertRaises(ValueError):
+            ninja_regen._track_compile_includes(text, {})
+
     def test_ninja_options_only_select_default_full_build(self):
         self.assertEqual(build_ninja._explicit_targets(["-j6"]), [])
         self.assertEqual(build_ninja._explicit_targets(["-j", "6"]), [])

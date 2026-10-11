@@ -300,6 +300,21 @@ REBUILD_LOG = BINARIES / "rebuild.log"
 BUILD_JOBS = BINARIES / "build-jobs"
 
 
+def _runtime_dir() -> Path:
+    """Per-user runtime dir; derived from the uid when XDG_RUNTIME_DIR is unset,
+    so an `env -i` shell and a desktop shell still meet on the same lock."""
+    for candidate in (os.environ.get("XDG_RUNTIME_DIR"), f"/run/user/{os.getuid()}"):
+        if candidate and Path(candidate).is_dir():
+            return Path(candidate)
+    return Path("/tmp")
+
+
+# Host-wide: one ninja compile/link at a time across every worktree on this
+# machine (vostok.build.ninja). Outside any worktree on purpose.
+HOST_BUILD_LOCK = Path(os.environ.get("VOSTOK_BUILD_LOCK")
+                       or _runtime_dir() / "vostok-ninja.lock")
+
+
 def _main_worktree() -> Path:
     """REPO, or - when REPO is a LINKED worktree - the main checkout.
 

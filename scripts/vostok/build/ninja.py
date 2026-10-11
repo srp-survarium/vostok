@@ -10,6 +10,7 @@ own -k/-j (the last occurrence wins).
 
 Usage:
   python3 -m vostok.build.ninja                  # build the game (verbose, keep-going)
+  python3 -m vostok.build.ninja --no-lock        # skip the host-wide build lock
   python3 -m vostok.build.ninja logging          # build just the logging project
   python3 -m vostok.build.ninja -t clean         # ninja flag (clean tool)
   python3 -m vostok.build.ninja -k 1             # stop at first failure
@@ -39,6 +40,22 @@ build start (so we never proceed on a half-written EXE - that would show up as a
 blown-up diff downstream); a real LTCG link keeps a core busy, so it never reads
 as idle. Module-only builds (which don't relink the EXE) skip the watchdog.
 
+## Host-wide build lock (every compile/link run)
+
+Each ninja runs -j(cores+2) cl.exe processes, so N worktrees building at once
+put N times the machine's cores in flight and thrash it (five concurrent full
+builds: ~490 cl.exe, load ~55 on 24 cores and 31 GB). Every run that can
+compile or link therefore takes an flock on paths.HOST_BUILD_LOCK
+($VOSTOK_BUILD_LOCK, else $XDG_RUNTIME_DIR/vostok-ninja.lock) - outside every
+worktree, so all of them share it. A waiter prints one line naming the holder
+and blocks; the kernel drops the lock when the holder exits or crashes.
+`--no-lock` opts out; `-t` tools and `-n` dry runs never take it.
+
+Only ninja is serialized. The measurement after it (PDB evidence, delink,
+objdiff report, ledger) runs at most two processes per build, so it cannot
+multiply the way -j does, and holding the lock through it would idle the
+compiler slot for the ~15 minutes another worktree could be compiling.
+
 ## mspdbsrv reaping (every build)
 
 cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which idles for
@@ -50,6 +67,8 @@ rebuild. We kill our prefix's mspdbsrv after every build; see
 _kill_prefix_processes for why the kill must be prefix-scoped.
 """
 
+import contextlib
+import fcntl
 import os
 import signal
 import shutil
@@ -60,6 +79,7 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+from vostok.core import paths
 from vostok.core.paths import BASE_EXE
 from vostok.core.paths import BASE_PDB
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
@@ -629,7 +649,37 @@ def _run_with_watchdog(
         return 0 if reaped else 1
 
 
+@contextlib.contextmanager
+def host_build_lock(path: Path | None = None, *, enabled: bool = True):
+    """Hold the host-wide compile/link lock for the duration of the block."""
+    if not enabled:
+        yield
+        return
+    path = Path(path or paths.HOST_BUILD_LOCK)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a+", encoding="utf-8") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            handle.seek(0)
+            holder = handle.read().strip() or "another build"
+            print(f"[ninja] waiting for the build lock held by {holder} ({path})", flush=True)
+            fcntl.flock(handle, fcntl.LOCK_EX)
+        handle.seek(0)
+        handle.truncate()
+        handle.write(f"{paths.REPO} pid {os.getpid()}\n")
+        handle.flush()
+        try:
+            yield
+        finally:
+            handle.seek(0)
+            handle.truncate()
+            handle.flush()
+
+
 def main() -> None:
+    no_lock = "--no-lock" in sys.argv[1:]
+    sys.argv = [sys.argv[0], *(a for a in sys.argv[1:] if a != "--no-lock")]
     ninja_dir = os.environ.get("NINJA_DIR")
     if not ninja_dir:
         die("NINJA_DIR not set - run from `nix develop`")
@@ -669,7 +719,13 @@ def main() -> None:
     # Both come before the user's args, so a later -k/-j on the command line
     # still wins (ninja takes the last occurrence).
     args = sys.argv[1:] or [DEFAULT_TARGET]
+    compiles = "-t" not in args and "-n" not in args
+    with host_build_lock(enabled=compiles and not no_lock):
+        rc = _build(ninja_exe, args)
+    sys.exit(rc)
 
+
+def _build(ninja_exe: Path, args: list[str]) -> int:
     # The stall watchdog only makes sense for the full-game build (the one that
     # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only
     # build (`vostok.build.ninja game_core`) doesn't relink and finishes fast, so run
@@ -684,14 +740,21 @@ def main() -> None:
         _kill_prefix_processes(("mspdbsrv.exe",))
         _stop_wine_session(RETAIL_CORE_BUILD_TIME)
         if rc != 0 or (targets == ["core"] and not full_build):
-            sys.exit(rc)
+            return rc
 
+    # Module builds run on the same retail clock as the full build.  Ninja
+    # stamps its deps log with the clock it runs under, and a deps record older
+    # than its output reads as out of date: one real-clock run after a faked
+    # one would recompile every edge.  It also keeps module objects' __DATE__
+    # equal to the full build's.
+    build_time = RETAIL_GAME_BUILD_TIME if date_sensitive else None
     if full_build:
-        build_time = RETAIL_GAME_BUILD_TIME if date_sensitive else None
         _prepare_clean_final_pdb(ninja_exe, args, build_time)
         rc = _run_with_watchdog(ninja_exe, args, build_time)
     else:
-        rc = _run_plain(ninja_exe, args)
+        if build_time is not None and "core" not in targets:
+            _stop_wine_session()
+        rc = _run_plain(ninja_exe, args, build_time)
 
     # cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which then
     # idles for ~10 minutes before exiting on its own. It inherits the build's
@@ -700,9 +763,9 @@ def main() -> None:
     # stall per rebuild. The PDB is fully written once ninja returns, so
     # killing it here is safe; respawning next build costs ~a second.
     _kill_prefix_processes(("mspdbsrv.exe",))
-    if full_build and date_sensitive:
-        _stop_wine_session(RETAIL_GAME_BUILD_TIME)
-    sys.exit(rc)
+    if build_time is not None:
+        _stop_wine_session(build_time)
+    return rc
 
 
 if __name__ == "__main__":
