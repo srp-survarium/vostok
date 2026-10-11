@@ -41,6 +41,7 @@ retargeted branches. See `contract`.
     python3 -m vostok sema branches <fn> --diff     # read a difference branch by branch
     python3 -m vostok sema dot      <fn> [--diff]   # graphviz
     python3 -m vostok sema sweep --module render [--unit U] [--min-pct P] [--max N]
+    python3 -m vostok sema ltcg     <fn>                  # which LTCG mechanism, fast-loop trust
 
 Only `blocks` takes `--lite`. `--base` selects the side for a one-sided view and
 is ignored by `--diff`, which always shows both.
@@ -101,6 +102,7 @@ def main():
     from vostok.sema.blocks import cmd_blocks
     from vostok.sema.branches import cmd_branches
     from vostok.sema.dot import cmd_dot
+    from vostok.sema.ltcg import cmd_ltcg
     from vostok.sema.rva import cmd_rva
     from vostok.sema.strings import cmd_strings
     from vostok.sema.sweep import cmd_sweep
@@ -149,6 +151,9 @@ def main():
     p.add_argument("--min-pct", type=float, help="skip functions below this fuzzy %%")
     p.add_argument("--max", type=int, help="stop after N functions (highest fuzzy %% first)")
     p.set_defaults(func=cmd_sweep)
+    p = sub.add_parser("ltcg", help="tag the residual with LTCG mechanisms (docs/binary_matching/ltcg.md)")
+    p.add_argument("fn", help=_FN_HELP)
+    p.set_defaults(func=cmd_ltcg)
     args = ap.parse_args()
     sys.exit(args.func(args))
 

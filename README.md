@@ -325,6 +325,7 @@ the loop is [`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agenti
 - [docs/binary_matching/matching_guide.md](docs/binary_matching/matching_guide.md) - how to actually match assembly.
 - [docs/index.md](docs/index.md) - index of build and per-module matching notes.
 - [docs/build/toolchain-build.md](docs/build/toolchain-build.md) - how the VS2008 toolchain is built under Wine.
+- [docs/binary_matching/ltcg.md](docs/binary_matching/ltcg.md) - what LTCG does to code, LTCG-or-source decision guide, fast-loop trust classes; `vostok sema ltcg <fn>` tags one residual.
 
 ## License
 
