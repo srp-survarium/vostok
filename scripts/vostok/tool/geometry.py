@@ -154,6 +154,32 @@ def _sizes(sizes: list[int]) -> str:
     return "+".join(f"{s}B" for s in sizes) if sizes else "."
 
 
+def overlay(target: dict, base: dict) -> dict:
+    """Retail's records beside ours in retail's relative-line frame.
+
+    Returns the rows (`geometry_rows`, gaps applied), the known-gap reasons and
+    the map from a frame line back to our source line, so a caller can print
+    the overlay or reduce it to a verdict without re-deriving either.
+    """
+    _, t_lines, t_other = _relative(target)
+    b_anchor, b_lines, b_other = _relative(base)
+    gaps = load_ignores(GEOMETRY_IGNORES, base["mangled"])
+    span = range(min(b_lines, default=0), max(b_lines, default=0) + 1)
+    framed, ours_at, reasons, skipped = to_frame(b_lines, gaps, span)
+    rows = geometry_rows(t_lines, framed)
+    divergent = [(rel, flag) for rel, _, _, flag in rows if flag in DIVERGENT]
+    divergent += [(r, "record in a known gap") for r, _, _ in skipped]
+    return {"anchor": b_anchor, "rows": rows, "ours_at": ours_at, "reasons": reasons,
+            "skipped": skipped, "gaps": gaps, "other": {"retail": t_other, "ours": b_other},
+            "records": sum(len(v) for v in t_lines.values()), "divergent": divergent,
+            "bytes": sum(1 for row in rows if row[3] == "bytes")}
+
+
+def our_line(view: dict, rel: int) -> int | None:
+    """Our absolute source line at a frame line, or None inside a known gap."""
+    return view["anchor"] + view["ours_at"][rel] if rel in view["ours_at"] else None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("function", nargs="?", help="mangled name or demangled substring")
@@ -163,47 +189,41 @@ def main() -> int:
         parser.error("give a function or --rva")
 
     target, base = _select(args.function, args.rva)
-    _, t_lines, t_other = _relative(target)
-    b_anchor, b_lines, b_other = _relative(base)
-    gaps = load_ignores(GEOMETRY_IGNORES, base["mangled"])
-    span = range(min(b_lines, default=0), max(b_lines, default=0) + 1)
-    framed, ours_at, reasons, skipped = to_frame(b_lines, gaps, span)
+    view = overlay(target, base)
+    reasons = view["reasons"]
     source_path = SOURCES / base["file"]
     source = source_path.read_text(errors="replace").splitlines() if source_path.is_file() else []
     stale = source_path.is_file() and source_path.stat().st_mtime > BASE_EVIDENCE.stat().st_mtime
 
-    print(f"{target['name']}\n  retail {target['file']}  ours {base['file']} (line {b_anchor} = +0)")
-    if gaps:
-        print(f"  {len(gaps)} known gap(s) from {GEOMETRY_IGNORES.name} applied")
+    print(f"{target['name']}\n  retail {target['file']}  ours {base['file']} "
+          f"(line {view['anchor']} = +0)")
+    if view["gaps"]:
+        print(f"  {len(view['gaps'])} known gap(s) from {GEOMETRY_IGNORES.name} applied")
     if stale:
         print("  note: the source is newer than our build's evidence - rebuild for an exact overlay")
     print(f"\n{'rel':>5} | {'retail':>10} | {'ours':>10} | source")
-    rows = geometry_rows(t_lines, framed)
-    for rel, t, b, flag in rows:
+    for rel, t, b, flag in view["rows"]:
         if rel in reasons and not t:
             text, flag = f"(known gap: {reasons[rel]})", ""
         else:
-            number = b_anchor + ours_at[rel] if rel in ours_at else None
+            number = our_line(view, rel)
             text = source[number - 1].rstrip() if number and 0 < number <= len(source) else ""
         marker = f"   <- {flag}" if flag else ""
         print(f"{rel:>+5} | {_sizes(t):>10} | {_sizes(b):>10} | {text}{marker}")
-    for side, other in (("retail", t_other), ("ours", b_other)):
+    for side, other in view["other"].items():
         for file, count in sorted(other.items()):
             print(f"  {side}: {count} record(s) attributed to {file}")
-    for r, reason, sizes in skipped:
+    for r, reason, sizes in view["skipped"]:
         print(f"  ours +{r}: {_sizes(sizes)} sits inside the known gap '{reason}'")
 
-    divergent = [(rel, flag) for rel, _, _, flag in rows if flag in DIVERGENT]
-    divergent += [(r, "record in a known gap") for r, _, _ in skipped]
-    differing = sum(1 for row in rows if row[3] == "bytes")
+    divergent, differing = view["divergent"], view["bytes"]
     if not divergent:
-        print(f"\nGEOMETRY MATCH ({sum(len(v) for v in t_lines.values())} records"
+        print(f"\nGEOMETRY MATCH ({view['records']} records"
               + (f"; {differing} line(s) differ in bytes" if differing else "") + ")")
         return 0
     rel, flag = divergent[0]
     print(f"\nfirst divergence at {rel:+d} ({flag}); {len(divergent)} divergent line(s)")
     return 1
-
 
 if __name__ == "__main__":
     raise SystemExit(_log.run("vostok.tool.geometry", main))
