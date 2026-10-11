@@ -31,9 +31,9 @@ tcp_packet_client::tcp_packet_client( vostok::network::world& world ) :
 	);
 }
 
-// Retail forwards the allocator directly; this build retains strip_pointer.
-// claude@MATCH: GLOBAL-scope static - the target symbol is the unmangled
-// PDB-private name `destroy_client` (no namespaces), not a mangled export
+
+
+// Global scope: retail names this static the unmangled `destroy_client`.
 static void destroy_client( vostok::network_core::tcp_packet_client* client_to_destroy )
 #line 35
 {
@@ -70,10 +70,10 @@ void tcp_packet_client::connect_impl	( pcstr const host, u16 const port )
 void tcp_packet_client::connect		( pcstr const host, u16 const port )
 #line 64
 {
-	// claude@MATCH: the bind converts implicitly (ctor arity disambiguates the
-	// string_order overloads); an explicit boost::function<...>( ... ) wrap makes
-	// the base schedule the temp's EH guard `or` early (before the bind) where
-	// the target sets it after assign_to
+
+
+
+	// the bind converts implicitly: an explicit boost::function wrap reorders the EH state store
 	m_world.add_order				(
 		VOSTOK_NEW_IMPL( m_world.orders_allocator(), string_order ) (
 			m_world.orders_allocator( ),
@@ -95,9 +95,9 @@ void tcp_packet_client::disconnect	( )
 	);
 }
 
-// claude@MATCH: the clone source is built inline with the ORDERS allocator (both
-// the placement NEW and the tcp_packet ctor arg) - NOT via m_world.new_packet()
-// (that one is the responses-side g_allocator; see on_packet_received)
+
+
+// the clone comes from the orders allocator, not m_world.new_packet( ) (responses side)
 void tcp_packet_client::send		( vostok::network_core::tcp_packet const& packet )
 #line 84
 {
@@ -119,9 +119,9 @@ void tcp_packet_client::on_packet_received_impl( vostok::network_core::packet_re
 		m_on_packet_received		( reader );
 }
 
-// claude@MATCH: receive_response takes the allocator and packet as PLAIN
-// references (no boost::ref/cref - the target has no addressof calls here,
-// unlike send_order's cref/ref pair)
+
+
+// plain references, unlike send_order's cref/ref pair
 void tcp_packet_client::on_packet_received		( vostok::network_core::tcp_packet const& packet )
 #line 103
 {
@@ -223,7 +223,7 @@ void tcp_packet_client::on_error		(
 	);
 }
 
-// Retail retains the callback assignment call; this build expands copy/swap/clear.
+
 void tcp_packet_client::set_on_error	(
 		boost::function< void ( enum vostok::network_core::client_error_codes_enum, boost::system::error_code ) > const&	on_error
 	)

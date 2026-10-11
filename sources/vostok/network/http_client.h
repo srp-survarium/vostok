@@ -24,8 +24,8 @@ public:
 			explicit	http_client					( world& world );
 						~http_client				( );
 
-	// STATE[INLINED]: no standalone target symbol; m_on_error @0x28 is the member
-	// the .cpp's on_error_impl tests/invokes, so this is the canonical setter
+
+	// STATE[INLINED]
 	inline	void		set_on_error				( on_error_type const& on_error )
 	{
 		m_on_error			= on_error;
@@ -33,12 +33,12 @@ public:
 
 			void		get							( pcstr server, pcstr path, on_content_downloaded_type const& callback );
 
-	// STATE[INLINED]: no standalone target symbol; m_busy @0x6C is the flag every
-	// .cpp body sets/clears
+
+	// STATE[INLINED]
 	inline	bool		busy						( ) const { return m_busy; }
 
-	// claude@MATCH: private - get_impl/create_client_impl/on_* all mangle AAE
-	// (private non-const) in the target
+
+
 private:
 			void		get_impl					( pcstr server, pcstr path );
 			void		create_client_impl			( );
