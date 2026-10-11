@@ -282,8 +282,10 @@ The toolchain and third-party library archives are published in this repo's
 
 `binaries.prebuilt/` is staged on first entry from the pinned `vostok-libs` zip.
 The Scaleform GFx static libs in it are the one part this repo builds
-itself: `python3 -m vostok.build.gfx` compiles them from the pristine 4.2.22 SDK
-(`nix develop .#with-scaleform-sdk`) with the recipe the shipped PDB records, and
+itself: `python3 -m vostok.build.gfx` compiles them from the pinned
+[scaleform-gfx](https://github.com/srp-survarium/scaleform-gfx) source (the
+`scaleform-gfx-src` flake input, recovered GFx 4.2.21) with the recipe the shipped
+PDB records, and
 `python3 -m vostok tool libs-release --tag <tag>` packages a new zip and prints the
 hash to pin. Add `--upload` to upload it to the `v0.100b` release in
 `srp-survarium/vostok`; `gh` is included in the dev shell. The
@@ -293,8 +295,7 @@ builds a run-only Wine prefix from a bare clone.
 
 The library archive and staging tool exclude the Sony Cell SDK and the PS3/Xbox
 builds of `cs`, Lua, and luabind. Staging removes these directories from older
-`binaries.prebuilt/` installations too. The optional Scaleform SDK derivation
-removes its PS3/Xbox ports and libraries. Console-only engine files and tools
+`binaries.prebuilt/` installations too. Console-only engine files and tools
 are omitted; shared Windows/console implementations remain for the PC build.
 
 ## Game data
@@ -396,7 +397,7 @@ engine and its tools build as shipped)
 
 | Tree | Version | Terms as carried in the tree | Used by |
 | :-- | :-- | :-- | :-- |
-| `scaleform` | GFx 4.2.22 subset (retail linked 4.2.21) | Autodesk Scaleform SDK license | UI (Flash) |
+| `scaleform` (not committed here: the [scaleform-gfx](https://github.com/srp-survarium/scaleform-gfx) flake input, written to `sources/scaleform` at setup) | GFx 4.2.21, recovered on the 4.2.22 release | Autodesk Scaleform SDK license | UI (Flash) |
 | `SpeedTree` | 5.2.1 | IDV SDK license, confidentiality markings | render (trees, grass) |
 | `maya2011`, `maya2012` | devkits | Autodesk devkit license, proprietary markings | Maya plugin |
 | `nvidia/PerfSDK` | 6.62 | NVIDIA SDK license | benchmark |

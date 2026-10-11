@@ -35,8 +35,8 @@ DEST        = PREBUILT
 # License text can share the .lib suffix with binary archives.
 LICENSE_NAMES  = {"COPYING.LIB"}
 
-# Our from-source 4.2.22 GFx suite (built per the shipped PDB's recipe - non-/GL,
-# /Ox, pristine SDK; see vostok.build.gfx) ships inside vostok-libs at the shipped
+# Our from-source GFx suite (built per the shipped PDB's recipe - non-/GL, /Ox,
+# from the pinned scaleform-gfx tree; see vostok.build.gfx) ships inside vostok-libs at the shipped
 # Win32 Shipping config path. Remap it onto the game's binaries.prebuilt layout
 # (`Win32/libraries/shipping/`), where the exe's `#pragma comment(lib,"libgfx.lib")`
 # resolves it. The foreign 4.0.15 GFx libs were removed from vostok-libs and replaced

@@ -35,6 +35,15 @@
       url = "github:srp-survarium/vostok-resources-db";
       flake = false;
     };
+    scaleform-gfx-src = {
+      # Scaleform GFx 4.2.21 as Survarium shipped it: the pristine 4.2.22
+      # DuckTales import plus the recovered 4.2.21 rollbacks. vostok.build.gfx
+      # compiles the lib suite from Include/ Src/ 3rdParty/; the engine's own
+      # TUs see Include/ + Src/ with Vostok/ laid over (sources/scaleform,
+      # materialized by vostok.tool.toolchain).
+      url = "github:srp-survarium/scaleform-gfx/4.2.21-vostok";
+      flake = false;
+    };
     bullet-2_79-src = {
       # The first official 2.79 revision. Multiple stock target-PDB MD5s land
       # exactly on this commit after the repository's LF -> CRLF conversion.
@@ -43,7 +52,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, bullet-2_79-src }:
+  outputs = { self, nixpkgs, rust-overlay, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, scaleform-gfx-src, bullet-2_79-src }:
     let
       system = "x86_64-linux";
 
@@ -296,45 +305,6 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # Scaleform GFx 4.2.22 SDK - source from the DuckTales Remastered
-      # source release (its only public copy). vostok.build.gfx compiles the
-      # libgfx suite from this tree; retail's own gfx_4.2.21 tree is
-      # byte-identical for 806 of its 1,128 files (proven against the retail
-      # PDB's per-file MD5s: `pdb_diff --source-dir`), so it is the
-      # reconstruction baseline, not a lookalike. 5.1 GiB download - opt-in
-      # via `nix develop .#with-scaleform-sdk`; a local checkout via
-      # $SCALEFORM_SDK keeps working without realizing this.
-      # ---------------------------------------------------------------------------
-      ducktales-src = pkgs.fetchurl {
-        name = "ducktales_r326558.7z";
-        url = "https://archive.org/download/ducktales-remastered-src/ducktales_r326558.7z";
-        sha1 = "542945ecbba4dea4118ca9845130999fbf08af36";
-      };
-
-      scaleform-sdk = pkgs.runCommand "scaleform-sdk-4.2.22" {
-        nativeBuildInputs = [ pkgs.p7zip ];
-      } ''
-        # The SDK root inside the archive is not a path we control - find it
-        # as the directory holding Include/GFxVersion.h (either separator).
-        marker=$(7z l -slt ${ducktales-src} | sed -n 's/^Path = //p' \
-                 | grep -iE 'Include[\\/]GFxVersion\.h$' | head -1)
-        if [ -z "$marker" ]; then
-          echo "ERROR: Include/GFxVersion.h not found in archive listing"
-          exit 1
-        fi
-        root=$(printf '%s' "$marker" | sed 's![\\/]Include[\\/]GFxVersion\.h$!!I')
-        echo "SDK root in archive: $root"
-        7z x -oextract ${ducktales-src} "$root/*" > /dev/null
-        src_dir="extract/$(printf '%s' "$root" | tr '\\' '/')"
-        [ -d "$src_dir" ] || { echo "ERROR: extraction missing $src_dir"; exit 1; }
-        mkdir -p "$out"
-        cp -r "$src_dir"/. "$out"/
-        # Console ports and their libraries are unused by the Windows target.
-        find "$out" -depth \( -iname '*ps3*' -o -iname '*xbox*' -o -iname '*xenon*' \) \
-          -exec rm -rf -- {} +
-      '';
-
-      # ---------------------------------------------------------------------------
       # Unpacked game resources: the packed resources.db (from survarium.resources)
       # expanded into its file tree with the vostok-resources-db unpacker. ~12.5k
       # files; useful for inspecting/diffing game assets without the engine. The
@@ -501,6 +471,10 @@
           export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
           export SURVARIUM_BIN="${survarium}"
           export BULLET_2_79_SOURCE="${bullet-2_79-src}/src"
+          # The pinned Scaleform tree (lib build source + engine view). For a
+          # local checkout use --override-input scaleform-gfx-src, so the
+          # engine view can never silently come from an unrelated tree.
+          export SCALEFORM_SDK="${scaleform-gfx-src}"
 
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
@@ -519,6 +493,7 @@
                 "vcproj2ninja:${vcproj2ninja}" \
                 "survarium-game:${survarium}" \
                 "survarium-keys:${survarium.keys}" \
+                "scaleform-gfx:${scaleform-gfx-src}" \
                 "bullet-2.79-source:${bullet-2_79-src}" \
                 "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
               name="''${pair%%:*}"
@@ -569,27 +544,6 @@
         '';
       };
 
-      # Opt-in shell for GFx lib rebuilds from a fresh clone:
-      #   nix develop .#with-scaleform-sdk
-      # Realizes and pins the 5.1 GiB DuckTales source fetch that carries the
-      # Scaleform SDK, and exports SCALEFORM_SDK from the store. With a local
-      # SDK checkout, the plain default shell + $SCALEFORM_SDK works instead
-      # (paths.py falls back to ~/Projects/survarium/scaleform_sdk).
-      withScaleformSdkDevShell = pkgs.mkShell {
-        name = "surv-decomp-with-scaleform-sdk";
-        inputsFrom = [ defaultDevShell ];
-        shellHook = ''
-          export SCALEFORM_SDK="${scaleform-sdk}"
-          if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
-            mkdir -p "$VOSTOK_DIR/binaries/nix-store"
-            nix-store -r "${scaleform-sdk}" \
-              --add-root "$VOSTOK_DIR/binaries/nix-store/scaleform-sdk" \
-              --indirect >/dev/null
-          fi
-          echo "[vostok] scaleform  : REALIZED -> SCALEFORM_SDK (opt-in shell)." >&2
-        '';
-      };
-
     in {
       packages.${system} = {
         inherit vostok-pdb vostok-delinker vostok-data-delinker vostok-resources-db vcproj2ninja
@@ -599,8 +553,6 @@
         # (`nix build .#survarium-resources-unpacked`), but the default devShell
         # does NOT realize it - see the `with-resources` shell below.
         inherit survarium-resources-unpacked;
-        # The Scaleform GFx SDK (5.1 GiB fetch) - on demand / with-scaleform-sdk.
-        inherit scaleform-sdk;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
         survarium-game = survarium;            # default `out` = game binaries
@@ -611,7 +563,6 @@
       devShells.${system} = {
         default = defaultDevShell;
         with-resources = withResourcesDevShell;
-        with-scaleform-sdk = withScaleformSdkDevShell;
       };
     };
 }

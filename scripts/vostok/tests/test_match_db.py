@@ -63,6 +63,37 @@ class CleanFinalPdbTests(unittest.TestCase):
             ["faketime", "2013-05-09 12:00:00", "wine", "cmd"],
         )
 
+    def test_gfx_engine_tree_lays_vostok_overlay_over_sdk(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sdk = Path(tmp) / "sdk"
+            tree = Path(tmp) / "sources" / "scaleform"
+            for rel, text in {
+                "Include/GFxVersion.h": "lib",
+                "Src/Kernel/SF_Types.h": "shared",
+                "3rdParty/zlib/zlib.h": "lib-only",
+                "Vostok/Include/GFxVersion.h": "engine",
+            }.items():
+                (sdk / rel).parent.mkdir(parents=True, exist_ok=True)
+                (sdk / rel).write_text(text)
+            stale = tree / "sdk-overlay" / "GFxConfig.h"
+            stale.parent.mkdir(parents=True)
+            stale.write_text("retired")
+
+            gfx.materialize_engine_tree(sdk, tree)
+            shared = tree / "Src/Kernel/SF_Types.h"
+            os.utime(shared, (1, 1))
+            gfx.materialize_engine_tree(sdk, tree)
+
+            self.assertEqual(
+                sorted(str(p.relative_to(tree)) for p in tree.rglob("*") if p.is_file()),
+                ["Include/GFxVersion.h", "Src/Kernel/SF_Types.h"],
+            )
+            self.assertEqual((tree / "Include/GFxVersion.h").read_text(), "engine")
+            self.assertFalse(shared.is_symlink())
+            # Unchanged content keeps its mtime, so ninja sees no edit.
+            self.assertEqual(shared.stat().st_mtime, 1)
+            self.assertFalse((tree / "sdk-overlay").exists())
+
     def test_gfx_object_paths_use_machine_independent_alias(self):
         self.assertEqual(
             gfx.object_path(Path("libgfx") / "sample.obj"),
