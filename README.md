@@ -8,23 +8,23 @@ flake builds the exact toolchain under Wine, no Windows install needed.
 <!-- match-score:start -->
 ## Match status
 
-**`survarium.exe`: 95.84% matched (MAX)** - 11,287 / 13,014 functions exact (86.7%), weighted by code size.
+**`survarium.exe`: 95.85% matched (MAX)** - 11,289 / 13,014 functions exact (86.7%), weighted by code size.
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |          10,680 |   94.15% | last measured score                            |
-| MAX   |          11,287 |   95.84% | best result for each function's current source |
-| HIST  |          11,402 |   96.15% | all-time peak across source revisions          |
+| CUR   |          10,683 |   94.20% | last measured score                            |
+| MAX   |          11,289 |   95.85% | best result for each function's current source |
+| HIST  |          11,404 |   96.16% | all-time peak across source revisions          |
 
 MAX by module:
 
 | Module          | Units |   Functions exact MAX | Weighted MAX |
 | :-------------- | ----: | --------------------: | -----------: |
-| `render`        |   351 | 2,281 / 2,734 (83.4%) |       94.57% |
-| `game`          |   141 | 1,156 / 1,528 (75.7%) |       89.86% |
+| `render`        |   351 | 2,281 / 2,734 (83.4%) |       94.58% |
+| `game`          |   141 | 1,157 / 1,528 (75.7%) |       89.86% |
 | `core`          |   136 | 1,261 / 1,325 (95.2%) |       98.80% |
-| `vostok`        |   112 | 1,150 / 1,250 (92.0%) |       98.56% |
-| `game_core`     |   189 |   894 / 1,181 (75.7%) |       96.85% |
+| `vostok`        |   112 | 1,151 / 1,250 (92.1%) |       98.55% |
+| `game_core`     |   189 |   894 / 1,181 (75.7%) |       96.93% |
 | `animation`     |   102 |     628 / 727 (86.4%) |       94.63% |
 | `ai`            |   124 |     660 / 691 (95.5%) |       99.65% |
 | `sound`         |    69 |     500 / 510 (98.0%) |       99.90% |
@@ -52,9 +52,9 @@ _Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand.
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,088,375 / 429,051,363).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,087,183 / 429,051,363).**
 
-_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,484 otherwise-exact functions (602,731 code bytes) with referent debt._
+_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,492 otherwise-exact functions (607,454 code bytes) with referent debt._
 
 _The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11805 / 13321 definitions). Integrity ratchet: armed._
 
