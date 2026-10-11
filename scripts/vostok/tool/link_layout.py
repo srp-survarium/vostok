@@ -4,10 +4,15 @@
 
     python3 -m vostok tool link-layout runs     [--section N] [--limit N]
     python3 -m vostok tool link-layout owners   [--module M] [--all] [--pass1 LINK_VERBOSE_LOG]
+    python3 -m vostok tool link-layout order    [--library LIB]
 
 `runs` prints each PDB's section contributions as consecutive runs of one
 archive (or direct object), split into COMDAT and non-COMDAT code, so the
 link layout can be read side by side.
+
+`order` prints, per section kind, how far our compiland order is from retail's:
+pairwise inversions among shared compilands and the share that a longest
+in-order run keeps, for the whole image or one library.
 
 `owners` lists COMDAT functions whose code the two linkers took from different
 compilands. Under /LTCG every TU that references an inline or template function
@@ -48,6 +53,8 @@ class Module:
     index: int
     name: str
     archive: str
+    stream: int = 0xFFFF            # module symbol stream, 0xFFFF when absent
+    symbol_bytes: int = 0
 
     @property
     def key(self) -> str:
@@ -130,9 +137,10 @@ def parse_dbi(dbi: bytes, section_headers: bytes) -> Layout:
     modules = []
     pos, end = 64, 64 + mod_size
     while pos < end:
+        stream, symbol_bytes = struct.unpack_from("<HI", dbi, pos + 34)
         name, nxt = _cstr(dbi, pos + 64)
         archive, nxt = _cstr(dbi, nxt)
-        modules.append(Module(len(modules), name, archive))
+        modules.append(Module(len(modules), name, archive, stream, symbol_bytes))
         pos = (nxt + 3) & ~3
     version = struct.unpack_from("<I", dbi, end)[0]
     entry = 32 if version == 0xEFFE0000 + 20140516 else 28
@@ -148,14 +156,72 @@ def parse_dbi(dbi: bytes, section_headers: bytes) -> Layout:
     return Layout(modules, contributions, section_va)
 
 
-def read_layout(pdb: Path) -> Layout:
+def _open(pdb: Path) -> tuple[_Msf, bytes, Layout]:
     msf = _Msf(pdb.read_bytes())
     dbi = msf.stream(3)
     mod_size, sc_size, map_size, src_size, tsm_size, _mfc, dbg_size, ec_size = \
         struct.unpack_from("<iiiiiIii", dbi, 24)
     dbg = 64 + mod_size + sc_size + map_size + src_size + tsm_size + ec_size
     section_header_stream = struct.unpack_from("<H", dbi, dbg + 10)[0]
-    return parse_dbi(dbi, msf.stream(section_header_stream))
+    return msf, dbi, parse_dbi(dbi, msf.stream(section_header_stream))
+
+
+def read_layout(pdb: Path) -> Layout:
+    return _open(pdb)[2]
+
+
+@dataclass(frozen=True)
+class Symbol:
+    rva: int
+    name: str
+    size: int | None        # a procedure's length; None for publics and data
+    module: int | None      # owning DBI module, None for the global stream
+    procedure: bool
+
+
+_PUB32, _LDATA32, _GDATA32 = 0x110E, 0x110C, 0x110D
+_PROC32 = (0x110F, 0x1110, 0x1146, 0x1147)
+
+
+def parse_symbols(data: bytes, start: int, end: int, section_va: list[int],
+                  module: int | None) -> list[Symbol]:
+    """Public, data and procedure records of one CodeView symbol stream."""
+    out = []
+    pos = start
+    while pos + 4 <= end:
+        length, kind = struct.unpack_from("<HH", data, pos)
+        if length < 2:
+            break
+        body = pos + 4
+        if kind in (_PUB32, _LDATA32, _GDATA32):
+            off, seg = struct.unpack_from("<IH", data, body + 4)
+            name = _cstr(data, body + 10)[0]
+            size, procedure = None, kind == _PUB32 and bool(struct.unpack_from("<I", data, body)[0] & 2)
+        elif kind in _PROC32:
+            size = struct.unpack_from("<I", data, body + 12)[0]
+            off, seg = struct.unpack_from("<IH", data, body + 28)
+            name = _cstr(data, body + 35)[0]
+            procedure = True
+        else:
+            pos += length + 2
+            continue
+        if 0 < seg < len(section_va):
+            out.append(Symbol(section_va[seg] + off, name, size, module, procedure))
+        pos += length + 2
+    return out
+
+
+def read_symbols(pdb: Path) -> list[Symbol]:
+    """Every public (S_PUB32), global/static datum and procedure the PDB names."""
+    msf, dbi, layout = _open(pdb)
+    records = msf.stream(struct.unpack_from("<H", dbi, 20)[0])
+    out = parse_symbols(records, 0, len(records), layout.section_va, None)
+    for m in layout.modules:
+        if m.stream == 0xFFFF or not m.symbol_bytes:
+            continue
+        stream = msf.stream(m.stream)
+        out += parse_symbols(stream, 4, min(m.symbol_bytes, len(stream)), layout.section_va, m.index)
+    return out
 
 
 def runs(layout: Layout, section: int) -> list[tuple[str, bool, int, int, int]]:
@@ -169,6 +235,58 @@ def runs(layout: Layout, section: int) -> list[tuple[str, bool, int, int, int]]:
         else:
             out.append([lib, c.comdat, 1, c.size, c.offset])
     return [tuple(r) for r in out]
+
+
+def _inversions(seq: list[int]) -> int:
+    if len(seq) < 2:
+        return 0
+    mid = len(seq) // 2
+    left, right = sorted(seq[:mid]), sorted(seq[mid:])
+    count = _inversions(seq[:mid]) + _inversions(seq[mid:])
+    j = 0
+    for x in left:                      # pairs (x in left, y in right) with x > y
+        while j < len(right) and right[j] < x:
+            j += 1
+        count += j
+    return count
+
+
+def _longest_increasing(seq: list[int]) -> int:
+    tails: list[int] = []
+    for x in seq:
+        k = bisect.bisect_left(tails, x)
+        tails[k:k + 1] = [x]
+    return len(tails)
+
+
+def module_order(layout: Layout, keep) -> list[str]:
+    """Module keys in the order of their first contribution that `keep` accepts."""
+    seen: dict[str, None] = {}
+    for c in sorted((c for c in layout.contributions if keep(c)), key=lambda c: (c.section, c.offset)):
+        seen.setdefault(layout.modules[c.module].key, None)
+    return list(seen)
+
+
+def order_metrics(target: Layout, base: Layout, keep, base_keep=None) -> dict[str, float]:
+    """Retail-vs-ours compiland order over the contributions `keep` accepts
+    (`base_keep` for ours, when it needs its own module table)."""
+    t, b = module_order(target, keep), module_order(base, base_keep or keep)
+    rank = {k: i for i, k in enumerate(k for k in t if k in set(b))}
+    seq = [rank[k] for k in b if k in rank]
+    n = len(seq)
+    inversions = _inversions(seq)
+    return {"shared": n, "inversions": inversions,
+            "inverted_percent": 100 * inversions / max(1, n * (n - 1) // 2),
+            "in_order_percent": 100 * _longest_increasing(seq) / max(1, n)}
+
+
+SECTION_KINDS = {
+    "code-comdat": lambda c: c.section == 1 and c.code and c.comdat,
+    "code-plain": lambda c: c.section == 1 and c.code and not c.comdat,
+    "rdata": lambda c: c.section == 2,
+    "data": lambda c: c.section == 3 and bool(c.characteristics & 0x40),
+    "bss": lambda c: c.section == 3 and bool(c.characteristics & 0x80),
+}
 
 
 def code_owners(layout: Layout, functions: list[tuple[str, int]]) -> dict[str, tuple[str, bool]]:
@@ -255,6 +373,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("runs", help="archive runs per section, retail beside ours")
     r.add_argument("--section", type=int, default=1, help="1=.text 2=.rdata 3=.data")
     r.add_argument("--limit", type=int, default=80)
+    od = sub.add_parser("order", help="compiland order per section kind, retail beside ours")
+    od.add_argument("--library", default="", help="substring of an archive name")
     o = sub.add_parser("owners", help="COMDATs taken from a different compiland")
     o.add_argument("--module", default="", help="substring of either owner key")
     o.add_argument("--all", action="store_true", help="include exact rows")
@@ -268,6 +388,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"== {side}")
             for lib, comdat, n, size, off in runs(layout, args.section)[:args.limit]:
                 print(f"  {off:#9x} {'comdat' if comdat else 'plain ':6} {n:6d} {size:9d}  {lib}")
+        return 0
+    if args.cmd == "order":
+        lib = args.library.lower()
+        for kind, keep in SECTION_KINDS.items():
+            m = order_metrics(
+                target, base,
+                lambda c, keep=keep: keep(c) and lib in target.modules[c.module].key,
+                lambda c, keep=keep: keep(c) and lib in base.modules[c.module].key)
+            print(f"{kind:12} shared {m['shared']:5d}  inverted pairs {m['inversions']:9d} "
+                  f"({m['inverted_percent']:5.2f}%)  in order {m['in_order_percent']:5.1f}%")
         return 0
     rows = owner_rows(target, base, _functions(PDB_DIR / "target" / "evidence.sqlite"),
                       _functions(PDB_DIR / "base" / "evidence.sqlite"),

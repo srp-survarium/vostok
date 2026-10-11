@@ -1,0 +1,24 @@
+# Banked counts of `vostok diff image`. Each is a ceiling (code-exact a floor):
+# a run fails when a count moves past it. `vostok diff image --update` only
+# tightens a bank; never edit a row to admit a regression.
+region	count
+headers	18
+rich	13
+imports	85
+sections	2
+rsrc	562176
+code-exact	5155551
+code-misplaced	986717
+code-order	2022
+code-unplaced	348798
+code-absent	144603
+data-inexact	442588
+data-unclaimed	1020114
+data-absent	586
+data-unplaced	473
+order-code-comdat	117319
+order-code-plain	20592
+order-rdata	55894
+order-data	11341
+order-bss	4678
+vftables	7

@@ -16,7 +16,7 @@
 * [shaders.md](shaders.md) — shipped shader cache format, permutation recovery, and byte-exact roundtrip validation.
 * [build/toolchain-build.md](build/toolchain-build.md) — how the vostok-toolchain is built on Linux/Wine (mspdb DLLs, SP1 via `PATCH=`) and why Wine must be **staging** (cl `/Zi` → C1902 on wine-10.0 stable).
 * [build-flags.md](build-flags.md) — per-project compiler-flag comparison (target vs. base) recovered from the PDBs, and which vcproj were built with/without optimizations.
-* [target-vs-base.md](target-vs-base.md) — synthesis of every target-vs-base comparison the PDB/EXE tooling makes (PE/Rich header, flags, link order, RTTI): what's the same, what's different, and which differences are actionable.
+* [target-vs-base.md](target-vs-base.md) — the whole-image report `python3 -m vostok diff image`: headers, Rich header, imports, sections, resources, code and data bytes and order, vftables, each banked in `config/image_diff.tsv`.
 
 ### Per-module matching notes
 Each matched module has its own folder under `binary_matching/` (module notes in `README.md` where one exists).

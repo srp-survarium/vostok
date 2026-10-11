@@ -21,7 +21,8 @@
     vostok data <verb>             independent PDB/image data matching lane
     vostok pdb <verb>              PDB/PE/source evidence and structure views
     vostok diff <view>             target-vs-base source shape: layout / order
-                                   / tu-order / enums
+                                   / tu-order / enums; `image` compares the
+                                   linked EXEs region by region
     vostok tool <name>             operational helpers: clangd / toolchain /
                                    libs / pdb-order-probe / geometry / link-layout, plus `usage` - the
                                    read-back of the usage log
@@ -45,7 +46,7 @@ from vostok.core import log as _log
 
 DIFF = {"layout": "vostok.diff.layout", "order": "vostok.diff.order",
         "tu-order": "vostok.diff.tu_order", "enums": "vostok.diff.enums",
-        "enums-compare": "vostok.diff.enums_compare"}
+        "enums-compare": "vostok.diff.enums_compare", "image": "vostok.diff.image"}
 TOOLS = {"clangd": "vostok.tool.clangd", "toolchain": "vostok.tool.toolchain",
          "toolchain-release": "vostok.tool.toolchain_release",
          "libs-release": "vostok.tool.libs_release",
