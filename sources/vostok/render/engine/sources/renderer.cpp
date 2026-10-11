@@ -1364,8 +1364,8 @@ void renderer::draw_frame_histogram( ) const
 
 	if ( count > 1 )
 	{
-		system_renderer::ref( ).draw_screen_lines( lines_time, count, math::color( math::color_rgba( 0.f, 1.f, 0.f, 1.f ) ), 1, 0xffffffff, true, true );
-		system_renderer::ref( ).draw_screen_lines( lines_dips, count, math::color( math::color_rgba( .5f, .5f, .7f, 1.f ) ), 1, 0xffffffff, true, true );
+		system_renderer::ref( ).draw_screen_lines( lines_time, count, math::color( math::color_rgba( 1.f, 0.f, 0.f, 1.f ) ), 1, 0xffffffff, true, true );
+		system_renderer::ref( ).draw_screen_lines( lines_dips, count, math::color( math::color_rgba( .1f, .7f, .1f, 1.f ) ), 1, 0xffffffff, true, true );
 	}
 }
 
