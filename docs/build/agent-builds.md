@@ -6,6 +6,25 @@ The Wine supervisor scopes cleanup to this worktree's prefix; if the PDB server
 holds Ninja after a completed link or a failed pre-link edge, it reaps that
 server and preserves Ninja's real success or failure result.
 
+## Header dependencies
+
+Header dependencies come from the compiler, not only from vcproj2ninja's
+include scan (which cannot follow computed includes such as
+`#include VOSTOK_RENDER_CORE_FILE(...)`). Every compile edge stores the headers
+cl actually opened in Ninja's deps log (`deps = msvc`), so editing any header
+rebuilds exactly the edges that include it. `/GL` compiles pass the front-end
+`/d1showIncludes`, which keeps `/MP` and the object bytes. Non-`/GL` objects
+record their whole command line in the PDB, and PCH creation lists no includes,
+so those edges first run a syntax-only `/Zs` scan and then compile with the
+unchanged command line. The first build after this graph change recompiles
+every edge once, because no edge has recorded dependencies yet. Ninja stamps
+those records with the clock it runs under, so module builds
+(`python3 -m vostok.build.ninja MODULE`) run on the same retail build clock as
+the full build; a real-clock run after a faked one would see every record as
+stale.
+
+## Notification-driven builds
+
 Codex builds on Linux with a systemd user manager are notification-driven by
 default whenever `CODEX_THREAD_ID` is set:
 
