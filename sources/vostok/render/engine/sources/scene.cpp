@@ -407,6 +407,9 @@ void scene::process_streaming(
 		fs_new::virtual_path_string path_add( texture_request.path.c_str( ) );
 		path.assignf( "%s/%s.dds", "resources/textures", path_add.c_str( ) );
 
+		texture_request.texture->m_loaded	= false;
+		texture_request.texture->num_mips	= num_wanted_mips;
+
 		resources::request requests[] = {
 			{ path.c_str( ), resources::texture_wrapper_class }
 		};

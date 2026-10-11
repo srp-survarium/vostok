@@ -77,10 +77,8 @@ inline render_surface::render_surface( ) :
 {
 }
 
-inline void render_model_instance_impl::set_transform( float4x4 const& transform )
-{
-	m_transform = transform;
-}
+
+inline void render_model_instance_impl::set_transform( float4x4 const& transform ) { m_transform = transform; }
 
 } // namespace render
 } // namespace vostok

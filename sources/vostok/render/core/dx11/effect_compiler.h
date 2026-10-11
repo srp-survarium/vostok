@@ -187,16 +187,7 @@ public:
 	}
 
 	template < typename T >
-	effect_compiler& set_constant( shared_string hlsl_name, T const& source )
-	{
-		// Observed float3 instantiation [0x887f0] and float2 [0x8cc90].
-		return bind_constant(
-			shader_constant_binding(
-				hlsl_name,
-				effect_constant_storage::ref( ).store_constant( source )
-			)
-		);
-	}
+	effect_compiler& set_constant( shared_string hlsl_name, T const& source ) { return bind_constant( shader_constant_binding( hlsl_name, effect_constant_storage::ref( ).store_constant( source ) ) ); }
 
 	effect_compiler(
 		res_effect& effect,

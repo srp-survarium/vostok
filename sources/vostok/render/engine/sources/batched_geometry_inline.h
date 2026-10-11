@@ -181,9 +181,9 @@ void batched_geometry< Vertex >::add_data(
 		batched_vertex_source vertex = vertices[i];
 		float3 normal = math::normalize_safe(
 			float3(
-				vertex.normal.get_Rf( ) * 2.f - 1.f,
+				vertex.normal.get_Bf( ) * 2.f - 1.f,
 				vertex.normal.get_Gf( ) * 2.f - 1.f,
-				vertex.normal.get_Bf( ) * 2.f - 1.f
+				vertex.normal.get_Rf( ) * 2.f - 1.f
 			),
 			float3( 0.f, 0.f, 0.f )
 		);
@@ -193,7 +193,7 @@ void batched_geometry< Vertex >::add_data(
 
 		base_basis basis;
 		basis.set( normal );
-		vertex.normal = math::color( basis.x, basis.y, basis.z, 127 );
+		vertex.normal = math::color( basis.z, basis.y, basis.x, 127 );
 		m_bbox.modify( vertex.position );
 		m_materail_effects_instance = in_materail_effects_instance;
 		add_vertex( vertex, not_modified_pos );

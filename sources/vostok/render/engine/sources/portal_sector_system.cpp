@@ -168,7 +168,7 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	typedef buffer_vector< Wm4::Vector2< float > > wm_vertices_2d_buffer_type;
 	typedef buffer_vector< float3 > vertices_buffer_type;
 	typedef Wm4::Vector2< float > wm_vertex_2d;
-
+	// sushi@TODO: Recover inlined segment arithmetic that changes the clipped point buffer.
 	float3 const normal = math::normalize( ( io_points[1] - io_points[0] ) ^ ( io_points[2] - io_points[0] ) );
 
 	vertices_buffer_type temp( ALLOCA( 16 * sizeof( float3 ) ), 16 );
@@ -657,17 +657,15 @@ u32 get_aabb_furthest_vertex_id( float3 const view_dir )
 		return view_dir.z >= 0.f ? 2 : 3;
 	return view_dir.z >= 0.f ? 1 : 0;
 }
-
+// sushi@TODO: Recover frustum-image loop and placement-copy statement attribution.
 void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
 	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
 	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
 	sectors_type::const_iterator const sectors_end = m_structure->get_sectors( ).end( );
-	float3* output = furthest_vertices;
-	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	float3* output = furthest_vertices; for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
 	{
-		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id );
-		new ( output ) float3( furthest_vertex );
+		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id ); new ( output ) float3( furthest_vertex );
 	}
 	m_preventer->make_frustum_images( furthest_vertices );
 }

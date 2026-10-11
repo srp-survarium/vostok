@@ -146,16 +146,18 @@ void grass_world::remove_instance( u32 const in_id )
 
 grass_template* grass_world::id_to_template( u32 const id ) const
 {
-	grass_template* result							=	NULL;
-	grass_templates_type::const_iterator	it		=	m_templates.begin();
-	grass_templates_type::const_iterator	end		=	m_templates.end();
+	grass_template* result = NULL;
+	grass_templates_type::const_iterator it = m_templates.begin( );
+	grass_templates_type::const_iterator end = m_templates.end( );
 
-	for (; it != end; ++it)
+	for ( ; it != end; ++it )
 	{
-		result										=	(*it);
-
-		if (result->m_index == id)
+		// sushi@TODO: Verify invalid template IDs reaching instance creation.
+		if ( ( *it )->m_index == id )
+		{
+			result = *it;
 			break;
+		}
 	}
 
 	return result;
@@ -166,13 +168,15 @@ grass_template* grass_world::find_template( grass_render_model_ptr const& model 
 	grass_template* result = NULL;
 	grass_templates_type::const_iterator it = m_templates.begin( );
 	grass_templates_type::const_iterator end = m_templates.end( );
+
 	for ( ; it != end; ++it )
 	{
-		result = *it;
-		if ( result->m_render_model == model )
+		if ( ( *it )->m_render_model == model )
+		{
+			result = *it;
 			break;
+		}
 	}
-
 	return result;
 }
 
@@ -216,8 +220,21 @@ void grass_world::populate( float const patch_size_ground )
 {
 	remove_patches( );
 
+	// sushi@TODO: Recover grass population statement attribution and call expansion.
+
+
+
+
+
+
+
+
+
+
 	grass_template** it					=	m_templates.begin( );
 	grass_template** end				=	m_templates.end( );
+
+
 
 	for ( ; it != end; ++it )
 	{
@@ -226,28 +243,38 @@ void grass_world::populate( float const patch_size_ground )
 		grass_instance** it_instance	=	templ->m_instances.begin( );
 		grass_instance** end_instance	=	templ->m_instances.end( );
 
+
+
 		for ( ; it_instance != end_instance; ++it_instance )
 		{
 			grass_instance* instance	=	*it_instance;
 			float3 origin				=	instance->m_transform.c.xyz( );
+
 			float3 origin_aligned		=	float3(
 				math::floor( origin.x / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f,
 				0.f,
 				math::floor( origin.z / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f
 			);
 
-			grass_patch* new_patch		=	find_patch( origin_aligned );
+			grass_patch* new_patch		=	find_patch( origin );
 			if ( !new_patch )
 			{
+
 				new_patch					=	NEW( grass_patch )(
 					m_patches_tree,
 					templ,
 					origin_aligned,
 					patch_size_ground
 				);
+
 				m_patches.push_back		( new_patch );
+
+				new_patch->m_instances.push_back( instance );
 			}
-			new_patch->m_instances.push_back( instance );
+			else
+			{
+				new_patch->m_instances.push_back( instance );
+			}
 		}
 	}
 

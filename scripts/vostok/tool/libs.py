@@ -16,6 +16,8 @@ source-relative subpath under `binaries.prebuilt/`. Include dirs still point at
 import argparse
 import os
 import shutil
+import stat
+import tempfile
 from pathlib import Path
 
 from vostok.core.paths import CONSOLE_LIBRARY_ROOTS, PREBUILT, REPO
@@ -87,6 +89,38 @@ def human_size(n: int) -> str:
         size /= 1024
 
 
+
+def _same_regular_contents(source: Path, destination: Path) -> bool:
+    """Compare bytes in bounded chunks; a destination symlink is never retained."""
+    try:
+        info = destination.lstat()
+        if not stat.S_ISREG(info.st_mode) or info.st_size != source.stat().st_size:
+            return False
+        with source.open("rb") as left, destination.open("rb") as right:
+            while True:
+                chunk = left.read(1024 * 1024)
+                if chunk != right.read(1024 * 1024):
+                    return False
+                if not chunk:
+                    return True
+    except OSError:
+        return False
+
+
+def stage_file(source: Path, destination: Path) -> bool:
+    """Retain identical regular files, or atomically publish a writable copy."""
+    if _same_regular_contents(source, destination):
+        return False
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".vostok-stage-", dir=destination.parent) as directory:
+        temporary = Path(directory) / "copy"
+        # An initially absent child uses copyfile's original 0666/umask mode,
+        # unlike mkstemp's fixed 0600. Replace a symlink, never its referent.
+        shutil.copyfile(source, temporary)
+        os.replace(temporary, destination)
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("src", nargs="?", type=Path, default=SRC)
@@ -114,12 +148,8 @@ def main():
             target = dest_for(rel_path, dest)
             target.parent.mkdir(parents=True, exist_ok=True)
 
-            # Prior copies came from /nix/store (read-only). Atomically remove any
-            # existing one (unlink needs write on the dir, not the file), then copy
-            # contents only - copyfile gives the new file a default writable mode,
-            # unlike copy2 which would preserve the read-only source mode.
-            target.unlink(missing_ok=True)
-            shutil.copyfile(file, target)
+            if not stage_file(file, target):
+                continue
             if args.verbose:
                 print(f"COPIED: {file} -> {target}")
 
