@@ -5,16 +5,16 @@
 #ifndef D3D1X_MESHCACHE_H_INCLUDED
 #define D3D1X_MESHCACHE_H_INCLUDED
 
-// claude@NOTE: nothing #includes this header - it is a PDB-derived reference skeleton,
-// listed in scaleform.vcproj but never compiled. Every symbol it describes is emitted
-// (and already byte-exact) from the vendored SDK header it mirrors under
-// scaleform/src/render/d3d1x/, so its STATE[STUB] bodies are documentation, not a
-// matching gap - check the vendored header before treating one as work.
-// survarium's fork of the Scaleform 4.x D3D1x_MeshCache.h - the shipped
-// binary tracks a NEWER SDK than the vendored 4.0.15 (RenderSync member,
-// Render::MeshBase in Evict, ...); skeleton rebuilt from the canonical PDB
-// type dumps, template shapes follow the vendored SDK
-// (sources/scaleform/Src/Render/D3D1x/D3D1x_MeshCache.h).
+
+
+
+
+
+
+
+
+// Reference skeleton of survarium's newer-SDK fork of D3D1x_MeshCache.h, rebuilt from the
+// PDB type dumps. Nothing includes it: the shipped code comes from the vendored SDK header.
 
 #include "Render/Render_MeshCache.h"
 #include "d3d1x_sync.h"
@@ -84,10 +84,10 @@ public:
 								ID3D11Device*				arg_4
 							) = 0;
 
-	// STATE[STUB]
+
 	inline	void			DestroyBuffers	( MeshBuffer::AllocType arg_0 )
 	{
-		// FUNCTION BODY[0x0b4930]
+
 		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
 	}
 
@@ -111,8 +111,8 @@ class MeshBufferSetImpl : public MeshBufferSet {
 public:
 	inline					MeshBufferSetImpl( MemoryHeap* arg_0, u32 arg_1 ) { /* no source */ }
 
-	// STATE[STUB]
-	// FUNCTION BODY[0x0b4b60] (VertexBuffer) / FUNCTION BODY[0x0b4b90] (IndexBuffer)
+
+
 	virtual	MeshBuffer*		CreateBuffer	(
 								u32							arg_0,
 								MeshBuffer::AllocType		arg_1,
@@ -132,16 +132,16 @@ public:
 
 	inline	BType*			GetHWBuffer		( ) const { /* no source */ return pBuffer; }
 
-	// STATE[STUB]
-	// FUNCTION BODY[0x0b4b20] (both instantiations ICF-folded)
+
+
 	virtual	bool			DoLock			( ID3D11DeviceContext* arg_0 ) override { /* no source */ return false; }
 
-	// STATE[STUB]
-	// FUNCTION BODY[0x0b4b00] (both instantiations ICF-folded)
+
+
 	virtual	void			Unlock			( ID3D11DeviceContext* arg_0 ) override { /* no source */ }
 
-	// STATE[STUB]
-	// FUNCTION BODY[0x0b4bc0] (VertexBuffer) / FUNCTION BODY[0x0b4cc0] (IndexBuffer)
+
+
 	static	Derived*		Create			(
 								u32							arg_0,
 								AllocType					arg_1,
@@ -160,18 +160,18 @@ class VertexBuffer : public MeshBufferImpl< ID3D11Buffer, VertexBuffer > {
 public:
 	inline				VertexBuffer	( u32 arg_0, AllocType arg_1, u32 arg_2 ) { /* no source */ }
 
-	// STATE[STUB]
+
 	virtual	bool		allocBuffer		( ID3D11Device* arg_0 ) override
 	{
-		// FUNCTION BODY[0x0b49e0]
+
 		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
 		return false;
 	}
 
-	// STATE[STUB]
+
 	virtual	BufferType	GetBufferType	( ) const override
 	{
-		// FUNCTION BODY[0x0427c0]
+
 		return Buffer_Vertex;
 	}
 
@@ -182,18 +182,18 @@ class IndexBuffer : public MeshBufferImpl< ID3D11Buffer, IndexBuffer > {
 public:
 	inline				IndexBuffer		( u32 arg_0, AllocType arg_1, u32 arg_2 ) { /* no source */ }
 
-	// STATE[STUB]
+
 	virtual	bool		allocBuffer		( ID3D11Device* arg_0 ) override
 	{
-		// FUNCTION BODY[0x0b4a80]
+
 		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
 		return false;
 	}
 
-	// STATE[STUB]
+
 	virtual	BufferType	GetBufferType	( ) const override
 	{
-		// FUNCTION BODY[0x0b53b0]
+
 		return Buffer_Index;
 	}
 
@@ -205,7 +205,7 @@ public:
 	inline		MeshCacheItem	( ) { /* no source */ }
 	inline		~MeshCacheItem	( ) { /* no source */ }
 
-	// STATE[STUB]
+
 	static	MeshCacheItem*	Create	(
 					MeshType				arg_0,
 					MeshCacheListSet*		arg_1,
@@ -220,7 +220,7 @@ public:
 					u32						arg_10
 				)
 	{
-		// FUNCTION BODY[0x0b48e0]
+
 		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2, arg_3, arg_4, arg_5, arg_6, arg_7, arg_8, arg_9, arg_10 );
 		return 0;
 	}
@@ -237,7 +237,7 @@ private:
 
 class MeshCache : public Render::MeshCache {
 public:
-	// everything unmarked is out-of-line in d3d1x_meshcache.cpp per the rich index
+
 	inline	MeshCache*	getThis							( ) { /* no source */ return this; }
 
 	inline	u32			getTotalSize					( ) const { /* no source */ return 0; }
@@ -279,10 +279,10 @@ public:
 
 			void		Reset							( );
 
-	// STATE[STUB]
+
 	virtual	QueueMode	GetQueueMode					( ) const override
 	{
-		// FUNCTION BODY[0x0b53b0] (ICF-folded with IndexBuffer::GetBufferType)
+
 		return QM_ExtendLocks;
 	}
 
@@ -298,10 +298,10 @@ public:
 
 	virtual	void		UnlockBuffers					( ) override;
 
-	// STATE[STUB]
+
 	virtual	bool		AreBuffersLocked				( ) const override
 	{
-		// FUNCTION BODY[0x0b4ad0]
+
 		return Locked;
 	}
 

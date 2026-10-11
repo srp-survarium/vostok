@@ -39,7 +39,7 @@ void flash_value::SetBoolean( bool value )
 	gfx( this )->SetBoolean( value );
 }
 
-// claude@NOTE: the target inlines the string assignments; this compiler island keeps them out of line.
+
 void flash_value::SetString( pcstr value )
 {
 	Scaleform::GFx::Value vv( value );
@@ -92,7 +92,7 @@ void flash_value::SetElement( u32 idx, flash_value& value )
 	gfx( this )->SetElement( idx, gfx( value ) );
 }
 
-// claude@NOTE: the target passes the string argument in ESI through a custom LTCG convention.
+
 void flash_value::SetElement( u32 idx, pcstr value )
 {
 	gfx( this )->SetElement( idx, Scaleform::GFx::Value( value ) );
