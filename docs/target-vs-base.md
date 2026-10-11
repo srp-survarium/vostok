@@ -49,7 +49,7 @@ closer to retail; never raise one to admit a regression.
 
 ## First banked reading
 
-Measured on the link-layout PR's full build (#595's tree plus the
+Measured on the link-layout PR's full build (v0.10b `67a70f984` plus the
 `weapon_core` accessor fix):
 
 - **Identity.** Machine `0x14c`, linker 9.0, subsystem 2, image base
@@ -60,15 +60,15 @@ Measured on the link-layout PR's full build (#595's tree plus the
   SP1 (build 30729): `0x83` 725/724, `0x84` 374/370, `0x8a` 1181/1174. The old
   report of a large VS2008 RTM (21022) share in our build no longer holds;
   the one RTM object left is retail's `0x94`.
-- **Imports.** 87 findings, all order: no thunk is missing or extra. KERNEL32
+- **Imports.** 85 findings, all order: no thunk is missing or extra. KERNEL32
   thunks sit in a different order, and the delay-import DLLs are emitted in a
   different order.
 - **Sections and resources.** Ours has no `.rsrc` (562,176 bytes), which also
   shifts `.reloc` into its slot.
-- **Code.** 5.13 MB of retail code reproduced exactly; 0.98 MB of it sits outside
-  retail order, with 2,050 order breaks. 349 KB of ours has no retail name,
+- **Code.** 5.16 MB of retail code reproduced exactly; 0.99 MB of it sits outside
+  retail order, with 2,022 order breaks. 349 KB of ours has no retail name,
   and 145 KB of retail has no counterpart.
-- **Order.** 8.05% of compiland pairs inverted for COMDAT code, 2.72% for
+- **Order.** 7.97% of compiland pairs inverted for COMDAT code, 2.72% for
   non-COMDAT LTCG code, 4.84% `.rdata`, 3.31% `.data`, 7.44% `.bss`.
 - **Polymorphic types.** 7 retail vftables are missing: six Scaleform
   allocator and video classes from the GFx archives, and
