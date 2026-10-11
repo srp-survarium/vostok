@@ -40,7 +40,7 @@ _All figures come from the ledger over every target function (paired plus inline
 | `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  96.0% |     98.1% |
 | `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
 
-_Updated 2026-10-09 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Updated 2026-10-11 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -48,13 +48,13 @@ _Updated 2026-10-09 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,503 / 71,536,291) &middot; matched projected copies: 66.09% (17,446,295 / 26,397,507).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,503 / 71,536,291) &middot; matched projected copies: 66.09% (17,446,451 / 26,397,507).**
 
-_The projection has 15,305 paired copies across 1,701 units and 30,824 unresolved blockers. Strict relocation comparison exposes 1,482 otherwise-exact functions (596,537 code bytes) with referent debt._
+_The projection has 15,305 paired copies across 1,701 units and 30,824 unresolved blockers. Strict relocation comparison exposes 1,486 otherwise-exact functions (596,842 code bytes) with referent debt._
 
 _The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11288 / 12806 definitions). Integrity ratchet: armed._
 
-_Updated 2026-10-09._
+_Updated 2026-10-11._
 <!-- data-match:end -->
 
 ## Requirements
