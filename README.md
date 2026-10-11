@@ -5,39 +5,43 @@ Decompilation of the **Vostok Engine** used by Survarium (v0.100b).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `config/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+**`survarium.exe`: 95.77% matched (MAX)** - 11,266 / 13,014 functions exact (86.6%), weighted by code size.
 
-**Overall: 10,682 / 13,014 functions exact (82.08%) &middot; 11,266 / 13,014 functions exact-max (86.57%) &middot; 94.28% fuzzy &middot; 95.77% fuzzy-max.**
+| Score | Functions exact | Weighted | Meaning                                        |
+| :---- | --------------: | -------: | :--------------------------------------------- |
+| CUR   |          10,682 |   94.28% | last measured score                            |
+| MAX   |          11,266 |   95.77% | best result for each function's current source |
+| HIST  |          11,383 |   96.10% | all-time peak across source revisions          |
 
-_All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
+MAX by module:
 
-| Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
-| :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
-| `render`        |   351 | 2,061 / 2,734 (75.4%) | 2,281 / 2,734 (83.4%) |  92.6% |     94.6% |
-| `game`          |   141 | 1,018 / 1,528 (66.6%) | 1,149 / 1,528 (75.2%) |  86.7% |     89.7% |
-| `core`          |   136 | 1,172 / 1,325 (88.5%) | 1,259 / 1,325 (95.0%) |  97.4% |     98.8% |
-| `vostok`        |   112 | 1,128 / 1,250 (90.2%) | 1,148 / 1,250 (91.8%) |  97.9% |     98.5% |
-| `game_core`     |   189 |   864 / 1,181 (73.2%) |   891 / 1,181 (75.4%) |  94.9% |     96.6% |
-| `animation`     |   102 |     604 / 727 (83.1%) |     627 / 727 (86.2%) |  93.6% |     94.3% |
-| `ai`            |   124 |     647 / 691 (93.6%) |     659 / 691 (95.4%) |  99.3% |     99.6% |
-| `sound`         |    69 |     499 / 510 (97.8%) |     500 / 510 (98.0%) |  99.8% |     99.9% |
-| `collision`     |    52 |     461 / 503 (91.7%) |     469 / 503 (93.2%) |  98.4% |     98.7% |
-| `scaleform`     |    47 |     420 / 454 (92.5%) |     425 / 454 (93.6%) |  96.7% |     96.9% |
-| `particle`      |    25 |     391 / 400 (97.8%) |     398 / 400 (99.5%) |  99.7% |    100.0% |
-| `vfs`           |    71 |     319 / 390 (81.8%) |     319 / 390 (81.8%) |  98.4% |     98.5% |
-| `ui`            |    27 |     221 / 227 (97.4%) |     222 / 227 (97.8%) |  99.5% |     99.9% |
-| `physics`       |    14 |     139 / 198 (70.2%) |     159 / 198 (80.3%) |  90.3% |     95.1% |
-| `fs`            |    25 |     141 / 165 (85.5%) |     144 / 165 (87.3%) |  97.9% |     98.3% |
-| `engine`        |    22 |     156 / 162 (96.3%) |     161 / 162 (99.4%) |  99.5% |    100.0% |
-| `network`       |    25 |      90 / 159 (56.6%) |      93 / 159 (58.5%) |  90.6% |     91.3% |
-| `network_core`  |    22 |      95 / 127 (74.8%) |      97 / 127 (76.4%) |  98.2% |     98.2% |
-| `debug`         |    16 |     118 / 122 (96.7%) |     118 / 122 (96.7%) |  98.9% |     98.9% |
-| `logging`       |    10 |       53 / 72 (73.6%) |       60 / 72 (83.3%) |  97.0% |     99.4% |
-| `input`         |     9 |       52 / 53 (98.1%) |       52 / 53 (98.1%) |  99.9% |     99.9% |
-| `survarium`     |     5 |       19 / 22 (86.4%) |       21 / 22 (95.5%) |  97.7% |     99.8% |
-| `ai_navigation` |     3 |      14 / 14 (100.0%) |      14 / 14 (100.0%) | 100.0% |    100.0% |
+| Module          | Units |   Functions exact MAX | Weighted MAX |
+| :-------------- | ----: | --------------------: | -----------: |
+| `render`        |   351 | 2,281 / 2,734 (83.4%) |       94.56% |
+| `game`          |   141 | 1,149 / 1,528 (75.2%) |       89.71% |
+| `core`          |   136 | 1,259 / 1,325 (95.0%) |       98.76% |
+| `vostok`        |   112 | 1,148 / 1,250 (91.8%) |       98.53% |
+| `game_core`     |   189 |   891 / 1,181 (75.4%) |       96.62% |
+| `animation`     |   102 |     627 / 727 (86.2%) |       94.27% |
+| `ai`            |   124 |     659 / 691 (95.4%) |       99.64% |
+| `sound`         |    69 |     500 / 510 (98.0%) |       99.90% |
+| `collision`     |    52 |     469 / 503 (93.2%) |       98.75% |
+| `scaleform`     |    47 |     425 / 454 (93.6%) |       96.89% |
+| `particle`      |    25 |     398 / 400 (99.5%) |       99.99% |
+| `vfs`           |    71 |     319 / 390 (81.8%) |       98.47% |
+| `ui`            |    27 |     222 / 227 (97.8%) |       99.90% |
+| `physics`       |    14 |     159 / 198 (80.3%) |       95.14% |
+| `fs`            |    25 |     144 / 165 (87.3%) |       98.33% |
+| `engine`        |    22 |     161 / 162 (99.4%) |      100.00% |
+| `network`       |    25 |      93 / 159 (58.5%) |       91.31% |
+| `network_core`  |    22 |      97 / 127 (76.4%) |       98.22% |
+| `debug`         |    16 |     118 / 122 (96.7%) |       98.89% |
+| `logging`       |    10 |       60 / 72 (83.3%) |       99.42% |
+| `input`         |     9 |       52 / 53 (98.1%) |       99.90% |
+| `survarium`     |     5 |       21 / 22 (95.5%) |       99.76% |
+| `ai_navigation` |     3 |      14 / 14 (100.0%) |      100.00% |
 
-_Updated 2026-10-11 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
+_Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand._
 <!-- match-score:end -->
 
 <!-- data-match:start -->
@@ -45,11 +49,11 @@ _Updated 2026-10-11 &middot; delinker `d7e9292` (folded-symbol reconciliation)._
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,511 / 71,536,291) &middot; matched projected copies: 66.09% (17,444,951 / 26,397,507).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 4.33% (3,095,503 / 71,536,291) &middot; matched projected copies: 66.09% (17,446,451 / 26,397,507).**
 
-_The projection has 15,306 paired copies across 1,701 units and 30,823 unresolved blockers. Strict relocation comparison exposes 1,520 otherwise-exact functions (605,377 code bytes) with referent debt._
+_The projection has 15,305 paired copies across 1,701 units and 30,824 unresolved blockers. Strict relocation comparison exposes 1,486 otherwise-exact functions (596,842 code bytes) with referent debt._
 
-_The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11289 / 12807 definitions). Integrity ratchet: armed._
+_The linked-image audit is 4.03% exact and covers 98.57% by PDB type extent, with 86.68% paired-only fidelity (11288 / 12806 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-11._
 <!-- data-match:end -->
