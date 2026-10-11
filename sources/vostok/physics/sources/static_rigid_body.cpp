@@ -57,7 +57,7 @@ bt_static_rigid_body* create_static_rigid_body( bt_rigid_body_construction_info 
 
 	bt_collision_shape_ptr shape = construction_info.m_collisionShape;
 
-	if ( math::abs( construction_info.m_mass ) > math::epsilon_5 )
+	if ( !math::is_zero( construction_info.m_mass ) )
 	{
 		shape->get_bt_shape( )->calculateLocalInertia( construction_info.m_mass, local_inertia );
 	} else

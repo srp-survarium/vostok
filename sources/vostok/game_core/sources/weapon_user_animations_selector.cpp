@@ -14,8 +14,8 @@
 //   is_weapon_firing/in_idle/toggling ..... SIZE +0x49 (identical) on the current_active_object()
 //                                           temp: intrusive_ptr<inventory_item> copy-ctor
 //                                           inline-vs-call + temp element type.
-//   set_sprint_callbacks / look_time_factor SIZE-only: static_cast_checked instantiation /
-//                                           float-op scheduling+regalloc (LTCG), not source-shape.
+//   set_sprint_callbacks .................. SIZE-only: static_cast_checked instantiation,
+//                                           not source-shape.
 // None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
 
 #include "pch.h"
@@ -278,7 +278,7 @@ bool weapon_user_animations_selector::is_weapon_toggling( ) const
 
 float weapon_user_animations_selector::look_time_factor( ) const
 {
-	return math::min( 1.f - math::epsilon_5, m_user->get_look_pitch( ) / 2.f + .5f );
+	return math::min( m_user->get_look_pitch( ) / 2.f + .5f, 1.f - math::epsilon_5 );
 }
 
 float weapon_user_animations_selector::look_time_factor_calculator(

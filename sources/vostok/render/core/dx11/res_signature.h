@@ -18,8 +18,7 @@ class res_signature : public resource_intrusive_base {
 		m_signature( signature ),
 		m_is_registered( false )
 	{
-		if ( m_signature )
-			m_signature->AddRef( );
+		m_signature->AddRef( );
 	}
 
 	~res_signature( );

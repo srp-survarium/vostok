@@ -744,13 +744,13 @@ struct player_movement_notifier {
 	inline	player_movement_notifier( hit_receiver const* receiver, bool sprinting, float movement ) :
 		m_receiver( receiver ), m_sprinting( sprinting ), m_movement( movement ) { }
 	inline	void operator( )( player_actions_subscriber* subscriber ) const {
-		if ( math::abs( m_movement ) >= math::epsilon_3 )
-		{
-			if ( m_sprinting )
-				subscriber->on_player_action( m_receiver, player_actions_subscriber::sprint, m_movement );
-			else
-				subscriber->on_player_action( m_receiver, player_actions_subscriber::run, m_movement );
-		}
+		if ( math::abs( m_movement ) < math::epsilon_3 )
+			return;
+
+		if ( m_sprinting )
+			subscriber->on_player_action( m_receiver, player_actions_subscriber::sprint, m_movement );
+		else
+			subscriber->on_player_action( m_receiver, player_actions_subscriber::run, m_movement );
 	}
 };
 

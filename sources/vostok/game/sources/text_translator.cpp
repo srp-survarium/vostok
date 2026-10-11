@@ -35,7 +35,7 @@ void text_translator::load_text_localization( )
 	);
 }
 #line 50
-void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
+void text_translator::translate_text( pcstr text_id, wchar_t translated_text[] )
 {
 	size_t converted_chars_count;
 	pcstr translated;

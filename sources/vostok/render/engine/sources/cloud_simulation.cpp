@@ -231,7 +231,7 @@ void cloud_simulation::compute_indirect_light(
 					{
 						float3 coord =
 							float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) +
-							sun_direction * static_cast<float>( i + 1 );
+							sun_direction * ( static_cast<float>( i ) + 1.0f );
 
 						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x || !in_grid( static_cast<u32>( math::max( coord.y, 0.0f ) ), static_cast<u32>( math::max( coord.z, 0.0f ) ), static_cast<u32>( math::max( coord.x, 0.0f ) ) ) )
 						{

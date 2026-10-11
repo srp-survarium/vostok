@@ -487,7 +487,7 @@ void portal_sector_system::process_portal_in_screen_space(
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
 	aab_rect limited_portal_rect = portals_rects[portal_id];
 	if ( !limiting_rect.contains( portals_rects[portal_id] ) &&
-		!portal_screen_rect_to_four_points( portals_rects[portal_id], far_plane, inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
+		!portal_screen_rect_to_four_points( portals_rects[portal_id], p.get_plane( ), inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
 		return;
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_ss_aab_rect( limited_portal_rect, next_sector_id ) )

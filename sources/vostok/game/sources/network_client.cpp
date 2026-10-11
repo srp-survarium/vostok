@@ -353,7 +353,6 @@ void network_client::on_http_error( boost::system::error_code __formal )
 void network_client::on_match_disconnected( network_core::disconnect_event_types_enum disconnect_event_type )
 {
 	m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );
-
 	switch ( disconnect_event_type )
 	{
 	case network_core::disconnected_by_timeout:
@@ -366,26 +365,35 @@ void network_client::on_match_disconnected( network_core::disconnect_event_types
 	}
 }
 
-void network_client::connect_to_login(
-	pcstr const		host,
-	const u16		port,
-	pcstr			account_name,
-	pcstr			account_password
-)
+void network_client::connect_to_login( pcstr const host, const u16 port, pcstr account_name, pcstr account_password )
 {
 	if ( m_is_spectator )
 	{
-		m_last_tick_time_in_ms = m_game.game_time_ms( );
 
+		m_last_tick_time_in_ms = m_game.game_time_ms( );
 		LOG_INFO( "[R] connect_to_game_server: %s: %d game time is %d", host, port, m_last_tick_time_in_ms );
 
 		m_match_client.set_on_disconnect( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
-		m_match_client.connect( host, port, 0, m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
+		m_match_client.connect(
+			host,
+			port,
+			0,
+			m_last_tick_time_in_ms,
+			boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
 
 		m_game.switch_to_scene( &m_game.get_game_world( ) );
 	}
 	else
-		m_login_client.sign_in( host, port, account_name, account_password, boost::bind( &network_client::on_connected_to_login, this, _1, _2, _3, _4 ) );
+	{
+
+		m_login_client.sign_in(
+			host,
+			port,
+			account_name,
+			account_password,
+			boost::bind( &network_client::on_connected_to_login, this, _1, _2, _3, _4 )
+		);
+	}
 }
 
 game_world& network_client::get_game_world( )
@@ -484,8 +492,10 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 game_team_id network_client::get_player_team( pcstr player_profile_name )
 {
 	for ( u8 i = 0; i < 20; ++i )
-		if ( strcmp( m_match_client.get_match_options( ).player_profiles[ i ].profile_name, player_profile_name ) == 0 )
+	{
+		if ( strcmp( player_profile_name, m_match_client.get_match_options( ).player_profiles[ i ].profile_name ) == 0 )
 			return m_match_client.get_match_options( ).player_profiles[ i ].team;
+	}
 
 	return team_undefined;
 }

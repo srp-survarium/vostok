@@ -158,9 +158,9 @@ quaternion::quaternion	( float4x4 const& matrix_raw )
 
 quaternion slerp_optimized ( quaternion const& q0, quaternion const& q1, float const t )
 {
-	float cosom	=  q0.x * q1.x +
-				   q0.y * q1.y +
-				   q0.z * q1.z +
+	float cosom	=  ( ( q0.x * q1.x +
+				   q0.y * q1.y ) +
+				   q0.z * q1.z ) +
 				   q0.w * q1.w;
 
 	float		Scale0, Scale1, sign;
@@ -172,11 +172,11 @@ quaternion slerp_optimized ( quaternion const& q0, quaternion const& q1, float c
 	}
 
 	if ( cosom < 1.0f - vostok::math::epsilon_5 ) {
-		const float	omega	= acos( cosom );
-		const float	i_sinom = 1.f / sin( omega );
+		const float	omega	= vostok::math::acos( cosom );
+		const float	i_sinom = 1.f / vostok::math::sin( omega );
 		const float	t_omega	= t*omega;
-		Scale0	= sin( omega - 	t_omega ) * i_sinom;
-		Scale1	= sin( t_omega			) * i_sinom;
+		Scale0	= vostok::math::sin( omega - 	t_omega ) * i_sinom;
+		Scale1	= vostok::math::sin( t_omega			) * i_sinom;
 	}
 	else {
 		// has numerical difficulties around cosom == 0

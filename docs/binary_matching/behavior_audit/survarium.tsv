@@ -1,0 +1,2 @@
+mangled	verdict	evidence
+splash_screen_main	EQUIVALENT	SEH scope table VA and _resetstkoflw spelling only; same call set, literals, constants, member offsets and branch kinds; ICF helper names and /Od stack slots only

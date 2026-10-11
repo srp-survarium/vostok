@@ -174,7 +174,7 @@ void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time
 	typedef ai::statistics_item<46, 16> content_type;
 	content_type new_stats_item;
 	new_stats_item.caption = "damage status: ";
-	stats.selectors_state.push_back( new_stats_item );	// sushi@TODO: This is wrong, npc_statistics has changed, this should be `body_state`.
+	stats.body_state.push_back( new_stats_item );
 
 	dump_npc_body_part_state_predicate dump_predicate( stats, current_time_in_ms );
 	m_body_parts.for_each( dump_predicate );

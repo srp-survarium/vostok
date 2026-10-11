@@ -1,0 +1,416 @@
+mangled	verdict	evidence
+??$?4PBD@effect_options_descriptor@render@vostok@@QAEAAU012@PBD@Z	EQUIVALENT	identical after regalloc
+??$create_xs_hw_impl@Ugs_data@render@vostok@@@resource_manager@render@vostok@@AAEPAV?$res_xs_hw@Ugs_data@render@vostok@@@12@PBDUshader_configuration@12@PAUshader_include_getter@12@PAV?$associative_vector@Ubinary_shader_key_type@render@vostok@@V?$resource_ptr@Ubinary_shader_source@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@Vvector@23@U?$less@Ubinary_shader_key_type@render@vostok@@@stlp_std@@@@@Z	EQUIVALENT	ICF reps (res_xs_hw ctor, boost function clear); log __LINE__ only (absolute line drift)
+??$create_xs_hw_impl@Ups_data@render@vostok@@@resource_manager@render@vostok@@AAEPAV?$res_xs_hw@Ups_data@render@vostok@@@12@PBDUshader_configuration@12@PAUshader_include_getter@12@PAV?$associative_vector@Ubinary_shader_key_type@render@vostok@@V?$resource_ptr@Ubinary_shader_source@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@Vvector@23@U?$less@Ubinary_shader_key_type@render@vostok@@@stlp_std@@@@@Z	EQUIVALENT	ICF reps (res_xs_hw ctor, boost function clear); log __LINE__ only (absolute line drift)
+??$create_xs_hw_impl@Uvs_data@render@vostok@@@resource_manager@render@vostok@@AAEPAV?$res_xs_hw@Uvs_data@render@vostok@@@12@PBDUshader_configuration@12@PAUshader_include_getter@12@PAV?$associative_vector@Ubinary_shader_key_type@render@vostok@@V?$resource_ptr@Ubinary_shader_source@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@Vvector@23@U?$less@Ubinary_shader_key_type@render@vostok@@@stlp_std@@@@@Z	EQUIVALENT	ICF reps (res_xs_hw ctor, boost function clear); log __LINE__ only (absolute line drift)
+??$load_props_impl@Vbinary_config_value@configs@vostok@@@render@vostok@@YAXAAUlight_props@01@ABVbinary_config_value@configs@1@@Z	EQUIVALENT	create_translation evaluated before create_rotation in base; pure calls
+??$log_ref_count@UID3D11DepthStencilView@@@@YAXPBDPAUID3D11DepthStencilView@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$log_ref_count@UID3D11Device@@@@YAXPBDPAUID3D11Device@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$log_ref_count@UID3D11RenderTargetView@@@@YAXPBDPAUID3D11RenderTargetView@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$log_ref_count@UID3D11Texture2D@@@@YAXPBDPAUID3D11Texture2D@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$log_ref_count@UID3D11Texture3D@@@@YAXPBDPAUID3D11Texture3D@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$log_ref_count@UIDXGIAdapter@@@@YAXPBDPAUIDXGIAdapter@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??$reclaim@Vres_input_layout@render@vostok@@U?$compare_predicate@Vres_input_layout@render@vostok@@@resource_manager@23@@render@vostok@@YA_NAAV?$set@PAVres_input_layout@render@vostok@@U?$compare_predicate@Vres_input_layout@render@vostok@@@resource_manager@23@@01@PBVres_input_layout@01@@Z	EQUIVALENT	identical after regalloc
+??$reclaim@Vres_signature@render@vostok@@U?$compare_predicate@Vres_signature@render@vostok@@@resource_manager@23@@render@vostok@@YA_NAAV?$set@PAVres_signature@render@vostok@@U?$compare_predicate@Vres_signature@render@vostok@@@resource_manager@23@@01@PBVres_signature@01@@Z	EQUIVALENT	identical after regalloc
+??0?$statistics_value@H@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	regalloc
+??0?$statistics_value@N@render@vostok@@QAE@PAUstatistics_group@12@PBD@Z	EQUIVALENT	history[0]=0.0 stored with pxor/movq vs movsd; same bits
+??0backend@render@vostok@@QAE@XZ	EQUIVALENT	flag stored from register holding 1 vs immediate
+??0cook_intermediate_data@render@vostok@@QAE@ABVvirtual_path_string@fs_new@2@PAVquery_result_for_cook@resources@2@@Z	EQUIVALENT	identical after regalloc
+??0debug_statistics_group@render@vostok@@QAE@PBD@Z	EQUIVALENT	buffer_string append inlined vs called
+??0environment_temp@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0grass_patch@render@vostok@@QAE@QAUspace_partitioning_tree@collision@2@PAUgrass_template@12@ABVfloat3@math@2@M@Z	EQUIVALENT	ICF push reps
+??0grass_template@render@vostok@@QAE@IABV?$resource_ptr@Vgrass_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	identical after regalloc
+??0hw_hiz_occlusion_manager@render@vostok@@QAE@_NII@Z	EQUIVALENT	ICF push reps
+??0index_buffer@render@vostok@@QAE@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??0portal_sector_structure@culling@render@vostok@@QAE@PAVbase_allocator@memory@3@II@Z	EQUIVALENT	regalloc; null stores via register
+??0possible_sectors_holder@culling@render@vostok@@QAE@Vbinary_config_value@configs@3@@Z	EQUIVALENT	schedule only
+??0post_process_parameters@render@vostok@@QAE@XZ	EQUIVALENT	xmm0/xmm1 constant registers swapped; same field values
+??0radiance_volume@render@vostok@@QAE@IIIMM@Z	EQUIVALENT	ICF/inline choices for intrusive_ptr assignment and shared_string construction
+??0render_output_window@render@vostok@@QAE@ABUoutput_window_configuration@12@@Z	EQUIVALENT	regalloc; same backend RT dirty-flag stores
+??0renderer_context@render@vostok@@QAE@XZ	EQUIVALENT	opposite inline choices for shader_constant_binding/intrusive_ptr::set (ICF reps)
+??0res_sampler_list@render@vostok@@QAE@ABV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@2@@Z	EQUIVALENT	retail calls vector::resize where base inlines it
+??0resource_manager@render@vostok@@QAE@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@@Z	EQUIVALENT	map header stores addressed via esi vs eax; ICF atexit rep
+??0scene_view@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0shader_constant_buffer@render@vostok@@IAE@ABV?$fixed_string@$0EA@@2@W4enum_shader_type@12@W4_D3D_CBUFFER_TYPE@@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??0shader_constant_host@render@vostok@@QAE@ABVshared_string@2@W4enum_constant_type@12@@Z	EQUIVALENT	update markers zeroed with pxor/movq vs three movs
+??0skeleton_mesh_gpu_skinning_1weight@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0skeleton_mesh_gpu_skinning_2weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0skeleton_mesh_gpu_skinning_3weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0skeleton_mesh_gpu_skinning_4weights@render@vostok@@QAE@XZ	EQUIVALENT	store order only
+??0sky_dome_geometry@render@vostok@@QAE@XZ	OPEN	move_xz: retail fmul 1/15 then deg2rad(100) (+0x7d, +0x89); base folds to 0.116355 (1-ulp). See review_todos "Sky-dome angle multiplication partition"
+??0speedtree_tree_component_branch@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
+??0speedtree_tree_component_frond@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim; base calls resource_manager::release
+??0speedtree_tree_component_leafcard@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	push/schedule order only
+??0speedtree_tree_component_leafmesh@render@vostok@@QAE@AAVspeedtree_tree@12@@Z	EQUIVALENT	retail inlines resource release via reclaim/delete_helper; base calls resource_manager::release
+??0sphere_geometry@render@vostok@@QAE@II@Z	EQUIVALENT	retail transforms side vertices as positions (xyz, w stored as 1.0) where base runs the full float4 transform with w=1; identical for the rotation matrix used
+??0stage_ambient_lighting@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	ICF push reps in member init
+??0stage_clouds@render@vostok@@QAE@PAVrenderer@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@PAVrenderer_context@12@@Z	EQUIVALENT	commutative multiply operand placement
+??0stage_lights@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@_N@Z	EQUIVALENT	ICF intrusive_ptr reps in member init
+??0stage_shadow_direct@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@@Z	EQUIVALENT	regalloc/store scheduling; same member stores
+??0stage_sun@render@vostok@@QAE@PAVrenderer@12@PAVrenderer_context@12@AAUcloud_interp_textures@12@AAVcloud_simulation@12@@Z	EQUIVALENT	retail calls CRT sinf where base uses the fsin intrinsic (same argument)
+??0static_render_model_instance@render@vostok@@QAE@XZ	EQUIVALENT	regalloc
+??0untyped_buffer@render@vostok@@QAE@IPBXW4enum_buffer_type@12@_N2@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??0vertex_buffer@render@vostok@@QAE@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+??0world@render@vostok@@QAE@AAVbase_allocator@memory@2@PAV342@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	m_editor_renderer=0 stored after game::renderer ctor (does not read it); LTCG param registers
+??1grass_world@render@vostok@@UAE@XZ	EQUIVALENT	retail calls unmanaged_resource dtor out of line
+??1portal_sector_structure@culling@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1render_model@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1renderer@render@vostok@@QAE@XZ	FIXED	dtor deleted m_frame_sync_event(+0x64) before m_timing_event(+0x60); retail +0x0a loads [ebp+60h] first, then +0x3e [ebp+64h]
+??1scene_manager@render@vostok@@QAE@XZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+??1stage_accumulate_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical
+??1stage_apply_distortion@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_atmosphere@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor reps; LTCG conv
+??1stage_clouds@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep; LTCG conv
+??1stage_debug@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep (sphere vs sliced cube geometry)
+??1stage_decals_accumulate@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_forward@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_gbuffer@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_light_propagation_volumes@render@vostok@@UAE@XZ	EQUIVALENT	ICF destroy_range rep; LTCG conv
+??1stage_particles@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_pre_rain@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_rain@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
+??1stage_shadow_direct@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_visibility@render@vostok@@UAE@XZ	EQUIVALENT	identical after regalloc
+??1stage_volume_fog@render@vostok@@UAE@XZ	EQUIVALENT	ICF dtor rep
+??1update_model_vertex_buffer_command@render@vostok@@UAE@XZ	EQUIVALENT	compare form only
+??4texture_slot@render@vostok@@QAEAAV012@ABV012@@Z	EQUIVALENT	identical after regalloc
+??Aeffect_options_descriptor@render@vostok@@QAEAAU012@PBD@Z	EQUIVALENT	identical after regalloc
+??Mrender@vostok@@YA_NABUbinary_shader_key_type@01@0@Z	EQUIVALENT	retail inlines identity accessors (ICF reps in base)
+??Rconstant_buffer_predicate@resource_manager@render@vostok@@QBE_NQBVshader_constant_buffer@23@0@Z	EQUIVALENT	branch inversion and setne vs jne tail; same comparison order
+??Rremove_inappropriate_models@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	regalloc
+??Rremove_model_if_not_skeletal_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	branch layout only
+??Rremove_model_skeletal_filter_predicate@render@vostok@@QAE_NPAUrender_surface_instance@12@@Z	EQUIVALENT	identical after regalloc
+??Rsort_by_texture_predicate@render@vostok@@QBE_NPBUrender_surface_instance@12@0@Z	EQUIVALENT	LTCG conv at res_texture_list::compare (this=left on stack, right in edi); same comparison
+??_Grender_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+??_Gstage_forward@render@vostok@@UAEPAXI@Z	EQUIVALENT	base deleting dtor not emitted standalone (folded/inlined)
+??_Gstage_pre_rain@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+??_Gstage_shadow_direct@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+??_Gstage_volume_fog@render@vostok@@UAEPAXI@Z	EQUIVALENT	operator delete thunk name
+?Alloc@speed_tree_allocator@render@vostok@@UAEPAXI@Z	EQUIVALENT	retail inlines bad_alloc construction (exception ctor + vtable); same throw
+?accumulate_local_reflections@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
+?accumulate_motion_vectors@stage_postprocess@render@vostok@@AAEXXZ	EQUIVALENT	ICF _Destroy reps
+?accumulate_trample@grass_world@render@vostok@@QAEXPAVrenderer@23@PAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
+?add_clouds@scene@render@vostok@@QAEXABUcloud_parameters@23@@Z	EQUIVALENT	retail keeps dead m_clouds=0 store before reassignment
+?add_data@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
+?add_data@?$batched_geometry@Ushadow_vertex@render@vostok@@@render@vostok@@MAEXPBUbatched_vertex_source@23@IPBGIABVfloat4x4@math@3@ABV?$resource_ptr@Umaterial_effects_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	normal decode byte/255*2-1: retail rounds the /255 product to float then SSE, base keeps x87 extended (same expression)
+?add_shadow_vertices@static_render_surface@render@vostok@@UAEXPAUbatched_geometry_interface@23@ABVfloat4x4@math@3@@Z	EQUIVALENT	regalloc
+?advanced_bloom@stage_postprocess@render@vostok@@AAEXXZ	EQUIVALENT	flush_rt_views inlined in retail (vtable call); ICF set reps
+?allocate_resource@renderer_cook@render@vostok@@UAE?AVmutable_buffer@3@AAVquery_result_for_cook@resources@3@Vconst_buffer@3@_N@Z	EQUIVALENT	ICF ctor representative; unused frame alignment in retail
+?apply@?$res_xs@Ups_data@render@vostok@@@render@vostok@@QBEXXZ	EQUIVALENT	regalloc
+?apply@?$res_xs@Uvs_data@render@vostok@@@render@vostok@@QBEXXZ	EQUIVALENT	retail inlines backend::set_vs (dirty flag/refcount); same state
+?apply@res_effect@render@vostok@@QAE_NII@Z	EQUIVALENT	identical after regalloc
+?apply_pass@res_effect@render@vostok@@QAE_NI@Z	EQUIVALENT	identical after regalloc
+?arrange_surfaces_by_lod@render@vostok@@YAXPAUcook_intermediate_data@12@AAPAUmodel_lods_descriptor@12@@Z	EQUIVALENT	retail inlines NEW_ARRAY<u8> header (count, marker); log __LINE__ only (absolute line drift)
+?assign_original@skeleton_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vskeleton_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	loop bound compare form only
+?assign_original@static_render_model_instance@render@vostok@@QAEXV?$resource_ptr@Vstatic_render_model@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	retail loop counter widened to u16 (count is u8, same trip count)
+?build@lpv_batched_geometry@render@vostok@@UAEXAAV?$vector@V?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
+?build@shadow_batched_geometry@render@vostok@@UAEXAAV?$vector@V?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
+?build_from_config@render@vostok@@YAXAAV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@PAUskeleton_combined_cook_data@12@@Z	EQUIVALENT	iterator register offset by 4 bytes; same members
+?calculate_needed_texture_mip_levels@render@vostok@@YAHABVfloat4x4@math@2@ABVfloat3@42@ABVsphere@42@IIMAAM@Z	EQUIVALENT	max(sx, sy) compared in SSE on stored floats (retail) vs x87 (base); same expression and clamp
+?calculate_portal_rects_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXABVfloat4x4@math@4@MAAV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@AAV?$buffer_vector@M@4@@Z	EQUIVALENT	same float op multiset (divss/mulss operand spill location only)
+?calculate_streaming_texture_factor@render@vostok@@YAMPBVfloat3@math@2@PBVfloat2@42@IIPBGI@Z	EQUIVALENT	index loads from pre- vs post-incremented pointer; same triangle math
+?compare@?$res_xs@Ups_data@render@vostok@@@render@vostok@@QBEHABV?$xs_descriptor@Ups_data@render@vostok@@@23@@Z	EQUIVALENT	LTCG conv (ret 8 vs ret 4)
+?compare@render@vostok@@YAHABV?$res_xs@Ugs_data@render@vostok@@@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@render@vostok@@YAHABVres_declaration@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@render@vostok@@YAHABVres_shader_technique@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@render@vostok@@YAHABVshader_constant@12@0@Z	EQUIVALENT	branch inversions; left on stack in both LTCG convs; same ordering
+?compare@render@vostok@@YAHABVshader_constant_host@12@0@Z	EQUIVALENT	identical after regalloc
+?compare@res_sampler_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	ICF identity begin/end reps
+?compare@res_texture_list@render@vostok@@QBEHABV123@@Z	EQUIVALENT	regalloc; LTCG conv (ret 4 vs ret 8)
+?compare@res_texture_list@render@vostok@@QBEHABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	regalloc; LTCG conv
+?compare@shader_constant_table@render@vostok@@QBEHABV123@@Z	EQUIVALENT	branch layout only
+?compile@depth_accumulate_material_effect@render@vostok@@EAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	wind_scale set_constant branches merged into one call site in retail; same values
+?compile@effect_editor_wireframe_accumulation@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	command-line key guard at shifted address
+?compile@effect_fstage_default_view_angle_dependent_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	bool materialised vs loaded
+?compile@effect_fstage_sky_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	opposite inline choices (set_depth/set_alpha_blend/set_cull_mode, float4 conversion); same state calls
+?compile@effect_gstage_default_materials@render@vostok@@UAEXAAVeffect_compiler@23@ABVcustom_config_value@23@@Z	EQUIVALENT	ICF reps; inline copy of get_stencil_mask matches retail including the range check
+?compute_aligment@stage_pre_rain@render@vostok@@AAE?AVfloat3@math@3@ABV453@ABVfloat4x4@53@M@Z	EQUIVALENT	retail CSEs a repeated zero-coefficient product inside viewport.transform; same values
+?compute_caster_model_fixed@shadow_cascade_volume@render@vostok@@QAEXAAV?$fixed_vector@Vplane@math@vostok@@$0BA@@3@AAVfloat3@math@3@M_N@Z	EQUIVALENT	identical after regalloc
+?compute_cloud_density@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	member reloads vs stack caching; same divisions and tests
+?compute_direct_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	EQUIVALENT	index recomputation vs cached voxel pointer; same pow/pow/clamp chain
+?compute_indirect_light@cloud_simulation@render@vostok@@AAEXABVfloat3@math@3@ABUcloud_key_parameters@23@@Z	FIXED	ray step used float(i+1); retail +0x1e2 fadd st,st(2) adds the kept 1.0 to fild(i): float(i)+1.f
+?compute_per_pixel_eye_adaptated_luminance@stage_postprocess@render@vostok@@AAEXXZ	EQUIVALENT	identical after regalloc
+?copy_from@cloud_simulation@render@vostok@@QAEXABV123@@Z	EQUIVALENT	LTCG conv (this/other registers); same memcpy(this, other, size)
+?copy_scene_depth@hw_hiz_occlusion_manager@render@vostok@@AAEXXZ	EQUIVALENT	identical after regalloc
+?create@device@render@vostok@@AAEXXZ	EQUIVALENT	command-line guard address; log __LINE__ only (absolute line drift)
+?create@render_target@render@vostok@@QAEXPBDIIW4DXGI_FORMAT@@W4enum_rt_usage@23@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@II@Z	EQUIVALENT	compare form only; log __LINE__ only (absolute line drift)
+?create@render_target@render@vostok@@QAEXPBDIIW4DXGI_FORMAT@@W4enum_rt_usage@23@W4D3D11_USAGE@@I@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_3d@render_target@render@vostok@@QAEXPBDIIIW4DXGI_FORMAT@@W4enum_rt_usage@23@W4D3D11_USAGE@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_const_table@resource_manager@render@vostok@@QAEPAVshader_constant_table@23@ABV423@@Z	EQUIVALENT	regalloc; same descriptor lookup/insert
+?create_constant_buffer@resource_manager@render@vostok@@QAEPAVshader_constant_buffer@23@ABV?$fixed_string@$0EA@@3@W4enum_shader_type@23@W4_D3D_CBUFFER_TYPE@@I@Z	EQUIVALENT	retail calls ICF ~shader_constant_buffer rep; base inlines same release/free
+?create_d3d@device@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_declaration@resource_manager@render@vostok@@QAEPAVres_declaration@23@PBUD3D11_INPUT_ELEMENT_DESC@@I@Z	EQUIVALENT	retail inlines res_declaration ctor; same range init and lookup
+?create_frustum_from_four_points@culling@render@vostok@@YA?AVfrustum@math@3@ABVfloat3@53@AAY03$$CBV653@ABVplane@53@@Z	EQUIVALENT	schedule only
+?create_hw_shader@?$res_xs_hw@Ugs_data@render@vostok@@@render@vostok@@QAEJPAUID3D10Blob@@@Z	EQUIVALENT	ICF parse_resources rep; log __LINE__ only (absolute line drift)
+?create_hw_shader@?$res_xs_hw@Ups_data@render@vostok@@@render@vostok@@QAEJPAUID3D10Blob@@@Z	EQUIVALENT	ICF parse_resources rep; log __LINE__ only (absolute line drift)
+?create_hw_shader@?$res_xs_hw@Uvs_data@render@vostok@@@render@vostok@@QAEJPAUID3D10Blob@@@Z	EQUIVALENT	ICF parse_resources rep; log __LINE__ only (absolute line drift)
+?create_input_layout@resource_manager@render@vostok@@QAEPAVres_input_layout@23@PBVres_declaration@23@PBVres_signature@23@@Z	EQUIVALENT	retail calls ICF ~res_input_layout rep for stack descriptor; base inlines same releases
+?create_resource@effect_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	ICF reps; log __LINE__ only (absolute line drift)
+?create_resource@renderer_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	frame/stack layout; ICF intrusive_ptr::set rep
+?create_resource@shader_binary_source_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@Vmutable_buffer@3@@Z	EQUIVALENT	path append inline/ICF choices
+?create_shadow_pass_geometry@static_render_surface@render@vostok@@QAEXPBEII@Z	EQUIVALENT	LTCG conv (ret 0Ch vs ret 8)
+?create_signature@resource_manager@render@vostok@@QAEPAVres_signature@23@PAUID3D10Blob@@@Z	FIXED	res_signature ctor guarded AddRef with a null test; retail +0x07 and +0x8f call [vtbl+4] unconditionally (no test)
+?create_state@?$state_cache@UID3D11BlendState@@UD3D11_BLEND_DESC@@@render@vostok@@AAEXUD3D11_BLEND_DESC@@PAPAUID3D11BlendState@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_state@?$state_cache@UID3D11DepthStencilState@@UD3D11_DEPTH_STENCIL_DESC@@@render@vostok@@AAEXUD3D11_DEPTH_STENCIL_DESC@@PAPAUID3D11DepthStencilState@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_state@?$state_cache@UID3D11RasterizerState@@UD3D11_RASTERIZER_DESC@@@render@vostok@@AAEXUD3D11_RASTERIZER_DESC@@PAPAUID3D11RasterizerState@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_state@?$state_cache@UID3D11SamplerState@@UD3D11_SAMPLER_DESC@@@render@vostok@@AAEXUD3D11_SAMPLER_DESC@@PAPAUID3D11SamplerState@@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_targets@renderer_context_targets@render@vostok@@AAEXVuint2@math@3@_N@Z	EQUIVALENT	push/store scheduling; same target recreation sequence
+?create_texture2d@resource_manager@render@vostok@@QAEPAVres_texture@23@PBDIIPBUD3D11_SUBRESOURCE_DATA@@W4DXGI_FORMAT@@W4D3D11_USAGE@@II_N@Z	EQUIVALENT	register swap only
+?create_texture2d_impl@resource_manager@render@vostok@@AAEPAVres_texture@23@IIPBUD3D11_SUBRESOURCE_DATA@@W4DXGI_FORMAT@@W4D3D11_USAGE@@II_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_texture3d@resource_manager@render@vostok@@QAEPAVres_texture@23@PBDIIIPBUD3D11_SUBRESOURCE_DATA@@W4DXGI_FORMAT@@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?create_texture_list@resource_manager@render@vostok@@QAEPAVres_texture_list@23@ABV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	identical after regalloc
+?create_world@render@vostok@@YAPAVworld@12@AAVbase_allocator@memory@2@PAV452@ABV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@_N@Z	EQUIVALENT	s_world construction flag at shifted address; LTCG conv
+?cull_points_by_frustum@culling@render@vostok@@YA_NABVfrustum@math@3@AAY03Vfloat3@53@@Z	OPEN	inline segment numerator association differs (prior audit: planar quad keeps 3 retail vs 4 base points under some inputs); no faithful source lever found
+?debug_render@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?debug_render@stage_lights@render@vostok@@UAEXXZ	EQUIVALENT	unrolled constant cube transform (debug draw): fp:fast CSE of shared partial sums differs; same source expression
+?debug_render@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?delete_pass@effect_manager@render@vostok@@QAEXPBVres_pass@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?delete_resource@texture_cook_wrapper@render@vostok@@UAEXPAVresource_base@resources@3@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?downsample_occlusion_buffer@hw_hiz_occlusion_manager@render@vostok@@AAEXXZ	EQUIVALENT	int conversion from stack copy vs member
+?downsample_rsm@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
+?draw_3D_point@system_renderer@render@vostok@@QAEXABVfloat3@math@3@MABVcolor@53@_N@Z	EQUIVALENT	identical after regalloc
+?draw_aabb@system_renderer@render@vostok@@QAEXABVaabb@math@3@ABVcolor@53@@Z	EQUIVALENT	push order only
+?draw_cylinder_solid@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	use_depth constant-propagated (push 1) in retail; LTCG conv
+?draw_debug@renderer@render@vostok@@QAEXPAVscene@23@PAVscene_view@23@MPBUfont@ui@3@@Z	EQUIVALENT	grass_world::render_debug guard partial-inlined in base; cvtps2pd scheduling
+?draw_ellipsoid@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	base body not emitted standalone; retail draw_lines(ellipsoid vertices 0x72, pairs 0x150) matches source; use_depth constprop true
+?draw_frame_histogram@renderer@render@vostok@@ABEXXZ	EQUIVALENT	regalloc+x87 stack order; same scales, colors (0,1,0,1)/(0.5,0.5,0.7,1) via color_rgba call in retail
+?draw_line@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat3@math@4@1ABVcolor@84@_N@Z	EQUIVALENT	regalloc
+?draw_lines@system_renderer@render@vostok@@QAEXQBUvertex_colored@23@0QBG1_N@Z	EQUIVALENT	LTCG conv
+?draw_luminance_picker_info@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	EQUIVALENT	retail calls color_rgba for rgbl_colors (same r,g,b,a args), inlines draw_text_shadowed; same strings/positions
+?draw_quads@portal_sector_system@culling@render@vostok@@AAEXAAVsystem_renderer@34@@Z	EQUIVALENT	identical after regalloc
+?draw_render_models_selection@system_renderer@render@vostok@@QAEXAAV?$vector@V?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@vostok@@@23@@Z	EQUIVALENT	x87 commutative multiply order
+?draw_scene_impl@renderer@game@render@vostok@@AAEXABUdraw_scene_params@1234@@Z	EQUIVALENT	null test folded differently
+?draw_screen_lines@system_renderer@render@vostok@@QAEXPBVfloat3@math@3@IABVcolor@53@MI_N2@Z	EQUIVALENT	identical after regalloc
+?draw_solid_capsule@renderer@debug@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVfloat4x4@math@4@ABVfloat3@84@ABVcolor@84@_N@Z	EQUIVALENT	retail inlines draw_cylinder_solid (memset/mul4x3/draw_primitive_solid); same float op multiset
+?draw_stages_stats@renderer@render@vostok@@AAEXPBUfont@ui@3@@Z	FIXED	even-row stage colour was (0.5,0.75,1,1); retail +0x175..0x20c folds floor(255),floor(127.5),floor(191.25) to 0xFF7FBFFF = color_rgba(1,0.75,0.5,1)
+?draw_triangles@system_renderer@render@vostok@@QAEXQBUvertex_colored@23@0QBG1_N@Z	EQUIVALENT	push order only
+?draw_ui_vertices@system_renderer@render@vostok@@QAEXPBUTL@vertex_formats@23@ABIHH@Z	EQUIVALENT	identical after regalloc
+?dump_scene_statistics@scene@render@vostok@@QBEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?end_render_options_changing@options@render@vostok@@QAE?AW4enum_options_changes_result@23@AAV?$vector@Vvirtual_path_string@fs_new@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
+?end_render_options_changing@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@64@_N2PCJ@Z	EQUIVALENT	base set_size constprop-specialized for force_resize=true; boost::function::clear inline
+?execute@stage_accumulate_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_ambient_lighting@render@vostok@@UAEXXZ	EQUIVALENT	opposite LTCG inline choices (res_effect::apply, render_indexed, set_render_targets, light dtor); same stage sequence
+?execute@stage_ambient_occlusion@render@vostok@@UAEXXZ	EQUIVALENT	retail merges the two final fill_surface call sites; same arguments per path
+?execute@stage_apply_distortion@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_atmosphere@render@vostok@@UAEXXZ	FIXED	angle folded to x*(pi/180); retail +0x67d fmul 1/180 then +0x684 fmul [pi] is math::deg2rad, which now reproduces it
+?execute@stage_clouds@render@vostok@@UAEXXZ	FIXED	wind terms used m_clouds_scale_multiplier: retail +0x772 fmul and +0x795 load interp_key.wind_speed ([esp+0FCh]); slice scale distributed i*s - off*s (+0xa8b..+0xa93, +0xeaf..+0xeb7)
+?execute@stage_debug@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_decals_accumulate@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (get_rt, intrusive_ptr dtor, res_effect::apply)
+?execute@stage_forward@render@vostok@@UAEXXZ	EQUIVALENT	retail frees a temp buffer out of line / inc vs add 1; same calls
+?execute@stage_gbuffer@render@vostok@@UAEXXZ	EQUIVALENT	ICF _Destroy reps
+?execute@stage_lights@render@vostok@@UAEXXZ	FIXED	probe picks lost retail NaN order: retail +0x436/+0xbe9 comiss radius,max_rad;jbe (radius > max_rad), +0x665/+0x670 dist <= r*0.45+scale and dist < min_dist
+?execute@stage_particles@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	opposite inline choices (set_ps_constant, apply, get_rt, set_ps_texture)
+?execute@stage_pre_rain@render@vostok@@UAEXXZ	EQUIVALENT	retail set_w(float4x4().identity()) vs set_w_identity(); same world matrix
+?execute@stage_rain@render@vostok@@UAEXXZ	EQUIVALENT	commutative operand order (time_delta*speed); cached loads of rain parameters
+?execute@stage_resolve_lighting@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute@stage_screen_image@render@vostok@@QAEXV?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@@Z	EQUIVALENT	identical after regalloc
+?execute@stage_shadow_direct@render@vostok@@UAEXXZ	EQUIVALENT	s_prev_sun_direction BSS address only; ICF safe-bool rep
+?execute@stage_sun@render@vostok@@UAEXXZ	EQUIVALENT	addressing only (trailing jump-table bytes differ)
+?execute@stage_translucency@render@vostok@@UAEXXZ	EQUIVALENT	transform_direction operands from memory vs register; same products
+?execute@stage_visibility@render@vostok@@UAEXXZ	EQUIVALENT	ICF identity strip_pointer calls; branch inversion
+?execute@stage_volume_fog@render@vostok@@UAEXXZ	EQUIVALENT	inside-box flag materialised vs branched; same six compares
+?execute_cascade@stage_shadow_direct@render@vostok@@QAEXIII@Z	FIXED	align mult folded to mult/pow; retail +0x154 fld1/fdivrp then +0x177 fmul mults[i] = (1/pow)*mult; explicit parenthesised reciprocal reproduces it
+?execute_disabled@stage_postprocess@render@vostok@@UAEXXZ	EQUIVALENT	identical after regalloc
+?execute_impl@stage_light_propagation_volumes@render@vostok@@QAEXXZ	EQUIVALENT	opposite inline choices; same RT dirty flags
+?execute_smoothed_impl@stage_light_propagation_volumes@render@vostok@@QAEXIIIII@Z	EQUIVALENT	set_constant inlined/called oppositely; same RT dirty flags
+?fill_opaque_models@renderer@render@vostok@@QAEXXZ	EQUIVALENT	retail inlines screen_factor and fp:fast reassociates dist2 to (dx2+dz2)+dy2 (1-ulp); standalone retail copy agrees with source; ICF identity begin/end calls
+?fill_surface@stage_postprocess@render@vostok@@AAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0@Z	EQUIVALENT	identical after regalloc
+?fill_surface@system_renderer@render@vostok@@QAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0000_NPAUD3D11_VIEWPORT@@MMMM@Z	EQUIVALENT	schedule only
+?fill_surfaces@stage_atmosphere@render@vostok@@QAEXV?$intrusive_ptr@Vrender_target@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@0_N@Z	EQUIVALENT	identical after regalloc
+?find_material_index@cook_intermediate_data@render@vostok@@QAEHPBD@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?finish_model_creation@render_model_cook@render@vostok@@IAEXAAVqueries_result@resources@3@PAUcook_intermediate_data@23@@Z	EQUIVALENT	string append inlined in retail
+?flush_rt_views@backend@render@vostok@@QAEXXZ	EQUIVALENT	null RT array zeroed with movdqa vs movq/mov; same OMSetRenderTargets(8, nulls, 0)
+?for_each_batch_render@?$batched_geometry@Ulpv_vertex@render@vostok@@@render@vostok@@QAEXPAVrenderer_context@23@ABV?$function@$$A6AXABUgeometry_batch@render@vostok@@@Z@boost@@1@Z	EQUIVALENT	ICF boost::function operator() reps
+?gather_streamable_textures@scene@render@vostok@@QAEXV?$resource_ptr@Vrender_model_instance_impl@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	fixed_string op= out of line vs inline memcpy; branch layout
+?generate@cloud_simulation@render@vostok@@QAEXABUcloud_key_parameters@23@ABVfloat3@math@3@@Z	EQUIVALENT	size_y-1 then -2/-3 vs direct -3/-4; same max_y values
+?get_model_type@model_factory@render@vostok@@YAGAAVchunk_reader@memory@3@@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_ambient_volumes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_decals@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_env_probes@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_results_and_prepare_bounds_grass@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	instance pointer offset folded into addressing (base) vs lea (retail)
+?get_results_and_prepare_bounds_lights@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	addressing only
+?get_results_and_prepare_bounds_models@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	addressing only
+?get_results_and_prepare_bounds_particles@stage_visibility@render@vostok@@AAEXAAPAVfloat4@math@3@AAI@Z	EQUIVALENT	identical after regalloc
+?get_surfaces@static_render_model_instance@render@vostok@@UAEXPBVfloat4x4@math@3@PBVfloat3@53@AAV?$vector@PAUrender_surface_instance@render@vostok@@@23@_NEI@Z	FIXED	the LOD fallback walk ran for caller-supplied lod_id; retail +0x0d jne skips straight to the 0xaa test, so it walks only after select_lod
+?get_texture_video_memory_size@resource_manager@render@vostok@@QAEIXZ	EQUIVALENT	iterator != end materialised as setne/test in base; same loop and >>20
+?goto_fullscreen@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
+?grass_layer_resources_ready@grass_world@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N@Z	EQUIVALENT	same float ops (x87 operand order)
+?in_grid@cloud_simulation@render@vostok@@ABE_NIII@Z	EQUIVALENT	base standalone is an LTCG constprop clone; source y<size_y && z<size_z matches retail
+?init_collision@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	random offset: retail rounds the x87 product to float then SSE (rnd-0.25)+pos, base keeps x87 extended; same expression
+?initialize_post_process_parameters@material_manager@render@vostok@@QAEXPAUpost_process_parameters@23@V?$resource_ptr@Vmaterial@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@_N@Z	EQUIVALENT	base pow(float4,float) is LTCG-specialised to 2.2 so the call omits the argument; rain/wet/density assignments identical
+?inject_camera_occluders@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
+?inject_lighting@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0MI@Z	EQUIVALENT	identical after regalloc
+?inject_occluder_geometry@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@ABVfloat3@math@3@1ABV?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	identical after regalloc
+?inject_occluders@radiance_volume@render@vostok@@QAEXPAVrenderer_context@23@ABVfloat3@math@3@1I@Z	EQUIVALENT	LTCG conv (ret 10h vs ret 8)
+?inject_occluders@stage_light_propagation_volumes@render@vostok@@AAEXIABVfloat3@math@3@0V?$vector@Vfloat4x4@math@vostok@@@23@@Z	EQUIVALENT	schedule only
+?is_effects_ready@stage_postprocess@render@vostok@@ABE_NXZ	EQUIVALENT	null checks via register zero; ICF safe-bool rep
+?is_playing@scene_renderer@render@vostok@@QAE_NABV?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@resources@3@@Z	EQUIVALENT	base body inlined into callers; retail forwards to particle::is_playing as source
+?load@grass_render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	ICF alloc_proxy rep
+?load@portal_sector_structure@culling@render@vostok@@QAEXPAVbinary_config_value@configs@4@@Z	EQUIVALENT	schedule only; same aabb compares
+?load@render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	min+max vs max+min commutative
+?load@static_render_surface@render@vostok@@UAEXABVbinary_config_value@configs@3@AAVchunk_reader@memory@3@@Z	EQUIVALENT	ICF alloc_proxy rep; log __LINE__ only (absolute line drift)
+?load_bones@skeleton_render_model@render@vostok@@QAEXAAVreader@memory@3@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?load_from_chunk_data@user_render_surface_editable@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	constants via register vs immediate
+?load_from_chunk_data@user_render_surface_wire@render@vostok@@UAEXAAVchunk_reader@memory@3@@Z	EQUIVALENT	ctor inlined in retail; stack layout; same float op multiset modulo operand location
+?make_frustum_images@portal_sector_system@culling@render@vostok@@AAEXABVfloat3@math@4@@Z	EQUIVALENT	identical after regalloc
+?make_frustum_images@sector_double_query_preventer@culling@render@vostok@@QAEXPBVfloat3@math@4@@Z	EQUIVALENT	multiply operands from memory vs register; same products
+?make_plane_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	stack-slot layout and schedule; same direction/position arithmetic
+?make_skin_scattering_texture@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail constants_handler<1>::set_constant vs base backend::set_ps_constant wrapper; ICF push reps
+?make_spot_light_shadowmap@stage_lights@render@vostok@@AAEXIPAVlight@23@@Z	EQUIVALENT	schedule only; same float op multiset
+?measure_per_pixel_luminance@stage_postprocess@render@vostok@@AAEXPAVres_texture@23@AAVfloat4@math@3@@Z	EQUIVALENT	identical after regalloc
+?merge_instances@grass_patch@render@vostok@@QAEXXZ	EQUIVALENT	resource_ptr temp zero-init and dead null store after FREE; same float op multiset
+?new_rt@renderer_context_targets@render@vostok@@QAEXW4enum_render_target_index@23@W4DXGI_FORMAT@@Vuint2@math@3@W4enum_rt_usage@23@_N@Z	EQUIVALENT	identical after regalloc
+?on_binary_shaders@effect_cook@render@vostok@@QAEXPAVquery_result_for_cook@resources@3@PAVres_effect@23@PAUeffect_compile_data@23@AAVqueries_result@53@@Z	EQUIVALENT	identical after regalloc
+?on_effect_ready@material_effects_instance_cook@render@vostok@@QAEXAAVqueries_result@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	retail inlines strings::equal comparisons
+?on_fs_iterator_probes_ready@scene@render@vostok@@QAEXPADABVvfs_locked_iterator@vfs@3@@Z	FIXED	device came from resources::get_synchronous_device(); retail +0x290 loads [9EFE7Ch], the global read by core::get_core_synchronous_device()
+?on_layers_loaded@grass_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUgrass_cook_data@23@@Z	EQUIVALENT	stack realignment and addressing
+?on_material_ready@material_effects_instance_cook@render@vostok@@QAEXAAVqueries_result@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?on_properties_changed@light@render@vostok@@QAEXXZ	EQUIVALENT	collision setup per light type with tail merging/inline differences; same transforms and calls per case
+?on_renderer_configuration_config_loaded@world@engine@render@vostok@@AAEX_NAAVqueries_result@resources@4@@Z	EQUIVALENT	base save() constprop-specialized with "user.cfg"
+?on_resources_loaded@skeleton_combined_model_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	data[2+i*3] walked via base+0x5F0 step 0x2D0 vs base+0x99C-0x2D4; same elements
+?on_skeleton_config_loaded@animated_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@V?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@Z	EQUIVALENT	ICF intrusive_ptr::set rep
+?on_skeleton_config_loaded@skeleton_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAUskeleton_model_instance_cook_data@23@@Z	EQUIVALENT	ICF intrusive_ptr::set rep
+?on_subresources_loaded@static_model_instance_cook@render@vostok@@AAEXAAVqueries_result@resources@3@PAVquery_result_for_cook@53@@Z	EQUIVALENT	retail keeps an extra static_cast_resource_ptr temporary for the sound environment (balanced addref/release)
+?on_texture_loaded@resource_manager@render@vostok@@QAEXAAVqueries_result@resources@3@I_NI@Z	EQUIVALENT	ICF reps (_Destroy, pinned_ptr dtor); log __LINE__ only (absolute line drift)
+?on_texture_loaded@resource_manager@render@vostok@@QAEXV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@PBDI@Z	EQUIVALENT	inline vs call of max<u32>/mutable_buffer helpers, ICF reps, CSE; log __LINE__ only (absolute line drift)
+?on_texture_loaded@scene@render@vostok@@QAEXAAVqueries_result@resources@3@V?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@IM@Z	EQUIVALENT	buffer_string assign inlined in retail vs operator+= call
+?parse@shader_constant_table@render@vostok@@QAE_NPAUID3D11ShaderReflection@@W4enum_shader_type@23@@Z	EQUIVALENT	ICF copy reps; log __LINE__ only (absolute line drift)
+?parse_resources@?$res_xs_hw@Uvs_data@render@vostok@@@render@vostok@@AAEXPAUID3D11ShaderReflection@@AAV?$fixed_vector@Vsampler_slot@render@vostok@@$0BA@@3@AAV?$fixed_vector@Vtexture_slot@render@vostok@@$0IA@@3@@Z	EQUIVALENT	string appends inlined in base
+?populate@grass_world@render@vostok@@QAEXM@Z	EQUIVALENT	push_back realloc tails merged in retail
+?portal_screen_rect_to_four_points@culling@render@vostok@@YA_NABVaab_rect@123@ABVplane@math@3@ABVfloat4x4@63@0AAY03Vfloat3@63@AAV4123@@Z	OPEN	FP-assoc in shared header, no TU lever: inlined transform(float3) with const z; base CSEs (z*e2k+e3k) for all 4 rows, retail only row 0 (e20+e30); same tree, 1-ulp
+?pre_lpv_batch_render@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABUgeometry_batch@23@@Z	EQUIVALENT	identical after regalloc
+?prepare@radiance_volume@render@vostok@@QAEXABVfloat3@math@3@0M@Z	EQUIVALENT	retail drops the (view_direction.y=0)*scale*offset term; base adds 0*x to y (same for finite values)
+?prepare_final@radiance_volume@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
+?prepare_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@@Z	EQUIVALENT	ICF identity begin/end and alloc_proxy reps
+?present@res_render_output@render@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?print@statistics_int@render@vostok@@UAEXAAVvirtual_path_string@fs_new@3@@Z	EQUIVALENT	push order only
+?print_speedtree_errors@render@vostok@@YAXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?process_blur@stage_postprocess@render@vostok@@AAEXPAVrender_target@23@PAVres_texture@23@01I@Z	EQUIVALENT	identical after regalloc
+?process_culling@grass_world@render@vostok@@QAEXPAVrenderer_context@23@M@Z	EQUIVALENT	ICF reps; min+max vs max+min commutative
+?process_portal_by_frustum_intersection@portal_sector_system@culling@render@vostok@@AAEXIABVfrustum@math@4@IABVfloat3@64@@Z	EQUIVALENT	operand order of subtractions from memory vs register; same multiset
+?process_portal_in_screen_space@portal_sector_system@culling@render@vostok@@AAEXIIABV?$buffer_vector@Vaab_rect@culling@render@vostok@@@4@ABVfloat3@math@4@ABVplane@74@ABVfloat4x4@74@3ABVaab_rect@234@@Z	EQUIVALENT	multiplicands from stack copy vs memory; same products
+?process_streaming@scene@render@vostok@@QAEXABVfloat4x4@math@3@Vfloat3@53@II@Z	EQUIVALENT	retail tests size() of 0x120-byte elements vs empty(); hoisted instances.end(); fixed_string op= call vs memcpy
+?propagate_lighting@radiance_volume@render@vostok@@QAEXI@Z	EQUIVALENT	identical after regalloc
+?propagate_lighting_iter@radiance_volume@render@vostok@@QAEXII@Z	EQUIVALENT	identical after regalloc
+?push_jittering@temporal_projection_matrix_modifier@render@vostok@@QAEXXZ	EQUIVALENT	multiplicands from stack vs register
+?query_effects@material_effects_instance_cook@render@vostok@@QAEXAAVquery_result_for_cook@resources@3@PAUmaterial_effects_instance_cook_data@23@@Z	EQUIVALENT	ICF reps and resource_ptr dtor inline choices
+?query_resources_by_data@skeleton_combined_model_cook@render@vostok@@AAEXPAVquery_result_for_cook@resources@3@PAUskeleton_combined_cook_data@23@@Z	EQUIVALENT	request fields initialised in different order, same values
+?recompile_shaders_async@effect_manager@render@vostok@@QAEXABV?$vector@Vvirtual_path_string@fs_new@vostok@@@23@@Z	EQUIVALENT	ICF reps; stack layout
+?register_samplers@render@vostok@@YAXXZ	EQUIVALENT	retail loads the per-TU math::float_max object, base folds FLT_MAX (same value)
+?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Ugs_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Ups_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBV?$res_xs@Uvs_data@render@vostok@@@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_declaration@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_geometry@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_input_layout@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_render_output@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_sampler_list@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_signature@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_state@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVres_texture_list@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVshader_constant_buffer@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?release@resource_manager@render@vostok@@QAEXPBVshader_constant_table@23@@Z	EQUIVALENT	ICF boost::function rep; log __LINE__ only (absolute line drift)
+?remove_environment_probe@scene@render@vostok@@QAEXI@Z	EQUIVALENT	retail DELETE omits dead null store into the slot erased next
+?remove_instance@speedtree_forest@render@vostok@@QAEXV?$resource_ptr@Vspeedtree_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@@Z	EQUIVALENT	ICF vector helper reps
+?render@decal_instance@0vostok@@AAEXPAVrenderer_context@02@W4enum_render_stage_type@02@@Z	EQUIVALENT	identical after regalloc
+?render@grass_patch@0vostok@@QAEXPAUgrass_world@02@PAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IMPAVres_effect@02@I@Z	EQUIVALENT	immediate via register
+?render@grass_world@0vostok@@QAEXPAVrenderer_context@02@ABVfloat3@math@2@W4enum_render_stage_type@02@IM_NPAVres_effect@02@3I@Z	EQUIVALENT	identical after regalloc
+?render@renderer@0vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@2@ABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@42@ABV?$rectangle@Vfloat2@math@vostok@@@math@2@ABV?$function@$$A6AX_N@Z@boost@@_NPBUfont@ui@2@@Z	FIXED	info->dips used signed max(s32); retail +0x8d6 calls max(u32,u32). Also flash present arg: retail +0x79a passes empty()?0:begin
+?render@sector_double_query_preventer@culling@0vostok@@QAEXAAVsystem_renderer@03@@Z	EQUIVALENT	identical after regalloc
+?render_debug@grass_world@render@vostok@@QAEXPAVrenderer_context@23@@Z	EQUIVALENT	debug-only draw: x87 operand order; same products
+?render_debug@hw_hiz_occlusion_manager@render@vostok@@QAEXPAVrenderer_context@23@PBVfloat4@math@3@PBEI@Z	EQUIVALENT	LTCG conv
+?render_dynamic_models@stage_shadow_direct@render@vostok@@QAEXIIABVfloat3@math@3@@Z	EQUIVALENT	empty body; LTCG conv (ret 8 vs ret)
+?render_environment_probe_preview@stage_debug@render@vostok@@QAEXXZ	EQUIVALENT	identical after regalloc
+?render_forward_models@stage_forward@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@I@Z	EQUIVALENT	identical after regalloc
+?render_light@stage_lights@render@vostok@@AAEXPAVlight@23@_N@Z	EQUIVALENT	retail inlines set_constant<float> (set_memory) and res_effect::apply (apply_pass); same constants and passes
+?render_lines@scene@render@vostok@@AAEX_N@Z	EQUIVALENT	LTCG conv at draw_lines (one arg in eax)
+?render_model_bounds@hw_hiz_occlusion_manager@render@vostok@@AAEXPAVrenderer_context@23@PBVfloat4@math@3@I@Z	EQUIVALENT	identical after regalloc
+?render_model_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant<float>/<float4x4> via set_memory; same float op count
+?render_model_probe_lighting@stage_lights@render@vostok@@AAEXPAUrender_surface_instance@23@PAUenvironment_probe@23@M@Z	EQUIVALENT	regalloc
+?render_models@stage_gbuffer@render@vostok@@AAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@IAAI_N@Z	EQUIVALENT	identical after regalloc
+?render_models@stage_resolve_lighting@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@AAI@Z	EQUIVALENT	identical after regalloc
+?render_models@stage_shadow_direct@render@vostok@@QAEXAAV?$vector@PAUrender_surface_instance@render@vostok@@@23@ABVfloat4x4@math@3@IIABVfloat3@63@II@Z	EQUIVALENT	retail drops redundant it_d!=end_d test on the index-exhausted exit; ICF reps
+?render_occluders@hw_hiz_occlusion_manager@render@vostok@@AAEXPAVrenderer_context@23@@Z	EQUIVALENT	identical after regalloc
+?render_opaque_models@stage_forward@render@vostok@@QAEXXZ	EQUIVALENT	RT slot clears via immediate vs register zero
+?render_particle_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAVlight@23@I@Z	EQUIVALENT	retail inlines get_view2shadow switch and set_constant<float>; same float op multiset
+?render_particle_probe_lighting@stage_lights@render@vostok@@AAEXPAVrender_particle_emitter_instance@23@PAUenvironment_probe@23@I@Z	EQUIVALENT	addressing only
+?render_particles@stage_gbuffer@render@vostok@@AAEX_N@Z	EQUIVALENT	identical after regalloc
+?render_rain_shadow_map@stage_pre_rain@render@vostok@@AAE?AVfloat4x4@math@3@XZ	EQUIVALENT	mul4x3 argument order/scheduling; same matrices
+?render_shadowed_light@stage_lights@render@vostok@@AAEXPAVlight@23@@Z	EQUIVALENT	view_matrix_parameters table addressed at same relative offsets; operand order of commutative adds only
+?render_speedtree_lighting@stage_lights@render@vostok@@AAEXPBUlod_entry@23@PBVCInstance@SpeedTree@@PBUSInstanceLod@6@PAVspeedtree_tree_component@23@PAVlight@23@@Z	EQUIVALENT	retail inlines set_constant and speedtree get_material_effects; same float op count
+?render_subuv_sprites@render_particle_emitter_instance@render@vostok@@QAEXXZ	EQUIVALENT	addressing only
+?render_to_hw_shadowmap@stage_lights@render@vostok@@AAEXPAVlight@23@IMIIABVfloat4x4@math@3@1I@Z	EQUIVALENT	retail calls res_effect::apply where base inlines apply_pass; static_shadows?1:0 vs bool push; size()!=0 vs pointer compare
+?render_to_rms@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABVfloat4x4@53@1V?$vector@Vfloat4x4@math@vostok@@@23@I@Z	EQUIVALENT	shared tail (reset RTs, viewport, pop_v/pop_p) placed before the else loop in retail; same paths
+?render_to_rms_smoothed2@stage_light_propagation_volumes@render@vostok@@AAEXABVfloat3@math@3@MABVfloat4x4@53@1V?$vector@Vfloat4x4@math@vostok@@@23@III@Z	EQUIVALENT	vector::erase called vs inlined; same geometry checks
+?render_trails@render_particle_emitter_instance@render@vostok@@QAEXABVfloat3@math@3@PAUbase_particle@particle@3@I@Z	EQUIVALENT	commutative add/mul order in trail vertex math
+?reset@backend@render@vostok@@QAEXXZ	EQUIVALENT	flush_rt_views inlined in retail
+?reset_renderer@world@engine@render@vostok@@QAEX_N@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?resize@res_render_output@render@vostok@@QAEX_NII0@Z	EQUIVALENT	schedule; log __LINE__ only (absolute line drift)
+?resize_render_output_window@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II_N@Z	EQUIVALENT	base body not emitted (no callers); source set_size(width,height,fullscreen,false) matches retail call
+?select_lod@static_render_model_instance@render@vostok@@IAEEABVfloat4x4@math@3@ABVfloat3@53@@Z	EQUIVALENT	regalloc+schedule; same arithmetic sequence
+?select_models@portal_sector_system@culling@render@vostok@@QAEXPAUspace_partitioning_tree@collision@4@ABVfloat3@math@4@ABVfloat4x4@84@AAV?$vector@PAUrender_surface_instance@render@vostok@@@34@@Z	EQUIVALENT	ICF _Destroy rep; plane distance adds reordered commutatively
+?select_volume_fog_instances@scene@render@vostok@@QAEXABVfloat4x4@math@3@AAV?$vector@Uvolume_fog_parameters@render@vostok@@@23@@Z	EQUIVALENT	schedule only
+?set@subuv_particle_sprite_vertex@render@vostok@@QAEXVfloat3@math@3@Vfloat4@53@Vfloat2@53@2MM021@Z	EQUIVALENT	identical after regalloc
+?set_children@grass_render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	same fallthrough switch over lods
+?set_children@render_model@render@vostok@@UAEXPAPAVrender_surface@23@EPAUmodel_lods_descriptor@23@@Z	EQUIVALENT	schedule only
+?set_default_values@options@render@vostok@@QAEXXZ	EQUIVALENT	immediate store vs register
+?set_model_material@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABVvirtual_path_string@fs_new@4@V?$resource_ptr@Vunmanaged_resource@resources@vostok@@Vunmanaged_intrusive_base@23@@64@@Z	EQUIVALENT	boost assign_to call vs inline; ICF reps
+?set_model_visible_by_id@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@II@Z	EQUIVALENT	log __LINE__ only (absolute line drift)
+?set_properties@decal_instance@render@vostok@@QAEXABUdecal_properties@23@@Z	EQUIVALENT	identical after regalloc
+?set_properties@environment_probe@render@vostok@@QAEXABUenvironment_probe_properties@23@@Z	EQUIVALENT	retail memsets the matrix before identity(); same result
+?set_size@render_output_window@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	base set_size constprop-specialised for force_resize=true (only caller passing false is unreferenced); retail generic guard matches source
+?set_size@res_render_output@render@vostok@@QAEXII_N_N@Z	EQUIVALENT	math::max inlined in retail (cmp/sbb select); GetSystemMetrics via register in base
+?set_target_context@renderer_context@render@vostok@@QAEXPBVrenderer_context_targets@23@_N@Z	EQUIVALENT	retail reads size from targets_context, base from the just-copied m_current_size (same values); per-iteration m_targets reload
+?set_texture@effect_compiler@render@vostok@@QAEAAV123@PBD0PAV?$intrusive_ptr@Vres_texture@render@vostok@@Vresource_intrusive_base@23@Vsingle_threading_policy@threading@3@@3@_NI@Z	EQUIVALENT	ICF fixed_string operator= rep; base partially inlines callee guard
+?set_texture@effect_compiler@render@vostok@@QAEAAV123@PBDPAVres_texture@23@_NI@Z	EQUIVALENT	base partially inlines the m_shaders_cache_mode guard into the caller; same guards
+?set_time@clouds@render@vostok@@QAEXM@Z	EQUIVALENT	ICF boost::function clear rep; compare operand from stack vs register
+?set_transform@speedtree_instance_impl@render@vostok@@QAEXABVfloat4x4@math@3@@Z	EQUIVALENT	identical after regalloc
+?set_vb_stream_1@backend@render@vostok@@QAEXPAVuntyped_buffer@23@II@Z	EQUIVALENT	constant via register vs immediate
+?setup_render_output_window@renderer@render@vostok@@QAEXV?$resource_ptr@Ubase_output_window@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABV?$rectangle@Vfloat2@math@vostok@@@math@3@@Z	EQUIVALENT	LTCG conv (stack args, ret 8 vs reg args, ret 4); stack slots shifted uniformly
+?show_movie@renderer@game@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene_view@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@V?$resource_ptr@Uflash_movie_resource@survarium@@Vunmanaged_intrusive_base@resources@vostok@@@64@@Z	EQUIVALENT	ICF boost::function ctor rep; stack alignment
+?smooth_transparency@cloud_simulation@render@vostok@@AAEXXZ	EQUIVALENT	retail reloads size members (alias) vs cached; same neighbour tests
+?sort_instances@grass_patch@render@vostok@@QAEXABVfloat3@math@3@@Z	EQUIVALENT	identical after regalloc
+?start@?$statistics_value@H@render@vostok@@UAEXXZ	EQUIVALENT	retail calls max(int,int) out of line; base inlines signed max
+?translate_query@grass_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	1.f/u32(count) for a u8 count: retail x87 unsigned convert, base cvtsi2ss (same value)
+?translate_query@scene_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail inlines query_create_resource (1-element request + query_create_resources)
+?translate_query@skeleton_combined_model_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
+?translate_query@skeleton_combined_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail inlines user_data_variant::set (destroy-old check on empty ud); ICF assign_to reps
+?translate_query@skeleton_combined_render_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	ICF assign_to reps
+?translate_query@static_model_instance_cook@render@vostok@@UAEXAAVquery_result_for_cook@resources@3@@Z	EQUIVALENT	retail zero-fills with a loop where base calls memset; ICF reps
+?try_accumulate_trample@grass_patch@render@vostok@@QAEXAAUtrample_desc@23@PAUgrass_world@23@PAVrenderer@23@PAVrenderer_context@23@@Z	EQUIVALENT	opposite inline choices (apply_pass/set_constant vs set_trample_parameters); LTCG conv
+?update_depth_stencil_buffer@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?update_grass_layer@grass_world@render@vostok@@QAEXPAUgrass_layer_desc@23@PAUgrass_layer_data@23@_N22@Z	FIXED	models_count was truncated to u8; retail +0x2a..+0x31 keeps the full size() (alloca edi*8, cmp movzx(i), edi)
+?update_light@scene@render@vostok@@QAEXIPAUlight_props@23@@Z	EQUIVALENT	retail inlines lights_db::update_light (lower_bound+fill_light); same lookup and call
+?update_light@world@engine@render@vostok@@QAEXABV?$resource_ptr@Ubase_scene@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@IPAUlight_props@34@@Z	EQUIVALENT	retail inlines lights_db::update_light
+?update_model_vertex_buffer@world@engine@render@vostok@@QAEXABV?$resource_ptr@Vrender_model_instance@render@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@4@ABV?$vectora@Ubuffer_fragment@render@vostok@@@4@@Z	EQUIVALENT	identical after regalloc
+?update_portals_visability@portal_sector_structure@culling@render@vostok@@QAEXABVfrustum@math@4@PBE@Z	EQUIVALENT	identical after regalloc
+?update_targets@res_render_output@render@vostok@@AAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
+?xform_calc@light@render@vostok@@QAEXXZ	EQUIVALENT	schedule only (trailing jump-table bytes differ)
+?z_only_pass@stage_gbuffer@render@vostok@@AAEXXZ	EQUIVALENT	ICF _Destroy reps
+`vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()	EQUIVALENT	LTCG register swap of this/arg; symmetric == on texture pointer
+`vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()	EQUIVALENT	identical after regalloc
+`vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()	EQUIVALENT	identical after regalloc
+vostok::render::construct<vostok::render::effect_options_descriptor,vostok::render::custom_config_value>	EQUIVALENT	load order only
+vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::colored_static_vertex,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`3'::colored_opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
+vostok::render::create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::static_vertex0,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex>	EQUIVALENT	vertex copy with pre- vs post-incremented pointers; same field mapping
+vostok::render::draw_text_shadowed	EQUIVALENT	inline-vs-call of color_rgba(0,0,0,1); LTCG conv for font arg
+vostok::render::fill_data<vostok::render::custom_config_value>	EQUIVALENT	identical after regalloc
+vostok::render::fill_data_crc_buffer<vostok::render::custom_config_value>	EQUIVALENT	identical after regalloc
+vostok::render::fill_source_vertices	EQUIVALENT	regalloc
+vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::colored_static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping (+0..+20, tangent/binormal 0)
+vostok::render::fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::static_vertex>	EQUIVALENT	retail iterates a hoisted out pointer, base reloads vector begin per store; same field mapping
+vostok::render::fill_static_lpv_vertex_color<`vostok::render::static_render_surface::fill_lpv_vertex_color'::`2'::colored_static_vertex>	EQUIVALENT	pointer-difference vs direct addressing in the copy loop; same interpolated_color args (dst+18h, dst+1Ch); zeros pushed from register
+vostok::render::fill_static_lpv_vertex_color<`vostok::render::static_render_surface::fill_lpv_vertex_color'::`2'::static_vertex0>	EQUIVALENT	same as the static_vertex instantiation: addressing only; zeros pushed from register
+vostok::render::get_gaussain_weights_offsets	EQUIVALENT	operand placement; same gaussian weights math
+vostok::render::get_stencil_mask	EQUIVALENT	base standalone copy is unreferenced and LTCG-specialised to the 6-bit vertex_input_type field (64-entry table); the inlined copy in compile has retail's vit-3>6 check
+vostok::render::interpolated_color<64>	EQUIVALENT	regalloc+schedule; same arithmetic sequence
+vostok::render::on_fs_iterator_materials_ready	EQUIVALENT	log __LINE__ only (absolute line drift)
+vostok::render::on_fs_iterator_materials_ready_children	EQUIVALENT	file_type_pointer bool inlined in retail; separate vs shared path buffers on stack
+vostok::render::on_material_loaded	EQUIVALENT	log __LINE__ only (absolute line drift)
+vostok::render::parse_resolution	EQUIVALENT	atoi import thunk name
+vostok::render::query_materials_and_wait	FIXED	FREE order was ptrs,variants,requests; retail +0x212..+0x24a frees requests (esi), variants ([esp+2Ch]), ptrs ([esp+10h])
+vostok::render::read_diffuse_colors<64>	EQUIVALENT	regalloc+schedule; same arithmetic sequence
+vostok::render::screen_factor	EQUIVALENT	regalloc+schedule; same ((dz2+dy2)+dx2) sum, max/clamp with identical NaN outcome
+vostok::render::speedtree_subsurface_name_to_vertex_input_type	EQUIVALENT	branch layout; any name match returns 0x10 else 0

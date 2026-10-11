@@ -520,7 +520,7 @@ void grass_world::update_grass_layer(
 {
 	if ( is_set )
 	{
-		u8 const models_count = (u8)desc->models_list.size( );
+		u32 const models_count = desc->models_list.size( );
 		buffer_vector<resources::request> r( ALLOCA( sizeof( resources::request ) * models_count ), models_count );
 		r.resize( models_count );
 		for ( u8 i = 0; i < models_count; ++i )

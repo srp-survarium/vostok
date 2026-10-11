@@ -345,13 +345,13 @@ void weapon::on_hide( )
 // claude@NOTE: structure matched (8 stmts, 0 named locals). Capped by inline-vs-call: the target
 // INLINES inventory::item_in_slot (direct m_slots[slot].item access) and the inventory_item_ptr
 // addref/release, but item_in_slot is parked out-of-line (STATE[STUB] in inventory.h, LTCG custom
-// convention) so our base CALLs it + the resource_ptr copy-ctor. Also the set_ammo_in_magazine arg
-// is register-passed (16-bit add) target-side vs our push. Both are cross-unit LTCG walls.
+// convention) so our base CALLs it + the resource_ptr copy-ctor. Cross-unit LTCG wall.
+// The magazine count is summed in 16 bits, as retail does (add ax,[47A]).
 void weapon::set_ui_ammo( bool update_total_count )
 {
 	if ( m_game_ui && m_inventory )
 	{
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 
 		if ( update_total_count )
 		{
@@ -378,19 +378,19 @@ void weapon::on_reload( )
 	set_ui_ammo( true );
 }
 
-// claude@NOTE: structure correct. Target records 0 line records (ICF-folded COMDAT) and tail-jmps
-// set_ammo_in_magazine with a 16-bit `add ax,[47A]` register-arg; our base does the 32-bit add +
-// push/call/ret (no tail-call). LTCG call-convention cap, not source-steerable.
+// Retail sums the chambered round and the magazine count in 16 bits (add ax,[47A]);
+// the u16 cast reproduces it. Target records no line records here (ICF-folded COMDAT).
+//
 void weapon::on_chamber_a_round( )
 {
 	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 void weapon::on_unload_chambered_round( )
 {
 	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+		m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 // claude@NOTE: show_crosshair/hide_crosshair structure correct (the if-guard + the inner call).
@@ -419,9 +419,9 @@ void weapon::on_before_fire( )
 }
 
 // claude@NOTE: the 2nd guard is ONE statement target-side (if+body on one line); split
-// across two lines it emitted a spurious BASE_ONLY body row (4/5). Residual is the same
-// set_ammo_in_magazine LTCG register-arg / tail-jmp wall as on_chamber_a_round (16-bit
-// `add ax,[47A]` + tail-call vs our 32-bit add + push/call); not source-steerable.
+// across two lines it emitted a spurious BASE_ONLY body row (4/5). The magazine sum is
+// 16-bit as in on_chamber_a_round.
+//
 void weapon::on_after_fire( )
 {
 	if ( m_game_ui )
@@ -429,7 +429,7 @@ void weapon::on_after_fire( )
 
 	play_weapon_fire_pfx( );
 
-	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( u16 )( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine ) );
 }
 
 // claude@NOTE: structure correct - both sides emit 9 statements (the ledger's SPLIT class is a

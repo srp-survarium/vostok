@@ -838,19 +838,19 @@ bool n_ary_tree::dispatch_callbacks(
 			float const animation_length	= pinned_animation->length_in_frames( );
 
 			float const lower_time			=
-				animation_time < channel.knot( knot_lower_id ) ?
-				channel.knot( knot_lower_id ) - animation_length :
-				channel.knot( knot_lower_id );
+				animation_time >= channel.knot( knot_lower_id ) ?
+				channel.knot( knot_lower_id ) :
+				channel.knot( knot_lower_id ) - animation_length;
 			float const upper_time			=
-				channel.knot( knot_upper_id ) < animation_time ?
-				channel.knot( knot_upper_id ) + animation_length :
-				channel.knot( knot_upper_id );
+				channel.knot( knot_upper_id ) >= animation_time ?
+				channel.knot( knot_upper_id ) :
+				channel.knot( knot_upper_id ) + animation_length;
 
 			float const clamped_time		= math::min( animation_time, upper_time );
 			u32 const domain_id			=
-				clamped_time - lower_time <= upper_time - clamped_time ?
-				knot_lower_id :
-				knot_upper_id;
+				clamped_time - lower_time > upper_time - clamped_time ?
+				knot_upper_id :
+				knot_lower_id;
 			u8 domain_data				= channel.domain( domain_id ).data;
 
 			for ( animation_callback* callback = subscribed_channel->first_callback; callback; callback = callback->next )

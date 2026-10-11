@@ -247,7 +247,7 @@ void stage_clouds::execute( )
 		math::create_scale(
 			float3(
 				60000.0f * options::ref( ).current.m_clouds_scale,
-				interp_key.layer_height * 1000.0f * options::ref( ).current.m_clouds_scale,
+				( interp_key.layer_height * 1000.0f ) * options::ref( ).current.m_clouds_scale,
 				60000.0f * options::ref( ).current.m_clouds_scale
 			)
 		) * math::create_translation(
@@ -265,7 +265,7 @@ void stage_clouds::execute( )
 		math::create_scale(
 			float3(
 				60000.0f * options::ref( ).current.m_clouds_scale,
-				math::max( 0.01f, interp_key.cloud_base * 2.0f ) *
+				math::max( interp_key.cloud_base * 2.0f, 0.01f ) *
 					options::ref( ).current.m_clouds_scale,
 				60000.0f * options::ref( ).current.m_clouds_scale
 			)
@@ -316,9 +316,9 @@ void stage_clouds::execute( )
 		float const wind_dot_view_direction = m_wind_direction | view_dir_2d2;
 		if ( math::abs( wind_dot_view_direction ) > 0.0f )
 		{
-			m_camera_offset += math::sign( wind_dot_view_direction ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( wind_dot_view_direction ) * m_clouds_scale_multiplier;
+			m_camera_offset += math::sign( wind_dot_view_direction ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( wind_dot_view_direction ) * interp_key.wind_speed;
 		}
-		m_wind_offset += m_wind_direction * ( m_clouds_scale_multiplier * 0.0125f ) * m_clouds_scale_multiplier;
+		m_wind_offset += m_wind_direction * ( interp_key.wind_speed * 0.0125f ) * m_clouds_scale_multiplier;
 	}
 
 	if ( m_camera_offset >= 1.0f )
@@ -363,7 +363,7 @@ void stage_clouds::execute( )
 
 		);
 		{
-			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
+			float scale = static_cast<float>( i ) * m_clouds_scale_multiplier - m_camera_offset * m_clouds_scale_multiplier;
 			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
 			m_clouds_effect->apply( 0, 0 );
 			m_context->set_w( world_matrix );
@@ -386,7 +386,7 @@ void stage_clouds::execute( )
 		if ( options::ref( ).current.m_use_god_rays )
 		{
 
-			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
+			float scale = static_cast<float>( i ) * m_clouds_scale_multiplier - m_camera_offset * m_clouds_scale_multiplier;
 
 			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
 			m_god_rays_effect->apply( 0, 0 );

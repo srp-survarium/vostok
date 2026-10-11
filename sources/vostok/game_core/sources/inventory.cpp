@@ -173,7 +173,7 @@ void inventory::setup_from_profile( player_profile& profile, items_dictionary co
 			inventory_item_ptr& iitem = item_in_slot( current );
 			if ( iitem )
 			{
-				if ( dict.item_by_id( current ).is_stack )
+				if ( dict.item_by_id( slot->item.dict_id ).is_stack )
 				{
 					const u32 amount = math::min( slot->item.condition_or_stack, slot->item.amount_in_inventory );
 					iitem->set_amount( amount );

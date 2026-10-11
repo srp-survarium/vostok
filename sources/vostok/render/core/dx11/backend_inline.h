@@ -75,7 +75,7 @@ inline void backend::set_ib( untyped_buffer* buffer, u32 offset )
 inline void backend::set_vs( res_vs_hw* shader )
 {
 	m_dirty_objects.vertex_shader |= m_vs != shader;
-	if ( m_vs != shader )
+	if ( m_dirty_objects.vertex_shader )
 		++num_vs_changes;
 	m_vs = shader;
 	m_input_layout = m_dirty_objects.vertex_shader ? 0 : m_input_layout;
@@ -85,7 +85,7 @@ inline void backend::set_vs( res_vs_hw* shader )
 inline void backend::set_ps( res_ps_hw* shader )
 {
 	m_dirty_objects.pixel_shader |= m_ps != shader;
-	if ( m_ps != shader )
+	if ( m_dirty_objects.pixel_shader )
 		++num_ps_changes;
 	m_ps = shader;
 }

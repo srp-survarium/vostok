@@ -89,8 +89,7 @@ void login_menu::on_resources_ready( resources::queries_result& data )
 	show_movie( m_login_menu_ui );
 	show_movie( m_cursor_ui );
 
-	// The target bypasses flash_movie's deliberately-NoScale wrapper here.
-	m_login_menu_ui->movie->m_movie->SetViewScaleMode( Scaleform::GFx::Movie::SM_ExactFit );
+	m_login_menu_ui->movie->ForceCollectGarbage( );
 
 	fill_labels( );
 

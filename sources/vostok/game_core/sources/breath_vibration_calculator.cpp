@@ -11,7 +11,7 @@
 namespace survarium {
 
 static bool s_enable_breath_vibration_value = true;
-static console_commands::cc_bool s_enable_breath_vibration_cc( "breath_vibration_enable", s_enable_breath_vibration_value, true, console_commands::command_type_user_specific );
+static console_commands::cc_bool s_enable_breath_vibration_cc( "breath_vibration_enable", s_enable_breath_vibration_value, true, console_commands::command_type_engine_internal );
 breath_vibration_calculator::breath_vibration_calculator( )
 	:	m_user						( 0 ),
 		m_params					( 0 ),

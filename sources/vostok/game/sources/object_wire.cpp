@@ -116,6 +116,7 @@ void object_wire::load(
 	else
 	{
 		LOG_WARNING( "empty wire" );
+		cb( *this );
 	}
 }
 

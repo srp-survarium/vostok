@@ -57,11 +57,11 @@ void reset_physics_profiler( pcstr __formal )
 }
 
 static console_commands::cc_delegate s_dump_statistics (
-	"dump_physics_profiler", &dump_physics_profiler, false
+	"dump_physics_profiler", &dump_physics_profiler, false, console_commands::command_type_engine_internal
 );
 
 static console_commands::cc_delegate s_reset_statistics (
-	"reset_physics_profiler", &reset_physics_profiler, false
+	"reset_physics_profiler", &reset_physics_profiler, false, console_commands::command_type_engine_internal
 );
 
 
@@ -597,7 +597,7 @@ static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape
 		case SPHERE_SHAPE_PROXYTYPE:
 		{
 			btSphereShape const* bt_shape = static_cast< btSphereShape const* >( bullet_shape );
-			float3 radius( bt_shape->getRadius( ), bt_shape->getRadius( ), 0.0f );
+			float3 radius( bt_shape->getRadius( ), 0.0f, 0.0f );
 			return radius;
 		}
 		case CYLINDER_SHAPE_PROXYTYPE:
@@ -675,7 +675,7 @@ bool bullet_physics_world::adjust_foot_transform(
 
 	if ( callback.hasHit( ) )
 	{
-		if ( math::abs( callback.m_closestHitFraction ) >= math::epsilon_5 )
+		if ( !math::is_zero( callback.m_closestHitFraction ) )
 		{
 			btVector3 result;
 			result.setInterpolate3( btStart, btEnd, callback.m_closestHitFraction );
@@ -684,7 +684,7 @@ bool bullet_physics_world::adjust_foot_transform(
 			{ // collision normal and the object�s forward direction
 				float3 normal = from_bullet( callback.m_hitNormalWorld );
 				const float angle = math::acos( math::clamp_r( normal.dot_product( -transform.k.xyz( ) ), -1.0f, 1.0f ) ) * rotation_koef0;
-				if ( math::abs( angle ) >= math::epsilon_5 )
+				if ( !math::is_zero( angle ) )
 				{
 					float3 const rotation_axis = math::normalize( normal ^ -transform.k.xyz( ) );
 					transform = math::mul4x3( transform, math::create_rotation( rotation_axis, angle ) );
@@ -704,7 +704,7 @@ void bullet_physics_world::notify_about_contact( )
 		btPersistentManifold* manifold = m_dispatcher->getManifoldByIndexInternal( i );
 		for ( s32 j = 0 ; j < manifold->getNumContacts( ) ; ++j )
 		{
-			if ( 0.0f <= manifold->getContactPoint( j ).m_distance1 )
+			if ( !( manifold->getContactPoint( j ).m_distance1 < 0.0f ) )
 				continue;
 
 			base_physics_object* base_obj_a = static_cast< base_physics_object* >(

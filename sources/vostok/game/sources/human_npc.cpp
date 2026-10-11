@@ -593,12 +593,12 @@ void human_npc::up_to_terrain( )
 	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 10.f, 0x20, 2 );
 
 	if ( result.object )
-		m_feet_target			= result.hit_point_world;
+		m_feet_target			= float3( position.x, result.hit_point_world.y, position.z );
 
 	if ( m_feet_target != position )
 	{
 		float3 const offset		= m_feet_target - position;
-		float const factor		= math::min( m_game_world.get_game().last_frame_time() / ( length( offset ) / m_feet_adjustment_speed ), 1.f );
+		float const factor		= math::min( 1.f, m_game_world.get_game().last_frame_time() / ( length( offset ) / m_feet_adjustment_speed ) );
 		set_translation			( create_translation( position + offset * factor ) );
 	}
 }

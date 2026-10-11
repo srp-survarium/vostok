@@ -94,7 +94,7 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		float const* const knots_end	= time_direction == 1 ? (channel.knots() + knots_count) : (channel.knots() - 1);
 		for ( ; current_knot != knots_end; current_knot += time_direction ) {
 			float const current_knot_time	= (*current_knot) / default_fps;
-			float knot_time				= animation_length <= current_knot_time ? current_knot_time - animation_length : current_knot_time;
+			float knot_time				= current_knot_time < animation_length ? current_knot_time : current_knot_time - animation_length;
 
 			knot_time					-= interval.start_time();
 			if ( knot_time < 0.f ) {

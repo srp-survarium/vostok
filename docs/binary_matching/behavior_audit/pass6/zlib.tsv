@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+_zcalloc	EQUIVALENT	confirms pass 5: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions
+_zcfree	EQUIVALENT	confirms pass 5: only identical-code-folding/import-alias call names and __LINE__ pushes differ; same call count, argument constants, ops and FP expressions

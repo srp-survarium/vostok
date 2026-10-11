@@ -1,0 +1,3 @@
+mangled	verdict	evidence
+_zcalloc	EQUIVALENT	direct malloc vs import thunk (CRT import alias)
+_zcfree	EQUIVALENT	direct free vs import thunk (CRT import alias)

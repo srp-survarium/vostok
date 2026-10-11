@@ -478,8 +478,8 @@ renderer::renderer( renderer_context* renderer_context ) :
 renderer::~renderer( )
 {
 
-	DELETE					( m_frame_sync_event );
 	DELETE					( m_timing_event );
+	DELETE					( m_frame_sync_event );
 
 	for ( std::reverse_iterator< stage** > it = m_stages.rbegin( ), e = m_stages.rend( ); it != e; ++it )
 		DELETE				( *it );
@@ -1093,7 +1093,7 @@ void renderer::render(
 			backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
 			backend::ref( ).flush( );
 
-			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.begin( ), movies_vec.size( ), text_manager );
+			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.empty( ) ? 0 : &movies_vec[0], movies_vec.size( ), text_manager );
 		}
 		backend::ref( ).flush_rt_shader_resources( );
 		scene->flush			( on_draw_scene, false, true );
@@ -1124,7 +1124,7 @@ void renderer::render(
 		frame_histogram_info* const info = NEW( frame_histogram_info );
 		info->time				= math::clamp_r( 1000.f / math::max( float( statistics::ref( ).general_stat_group.fps.value ), 1.f ), 0.f, 1000.f );
 		info->mem				= 0.f;
-		info->dips				= math::max( statistics::ref( ).visibility_stat_group.num_draw_calls.value, 1 );
+		info->dips				= math::max( u32( statistics::ref( ).visibility_stat_group.num_draw_calls.value ), 1u );
 		m_fps_history.push_back	( info );
 	}
 
@@ -1239,7 +1239,7 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 		math::color( math::color_rgba( 1.f, 1.f, 1.f, 1.f ) )
 	};
 	const float lum_diffuse					= m_debug_readed_data[0].x * 0.2125f + m_debug_readed_data[0].y * 0.7154f + m_debug_readed_data[0].z * 0.0721f;
-	const float lum_final					= m_debug_readed_data[1].x * 0.2125f + m_debug_readed_data[1].y * 0.7154f + m_debug_readed_data[1].z * 0.0721f;
+	const float lum_final					= ( m_debug_readed_data[1].z * 0.0721f + m_debug_readed_data[1].y * 0.7154f ) + m_debug_readed_data[1].x * 0.2125f;
 
 	strings[0].assignf						( "r: %f", m_debug_readed_data[0].x );
 	strings[1].assignf						( "g: %f", m_debug_readed_data[0].y );
@@ -1292,7 +1292,7 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 
 		const u32 char_color				= string_index & 1 ?
 			math::color_rgba( 0.75f, 1.f, 0.75f, 1.f ) :
-			math::color_rgba( 0.5f, 0.75f, 1.f, 1.f );
+			math::color_rgba( 1.f, 0.75f, 0.5f, 1.f );
 
 		draw_text_shadowed	( default_font, render_stage_names[stage_index], 5, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_gpu_time.c_str( ), 201, string_index * 12 + 5, char_color );

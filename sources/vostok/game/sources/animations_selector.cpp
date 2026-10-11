@@ -39,7 +39,7 @@ namespace survarium {
 		boost::bind( &animations_selector::on_animation_interval_end, this, _1 ),
 		NULL,
 		resources::managed_resource_ptr( ),
-		this
+		NULL
 	);
 }
 
