@@ -29,7 +29,10 @@ The short answers:
 * **The whole-engine LTCG relink takes 1 min 50 s** (wall clock, replaying the
   real link command over main's libraries). Compilation, not LTCG codegen, is
   what makes builds slow. A single-TU loop with real LTCG (recompile, relink,
-  diff one unit) gives exact retail semantics in about 2.5 minutes.
+  diff one unit) gives exact retail semantics in about 2.5 minutes. Until ninja
+  tracks the computed header includes, every measured build recompiles all
+  ~2,500 sources (~27 min). With header dependencies tracked, a small change
+  costs its dependents' recompile plus the ~2 min link plus measurement.
 
 Toolchain: `cl` 15.00.30729.01 (VS2008 SP1) and `link` 9.00, from the repo
 flake (`nix develop` in a worktree, `VOSTOK_DIR` = that worktree, isolated
@@ -198,6 +201,18 @@ documented in `link-layout.md`). Under LTCG a call site inlines that function
 **only if the caller and the kept copy share an optimisation class** ({`/Od`,
 no-`/Og`} versus `/Og`). Otherwise the caller calls the kept copy out of line,
 with the kept copy's convention.
+
+**Why this is LTCG although the body is in a header.** Without `/GL`, every TU
+compiles its own copy of the header inline and inlines it locally, so the
+barrier never appears (the "without `/GL`" row below). With `/GL`, `cl` emits
+IL instead of code, including one IL copy of each header inline per TU. The
+linker folds those copies into the single kept copy, which keeps the
+optimisation flags of the TU it came from, and only then generates code and
+decides inlining against it. A header inline therefore goes through the same
+link-time code generation as any out-of-line function. The engine mixes
+`/Od`-class modules (game_core, network_core, ai, fs, vfs, network, debug,
+particle) with `/Ox` modules, so header inlines shared between them cross the
+barrier constantly.
 
 **Measured** (`gen/owner_matrix.sh`). The caller is `/Od`, `/Ot` (no `/Og`) or
 `/Ox`. The kept owner is chosen by link order. A cell shows the out-of-line
