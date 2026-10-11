@@ -1,2 +1,0 @@
-mangled	verdict	evidence
-?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	confirms pass 1: differs only when a compound shape has no dynamic AABB tree (retail +0x15c1 skips, base loops children); retail Bullet variant of the branch not reconstructed

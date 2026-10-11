@@ -1,6 +1,0 @@
-mangled	verdict	evidence
-??0ui_progress_bar@ui@vostok@@QAE@AAVui_world@12@@Z	EQUIVALENT	confirms pass 5: retail inlines fixed_string<32> ctor (+68/+6C begin, +70 end, +74 buf); same per-field stores, LTCG this/world registers
-?copy_to_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	confirms pass 5: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
-?cut_to_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	confirms pass 5: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
-?paste_from_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	confirms pass 5: __LINE__ only (every differing instruction is a pushed line number beside the function/file strings)
-?set_text@ui_progress_bar@ui@vostok@@UAEXPBD@Z	EQUIVALENT	confirms pass 5: retail inlines fixed_string<32>::operator= (self-check, clear, append tail-call); base tail-calls it

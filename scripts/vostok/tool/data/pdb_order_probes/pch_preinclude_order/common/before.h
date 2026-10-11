@@ -1,7 +1,0 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-#pragma once
-
-struct before_preinclude_type
-{
-	int member;
-};

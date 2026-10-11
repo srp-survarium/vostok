@@ -1,2 +1,0 @@
-mangled	verdict	evidence
-?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	compound shape without dbvt: retail +0x15bf je skips the child loop; matching it needs the else branch removed (worker fix used a dead duplicate isCompound test, not integrated); never triggers: every compound has a dbvt

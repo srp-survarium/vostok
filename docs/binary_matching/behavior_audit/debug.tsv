@@ -1,5 +1,0 @@
-mangled	verdict	evidence
-?on_error@debug@vostok@@YAXPA_NW4process_error_enum@2@0W4assert_enum@2@PBD333I3ZZ	EQUIVALENT	stack frame size only (0x1004 vs 0x1008)
-?on_error@platform@debug@vostok@@YAXPA_NQADI0PAU_EXCEPTION_POINTERS@@W4error_type_enum@123@@Z	EQUIVALENT	base inlines boost::function assign; ICF reps; CRT import aliases; same non-boost call sequence
-?set_support_email@debug@vostok@@YAXPBD@Z	EQUIVALENT	strcpy_s<64> template vs CRT _strcpy_s with 0x40 (same call)
-save_minidump	EQUIVALENT	strcat_s<260> template vs CRT _strcat_s with 0x104; CRT import alias

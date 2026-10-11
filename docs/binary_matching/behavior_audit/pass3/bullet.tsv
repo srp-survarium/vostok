@@ -1,2 +1,0 @@
-mangled	verdict	evidence
-?objectQuerySingle@btCollisionWorld@@SAXPBVbtConvexShape@@ABVbtTransform@@1PAVbtCollisionObject@@PBVbtCollisionShape@@1AAUConvexResultCallback@1@M@Z	OPEN	retail +0x15bf cmp esi,edi;je .24 skips to the profile dtor when getDynamicAabbTree() is NULL, base loops children; retail never constructs LocalInfoAdder 57 (vtable 0x9484f0 unreferenced); all vostok

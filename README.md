@@ -1,9 +1,9 @@
-<!-- no-score -->
 # vostok - offline
 
 Survarium (v0.100b) playable offline, without servers or an account. This branch is
 [`v0.10b`](https://github.com/srp-survarium/vostok/tree/v0.10b) - the decompiled
-Vostok Engine - plus the changes below; build it the same way.
+Vostok Engine - plus the changes below, without the binary-matching tooling
+(ledger, objdiff, PDB evidence, matching docs), which lives on `v0.10b`.
 
 ## Changes on top of v0.10b
 
@@ -29,6 +29,6 @@ Vostok Engine - plus the changes below; build it the same way.
 
 ```sh
 nix develop
-python3 -m vostok build --code-only
+python3 -m vostok build
 scripts/release/make-release.sh --resources-db <resources.db> --out <dir>
 ```

@@ -10,16 +10,13 @@ in binaries/ninja/ can build the project. Steps:
   2. Initialise the Wine prefix
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
-  5. Generate the target-side diff inputs once (function, structure, rich, data)
-     from the original game - these don't change between recompiles.
 
-Does not run ninja itself. Steps 1-4 short-circuit if every input still hashes to
-the previously recorded fingerprint AND all expected outputs exist; step 5 is
-independently idempotent (skips whatever target output already exists).
+Does not run ninja itself. The steps short-circuit if every input still hashes to
+the previously recorded fingerprint AND all expected outputs exist.
 
 The fingerprint tracks the toolchain paths and the .sln, not the individual
 .vcproj files - so after editing a .vcproj, re-run with `--force ninja` to
-regenerate the build graph. `--force {libs,wine,registry,ninja,target,all}`
+regenerate the build graph. `--force {libs,wine,registry,ninja,all}`
 re-runs the named stage(s) regardless of the fingerprint.
 
 Run from inside `nix develop` after all Nix packages are built:
@@ -48,9 +45,7 @@ from pathlib import Path
 
 from vostok.build import native_crt, ninja_regen
 from vostok.core import paths
-from vostok.core.paths import (DATA_TARGET_ACCESS, DATA_TARGET_INDEX,
-                               DATA_TARGET_RELOCS, OBJDIFF_DIR, PREBUILT,
-                               PDB_DIR, SETUP_STAMP, STRUCTURE_DIR, WINEPREFIX)
+from vostok.core.paths import PREBUILT, SETUP_STAMP, WINEPREFIX
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
@@ -61,7 +56,7 @@ from vostok.core import log as _log
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
 # the fingerprint says setup is already complete.
-STAGES = ("libs", "wine", "registry", "ninja", "target")
+STAGES = ("libs", "wine", "registry", "ninja")
 
 
 log = logger("setup")
@@ -154,51 +149,6 @@ def compute_fingerprint(
         f"sln_size={sln_stat.st_size}",
     ]
     return "\n".join(lines) + "\n"
-
-
-def _nonempty_dir(p: Path) -> bool:
-    return p.is_dir() and any(p.iterdir())
-
-
-def ensure_target_side(force: bool = False) -> None:
-    """Generate the target-side diff inputs (the original game never changes):
-    binaries/objdiff/target (COFF), binaries/structure/target (vostok-pdb stubs),
-    binaries/pdb/target (the vostok-pdb evidence database), and the
-    independent PDB/image data inventory under binaries/gen/.
-
-    Idempotent - skips whichever output already exists (unless `force`), so this is
-    cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
-    doesn't go unnoticed.
-    """
-    from vostok.build import generate_delink, generate_pdb, generate_structure
-
-    objdiff_target   = OBJDIFF_DIR / "target"
-    structure_target = STRUCTURE_DIR / "target"
-    rich_target      = PDB_DIR / "target"
-    if (
-        not force
-        and _nonempty_dir(objdiff_target)
-        and _nonempty_dir(structure_target)
-        and _nonempty_dir(rich_target)
-        and DATA_TARGET_INDEX.is_file()
-        and DATA_TARGET_ACCESS.is_file()
-        and DATA_TARGET_RELOCS.is_file()
-    ):
-        return  # already generated
-
-    log("Generating target diff inputs (original game COFF + structure + PDB evidence) ...")
-    try:
-        if force or not _nonempty_dir(objdiff_target):
-            generate_delink.generate("target", reports=False)
-        if force or not _nonempty_dir(structure_target):
-            generate_structure.generate("target")
-        if force or not _nonempty_dir(rich_target):
-            generate_pdb.generate("target")
-        from vostok.data import pipeline as data_pipeline
-        data_pipeline.init_target(force=force)
-    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as e:
-        die(f"could not generate target diff inputs: {e}")
-    log("Target diff inputs ready.")
 
 
 def copy_libs(libs_dir: Path) -> None:
@@ -365,7 +315,6 @@ def setup(force: set[str]) -> None:
         log("Wine/ninja setup already complete.")
         ensure_retail_source_root(wineprefix)
         ensure_compdb()
-        ensure_target_side()
         return
     if setup_current:
         log(f"Setup is current; forcing stage(s): {', '.join(sorted(force))}")
@@ -385,8 +334,6 @@ def setup(force: set[str]) -> None:
     # Record the fingerprint so the next plain run short-circuits.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)
     SETUP_STAMP.write_text(fingerprint)
-
-    ensure_target_side(force="target" in force)
 
     if not setup_current:
         log("")

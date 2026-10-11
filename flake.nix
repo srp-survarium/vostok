@@ -15,35 +15,13 @@
       url = "github:srp-survarium/vcproj2ninja";
       flake = false;
     };
-    vostok-delinker-src = {
-      # The measured code-project delinker. Keep this immutable: changing its
-      # relocation materialization changes the established function ledger.
-      url = "github:srp-survarium/vostok-delinker/d7e9292c5d6ddc07bd62894b2bc49334ed1c7321";
-      flake = false;
-    };
-    vostok-data-delinker-src = {
-      # Gruntz's reviewed data-topology base. It writes a separate objdiff
-      # project and therefore cannot perturb the code/MAX ledger.
-      url = "github:srp-survarium/vostok-delinker/25719787a8b3d2dd5d461a6af3af837c45353079";
-      flake = false;
-    };
-    objdiff-src = {
-      url = "github:encounter/objdiff/v3.7.3";
-      flake = false;
-    };
     vostok-resources-db-src = {
       url = "github:srp-survarium/vostok-resources-db";
       flake = false;
     };
-    bullet-2_79-src = {
-      # The first official 2.79 revision. Multiple stock target-PDB MD5s land
-      # exactly on this commit after the repository's LF -> CRLF conversion.
-      url = "github:bulletphysics/bullet3/ce62d7615ecb1faa876d11172c418244c7246b5c";
-      flake = false;
-    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vcproj2ninja-src, vostok-delinker-src, vostok-data-delinker-src, objdiff-src, vostok-resources-db-src, bullet-2_79-src }:
+  outputs = { self, nixpkgs, rust-overlay, vcproj2ninja-src, vostok-resources-db-src }:
     let
       system = "x86_64-linux";
 
@@ -52,8 +30,8 @@
         overlays = [ rust-overlay.overlays.default ];
       };
 
-      # Nightly Rust toolchain for all Rust tools.
-      # Includes the Windows GNU target for cross-compiling vcproj2ninja.exe.
+      # Nightly Rust toolchain for the Rust tools below (vcproj2ninja,
+      # vostok-resources-db). Includes the Windows GNU target for vcproj2ninja.exe.
       rust = pkgs.rust-bin.nightly.latest.default.override {
         extensions = [ "rust-src" "rustfmt" "clippy" ];
         targets = [ "x86_64-pc-windows-gnu" ];
@@ -66,52 +44,6 @@
       };
 
       mingw = pkgs.pkgsCross.mingwW64;
-
-      # ---------------------------------------------------------------------------
-      # Unified in-repo PDB/PE/source evidence engine.
-      # ---------------------------------------------------------------------------
-      vostok-pdb = nightly-rustPlatform.buildRustPackage {
-        pname = "vostok-pdb";
-        version = "0.1.0";
-        src = ./tools/vostok-pdb;
-        cargoHash = "sha256-AoIYYQaXoQWTz29FjTxTaNAvPSe0lQIKP68oFa2U3vs=";
-        nativeBuildInputs = [ pkgs.makeWrapper ];
-        postInstall = ''
-          wrapProgram "$out/bin/vostok-pdb" \
-            --set LIBCLANG_PATH "${pkgs.llvmPackages.libclang.lib}/lib"
-        '';
-      };
-
-      # ---------------------------------------------------------------------------
-      # vostok-delinker - Linux binary, splits an EXE into per-unit COFF .obj files
-      # for objdiff. Run natively (no Wine): vostok-delinker --pdb-path ... --exe-path ...
-      #
-      # cargoHash: update by running `nix build .#vostok-delinker` after bumping
-      # the input (nix flake update vostok-delinker-src) - Nix reports the new hash.
-      # ---------------------------------------------------------------------------
-      vostok-delinker = nightly-rustPlatform.buildRustPackage {
-        pname = "vostok-delinker";
-        version = "0.1.0";
-        src = vostok-delinker-src;
-        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
-      };
-
-      # Data topology deliberately uses its own binary and output tree. The
-      # newer relocation/data model is evidence for data matching, never a
-      # migration of the already-measured code matcher.
-      vostok-data-delinker = nightly-rustPlatform.buildRustPackage {
-        pname = "vostok-data-delinker";
-        version = "0.1.0";
-        src = vostok-data-delinker-src;
-        patches = [ ./tools/vostok-data-delinker-declared-extent-resolution.patch ];
-        # The data lane needs the identities and type-derived extents that the
-        # delinker already reads from the PDB.  Exporting them is opt-in and
-        # exits before normal COFF emission, so function pairing is unchanged.
-        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
-        postInstall = ''
-          mv $out/bin/vostok-delinker $out/bin/vostok-data-delinker
-        '';
-      };
 
       # ---------------------------------------------------------------------------
       # vostok-resources-db - Linux binary, packs/unpacks the engine's resources.db
@@ -181,7 +113,7 @@
 
       # ---------------------------------------------------------------------------
       # vostok-toolchain - VS2008 SP1 + WinSDK 6.0A + DXSDK Jun2010 + ninja.exe.
-      # Produced by: nix-shell scripts/create-toolchain-release.nix  (reproducible -
+      # Produced on v0.10b by: nix-shell scripts/create-toolchain-release.nix  (reproducible -
       # a fresh rebuild yields a byte-identical tarball).
       # Uploaded to: gh release upload v0.100b binaries/vostok-toolchain-v0.100b.tar.xz \
       #                --repo srp-survarium/vostok --clobber
@@ -200,41 +132,12 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # dxsdk-shader-compiler - fxc.exe + D3DCompiler_43.dll from the June 2010
-      # DirectX SDK. The shipped shader blobs in resources.db carry the RDEF
-      # creator string "Microsoft (R) HLSL Shader Compiler 9.29.952.3111", which
-      # is exactly this SDK's compiler; the toolchain tarball carries only the
-      # SDK's Include/Lib. Run under Wine. Used by the shader roundtrip harness.
-      # ---------------------------------------------------------------------------
-      dxsdk-shader-compiler = pkgs.runCommand "dxsdk-shader-compiler" {
-        src = pkgs.fetchurl {
-          name = "DXSDK_Jun10.exe";
-          url = "https://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe";
-          hash = "sha256-cFJx3IO/7lTZuU4ChCbiiNXwcHhLdEbRZPSOz7sqAss=";
-        };
-        nativeBuildInputs = [ pkgs.cabextract ];
-      } ''
-        set -euo pipefail
-        # The installer's payload is one embedded cabinet; cabextract scans for
-        # it. The compiler DLL sits in a nested redist cab whose member carries
-        # an FL_-mangled name.
-        cabextract -q -F 'DXSDK/Utilities/bin/x86/fxc.exe' -d extract "$src"
-        cabextract -q -F 'DXSDK/Redist/Jun2010_D3DCompiler_43_x86.cab' -d extract "$src"
-        cabextract -q -d cabout "extract/DXSDK/Redist/Jun2010_D3DCompiler_43_x86.cab"
-        dll=$(find cabout -iname '*D3DCompiler_43*' -type f | head -1)
-        test -n "$dll"
-        mkdir -p "$out/bin"
-        cp "extract/DXSDK/Utilities/bin/x86/fxc.exe" "$out/bin/fxc.exe"
-        cp "$dll" "$out/bin/D3DCompiler_43.dll"
-      '';
-
-      # ---------------------------------------------------------------------------
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
       # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-pc-only.zip --repo srp-survarium/vostok
       # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
-      # (built per the shipped PDB recipe; see docs + vostok/build/gfx.py).
+      # (built per the shipped PDB recipe; see vostok/build/gfx.py on v0.10b).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         # PC-only package: console SDKs and console library builds removed.
@@ -296,45 +199,6 @@
       '';
 
       # ---------------------------------------------------------------------------
-      # Scaleform GFx 4.2.22 SDK - source from the DuckTales Remastered
-      # source release (its only public copy). vostok.build.gfx compiles the
-      # libgfx suite from this tree; retail's own gfx_4.2.21 tree is
-      # byte-identical for 806 of its 1,128 files (proven against the retail
-      # PDB's per-file MD5s: `pdb_diff --source-dir`), so it is the
-      # reconstruction baseline, not a lookalike. 5.1 GiB download - opt-in
-      # via `nix develop .#with-scaleform-sdk`; a local checkout via
-      # $SCALEFORM_SDK keeps working without realizing this.
-      # ---------------------------------------------------------------------------
-      ducktales-src = pkgs.fetchurl {
-        name = "ducktales_r326558.7z";
-        url = "https://archive.org/download/ducktales-remastered-src/ducktales_r326558.7z";
-        sha1 = "542945ecbba4dea4118ca9845130999fbf08af36";
-      };
-
-      scaleform-sdk = pkgs.runCommand "scaleform-sdk-4.2.22" {
-        nativeBuildInputs = [ pkgs.p7zip ];
-      } ''
-        # The SDK root inside the archive is not a path we control - find it
-        # as the directory holding Include/GFxVersion.h (either separator).
-        marker=$(7z l -slt ${ducktales-src} | sed -n 's/^Path = //p' \
-                 | grep -iE 'Include[\\/]GFxVersion\.h$' | head -1)
-        if [ -z "$marker" ]; then
-          echo "ERROR: Include/GFxVersion.h not found in archive listing"
-          exit 1
-        fi
-        root=$(printf '%s' "$marker" | sed 's![\\/]Include[\\/]GFxVersion\.h$!!I')
-        echo "SDK root in archive: $root"
-        7z x -oextract ${ducktales-src} "$root/*" > /dev/null
-        src_dir="extract/$(printf '%s' "$root" | tr '\\' '/')"
-        [ -d "$src_dir" ] || { echo "ERROR: extraction missing $src_dir"; exit 1; }
-        mkdir -p "$out"
-        cp -r "$src_dir"/. "$out"/
-        # Console ports and their libraries are unused by the Windows target.
-        find "$out" -depth \( -iname '*ps3*' -o -iname '*xbox*' -o -iname '*xenon*' \) \
-          -exec rm -rf -- {} +
-      '';
-
-      # ---------------------------------------------------------------------------
       # Unpacked game resources: the packed resources.db (from survarium.resources)
       # expanded into its file tree with the vostok-resources-db unpacker. ~12.5k
       # files; useful for inspecting/diffing game assets without the engine. The
@@ -348,94 +212,18 @@
         resources-db extract "${survarium.resources}/resources.db" "$out"
       '';
 
-      # ---------------------------------------------------------------------------
-      # objdiff - upstream's prebuilt Linux binaries (not in nixpkgs, no flake).
-      # These are foreign ELF binaries built for a normal FHS distro: their ELF
-      # interpreter (/lib64/ld-linux-*) and library search paths don't exist on
-      # Nix, so autoPatchelfHook rewrites the interpreter + RPATH to point into the
-      # store. buildInputs below is just the *pool of libraries* autoPatchelf links
-      # against - not a compile step (the binaries are already built).
-      # `objdiff` is the GUI (interactive matching), `objdiff-cli` the CLI differ.
-      # ---------------------------------------------------------------------------
-      objdiffVersion = "3.7.1";
-      objdiffUrl = name:
-        "https://github.com/encounter/objdiff/releases/download/v${objdiffVersion}/${name}";
-      objdiffGuiLibs = with pkgs; [
-        libGL libxkbcommon wayland fontconfig freetype
-        libx11 libxcursor libxi libxrandr libxcb
-      ];
-
-      # Keep the established code ledger on its measured CLI.
-      objdiff-cli = pkgs.stdenv.mkDerivation {
-        pname = "objdiff-cli";
-        version = objdiffVersion;
-        src = pkgs.fetchurl {
-          url = objdiffUrl "objdiff-cli-linux-x86_64";
-          hash = "sha256-QNhW2gHgpnbA8zr1NOVi8JjNUORey2Tzs0ZBjHsmSuY=";
-        };
-        dontUnpack = true;
-        nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ];
-        installPhase = "install -Dm755 $src $out/bin/objdiff-cli";
-      };
-
-      # The parallel data project needs the Gruntz BSS and DIR32-addend fixes.
-      vostok-data-objdiff-cli = nightly-rustPlatform.buildRustPackage {
-        pname = "vostok-data-objdiff-cli";
-        version = "3.7.3";
-        src = objdiff-src;
-        patches = [
-          ./tools/objdiff-bss-inferred-extent.patch
-          ./tools/objdiff-score-reloc-addend.patch
-        ];
-        cargoHash = "sha256-Z9vyUj35nrHuUoOYM54RLCn7CzcQ6k3A6FsDYKCVqVM=";
-        cargoBuildFlags = [ "-p" "objdiff-cli" ];
-        cargoTestFlags = [ "-p" "objdiff-core" "-p" "objdiff-cli" ];
-        cargoInstallFlags = [ "-p" "objdiff-cli" ];
-        postInstall = ''
-          mv $out/bin/objdiff-cli $out/bin/vostok-data-objdiff-cli
-        '';
-      };
-
-      objdiff = pkgs.stdenv.mkDerivation {
-        pname = "objdiff";
-        version = objdiffVersion;
-        src = pkgs.fetchurl {
-          url = objdiffUrl "objdiff-linux-x86_64";
-          hash = "sha256-LpBPYyWPzuX5jm02WUovzqJQyqz+l8SbRURHDWgFqq8=";
-        };
-        dontUnpack = true; # a bare binary; nothing to unpack
-        # autoPatchelfHook: fix the foreign binary's interpreter + RPATH so it runs
-        # on Nix. makeWrapper: provides the wrapProgram used in installPhase.
-        nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.makeWrapper ];
-        # Libraries autoPatchelf rewrites the RPATH against: the C++ runtime plus
-        # the X/GL/Wayland libs that appear in the binary's DT_NEEDED list.
-        buildInputs = [ pkgs.stdenv.cc.cc.lib ] ++ objdiffGuiLibs;
-        installPhase = ''
-          install -Dm755 $src $out/bin/objdiff
-          # The GUI *also* dlopen's GL/Wayland/X lazily at runtime; those are NOT in
-          # DT_NEEDED, so autoPatchelf can't see them. Expose them on LD_LIBRARY_PATH
-          # so the runtime dlopen()s resolve.
-          wrapProgram $out/bin/objdiff \
-            --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath objdiffGuiLibs}"
-        '';
-      };
-
       # The lean default dev shell. `with-resources` (below) extends it with the
       # heavy game-data outputs; everything common lives here.
       defaultDevShell = pkgs.mkShell {
         name = "surv-decomp";
 
         packages = [
-          # Nightly Rust (for manual cargo builds of vostok-delinker etc.)
-          rust
-
           # Wine - runs cl.exe / link.exe / ninja.exe / vcproj2ninja.exe.
           # MUST be staging (>= 10.20): cl /Zi spawns mspdbsrv.exe (the PDB
           # server) over RPC, and wine-10.0 stable fails to start RpcSs so
           # mspdbsrv never spawns -> "fatal error C1902: Program database manager
           # mismatch". wine-staging 10.20 spawns mspdbsrv correctly. See
-          # docs/build/toolchain-build.md.
+          # docs/build/toolchain-build.md on v0.10b.
           pkgs.wineWow64Packages.staging
 
           # Scripts + handy tools
@@ -448,29 +236,16 @@
           pkgs.xxd
           pkgs.jq
           pkgs.llvmPackages.bintools
-          # sqlite3 CLI - handy for ad-hoc inspection; the matching record itself is
-          # the text ledger (config/match_state.tsv), there is no database any more.
-          pkgs.sqlite
 
           # clangd - source navigation/LSP over the generated
           # compile_commands.json (clang is a READER here; MSVC8 under Wine
           # stays the only build truth)
           pkgs.clang-tools
 
-          # objdiff - GUI + CLI for comparing base vs target objects
-          objdiff
-          objdiff-cli
-          vostok-data-objdiff-cli
-
           # Nix-built tools and assets - all evaluated when entering the shell.
-          vostok-pdb
-          vostok-delinker
-          vostok-data-delinker
-          vostok-resources-db
           vcproj2ninja
           vostok-toolchain
           vostok-libs
-          survarium
         ];
 
         shellHook = ''
@@ -493,34 +268,24 @@
           export MSVC_DIR="${vostok-toolchain}/msvc"
           export WINSDK_DIR="${vostok-toolchain}/winsdk"
           export DXSDK_DIR="${vostok-toolchain}/dxsdk"
-          # fxc 9.29.952.3111 + native D3DCompiler_43.dll - the exact compiler
-          # behind the shipped shader blobs; vostok.shaders runs it under Wine.
-          export DXSDK_SHADER_COMPILER="${dxsdk-shader-compiler}/bin"
           export NINJA_DIR="${vostok-toolchain}/ninja"
           export VOSTOK_LIBS_DIR="${vostok-libs}"
           export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
-          export SURVARIUM_BIN="${survarium}"
-          export BULLET_2_79_SOURCE="${bullet-2_79-src}/src"
 
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
-          # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
-          # The lean shell pins only what matching needs: the toolchain, libs,
-          # the game binaries (survarium `out` = exe/pdb), and the small SSL keys.
-          # The heavy ~1.5 GiB packed resources and ~1.6 GiB unpacked tree are
-          # deliberately NOT realized/pinned here - they're opt-in via the
-          # `with-resources` shell (`nix develop .#with-resources`).
+          # binaries/nix-store/<name> (e.g. binaries/nix-store/vostok-toolchain).
+          # The lean shell pins only what the build needs: the toolchain, libs
+          # and vcproj2ninja. The original game (installer, ~1.5 GiB packed
+          # resources, ~1.6 GiB unpacked tree) is NOT realized here - it's
+          # opt-in via the `with-resources` shell (`nix develop .#with-resources`).
           # Read-only tools need the flake environment without worktree setup.
           if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
             mkdir -p "$VOSTOK_DIR/binaries/nix-store"
             for pair in \
                 "vostok-toolchain:${vostok-toolchain}" \
                 "vostok-libs:${vostok-libs}" \
-                "vcproj2ninja:${vcproj2ninja}" \
-                "survarium-game:${survarium}" \
-                "survarium-keys:${survarium.keys}" \
-                "bullet-2.79-source:${bullet-2_79-src}" \
-                "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
+                "vcproj2ninja:${vcproj2ninja}"; do
               name="''${pair%%:*}"
               path="''${pair#*:}"
               nix-store -r "$path" \
@@ -569,38 +334,13 @@
         '';
       };
 
-      # Opt-in shell for GFx lib rebuilds from a fresh clone:
-      #   nix develop .#with-scaleform-sdk
-      # Realizes and pins the 5.1 GiB DuckTales source fetch that carries the
-      # Scaleform SDK, and exports SCALEFORM_SDK from the store. With a local
-      # SDK checkout, the plain default shell + $SCALEFORM_SDK works instead
-      # (paths.py falls back to ~/Projects/survarium/scaleform_sdk).
-      withScaleformSdkDevShell = pkgs.mkShell {
-        name = "surv-decomp-with-scaleform-sdk";
-        inputsFrom = [ defaultDevShell ];
-        shellHook = ''
-          export SCALEFORM_SDK="${scaleform-sdk}"
-          if [ "''${VOSTOK_SKIP_SETUP:-0}" != 1 ]; then
-            mkdir -p "$VOSTOK_DIR/binaries/nix-store"
-            nix-store -r "${scaleform-sdk}" \
-              --add-root "$VOSTOK_DIR/binaries/nix-store/scaleform-sdk" \
-              --indirect >/dev/null
-          fi
-          echo "[vostok] scaleform  : REALIZED -> SCALEFORM_SDK (opt-in shell)." >&2
-        '';
-      };
-
     in {
       packages.${system} = {
-        inherit vostok-pdb vostok-delinker vostok-data-delinker vostok-resources-db vcproj2ninja
-          vostok-toolchain vostok-libs survarium
-          objdiff objdiff-cli vostok-data-objdiff-cli dxsdk-shader-compiler;
+        inherit vostok-resources-db vcproj2ninja vostok-toolchain vostok-libs survarium;
         # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand
         # (`nix build .#survarium-resources-unpacked`), but the default devShell
         # does NOT realize it - see the `with-resources` shell below.
         inherit survarium-resources-unpacked;
-        # The Scaleform GFx SDK (5.1 GiB fetch) - on demand / with-scaleform-sdk.
-        inherit scaleform-sdk;
         # Convenience aliases for the individual survarium outputs:
         #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
         survarium-game = survarium;            # default `out` = game binaries
@@ -611,7 +351,6 @@
       devShells.${system} = {
         default = defaultDevShell;
         with-resources = withResourcesDevShell;
-        with-scaleform-sdk = withScaleformSdkDevShell;
       };
     };
 }

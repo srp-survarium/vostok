@@ -1,6 +1,0 @@
-mangled	verdict	evidence
-??0ui_progress_bar@ui@vostok@@QAE@AAVui_world@12@@Z	EQUIVALENT	retail inlines fixed_string<32> ctor; LTCG this/world registers; same stores
-?copy_to_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
-?cut_to_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
-?paste_from_clipboard@ui_text_edit@ui@vostok@@QAEXXZ	EQUIVALENT	log __LINE__ only (absolute line drift)
-?set_text@ui_progress_bar@ui@vostok@@UAEXPBD@Z	EQUIVALENT	retail inlines fixed_string<32> operator= (self-check, clear, append); base tail-calls it

@@ -1,48 +1,20 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """
-vostok.build.rebuild - full base-side refresh after editing sources.
+vostok.build.rebuild - `vostok build`: compile and link the game.
 
-  1. Build survarium via ninja under Wine (vostok.build.ninja).
-  2. Regenerate binaries/pdb/base, then binaries/objdiff/base. The COFF symbol
-     normalizer consumes the completed PDB evidence, so those two steps must be
-     ordered. binaries/structure/base remains disjoint and runs in parallel.
-  3. Re-derive the committed ledger config/match_state.tsv from
-     the fresh report.json (vostok.derive.roster.regen()), and refresh README's
-     score block from it. `vostok build` is the canonical build step and owns
-     the regen; `vostok derive refresh` is the regen-only path for an
-     already-built report. A regen failure warns but does not fail the build.
+  1. Toolchain setup (vostok.tool.toolchain): staged libs, Wine prefix, registry.
+  2. Refresh the ninja graph from the .vcprojs (vostok.build.ninja_regen).
+  3. Build via ninja under Wine (vostok.build.ninja); the result is
+     binaries/Win32/survarium-dx11-win32-gold.exe.
 
-The target side (binaries/structure/target, binaries/objdiff/target,
-binaries/pdb/target) is the original game and does not change between
-recompiles; it is generated once on first `nix develop` (see vostok.tool.toolchain).
-
-Each run appends one audit line to binaries/rebuild.log (git-ignored, mirrors
-binaries/vostok_usage.log):
+Each run appends one line to binaries/rebuild.log (git-ignored):
     [<timestamp>][<git-branch>]: <elapsed>, <summary>
-where <summary> reports the wall-clock and the set of engine modules whose TUs
-ninja actually recompiled this run (a no-op rebuild = 0 modules).
+where <summary> names the engine modules whose TUs ninja recompiled.
 
 Any extra args are forwarded to vostok.build.ninja:
-  python3 -m vostok build            # notify on completion when CODEX_THREAD_ID is set
-  python3 -m vostok build logging    # build just one project first
-
-  python3 -m vostok build --code-only
-      Iteration build: ninja, PDB evidence, structure, code COFF/report and the
-      function ledger only. Skips the data lane (manifests, data COFF/reports,
-      image-data ledger, module data audits) and the README. Function scores are
-      the same as a full build's; not a commit state - commit after a full build.
-
-  python3 -m vostok build --background
-      Run in a host systemd user service; notify CODEX_THREAD_ID on completion.
-      Overrides: --notify-thread THREAD, --codex-bin /path/to/codex.
-      Remaining arguments are forwarded to the normal build.
-
-  python3 -m vostok build --foreground
-      Explicit synchronous mode for CI or a supervising process. Without a
-      Codex thread or an explicit notification request, this is the default.
-      Foreground exit status covers the whole build; background launch success
-      only means the service started. Wait for its notification before review.
+  python3 -m vostok build            # the whole game
+  python3 -m vostok build logging    # just one project
 """
 
 import datetime
@@ -54,17 +26,12 @@ import subprocess
 import functools
 import sys
 import time
-from concurrent.futures import ThreadPoolExecutor
 
-from vostok.build import generate_delink
-from vostok.build import generate_pdb
-from vostok.build import generate_structure
 from vostok.build import ninja_regen
 
 from vostok.core import paths
 from vostok.core.paths import REBUILD_LOG as LOG_PATH
 from vostok.core.paths import REPO as VOSTOK_DIR
-from vostok.core.paths import REPORT_HEAD
 from vostok.core.log import logger
 from vostok.core.log import die as core_die
 from vostok.core import log as _log
@@ -72,10 +39,12 @@ from vostok.core import log as _log
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
 #   cmd /c cd "Z:\...\sources\vostok\game_core\sources" && cl @...rsp ...
-# The "...\vostok\<module>\sources && cl" shape is unique to a recompile (link/lib
-# edges run `link`/`lib`, not `cl`), so it counts TUs without double-counting the
-# per-project link step. Path separators are backslashes under Wine.
 _CL_MODULE_RE = re.compile(r"vostok[\\/]([A-Za-z0-9_]+)[\\/]sources\b[^\n]*?&&\s*cl\b")
+
+# After vostok.build.ninja exits, Wine children leaked by the build may still
+# hold the output pipe open; once the child has exited and the pipe has stayed
+# silent this long, stop reading.
+DRAIN_GRACE_SECONDS = 2.0
 
 
 log = logger("rebuild")
@@ -112,7 +81,7 @@ def _summarize(modules: set[str]) -> str:
 
 
 def _append_log(elapsed: float, modules: set[str]) -> None:
-    """Best-effort audit line; a logging error must never fail the rebuild."""
+    """Best-effort audit line; a logging error must never fail the build."""
     try:
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
         line = f"[{ts}][{_git_branch()}]: {_fmt_elapsed(elapsed)}, {_summarize(modules)}\n"
@@ -121,17 +90,6 @@ def _append_log(elapsed: float, modules: set[str]) -> None:
             f.write(line)
     except Exception as e:  # noqa: BLE001
         log(f"(audit log skipped: {e})")
-
-
-# After vostok.build.ninja exits, a blocking read of its output pipe may STILL not
-# see EOF: wine children leaked by the build inherit the write end and hold it
-# open. The worst offender was mspdbsrv.exe (link.exe's PDB-writer daemon),
-# which idles for ~10 minutes before exiting on its own - that one stalled
-# every fresh-worktree rebuild by a constant ~600s until vostok.build.ninja
-# learned to kill it. Belt and braces here: read via select() with a timeout,
-# and once the child has exited and the pipe has stayed silent this long,
-# stop reading - nothing real is coming.
-DRAIN_GRACE_SECONDS = 2.0
 
 
 def run_ninja() -> set[str]:
@@ -171,51 +129,16 @@ def run_ninja() -> set[str]:
     scan(tail)
     rc = proc.wait()
     if rc != 0:
-        # mirror vostok.build.ninja's exit code so callers/watchdog see the failure,
-        # but the audit line is still written by main()'s finally guard.
         raise subprocess.CalledProcessError(rc, "vostok.build.ninja")
     return modules
 
 
-def _write_build_head() -> None:
-    """Record WHICH source state this report.json was built from
-    (binaries/objdiff/report.head: "<HEAD sha>[+dirty]"). vostok derive's
-    staleness guard compares it against the current HEAD - freshness is
-    created here, not at DB refresh time."""
-    try:
-        head = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=VOSTOK_DIR,
-            capture_output=True, text=True, timeout=10,
-        ).stdout.strip()
-        dirty = subprocess.run(
-            ["git", "status", "--porcelain", "--", "sources/"], cwd=VOSTOK_DIR,
-            capture_output=True, text=True, timeout=10,
-        ).stdout.strip()
-        if head:
-            marker = REPORT_HEAD
-            marker.write_text(head + ("+dirty" if dirty else "") + "\n")
-    except Exception as e:  # noqa: BLE001 - never fail the build over bookkeeping
-        log(f"report.head not written: {e}")
-
-
 def _acquire_build_lock():
-    """Serialise builds sharing this worktree. Returns the held lock file.
+    """Serialise builds sharing this worktree (one ninja tree, one WINEPREFIX).
 
-    A worktree has ONE ninja output tree, one `binaries/objdiff/base`, one
-    report.json - and, worst of all, one WINEPREFIX. `vostok.build.ninja` kills
-    that prefix's `mspdbsrv.exe` after every ninja run, and the kill is
-    prefix-scoped, not build-scoped: a second build compiling at that moment
-    loses the PDB writer out from under `cl.exe`, which is a C1090 at best and
-    a truncated PDB at worst. Two agents matching in one worktree is now normal,
-    so waiting is the only safe answer - and it costs nothing that racing did
-    not already cost, since the two builds could not have run in parallel
-    correctly anyway.
+    flock is dropped by the kernel when the process dies, so a stale lock is
+    not possible.
     """
-    # flock, deliberately: the kernel holds it against the file descriptor and
-    # drops it when the process does - crash, SIGKILL, an agent stopped mid-build.
-    # A stale lock is therefore not possible, which a PID file or a timestamp
-    # lockfile could not promise. The file itself is never cleaned up and does
-    # not need to be; it carries no state.
     paths.BUILD_LOCK.parent.mkdir(parents=True, exist_ok=True)
     lock = open(paths.BUILD_LOCK, "a")
     try:
@@ -227,50 +150,12 @@ def _acquire_build_lock():
     return lock
 
 
-def _background_dispatch() -> bool:
-    """All canonical CLI consumers inherit notification mode inside Codex."""
-    arguments = sys.argv[1:]
-    foreground = "--foreground" in arguments
-    explicit = any(argument == "--background" or
-                   argument.split("=", 1)[0] in ("--notify-thread", "--codex-bin")
-                   for argument in arguments)
-    if foreground:
-        if explicit:
-            die("--foreground cannot be combined with notification options")
-        sys.argv = [sys.argv[0], *(argument for argument in arguments
-                                   if argument != "--foreground")]
-        return False
-    if explicit or os.environ.get("CODEX_THREAD_ID"):
-        from vostok.build import background
-        if "--background" not in arguments:
-            arguments = ["--background", *arguments]
-        # A launch failure is an error, never a silent foreground/poll fallback.
-        background.launch(arguments)
-        return True
-    return False
-
-
-def _take_code_only() -> bool:
-    """Strip --code-only before the remaining arguments reach ninja."""
-    if "--code-only" not in sys.argv[1:]:
-        return False
-    sys.argv = [sys.argv[0], *(a for a in sys.argv[1:] if a != "--code-only")]
-    return True
-
-
 def main() -> None:
-    # `vostok build --help` must NOT reach ninja. Everything else here is
-    # forwarded verbatim, and ninja's own `--help` exits 1 - which used to
-    # print a bogus "ninja build failed" AND, worse, still ran ninja.main()'s
-    # trailing prefix-scoped mspdbsrv kill, breaking a build running
-    # concurrently in the same WINEPREFIX.
+    # `vostok build --help` must not reach ninja: its own --help exits 1 and
+    # would still run the trailing mspdbsrv reap.
     if any(a in ("-h", "--help") for a in sys.argv[1:]):
         print(__doc__.strip())
         return
-
-    if _background_dispatch():
-        return
-    code_only = _take_code_only()
 
     lock = _acquire_build_lock()
     start = time.monotonic()
@@ -281,158 +166,15 @@ def main() -> None:
         log("Refreshing ninja graph from the .vcprojs ...")
         _log.timed("ninja graph", ninja_regen.regenerate)
 
-        if code_only:
-            log("code-only build: the data lane and README are skipped; this is "
-                "not a measured commit state")
         log("Building survarium via ninja ...")
         try:
             modules = _log.timed("ninja build", run_ninja)
         except subprocess.CalledProcessError as e:
-            die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
-
-        log(
-            f"Build OK ({_summarize(modules)}). Regenerating base PDB evidence "
-            "then COFF; base structure runs in parallel ..."
-        )
-        failures = []
-        prepared_manifests = None
-        with ThreadPoolExecutor(max_workers=1) as ex:
-            structure = ex.submit(
-                _log.timed, "base structure", generate_structure.generate, "base"
-            )
-            try:
-                _log.timed("base PDB evidence", generate_pdb.generate, "base")
-                log("base PDB evidence: OK")
-            except Exception as e:  # noqa: BLE001 - report every step's failure
-                failures.append("base PDB evidence")
-                log(f"base PDB evidence: FAILED - {e}")
-
-            if "base PDB evidence" not in failures and not code_only:
-                try:
-                    from vostok.data import pipeline as data_pipeline
-                    prepared_manifests = _log.timed(
-                        "data preparation", data_pipeline.prepare_manifests
-                    )
-                    log("consumer-owned data manifests: OK")
-                except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append("data manifests")
-                    log(f"consumer-owned data manifests: FAILED - {e}")
-
-            if "base PDB evidence" not in failures:
-                try:
-                    # The established code project stays on the measured legacy
-                    # delinker and never consumes data manifests.
-                    _log.timed("base code COFF/report", generate_delink.generate, "base")
-                    log("base code COFF: OK")
-                except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append("base code COFF")
-                    log(f"base code COFF: FAILED - {e}")
-
-            if prepared_manifests is not None:
-                try:
-                    # Data ownership follows the current consumer graph, so
-                    # both synthetic sides are regenerated in their separate
-                    # objdiff project. Neither report can feed code/MAX.
-                    _log.timed(
-                        "target data COFF", generate_delink.generate,
-                        "target", reports=False, data_project=True,
-                    )
-                    log("target data COFF: OK")
-                except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append("target data COFF")
-                    log(f"target data COFF: FAILED - {e}")
-
-            if prepared_manifests is not None and "target data COFF" not in failures:
-                try:
-                    _log.timed(
-                        "base data COFF/reports", generate_delink.generate,
-                        "base", data_project=True,
-                    )
-                    log("base data COFF and reports: OK")
-                except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append("base data COFF")
-                    log(f"base data COFF and reports: FAILED - {e}")
-
-            try:
-                structure.result()
-                log("base structure: OK")
-            except Exception as e:  # noqa: BLE001 - report every step's failure
-                failures.append("base structure")
-                log(f"base structure: FAILED - {e}")
-
-        if failures:
-            die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
-        _write_build_head()
-
-        # Data is a separate image-level ledger: refreshing it must never alter
-        # or gate the function report while the census is being calibrated.
-        if not code_only:
-            try:
-                from vostok.data import pipeline as data_pipeline
-                _log.timed(
-                    "image-data ledger", data_pipeline.refresh,
-                    prepared=prepared_manifests,
-                )
-                log("image-data ledger refreshed (shadow mode).")
-            except (Exception, SystemExit) as e:  # noqa: BLE001 - independent shadow lane
-                log(f"WARNING: image-data ledger NOT refreshed ({e}); "
-                    "refresh it with `python3 -m vostok data refresh`")
-
-        # `vostok build` is the canonical build step, so it also re-derives the
-        # committed ledger from the report.json it just produced (the inverse of
-        # the old model where vostok derive refresh shelled out to `vostok build`).
-        # A regen failure is logged but does NOT fail the build - the diff inputs
-        # are already good, and `vostok derive refresh` can re-derive later.
-        try:
-            from vostok.derive import roster
-            _log.timed("function ledger", roster.regen)
-            log("matching ledger re-derived.")
-        # catch SystemExit too (regen's missing-artifact guard calls sys.exit) so
-        # a derivation hiccup never aborts a build whose diff inputs are good.
-        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the ledger
-            log(f"WARNING: matching ledger NOT re-derived ({e}); "
-                "re-derive it with `python3 -m vostok derive refresh`")
-
-        if code_only:
-            # The function ledger reads only the code lane (report.json, symbol
-            # maps, PDB evidence), so it is exact; data and README stay stale.
-            log("Code-only build done - function ledger refreshed. Run a full "
-                "`vostok build` before committing.")
-            return
-
-        # The direct relocation audits consume the final function ledger, so
-        # refresh every ledger module after roster.regen rather than with the
-        # earlier image ledger. The aggregate is the complete datum-use
-        # denominator; its zero gate remains an explicit `vostok data check
-        # --gate` while the queue is being drained.
-        try:
-            from vostok.data import gate as data_gate
-            data_report = _log.timed("all-module data audits", data_gate.refresh)
-            log(
-                "all-module data relocation audit refreshed: "
-                f"{data_report['summary']['modules']:,} modules, "
-                f"{data_report['summary']['open_function_data']:,} open "
-                "function datum-use rows."
-            )
-        except (Exception, SystemExit) as e:  # noqa: BLE001 - independent data lane
-            log(f"WARNING: all-module data relocation audit NOT refreshed ({e}); "
-                "refresh it with `python3 -m vostok data module-relocs all`")
-
-        # ...and the README score block, the other report.json-derived artifact, so a
-        # build keeps both current in one shot. Separately guarded: a score-write
-        # failure warns but never fails the build (the report.json is already good).
-        try:
-            from vostok.ledger import readme
-            _log.timed("README", readme.regen_readme)
-            log("README score block refreshed.")
-        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the README
-            log(f"WARNING: README score block NOT refreshed ({e}); "
-                "re-derive it with `python3 -m vostok ledger readme --write-readme`")
-
-        log("All done - base diff inputs refreshed.")
+            die(f"ninja build failed (exit {e.returncode})")
+        log(f"Build OK ({_summarize(modules)}): {paths.BASE_EXE}")
     finally:
         _append_log(time.monotonic() - start, modules)
-        lock.close()          # releases the flock; the kernel would anyway
+        lock.close()
 
 
 if __name__ == "__main__":

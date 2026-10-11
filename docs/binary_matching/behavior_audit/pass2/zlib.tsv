@@ -1,3 +1,0 @@
-mangled	verdict	evidence
-_zcalloc	EQUIVALENT	confirms pass 1: direct malloc vs import thunk (CRT import alias)
-_zcfree	EQUIVALENT	confirms pass 1: direct free vs import thunk (CRT import alias)

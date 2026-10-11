@@ -1,3 +1,0 @@
-mangled	verdict	evidence
-?get_transform@particle_domain_complex@particle@vostok@@QBE?AVfloat4x4@math@3@XZ	EQUIVALENT	confirms pass 5: regalloc/schedule only (normalised op, constant, call-argument, member and FP-expression multisets identical)
-?load_material@particle_emitter_instance@particle@vostok@@QAEXPBD@Z	EQUIVALENT	confirms pass 5: ICF reps
