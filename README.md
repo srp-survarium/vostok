@@ -274,6 +274,14 @@ It records commands, artifacts, and complete `vostok-pdb topology --order --json
 comparisons under `binaries/gen/pdb-order-probes/`; see
 [`vostok-pdb topology.md`](docs/binary_matching/vostok-pdb topology.md#causal-order-probes).
 
+`python3 -m vostok tool cleanliness` prints the source-cleanliness board: per
+module, the joined statements, steering constructs (pragmas, `#line` pins,
+inline pins, dead conditions, `identity()` opacity, blank-line padding),
+`volatile`, C-style casts, `UNKNOWN_EXPRESSION`, `STATE[...]`/`sushi@TODO`
+markers and stale matching prose in `sources/vostok/**`, vendored code excluded.
+`--list KIND` names every site. `--check` fails when a count rises above its floor
+in `config/cleanliness/baseline.tsv`; it is not part of `vostok build`.
+
 ## Third-party libs and the GFx suite
 
 The toolchain and third-party library archives are published in this repo's

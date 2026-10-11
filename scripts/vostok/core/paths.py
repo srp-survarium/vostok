@@ -336,6 +336,8 @@ RETAIL_DATA_SYMBOLS = RETAIL_CONFIG / "data_symbols.tsv"
 RETAIL_PDB_DATA_EXTENTS = RETAIL_CONFIG / "pdb_data_extents.tsv"
 RETAIL_RELOC_REFERENTS = RETAIL_CONFIG / "reloc_referents.tsv"
 DATA_INTEGRITY_RATCHET = CLEANLINESS_CONFIG / "data-integrity-ratchet.tsv"
+# down-only per-module floors for `vostok tool cleanliness --check`
+CLEANLINESS_BASELINE = CLEANLINESS_CONFIG / "baseline.tsv"
 
 
 def data_module_problems(module: str) -> Path:
