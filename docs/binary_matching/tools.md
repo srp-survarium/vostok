@@ -52,3 +52,40 @@ record count with. `python3 -m vostok tool joined` lists them per module
 (`--list` for every line, `--module`, `--blame`/`--since` for commit dates,
 `--verdict` to look each line up in the PDB evidence: `retail-split` lines are
 unwound first). Vendored subtrees and tool programs are skipped.
+
+## One function's evidence
+
+`vostok evidence` reads the last build's `binaries/pdb/*/evidence.sqlite` and the
+ledger, without rebuilding. It gathers the ledger row, the PDB statement
+partition (the `structure-diff` verdict), the relative-line geometry, the
+`sema blocks` flow verdict and unmatched callees:
+
+```sh
+python3 -m vostok evidence 'weapon_core::tick'      # verdict line, then only what needs action
+python3 -m vostok evidence <fn> --full              # matched rows, block diffs, callers too
+python3 -m vostok evidence <fn> --json --only structure,flow
+```
+
+The first line is the verdict (`STRUCTURE MATCH, 2 SIZE residuals; cur 97.30,
+max 98.10 (held)`). Exit status 0 means nothing needs action, 1 means something
+does, and 2 means an ambiguous or unknown selector. A warning line flags evidence
+built from an older revision of the source, whose line numbers no longer apply.
+
+## Ledger history
+
+```sh
+python3 -m vostok ledger hist-gap --module render   # real drops: the commits that reached and lost the peak (--all: every hist > max row)
+python3 -m vostok ledger last-exact <fn> --diff     # the last exact commit's source for <fn>, against HEAD
+```
+
+## Link layout and the whole image
+
+`python3 -m vostok tool link-layout runs|owners` reads the section contributions
+of both PDBs. It shows archive runs per section side by side, and the COMDAT
+functions whose kept copy comes from a different compiland than retail's; see
+[`link-layout.md`](link-layout.md).
+
+`python3 -m vostok diff image` compares the linked EXE with retail region by
+region (headers, Rich header, imports, resources, code and data bytes and order)
+against the banked counts in `config/image_diff.tsv`; see
+[`target-vs-base.md`](../target-vs-base.md). It runs on demand, not in the build.
