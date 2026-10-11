@@ -52,9 +52,9 @@ _Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand.
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,088,375 / 429,051,363).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,088,979 / 429,051,363).**
 
-_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,484 otherwise-exact functions (602,731 code bytes) with referent debt._
+_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,479 otherwise-exact functions (600,633 code bytes) with referent debt._
 
 _The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11805 / 13321 definitions). Integrity ratchet: armed._
 

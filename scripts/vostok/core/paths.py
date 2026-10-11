@@ -147,6 +147,7 @@ DATA_REPORT = GEN_DIR / "data_image_report.json"
 DATA_COVERAGE = GEN_DIR / "data_coverage.json"
 DATA_STATE = GEN_DIR / "data_image_state.tsv"
 DATA_COVERAGE_GAPS = GEN_DIR / "data_coverage_gaps.tsv"
+DATA_VALUE_DIFF = GEN_DIR / "data_value_diff.tsv"
 DATA_BASE_GEN = GEN_DIR / "base"
 # Keep the target manifest names and locations identical to Gruntz. Vostok
 # additionally needs a base projection because LTCG left us no compiler objs.

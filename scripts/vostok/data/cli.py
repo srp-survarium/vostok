@@ -18,6 +18,9 @@ Commands:
   access PATTERN  find retail/base code references to a data symbol or address
   relocs PATTERN  inspect pointer cells and their resolved targets
   function PATTERN inspect per-function data-reference equality
+  values [--module M] [--function PAT] [--class all]
+                   compare the VALUES paired code reads from data (constants,
+                   strings, tables, switch tables); DIFFERENT rows are leads
   coverage        show retail coverage, objdiff enrollment, and generated gaps
   check [--gate|--all-zero]
                    validate artifacts; enforce the ratchet or full zero target
@@ -424,6 +427,12 @@ def main(argv: list[str] | None = None) -> int:
     check = sub.add_parser("check")
     check.add_argument("--gate", action="store_true")
     check.add_argument("--all-zero", action="store_true")
+    sub.add_parser("values", add_help=False)
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "values":
+        from vostok.data import values
+
+        return values.main(argv[1:])
     args = parser.parse_args(argv)
 
     try:
