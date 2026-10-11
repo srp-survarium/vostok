@@ -10,9 +10,9 @@ class usable_object;
 struct usable_object_user_data;
 
 struct usable_object_user_data {
-	// body in collision_user.h: the target attributes the ctor's COMDAT to
-	// collision_user.h (the struct lived there in the original), so defining it
-	// here would put the base COMDAT in the wrong objdiff unit and never pair.
+
+
+	// defined in collision_user.h, where retail's ctor COMDAT lives
 	inline	explicit	usable_object_user_data	( );
 
 	/* 0x0000 */	collision_user*				owner;

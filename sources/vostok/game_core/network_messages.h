@@ -8,11 +8,11 @@
 
 namespace survarium {
 
-// canonical home: this header (the addressed get_sending_message_info inline
-// lands at network_messages.h:'35'). PDB prints only the monomorphised
-// < match_client_message_types_enum, match_server_message_types_enum > form -
-// reconstructed as the primary template; the overloaded get_message_type_info
-// statics take one template arg each
+
+
+
+
+
 template < typename SendingMessageType, typename ReceivedMessageType >
 class network_packets_orderer : public network_core::udp_match_packets_orderer {
 private:

@@ -39,9 +39,9 @@ public:
 	virtual	bool		is_ready_for_transition			( ) const override { return true; } /* <0x22700>|0x000:'39' */
 
 private:
-	// target mangling: weapon_and_hands_expression @@EBE (private virtual),
-	// initialize_logic @@AAE / finish_reload_predicate @@ABE (private) - the public
-	// spellings left all three unpaired in objdiff (U/Q letters).
+
+
+
 	virtual	animation::mixing::expression
 						weapon_and_hands_expression		(
 							mutable_buffer&							buffer,

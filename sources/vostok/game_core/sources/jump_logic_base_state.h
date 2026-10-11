@@ -39,7 +39,7 @@ public:
 	inline	bool		is_jump_finished		( ) const { return m_is_jump_finished; }
 
 protected:
-	// claude@MATCH: target mangles the ctor ?...@@IAE (protected).
+
 	explicit			jump_logic_base_state	( jump_logic& owner )
 							:	m_jump_logic( owner ),
 								m_user( 0 ),
@@ -48,9 +48,9 @@ protected:
 						{}
 
 protected:
-	// claude@MATCH: derived state overrides read m_jump_logic / m_animation /
-	// m_interval_id_to_wait_for directly (no accessor in the target asm), so the data
-	// members are protected. Access specifier changes no codegen, only visibility.
+
+
+	// protected: derived states read these directly, as retail does
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	jump_logic&							m_jump_logic;
 	/* 0x001c */	base_player*						m_user;

@@ -15,17 +15,17 @@ private:
 	virtual	bool								is_ready_for_transition		( ) const override { return true; }
 	virtual	bool								has_animation_ended			( ) const { return true; }
 
-	// claude@NOTE: NOT a recoverable ASSERT. The leading mov byte[ebp-1],0; lea; call empty_stub
-	// is the macro's own if(::vostok::identity(false)) lvalue-materialization (one call, both
-	// sides) - there is no second empty_stub, so no compiled-out ASSERT to recover. The residual
-	// is the dead-guard fold: target's COMDAT emits the eater UNCONDITIONAL (no movzx/test/je),
-	// our /Od MASTER_GOLD build keeps the full if(identity(false)){...}else(void)0 branch. Verified
-	// systemic: EVERY weapon_*_state::weapon_and_hands_expression override carries this same guard
-	// and only fully pairs where its target COMDAT happened to be the /Od build (optimized
-	// COMDAT in /Od unit - see optimized-comdat-in-od-unit.md). weapon_and_hands_expression below
-	// carries a SECOND /Od artifact: the animation_lexeme& arg promoted through the variadic eater
-	// is copied by value (sub esp,84h; rep movsd) in /Od vs passed as a pointer in the optimized
-	// target. Both are non-steerable build-mode residuals; macro/structure are faithful.
+
+
+
+
+
+
+
+
+
+
+
 	virtual	void								on_animation_end			( resources::managed_resource_ptr const& animation, const u32 callback_time_in_ms ) { VOSTOK_UNREFERENCED_PARAMETERS( animation, callback_time_in_ms ); }
 	virtual	void								on_specific_event			( resources::managed_resource_ptr const& animation, const u32 callback_time_in_ms ) { VOSTOK_UNREFERENCED_PARAMETERS( animation, callback_time_in_ms ); }
 

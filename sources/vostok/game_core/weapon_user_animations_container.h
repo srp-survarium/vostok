@@ -7,10 +7,10 @@ namespace survarium {
 
 class weapon_user_animations_container_cook;
 
-// claude@MATCH: extern caption arrays - single .rdata copy each in the target exe
-// (external `?..._captions@survarium@@3QBQBDB` symbols); stand_animations_captions is
-// defined in player_logic_stand_state.cpp, crouch_animations_captions in
-// player_logic_crouch_state.cpp, jump_animations_captions in jump_logic.cpp.
+
+
+
+// defined in player_logic_stand_state.cpp, player_logic_crouch_state.cpp and jump_logic.cpp
 extern pcstr const stand_animations_captions[];
 extern pcstr const crouch_animations_captions[];
 extern pcstr const sprint_animations_captions[];

@@ -5,8 +5,8 @@
 
 namespace survarium {
 
-// claude@MATCH: additive_back_recoil (offset 0x20) is omitted - the target never
-// stores it (no movss [this+20h]); additive_recoil_time is math::epsilon_3 (.001f).
+
+// retail never initialises additive_back_recoil (0x20)
 weapon_recoil_params::weapon_recoil_params( ) :
 	first_shoot_side_recoil		( 0.0f ),
 	shoot_side_recoil		( 0.0f ),
@@ -23,10 +23,10 @@ weapon_recoil_params::weapon_recoil_params( ) :
 {
 }
 
-// claude@MATCH: the member-init list omits first_shoot_back_recoil (0x08),
-// shoot_back_recoil (0x0c), additive_back_recoil (0x20) and back_compensation_speed
-// (0x30) - only 9 of the 12 members are initialized here (the default ctor inits all
-// but 0x20); reproduced verbatim from the target's prologue stores.
+
+
+// retail leaves first_shoot_back_recoil, shoot_back_recoil, additive_back_recoil
+// and back_compensation_speed uninitialised here
 weapon_recoil_params::weapon_recoil_params( configs::binary_config_value const& cfg ) :
 	first_shoot_side_recoil		( 0.0f ),
 	shoot_side_recoil		( 0.0f ),

@@ -37,10 +37,10 @@ private:
 												);
 
 private:
-	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
-	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
-	// faithful idioms below. update_bones_matrices ICF-folds with the medkit and
-	// artefact_lifebone_core copies at rva 0xbc810.
+
+
+
+
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
 	virtual	void								deactivate					( ) override { }
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }

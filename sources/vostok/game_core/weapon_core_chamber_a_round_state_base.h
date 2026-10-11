@@ -24,8 +24,8 @@ private:
 
 
 protected:
+
 	// protected so the concrete subclass reads it in get_weapon_lexeme_pair
-	// (data-member access is not part of the byte match; only mangled members are).
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
 	/* 0x0140 */	const float	m_animation_timescale;
 }; // class weapon_core_chamber_a_round_state_base

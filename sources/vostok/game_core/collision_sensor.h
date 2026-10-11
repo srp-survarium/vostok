@@ -48,7 +48,7 @@ public:
 	typedef vector< base_physics_object_ptr > objects_container;
 	typedef vector< collision_geometry* > collision_geometries;
 
-protected:	// claude@MATCH: target mangles these four overrides `MAE` (protected), not `UAE` - must be protected: to pair.
+protected:
 	virtual	void					on_inside						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_leave						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_enter						( buffer_vector< physics::base_physics_object* > const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
