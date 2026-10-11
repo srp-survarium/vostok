@@ -17,6 +17,8 @@ derivation cache, and is now gone entirely - the derivation writes here.)
     cli      query and mutate: report / list / queue / tried / park / open.
              Needs no build: it reads the committed ledger directly, and its
              mutating verbs are durable because nothing re-projects over them.
+    history  hist-gap / last-exact: which commit reached a row's peak and
+             which lost it, read from the ledger's git history (read-only)
     readme   the README score block, rolled up from this record
     queue    the structure-mismatch worklist, projected into a markdown queue
 
@@ -48,5 +50,4 @@ def main(argv: list[str] | None = None) -> int:
         sys.argv = ["vostok.ledger mismatch-queue", *argv[1:]]
         return queue.main()
     from vostok.ledger import cli
-    cli.main()
-    return 0
+    return cli.main() or 0

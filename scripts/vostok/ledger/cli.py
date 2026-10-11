@@ -18,6 +18,9 @@ every question below before it has compiled anything.
   vostok ledger tried   <mangled>... [--note ...]   record a dispatch attempt
   vostok ledger park    <mangled> --cause "..."     stop working it, with a reason
   vostok ledger open    <mangled>                   undo a park
+  vostok ledger hist-gap [--module M] [--min-gap X] [--limit N]
+                                              hist > max rows: peak + drop commits
+  vostok ledger last-exact FUNCTION [--diff]  last commit at 100; its source since
 
 Two more verbs live beside these and are dispatched by `vostok.ledger.__init__`,
 so argparse below does not list them:
@@ -41,7 +44,7 @@ import argparse
 import json
 import sys
 
-from vostok.ledger import store
+from vostok.ledger import history, store
 from vostok.core import log as _log
 
 EXACT = store.EXACT
@@ -305,8 +308,11 @@ def main():
     p.add_argument("mangled", nargs="+")
     p.set_defaults(func=cmd_open)
 
+    # read-only history queries over the committed ledger (vostok.ledger.history)
+    history.add_parsers(sub)
+
     args = ap.parse_args()
-    args.func(args)
+    return args.func(args) or 0
 
 
 if __name__ == "__main__":

@@ -6,7 +6,8 @@
                                    delink + structure + PDB evidence, then derive
                                    and ledger refresh and the README block
     vostok ledger <verb>           the committed campaign record: report / list
-                                   / queue / tried / park / open, plus `readme`
+                                   / queue / tried / park / open, the history
+                                   queries hist-gap / last-exact, plus `readme`
                                    and `mismatch-queue`
     vostok derive refresh          re-derive the ledger from an already-built
                                    report; the one verb, since the derivation
