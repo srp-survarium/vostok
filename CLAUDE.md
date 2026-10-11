@@ -126,6 +126,13 @@ What moves the partition is source shape, not logic:
 - a ternary vs an if/else; braces that open a lexical block
 - which `.cpp` a body lives in and its definition order (a moved body changes the record)
 
+The one-shot first look gathers this verdict with the ledger row (cur/max/hist,
+`tried`, note), the geometry check, the `sema blocks` flow verdict and unmatched
+callees, in one process, and prints a one-line verdict followed only by what
+needs action (`--full` for everything, `--json` for agents, `--only`/`--skip`):
+
+    python3 -m vostok evidence 'weapon_core::tick'
+
 How to act: run the diff before writing a body (read the target's statements) and
 after each build. `TRGT_ONLY` / `BASE_ONLY` rows are structure work - fix the shape
 until they are gone. A `SIZE` residual that survives a correct shape is usually an
@@ -164,7 +171,8 @@ Iterate with `vostok build --code-only`.
   and assembly before writing a body; never fabricate a function, type, override
   or symbol to gain percentage, and never change another unit to steer a caller's
   inlining. Match one translation unit at a time.
-- Evidence beats taste: `vostok-pdb inspect --view target|base|structure-diff` for
+- Evidence beats taste: `vostok evidence <fn>` for the one-shot verdict,
+  `vostok-pdb inspect --view target|base|structure-diff` for
   disassembly and PDB statements, `python3 -m vostok sema rva|xref|blocks --diff`
   for control flow (its exit code 1 is an answer, read the printed verdict),
   `binaries/structure/target/headers` for class layout and vtable order.

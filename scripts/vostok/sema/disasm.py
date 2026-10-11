@@ -39,14 +39,36 @@ def _pdb_tool():
 def disasm(side, rva):
     """One side's rendered disassembly (offsets, `.N` labels, symbolized calls,
     and - base side only - the source statement headers)."""
+    # `listing` renders the record either side's database holds; `--view base`
+    # selects a partner through `--base` and fails on a lone `--database`.
     cmd = [_pdb_tool(), "inspect", "--database", str(_index_path(side)),
-           "--rva", hex(rva), "--view", side]
+           "--rva", hex(rva), "--view", "listing"]
     res = subprocess.run(cmd, cwd=str(VOSTOK), capture_output=True, text=True)
     if res.returncode != 0:
         die(f"vostok-pdb failed: {res.stderr.strip()}")
     if "no function matched" in res.stdout:
         die(f"vostok-pdb found no {side} function at rva={rva:#x}")
     return res.stdout
+
+
+def listing(rec):
+    """The `disasm` text rendered from a record already in hand.
+
+    The same layout vostok-pdb's listing view prints (`render_listing`), built
+    from the record's own statements and instructions, so a caller that has
+    the record pays for neither a process nor a second database read."""
+    out = [f"{rec['name']}:"]
+    statements = rec.get("statements") or []
+    heads = {} if len(statements) <= 2 else {s["off"]: s for s in statements}
+    for insn in rec.get("instructions") or []:
+        head = heads.get(insn["off"])
+        if head is not None:
+            source = head.get("source")
+            out.append(f"[0x{insn['off']:02x}]:" + (f" {source}" if source is not None else ""))
+        if insn.get("label"):
+            out.append(f"{insn['label']}:")
+        out.append(f"0x{insn['off']:02x}:    {insn['text']}")
+    return "\n".join(out) + "\n"
 
 
 def parse(text):

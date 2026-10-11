@@ -316,6 +316,22 @@ python3 -m vostok ledger queue  --module render   # one batch per TU, what a mat
 git diff <rev> -- config/match_state.tsv          # which functions moved, and how
 ```
 
+One function's evidence in one process - the ledger row, the PDB statement
+partition (the `structure-diff` verdict), the relative-line geometry, the
+`sema blocks` flow verdict and unmatched callees - read from the last build's
+`binaries/pdb/*/evidence.sqlite` and the ledger, without rebuilding:
+
+```sh
+python3 -m vostok evidence 'weapon_core::tick'      # verdict line, then only what needs action
+python3 -m vostok evidence <fn> --full              # matched rows, block diffs, callers too
+python3 -m vostok evidence <fn> --json --only structure,flow
+```
+
+The first line is the verdict (`STRUCTURE MATCH, 2 SIZE residuals; cur 97.30,
+max 98.10 (held)`); exit status 0 means nothing needs action, 1 something
+does, 2 an ambiguous or unknown selector. A warning line flags evidence built
+from an older revision of the source, whose line numbers no longer apply.
+
 Campaigns are agent-driven: the skills under [`.agents/skills/`](.agents/skills/)
 cover unit matching, structure verification, review and module-scale orchestration;
 the loop is [`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agentic_loop.md).
