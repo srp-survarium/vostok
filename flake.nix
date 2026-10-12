@@ -241,9 +241,9 @@
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
-      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-pc-only.zip --repo srp-survarium/vostok
-      # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
-      # (built per the shipped PDB recipe; see docs + vostok/build/gfx.py).
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx421-vostok1.zip --repo srp-survarium/vostok
+      # GFx 4.2.21 suite rebuilt from the pinned scaleform-gfx-src input
+      # with the shipped PDB recipe; see vostok/build/gfx.py.
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         # PC-only package: console SDKs and console library builds removed.
@@ -252,11 +252,12 @@
         # hash-verified header/TU rollbacks) plus libgfxexpat.lib and pcre.lib
         # the exe pragma-links - cut by `vostok tool libs-release`, compiled
         # through the C:\survarium\gfx-sdk alias so the objects record that
-        # neutral prefix (paths.GFX_RELEASE_PREFIX). Same machine code as r1.
+        # neutral prefix (paths.GFX_RELEASE_PREFIX), including the retail
+        # Multiply/Darken blend fix.
         src = pkgs.fetchurl {
-          name = "vostok-libs-v0.100b-pc-only.zip";
-          url = "https://github.com/srp-survarium/vostok/releases/download/v0.100b/vostok-libs-v0.100b-pc-only.zip";
-          sha256 = "9c990d54992b864d58908525b05ed88aecc8f71e76f1c9a44112b3295fea4836";
+          name = "vostok-libs-v0.100b-gfx421-vostok1.zip";
+          url = "https://github.com/srp-survarium/vostok/releases/download/v0.100b/vostok-libs-v0.100b-gfx421-vostok1.zip";
+          sha256 = "ee657465c2db7052529ae63a0026e755b3527b28ea376a50da8aa39d5012476c";
         };
         nativeBuildInputs = [ pkgs.unzip ];
       } ''

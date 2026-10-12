@@ -376,13 +376,14 @@ def build_one(name):
     return 1
 
 
-def main():
+def main(names=None):
+    """Build `names` (default: sys.argv[1:], else DEFAULT_ORDER)."""
     if not SDK.is_dir():
         raise SystemExit(f"Scaleform SDK not found: {SDK} (SCALEFORM_SDK; enter `nix develop`)")
     stop_wine_session(GFX_BUILD_TIME)
     try:
         materialize_tree()
-        names = sys.argv[1:] or DEFAULT_ORDER
+        names = (sys.argv[1:] if names is None else list(names)) or DEFAULT_ORDER
         for n in names:
             if build_one(n) == 1:
                 print(f"\n*** {n} failed; stopping. ***")
