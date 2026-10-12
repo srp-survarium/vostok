@@ -50,6 +50,18 @@ from vostok.ledger import store
 
 
 class CleanFinalPdbTests(unittest.TestCase):
+    def test_libs_release_builds_full_suite_without_forwarding_release_options(self):
+        from vostok.tool import libs_release
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(gfx, "SDK", Path(tmp)), \
+                mock.patch.object(gfx, "stop_wine_session"), \
+                mock.patch.object(gfx, "materialize_tree"), \
+                mock.patch.object(gfx, "build_one", return_value=0) as build, \
+                mock.patch.object(gfx.sys, "argv", ["libs-release", "--tag", "test"]):
+            libs_release.build_gfx()
+        self.assertEqual(build.call_args_list, [mock.call(n) for n in gfx.DEFAULT_ORDER])
+
     @mock.patch.object(gfx_mspdbsrv.shutil, "which", return_value="/bin/faketime")
     def test_gfx_fixed_time_command_freezes_clock(self, _which):
         self.assertEqual(

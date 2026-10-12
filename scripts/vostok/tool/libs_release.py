@@ -50,7 +50,7 @@ log = logger("libs-release")
 def build_gfx() -> None:
     from vostok.build import gfx
     log("building the GFx suite from source (vostok.build.gfx) ...")
-    if gfx.main() != 0:
+    if gfx.main([]) != 0:                         # [] = the whole suite, not our argv
         raise SystemExit("GFx build failed - fix it or pass --skip-gfx to package what is staged")
 
 

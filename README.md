@@ -9,7 +9,7 @@ Decompilation of the **Vostok Engine** used by Survarium (v0.100b).
 
 | Score | Functions exact | Weighted | Meaning                                        |
 | :---- | --------------: | -------: | :--------------------------------------------- |
-| CUR   |          10,762 |   94.38% | last measured score                            |
+| CUR   |          10,771 |   94.39% | last measured score                            |
 | MAX   |          11,374 |   96.06% | best result for each function's current source |
 | HIST  |          11,488 |   96.37% | all-time peak across source revisions          |
 
@@ -49,11 +49,11 @@ _Generated from `config/match_state.tsv` by `vostok build`; do not edit by hand.
 
 _Auto-generated from the consumer-owned objdiff projection plus the independent linked-image audit; it does not feed the function score._
 
-**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,491 / 71,536,291) &middot; matched projected copies: 97.91% (420,087,935 / 429,051,363).**
+**Function-reachable retail data: 98.14% (70,207,119 / 71,536,291 unique bytes) &middot; paired for comparison: 98.14% (70,205,551 / 71,536,291) &middot; matched projected copies: 97.91% (420,103,195 / 429,051,463).**
 
-_The projection has 15,400 paired copies across 1,701 units and 30,729 unresolved blockers. Strict relocation comparison exposes 1,501 otherwise-exact functions (624,019 code bytes) with referent debt._
+_The projection has 15,405 paired copies across 1,701 units and 30,724 unresolved blockers. Strict relocation comparison exposes 1,493 otherwise-exact functions (634,417 code bytes) with referent debt._
 
-_The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11805 / 13321 definitions). Integrity ratchet: armed._
+_The linked-image audit is 97.93% exact and covers 98.57% by PDB type extent, with 99.37% paired-only fidelity (11814 / 13324 definitions). Integrity ratchet: armed._
 
 _Updated 2026-10-12._
 <!-- data-match:end -->
@@ -121,6 +121,8 @@ The Scaleform GFx libs in that archive are prebuilt by the project from
 [scaleform-gfx](https://github.com/srp-survarium/scaleform-gfx) (GFx 4.2.21, a
 flake input) with `python3 -m vostok tool libs-release`; engine builds only link
 them. Packaging and publishing: [docs/build/toolchain-build.md](docs/build/toolchain-build.md).
+To cut an updated suite, run `python3 -m vostok tool libs-release --tag <tag>`
+inside the dev shell; the command builds all eight libraries before packaging.
 
 ## Game data
 
